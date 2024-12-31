@@ -17,15 +17,14 @@ This app was started because of the three main features I missed out by popular 
 2. Privacy by design: The server only knows your username and public key.
 3. User-friendliness: Decide for your own :)
 
-> "It's the combination that makes the difference. Only a combination of privacy, security and user-friendliness can make a application good. Focusing on just one of these three areas can mean that everyone loses out in the end." ~ Myself 2019
+> "It's the combination that makes the difference. Only a combination of privacy, security and user-friendliness can make a application good. Focusing on just one of these three areas can mean that everyone loses out in the end." ~ Myself
 
 ### But there is even more!
 
 4. Decentralized: Everyone can host an server. The usernames are like your email USERNAME@YOURSERVER
 5. Simple to use: What is a Public key? If you don't know this it is okay you don't have to to use Connect!
 
-> "Its like when S[redacted]chat and email had a modern baby" ~ Myself 2024
-
+> "Its like when S[redacted]chat, Signal and email had an baby" ~ Myself
 
 ## Roadmap
 
