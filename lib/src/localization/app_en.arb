@@ -1,0 +1,7 @@
+{
+  "appTitle": "connect",
+  "@@locale": "en",
+  "@appTitle": {
+    "description": "The title of the application"
+  }
+}

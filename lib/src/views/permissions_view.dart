@@ -1,0 +1,85 @@
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+class PermissionHandlerView extends StatefulWidget {
+  const PermissionHandlerView({super.key, required this.onSuccess});
+
+  final Function onSuccess;
+
+  @override
+  _PermissionHandlerViewState createState() => _PermissionHandlerViewState();
+}
+
+Future<bool> checkPermissions() async {
+  if (!await Permission.camera.isGranted) {
+    return false;
+  }
+  if (!await Permission.microphone.isGranted) {
+    return false;
+  }
+  return true;
+}
+
+class _PermissionHandlerViewState extends State<PermissionHandlerView> {
+  Future<Map<Permission, PermissionStatus>> permissionServices() async {
+    // You can request multiple permissions at once.
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.camera,
+      Permission.microphone,
+      //add more permission to request here.
+    ].request();
+
+    if (statuses[Permission.microphone]!.isPermanentlyDenied) {
+      openAppSettings();
+      // setState(() {});
+    } else {
+      // if (statuses[Permission.microphone]!.isDenied) {
+      // }
+    }
+
+    if (statuses[Permission.camera]!.isPermanentlyDenied) {
+      openAppSettings();
+      // setState(() {});
+    } else {
+      // if (statuses[Permission.camera]!.isDenied) {
+      // }
+    }
+    /*{Permission.camera: PermissionStatus.granted, Permission.storage: PermissionStatus.granted}*/
+    return statuses;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      onPopInvokedWithResult: (bool didPop, Object? result) async {},
+      child: Scaffold(
+        body: Center(
+          child: Container(
+            padding: EdgeInsets.all(100),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "Connect needs access to the camera and microphone for obvious reasons.",
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 50),
+                FilledButton.icon(
+                  label: Text("Request permissions"),
+                  icon: const Icon(Icons.perm_camera_mic),
+                  onPressed: () async {
+                    permissionServices();
+                    if (await checkPermissions()) {
+                      widget.onSuccess();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
