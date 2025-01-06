@@ -84,13 +84,6 @@ reports to their own home sever. The home server then can authenticate the other
 is the thread here, the server are not able to see the messages nor change it as the client does an
 integrity check. An attacker could drop a messages and send an ACK as this is unauthenticated.
 
-## Donating
-
-As this is currently just a stupid project which does not work or serves a real use case even I
-would not donate anything to it. But there is another cool way: If you are on the search for a really
-cheap hosting provider which I use for my self for over 8 years you could use the following voucher
-to get 5€ off `36nc15747855300` (contact me to get a 30% off voucher). I get 10% from the affiliate program which
-helps me cover my hosting costs :)
 
 ## Self-hosting
 
