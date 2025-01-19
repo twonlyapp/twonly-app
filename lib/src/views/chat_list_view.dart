@@ -167,6 +167,9 @@ class _ChatListViewState extends State<ChatListView> {
     // Extract initials from the username
     List<String> nameParts = username.split(' ');
     String initials = nameParts.map((part) => part[0]).join().toUpperCase();
+    if (initials.length > 2) {
+      initials = initials[0] + initials[1];
+    }
 
     // Generate a color based on the initials (you can customize this logic)
     Color avatarColor = _getColorFromInitials(initials);

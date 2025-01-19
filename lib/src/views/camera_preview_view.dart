@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'camera_editor_view.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+// import 'package:camerawesome/camerawesome_plugin.dart';
 import 'dart:math';
 
 class CameraPreviewView extends StatefulWidget {
