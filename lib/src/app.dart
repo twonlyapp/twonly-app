@@ -3,8 +3,8 @@ import 'views/home_view.dart';
 import 'views/register_view.dart';
 import 'utils.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-// import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'settings/settings_controller.dart';
 
@@ -34,16 +34,17 @@ class _MyAppState extends State<MyApp> {
       builder: (BuildContext context, Widget? child) {
         return MaterialApp(
           restorationScopeId: 'app',
-          // localizationsDelegates: const [
-          //   AppLocalizations.delegate,
-          //   GlobalMaterialLocalizations.delegate,
-          //   GlobalWidgetsLocalizations.delegate,
-          //   GlobalCupertinoLocalizations.delegate,
-          // ],
-          supportedLocales: const [
-            Locale('en', ''), // English, no country code
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
           ],
-          onGenerateTitle: (BuildContext context) => "Connect!",
+          supportedLocales: const [
+            Locale('en', ''),
+            Locale('de', ''),
+          ],
+          onGenerateTitle: (BuildContext context) => "twonly",
           theme: ThemeData(
               colorScheme:
                   ColorScheme.fromSeed(seedColor: const Color(0xFF57CC99)),

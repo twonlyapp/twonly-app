@@ -1,7 +1,22 @@
 {
-  "appTitle": "connect",
   "@@locale": "en",
-  "@appTitle": {
-    "description": "The title of the application"
-  }
+  "registerTitle": "Welcome to twonly!",
+  "registerSlogan": "Send pictures to friends in real time and be sure you are the only people who can see them.",
+  "registerUsernameSlogan": "Please select a username so others can find you!",
+  "registerUsernameDecoration": "Username",
+  "registerUsernameLimits": "Username must be 4 to 12 characters long, consisting only of letters (a-z) and numbers (0-9).",
+  "registerSubmitButton": "Register now!",
+  "errorUnknown": "An unexpected error has occurred. Please try again later.",
+  "errorBadRequest": "The request could not be understood by the server due to malformed syntax. Please check your input and try again.",
+  "errorTooManyRequests": "You have made too many requests in a short period. Please wait a moment before trying again.",
+  "errorInternalError": "The server encountered an internal error. Please try again later.",
+  "errorInvalidInvitationCode": "The invitation code you provided is invalid. Please check the code and try again.",
+  "errorUsernameAlreadyTaken": "The username you want to use is already taken. Please choose a different username.",
+  "errorSignatureNotValid": "The provided signature is not valid. Please check your credentials and try again.",
+  "errorUsernameNotFound": "The username you entered does not exist. Please check the spelling or create a new account.",
+  "errorUsernameNotValid": "The username you provided does not meet the required criteria. Please choose a valid username.",
+  "errorInvalidPublicKey": "The public key you provided is invalid. Please check the key and try again.",
+  "errorSessionAlreadyAuthenticated": "You are already logged in. Please log out if you want to log in with a different account.",
+  "errorSessionNotAuthenticated": "Your session is not authenticated. Please log in to continue.",
+  "errorOnlyOneSessionAllowed": "Only one active session is allowed per user. Please log out from other devices to continue."
 }

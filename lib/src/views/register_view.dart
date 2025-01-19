@@ -1,6 +1,9 @@
+import 'package:twonly/src/providers/api_provider.dart';
+
 import '../utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key, required this.callbackOnSuccess});
@@ -10,35 +13,11 @@ class RegisterView extends StatefulWidget {
   State<RegisterView> createState() => _RegisterViewState();
 }
 
-class MyButton extends StatelessWidget {
-  final void Function()? onTap;
-  final String text;
-  const MyButton({super.key, required this.onTap, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Center(
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _RegisterViewState extends State<RegisterView> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController inviteCodeController = TextEditingController();
+
+  bool _isTryingToRegister = false;
 
   @override
   Widget build(BuildContext context) {
@@ -48,77 +27,136 @@ class _RegisterViewState extends State<RegisterView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome to Connect!"),
+        title: Text(""),
       ),
       body: Padding(
           padding: EdgeInsets.all(10),
-          child: ListView(
-            children: [
-              const SizedBox(height: 20),
-              Center(
-                child: Text(
-                  "You made the right decision using Connect which is like SnXpchat but encrypted using the Signal protocol.",
+          child: Padding(
+            padding: EdgeInsets.only(left: 10, right: 10),
+            child: ListView(
+              children: [
+                const SizedBox(height: 50),
+                Text(
+                  AppLocalizations.of(context)!.registerTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15),
+                  style: TextStyle(fontSize: 30),
                 ),
-              ),
-              const SizedBox(height: 40),
-              Center(
-                child: Text(
-                  "Choice wisely, this username can't be changed. Only lowercase and numbers are allowed!",
-                  textAlign: TextAlign.center,
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  child: Text(
+                    AppLocalizations.of(context)!.registerSlogan,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
+                const SizedBox(height: 60),
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Text(
+                      AppLocalizations.of(context)!.registerUsernameSlogan,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 15),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                TextField(
                   controller: usernameController,
                   inputFormatters: [
-                    LengthLimitingTextInputFormatter(
-                        12), // Limit to 12 characters
-                    FilteringTextInputFormatter.allow(RegExp(
-                        r'[a-z0-9]')), // Allow only lowercase letters and numbers
+                    LengthLimitingTextInputFormatter(12),
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-z0-9]')),
                   ],
-                  decoration: getInputDecoration("Username")),
-              const SizedBox(height: 15),
-              Center(
-                child: Text(
-                  "To protect this small experimental project you need an invitation code! To get one just ask the right person!",
-                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 17),
+                  decoration: getInputDecoration(
+                    AppLocalizations.of(context)!.registerUsernameDecoration,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                  controller: inviteCodeController,
-                  decoration: getInputDecoration("Invitation code")),
-              const SizedBox(height: 25),
-              Center(
-                child: Text(
-                  "Where is the password? There is none! So make a backup of your Connect identity in the settings or you will lose your access if you lose your device!",
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 5),
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 10, right: 10),
+                    child: Text(
+                      AppLocalizations.of(context)!.registerUsernameLimits,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 7),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 30),
-              FilledButton.icon(
-                icon: Icon(Icons.group),
-                onPressed: () async {
-                  final success = await createNewUser(
-                      usernameController.text, inviteCodeController.text);
-                  if (success == null) {
-                    widget.callbackOnSuccess();
-                    return;
-                  }
-                  showAlertDialog(context, "Oh no!", success);
-                },
-                label: Text("Komm in die Gruppe!"),
-              ),
-              OutlinedButton.icon(
-                  onPressed: () {
-                    showAlertDialog(context, "Coming soon",
-                        "This feature is not yet implemented! Just create a new account :/");
-                  },
-                  label: Text("Restore identity")),
-              // MyButton(onTap: () {}, text: "Komm in die Gruppe!")
-            ],
+                // const SizedBox(height: 15),
+                // Center(
+                //   child: Text(
+                //     "To protect this small experimental project you need an invitation code! To get one just ask the right person!",
+                //     textAlign: TextAlign.center,
+                //   ),
+                // ),
+                // const SizedBox(height: 10),
+                // TextField(
+                //     controller: inviteCodeController,
+                //     decoration: getInputDecoration("Voucher code")),
+                // const SizedBox(height: 25),
+                // Center(
+                //   child: Text(
+                //     "Please ",
+                //     textAlign: TextAlign.center,
+                //   ),
+                // ),
+                const SizedBox(height: 50),
+                // Padding(
+                //   padding: EdgeInsets.symmetric(horizontal: 10),
+                Column(children: [
+                  FilledButton.icon(
+                    icon: _isTryingToRegister
+                        ? SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.black,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Icon(Icons.group),
+                    onPressed: () async {
+                      setState(() {
+                        _isTryingToRegister = true;
+                      });
+                      final res = await createNewUser(
+                          usernameController.text, inviteCodeController.text);
+                      setState(() {
+                        _isTryingToRegister = false;
+                      });
+                      if (res.isSuccess) {
+                        widget.callbackOnSuccess();
+                        return;
+                      }
+                      final errMsg =
+                          ApiProvider.getLocalizedString(context, res.error);
+                      showAlertDialog(context, "Oh no!", errMsg);
+                    },
+                    style: ButtonStyle(
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                        ),
+                        backgroundColor: _isTryingToRegister
+                            ? WidgetStateProperty.all<MaterialColor>(
+                                Colors.grey)
+                            : null),
+                    label: Text(
+                      AppLocalizations.of(context)!.registerSubmitButton,
+                      style: TextStyle(fontSize: 17),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                      onPressed: () {
+                        showAlertDialog(context, "Coming soon",
+                            "This feature is not yet implemented! Just create a new account :/");
+                      },
+                      label: Text("Restore identity")),
+                ]),
+                //   ),
+              ],
+            ),
           )),
     );
   }

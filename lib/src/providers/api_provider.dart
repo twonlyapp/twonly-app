@@ -4,12 +4,26 @@ import 'dart:ffi';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/material.dart';
 
 import 'package:logging/logging.dart';
 import 'package:twonly/src/proto/api/client_to_server.pb.dart';
+import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
 import 'package:twonly/src/signal/signal_helper.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+
+class Result<T, E> {
+  final T? value;
+  final E? error;
+
+  bool get isSuccess => value != null;
+  bool get isError => error != null;
+
+  Result.success(this.value) : error = null;
+  Result.error(this.error) : value = null;
+}
 
 class ApiProvider {
   ApiProvider({required this.apiUrl});
@@ -77,7 +91,7 @@ class ApiProvider {
         log.shout("Timeout for message $seq");
         return null;
       }
-      await Future.delayed(Duration(milliseconds: 1));
+      await Future.delayed(Duration(milliseconds: 10));
     }
   }
 
@@ -101,21 +115,6 @@ class ApiProvider {
     return await _waitForResponse(seq);
   }
 
-  String? _getErrorMsg(server.ServerToClient msg) {
-    // if (msg.containsKey("Ok")) {
-    //   return null;
-    // }
-    // if (msg.containsKey("Error")) {
-    //   if (msg["Error"] != null) {
-    //     if (msg["Error"].containsKey("AlertUser")) {
-    //       return msg["Error"]["AlertUser"];
-    //     }
-    //   }
-    //   return "There was an unknown error :/";
-    // }
-    return null;
-  }
-
   ClientToServer createClientToServerFromHandshake(Handshake handshake) {
     // Create the V0 message
     var v0 = V0()
@@ -128,27 +127,63 @@ class ApiProvider {
     return clientToServer;
   }
 
-  Future<String?> register(
-      String username,
-      // Uint8List publicIdentityKey,
-      // Uint8List signedPrekey,
-      // Uint8List signedPrekeySignature,
-      String? inviteCode) async {
+  static String getLocalizedString(BuildContext context, ErrorCode code) {
+    switch (code.toString()) {
+      case "Unknown":
+        return AppLocalizations.of(context)!.errorUnknown;
+      case "BadRequest":
+        return AppLocalizations.of(context)!.errorBadRequest;
+      case "TooManyRequests":
+        return AppLocalizations.of(context)!.errorTooManyRequests;
+      case "InternalError":
+        return AppLocalizations.of(context)!.errorInternalError;
+      case "InvalidInvitationCode":
+        return AppLocalizations.of(context)!.errorInvalidInvitationCode;
+      case "UsernameAlreadyTaken":
+        return AppLocalizations.of(context)!.errorUsernameAlreadyTaken;
+      case "SignatureNotValid":
+        return AppLocalizations.of(context)!.errorSignatureNotValid;
+      case "UsernameNotFound":
+        return AppLocalizations.of(context)!.errorUsernameNotFound;
+      case "UsernameNotValid":
+        return AppLocalizations.of(context)!.errorUsernameNotValid;
+      case "InvalidPublicKey":
+        return AppLocalizations.of(context)!.errorInvalidPublicKey;
+      case "SessionAlreadyAuthenticated":
+        return AppLocalizations.of(context)!.errorSessionAlreadyAuthenticated;
+      case "SessionNotAuthenticated":
+        return AppLocalizations.of(context)!.errorSessionNotAuthenticated;
+      case "OnlyOneSessionAllowed":
+        return AppLocalizations.of(context)!.errorOnlyOneSessionAllowed;
+      default:
+        return code.toString(); // Fallback for unrecognized keys
+    }
+  }
+
+  Result _asResult(server.ServerToClient msg) {
+    if (msg.v0.response.hasOk()) {
+      return Result.success(msg.v0.response.ok);
+    } else {
+      return Result.error(msg.v0.response.error);
+    }
+  }
+
+  Future<Result> register(String username, String? inviteCode) async {
     final reqSignal = await SignalHelper.getRegisterData();
 
     if (reqSignal == null) {
-      print("NULL");
-      return null;
+      return Result.error(
+          "There was an fatal error. Try reinstalling the app.");
     }
 
-    print(reqSignal);
     var register = Handshake_Register()
       ..username = username
+      ..publicIdentityKey = reqSignal["identityKey"]
       ..signedPrekey = reqSignal["signedPreKey"]?["key"]
       ..signedPrekeySignature = reqSignal["signedPreKey"]?["signature"]
       ..signedPrekeyId = Int64(reqSignal["signedPreKey"]?["id"]);
 
-    if (inviteCode != null) {
+    if (inviteCode != null && inviteCode != "") {
       register.inviteCode = inviteCode;
     }
     // Create the Handshake message
@@ -157,8 +192,8 @@ class ApiProvider {
 
     final resp = await _sendRequestV0(req);
     if (resp == null) {
-      return "Server is not reachable!";
+      return Result.error("Server is not reachable!");
     }
-    return _getErrorMsg(resp);
+    return _asResult(resp);
   }
 }
