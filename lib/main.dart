@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
-import 'package:connect/src/providers/api_provider.dart';
-import 'package:connect/src/providers/db_provider.dart';
+import 'package:twonly/src/providers/api_provider.dart';
+import 'package:twonly/src/providers/db_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
@@ -45,13 +45,13 @@ void main() async {
   var apiUrl = "ws://api.theconnectapp.de/v0/";
   if (kDebugMode) {
     // Overwrite the domain in your local network so you can test the app locally
-    apiUrl = "ws://debug.theconnectapp.de:3030/v0/";
+    apiUrl = "ws://10.99.0.6:3030/api/client";
   }
 
   apiProvider = ApiProvider(apiUrl: apiUrl);
 
   // TODO: Open the connection in the background so the app launch is not delayed.
-  await apiProvider.connect();
+  //await apiProvider.connect();
 
   // Workmanager.executeTask((task, inputData) async {
   //   await _HomeState().manager();

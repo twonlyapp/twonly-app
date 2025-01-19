@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:connect/src/model/identity_key_store_model.dart';
-import 'package:connect/src/model/model_constants.dart';
-import 'package:connect/src/model/pre_key_model.dart';
-import 'package:connect/src/model/sender_key_store_model.dart';
-import 'package:connect/src/model/session_store_model.dart';
-import 'package:connect/src/utils.dart';
+import 'package:twonly/src/model/identity_key_store_model.dart';
+import 'package:twonly/src/model/model_constants.dart';
+import 'package:twonly/src/model/pre_key_model.dart';
+import 'package:twonly/src/model/sender_key_store_model.dart';
+import 'package:twonly/src/model/session_store_model.dart';
+import 'package:twonly/src/utils.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class DbProvider {

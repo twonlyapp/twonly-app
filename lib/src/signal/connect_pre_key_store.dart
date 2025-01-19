@@ -1,6 +1,6 @@
 import 'dart:typed_data';
-import 'package:connect/main.dart';
-import 'package:connect/src/model/pre_key_model.dart';
+import 'package:twonly/main.dart';
+import 'package:twonly/src/model/pre_key_model.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 typedef DB = DbSignalPreKeyStore;

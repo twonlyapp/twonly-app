@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:connect/src/utils.dart';
+import 'package:twonly/src/utils.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 class ConnectSignedPreKeyStore extends SignedPreKeyStore {
@@ -16,15 +16,19 @@ class ConnectSignedPreKeyStore extends SignedPreKeyStore {
       return store;
     }
     final storeHashMap = json.decode(storeSerialized);
-    // for (final item in storeHashMap) {
-    //   store[item[0]] = Uint8List.fromList(item[1].codeUnits);
-    // }
-    return storeHashMap;
+    for (final item in storeHashMap) {
+      store[item[0]] = base64Decode(item[1]);
+    }
+    return store;
   }
 
   Future safeStore(HashMap<int, Uint8List> store) async {
     final storage = getSecureStorage();
-    final storeSerialized = json.encode(store);
+    var storeHashMap = [];
+    for (final item in store.entries) {
+      storeHashMap.add([item.key, base64Encode(item.value)]);
+    }
+    final storeSerialized = json.encode(storeHashMap);
     await storage.write(key: "signed_pre_key_store", value: storeSerialized);
   }
 

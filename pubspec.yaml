@@ -1,5 +1,5 @@
-name: connect
-description: "Connect securely with your friends."
+name: twonly
+description: "Send pictures to friends in real time and be sure you are the only two people who can see them."
 
 # Prevent accidental publishing to pub.dev.
 publish_to: 'none'
@@ -13,6 +13,7 @@ dependencies:
   camera: ^0.11.0+2
   collection: ^1.18.0
   cv: ^1.1.3
+  fixnum: ^1.1.1
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -41,10 +42,13 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.1
 
 flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
+  android: true
+  ios: false
   image_path: "assets/images/logo.png"
+  adaptive_icon_foreground: "assets/images/logo.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
+  remove_alpha_ios: true
+  adaptive_icon_background: "#FF57CC99"
 
 flutter:
   uses-material-design: true

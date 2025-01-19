@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:collection/collection.dart';
-import 'package:connect/main.dart';
-import 'package:connect/src/model/identity_key_store_model.dart';
+import 'package:twonly/main.dart';
+import 'package:twonly/src/model/identity_key_store_model.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 bool eq<E>(List<E>? list1, List<E>? list2) =>

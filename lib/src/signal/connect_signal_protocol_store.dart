@@ -1,7 +1,7 @@
-import 'package:connect/src/signal/connect_identitiy_key_store.dart';
-import 'package:connect/src/signal/connect_pre_key_store.dart';
-import 'package:connect/src/signal/connect_session_store.dart';
-import 'package:connect/src/signal/connect_signed_pre_key_store.dart';
+import 'package:twonly/src/signal/connect_identitiy_key_store.dart';
+import 'package:twonly/src/signal/connect_pre_key_store.dart';
+import 'package:twonly/src/signal/connect_session_store.dart';
+import 'package:twonly/src/signal/connect_signed_pre_key_store.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 class ConnectSignalProtocolStore implements SignalProtocolStore {

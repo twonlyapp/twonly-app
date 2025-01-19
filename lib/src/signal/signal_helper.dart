@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/src/model/signal_identity_json.dart';
+import 'package:twonly/src/utils.dart';
 
 import 'connect_sender_key_store.dart';
 import 'connect_signal_protocol_store.dart';
 
 class SignalDataModel {
-  String name;
+  Uint8List userId;
   ConnectSignalProtocolStore signalStore;
   ConnectSenderKeyStore senderKeyStore;
-  Map<String, dynamic> serverKeyBundle;
   SignalDataModel({
-    required this.name,
-    required this.serverKeyBundle,
+    required this.userId,
     required this.senderKeyStore,
     required this.signalStore,
   });
@@ -26,7 +26,7 @@ class SignalDataModel {
         final generator = NumericFingerprintGenerator(5200);
         final localFingerprint = generator.createFor(
           1,
-          Uint8List.fromList(utf8.encode(name)),
+          userId,
           (await signalStore.getIdentityKeyPair()).getPublicKey(),
           Uint8List.fromList(utf8.encode(target)),
           targetIdentity,
@@ -139,7 +139,54 @@ class SignalDataModel {
 class SignalHelper {
   static const int defaultDeviceId = 1;
 
-  static Future<SignalDataModel> createNewSignalIdentity(String name) async {
+  static Future<Map<String, dynamic>?> getRegisterData() async {
+    final storage = getSecureStorage();
+    final signalIdentityJson = await storage.read(key: "signal_identity");
+    if (signalIdentityJson == null) {
+      return null;
+    }
+
+    print(signalIdentityJson);
+    final SignalIdentity signalIdentity =
+        SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
+
+    final identityKeyPair =
+        IdentityKeyPair.fromSerialized(signalIdentity.identityKeyPairU8List);
+    // final publicKey = identityKeyPair.getPublicKey().serialize();
+
+    ConnectSignalProtocolStore signalStore = ConnectSignalProtocolStore(
+        identityKeyPair, signalIdentity.registrationId);
+
+    final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
+    final Map<String, dynamic> req = {};
+    req['registrationId'] = signalIdentity.registrationId;
+    req['identityKey'] =
+        (await signalStore.getIdentityKeyPair()).getPublicKey().serialize();
+
+    req['signedPreKey'] = {
+      'id': signedPreKey.id,
+      'signature': signedPreKey.signature,
+      'key': signedPreKey.getKeyPair().publicKey.serialize(),
+    };
+    // List pKeysList = [];
+    // for (PreKeyRecord pKey in preKeys) {
+    //   Map<String, dynamic> pKeys = {};
+    //   pKeys['id'] = pKey.id;
+    //   pKeys['key'] = base64Encode(pKey.getKeyPair().publicKey.serialize());
+    //   pKeysList.add(pKeys);
+    // }
+    // req['preKeys'] = pKeysList;
+    return req;
+  }
+
+  static Future createIfNotExistsSignalIdentity() async {
+    final storage = getSecureStorage();
+
+    final signalIdentity = await storage.read(key: "signal_identity");
+    if (signalIdentity != null) {
+      return;
+    }
+
     final identityKeyPair = generateIdentityKeyPair();
     final registrationId = generateRegistrationId(true);
 
@@ -157,30 +204,11 @@ class SignalHelper {
     await signalStore.signedPreKeyStore
         .storeSignedPreKey(signedPreKey.id, signedPreKey);
 
-    Map<String, dynamic> req = {};
-    req['registrationId'] = registrationId;
-    req['identityKey'] =
-        base64Encode(identityKeyPair.getPublicKey().serialize());
-    req['signedPreKey'] = {
-      'id': signedPreKey.id,
-      'signature': base64Encode(signedPreKey.signature),
-      'key': base64Encode(signedPreKey.getKeyPair().publicKey.serialize()),
-    };
-    List pKeysList = [];
-    for (PreKeyRecord pKey in preKeys) {
-      Map<String, dynamic> pKeys = {};
-      pKeys['id'] = pKey.id;
-      pKeys['key'] = base64Encode(pKey.getKeyPair().publicKey.serialize());
-      pKeysList.add(pKeys);
-    }
-    req['preKeys'] = pKeysList;
+    final storedSignalIdentity = SignalIdentity(
+        identityKeyPairU8List: identityKeyPair.serialize(),
+        registrationId: registrationId);
 
-    SignalDataModel sm = SignalDataModel(
-      name: name,
-      serverKeyBundle: req,
-      senderKeyStore: ConnectSenderKeyStore(),
-      signalStore: signalStore,
-    );
-    return sm;
+    await storage.write(
+        key: "signal_identity", value: jsonEncode(storedSignalIdentity));
   }
 }
