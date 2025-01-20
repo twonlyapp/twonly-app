@@ -1,5 +1,4 @@
 import 'package:camera/camera.dart';
-import 'camera_editor_view.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 // import 'package:camerawesome/camerawesome_plugin.dart';
@@ -71,13 +70,13 @@ class CameraPreviewViewState extends State<CameraPreviewView> {
       final image = await _controller.takePicture();
 
       if (!context.mounted) return;
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => CameraEditorView(
-            imagePath: image.path,
-          ),
-        ),
-      );
+      // await Navigator.of(context).push(
+      //   MaterialPageRoute(
+      //     builder: (context) => CameraEditorView(
+      //       imagePath: image.path,
+      //     ),
+      //   ),
+      // );
     } catch (e) {
       // If an error occurs, log the error to the console.
       print(e);

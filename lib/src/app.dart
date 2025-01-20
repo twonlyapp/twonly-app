@@ -1,11 +1,15 @@
 import 'package:camera/camera.dart';
+import 'package:path/path.dart';
+import 'package:twonly/src/providers/api_provider.dart';
 import 'views/home_view.dart';
 import 'views/register_view.dart';
 import 'utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-
+import 'package:provider/provider.dart';
+import 'dart:isolate';
+import 'dart:async';
 import 'settings/settings_controller.dart';
 
 /// The Widget that configures your application.
@@ -22,9 +26,41 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Future<bool> _isUserCreated = isUserCreated();
+  int redColorOpacity = 0; // Start with dark red
+  bool redColorGoUp = true;
+  bool isConnected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the color animation
+    _startColorAnimation();
+  }
+
+  void _startColorAnimation() {
+    // Change the color every second
+    Future.delayed(Duration(milliseconds: 200), () {
+      setState(() {
+        if (redColorOpacity <= 100) {
+          redColorGoUp = true;
+        }
+        if (redColorOpacity >= 150) {
+          redColorGoUp = false;
+        }
+        if (redColorGoUp) {
+          redColorOpacity += 10;
+        } else {
+          redColorOpacity -= 10;
+        }
+      });
+      _startColorAnimation(); // Repeat the animation
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    var isConnected = context.watch<ApiProvider>().isConnected;
     // Glue the SettingsController to the MaterialApp.
     //
     // The ListenableBuilder Widget listens to the SettingsController for changes.
@@ -58,27 +94,59 @@ class _MyAppState extends State<MyApp> {
                 const InputDecorationTheme(border: OutlineInputBorder()),
           ),
           themeMode: widget.settingsController.themeMode,
-          home: FutureBuilder<bool>(
-              future: _isUserCreated,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return snapshot.data!
-                      ? HomeView(
-                          settingsController: widget.settingsController,
-                          cameras: widget.cameras)
-                      : RegisterView(callbackOnSuccess: () {
-                          _isUserCreated = isUserCreated();
-                          setState(() {});
+          home: Stack(
+            children: [
+              FutureBuilder<bool>(
+                  future: context.watch<ApiProvider>().startBackend(),
+                  builder: (context, snapshot) {
+                    return FutureBuilder<bool>(
+                        future: _isUserCreated,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return snapshot.data!
+                                ? HomeView(
+                                    settingsController:
+                                        widget.settingsController,
+                                    cameras: widget.cameras)
+                                : RegisterView(
+                                    callbackOnSuccess: () {
+                                      _isUserCreated = isUserCreated();
+                                      setState(() {});
+                                    },
+                                  ); // Show the red line if not connected
+                          } else {
+                            return Container();
+                          }
                         });
-                } else {
-                  return Center(
-                      child: SizedBox(
-                    width: 60,
-                    height: 60,
-                    child: CircularProgressIndicator(),
-                  ));
-                }
-              }),
+                  }),
+              if (!isConnected)
+                Positioned(
+                  top: 3, // Position it at the top
+                  left: (screenWidth * 0.5) / 2, // Center it horizontally
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 100),
+                    width: screenWidth * 0.5, // 50% of the screen width
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                          color: Colors.red[600]!.withAlpha(redColorOpacity),
+                          width: 2.0), // Red border
+                      borderRadius: BorderRadius.all(
+                          Radius.circular(10.0)), // Rounded top corners
+                    ),
+                    // child: Padding(
+                    //   padding: const EdgeInsets.all(
+                    //       8.0), // Padding around the child
+                    //   child: Center(
+                    //     child: Text(
+                    //       'Not Connected',
+                    //       style: TextStyle(fontSize: 24),
+                    //     ),
+                    //   ),
+                    // ),
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );

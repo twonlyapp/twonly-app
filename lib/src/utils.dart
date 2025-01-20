@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/signal/signal_helper.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'model/user_data_json.dart';
+import 'package:provider/provider.dart';
 import 'package:logging/logging.dart';
 
 // Just a helper function to get the secure storage
@@ -44,13 +46,18 @@ Future<bool> deleteLocalUserData() async {
   return true;
 }
 
-Future<Result> createNewUser(String username, String inviteCode) async {
+Future<Result> createNewUser(
+    BuildContext context, String username, String inviteCode) async {
   final storage = getSecureStorage();
+  if (!context.mounted) {
+    return Result.error("not mounted");
+  }
 
   await SignalHelper.createIfNotExistsSignalIdentity();
 
   // TODO: API call to server to check username and inviteCode
-  final res = await apiProvider.register(username, inviteCode);
+  // final res = await apiProvider.register(username, inviteCode);
+  final res = await context.watch<ApiProvider>().register(username, inviteCode);
 
   if (res.isSuccess) {
     print("Got user_id ${res.value}");
