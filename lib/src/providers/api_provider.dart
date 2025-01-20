@@ -1,17 +1,15 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 
 import 'package:logging/logging.dart';
-import 'package:twonly/src/proto/api/client_to_server.pb.dart' as c;
+import 'package:twonly/src/proto/api/client_to_server.pb.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
-import 'package:twonly/src/proto/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/signal/signal_helper.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -27,170 +25,13 @@ class Result<T, E> {
   Result.error(this.error) : value = null;
 }
 
-enum ExchangeKind { connectionStateChange, sendRequestV0 }
-
-class Exchange {
-  Exchange({required this.kind, required this.body, required this.seq});
-  final int seq;
-  final ExchangeKind kind;
-  final dynamic body;
-}
-
-c.ClientToServer createClientToServerFromHandshake(c.Handshake handshake) {
-  // Create the V0 message
-  var v0 = c.V0()
-    ..seq = Int64(0) // You can set this to the appropriate sequence number
-    ..handshake = handshake;
-
-  // Create the ClientToServer message
-  var clientToServer = c.ClientToServer()..v0 = v0;
-
-  return clientToServer;
-}
-
-Result asResult(server.ServerToClient msg) {
-  if (msg.v0.response.hasOk()) {
-    return Result.success(msg.v0.response.ok);
-  } else {
-    return Result.error(msg.v0.response.error);
-  }
-}
-
-class BackendIsolatedArgs {
-  BackendIsolatedArgs(
-      {required this.apiUrl,
-      required this.backupApiUrl,
-      required this.receivePort,
-      required this.sendPort});
-  final String apiUrl;
-  final String backupApiUrl;
-  final ReceivePort receivePort;
-  final SendPort sendPort;
-}
-
-class ApiProvider with ChangeNotifier {
+class ApiProvider {
   ApiProvider({required this.apiUrl, required this.backupApiUrl});
 
   final String apiUrl;
-  final String backupApiUrl;
-  bool _isConnected = false;
-  final Map<int, ServerToClient> _sendRequestV0Resp = HashMap();
-  final log = Logger("twonly::ApiProvider");
-
-  final ReceivePort _receivePort = ReceivePort();
-  SendPort? _sendPort;
-
-  Future<ServerToClient?> _waitForResponse(int seq) async {
-    final startTime = DateTime.now();
-
-    final timeout = Duration(seconds: 5);
-
-    while (true) {
-      if (_sendRequestV0Resp[seq] != null) {
-        final tmp = _sendRequestV0Resp[seq];
-        _sendRequestV0Resp.remove(seq);
-        return tmp;
-      }
-      if (DateTime.now().difference(startTime) > timeout) {
-        log.shout("Timeout for message $seq");
-        return null;
-      }
-      await Future.delayed(Duration(milliseconds: 10));
-    }
-  }
-
-  static void _startBackendIsolated(BackendIsolatedArgs args) async {
-    final backend =
-        Backend(apiUrl: args.apiUrl, backupApiUrl: args.backupApiUrl);
-
-    await backend.connect();
-
-    args.receivePort.listen((msg) async {
-      switch (msg.kind) {
-        case ExchangeKind.sendRequestV0:
-          final resp = await backend._sendRequestV0(msg.body);
-          args.sendPort.send(Exchange(
-              kind: ExchangeKind.sendRequestV0, body: resp, seq: msg.seq));
-          break;
-        default:
-      }
-    });
-    args.sendPort.send(
-        Exchange(kind: ExchangeKind.connectionStateChange, body: true, seq: 0));
-  }
-
-  Future<bool> startBackend() async {
-    ReceivePort port = ReceivePort();
-    _sendPort = port.sendPort;
-
-    await Isolate.spawn(
-        _startBackendIsolated,
-        BackendIsolatedArgs(
-            sendPort: _receivePort.sendPort,
-            receivePort: port,
-            apiUrl: apiUrl,
-            backupApiUrl: backupApiUrl));
-
-    _receivePort.listen((msg) {
-      switch (msg.kind) {
-        case ExchangeKind.sendRequestV0:
-          _sendRequestV0Resp[msg.seq] = msg.body;
-          // final resp = await backend._sendRequestV0(msg.body);
-          // args.sendPort.send(Exchange(
-          //     kind: ExchangeKind.sendRequestV0, body: resp, seq: msg.seq));
-          break;
-        case ExchangeKind.connectionStateChange:
-          _isConnected = msg.body;
-        default:
-      }
-    });
-    return true;
-  }
-
-  bool get isConnected => _isConnected;
-
-  Future<Result> register(String username, String? inviteCode) async {
-    if (_sendPort == null) return Result.error("Unknown error");
-    final reqSignal = await SignalHelper.getRegisterData();
-
-    if (reqSignal == null) {
-      return Result.error(
-          "There was an fatal error. Try reinstalling the app.");
-    }
-
-    var register = c.Handshake_Register()
-      ..username = username
-      ..publicIdentityKey = reqSignal["identityKey"]
-      ..signedPrekey = reqSignal["signedPreKey"]?["key"]
-      ..signedPrekeySignature = reqSignal["signedPreKey"]?["signature"]
-      ..signedPrekeyId = Int64(reqSignal["signedPreKey"]?["id"]);
-
-    if (inviteCode != null && inviteCode != "") {
-      register.inviteCode = inviteCode;
-    }
-    // Create the Handshake message
-    var handshake = c.Handshake()..register = register;
-    var req = createClientToServerFromHandshake(handshake);
-
-    var seq = Random().nextInt(4294967296);
-    final tmp = Exchange(seq: seq, kind: ExchangeKind.sendRequestV0, body: req);
-    _sendPort!.send(tmp);
-
-    final resp = await _waitForResponse(seq);
-
-    if (resp == null) {
-      return Result.error("Server is not reachable!");
-    }
-    return asResult(resp);
-  }
-}
-
-class Backend {
-  Backend({required this.apiUrl, required this.backupApiUrl});
-
-  final String apiUrl;
   final String? backupApiUrl;
-  final log = Logger("twonly::backend");
+  final log = Logger("connect::ApiProvider");
+  final HashMap<String, List<Function>> _callbacks = HashMap();
 
   final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
 
@@ -213,18 +54,20 @@ class Backend {
     }
   }
 
-  Future<bool> connect() async {
+  Future<bool> connect(Function(bool)? callBack) async {
     print("Trying to connect to the backend $apiUrl!");
     if (_channel != null && _channel!.closeCode != null) {
       return true;
     }
     log.info("Trying to connect to the backend $apiUrl!");
     if (await _connectTo(apiUrl)) {
+      if (callBack != null) callBack(true);
       return true;
     }
     if (backupApiUrl != null) {
       log.info("Trying to connect to the backup backend $backupApiUrl!");
       if (await _connectTo(backupApiUrl!)) {
+        if (callBack != null) callBack(true);
         return true;
       }
     }
@@ -244,6 +87,13 @@ class Backend {
     } catch (e) {
       log.shout("Error parsing the servers message: $e");
     }
+  }
+
+  void addNotifier(String messageType, Function callBackFunction) {
+    if (!_callbacks.containsKey(messageType)) {
+      _callbacks[messageType] = [];
+    }
+    _callbacks[messageType]!.add(callBackFunction);
   }
 
   // TODO: There must be a smarter move to do that :/
@@ -266,8 +116,7 @@ class Backend {
     }
   }
 
-  Future<server.ServerToClient?> _sendRequestV0(
-      c.ClientToServer request) async {
+  Future<server.ServerToClient?> _sendRequestV0(ClientToServer request) async {
     var seq = Int64(Random().nextInt(4294967296));
     while (messagesV0.containsKey(seq)) {
       seq = Int64(Random().nextInt(4294967296));
@@ -278,13 +127,25 @@ class Backend {
 
     log.info("Check if is connected?");
     // check if it is connected to the backend. if not try to reconnect.
-    if (!await connect()) {
+    if (!await connect(null)) {
       return null;
     }
 
     _channel!.sink.add(requestBytes);
 
     return await _waitForResponse(seq);
+  }
+
+  ClientToServer createClientToServerFromHandshake(Handshake handshake) {
+    // Create the V0 message
+    var v0 = V0()
+      ..seq = Int64(0) // You can set this to the appropriate sequence number
+      ..handshake = handshake;
+
+    // Create the ClientToServer message
+    var clientToServer = ClientToServer()..v0 = v0;
+
+    return clientToServer;
   }
 
   static String getLocalizedString(BuildContext context, ErrorCode code) {
@@ -318,5 +179,42 @@ class Backend {
       default:
         return code.toString(); // Fallback for unrecognized keys
     }
+  }
+
+  Result _asResult(server.ServerToClient msg) {
+    if (msg.v0.response.hasOk()) {
+      return Result.success(msg.v0.response.ok);
+    } else {
+      return Result.error(msg.v0.response.error);
+    }
+  }
+
+  Future<Result> register(String username, String? inviteCode) async {
+    final reqSignal = await SignalHelper.getRegisterData();
+
+    if (reqSignal == null) {
+      return Result.error(
+          "There was an fatal error. Try reinstalling the app.");
+    }
+
+    var register = Handshake_Register()
+      ..username = username
+      ..publicIdentityKey = reqSignal["identityKey"]
+      ..signedPrekey = reqSignal["signedPreKey"]?["key"]
+      ..signedPrekeySignature = reqSignal["signedPreKey"]?["signature"]
+      ..signedPrekeyId = Int64(reqSignal["signedPreKey"]?["id"]);
+
+    if (inviteCode != null && inviteCode != "") {
+      register.inviteCode = inviteCode;
+    }
+    // Create the Handshake message
+    var handshake = Handshake()..register = register;
+    var req = createClientToServerFromHandshake(handshake);
+
+    final resp = await _sendRequestV0(req);
+    if (resp == null) {
+      return Result.error("Server is not reachable!");
+    }
+    return _asResult(resp);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:path/path.dart';
+import 'package:twonly/main.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'views/home_view.dart';
 import 'views/register_view.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Future<bool> _isUserCreated = isUserCreated();
+  bool _isConnected = false;
   int redColorOpacity = 0; // Start with dark red
   bool redColorGoUp = true;
   bool isConnected = false;
@@ -35,6 +37,11 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // Start the color animation
     _startColorAnimation();
+    apiProvider.connect((isConnected) {
+      setState(() {
+        _isConnected = isConnected;
+      });
+    });
   }
 
   void _startColorAnimation() {
@@ -60,7 +67,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    var isConnected = context.watch<ApiProvider>().isConnected;
+    // var isConnected = context.watch<ApiProvider>().isConnected;
     // Glue the SettingsController to the MaterialApp.
     //
     // The ListenableBuilder Widget listens to the SettingsController for changes.
@@ -97,29 +104,24 @@ class _MyAppState extends State<MyApp> {
           home: Stack(
             children: [
               FutureBuilder<bool>(
-                  future: context.watch<ApiProvider>().startBackend(),
+                  future: _isUserCreated,
                   builder: (context, snapshot) {
-                    return FutureBuilder<bool>(
-                        future: _isUserCreated,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            return snapshot.data!
-                                ? HomeView(
-                                    settingsController:
-                                        widget.settingsController,
-                                    cameras: widget.cameras)
-                                : RegisterView(
-                                    callbackOnSuccess: () {
-                                      _isUserCreated = isUserCreated();
-                                      setState(() {});
-                                    },
-                                  ); // Show the red line if not connected
-                          } else {
-                            return Container();
-                          }
-                        });
+                    if (snapshot.hasData) {
+                      return snapshot.data!
+                          ? HomeView(
+                              settingsController: widget.settingsController,
+                              cameras: widget.cameras)
+                          : RegisterView(
+                              callbackOnSuccess: () {
+                                _isUserCreated = isUserCreated();
+                                setState(() {});
+                              },
+                            ); // Show the red line if not connected
+                    } else {
+                      return Container();
+                    }
                   }),
-              if (!isConnected)
+              if (!_isConnected)
                 Positioned(
                   top: 3, // Position it at the top
                   left: (screenWidth * 0.5) / 2, // Center it horizontally

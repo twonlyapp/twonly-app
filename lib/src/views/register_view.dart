@@ -120,7 +120,7 @@ class _RegisterViewState extends State<RegisterView> {
                       setState(() {
                         _isTryingToRegister = true;
                       });
-                      final res = await createNewUser(context,
+                      final res = await createNewUser(
                           usernameController.text, inviteCodeController.text);
                       setState(() {
                         _isTryingToRegister = false;
@@ -130,7 +130,7 @@ class _RegisterViewState extends State<RegisterView> {
                         return;
                       }
                       final errMsg =
-                          Backend.getLocalizedString(context, res.error);
+                          ApiProvider.getLocalizedString(context, res.error);
                       showAlertDialog(context, "Oh no!", errMsg);
                     },
                     style: ButtonStyle(

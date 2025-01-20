@@ -1,5 +1,4 @@
 import 'package:camera/camera.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/providers/db_provider.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +9,7 @@ import 'src/settings/settings_controller.dart';
 import 'src/settings/settings_service.dart';
 
 late DbProvider dbProvider;
+late ApiProvider apiProvider;
 
 void main() async {
   // Set up the SettingsController, which will glue user settings to multiple
@@ -27,7 +27,7 @@ void main() async {
   // check if release build or debug build
   final kDebugMode = true;
 
-  Logger.root.level = Level.FINEST; // defaults to Level.INFO
+  Logger.root.level = Level.ALL; // defaults to Level.INFO
   Logger.root.onRecord.listen((record) {
     // if (kDebugMode) {
     // ignore: avoid_print
@@ -36,17 +36,22 @@ void main() async {
   });
 
   var cameras = await availableCameras();
-  t
-      // Create or open the database
-      dbProvider = DbProvider();
+
+  // Create or open the database
+  dbProvider = DbProvider();
   await dbProvider.ready;
 
   // Create an option to select different servers.
   var apiUrl = "ws://api.theconnectapp.de/v-1/";
   if (true) {
     // Overwrite the domain in your local network so you can test the app locally
-    apiUrl = "ws://9.99.0.6:3030/api/client";
+    apiUrl = "ws://10.99.0.6:3030/api/client";
   }
+
+  apiProvider = ApiProvider(apiUrl: apiUrl, backupApiUrl: null);
+
+  // TODO: Open the connection in the background so the app launch is not delayed.
+  //await apiProvider.connect();
 
   // Workmanager.executeTask((task, inputData) async {
   //   await _HomeState().manager();
@@ -54,7 +59,8 @@ void main() async {
   //   return true;
   // });
 
-  runApp(ChangeNotifierProvider<ApiProvider>(
-      child: MyApp(settingsController: settingsController, cameras: cameras),
-      create: (_) => ApiProvider(apiUrl: apiUrl, backupApiUrl: apiUrl)));
+  // Run the app and pass in the SettingsController. The app listens to the
+  // SettingsController for changes, then passes it further down to the
+  // SettingsView.
+  runApp(MyApp(settingsController: settingsController, cameras: cameras));
 }
