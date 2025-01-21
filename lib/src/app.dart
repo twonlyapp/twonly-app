@@ -1,15 +1,11 @@
 import 'package:camera/camera.dart';
-import 'package:path/path.dart';
 import 'package:twonly/main.dart';
-import 'package:twonly/src/providers/api_provider.dart';
 import 'views/home_view.dart';
 import 'views/register_view.dart';
 import 'utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:provider/provider.dart';
-import 'dart:isolate';
 import 'dart:async';
 import 'settings/settings_controller.dart';
 
@@ -37,11 +33,12 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // Start the color animation
     _startColorAnimation();
-    apiProvider.connect((isConnected) {
+    apiProvider.setConnectionStateCallback((isConnected) {
       setState(() {
         _isConnected = isConnected;
       });
     });
+    apiProvider.connect();
   }
 
   void _startColorAnimation() {

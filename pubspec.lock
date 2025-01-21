@@ -634,14 +634,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  mobile_scanner:
-    dependency: "direct main"
-    description:
-      name: mobile_scanner
-      sha256: "57d6269d10912d5d583606b46d963d7c5d0299d2c37add8b7192dd769d40a319"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.3"
   nested:
     dependency: transitive
     description:
@@ -827,7 +819,7 @@ packages:
     source: hosted
     version: "7.6.4"
   protobuf:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: protobuf
       sha256: "01dd9bd0fa02548bf2ceee13545d4a0ec6046459d847b6b061d8a27237108a08"

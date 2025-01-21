@@ -24,15 +24,10 @@ void main() async {
   // can be called before `runApp()`
   WidgetsFlutterBinding.ensureInitialized();
 
-  // check if release build or debug build
-  final kDebugMode = true;
-
   Logger.root.level = Level.ALL; // defaults to Level.INFO
   Logger.root.onRecord.listen((record) {
-    // if (kDebugMode) {
-    // ignore: avoid_print
-    print('${record.level.name}: ${record.time}: ${record.message}');
-    // }
+    debugPrint(
+        '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
   });
 
   var cameras = await availableCameras();
@@ -49,9 +44,6 @@ void main() async {
   }
 
   apiProvider = ApiProvider(apiUrl: apiUrl, backupApiUrl: null);
-
-  // TODO: Open the connection in the background so the app launch is not delayed.
-  //await apiProvider.connect();
 
   // Workmanager.executeTask((task, inputData) async {
   //   await _HomeState().manager();

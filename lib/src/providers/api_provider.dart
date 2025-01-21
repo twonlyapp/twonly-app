@@ -1,8 +1,5 @@
 import 'dart:collection';
-import 'dart:convert';
-import 'dart:ffi';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 
@@ -12,7 +9,9 @@ import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
 import 'package:twonly/src/signal/signal_helper.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/utils.dart';
 import 'package:web_socket_channel/io.dart';
+import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class Result<T, E> {
@@ -31,7 +30,8 @@ class ApiProvider {
 
   final String apiUrl;
   final String? backupApiUrl;
-  final log = Logger("connect::ApiProvider");
+  int _reconnectionDelay = 5;
+  final log = Logger("api_provider");
   Function(bool)? _connectionStateCallback;
 
   final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
@@ -47,7 +47,6 @@ class ApiProvider {
       _channel!.stream.listen(_onData, onDone: _onDone, onError: _onError);
       await _channel!.ready;
       log.info("Websocket is connected!");
-      print("Websocket is connected!");
       return true;
     } on WebSocketChannelException catch (e) {
       log.shout("Error: $e");
@@ -55,25 +54,24 @@ class ApiProvider {
     }
   }
 
-  Future<bool> connect(Function(bool)? callBack) async {
-    print("Trying to connect to the backend $apiUrl!");
-    if (callBack != null) {
-      _connectionStateCallback = callBack;
-    }
+  Future<bool> connect() async {
     if (_channel != null && _channel!.closeCode != null) {
-      print("is connected");
       return true;
     }
 
     log.info("Trying to connect to the backend $apiUrl!");
     if (await _connectTo(apiUrl)) {
-      if (callBack != null) callBack(true);
+      await authenticate();
+      if (_connectionStateCallback != null) _connectionStateCallback!(true);
+      _reconnectionDelay = 5;
       return true;
     }
     if (backupApiUrl != null) {
       log.info("Trying to connect to the backup backend $backupApiUrl!");
       if (await _connectTo(backupApiUrl!)) {
-        if (callBack != null) callBack(true);
+        await authenticate();
+        if (_connectionStateCallback != null) _connectionStateCallback!(true);
+        _reconnectionDelay = 5;
         return true;
       }
     }
@@ -87,7 +85,7 @@ class ApiProvider {
       _connectionStateCallback!(false);
     }
     _channel = null;
-    tryToReconnect(5);
+    tryToReconnect();
   }
 
   void _onError(dynamic e) {
@@ -95,20 +93,21 @@ class ApiProvider {
       _connectionStateCallback!(false);
     }
     _channel = null;
-    tryToReconnect(5);
+    tryToReconnect();
   }
 
-  void tryToReconnect(int delay) {
-    Future.delayed(Duration(seconds: delay)).then(
+  void setConnectionStateCallback(Function(bool) callBack) {
+    _connectionStateCallback = callBack;
+  }
+
+  void tryToReconnect() {
+    Future.delayed(Duration(seconds: _reconnectionDelay)).then(
       (value) async {
-        if (!await connect(_connectionStateCallback)) {
-          if (delay > 60 * 5) {
-            delay = 60 * 5;
-          } else {
-            delay = delay * 2;
-          }
-          tryToReconnect(delay);
+        _reconnectionDelay = _reconnectionDelay * 2;
+        if (_reconnectionDelay > 60 * 5) {
+          _reconnectionDelay = 60 * 5;
         }
+        await connect();
       },
     );
   }
@@ -119,14 +118,13 @@ class ApiProvider {
       if (msg.v0.hasResponse()) {
         messagesV0[msg.v0.seq] = msg;
       } else {
-        print("Got a new message from the server: $msg");
+        log.shout("Got a new message from the server: $msg");
       }
     } catch (e) {
       log.shout("Error parsing the servers message: $e");
     }
   }
 
-  // TODO: There must be a smarter move to do that :/
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
     final startTime = DateTime.now();
 
@@ -147,6 +145,9 @@ class ApiProvider {
   }
 
   Future<server.ServerToClient?> _sendRequestV0(ClientToServer request) async {
+    if (_channel == null) {
+      return null;
+    }
     var seq = Int64(Random().nextInt(4294967296));
     while (messagesV0.containsKey(seq)) {
       seq = Int64(Random().nextInt(4294967296));
@@ -155,27 +156,24 @@ class ApiProvider {
 
     final requestBytes = request.writeToBuffer();
 
-    log.info("Check if is connected?");
-    // check if it is connected to the backend. if not try to reconnect.
-    if (!await connect(null)) {
-      return null;
-    }
-
     _channel!.sink.add(requestBytes);
 
     return await _waitForResponse(seq);
   }
 
   ClientToServer createClientToServerFromHandshake(Handshake handshake) {
-    // Create the V0 message
     var v0 = V0()
-      ..seq = Int64(0) // You can set this to the appropriate sequence number
+      ..seq = Int64(0)
       ..handshake = handshake;
+    return ClientToServer()..v0 = v0;
+  }
 
-    // Create the ClientToServer message
-    var clientToServer = ClientToServer()..v0 = v0;
-
-    return clientToServer;
+  ClientToServer createClientToServerFromApplicationData(
+      ApplicationData applicationData) {
+    var v0 = V0()
+      ..seq = Int64(0)
+      ..applicationdata = applicationData;
+    return ClientToServer()..v0 = v0;
   }
 
   static String getLocalizedString(BuildContext context, ErrorCode code) {
@@ -219,6 +217,59 @@ class ApiProvider {
     }
   }
 
+  Future authenticate() async {
+    final reqSignal = await SignalHelper.getRegisterData();
+
+    if (reqSignal == null) {
+      return;
+    }
+
+    var handshake = Handshake()..getchallenge = Handshake_GetChallenge();
+    var req = createClientToServerFromHandshake(handshake);
+
+    final resp = await _sendRequestV0(req);
+    if (resp == null) {
+      log.shout("Server is not reachable!");
+      return;
+    }
+    final result = _asResult(resp);
+    if (result.isError) {
+      log.shout(result);
+      return;
+    }
+
+    final challenge = result.value.challenge;
+
+    final privKey = await SignalHelper.getPrivateKey();
+    if (privKey == null) return;
+    final random = getRandomUint8List(32);
+    final signature = sign(privKey.serialize(), challenge, random);
+
+    final userData = await getUser();
+    if (userData == null) return;
+
+    var open = Handshake_OpenSession()
+      ..response = signature
+      ..userId = userData.userId;
+
+    var opensession = Handshake()..opensession = open;
+
+    var req2 = createClientToServerFromHandshake(opensession);
+
+    final resp2 = await _sendRequestV0(req2);
+    if (resp2 == null) {
+      log.shout("Server is not reachable!");
+      return;
+    }
+    final result2 = _asResult(resp2);
+    if (result2.isError) {
+      log.shout(result2);
+      return;
+    }
+
+    log.info("Authenticated!");
+  }
+
   Future<Result> register(String username, String? inviteCode) async {
     final reqSignal = await SignalHelper.getRegisterData();
 
@@ -240,6 +291,18 @@ class ApiProvider {
     // Create the Handshake message
     var handshake = Handshake()..register = register;
     var req = createClientToServerFromHandshake(handshake);
+
+    final resp = await _sendRequestV0(req);
+    if (resp == null) {
+      return Result.error("Server is not reachable!");
+    }
+    return _asResult(resp);
+  }
+
+  Future<Result> getUserData(String username) async {
+    var get = ApplicationData_GetUserByUsername()..username = username;
+    var appData = ApplicationData()..getuserbyusername = get;
+    var req = createClientToServerFromApplicationData(appData);
 
     final resp = await _sendRequestV0(req);
     if (resp == null) {

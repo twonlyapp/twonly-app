@@ -1,5 +1,4 @@
 import 'package:camera/camera.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 // import 'package:camerawesome/camerawesome_plugin.dart';
 import 'dart:math';
@@ -34,14 +33,12 @@ class CameraPreviewViewState extends State<CameraPreviewView> {
     // To display the current output from the Camera,
     // create a CameraController.
 
-    _controller = CameraController(
-      // Get a specific camera from the list of available cameras.
-      widget.cameras.first,
-      // Define the resolution to use.
-      ResolutionPreset.max,
-    );
-
-    final size = Size(50, 300);
+    // _controller = CameraController(
+    //   // Get a specific camera from the list of available cameras.
+    //   widget.cameras.first,
+    //   // Define the resolution to use.
+    //   ResolutionPreset.max,
+    // );
 
     // _controller.initialize().then((_) {
     //   _controller.value = _controller.value.copyWith(previewSize: size);
@@ -49,7 +46,7 @@ class CameraPreviewViewState extends State<CameraPreviewView> {
     // });
 
     // Next, initialize the controller. This returns a Future.
-    _initializeControllerFuture = _controller.initialize();
+    // _initializeControllerFuture = _controller.initialize();
   }
 
   Future<void> updateController() async {
@@ -59,7 +56,7 @@ class CameraPreviewViewState extends State<CameraPreviewView> {
   @override
   void dispose() {
     // Dispose of the controller when the widget is disposed.
-    _controller.dispose();
+    // _controller.dispose();
     super.dispose();
   }
 
@@ -67,7 +64,7 @@ class CameraPreviewViewState extends State<CameraPreviewView> {
   Future<void> takePicture() async {
     try {
       await _initializeControllerFuture;
-      final image = await _controller.takePicture();
+      // final image = await _controller.takePicture();
 
       if (!context.mounted) return;
       // await Navigator.of(context).push(
@@ -129,6 +126,7 @@ class CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   Widget build(BuildContext context) {
+    return Container();
     var isFront = widget.cameras[_selectedCameraIdx].lensDirection ==
         CameraLensDirection.front;
     // Fill this out in the next steps.

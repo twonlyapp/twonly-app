@@ -1,5 +1,4 @@
 import 'package:twonly/src/providers/api_provider.dart';
-
 import '../utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

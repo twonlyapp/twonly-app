@@ -1,4 +1,7 @@
-import 'add_new_user_view.dart';
+import 'package:twonly/src/utils.dart';
+import 'package:twonly/src/views/search_username_view.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'new_message_view.dart';
 import 'package:flutter/material.dart';
 import 'chat_item_details_view.dart';
 import 'dart:async';
@@ -32,13 +35,13 @@ class ChatListView extends StatefulWidget {
           state: MessageSendState.sending),
       ChatItem(
           userId: 1,
-          username: "Franz",
+          username: "Klaus",
           lastMessageInSeconds: 20829,
           flames: 0,
           state: MessageSendState.received),
       ChatItem(
           userId: 2,
-          username: "Heiner",
+          username: "Markus",
           lastMessageInSeconds: 291829,
           state: MessageSendState.opened,
           flames: 38),
@@ -163,85 +166,24 @@ class _ChatListViewState extends State<ChatListView> {
     );
   }
 
-  Widget createInitialsAvatar(String username) {
-    // Extract initials from the username
-    List<String> nameParts = username.split(' ');
-    String initials = nameParts.map((part) => part[0]).join().toUpperCase();
-    if (initials.length > 2) {
-      initials = initials[0] + initials[1];
-    }
-
-    // Generate a color based on the initials (you can customize this logic)
-    Color avatarColor = _getColorFromInitials(initials);
-
-    return CircleAvatar(
-      backgroundColor: avatarColor,
-      child: Text(
-        initials,
-        style: TextStyle(
-            color: _getTextColor(Colors.white), fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Color _getTextColor(Color backgroundColor) {
-    // Calculate the luminance of the background color
-    double luminance = backgroundColor.computeLuminance();
-    // Return white for dark backgrounds and black for light backgrounds
-    return luminance < 0.5 ? Colors.white : Colors.black;
-  }
-
-  Color _getColorFromInitials(String initials) {
-    // Define color lists for light and dark themes
-    List<Color> lightColors = [
-      Colors.red,
-      Colors.green,
-      Colors.blue,
-      Colors.orange,
-      Colors.purple,
-      Colors.teal,
-      Colors.amber,
-      Colors.indigo,
-      Colors.cyan,
-      Colors.lime,
-      Colors.pink,
-      Colors.brown,
-      Colors.grey,
-    ];
-
-    List<Color> darkColors = [
-      Colors.deepOrange,
-      Colors.deepPurple,
-      Colors.redAccent,
-      Colors.greenAccent,
-      Colors.blueAccent,
-      Colors.orangeAccent,
-      Colors.purpleAccent,
-      Colors.tealAccent,
-      Colors.amberAccent,
-      Colors.indigoAccent,
-      Colors.cyanAccent,
-      Colors.limeAccent,
-      Colors.pinkAccent,
-    ];
-
-    // Simple logic to generate a hash from initials
-    int hash = initials.codeUnits.fold(0, (prev, element) => prev + element);
-
-    // Select the appropriate color list based on the current theme brightness
-    List<Color> colors = Theme.of(context).brightness == Brightness.dark
-        ? darkColors
-        : lightColors;
-
-    // Use the hash to select a color from the list
-    return colors[hash % colors.length];
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chats'),
+        title: Text(AppLocalizations.of(context)!.chatsTitle),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.person_add), // User with add icon
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SearchUsernameView(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: ListView.builder(
         restorationId: 'sampleItemListView',
@@ -251,7 +193,8 @@ class _ChatListViewState extends State<ChatListView> {
           return ListTile(
               title: Text(item.username),
               subtitle: getSubtitle(item),
-              leading: createInitialsAvatar(item.username),
+              leading: createInitialsAvatar(item.username,
+                  Theme.of(context).brightness == Brightness.dark),
               onTap: () {
                 Navigator.push(
                   context,
@@ -269,11 +212,11 @@ class _ChatListViewState extends State<ChatListView> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddNewUserView(),
+              builder: (context) => NewMessageView(),
             ),
           );
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.edit),
       ),
     );
   }

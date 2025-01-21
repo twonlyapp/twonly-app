@@ -139,20 +139,35 @@ class SignalDataModel {
 class SignalHelper {
   static const int defaultDeviceId = 1;
 
-  static Future<Map<String, dynamic>?> getRegisterData() async {
+  static Future<ECPrivateKey?> getPrivateKey() async {
     final storage = getSecureStorage();
     final signalIdentityJson = await storage.read(key: "signal_identity");
     if (signalIdentityJson == null) {
       return null;
     }
 
-    print(signalIdentityJson);
     final SignalIdentity signalIdentity =
         SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
 
-    final identityKeyPair =
+    final IdentityKeyPair identityKeyPair =
         IdentityKeyPair.fromSerialized(signalIdentity.identityKeyPairU8List);
+
+    return identityKeyPair.getPrivateKey();
+  }
+
+  static Future<Map<String, dynamic>?> getRegisterData() async {
     // final publicKey = identityKeyPair.getPublicKey().serialize();
+    final storage = getSecureStorage();
+    final signalIdentityJson = await storage.read(key: "signal_identity");
+    if (signalIdentityJson == null) {
+      return null;
+    }
+
+    final SignalIdentity signalIdentity =
+        SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
+
+    final IdentityKeyPair identityKeyPair =
+        IdentityKeyPair.fromSerialized(signalIdentity.identityKeyPairU8List);
 
     ConnectSignalProtocolStore signalStore = ConnectSignalProtocolStore(
         identityKeyPair, signalIdentity.registrationId);

@@ -7,7 +7,7 @@ class PermissionHandlerView extends StatefulWidget {
   final Function onSuccess;
 
   @override
-  _PermissionHandlerViewState createState() => _PermissionHandlerViewState();
+  PermissionHandlerViewState createState() => PermissionHandlerViewState();
 }
 
 Future<bool> checkPermissions() async {
@@ -20,7 +20,7 @@ Future<bool> checkPermissions() async {
   return true;
 }
 
-class _PermissionHandlerViewState extends State<PermissionHandlerView> {
+class PermissionHandlerViewState extends State<PermissionHandlerView> {
   Future<Map<Permission, PermissionStatus>> permissionServices() async {
     // You can request multiple permissions at once.
     Map<Permission, PermissionStatus> statuses = await [
