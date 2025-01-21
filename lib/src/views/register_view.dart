@@ -147,11 +147,12 @@ class _RegisterViewState extends State<RegisterView> {
                   ),
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
-                      onPressed: () {
-                        showAlertDialog(context, "Coming soon",
-                            "This feature is not yet implemented! Just create a new account :/");
-                      },
-                      label: Text("Restore identity")),
+                    onPressed: () {
+                      showAlertDialog(context, "Coming soon",
+                          "This feature is not yet implemented! Just create a new account :/");
+                    },
+                    label: Text("Restore identity"),
+                  ),
                 ]),
                 //   ),
               ],

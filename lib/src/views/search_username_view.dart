@@ -86,6 +86,16 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                     decoration: getInputDecoration(
                         AppLocalizations.of(context)!.searchUsernameInput))),
             const SizedBox(height: 40),
+            OutlinedButton.icon(
+              icon: Icon(Icons.qr_code),
+              onPressed: () {
+                showAlertDialog(context, "Coming soon",
+                    "This feature is not yet implemented!");
+              },
+              label: Text("QR-Code scannen"),
+            ),
+            SizedBox(height: 20),
+            const SizedBox(height: 40),
             if (_isLoading) const Center(child: CircularProgressIndicator())
           ],
         ),
