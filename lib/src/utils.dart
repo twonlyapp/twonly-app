@@ -61,16 +61,14 @@ Uint8List getRandomUint8List(int length) {
   return randomBytes;
 }
 
-Future<Result> addNewUser(String username) async {
+Future<bool> addNewUser(String username) async {
   final res = await apiProvider.getUserData(username);
 
-  // if (res.isSuccess) {
-  //   print("Got user_id ${res.value}");
-  //   final userData = UserData(
-  //       userId: res.value.userid, username: username, displayName: username);
-  // }
+  if (res.isSuccess) {
+    print("Found user: ${res.value}");
+  }
 
-  return res;
+  return res.isSuccess;
 }
 
 Future<Result> createNewUser(String username, String inviteCode) async {

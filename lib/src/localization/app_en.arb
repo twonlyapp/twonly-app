@@ -10,6 +10,8 @@
   "chatsTitle": "Chats",
   "searchUsernameInput": "Username",
   "searchUsernameTitle": "Search username",
+  "searchUsernameNotFound": "Username not found",
+  "searchUsernameNotFoundLong": "\"{username}\" is not a twonly user. Please check the username and try again.",
   "errorUnknown": "An unexpected error has occurred. Please try again later.",
   "errorBadRequest": "The request could not be understood by the server due to malformed syntax. Please check your input and try again.",
   "errorTooManyRequests": "You have made too many requests in a short period. Please wait a moment before trying again.",
