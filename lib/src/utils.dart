@@ -25,14 +25,17 @@ Future<bool> isUserCreated() async {
 Future<UserData?> getUser() async {
   final storage = getSecureStorage();
   String? userJson = await storage.read(key: "user_data");
+  print(userJson);
   if (userJson == null) {
     return null;
   }
   try {
     final userMap = jsonDecode(userJson) as Map<String, dynamic>;
     final user = UserData.fromJson(userMap);
+    print(user);
     return user;
-  } catch (_) {
+  } catch (e) {
+    print(e);
     return null;
   }
 }

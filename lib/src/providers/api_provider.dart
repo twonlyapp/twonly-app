@@ -12,6 +12,7 @@ import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
 import 'package:twonly/src/signal/signal_helper.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class Result<T, E> {
@@ -31,19 +32,19 @@ class ApiProvider {
   final String apiUrl;
   final String? backupApiUrl;
   final log = Logger("connect::ApiProvider");
-  final HashMap<String, List<Function>> _callbacks = HashMap();
+  Function(bool)? _connectionStateCallback;
 
   final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
 
-  WebSocketChannel? _channel;
+  IOWebSocketChannel? _channel;
 
   Future<bool> _connectTo(String apiUrl) async {
     try {
-      var channel = WebSocketChannel.connect(
+      var channel = IOWebSocketChannel.connect(
         Uri.parse(apiUrl),
       );
       _channel = channel;
-      _channel!.stream.listen(_onData);
+      _channel!.stream.listen(_onData, onDone: _onDone, onError: _onError);
       await _channel!.ready;
       log.info("Websocket is connected!");
       print("Websocket is connected!");
@@ -56,9 +57,14 @@ class ApiProvider {
 
   Future<bool> connect(Function(bool)? callBack) async {
     print("Trying to connect to the backend $apiUrl!");
+    if (callBack != null) {
+      _connectionStateCallback = callBack;
+    }
     if (_channel != null && _channel!.closeCode != null) {
+      print("is connected");
       return true;
     }
+
     log.info("Trying to connect to the backend $apiUrl!");
     if (await _connectTo(apiUrl)) {
       if (callBack != null) callBack(true);
@@ -76,6 +82,37 @@ class ApiProvider {
 
   bool get isConnected => _channel != null && _channel!.closeCode != null;
 
+  void _onDone() {
+    if (_connectionStateCallback != null) {
+      _connectionStateCallback!(false);
+    }
+    _channel = null;
+    tryToReconnect(5);
+  }
+
+  void _onError(dynamic e) {
+    if (_connectionStateCallback != null) {
+      _connectionStateCallback!(false);
+    }
+    _channel = null;
+    tryToReconnect(5);
+  }
+
+  void tryToReconnect(int delay) {
+    Future.delayed(Duration(seconds: delay)).then(
+      (value) async {
+        if (!await connect(_connectionStateCallback)) {
+          if (delay > 60 * 5) {
+            delay = 60 * 5;
+          } else {
+            delay = delay * 2;
+          }
+          tryToReconnect(delay);
+        }
+      },
+    );
+  }
+
   void _onData(dynamic msgBuffer) {
     try {
       final msg = server.ServerToClient.fromBuffer(msgBuffer);
@@ -87,13 +124,6 @@ class ApiProvider {
     } catch (e) {
       log.shout("Error parsing the servers message: $e");
     }
-  }
-
-  void addNotifier(String messageType, Function callBackFunction) {
-    if (!_callbacks.containsKey(messageType)) {
-      _callbacks[messageType] = [];
-    }
-    _callbacks[messageType]!.add(callBackFunction);
   }
 
   // TODO: There must be a smarter move to do that :/

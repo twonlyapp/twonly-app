@@ -1,3 +1,5 @@
+import 'package:twonly/src/model/user_data_json.dart';
+
 import '../settings/settings_controller.dart';
 import '../settings/settings_view.dart';
 import '../utils.dart';
@@ -14,13 +16,14 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
+  final Future<UserData?> _userData = getUser();
+
   @override
   Widget build(BuildContext context) {
-    // var user = await getUser();
     return Scaffold(
       appBar: AppBar(
           title: FutureBuilder(
-              future: getUser(),
+              future: _userData,
               builder: (context, snap) {
                 if (snap.hasData) {
                   return Text("Hello ${snap.data!.username}!");

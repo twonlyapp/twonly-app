@@ -43,10 +43,10 @@ class CameraPreviewViewState extends State<CameraPreviewView> {
 
     final size = Size(50, 300);
 
-    _controller.initialize().then((_) {
-      _controller.value = _controller.value.copyWith(previewSize: size);
-      setState(() {});
-    });
+    // _controller.initialize().then((_) {
+    //   _controller.value = _controller.value.copyWith(previewSize: size);
+    //   setState(() {});
+    // });
 
     // Next, initialize the controller. This returns a Future.
     _initializeControllerFuture = _controller.initialize();
