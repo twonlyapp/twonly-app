@@ -64,9 +64,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       alignment: Alignment.bottomCenter,
                       child: Column(
                         children: [
-                          AwesomeZoomSelector(state: cameraState
-                              // controller: _controller,
-                              ),
+                          AwesomeZoomSelector(state: cameraState),
                           const SizedBox(height: 30),
                           GestureDetector(
                             onTap: () async {

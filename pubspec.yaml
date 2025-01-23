@@ -22,6 +22,7 @@ dependencies:
   google_fonts: ^6.2.1
   image: ^4.3.0
   intl: any
+  introduction_screen: ^3.1.14
   json_annotation: ^4.9.0
   libsignal_protocol_dart: ^0.7.1
   logging: ^1.3.0
@@ -61,3 +62,9 @@ flutter:
   assets:
     # Add assets from the images directory to the application.
     - assets/images/
+    - assets/images/onboarding/01.png
+    - assets/images/onboarding/02.png
+    - assets/images/onboarding/03.png
+    - assets/images/onboarding/04.png
+    - assets/images/onboarding/05.png
+    - assets/images/onboarding/06.png

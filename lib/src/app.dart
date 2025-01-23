@@ -1,4 +1,5 @@
 import 'package:twonly/main.dart';
+import 'package:twonly/src/views/onboarding_view.dart';
 import 'views/home_view.dart';
 import 'views/register_view.dart';
 import 'utils.dart';
@@ -20,6 +21,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Future<bool> _isUserCreated = isUserCreated();
+  bool _showOnboarding = true;
   bool _isConnected = false;
   int redColorOpacity = 0; // Start with dark red
   bool redColorGoUp = true;
@@ -104,12 +106,18 @@ class _MyAppState extends State<MyApp> {
                       return snapshot.data!
                           ? HomeView(
                               settingsController: widget.settingsController)
-                          : RegisterView(
-                              callbackOnSuccess: () {
-                                _isUserCreated = isUserCreated();
-                                setState(() {});
-                              },
-                            ); // Show the red line if not connected
+                          : _showOnboarding
+                              ? OnboardingView(
+                                  callbackOnSuccess: () {
+                                    setState(() {
+                                      _showOnboarding = false;
+                                    });
+                                  },
+                                )
+                              : RegisterView(callbackOnSuccess: () {
+                                  _isUserCreated = isUserCreated();
+                                  setState(() {});
+                                });
                     } else {
                       return Container();
                     }

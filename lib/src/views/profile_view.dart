@@ -28,7 +28,7 @@ class _ProfileViewState extends State<ProfileView> {
                 if (snap.hasData) {
                   return Text("Hello ${snap.data!.username}!");
                 } else {
-                  return CircularProgressIndicator();
+                  return Container();
                 }
               }),
           actions: [
