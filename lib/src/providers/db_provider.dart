@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math';
-import 'package:logging/logging.dart';
+import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/identity_key_store_model.dart';
 import 'package:twonly/src/model/model_constants.dart';
 import 'package:twonly/src/model/pre_key_model.dart';
@@ -67,6 +66,8 @@ class DbProvider {
     await db
         .execute('DROP TABLE If EXISTS ${DbSignalIdentityKeyStore.tableName}');
     await db.execute(DbSignalIdentityKeyStore.getCreateTableString());
+    await db.execute('DROP TABLE If EXISTS ${DbContacts.tableName}');
+    await db.execute(DbContacts.getCreateTableString());
   }
 
   Future open() async {
@@ -74,7 +75,8 @@ class DbProvider {
   }
 
   Future remove() async {
-    await _createDb(db!);
+    await deleteDatabase(await fixPath(dbName));
+    // await _createDb(db!);
   }
 
   Future<String> fixPath(String path) async => path;
@@ -82,8 +84,4 @@ class DbProvider {
   Future close() async {
     await db!.close();
   }
-
-  // Future deleteDb() async {
-  //   await deleteDatabase(await fixPath(dbName));
-  // }
 }

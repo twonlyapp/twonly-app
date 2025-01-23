@@ -1,4 +1,3 @@
-import 'package:camera/camera.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/providers/db_provider.dart';
 import 'package:flutter/material.dart';
@@ -30,8 +29,6 @@ void main() async {
         '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
   });
 
-  var cameras = await availableCameras();
-
   // Create or open the database
   dbProvider = DbProvider();
   await dbProvider.ready;
@@ -54,5 +51,5 @@ void main() async {
   // Run the app and pass in the SettingsController. The app listens to the
   // SettingsController for changes, then passes it further down to the
   // SettingsView.
-  runApp(MyApp(settingsController: settingsController, cameras: cameras));
+  runApp(MyApp(settingsController: settingsController));
 }

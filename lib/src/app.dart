@@ -1,4 +1,3 @@
-import 'package:camera/camera.dart';
 import 'package:twonly/main.dart';
 import 'views/home_view.dart';
 import 'views/register_view.dart';
@@ -11,11 +10,9 @@ import 'settings/settings_controller.dart';
 
 /// The Widget that configures your application.
 class MyApp extends StatefulWidget {
-  const MyApp(
-      {super.key, required this.settingsController, required this.cameras});
+  const MyApp({super.key, required this.settingsController});
 
   final SettingsController settingsController;
-  final List<CameraDescription> cameras;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -106,8 +103,7 @@ class _MyAppState extends State<MyApp> {
                     if (snapshot.hasData) {
                       return snapshot.data!
                           ? HomeView(
-                              settingsController: widget.settingsController,
-                              cameras: widget.cameras)
+                              settingsController: widget.settingsController)
                           : RegisterView(
                               callbackOnSuccess: () {
                                 _isUserCreated = isUserCreated();
@@ -132,16 +128,6 @@ class _MyAppState extends State<MyApp> {
                       borderRadius: BorderRadius.all(
                           Radius.circular(10.0)), // Rounded top corners
                     ),
-                    // child: Padding(
-                    //   padding: const EdgeInsets.all(
-                    //       8.0), // Padding around the child
-                    //   child: Center(
-                    //     child: Text(
-                    //       'Not Connected',
-                    //       style: TextStyle(fontSize: 24),
-                    //     ),
-                    //   ),
-                    // ),
                   ),
                 ),
             ],

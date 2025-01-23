@@ -9,7 +9,6 @@ import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
-import 'package:twonly/src/proto/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/signal/signal_helper.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:twonly/src/utils.dart';

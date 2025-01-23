@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:logging/logging.dart';
 import 'package:twonly/src/model/signal_identity_json.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart';
 import 'package:twonly/src/utils.dart';
@@ -170,9 +171,13 @@ class SignalHelper {
       tempIdentityKey,
     );
 
-    await sessionBuilder.processPreKeyBundle(preKeyBundle);
-
-    return true;
+    try {
+      await sessionBuilder.processPreKeyBundle(preKeyBundle);
+      return true;
+    } catch (e) {
+      Logger("signal_helper").shout("Error: $e");
+      return false;
+    }
   }
 
   static Future<ConnectSignalProtocolStore?> getSignalStore() async {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/utils.dart';
+import 'package:twonly/src/views/search_username_view.dart';
 
 class NewMessageView extends StatefulWidget {
   const NewMessageView({super.key});
@@ -10,49 +12,42 @@ class NewMessageView extends StatefulWidget {
 }
 
 class _NewMessageView extends State<NewMessageView> {
-  final List<String> _known_users = [
-    "Alisa",
-    "Klaus",
-    "John",
-    "Emma",
-    "Michael",
-    "Sophia",
-    "James",
-    "Olivia",
-    "Liam",
-    "Ava",
-    "Noah",
-    "Isabella",
-    "Lucas",
-    "Mia",
-    "Ethan",
-    "Charlotte",
-  ];
-  List<String> _filteredUsers = [];
+  List<Contact> _knownUsers = [];
+  List<Contact> _filteredUsers = [];
   String _lastSearchQuery = '';
   final TextEditingController searchUserName = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Initialize the filtered users with all known users
-    _filteredUsers = List.from(_known_users);
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    final users = await DbContacts.getUsers();
+    setState(() {
+      _knownUsers = users;
+      _filteredUsers = List.from(_knownUsers);
+    });
   }
 
   Future _filterUsers(String query) async {
     if (query.isEmpty) {
-      _filteredUsers = List.from(_known_users);
+      _filteredUsers = List.from(_knownUsers);
       return;
     }
     if (_lastSearchQuery.length < query.length) {
-      _filteredUsers = _known_users
-          .where((user) => user.toLowerCase().contains(query.toLowerCase()))
+      _filteredUsers = _knownUsers
+          .where((user) =>
+              user.displayName.toLowerCase().contains(query.toLowerCase()))
           .toList();
     } else {
       _filteredUsers = _filteredUsers
-          .where((user) => user.toLowerCase().contains(query.toLowerCase()))
+          .where((user) =>
+              user.displayName.toLowerCase().contains(query.toLowerCase()))
           .toList();
     }
+    _lastSearchQuery = query;
   }
 
   @override
@@ -103,6 +98,11 @@ class _NewMessageView extends State<NewMessageView> {
                 FilledButton(
                   onPressed: () {
                     // Handle Nach Nutzername suchen button press
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SearchUsernameView()),
+                    );
                   },
                   child: Text('Nach Nutzername suchen'),
                 ),
@@ -120,23 +120,22 @@ class _NewMessageView extends State<NewMessageView> {
 }
 
 class UserList extends StatelessWidget {
-  final List<String> _known_users;
-
-  UserList(this._known_users);
+  const UserList(this._knownUsers, {super.key});
+  final List<Contact> _knownUsers;
 
   @override
   Widget build(BuildContext context) {
     // Step 1: Sort the users alphabetically
-    _known_users.sort();
+    _knownUsers.sort((a, b) => a.displayName.compareTo(b.displayName));
 
     // Step 2: Group users by their initials
     Map<String, List<String>> groupedUsers = {};
-    for (var user in _known_users) {
-      String initial = user[0].toUpperCase();
+    for (var user in _knownUsers) {
+      String initial = user.displayName[0].toUpperCase();
       if (!groupedUsers.containsKey(initial)) {
         groupedUsers[initial] = [];
       }
-      groupedUsers[initial]!.add(user);
+      groupedUsers[initial]!.add(user.displayName);
     }
 
     // Step 3: Create a list of sections

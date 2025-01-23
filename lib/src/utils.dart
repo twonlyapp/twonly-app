@@ -1,12 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-import 'dart:ui';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
+import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/signal/signal_helper.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -88,18 +86,12 @@ Future<bool> addNewUser(String username) async {
     print(res.value);
     print(res.value.userdata.userId);
 
-    await SignalHelper.addNewContact(res.value.userdata);
-
-    // final Map<String, dynamic> req = {};
-    // req['identityKey'] =
-    //     (await signalStore.getIdentityKeyPair()).getPublicKey().serialize();
-
-    // req['signedPreKey'] = {
-    //   'id': signedPreKey.id,
-    //   'signature': signedPreKey.signature,
-    //   'key': signedPreKey.getKeyPair().publicKey.serialize(),
-    // };
-
+    if (await SignalHelper.addNewContact(res.value.userdata)) {
+      await dbProvider.db!.insert(DbContacts.tableName, {
+        DbContacts.columnDisplayName: username,
+        DbContacts.columnUserId: res.value.userdata.userId
+      });
+    }
     print("Add new user: ${res}");
   }
 

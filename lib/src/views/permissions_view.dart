@@ -61,7 +61,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  "Connect needs access to the camera and microphone for obvious reasons.",
+                  "twonly needs access to the camera and microphone.",
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 50),

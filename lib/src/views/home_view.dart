@@ -1,4 +1,3 @@
-import 'package:camera/camera.dart';
 import 'camera_preview_view.dart';
 import 'chat_list_view.dart';
 import 'permissions_view.dart';
@@ -7,10 +6,8 @@ import '../settings/settings_controller.dart';
 import 'package:flutter/material.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView(
-      {super.key, required this.settingsController, required this.cameras});
+  const HomeView({super.key, required this.settingsController});
   final SettingsController settingsController;
-  final List<CameraDescription> cameras;
 
   @override
   State<HomeView> createState() => HomeViewState();
@@ -36,7 +33,7 @@ class HomeViewState extends State<HomeView> {
                   },
                   children: [
                     ChatListView(),
-                    CameraPreviewView(cameras: widget.cameras),
+                    CameraPreviewView(),
                     ProfileView(settingsController: widget.settingsController)
                   ],
                 ),
