@@ -244,14 +244,79 @@ class NewMessage extends $pb.GeneratedMessage {
   void clearBody() => clearField(1);
 }
 
+class Response_PreKey extends $pb.GeneratedMessage {
+  factory Response_PreKey({
+    $fixnum.Int64? id,
+    $core.List<$core.int>? prekey,
+  }) {
+    final $result = create();
+    if (id != null) {
+      $result.id = id;
+    }
+    if (prekey != null) {
+      $result.prekey = prekey;
+    }
+    return $result;
+  }
+  Response_PreKey._() : super();
+  factory Response_PreKey.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_PreKey.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.PreKey', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'id')
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'prekey', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response_PreKey clone() => Response_PreKey()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_PreKey copyWith(void Function(Response_PreKey) updates) => super.copyWith((message) => updates(message as Response_PreKey)) as Response_PreKey;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PreKey create() => Response_PreKey._();
+  Response_PreKey createEmptyInstance() => create();
+  static $pb.PbList<Response_PreKey> createRepeated() => $pb.PbList<Response_PreKey>();
+  @$core.pragma('dart2js:noInline')
+  static Response_PreKey getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_PreKey>(create);
+  static Response_PreKey? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get id => $_getI64(0);
+  @$pb.TagNumber(1)
+  set id($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get prekey => $_getN(1);
+  @$pb.TagNumber(2)
+  set prekey($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPrekey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPrekey() => clearField(2);
+}
+
 class Response_UserData extends $pb.GeneratedMessage {
   factory Response_UserData({
     $core.List<$core.int>? userId,
-    $core.Iterable<$core.List<$core.int>>? prekeys,
+    $core.Iterable<Response_PreKey>? prekeys,
     $core.List<$core.int>? publicIdentityKey,
     $core.List<$core.int>? signedPrekey,
     $core.List<$core.int>? signedPrekeySignature,
     $fixnum.Int64? signedPrekeyId,
+    $fixnum.Int64? registrationId,
   }) {
     final $result = create();
     if (userId != null) {
@@ -272,6 +337,9 @@ class Response_UserData extends $pb.GeneratedMessage {
     if (signedPrekeyId != null) {
       $result.signedPrekeyId = signedPrekeyId;
     }
+    if (registrationId != null) {
+      $result.registrationId = registrationId;
+    }
     return $result;
   }
   Response_UserData._() : super();
@@ -280,11 +348,12 @@ class Response_UserData extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.UserData', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
-    ..p<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'prekeys', $pb.PbFieldType.PY)
+    ..pc<Response_PreKey>(2, _omitFieldNames ? '' : 'prekeys', $pb.PbFieldType.PM, subBuilder: Response_PreKey.create)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'publicIdentityKey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
     ..aInt64(6, _omitFieldNames ? '' : 'signedPrekeyId')
+    ..aInt64(7, _omitFieldNames ? '' : 'registrationId')
     ..hasRequiredFields = false
   ;
 
@@ -319,7 +388,7 @@ class Response_UserData extends $pb.GeneratedMessage {
   void clearUserId() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.List<$core.List<$core.int>> get prekeys => $_getList(1);
+  $core.List<Response_PreKey> get prekeys => $_getList(1);
 
   @$pb.TagNumber(3)
   $core.List<$core.int> get publicIdentityKey => $_getN(2);
@@ -356,12 +425,22 @@ class Response_UserData extends $pb.GeneratedMessage {
   $core.bool hasSignedPrekeyId() => $_has(5);
   @$pb.TagNumber(6)
   void clearSignedPrekeyId() => clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get registrationId => $_getI64(6);
+  @$pb.TagNumber(7)
+  set registrationId($fixnum.Int64 v) { $_setInt64(6, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasRegistrationId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRegistrationId() => clearField(7);
 }
 
 enum Response_Ok_Ok {
   none, 
   userid, 
   challenge, 
+  uploadtoken, 
   userdata, 
   notSet
 }
@@ -371,6 +450,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     $core.bool? none,
     $core.List<$core.int>? userid,
     $core.List<$core.int>? challenge,
+    $core.List<$core.int>? uploadtoken,
     Response_UserData? userdata,
   }) {
     final $result = create();
@@ -382,6 +462,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     }
     if (challenge != null) {
       $result.challenge = challenge;
+    }
+    if (uploadtoken != null) {
+      $result.uploadtoken = uploadtoken;
     }
     if (userdata != null) {
       $result.userdata = userdata;
@@ -396,15 +479,17 @@ class Response_Ok extends $pb.GeneratedMessage {
     1 : Response_Ok_Ok.none,
     2 : Response_Ok_Ok.userid,
     3 : Response_Ok_Ok.challenge,
-    4 : Response_Ok_Ok.userdata,
+    4 : Response_Ok_Ok.uploadtoken,
+    5 : Response_Ok_Ok.userdata,
     0 : Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Ok', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4])
+    ..oo(0, [1, 2, 3, 4, 5])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'userid', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'challenge', $pb.PbFieldType.OY)
-    ..aOM<Response_UserData>(4, _omitFieldNames ? '' : 'userdata', subBuilder: Response_UserData.create)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'uploadtoken', $pb.PbFieldType.OY)
+    ..aOM<Response_UserData>(5, _omitFieldNames ? '' : 'userdata', subBuilder: Response_UserData.create)
     ..hasRequiredFields = false
   ;
 
@@ -460,15 +545,24 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearChallenge() => clearField(3);
 
   @$pb.TagNumber(4)
-  Response_UserData get userdata => $_getN(3);
+  $core.List<$core.int> get uploadtoken => $_getN(3);
   @$pb.TagNumber(4)
-  set userdata(Response_UserData v) { setField(4, v); }
+  set uploadtoken($core.List<$core.int> v) { $_setBytes(3, v); }
   @$pb.TagNumber(4)
-  $core.bool hasUserdata() => $_has(3);
+  $core.bool hasUploadtoken() => $_has(3);
   @$pb.TagNumber(4)
-  void clearUserdata() => clearField(4);
-  @$pb.TagNumber(4)
-  Response_UserData ensureUserdata() => $_ensure(3);
+  void clearUploadtoken() => clearField(4);
+
+  @$pb.TagNumber(5)
+  Response_UserData get userdata => $_getN(4);
+  @$pb.TagNumber(5)
+  set userdata(Response_UserData v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasUserdata() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearUserdata() => clearField(5);
+  @$pb.TagNumber(5)
+  Response_UserData ensureUserdata() => $_ensure(4);
 }
 
 enum Response_Response {

@@ -75,6 +75,7 @@ const Handshake_Register$json = {
     {'1': 'signed_prekey', '3': 4, '4': 1, '5': 12, '10': 'signedPrekey'},
     {'1': 'signed_prekey_signature', '3': 5, '4': 1, '5': 12, '10': 'signedPrekeySignature'},
     {'1': 'signed_prekey_id', '3': 6, '4': 1, '5': 3, '10': 'signedPrekeyId'},
+    {'1': 'registration_id', '3': 7, '4': 1, '5': 3, '10': 'registrationId'},
   ],
   '8': [
     {'1': '_invite_code'},
@@ -101,14 +102,14 @@ final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'FrZS5SZWdpc3RlckgAUghyZWdpc3RlchJOCgxnZXRjaGFsbGVuZ2UYAiABKAsyKC5jbGllbnRf'
     'dG9fc2VydmVyLkhhbmRzaGFrZS5HZXRDaGFsbGVuZ2VIAFIMZ2V0Y2hhbGxlbmdlEksKC29wZW'
     '5zZXNzaW9uGAMgASgLMicuY2xpZW50X3RvX3NlcnZlci5IYW5kc2hha2UuT3BlblNlc3Npb25I'
-    'AFILb3BlbnNlc3Npb24akwIKCFJlZ2lzdGVyEhoKCHVzZXJuYW1lGAEgASgJUgh1c2VybmFtZR'
+    'AFILb3BlbnNlc3Npb24avAIKCFJlZ2lzdGVyEhoKCHVzZXJuYW1lGAEgASgJUgh1c2VybmFtZR'
     'IkCgtpbnZpdGVfY29kZRgCIAEoCUgAUgppbnZpdGVDb2RliAEBEi4KE3B1YmxpY19pZGVudGl0'
     'eV9rZXkYAyABKAxSEXB1YmxpY0lkZW50aXR5S2V5EiMKDXNpZ25lZF9wcmVrZXkYBCABKAxSDH'
     'NpZ25lZFByZWtleRI2ChdzaWduZWRfcHJla2V5X3NpZ25hdHVyZRgFIAEoDFIVc2lnbmVkUHJl'
-    'a2V5U2lnbmF0dXJlEigKEHNpZ25lZF9wcmVrZXlfaWQYBiABKANSDnNpZ25lZFByZWtleUlkQg'
-    '4KDF9pbnZpdGVfY29kZRoOCgxHZXRDaGFsbGVuZ2UaQgoLT3BlblNlc3Npb24SFwoHdXNlcl9p'
-    'ZBgBIAEoDFIGdXNlcklkEhoKCHJlc3BvbnNlGAIgASgMUghyZXNwb25zZUILCglIYW5kc2hha2'
-    'U=');
+    'a2V5U2lnbmF0dXJlEigKEHNpZ25lZF9wcmVrZXlfaWQYBiABKANSDnNpZ25lZFByZWtleUlkEi'
+    'cKD3JlZ2lzdHJhdGlvbl9pZBgHIAEoA1IOcmVnaXN0cmF0aW9uSWRCDgoMX2ludml0ZV9jb2Rl'
+    'Gg4KDEdldENoYWxsZW5nZRpCCgtPcGVuU2Vzc2lvbhIXCgd1c2VyX2lkGAEgASgMUgZ1c2VySW'
+    'QSGgoIcmVzcG9uc2UYAiABKAxSCHJlc3BvbnNlQgsKCUhhbmRzaGFrZQ==');
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData$json = {
@@ -117,8 +118,10 @@ const ApplicationData$json = {
     {'1': 'textmessage', '3': 1, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.TextMessage', '9': 0, '10': 'textmessage'},
     {'1': 'getuserbyusername', '3': 2, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetUserByUsername', '9': 0, '10': 'getuserbyusername'},
     {'1': 'getprekeysbyuserid', '3': 3, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetPrekeysByUserId', '9': 0, '10': 'getprekeysbyuserid'},
+    {'1': 'getuploadtoken', '3': 4, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetUploadToken', '9': 0, '10': 'getuploadtoken'},
+    {'1': 'uploaddata', '3': 5, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.UploadData', '9': 0, '10': 'uploaddata'},
   ],
-  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_GetPrekeysByUserId$json],
+  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_GetPrekeysByUserId$json, ApplicationData_GetUploadToken$json, ApplicationData_UploadData$json],
   '8': [
     {'1': 'ApplicationData'},
   ],
@@ -149,6 +152,24 @@ const ApplicationData_GetPrekeysByUserId$json = {
   ],
 };
 
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_GetUploadToken$json = {
+  '1': 'GetUploadToken',
+  '2': [
+    {'1': 'len', '3': 1, '4': 1, '5': 13, '10': 'len'},
+  ],
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_UploadData$json = {
+  '1': 'UploadData',
+  '2': [
+    {'1': 'upload_token', '3': 1, '4': 1, '5': 12, '10': 'uploadToken'},
+    {'1': 'offset', '3': 2, '4': 1, '5': 13, '10': 'offset'},
+    {'1': 'data', '3': 3, '4': 1, '5': 12, '10': 'data'},
+  ],
+};
+
 /// Descriptor for `ApplicationData`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'Cg9BcHBsaWNhdGlvbkRhdGESUQoLdGV4dG1lc3NhZ2UYASABKAsyLS5jbGllbnRfdG9fc2Vydm'
@@ -156,10 +177,16 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'Ynl1c2VybmFtZRgCIAEoCzIzLmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkdldF'
     'VzZXJCeVVzZXJuYW1lSABSEWdldHVzZXJieXVzZXJuYW1lEmYKEmdldHByZWtleXNieXVzZXJp'
     'ZBgDIAEoCzI0LmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkdldFByZWtleXNCeV'
-    'VzZXJJZEgAUhJnZXRwcmVrZXlzYnl1c2VyaWQaOgoLVGV4dE1lc3NhZ2USFwoHdXNlcl9pZBgB'
-    'IAEoDFIGdXNlcklkEhIKBGJvZHkYAyABKAxSBGJvZHkaLwoRR2V0VXNlckJ5VXNlcm5hbWUSGg'
-    'oIdXNlcm5hbWUYASABKAlSCHVzZXJuYW1lGi0KEkdldFByZWtleXNCeVVzZXJJZBIXCgd1c2Vy'
-    'X2lkGAEgASgMUgZ1c2VySWRCEQoPQXBwbGljYXRpb25EYXRh');
+    'VzZXJJZEgAUhJnZXRwcmVrZXlzYnl1c2VyaWQSWgoOZ2V0dXBsb2FkdG9rZW4YBCABKAsyMC5j'
+    'bGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5HZXRVcGxvYWRUb2tlbkgAUg5nZXR1cG'
+    'xvYWR0b2tlbhJOCgp1cGxvYWRkYXRhGAUgASgLMiwuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNh'
+    'dGlvbkRhdGEuVXBsb2FkRGF0YUgAUgp1cGxvYWRkYXRhGjoKC1RleHRNZXNzYWdlEhcKB3VzZX'
+    'JfaWQYASABKAxSBnVzZXJJZBISCgRib2R5GAMgASgMUgRib2R5Gi8KEUdldFVzZXJCeVVzZXJu'
+    'YW1lEhoKCHVzZXJuYW1lGAEgASgJUgh1c2VybmFtZRotChJHZXRQcmVrZXlzQnlVc2VySWQSFw'
+    'oHdXNlcl9pZBgBIAEoDFIGdXNlcklkGiIKDkdldFVwbG9hZFRva2VuEhAKA2xlbhgBIAEoDVID'
+    'bGVuGlsKClVwbG9hZERhdGESIQoMdXBsb2FkX3Rva2VuGAEgASgMUgt1cGxvYWRUb2tlbhIWCg'
+    'ZvZmZzZXQYAiABKA1SBm9mZnNldBISCgRkYXRhGAMgASgMUgRkYXRhQhEKD0FwcGxpY2F0aW9u'
+    'RGF0YQ==');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {
@@ -168,9 +195,18 @@ const Response$json = {
     {'1': 'ok', '3': 1, '4': 1, '5': 11, '6': '.client_to_server.Response.Ok', '9': 0, '10': 'ok'},
     {'1': 'error', '3': 2, '4': 1, '5': 14, '6': '.error.ErrorCode', '9': 0, '10': 'error'},
   ],
-  '3': [Response_Prekeys$json, Response_Ok$json],
+  '3': [Response_PreKey$json, Response_Prekeys$json, Response_Ok$json],
   '8': [
     {'1': 'Response'},
+  ],
+};
+
+@$core.Deprecated('Use responseDescriptor instead')
+const Response_PreKey$json = {
+  '1': 'PreKey',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 3, '10': 'id'},
+    {'1': 'prekey', '3': 2, '4': 1, '5': 12, '10': 'prekey'},
   ],
 };
 
@@ -178,7 +214,7 @@ const Response$json = {
 const Response_Prekeys$json = {
   '1': 'Prekeys',
   '2': [
-    {'1': 'prekeys', '3': 1, '4': 3, '5': 12, '10': 'prekeys'},
+    {'1': 'prekeys', '3': 1, '4': 3, '5': 11, '6': '.client_to_server.Response.PreKey', '10': 'prekeys'},
   ],
 };
 
@@ -197,8 +233,9 @@ const Response_Ok$json = {
 /// Descriptor for `Response`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'CghSZXNwb25zZRIvCgJvaxgBIAEoCzIdLmNsaWVudF90b19zZXJ2ZXIuUmVzcG9uc2UuT2tIAF'
-    'ICb2sSKAoFZXJyb3IYAiABKA4yEC5lcnJvci5FcnJvckNvZGVIAFIFZXJyb3IaIwoHUHJla2V5'
-    'cxIYCgdwcmVrZXlzGAEgAygMUgdwcmVrZXlzGmAKAk9rEhQKBE5vbmUYASABKAhIAFIETm9uZR'
-    'I+CgdwcmVrZXlzGAIgASgLMiIuY2xpZW50X3RvX3NlcnZlci5SZXNwb25zZS5QcmVrZXlzSABS'
-    'B3ByZWtleXNCBAoCT2tCCgoIUmVzcG9uc2U=');
+    'ICb2sSKAoFZXJyb3IYAiABKA4yEC5lcnJvci5FcnJvckNvZGVIAFIFZXJyb3IaMAoGUHJlS2V5'
+    'Eg4KAmlkGAEgASgDUgJpZBIWCgZwcmVrZXkYAiABKAxSBnByZWtleRpGCgdQcmVrZXlzEjsKB3'
+    'ByZWtleXMYASADKAsyIS5jbGllbnRfdG9fc2VydmVyLlJlc3BvbnNlLlByZUtleVIHcHJla2V5'
+    'cxpgCgJPaxIUCgROb25lGAEgASgISABSBE5vbmUSPgoHcHJla2V5cxgCIAEoCzIiLmNsaWVudF'
+    '90b19zZXJ2ZXIuUmVzcG9uc2UuUHJla2V5c0gAUgdwcmVrZXlzQgQKAk9rQgoKCFJlc3BvbnNl');
 

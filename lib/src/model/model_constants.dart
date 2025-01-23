@@ -1,4 +1,4 @@
-const String dbName = 'connect.db';
+const String dbName = 'twonly.db';
 
 const int kVersion1 = 1;
 

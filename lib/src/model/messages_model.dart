@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cv/cv.dart';
 
 class DbMessages extends CvModelBase {
@@ -7,6 +5,9 @@ class DbMessages extends CvModelBase {
 
   static const columnMessageId = "messageId";
   final messageId = CvField<int>(columnMessageId);
+
+  static const columnBody = "body";
+  final messageBody = CvField<int>(columnBody);
 
   static const columnCreatedAt = "created_at";
   final createdAt = CvField<DateTime>(columnCreatedAt);

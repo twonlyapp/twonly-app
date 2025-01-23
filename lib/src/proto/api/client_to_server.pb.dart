@@ -204,6 +204,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     $core.List<$core.int>? signedPrekey,
     $core.List<$core.int>? signedPrekeySignature,
     $fixnum.Int64? signedPrekeyId,
+    $fixnum.Int64? registrationId,
   }) {
     final $result = create();
     if (username != null) {
@@ -224,6 +225,9 @@ class Handshake_Register extends $pb.GeneratedMessage {
     if (signedPrekeyId != null) {
       $result.signedPrekeyId = signedPrekeyId;
     }
+    if (registrationId != null) {
+      $result.registrationId = registrationId;
+    }
     return $result;
   }
   Handshake_Register._() : super();
@@ -237,6 +241,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
     ..aInt64(6, _omitFieldNames ? '' : 'signedPrekeyId')
+    ..aInt64(7, _omitFieldNames ? '' : 'registrationId')
     ..hasRequiredFields = false
   ;
 
@@ -314,6 +319,15 @@ class Handshake_Register extends $pb.GeneratedMessage {
   $core.bool hasSignedPrekeyId() => $_has(5);
   @$pb.TagNumber(6)
   void clearSignedPrekeyId() => clearField(6);
+
+  @$pb.TagNumber(7)
+  $fixnum.Int64 get registrationId => $_getI64(6);
+  @$pb.TagNumber(7)
+  set registrationId($fixnum.Int64 v) { $_setInt64(6, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasRegistrationId() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearRegistrationId() => clearField(7);
 }
 
 class Handshake_GetChallenge extends $pb.GeneratedMessage {
@@ -677,10 +691,140 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
   void clearUserId() => clearField(1);
 }
 
+class ApplicationData_GetUploadToken extends $pb.GeneratedMessage {
+  factory ApplicationData_GetUploadToken({
+    $core.int? len,
+  }) {
+    final $result = create();
+    if (len != null) {
+      $result.len = len;
+    }
+    return $result;
+  }
+  ApplicationData_GetUploadToken._() : super();
+  factory ApplicationData_GetUploadToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetUploadToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetUploadToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..a<$core.int>(1, _omitFieldNames ? '' : 'len', $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetUploadToken clone() => ApplicationData_GetUploadToken()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetUploadToken copyWith(void Function(ApplicationData_GetUploadToken) updates) => super.copyWith((message) => updates(message as ApplicationData_GetUploadToken)) as ApplicationData_GetUploadToken;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetUploadToken create() => ApplicationData_GetUploadToken._();
+  ApplicationData_GetUploadToken createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_GetUploadToken> createRepeated() => $pb.PbList<ApplicationData_GetUploadToken>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetUploadToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUploadToken>(create);
+  static ApplicationData_GetUploadToken? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get len => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set len($core.int v) { $_setUnsignedInt32(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasLen() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearLen() => clearField(1);
+}
+
+class ApplicationData_UploadData extends $pb.GeneratedMessage {
+  factory ApplicationData_UploadData({
+    $core.List<$core.int>? uploadToken,
+    $core.int? offset,
+    $core.List<$core.int>? data,
+  }) {
+    final $result = create();
+    if (uploadToken != null) {
+      $result.uploadToken = uploadToken;
+    }
+    if (offset != null) {
+      $result.offset = offset;
+    }
+    if (data != null) {
+      $result.data = data;
+    }
+    return $result;
+  }
+  ApplicationData_UploadData._() : super();
+  factory ApplicationData_UploadData.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_UploadData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UploadData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
+    ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UploadData clone() => ApplicationData_UploadData()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UploadData copyWith(void Function(ApplicationData_UploadData) updates) => super.copyWith((message) => updates(message as ApplicationData_UploadData)) as ApplicationData_UploadData;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UploadData create() => ApplicationData_UploadData._();
+  ApplicationData_UploadData createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_UploadData> createRepeated() => $pb.PbList<ApplicationData_UploadData>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UploadData getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UploadData>(create);
+  static ApplicationData_UploadData? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get uploadToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUploadToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUploadToken() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get offset => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set offset($core.int v) { $_setUnsignedInt32(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasOffset() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOffset() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get data => $_getN(2);
+  @$pb.TagNumber(3)
+  set data($core.List<$core.int> v) { $_setBytes(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasData() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearData() => clearField(3);
+}
+
 enum ApplicationData_ApplicationData {
   textmessage, 
   getuserbyusername, 
   getprekeysbyuserid, 
+  getuploadtoken, 
+  uploaddata, 
   notSet
 }
 
@@ -689,6 +833,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_TextMessage? textmessage,
     ApplicationData_GetUserByUsername? getuserbyusername,
     ApplicationData_GetPrekeysByUserId? getprekeysbyuserid,
+    ApplicationData_GetUploadToken? getuploadtoken,
+    ApplicationData_UploadData? uploaddata,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -700,6 +846,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (getprekeysbyuserid != null) {
       $result.getprekeysbyuserid = getprekeysbyuserid;
     }
+    if (getuploadtoken != null) {
+      $result.getuploadtoken = getuploadtoken;
+    }
+    if (uploaddata != null) {
+      $result.uploaddata = uploaddata;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -710,13 +862,17 @@ class ApplicationData extends $pb.GeneratedMessage {
     1 : ApplicationData_ApplicationData.textmessage,
     2 : ApplicationData_ApplicationData.getuserbyusername,
     3 : ApplicationData_ApplicationData.getprekeysbyuserid,
+    4 : ApplicationData_ApplicationData.getuploadtoken,
+    5 : ApplicationData_ApplicationData.uploaddata,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3])
+    ..oo(0, [1, 2, 3, 4, 5])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
+    ..aOM<ApplicationData_GetUploadToken>(4, _omitFieldNames ? '' : 'getuploadtoken', subBuilder: ApplicationData_GetUploadToken.create)
+    ..aOM<ApplicationData_UploadData>(5, _omitFieldNames ? '' : 'uploaddata', subBuilder: ApplicationData_UploadData.create)
     ..hasRequiredFields = false
   ;
 
@@ -776,11 +932,97 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearGetprekeysbyuserid() => clearField(3);
   @$pb.TagNumber(3)
   ApplicationData_GetPrekeysByUserId ensureGetprekeysbyuserid() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  ApplicationData_GetUploadToken get getuploadtoken => $_getN(3);
+  @$pb.TagNumber(4)
+  set getuploadtoken(ApplicationData_GetUploadToken v) { setField(4, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasGetuploadtoken() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearGetuploadtoken() => clearField(4);
+  @$pb.TagNumber(4)
+  ApplicationData_GetUploadToken ensureGetuploadtoken() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  ApplicationData_UploadData get uploaddata => $_getN(4);
+  @$pb.TagNumber(5)
+  set uploaddata(ApplicationData_UploadData v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasUploaddata() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearUploaddata() => clearField(5);
+  @$pb.TagNumber(5)
+  ApplicationData_UploadData ensureUploaddata() => $_ensure(4);
+}
+
+class Response_PreKey extends $pb.GeneratedMessage {
+  factory Response_PreKey({
+    $fixnum.Int64? id,
+    $core.List<$core.int>? prekey,
+  }) {
+    final $result = create();
+    if (id != null) {
+      $result.id = id;
+    }
+    if (prekey != null) {
+      $result.prekey = prekey;
+    }
+    return $result;
+  }
+  Response_PreKey._() : super();
+  factory Response_PreKey.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_PreKey.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.PreKey', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'id')
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'prekey', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response_PreKey clone() => Response_PreKey()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_PreKey copyWith(void Function(Response_PreKey) updates) => super.copyWith((message) => updates(message as Response_PreKey)) as Response_PreKey;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_PreKey create() => Response_PreKey._();
+  Response_PreKey createEmptyInstance() => create();
+  static $pb.PbList<Response_PreKey> createRepeated() => $pb.PbList<Response_PreKey>();
+  @$core.pragma('dart2js:noInline')
+  static Response_PreKey getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_PreKey>(create);
+  static Response_PreKey? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get id => $_getI64(0);
+  @$pb.TagNumber(1)
+  set id($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get prekey => $_getN(1);
+  @$pb.TagNumber(2)
+  set prekey($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPrekey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPrekey() => clearField(2);
 }
 
 class Response_Prekeys extends $pb.GeneratedMessage {
   factory Response_Prekeys({
-    $core.Iterable<$core.List<$core.int>>? prekeys,
+    $core.Iterable<Response_PreKey>? prekeys,
   }) {
     final $result = create();
     if (prekeys != null) {
@@ -793,7 +1035,7 @@ class Response_Prekeys extends $pb.GeneratedMessage {
   factory Response_Prekeys.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Prekeys', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..p<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'prekeys', $pb.PbFieldType.PY)
+    ..pc<Response_PreKey>(1, _omitFieldNames ? '' : 'prekeys', $pb.PbFieldType.PM, subBuilder: Response_PreKey.create)
     ..hasRequiredFields = false
   ;
 
@@ -819,7 +1061,7 @@ class Response_Prekeys extends $pb.GeneratedMessage {
   static Response_Prekeys? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.List<$core.int>> get prekeys => $_getList(0);
+  $core.List<Response_PreKey> get prekeys => $_getList(0);
 }
 
 enum Response_Ok_Ok {

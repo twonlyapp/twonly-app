@@ -27,6 +27,8 @@ class ErrorCode extends $pb.ProtobufEnum {
   static const ErrorCode SessionAlreadyAuthenticated = ErrorCode._(1008, _omitEnumNames ? '' : 'SessionAlreadyAuthenticated');
   static const ErrorCode SessionNotAuthenticated = ErrorCode._(1009, _omitEnumNames ? '' : 'SessionNotAuthenticated');
   static const ErrorCode OnlyOneSessionAllowed = ErrorCode._(1010, _omitEnumNames ? '' : 'OnlyOneSessionAllowed');
+  static const ErrorCode UploadLimitReached = ErrorCode._(1011, _omitEnumNames ? '' : 'UploadLimitReached');
+  static const ErrorCode InvalidUpdateToken = ErrorCode._(1012, _omitEnumNames ? '' : 'InvalidUpdateToken');
 
   static const $core.List<ErrorCode> values = <ErrorCode> [
     Unknown,
@@ -42,6 +44,8 @@ class ErrorCode extends $pb.ProtobufEnum {
     SessionAlreadyAuthenticated,
     SessionNotAuthenticated,
     OnlyOneSessionAllowed,
+    UploadLimitReached,
+    InvalidUpdateToken,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue = $pb.ProtobufEnum.initByValue(values);

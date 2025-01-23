@@ -2,11 +2,14 @@ import 'dart:collection';
 import 'dart:math';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 import 'package:logging/logging.dart';
-import 'package:twonly/src/proto/api/client_to_server.pb.dart';
+import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
+import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
+import 'package:twonly/src/proto/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/signal/signal_helper.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:twonly/src/utils.dart';
@@ -103,9 +106,9 @@ class ApiProvider {
   void tryToReconnect() {
     Future.delayed(Duration(seconds: _reconnectionDelay)).then(
       (value) async {
-        _reconnectionDelay = _reconnectionDelay * 2;
-        if (_reconnectionDelay > 60 * 5) {
-          _reconnectionDelay = 60 * 5;
+        _reconnectionDelay = _reconnectionDelay + 2;
+        if (_reconnectionDelay > 20) {
+          _reconnectionDelay = 20;
         }
         await connect();
       },
@@ -118,11 +121,40 @@ class ApiProvider {
       if (msg.v0.hasResponse()) {
         messagesV0[msg.v0.seq] = msg;
       } else {
+        _handleServerMessage(msg);
         log.shout("Got a new message from the server: $msg");
       }
     } catch (e) {
       log.shout("Error parsing the servers message: $e");
     }
+  }
+
+  Future _handleServerMessage(server.ServerToClient msg) async {
+    client.Response? response;
+
+    if (msg.v0.requestNewPreKeys) {
+      List<PreKeyRecord> localPreKeys = await SignalHelper.getPreKeys();
+
+      List<client.Response_PreKey> prekeysList = [];
+      for (int i = 0; i < localPreKeys.length; i++) {
+        prekeysList.add(client.Response_PreKey()
+          ..id = Int64(localPreKeys[i].id)
+          ..prekey = localPreKeys[i].getKeyPair().publicKey.serialize());
+      }
+      var prekeys = client.Response_Prekeys(prekeys: prekeysList);
+      var ok = client.Response_Ok()..prekeys = prekeys;
+      response = client.Response()..ok = ok;
+    }
+
+    if (response == null) return;
+
+    var v0 = client.V0()
+      ..seq = msg.v0.seq
+      ..response = response;
+    var res = ClientToServer()..v0 = v0;
+
+    final resBytes = res.writeToBuffer();
+    _channel!.sink.add(resBytes);
   }
 
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
@@ -162,7 +194,7 @@ class ApiProvider {
   }
 
   ClientToServer createClientToServerFromHandshake(Handshake handshake) {
-    var v0 = V0()
+    var v0 = client.V0()
       ..seq = Int64(0)
       ..handshake = handshake;
     return ClientToServer()..v0 = v0;
@@ -170,7 +202,7 @@ class ApiProvider {
 
   ClientToServer createClientToServerFromApplicationData(
       ApplicationData applicationData) {
-    var v0 = V0()
+    var v0 = client.V0()
       ..seq = Int64(0)
       ..applicationdata = applicationData;
     return ClientToServer()..v0 = v0;
@@ -218,9 +250,7 @@ class ApiProvider {
   }
 
   Future authenticate() async {
-    final reqSignal = await SignalHelper.getRegisterData();
-
-    if (reqSignal == null) {
+    if (await SignalHelper.getSignalIdentity() == null) {
       return;
     }
 
@@ -271,19 +301,26 @@ class ApiProvider {
   }
 
   Future<Result> register(String username, String? inviteCode) async {
-    final reqSignal = await SignalHelper.getRegisterData();
-
-    if (reqSignal == null) {
+    final signalIdentity = await SignalHelper.getSignalIdentity();
+    if (signalIdentity == null) {
       return Result.error(
           "There was an fatal error. Try reinstalling the app.");
     }
 
+    final signalStore =
+        await SignalHelper.getSignalStoreFromIdentity(signalIdentity);
+
+    final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
+    log.shout("handle registrationId", signalIdentity.registrationId);
+
     var register = Handshake_Register()
       ..username = username
-      ..publicIdentityKey = reqSignal["identityKey"]
-      ..signedPrekey = reqSignal["signedPreKey"]?["key"]
-      ..signedPrekeySignature = reqSignal["signedPreKey"]?["signature"]
-      ..signedPrekeyId = Int64(reqSignal["signedPreKey"]?["id"]);
+      ..publicIdentityKey =
+          (await signalStore.getIdentityKeyPair()).getPublicKey().serialize()
+      ..registrationId = Int64(signalIdentity.registrationId)
+      ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
+      ..signedPrekeySignature = signedPreKey.signature
+      ..signedPrekeyId = Int64(signedPreKey.id);
 
     if (inviteCode != null && inviteCode != "") {
       register.inviteCode = inviteCode;

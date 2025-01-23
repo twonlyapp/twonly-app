@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'package:logging/logging.dart';
 import 'package:twonly/src/model/identity_key_store_model.dart';
 import 'package:twonly/src/model/model_constants.dart';
 import 'package:twonly/src/model/pre_key_model.dart';
@@ -69,6 +71,10 @@ class DbProvider {
 
   Future open() async {
     await openPath(await fixPath(dbName));
+  }
+
+  Future remove() async {
+    await _createDb(db!);
   }
 
   Future<String> fixPath(String path) async => path;

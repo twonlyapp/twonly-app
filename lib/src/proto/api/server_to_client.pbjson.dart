@@ -69,9 +69,18 @@ const Response$json = {
     {'1': 'ok', '3': 1, '4': 1, '5': 11, '6': '.server_to_client.Response.Ok', '9': 0, '10': 'ok'},
     {'1': 'error', '3': 2, '4': 1, '5': 14, '6': '.error.ErrorCode', '9': 0, '10': 'error'},
   ],
-  '3': [Response_UserData$json, Response_Ok$json],
+  '3': [Response_PreKey$json, Response_UserData$json, Response_Ok$json],
   '8': [
     {'1': 'Response'},
+  ],
+};
+
+@$core.Deprecated('Use responseDescriptor instead')
+const Response_PreKey$json = {
+  '1': 'PreKey',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 3, '10': 'id'},
+    {'1': 'prekey', '3': 2, '4': 1, '5': 12, '10': 'prekey'},
   ],
 };
 
@@ -80,16 +89,18 @@ const Response_UserData$json = {
   '1': 'UserData',
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
-    {'1': 'prekeys', '3': 2, '4': 3, '5': 12, '10': 'prekeys'},
+    {'1': 'prekeys', '3': 2, '4': 3, '5': 11, '6': '.server_to_client.Response.PreKey', '10': 'prekeys'},
     {'1': 'public_identity_key', '3': 3, '4': 1, '5': 12, '9': 0, '10': 'publicIdentityKey', '17': true},
     {'1': 'signed_prekey', '3': 4, '4': 1, '5': 12, '9': 1, '10': 'signedPrekey', '17': true},
     {'1': 'signed_prekey_signature', '3': 5, '4': 1, '5': 12, '9': 2, '10': 'signedPrekeySignature', '17': true},
-    {'1': 'signed_prekey_id', '3': 6, '4': 1, '5': 3, '9': 3, '10': 'signedPrekeyId', '17': true},
+    {'1': 'registration_id', '3': 7, '4': 1, '5': 3, '9': 3, '10': 'registrationId', '17': true},
+    {'1': 'signed_prekey_id', '3': 6, '4': 1, '5': 3, '9': 4, '10': 'signedPrekeyId', '17': true},
   ],
   '8': [
     {'1': '_public_identity_key'},
     {'1': '_signed_prekey'},
     {'1': '_signed_prekey_signature'},
+    {'1': '_registration_id'},
     {'1': '_signed_prekey_id'},
   ],
 };
@@ -101,7 +112,8 @@ const Response_Ok$json = {
     {'1': 'None', '3': 1, '4': 1, '5': 8, '9': 0, '10': 'None'},
     {'1': 'userid', '3': 2, '4': 1, '5': 12, '9': 0, '10': 'userid'},
     {'1': 'challenge', '3': 3, '4': 1, '5': 12, '9': 0, '10': 'challenge'},
-    {'1': 'userdata', '3': 4, '4': 1, '5': 11, '6': '.server_to_client.Response.UserData', '9': 0, '10': 'userdata'},
+    {'1': 'uploadtoken', '3': 4, '4': 1, '5': 12, '9': 0, '10': 'uploadtoken'},
+    {'1': 'userdata', '3': 5, '4': 1, '5': 11, '6': '.server_to_client.Response.UserData', '9': 0, '10': 'userdata'},
   ],
   '8': [
     {'1': 'Ok'},
@@ -111,15 +123,18 @@ const Response_Ok$json = {
 /// Descriptor for `Response`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'CghSZXNwb25zZRIvCgJvaxgBIAEoCzIdLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuT2tIAF'
-    'ICb2sSKAoFZXJyb3IYAiABKA4yEC5lcnJvci5FcnJvckNvZGVIAFIFZXJyb3Ia4wIKCFVzZXJE'
-    'YXRhEhcKB3VzZXJfaWQYASABKAxSBnVzZXJJZBIYCgdwcmVrZXlzGAIgAygMUgdwcmVrZXlzEj'
-    'MKE3B1YmxpY19pZGVudGl0eV9rZXkYAyABKAxIAFIRcHVibGljSWRlbnRpdHlLZXmIAQESKAoN'
-    'c2lnbmVkX3ByZWtleRgEIAEoDEgBUgxzaWduZWRQcmVrZXmIAQESOwoXc2lnbmVkX3ByZWtleV'
-    '9zaWduYXR1cmUYBSABKAxIAlIVc2lnbmVkUHJla2V5U2lnbmF0dXJliAEBEi0KEHNpZ25lZF9w'
-    'cmVrZXlfaWQYBiABKANIA1IOc2lnbmVkUHJla2V5SWSIAQFCFgoUX3B1YmxpY19pZGVudGl0eV'
-    '9rZXlCEAoOX3NpZ25lZF9wcmVrZXlCGgoYX3NpZ25lZF9wcmVrZXlfc2lnbmF0dXJlQhMKEV9z'
-    'aWduZWRfcHJla2V5X2lkGp0BCgJPaxIUCgROb25lGAEgASgISABSBE5vbmUSGAoGdXNlcmlkGA'
-    'IgASgMSABSBnVzZXJpZBIeCgljaGFsbGVuZ2UYAyABKAxIAFIJY2hhbGxlbmdlEkEKCHVzZXJk'
-    'YXRhGAQgASgLMiMuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5Vc2VyRGF0YUgAUgh1c2VyZG'
-    'F0YUIECgJPa0IKCghSZXNwb25zZQ==');
+    'ICb2sSKAoFZXJyb3IYAiABKA4yEC5lcnJvci5FcnJvckNvZGVIAFIFZXJyb3IaMAoGUHJlS2V5'
+    'Eg4KAmlkGAEgASgDUgJpZBIWCgZwcmVrZXkYAiABKAxSBnByZWtleRrIAwoIVXNlckRhdGESFw'
+    'oHdXNlcl9pZBgBIAEoDFIGdXNlcklkEjsKB3ByZWtleXMYAiADKAsyIS5zZXJ2ZXJfdG9fY2xp'
+    'ZW50LlJlc3BvbnNlLlByZUtleVIHcHJla2V5cxIzChNwdWJsaWNfaWRlbnRpdHlfa2V5GAMgAS'
+    'gMSABSEXB1YmxpY0lkZW50aXR5S2V5iAEBEigKDXNpZ25lZF9wcmVrZXkYBCABKAxIAVIMc2ln'
+    'bmVkUHJla2V5iAEBEjsKF3NpZ25lZF9wcmVrZXlfc2lnbmF0dXJlGAUgASgMSAJSFXNpZ25lZF'
+    'ByZWtleVNpZ25hdHVyZYgBARIsCg9yZWdpc3RyYXRpb25faWQYByABKANIA1IOcmVnaXN0cmF0'
+    'aW9uSWSIAQESLQoQc2lnbmVkX3ByZWtleV9pZBgGIAEoA0gEUg5zaWduZWRQcmVrZXlJZIgBAU'
+    'IWChRfcHVibGljX2lkZW50aXR5X2tleUIQCg5fc2lnbmVkX3ByZWtleUIaChhfc2lnbmVkX3By'
+    'ZWtleV9zaWduYXR1cmVCEgoQX3JlZ2lzdHJhdGlvbl9pZEITChFfc2lnbmVkX3ByZWtleV9pZB'
+    'rBAQoCT2sSFAoETm9uZRgBIAEoCEgAUgROb25lEhgKBnVzZXJpZBgCIAEoDEgAUgZ1c2VyaWQS'
+    'HgoJY2hhbGxlbmdlGAMgASgMSABSCWNoYWxsZW5nZRIiCgt1cGxvYWR0b2tlbhgEIAEoDEgAUg'
+    't1cGxvYWR0b2tlbhJBCgh1c2VyZGF0YRgFIAEoCzIjLnNlcnZlcl90b19jbGllbnQuUmVzcG9u'
+    'c2UuVXNlckRhdGFIAFIIdXNlcmRhdGFCBAoCT2tCCgoIUmVzcG9uc2U=');
 

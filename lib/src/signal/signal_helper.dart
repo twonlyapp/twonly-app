@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/model/signal_identity_json.dart';
+import 'package:twonly/src/proto/api/server_to_client.pb.dart';
 import 'package:twonly/src/utils.dart';
 
 import 'connect_sender_key_store.dart';
@@ -39,58 +40,9 @@ class SignalDataModel {
     }
   }
 
-  // one to one implementation
-  Future<void> buildSession(
-    String target,
-    Map<String, dynamic> remoteBundle,
-  ) async {
-    SignalProtocolAddress targetAddress =
-        SignalProtocolAddress(target, SignalHelper.defaultDeviceId);
-    SessionBuilder sessionBuilder =
-        SessionBuilder.fromSignalStore(signalStore, targetAddress);
-    PreKeyBundle temp = preKeyBundleFromJson(remoteBundle);
-    await sessionBuilder.processPreKeyBundle(temp);
-  }
+  // PreKeyBundle preKeyBundleFromJson(Map<String, dynamic> remoteBundle) {
 
-  PreKeyBundle preKeyBundleFromJson(Map<String, dynamic> remoteBundle) {
-    // One time pre key calculation
-    List tempPreKeys = remoteBundle["preKeys"];
-    ECPublicKey? tempPrePublicKey;
-    int? tempPreKeyId;
-    if (tempPreKeys.isNotEmpty) {
-      tempPrePublicKey = Curve.decodePoint(
-          DjbECPublicKey(base64Decode(tempPreKeys.first['key'])).serialize(),
-          1);
-      tempPreKeyId = remoteBundle["preKeys"].first['id'];
-    }
-    // Signed pre key calculation
-    int tempSignedPreKeyId = remoteBundle["signedPreKey"]['id'];
-    Map? tempSignedPreKey = remoteBundle["signedPreKey"];
-    ECPublicKey? tempSignedPreKeyPublic;
-    Uint8List? tempSignedPreKeySignature;
-    if (tempSignedPreKey != null) {
-      tempSignedPreKeyPublic = Curve.decodePoint(
-          DjbECPublicKey(base64Decode(remoteBundle["signedPreKey"]['key']))
-              .serialize(),
-          1);
-      tempSignedPreKeySignature =
-          base64Decode(remoteBundle["signedPreKey"]['signature']);
-    }
-    // Identity key calculation
-    IdentityKey tempIdentityKey = IdentityKey(Curve.decodePoint(
-        DjbECPublicKey(base64Decode(remoteBundle["identityKey"])).serialize(),
-        1));
-    return PreKeyBundle(
-      remoteBundle['registrationId'],
-      1,
-      tempPreKeyId,
-      tempPrePublicKey,
-      tempSignedPreKeyId,
-      tempSignedPreKeyPublic,
-      tempSignedPreKeySignature,
-      tempIdentityKey,
-    );
-  }
+  // }
 
   Future<String?> getEncryptedText(String text, String target) async {
     try {
@@ -136,18 +88,30 @@ class SignalDataModel {
   }
 }
 
+int userIdToRegistrationId(List<int> userId) {
+  int result = 0;
+  for (int i = 8; i < 16; i++) {
+    result = (result << 8) | userId[i];
+  }
+  return result;
+}
+
+String uint8ListToHex(List<int> list) {
+  final StringBuffer hexBuffer = StringBuffer();
+  for (int byte in list) {
+    hexBuffer.write(byte.toRadixString(16).padLeft(2, '0'));
+  }
+  return hexBuffer.toString().toUpperCase();
+}
+
 class SignalHelper {
   static const int defaultDeviceId = 1;
 
   static Future<ECPrivateKey?> getPrivateKey() async {
-    final storage = getSecureStorage();
-    final signalIdentityJson = await storage.read(key: "signal_identity");
-    if (signalIdentityJson == null) {
+    final signalIdentity = await getSignalIdentity();
+    if (signalIdentity == null) {
       return null;
     }
-
-    final SignalIdentity signalIdentity =
-        SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
 
     final IdentityKeyPair identityKeyPair =
         IdentityKeyPair.fromSerialized(signalIdentity.identityKeyPairU8List);
@@ -155,43 +119,93 @@ class SignalHelper {
     return identityKeyPair.getPrivateKey();
   }
 
-  static Future<Map<String, dynamic>?> getRegisterData() async {
-    // final publicKey = identityKeyPair.getPublicKey().serialize();
+  static Future<bool> addNewContact(Response_UserData userData) async {
+    final List<int> userId = userData.userId;
+
+    SignalProtocolAddress targetAddress = SignalProtocolAddress(
+        uint8ListToHex(userId), SignalHelper.defaultDeviceId);
+
+    SignalProtocolStore? signalStore = await SignalHelper.getSignalStore();
+    if (signalStore == null) {
+      return false;
+    }
+
+    SessionBuilder sessionBuilder =
+        SessionBuilder.fromSignalStore(signalStore, targetAddress);
+
+    ECPublicKey? tempPrePublicKey;
+    int? tempPreKeyId;
+    if (userData.prekeys.isNotEmpty) {
+      tempPrePublicKey = Curve.decodePoint(
+          DjbECPublicKey(Uint8List.fromList(userData.prekeys.first.prekey))
+              .serialize(),
+          1);
+      tempPreKeyId = userData.prekeys.first.id.toInt();
+    }
+    // Signed pre key calculation
+    int tempSignedPreKeyId = userData.signedPrekeyId.toInt();
+    // Map? tempSignedPreKey = remoteBundle["signedPreKey"];
+    ECPublicKey? tempSignedPreKeyPublic;
+    Uint8List? tempSignedPreKeySignature;
+    // if (tempSignedPreKey != null) {
+    tempSignedPreKeyPublic = Curve.decodePoint(
+        DjbECPublicKey(Uint8List.fromList(userData.signedPrekey)).serialize(),
+        1);
+    tempSignedPreKeySignature =
+        Uint8List.fromList(userData.signedPrekeySignature);
+    // }
+    // Identity key calculation
+    IdentityKey tempIdentityKey = IdentityKey(Curve.decodePoint(
+        DjbECPublicKey(Uint8List.fromList(userData.publicIdentityKey))
+            .serialize(),
+        1));
+    PreKeyBundle preKeyBundle = PreKeyBundle(
+      userData.registrationId.toInt(),
+      1,
+      tempPreKeyId,
+      tempPrePublicKey,
+      tempSignedPreKeyId,
+      tempSignedPreKeyPublic,
+      tempSignedPreKeySignature,
+      tempIdentityKey,
+    );
+
+    await sessionBuilder.processPreKeyBundle(preKeyBundle);
+
+    return true;
+  }
+
+  static Future<ConnectSignalProtocolStore?> getSignalStore() async {
+    return await getSignalStoreFromIdentity((await getSignalIdentity())!);
+  }
+
+  static Future<SignalIdentity?> getSignalIdentity() async {
     final storage = getSecureStorage();
     final signalIdentityJson = await storage.read(key: "signal_identity");
     if (signalIdentityJson == null) {
       return null;
     }
 
-    final SignalIdentity signalIdentity =
-        SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
+    return SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
+  }
 
+  static Future<ConnectSignalProtocolStore> getSignalStoreFromIdentity(
+      SignalIdentity signalIdentity) async {
     final IdentityKeyPair identityKeyPair =
         IdentityKeyPair.fromSerialized(signalIdentity.identityKeyPairU8List);
 
-    ConnectSignalProtocolStore signalStore = ConnectSignalProtocolStore(
+    return ConnectSignalProtocolStore(
         identityKeyPair, signalIdentity.registrationId);
+  }
 
-    final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
-    final Map<String, dynamic> req = {};
-    req['registrationId'] = signalIdentity.registrationId;
-    req['identityKey'] =
-        (await signalStore.getIdentityKeyPair()).getPublicKey().serialize();
-
-    req['signedPreKey'] = {
-      'id': signedPreKey.id,
-      'signature': signedPreKey.signature,
-      'key': signedPreKey.getKeyPair().publicKey.serialize(),
-    };
-    // List pKeysList = [];
-    // for (PreKeyRecord pKey in preKeys) {
-    //   Map<String, dynamic> pKeys = {};
-    //   pKeys['id'] = pKey.id;
-    //   pKeys['key'] = base64Encode(pKey.getKeyPair().publicKey.serialize());
-    //   pKeysList.add(pKeys);
-    // }
-    // req['preKeys'] = pKeysList;
-    return req;
+  static Future<List<PreKeyRecord>> getPreKeys() async {
+    final preKeys = generatePreKeys(0, 200);
+    final signalStore = await getSignalStore();
+    if (signalStore == null) return [];
+    for (final p in preKeys) {
+      await signalStore.preKeyStore.storePreKey(p.id, p);
+    }
+    return preKeys;
   }
 
   static Future createIfNotExistsSignalIdentity() async {
@@ -208,13 +222,8 @@ class SignalHelper {
     ConnectSignalProtocolStore signalStore =
         ConnectSignalProtocolStore(identityKeyPair, registrationId);
 
-    final preKeys = generatePreKeys(0, 100);
     final signedPreKey =
         generateSignedPreKey(identityKeyPair, SignalHelper.defaultDeviceId);
-
-    for (final p in preKeys) {
-      await signalStore.preKeyStore.storePreKey(p.id, p);
-    }
 
     await signalStore.signedPreKeyStore
         .storeSignedPreKey(signedPreKey.id, signedPreKey);

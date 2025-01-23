@@ -1,3 +1,4 @@
+import 'package:twonly/main.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import '../utils.dart';
 import 'package:flutter/material.dart';
@@ -123,6 +124,7 @@ class _RegisterViewState extends State<RegisterView> {
                           usernameController.text, inviteCodeController.text);
                       setState(() {
                         _isTryingToRegister = false;
+                        apiProvider.authenticate();
                       });
                       if (res.isSuccess) {
                         widget.callbackOnSuccess();

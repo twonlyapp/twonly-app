@@ -30,6 +30,8 @@ const ErrorCode$json = {
     {'1': 'SessionAlreadyAuthenticated', '2': 1008},
     {'1': 'SessionNotAuthenticated', '2': 1009},
     {'1': 'OnlyOneSessionAllowed', '2': 1010},
+    {'1': 'UploadLimitReached', '2': 1011},
+    {'1': 'InvalidUpdateToken', '2': 1012},
   ],
 };
 
@@ -40,5 +42,6 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'EhkKFFVzZXJuYW1lQWxyZWFkeVRha2VuEOsHEhYKEVNpZ25hdHVyZU5vdFZhbGlkEOwHEhUKEF'
     'VzZXJuYW1lTm90Rm91bmQQ7QcSFQoQVXNlcm5hbWVOb3RWYWxpZBDuBxIVChBJbnZhbGlkUHVi'
     'bGljS2V5EO8HEiAKG1Nlc3Npb25BbHJlYWR5QXV0aGVudGljYXRlZBDwBxIcChdTZXNzaW9uTm'
-    '90QXV0aGVudGljYXRlZBDxBxIaChVPbmx5T25lU2Vzc2lvbkFsbG93ZWQQ8gc=');
+    '90QXV0aGVudGljYXRlZBDxBxIaChVPbmx5T25lU2Vzc2lvbkFsbG93ZWQQ8gcSFwoSVXBsb2Fk'
+    'TGltaXRSZWFjaGVkEPMHEhcKEkludmFsaWRVcGRhdGVUb2tlbhD0Bw==');
 

@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/signal/signal_helper.dart';
@@ -45,8 +47,10 @@ Future<UserData?> getUser() async {
 
 Future<bool> deleteLocalUserData() async {
   final storage = getSecureStorage();
-  await storage.delete(key: "user_data");
-  await storage.delete(key: "signal_identity");
+  var password = await storage.read(key: "sqflite_database_password");
+  await dbProvider.remove();
+  await storage.write(key: "sqflite_database_password", value: password);
+  await storage.deleteAll();
   return true;
 }
 
@@ -61,11 +65,42 @@ Uint8List getRandomUint8List(int length) {
   return randomBytes;
 }
 
+int userIdToRegistrationId(Uint8List userId) {
+  int result = 0;
+  for (int i = 8; i < 16; i++) {
+    result = (result << 8) | userId[i];
+  }
+  return result;
+}
+
+String uint8ListToHex(Uint8List list) {
+  final StringBuffer hexBuffer = StringBuffer();
+  for (int byte in list) {
+    hexBuffer.write(byte.toRadixString(16).padLeft(2, '0'));
+  }
+  return hexBuffer.toString().toUpperCase();
+}
+
 Future<bool> addNewUser(String username) async {
   final res = await apiProvider.getUserData(username);
 
   if (res.isSuccess) {
-    print("Found user: ${res.value}");
+    print(res.value);
+    print(res.value.userdata.userId);
+
+    await SignalHelper.addNewContact(res.value.userdata);
+
+    // final Map<String, dynamic> req = {};
+    // req['identityKey'] =
+    //     (await signalStore.getIdentityKeyPair()).getPublicKey().serialize();
+
+    // req['signedPreKey'] = {
+    //   'id': signedPreKey.id,
+    //   'signature': signedPreKey.signature,
+    //   'key': signedPreKey.getKeyPair().publicKey.serialize(),
+    // };
+
+    print("Add new user: ${res}");
   }
 
   return res.isSuccess;
