@@ -1,9 +1,8 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:typed_data';
-
-import 'package:twonly/src/utils.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class ConnectSignedPreKeyStore extends SignedPreKeyStore {
   // final store = HashMap<int, Uint8List>();

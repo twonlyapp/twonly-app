@@ -1,8 +1,8 @@
 import 'package:twonly/main.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding_view.dart';
-import 'views/home_view.dart';
-import 'views/register_view.dart';
-import 'utils.dart';
+import 'package:twonly/src/views/home_view.dart';
+import 'package:twonly/src/views/register_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';

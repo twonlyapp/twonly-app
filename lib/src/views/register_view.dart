@@ -1,9 +1,9 @@
 import 'package:twonly/main.dart';
 import 'package:twonly/src/providers/api_provider.dart';
-import '../utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/utils/api.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key, required this.callbackOnSuccess});
@@ -130,9 +130,11 @@ class _RegisterViewState extends State<RegisterView> {
                         widget.callbackOnSuccess();
                         return;
                       }
-                      final errMsg =
-                          ApiProvider.getLocalizedString(context, res.error);
-                      showAlertDialog(context, "Oh no!", errMsg);
+                      if (context.mounted) {
+                        final errMsg =
+                            ApiProvider.getLocalizedString(context, res.error);
+                        showAlertDialog(context, "Oh no!", errMsg);
+                      }
                     },
                     style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(

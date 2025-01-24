@@ -1,9 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/src/utils.dart';
+import 'package:twonly/src/utils/api.dart';
 import 'package:twonly/src/views/register_view.dart';
 
 class SearchUsernameView extends StatefulWidget {

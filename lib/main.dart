@@ -3,8 +3,7 @@ import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/providers/db_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/src/utils.dart';
-
+import 'package:twonly/src/utils/misc.dart';
 import 'src/app.dart';
 import 'src/settings/settings_controller.dart';
 import 'src/settings/settings_service.dart';

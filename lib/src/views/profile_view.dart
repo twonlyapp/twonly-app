@@ -1,10 +1,9 @@
 import 'package:twonly/src/model/user_data_json.dart';
-
-import '../settings/settings_controller.dart';
-import '../settings/settings_view.dart';
-import '../utils.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/settings/settings_controller.dart';
+import 'package:twonly/src/settings/settings_view.dart';
+import 'package:twonly/src/utils/storage.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key, required this.settingsController});

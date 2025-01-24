@@ -6,7 +6,7 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/src/model/signal_identity_json.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart';
-import 'package:twonly/src/utils.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 import 'connect_sender_key_store.dart';
 import 'connect_signal_protocol_store.dart';

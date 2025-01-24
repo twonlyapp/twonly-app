@@ -1,8 +1,7 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:twonly/src/utils.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/share_image_view.dart';
 
 class ShareImageEditorView extends StatefulWidget {
