@@ -7,22 +7,17 @@ import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/model/user_data_json.dart';
 
-Future<bool> addNewUser(String username) async {
+Future<bool> addNewContact(String username) async {
   final res = await apiProvider.getUserData(username);
 
   if (res.isSuccess) {
-    print(res.value);
-    print(res.value.userdata.userId);
-
     if (await SignalHelper.addNewContact(res.value.userdata)) {
       await dbProvider.db!.insert(DbContacts.tableName, {
         DbContacts.columnDisplayName: username,
         DbContacts.columnUserId: res.value.userdata.userId.toInt()
       });
     }
-    print("Add new user: ${res}");
   }
-
   return res.isSuccess;
 }
 

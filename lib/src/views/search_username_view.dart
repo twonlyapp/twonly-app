@@ -24,7 +24,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       });
     });
 
-    final status = await addNewUser(searchUserName.text);
+    final status = await addNewContact(searchUserName.text);
 
     timer.cancel();
     // loaderDelay.timeout(Duration(microseconds: 0));
