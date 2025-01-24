@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'signal_identity_json.dart';
+part of 'signal_identity.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator

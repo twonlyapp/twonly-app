@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/model/contacts_model.dart';
-import 'package:twonly/src/signal/signal_helper.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/model/user_data_json.dart';
+// ignore: library_prefixes
+import 'package:twonly/src/utils/signal.dart' as SignalHelper;
+import 'package:twonly/src/model/json/user_data.dart';
 
 Future<bool> addNewContact(String username) async {
   final res = await apiProvider.getUserData(username);

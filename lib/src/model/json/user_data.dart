@@ -1,20 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:fixnum/fixnum.dart';
-part 'user_data_json.g.dart';
-
-class Int64Converter implements JsonConverter<Int64, String> {
-  const Int64Converter();
-
-  @override
-  Int64 fromJson(String json) {
-    return Int64.parseInt(json);
-  }
-
-  @override
-  String toJson(Int64 object) {
-    return object.toString();
-  }
-}
+import 'package:twonly/src/utils/json.dart';
+part 'user_data.g.dart';
 
 @JsonSerializable()
 class UserData {

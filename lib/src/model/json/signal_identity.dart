@@ -1,22 +1,8 @@
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:twonly/src/model/user_data_json.dart';
-part 'signal_identity_json.g.dart';
-
-class Uint8ListConverter implements JsonConverter<Uint8List, String> {
-  const Uint8ListConverter();
-  @override
-  Uint8List fromJson(String json) {
-    return base64Decode(json);
-  }
-
-  @override
-  String toJson(Uint8List object) {
-    return base64Encode(object);
-  }
-}
+import 'package:twonly/src/utils/json.dart';
+part 'signal_identity.g.dart';
 
 @JsonSerializable()
 class SignalIdentity {

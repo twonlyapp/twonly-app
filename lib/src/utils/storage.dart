@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
-import 'package:twonly/src/model/user_data_json.dart';
+import 'package:twonly/src/model/json/user_data.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Future<bool> isUserCreated() async {

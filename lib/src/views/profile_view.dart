@@ -1,4 +1,4 @@
-import 'package:twonly/src/model/user_data_json.dart';
+import 'package:twonly/src/model/json/user_data.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/settings/settings_controller.dart';
