@@ -3,7 +3,37 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:twonly/src/views/share_image_view.dart';
+import 'package:twonly/src/views/permissions_view.dart';
+import 'package:twonly/src/views/share_image_editor_view.dart';
+
+class CameraPreviewViewPermission extends StatefulWidget {
+  const CameraPreviewViewPermission({super.key});
+
+  @override
+  State<CameraPreviewViewPermission> createState() =>
+      _CameraPreviewViewPermission();
+}
+
+class _CameraPreviewViewPermission extends State<CameraPreviewViewPermission> {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: checkPermissions(),
+        builder: (context, snap) {
+          if (snap.hasData) {
+            if (snap.data!) {
+              return CameraPreviewView();
+            } else {
+              return PermissionHandlerView(onSuccess: () {
+                setState(() {});
+              });
+            }
+          } else {
+            return const CircularProgressIndicator();
+          }
+        });
+  }
+}
 
 class CameraPreviewView extends StatefulWidget {
   const CameraPreviewView({super.key});
@@ -15,6 +45,7 @@ class CameraPreviewView extends StatefulWidget {
 class _CameraPreviewViewState extends State<CameraPreviewView> {
   double _lastZoom = 1;
   double _basePanY = 0;
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -23,11 +54,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(top: 50, bottom: 30, left: 5, right: 5),
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 50, horizontal: 0),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
         child: CameraAwesomeBuilder.custom(
+          sensorConfig: SensorConfig.single(
+            aspectRatio: CameraAspectRatios.ratio_16_9,
+            zoom: 0.07,
+          ),
+          previewFit: CameraPreviewFit.contain,
           progressIndicator: Container(),
           onMediaCaptureEvent: (event) {
             switch ((event.status, event.isPicture, event.isVideo)) {
@@ -40,9 +76,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     if (path == null) return;
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => ShareImageView(image: path),
-                      ),
+                      PageRouteBuilder(
+                          opaque: false,
+                          pageBuilder: (context, a1, a2) =>
+                              ShareImageEditorView(image: path),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return child;
+                          },
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero),
                     );
                     debugPrint('Picture saved: ${path}');
                   },
@@ -93,6 +136,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                         if (tmp != _lastZoom) {
                           cameraState.sensorConfig.setZoom(tmp);
                           setState(() {
+                            print(tmp);
                             _lastZoom = tmp;
                           });
                         }
@@ -161,7 +205,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               // );
             },
           ),
-          previewPadding: const EdgeInsets.all(10),
           // onPreviewTapBuilder: (state) => OnPreviewTap(
           //   onTap: (Offset position, PreviewSize flutterPreviewSize,
           //       PreviewSize pixelPreviewSize) {

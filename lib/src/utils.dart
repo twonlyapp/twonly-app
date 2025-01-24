@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:gal/gal.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/model/contacts_model.dart';
@@ -23,6 +24,19 @@ Future<bool> isUserCreated() async {
     return false;
   }
   return true;
+}
+
+Future<String?> saveImageToGallery(path) async {
+  final hasAccess = await Gal.hasAccess();
+  if (!hasAccess) {
+    await Gal.requestAccess();
+  }
+  try {
+    await Gal.putImage(path);
+    return null;
+  } on GalException catch (e) {
+    return e.type.message;
+  }
 }
 
 Future<UserData?> getUser() async {
