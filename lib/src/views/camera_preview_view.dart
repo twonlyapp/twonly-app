@@ -1,10 +1,9 @@
-// import 'package:camera/camera.dart';
-// import 'camera_editor_view.dart';
-// import 'package:flutter/gestures.dart';
-import 'package:camerawesome/pigeon.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:camerawesome/camerawesome_plugin.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:twonly/src/views/share_image_view.dart';
 
 class CameraPreviewView extends StatefulWidget {
   const CameraPreviewView({super.key});
@@ -30,6 +29,50 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         borderRadius: BorderRadius.circular(22),
         child: CameraAwesomeBuilder.custom(
           progressIndicator: Container(),
+          onMediaCaptureEvent: (event) {
+            switch ((event.status, event.isPicture, event.isVideo)) {
+              case (MediaCaptureStatus.capturing, true, false):
+                debugPrint('Capturing picture...');
+              case (MediaCaptureStatus.success, true, false):
+                event.captureRequest.when(
+                  single: (single) {
+                    final path = single.file?.path;
+                    if (path == null) return;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ShareImageView(image: path),
+                      ),
+                    );
+                    debugPrint('Picture saved: ${path}');
+                  },
+                  multiple: (multiple) {
+                    multiple.fileBySensor.forEach((key, value) {
+                      debugPrint('multiple image taken: $key ${value?.path}');
+                    });
+                  },
+                );
+              case (MediaCaptureStatus.failure, true, false):
+                debugPrint('Failed to capture picture: ${event.exception}');
+              case (MediaCaptureStatus.capturing, false, true):
+                debugPrint('Capturing video...');
+              case (MediaCaptureStatus.success, false, true):
+                event.captureRequest.when(
+                  single: (single) {
+                    debugPrint('Video saved: ${single.file?.path}');
+                  },
+                  multiple: (multiple) {
+                    multiple.fileBySensor.forEach((key, value) {
+                      debugPrint('multiple video taken: $key ${value?.path}');
+                    });
+                  },
+                );
+              case (MediaCaptureStatus.failure, false, true):
+                debugPrint('Failed to capture video: ${event.exception}');
+              default:
+                debugPrint('Unknown event: $event');
+            }
+          },
           builder: (cameraState, preview) {
             return Container(
               child: Stack(
@@ -99,7 +142,25 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               ),
             );
           },
-          saveConfig: SaveConfig.photoAndVideo(),
+          saveConfig: SaveConfig.photoAndVideo(
+            photoPathBuilder: (sensors) async {
+              final Directory extDir = await getTemporaryDirectory();
+              final testDir = await Directory(
+                '${extDir.path}/images',
+              ).create(recursive: true);
+              final String filePath =
+                  '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+              return SingleCaptureRequest(filePath, sensors.first);
+              // // Separate pictures taken with front and back camera
+              // return MultipleCaptureRequest(
+              //   {
+              //     for (final sensor in sensors)
+              //       sensor:
+              //           '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
+              //   },
+              // );
+            },
+          ),
           previewPadding: const EdgeInsets.all(10),
           // onPreviewTapBuilder: (state) => OnPreviewTap(
           //   onTap: (Offset position, PreviewSize flutterPreviewSize,

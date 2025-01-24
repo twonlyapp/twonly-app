@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/components/initialsavatar_component.dart';
 import 'package:twonly/src/model/contacts_model.dart';
-import 'package:twonly/src/utils.dart';
 import 'package:twonly/src/views/search_username_view.dart';
 
 class NewMessageView extends StatefulWidget {
@@ -166,8 +166,7 @@ class UserList extends StatelessWidget {
             ...users.map((username) {
               return ListTile(
                 title: Text(username),
-                leading: createInitialsAvatar(
-                    username, Theme.of(context).brightness == Brightness.dark),
+                leading: InitialsAvatar(displayName: username),
                 onTap: () {
                   // Handle tap
                 },

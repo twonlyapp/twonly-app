@@ -1,4 +1,4 @@
-import 'package:twonly/src/utils.dart';
+import 'package:twonly/src/components/initialsavatar_component.dart';
 import 'package:twonly/src/views/search_username_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'new_message_view.dart';
@@ -193,8 +193,7 @@ class _ChatListViewState extends State<ChatListView> {
           return ListTile(
               title: Text(item.username),
               subtitle: getSubtitle(item),
-              leading: createInitialsAvatar(item.username,
-                  Theme.of(context).brightness == Brightness.dark),
+              leading: InitialsAvatar(displayName: item.username),
               onTap: () {
                 Navigator.push(
                   context,
