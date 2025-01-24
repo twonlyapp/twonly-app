@@ -10,12 +10,13 @@ SignalIdentity _$SignalIdentityFromJson(Map<String, dynamic> json) =>
     SignalIdentity(
       identityKeyPairU8List: const Uint8ListConverter()
           .fromJson(json['identityKeyPairU8List'] as String),
-      registrationId: (json['registrationId'] as num).toInt(),
+      registrationId:
+          const Int64Converter().fromJson(json['registrationId'] as String),
     );
 
 Map<String, dynamic> _$SignalIdentityToJson(SignalIdentity instance) =>
     <String, dynamic>{
-      'registrationId': instance.registrationId,
+      'registrationId': const Int64Converter().toJson(instance.registrationId),
       'identityKeyPairU8List':
           const Uint8ListConverter().toJson(instance.identityKeyPairU8List),
     };

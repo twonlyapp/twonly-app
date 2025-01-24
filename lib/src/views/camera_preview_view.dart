@@ -136,7 +136,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                         if (tmp != _lastZoom) {
                           cameraState.sensorConfig.setZoom(tmp);
                           setState(() {
-                            print(tmp);
+                            (tmp);
                             _lastZoom = tmp;
                           });
                         }

@@ -364,7 +364,7 @@ class Handshake_GetChallenge extends $pb.GeneratedMessage {
 
 class Handshake_OpenSession extends $pb.GeneratedMessage {
   factory Handshake_OpenSession({
-    $core.List<$core.int>? userId,
+    $fixnum.Int64? userId,
     $core.List<$core.int>? response,
   }) {
     final $result = create();
@@ -381,7 +381,7 @@ class Handshake_OpenSession extends $pb.GeneratedMessage {
   factory Handshake_OpenSession.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.OpenSession', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'response', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -408,9 +408,9 @@ class Handshake_OpenSession extends $pb.GeneratedMessage {
   static Handshake_OpenSession? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get userId => $_getN(0);
+  $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -529,7 +529,7 @@ class Handshake extends $pb.GeneratedMessage {
 
 class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   factory ApplicationData_TextMessage({
-    $core.List<$core.int>? userId,
+    $fixnum.Int64? userId,
     $core.List<$core.int>? body,
   }) {
     final $result = create();
@@ -546,7 +546,7 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   factory ApplicationData_TextMessage.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.TextMessage', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
@@ -573,9 +573,9 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   static ApplicationData_TextMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get userId => $_getN(0);
+  $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -643,7 +643,7 @@ class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
 
 class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
   factory ApplicationData_GetPrekeysByUserId({
-    $core.List<$core.int>? userId,
+    $fixnum.Int64? userId,
   }) {
     final $result = create();
     if (userId != null) {
@@ -656,7 +656,7 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
   factory ApplicationData_GetPrekeysByUserId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetPrekeysByUserId', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..hasRequiredFields = false
   ;
 
@@ -682,9 +682,9 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
   static ApplicationData_GetPrekeysByUserId? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get userId => $_getN(0);
+  $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)

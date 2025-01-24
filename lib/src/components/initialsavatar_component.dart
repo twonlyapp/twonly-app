@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 class InitialsAvatar extends StatelessWidget {
   final String displayName;
+  final double? fontSize;
 
-  const InitialsAvatar({super.key, required this.displayName});
+  const InitialsAvatar(
+      {super.key, required this.displayName, this.fontSize = 20});
 
   @override
   Widget build(BuildContext context) {
@@ -25,12 +27,13 @@ class InitialsAvatar extends StatelessWidget {
 
     return CircleAvatar(
       backgroundColor: avatarColor,
+      radius: fontSize,
       child: Text(
         initials,
         style: TextStyle(
           color: _getTextColor(avatarColor),
           fontWeight: FontWeight.normal,
-          fontSize: 20,
+          fontSize: fontSize,
         ),
       ),
     );

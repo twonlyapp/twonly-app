@@ -102,7 +102,7 @@ Future<bool> addNewUser(String username) async {
     if (await SignalHelper.addNewContact(res.value.userdata)) {
       await dbProvider.db!.insert(DbContacts.tableName, {
         DbContacts.columnDisplayName: username,
-        DbContacts.columnUserId: res.value.userdata.userId
+        DbContacts.columnUserId: res.value.userdata.userId.toInt()
       });
     }
     print("Add new user: ${res}");

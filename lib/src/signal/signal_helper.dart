@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
+import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/src/model/signal_identity_json.dart';
@@ -121,10 +122,10 @@ class SignalHelper {
   }
 
   static Future<bool> addNewContact(Response_UserData userData) async {
-    final List<int> userId = userData.userId;
+    final Int64 userId = userData.userId;
 
-    SignalProtocolAddress targetAddress = SignalProtocolAddress(
-        uint8ListToHex(userId), SignalHelper.defaultDeviceId);
+    SignalProtocolAddress targetAddress =
+        SignalProtocolAddress(userId.toString(), SignalHelper.defaultDeviceId);
 
     SignalProtocolStore? signalStore = await SignalHelper.getSignalStore();
     if (signalStore == null) {
@@ -161,7 +162,7 @@ class SignalHelper {
             .serialize(),
         1));
     PreKeyBundle preKeyBundle = PreKeyBundle(
-      userData.registrationId.toInt(),
+      userData.userId.toInt(),
       1,
       tempPreKeyId,
       tempPrePublicKey,
@@ -200,7 +201,7 @@ class SignalHelper {
         IdentityKeyPair.fromSerialized(signalIdentity.identityKeyPairU8List);
 
     return ConnectSignalProtocolStore(
-        identityKeyPair, signalIdentity.registrationId);
+        identityKeyPair, signalIdentity.registrationId.toInt());
   }
 
   static Future<List<PreKeyRecord>> getPreKeys() async {
@@ -235,7 +236,7 @@ class SignalHelper {
 
     final storedSignalIdentity = SignalIdentity(
         identityKeyPairU8List: identityKeyPair.serialize(),
-        registrationId: registrationId);
+        registrationId: Int64(registrationId));
 
     await storage.write(
         key: "signal_identity", value: jsonEncode(storedSignalIdentity));

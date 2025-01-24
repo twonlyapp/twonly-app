@@ -310,13 +310,12 @@ class Response_PreKey extends $pb.GeneratedMessage {
 
 class Response_UserData extends $pb.GeneratedMessage {
   factory Response_UserData({
-    $core.List<$core.int>? userId,
+    $fixnum.Int64? userId,
     $core.Iterable<Response_PreKey>? prekeys,
     $core.List<$core.int>? publicIdentityKey,
     $core.List<$core.int>? signedPrekey,
     $core.List<$core.int>? signedPrekeySignature,
     $fixnum.Int64? signedPrekeyId,
-    $fixnum.Int64? registrationId,
   }) {
     final $result = create();
     if (userId != null) {
@@ -337,9 +336,6 @@ class Response_UserData extends $pb.GeneratedMessage {
     if (signedPrekeyId != null) {
       $result.signedPrekeyId = signedPrekeyId;
     }
-    if (registrationId != null) {
-      $result.registrationId = registrationId;
-    }
     return $result;
   }
   Response_UserData._() : super();
@@ -347,13 +343,12 @@ class Response_UserData extends $pb.GeneratedMessage {
   factory Response_UserData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.UserData', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'userId', $pb.PbFieldType.OY)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..pc<Response_PreKey>(2, _omitFieldNames ? '' : 'prekeys', $pb.PbFieldType.PM, subBuilder: Response_PreKey.create)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'publicIdentityKey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
     ..aInt64(6, _omitFieldNames ? '' : 'signedPrekeyId')
-    ..aInt64(7, _omitFieldNames ? '' : 'registrationId')
     ..hasRequiredFields = false
   ;
 
@@ -379,9 +374,9 @@ class Response_UserData extends $pb.GeneratedMessage {
   static Response_UserData? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get userId => $_getN(0);
+  $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($core.List<$core.int> v) { $_setBytes(0, v); }
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -425,15 +420,6 @@ class Response_UserData extends $pb.GeneratedMessage {
   $core.bool hasSignedPrekeyId() => $_has(5);
   @$pb.TagNumber(6)
   void clearSignedPrekeyId() => clearField(6);
-
-  @$pb.TagNumber(7)
-  $fixnum.Int64 get registrationId => $_getI64(6);
-  @$pb.TagNumber(7)
-  set registrationId($fixnum.Int64 v) { $_setInt64(6, v); }
-  @$pb.TagNumber(7)
-  $core.bool hasRegistrationId() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearRegistrationId() => clearField(7);
 }
 
 enum Response_Ok_Ok {
@@ -448,7 +434,7 @@ enum Response_Ok_Ok {
 class Response_Ok extends $pb.GeneratedMessage {
   factory Response_Ok({
     $core.bool? none,
-    $core.List<$core.int>? userid,
+    $fixnum.Int64? userid,
     $core.List<$core.int>? challenge,
     $core.List<$core.int>? uploadtoken,
     Response_UserData? userdata,
@@ -486,7 +472,7 @@ class Response_Ok extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Ok', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
     ..oo(0, [1, 2, 3, 4, 5])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
-    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'userid', $pb.PbFieldType.OY)
+    ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'challenge', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'uploadtoken', $pb.PbFieldType.OY)
     ..aOM<Response_UserData>(5, _omitFieldNames ? '' : 'userdata', subBuilder: Response_UserData.create)
@@ -527,9 +513,9 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearNone() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.List<$core.int> get userid => $_getN(1);
+  $fixnum.Int64 get userid => $_getI64(1);
   @$pb.TagNumber(2)
-  set userid($core.List<$core.int> v) { $_setBytes(1, v); }
+  set userid($fixnum.Int64 v) { $_setInt64(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasUserid() => $_has(1);
   @$pb.TagNumber(2)

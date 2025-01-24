@@ -91,7 +91,7 @@ const Handshake_GetChallenge$json = {
 const Handshake_OpenSession$json = {
   '1': 'OpenSession',
   '2': [
-    {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
+    {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'response', '3': 2, '4': 1, '5': 12, '10': 'response'},
   ],
 };
@@ -108,7 +108,7 @@ final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'NpZ25lZFByZWtleRI2ChdzaWduZWRfcHJla2V5X3NpZ25hdHVyZRgFIAEoDFIVc2lnbmVkUHJl'
     'a2V5U2lnbmF0dXJlEigKEHNpZ25lZF9wcmVrZXlfaWQYBiABKANSDnNpZ25lZFByZWtleUlkEi'
     'cKD3JlZ2lzdHJhdGlvbl9pZBgHIAEoA1IOcmVnaXN0cmF0aW9uSWRCDgoMX2ludml0ZV9jb2Rl'
-    'Gg4KDEdldENoYWxsZW5nZRpCCgtPcGVuU2Vzc2lvbhIXCgd1c2VyX2lkGAEgASgMUgZ1c2VySW'
+    'Gg4KDEdldENoYWxsZW5nZRpCCgtPcGVuU2Vzc2lvbhIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySW'
     'QSGgoIcmVzcG9uc2UYAiABKAxSCHJlc3BvbnNlQgsKCUhhbmRzaGFrZQ==');
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
@@ -131,7 +131,7 @@ const ApplicationData$json = {
 const ApplicationData_TextMessage$json = {
   '1': 'TextMessage',
   '2': [
-    {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
+    {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'body', '3': 3, '4': 1, '5': 12, '10': 'body'},
   ],
 };
@@ -148,7 +148,7 @@ const ApplicationData_GetUserByUsername$json = {
 const ApplicationData_GetPrekeysByUserId$json = {
   '1': 'GetPrekeysByUserId',
   '2': [
-    {'1': 'user_id', '3': 1, '4': 1, '5': 12, '10': 'userId'},
+    {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
   ],
 };
 
@@ -181,9 +181,9 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'bGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5HZXRVcGxvYWRUb2tlbkgAUg5nZXR1cG'
     'xvYWR0b2tlbhJOCgp1cGxvYWRkYXRhGAUgASgLMiwuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNh'
     'dGlvbkRhdGEuVXBsb2FkRGF0YUgAUgp1cGxvYWRkYXRhGjoKC1RleHRNZXNzYWdlEhcKB3VzZX'
-    'JfaWQYASABKAxSBnVzZXJJZBISCgRib2R5GAMgASgMUgRib2R5Gi8KEUdldFVzZXJCeVVzZXJu'
+    'JfaWQYASABKANSBnVzZXJJZBISCgRib2R5GAMgASgMUgRib2R5Gi8KEUdldFVzZXJCeVVzZXJu'
     'YW1lEhoKCHVzZXJuYW1lGAEgASgJUgh1c2VybmFtZRotChJHZXRQcmVrZXlzQnlVc2VySWQSFw'
-    'oHdXNlcl9pZBgBIAEoDFIGdXNlcklkGiIKDkdldFVwbG9hZFRva2VuEhAKA2xlbhgBIAEoDVID'
+    'oHdXNlcl9pZBgBIAEoA1IGdXNlcklkGiIKDkdldFVwbG9hZFRva2VuEhAKA2xlbhgBIAEoDVID'
     'bGVuGlsKClVwbG9hZERhdGESIQoMdXBsb2FkX3Rva2VuGAEgASgMUgt1cGxvYWRUb2tlbhIWCg'
     'ZvZmZzZXQYAiABKA1SBm9mZnNldBISCgRkYXRhGAMgASgMUgRkYXRhQhEKD0FwcGxpY2F0aW9u'
     'RGF0YQ==');

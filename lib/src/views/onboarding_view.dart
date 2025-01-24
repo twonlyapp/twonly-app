@@ -44,21 +44,21 @@ class OnboardingView extends StatelessWidget {
               ),
             ),
           ),
-          PageViewModel(
-            title: "Hard work",
-            body:
-                "We try everything to give you the best experience but developing and maintaining is hard work and requires thousand of hours.",
-            image: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 100),
-                child: Image.asset("assets/images/onboarding/04.png"),
-              ),
-            ),
-          ),
+          // PageViewModel(
+          //   title: "Hard work",
+          //   body:
+          //       "We try everything to give you the best experience but developing and maintaining is hard work and requires thousand of hours.",
+          //   image: Center(
+          //     child: Padding(
+          //       padding: const EdgeInsets.only(top: 100),
+          //       child: Image.asset("assets/images/onboarding/04.png"),
+          //     ),
+          //   ),
+          // ),
           PageViewModel(
             title: "You are not the product!",
             body:
-                "Nothing is free. Either you pay with your personal informations or with money. Twonly gives you the chance to use an sustainable social media product without exploiting you by collection you personal data.",
+                "Nothing is free. Either you pay with your personal informations or with money. Twonly gives you the chance to use an social media product without exploiting you by collection you personal data.",
             image: Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
@@ -71,7 +71,7 @@ class OnboardingView extends StatelessWidget {
             bodyWidget: Column(
               children: [
                 Text(
-                  "You can test twonly free for 14 days and then decide it is worth for you.",
+                  "You can test twonly free for 14 days and then decide if it is worth to you.",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 18),
                 ),

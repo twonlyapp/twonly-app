@@ -33,6 +33,7 @@ class ApiProvider {
   final String apiUrl;
   final String? backupApiUrl;
   int _reconnectionDelay = 5;
+  bool _tryingToConnect = false;
   final log = Logger("api_provider");
   Function(bool)? _connectionStateCallback;
 
@@ -103,8 +104,11 @@ class ApiProvider {
   }
 
   void tryToReconnect() {
+    if (_tryingToConnect) return;
+    _tryingToConnect = true;
     Future.delayed(Duration(seconds: _reconnectionDelay)).then(
       (value) async {
+        _tryingToConnect = false;
         _reconnectionDelay = _reconnectionDelay + 2;
         if (_reconnectionDelay > 20) {
           _reconnectionDelay = 20;
@@ -316,7 +320,7 @@ class ApiProvider {
       ..username = username
       ..publicIdentityKey =
           (await signalStore.getIdentityKeyPair()).getPublicKey().serialize()
-      ..registrationId = Int64(signalIdentity.registrationId)
+      ..registrationId = signalIdentity.registrationId
       ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
       ..signedPrekeySignature = signedPreKey.signature
       ..signedPrekeyId = Int64(signedPreKey.id);
