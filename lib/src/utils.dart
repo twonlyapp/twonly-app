@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:gal/gal.dart';
 import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/signal/signal_helper.dart';
@@ -126,4 +128,16 @@ Future<Result> createNewUser(String username, String inviteCode) async {
   }
 
   return res;
+}
+
+Future<void> writeLogToFile(LogRecord record) async {
+  final directory = await getApplicationDocumentsDirectory();
+  final logFile = File('${directory.path}/app.log');
+
+  // Prepare the log message
+  final logMessage =
+      '${record.level.name}: ${record.loggerName}: ${record.message}\n';
+
+  // Append the log message to the file
+  await logFile.writeAsString(logMessage, mode: FileMode.append);
 }

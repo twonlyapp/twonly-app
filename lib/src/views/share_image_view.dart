@@ -41,32 +41,70 @@ class _ShareImageView extends State<ShareImageView> {
         padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
         child: Column(
           children: [
-            Container(
-              alignment:
-                  Alignment.centerLeft, // Aligns the container to the left
-              padding: EdgeInsets.all(16.0), // Optional: Add some padding
-              child: Text(
-                'Best friends',
-                style: TextStyle(
-                  fontSize: 20, // Set the font size to 20
-                ),
+            Expanded(
+              child: ListView(
+                children: [
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
+                    child: Text(
+                      AppLocalizations.of(context)!.shareImageBestFriends,
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ),
+                  UserCheckboxList(
+                    users: _knownUsers,
+                    onChanged: (userId, checkedId) {
+                      setState(() {
+                        if (checkedId) {
+                          _selectedUserIds.add(userId);
+                        } else {
+                          _selectedUserIds.remove(userId);
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  // Expanded(
+                  // child: UserList(_filteredUsers),
+                  // )
+                ],
               ),
             ),
-            UserCheckboxList(
-                users: _knownUsers,
-                onChanged: (userId, checkedId) {
-                  setState(() {
-                    if (checkedId) {
-                      _selectedUserIds.add(userId);
-                    } else {
-                      _selectedUserIds.remove(userId);
-                    }
-                  });
-                }),
-            const SizedBox(height: 10),
-            // Expanded(
-            // child: UserList(_filteredUsers),
-            // )
+            SizedBox(
+              height: 120,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    FilledButton.icon(
+                      icon: Icon(Icons.send),
+                      onPressed: () async {
+                        print(_selectedUserIds);
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //       builder: (context) =>
+                        //           ShareImageView(image: widget.image)),
+                        // );
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                        ),
+                      ),
+                      label: Text(
+                        AppLocalizations.of(context)!
+                            .shareImagedEditorSendImage,
+                        style: TextStyle(fontSize: 17),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
           ],
         ),
       ),
@@ -87,6 +125,7 @@ class UserCheckboxList extends StatelessWidget {
     final limitedUsers = users.length > 8 ? users.sublist(0, 8) : users;
 
     return Column(
+      spacing: 8,
       children: List.generate((limitedUsers.length + 1) ~/ 2, (rowIndex) {
         final firstUserIndex = rowIndex * 2;
         final secondUserIndex = firstUserIndex + 1;
@@ -97,11 +136,15 @@ class UserCheckboxList extends StatelessWidget {
             Expanded(
                 child: UserCheckbox(
                     user: limitedUsers[firstUserIndex], onChanged: onChanged)),
-            if (secondUserIndex < limitedUsers.length)
-              Expanded(
-                  child: UserCheckbox(
-                      user: limitedUsers[secondUserIndex],
-                      onChanged: onChanged)),
+            (secondUserIndex < limitedUsers.length)
+                ? Expanded(
+                    child: UserCheckbox(
+                        user: limitedUsers[secondUserIndex],
+                        onChanged: onChanged),
+                  )
+                : Expanded(
+                    child: Container(),
+                  ),
           ],
         );
       }),
