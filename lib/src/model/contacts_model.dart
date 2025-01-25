@@ -96,6 +96,19 @@ class DbContacts extends CvModelBase {
     );
   }
 
+  static Future acceptUser(int userId) async {
+    Map<String, dynamic> valuesToUpdate = {
+      columnAccepted: 1,
+      columnRequested: 0,
+    };
+    await dbProvider.db!.update(
+      tableName,
+      valuesToUpdate,
+      where: "$columnUserId = ?",
+      whereArgs: [userId],
+    );
+  }
+
   static Future deleteUser(int userId) async {
     await dbProvider.db!.delete(
       tableName,

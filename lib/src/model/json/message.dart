@@ -3,7 +3,14 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:twonly/src/utils/json.dart';
 part 'message.g.dart';
 
-enum MessageKind { textMessage, image, video, contactRequest, rejectRequest }
+enum MessageKind {
+  textMessage,
+  image,
+  video,
+  contactRequest,
+  rejectRequest,
+  acceptRequest
+}
 
 // so _$MessageKindEnumMap gets generated
 @JsonSerializable()

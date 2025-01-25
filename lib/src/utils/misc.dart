@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:twonly/src/proto/api/error.pb.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 Future<void> writeLogToFile(LogRecord record) async {
   final directory = await getApplicationDocumentsDirectory();
@@ -48,4 +51,37 @@ Uint8List getRandomUint8List(int length) {
   }
 
   return randomBytes;
+}
+
+String errorCodeToText(BuildContext context, ErrorCode code) {
+  switch (code.toString()) {
+    case "Unknown":
+      return AppLocalizations.of(context)!.errorUnknown;
+    case "BadRequest":
+      return AppLocalizations.of(context)!.errorBadRequest;
+    case "TooManyRequests":
+      return AppLocalizations.of(context)!.errorTooManyRequests;
+    case "InternalError":
+      return AppLocalizations.of(context)!.errorInternalError;
+    case "InvalidInvitationCode":
+      return AppLocalizations.of(context)!.errorInvalidInvitationCode;
+    case "UsernameAlreadyTaken":
+      return AppLocalizations.of(context)!.errorUsernameAlreadyTaken;
+    case "SignatureNotValid":
+      return AppLocalizations.of(context)!.errorSignatureNotValid;
+    case "UsernameNotFound":
+      return AppLocalizations.of(context)!.errorUsernameNotFound;
+    case "UsernameNotValid":
+      return AppLocalizations.of(context)!.errorUsernameNotValid;
+    case "InvalidPublicKey":
+      return AppLocalizations.of(context)!.errorInvalidPublicKey;
+    case "SessionAlreadyAuthenticated":
+      return AppLocalizations.of(context)!.errorSessionAlreadyAuthenticated;
+    case "SessionNotAuthenticated":
+      return AppLocalizations.of(context)!.errorSessionNotAuthenticated;
+    case "OnlyOneSessionAllowed":
+      return AppLocalizations.of(context)!.errorOnlyOneSessionAllowed;
+    default:
+      return code.toString(); // Fallback for unrecognized keys
+  }
 }

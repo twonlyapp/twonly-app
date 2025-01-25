@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
@@ -93,7 +92,11 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                   Text(AppLocalizations.of(context)!.searchUsernameQrCodeBtn),
             ),
             SizedBox(height: 30),
-            if (context.read<NotifyProvider>().allContacts.isNotEmpty)
+            if (context
+                .read<NotifyProvider>()
+                .allContacts
+                .where((contact) => !contact.accepted)
+                .isNotEmpty)
               Container(
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
@@ -131,7 +134,11 @@ class ContactsListView extends StatefulWidget {
 class _ContactsListViewState extends State<ContactsListView> {
   @override
   Widget build(BuildContext context) {
-    List<Contact> contacts = context.read<NotifyProvider>().allContacts;
+    List<Contact> contacts = context
+        .read<NotifyProvider>()
+        .allContacts
+        .where((contact) => !contact.accepted)
+        .toList();
     return ListView.builder(
       itemCount: contacts.length,
       itemBuilder: (context, index) {
@@ -172,9 +179,12 @@ class _ContactsListViewState extends State<ContactsListView> {
                     ),
                     IconButton(
                       icon: Icon(Icons.check, color: Colors.green),
-                      onPressed: () {
-                        // Handle accept action
-                        print('Accepted ${contact.displayName}');
+                      onPressed: () async {
+                        await DbContacts.acceptUser(contact.userId.toInt());
+                        if (context.mounted) {
+                          context.read<NotifyProvider>().update();
+                        }
+                        acceptUserRequest(contact.userId);
                       },
                     ),
                   ],

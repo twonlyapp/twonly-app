@@ -64,6 +64,12 @@ Future<Result> rejectUserRequest(Int64 userId) async {
   return encryptAndSendMessage(userId, msg);
 }
 
+Future<Result> acceptUserRequest(Int64 userId) async {
+  Message msg =
+      Message(kind: MessageKind.acceptRequest, timestamp: DateTime.now());
+  return encryptAndSendMessage(userId, msg);
+}
+
 Future<Result> createNewUser(String username, String inviteCode) async {
   final storage = getSecureStorage();
 

@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/src/model/contacts_model.dart';
@@ -12,7 +11,6 @@ import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 // ignore: library_prefixes
@@ -176,6 +174,10 @@ class ApiProvider {
             DbContacts.deleteUser(fromUserId.toInt());
             updateNotifier();
             break;
+          case MessageKind.acceptRequest:
+            DbContacts.acceptUser(fromUserId.toInt());
+            updateNotifier();
+            break;
           default:
             log.shout("Got unknown MessageKind $message");
         }
@@ -251,39 +253,6 @@ class ApiProvider {
       ..seq = Int64(0)
       ..applicationdata = applicationData;
     return ClientToServer()..v0 = v0;
-  }
-
-  static String getLocalizedString(BuildContext context, ErrorCode code) {
-    switch (code.toString()) {
-      case "Unknown":
-        return AppLocalizations.of(context)!.errorUnknown;
-      case "BadRequest":
-        return AppLocalizations.of(context)!.errorBadRequest;
-      case "TooManyRequests":
-        return AppLocalizations.of(context)!.errorTooManyRequests;
-      case "InternalError":
-        return AppLocalizations.of(context)!.errorInternalError;
-      case "InvalidInvitationCode":
-        return AppLocalizations.of(context)!.errorInvalidInvitationCode;
-      case "UsernameAlreadyTaken":
-        return AppLocalizations.of(context)!.errorUsernameAlreadyTaken;
-      case "SignatureNotValid":
-        return AppLocalizations.of(context)!.errorSignatureNotValid;
-      case "UsernameNotFound":
-        return AppLocalizations.of(context)!.errorUsernameNotFound;
-      case "UsernameNotValid":
-        return AppLocalizations.of(context)!.errorUsernameNotValid;
-      case "InvalidPublicKey":
-        return AppLocalizations.of(context)!.errorInvalidPublicKey;
-      case "SessionAlreadyAuthenticated":
-        return AppLocalizations.of(context)!.errorSessionAlreadyAuthenticated;
-      case "SessionNotAuthenticated":
-        return AppLocalizations.of(context)!.errorSessionNotAuthenticated;
-      case "OnlyOneSessionAllowed":
-        return AppLocalizations.of(context)!.errorOnlyOneSessionAllowed;
-      default:
-        return code.toString(); // Fallback for unrecognized keys
-    }
   }
 
   Result _asResult(server.ServerToClient msg) {

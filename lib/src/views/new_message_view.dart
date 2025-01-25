@@ -24,7 +24,8 @@ class _NewMessageView extends State<NewMessageView> {
   }
 
   Future<void> _loadUsers() async {
-    final users = await DbContacts.getUsers();
+    final users =
+        (await DbContacts.getUsers()).where((c) => c.accepted).toList();
     setState(() {
       _knownUsers = users;
       _filteredUsers = List.from(_knownUsers);
