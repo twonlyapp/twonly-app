@@ -3,7 +3,7 @@ import 'dart:collection';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:twonly/src/components/initialsavatar_component.dart';
+import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 
 class ShareImageView extends StatefulWidget {

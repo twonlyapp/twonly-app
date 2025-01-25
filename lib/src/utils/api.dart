@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
@@ -42,6 +43,25 @@ Future<bool> addNewContact(String username) async {
     }
   }
   return res.isSuccess;
+}
+
+Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
+  Uint8List? bytes = await SignalHelper.encryptMessage(msg, userId);
+
+  if (bytes == null) {
+    Logger("utils/api").shout("Error encryption message!");
+    return Result.error(ErrorCode.InternalError);
+  }
+
+  Result resp = await apiProvider.sendTextMessage(userId, bytes);
+
+  return resp;
+}
+
+Future<Result> rejectUserRequest(Int64 userId) async {
+  Message msg =
+      Message(kind: MessageKind.rejectRequest, timestamp: DateTime.now());
+  return encryptAndSendMessage(userId, msg);
 }
 
 Future<Result> createNewUser(String username, String inviteCode) async {

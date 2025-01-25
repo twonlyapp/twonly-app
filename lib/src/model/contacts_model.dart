@@ -30,6 +30,9 @@ class DbContacts extends CvModelBase {
   static const columnRequested = "requested";
   final requested = CvField<int>(columnRequested);
 
+  static const columnBlocked = "blocked";
+  final blocked = CvField<int>(columnBlocked);
+
   static const columnCreatedAt = "created_at";
   final createdAt = CvField<DateTime>(columnCreatedAt);
 
@@ -40,6 +43,7 @@ class DbContacts extends CvModelBase {
       $columnDisplayName TEXT,
       $columnAccepted INT NOT NULL DEFAULT 0,
       $columnRequested INT NOT NULL DEFAULT 0,
+      $columnBlocked INT NOT NULL DEFAULT 0,
       $columnCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """;
@@ -47,22 +51,23 @@ class DbContacts extends CvModelBase {
 
   @override
   List<CvField> get fields =>
-      [userId, displayName, accepted, requested, createdAt];
+      [userId, displayName, accepted, requested, blocked, createdAt];
 
   static Future<List<Contact>> getUsers() async {
     try {
-      var users = await dbProvider.db!.query(tableName, columns: [
-        columnUserId,
-        columnDisplayName,
-        columnAccepted,
-        columnRequested,
-        columnCreatedAt
-      ]);
+      var users = await dbProvider.db!.query(tableName,
+          columns: [
+            columnUserId,
+            columnDisplayName,
+            columnAccepted,
+            columnRequested,
+            columnCreatedAt
+          ],
+          where: "$columnBlocked = 0");
       if (users.isEmpty) return [];
 
       List<Contact> parsedUsers = [];
       for (int i = 0; i < users.length; i++) {
-        print(users[i]);
         parsedUsers.add(
           Contact(
             userId: Int64(users.cast()[i][columnUserId]),
@@ -77,6 +82,26 @@ class DbContacts extends CvModelBase {
       Logger("contacts_model/getUsers").shout("$e");
       return [];
     }
+  }
+
+  static Future blockUser(int userId) async {
+    Map<String, dynamic> valuesToUpdate = {
+      columnBlocked: 1,
+    };
+    await dbProvider.db!.update(
+      tableName,
+      valuesToUpdate,
+      where: "$columnUserId = ?",
+      whereArgs: [userId],
+    );
+  }
+
+  static Future deleteUser(int userId) async {
+    await dbProvider.db!.delete(
+      tableName,
+      where: "$columnUserId = ?",
+      whereArgs: [userId],
+    );
   }
 
   static Future<bool> insertNewContact(

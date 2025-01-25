@@ -38,7 +38,6 @@ class ConnectPreKeyStore extends PreKeyStore {
   @override
   Future<void> storePreKey(int preKeyId, PreKeyRecord record) async {
     if (!await containsPreKey(preKeyId)) {
-      print(preKeyId);
       await dbProvider.db!.insert(DB.tableName,
           {DB.columnPreKeyId: preKeyId, DB.columnPreKey: record.serialize()});
     } else {

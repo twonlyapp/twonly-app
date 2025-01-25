@@ -2,7 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:logging/logging.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/providers/notify_provider.dart';
 import 'package:twonly/src/utils/api.dart';
 import 'package:twonly/src/views/register_view.dart';
 
@@ -28,11 +31,9 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       _isLoading = false;
     });
 
-    Logger("search_user_name").warning("Replace instead of pop");
-
     if (context.mounted) {
       if (status) {
-        // Navigator.pop(context);
+        context.read<NotifyProvider>().update();
       } else if (context.mounted) {
         showAlertDialog(
             context,
@@ -88,17 +89,19 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                 showAlertDialog(context, "Coming soon",
                     "This feature is not yet implemented!");
               },
-              label: Text("QR-Code scannen"),
+              label:
+                  Text(AppLocalizations.of(context)!.searchUsernameQrCodeBtn),
             ),
             SizedBox(height: 30),
-            Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
-              child: Text(
-                "Neue Followanfragen",
-                style: TextStyle(fontSize: 20),
+            if (context.read<NotifyProvider>().allContacts.isNotEmpty)
+              Container(
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
+                child: Text(
+                  AppLocalizations.of(context)!.searchUsernameNewFollowerTitle,
+                  style: TextStyle(fontSize: 20),
+                ),
               ),
-            ),
             Expanded(
               child: ContactsListView(),
             )
@@ -126,53 +129,55 @@ class ContactsListView extends StatefulWidget {
 }
 
 class _ContactsListViewState extends State<ContactsListView> {
-  List<Contact> _allContacts = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadContacts();
-  }
-
-  Future _loadContacts() async {
-    List<Contact> allContacts = await DbContacts.getUsers();
-    _allContacts = allContacts.where((contact) => !contact.accepted).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
+    List<Contact> contacts = context.read<NotifyProvider>().allContacts;
     return ListView.builder(
-      itemCount: _allContacts.length,
+      itemCount: contacts.length,
       itemBuilder: (context, index) {
-        final contact = _allContacts[index];
-
-        if (!contact.requested) {
-          return ListTile(
-            title: Text(contact.displayName),
-            subtitle: Text('Pending'),
-          );
-        }
-
+        final contact = contacts[index];
         return ListTile(
           title: Text(contact.displayName),
+          leading: InitialsAvatar(displayName: contact.displayName),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(Icons.close, color: Colors.red),
-                onPressed: () {
-                  // Handle reject action
-                  print('Rejected ${contact.displayName}');
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.check, color: Colors.green),
-                onPressed: () {
-                  // Handle accept action
-                  print('Accepted ${contact.displayName}');
-                },
-              ),
-            ],
+            children: (!contact.requested)
+                ? [Text('Pending')]
+                : [
+                    Tooltip(
+                      message: "Block the user without informing.",
+                      child: IconButton(
+                        icon: Icon(Icons.person_off_rounded,
+                            color: const Color.fromARGB(164, 244, 67, 54)),
+                        onPressed: () async {
+                          await DbContacts.blockUser(contact.userId.toInt());
+                          if (context.mounted) {
+                            context.read<NotifyProvider>().update();
+                          }
+                        },
+                      ),
+                    ),
+                    Tooltip(
+                      message: "Reject the request and let the requester know.",
+                      child: IconButton(
+                        icon: Icon(Icons.close, color: Colors.red),
+                        onPressed: () async {
+                          await DbContacts.deleteUser(contact.userId.toInt());
+                          if (context.mounted) {
+                            context.read<NotifyProvider>().update();
+                          }
+                          rejectUserRequest(contact.userId);
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.check, color: Colors.green),
+                      onPressed: () {
+                        // Handle accept action
+                        print('Accepted ${contact.displayName}');
+                      },
+                    ),
+                  ],
           ),
         );
       },

@@ -42,6 +42,7 @@ class ApiProvider {
   bool _tryingToConnect = false;
   final log = Logger("api_provider");
   Function(bool)? _connectionStateCallback;
+  Function? _updatedContacts;
 
   final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
 
@@ -109,6 +110,10 @@ class ApiProvider {
     _connectionStateCallback = callBack;
   }
 
+  void setUpdatedContacts(Function callBack) {
+    _updatedContacts = callBack;
+  }
+
   void tryToReconnect() {
     if (_tryingToConnect) return;
     _tryingToConnect = true;
@@ -157,13 +162,22 @@ class ApiProvider {
       Int64 fromUserId = msg.v0.newMessage.fromUserId;
       Message? message = await SignalHelper.getDecryptedText(fromUserId, body);
       if (message != null) {
-        Result username = await getUsername(fromUserId);
-        if (username.isSuccess) {
-          print(username.value);
-          Uint8List name = username.value.userdata.username;
-          DbContacts.insertNewContact(
-              utf8.decode(name), fromUserId.toInt(), true);
-          print(message);
+        switch (message.kind) {
+          case MessageKind.contactRequest:
+            Result username = await getUsername(fromUserId);
+            if (username.isSuccess) {
+              Uint8List name = username.value.userdata.username;
+              DbContacts.insertNewContact(
+                  utf8.decode(name), fromUserId.toInt(), true);
+              updateNotifier();
+            }
+            break;
+          case MessageKind.rejectRequest:
+            DbContacts.deleteUser(fromUserId.toInt());
+            updateNotifier();
+            break;
+          default:
+            log.shout("Got unknown MessageKind $message");
         }
       }
       var ok = client.Response_Ok()..none = true;
@@ -180,6 +194,12 @@ class ApiProvider {
 
     final resBytes = res.writeToBuffer();
     _channel!.sink.add(resBytes);
+  }
+
+  Future updateNotifier() async {
+    if (_updatedContacts != null) {
+      _updatedContacts!();
+    }
   }
 
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {

@@ -1,13 +1,14 @@
-import 'package:twonly/src/components/initialsavatar_component.dart';
-import 'package:twonly/src/model/contacts_model.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/src/components/initialsavatar.dart';
+import 'package:twonly/src/components/message_send_state_icon.dart';
+import 'package:twonly/src/components/notification_badge.dart';
+import 'package:twonly/src/providers/notify_provider.dart';
 import 'package:twonly/src/views/search_username_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'new_message_view.dart';
 import 'package:flutter/material.dart';
 import 'chat_item_details_view.dart';
 import 'dart:async';
-
-enum MessageSendState { sending, send, opened, received }
 
 class ChatItem {
   const ChatItem(
@@ -57,19 +58,12 @@ class ChatListView extends StatefulWidget {
 
 class _ChatListViewState extends State<ChatListView> {
   int _secondsSinceOpen = 0;
-  int _newContactRequests = 0;
   late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
-    _checkNewContactRequests();
-  }
-
-  Future _checkNewContactRequests() async {
-    _newContactRequests = (await DbContacts.getUsers()).length;
-    setState(() {});
   }
 
   void _startTimer() {
@@ -101,57 +95,12 @@ class _ChatListViewState extends State<ChatListView> {
     }
   }
 
-  Widget getMessageSateIcon(MessageSendState state) {
-    List<Widget> children = [];
-    Widget icon = Placeholder();
-    String text = "";
-
-    switch (state) {
-      case MessageSendState.opened:
-        icon = Icon(
-          Icons.crop_square,
-          size: 14,
-          color: Theme.of(context).colorScheme.primary,
-        );
-        text = "Opened";
-        break;
-      case MessageSendState.received:
-        icon = Icon(Icons.square_rounded,
-            size: 14, color: Theme.of(context).colorScheme.primary);
-        text = "Received";
-        break;
-      case MessageSendState.send:
-        icon = Icon(Icons.send, size: 14);
-        text = "Send";
-        break;
-      case MessageSendState.sending:
-        icon = Row(children: [
-          SizedBox(
-              width: 10,
-              height: 10,
-              child: CircularProgressIndicator(
-                strokeWidth: 1,
-              )),
-          SizedBox(width: 2)
-        ]);
-        text = "Sending";
-        break;
-    }
-    children.add(const SizedBox(width: 5));
-    return Row(
-      children: [
-        icon,
-        const SizedBox(width: 3),
-        Text(text, style: TextStyle(fontSize: 12)),
-        const SizedBox(width: 5)
-      ],
-    );
-  }
-
   Widget getSubtitle(ChatItem item) {
     return Row(
       children: [
-        getMessageSateIcon(item.state),
+        MessageSendStateIcon(
+          state: item.state,
+        ),
         Text("•"),
         const SizedBox(width: 5),
         Text(formatDuration(item.lastMessageInSeconds + _secondsSinceOpen),
@@ -180,62 +129,42 @@ class _ChatListViewState extends State<ChatListView> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.chatsTitle),
         actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(Icons.person_add), // User with add icon
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SearchUsernameView(),
-                    ),
-                  );
-                },
-              ),
-              if (_newContactRequests > 0)
-                Positioned(
-                  right: 5,
-                  top: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(5.0), // Add some padding
-                    decoration: BoxDecoration(
-                      color: Colors.red, // Background color
-                      shape: BoxShape.circle, // Make it circular
-                    ),
-                    child: Center(
-                      child: Text(
-                        _newContactRequests.toString(),
-                        style: TextStyle(
-                            color: Colors.white, // Text color
-                            fontSize: 10),
-                      ),
-                    ),
+          NotificationBadge(
+            count: context.watch<NotifyProvider>().newContactRequests,
+            child: IconButton(
+              icon: Icon(Icons.person_add),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SearchUsernameView(),
                   ),
-                ),
-            ],
+                );
+              },
+            ),
           )
         ],
       ),
       body: ListView.builder(
-        restorationId: 'sampleItemListView',
+        restorationId: 'chat_list_view',
         itemCount: widget.items.length,
         itemBuilder: (BuildContext context, int index) {
           final item = widget.items[index];
           return ListTile(
-              title: Text(item.username),
-              subtitle: getSubtitle(item),
-              leading: InitialsAvatar(displayName: item.username),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SampleItemDetailsView(
-                      userId: item.userId,
-                    ),
+            title: Text(item.username),
+            subtitle: getSubtitle(item),
+            leading: InitialsAvatar(displayName: item.username),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SampleItemDetailsView(
+                    userId: item.userId,
                   ),
-                );
-              });
+                ),
+              );
+            },
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(

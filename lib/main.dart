@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/providers/db_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/src/providers/notify_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'src/app.dart';
 import 'src/settings/settings_controller.dart';
@@ -49,5 +51,12 @@ void main() async {
   //   return true;
   // });
 
-  runApp(MyApp(settingsController: settingsController));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => NotifyProvider()),
+      ],
+      child: MyApp(settingsController: settingsController),
+    ),
+  );
 }

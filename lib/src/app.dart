@@ -1,4 +1,6 @@
+import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
+import 'package:twonly/src/providers/notify_provider.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding_view.dart';
 import 'package:twonly/src/views/home_view.dart';
@@ -30,13 +32,18 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    // Start the color animation
     _startColorAnimation();
+
     apiProvider.setConnectionStateCallback((isConnected) {
       setState(() {
         _isConnected = isConnected;
       });
     });
+    apiProvider.setUpdatedContacts(() {
+      context.read<NotifyProvider>().update();
+    });
+
+    context.read<NotifyProvider>().update();
     apiProvider.connect();
   }
 

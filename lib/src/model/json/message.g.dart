@@ -19,6 +19,7 @@ const _$MessageKindEnumMap = {
   MessageKind.image: 'image',
   MessageKind.video: 'video',
   MessageKind.contactRequest: 'contactRequest',
+  MessageKind.rejectRequest: 'rejectRequest',
 };
 
 Message _$MessageFromJson(Map<String, dynamic> json) => Message(
