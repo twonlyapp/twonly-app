@@ -88,9 +88,9 @@ class TextContent extends MessageContent {
 
 @JsonSerializable()
 class ImageContent extends MessageContent {
-  final String imageUrl;
+  final String imageToken;
 
-  ImageContent(this.imageUrl);
+  ImageContent(this.imageToken);
 
   factory ImageContent.fromJson(Map<String, dynamic> json) =>
       _$ImageContentFromJson(json);

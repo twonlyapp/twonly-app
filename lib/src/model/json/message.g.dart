@@ -47,10 +47,10 @@ Map<String, dynamic> _$TextContentToJson(TextContent instance) =>
     };
 
 ImageContent _$ImageContentFromJson(Map<String, dynamic> json) => ImageContent(
-      json['imageUrl'] as String,
+      json['imageToken'] as String,
     );
 
 Map<String, dynamic> _$ImageContentToJson(ImageContent instance) =>
     <String, dynamic>{
-      'imageUrl': instance.imageUrl,
+      'imageToken': instance.imageToken,
     };
