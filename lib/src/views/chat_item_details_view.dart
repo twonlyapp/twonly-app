@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/model/contacts_model.dart';
 
 class AlignedTextBox extends StatelessWidget {
   const AlignedTextBox({super.key, required this.text, required this.right});
@@ -39,9 +40,9 @@ class AlignedTextBox extends StatelessWidget {
 
 /// Displays detailed information about a SampleItem.
 class SampleItemDetailsView extends StatelessWidget {
-  const SampleItemDetailsView({super.key, required this.userId});
+  const SampleItemDetailsView({super.key, required this.user});
 
-  final int userId;
+  final Contact user;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +72,7 @@ class SampleItemDetailsView extends StatelessWidget {
     messages = messages.reversed.toList();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Your Chat with $userId'),
+        title: Text('Your Chat with ${user.displayName}'),
       ),
       body: Column(
         children: [

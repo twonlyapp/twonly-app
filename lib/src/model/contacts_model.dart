@@ -53,6 +53,10 @@ class DbContacts extends CvModelBase {
   List<CvField> get fields =>
       [userId, displayName, accepted, requested, blocked, createdAt];
 
+  static Future<List<Contact>> getActiveUsers() async {
+    return (await getUsers()).where((u) => u.accepted).toList();
+  }
+
   static Future<List<Contact>> getUsers() async {
     try {
       var users = await dbProvider.db!.query(tableName,

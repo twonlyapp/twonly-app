@@ -18,7 +18,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     imageIsLoaded();
   }
@@ -130,7 +129,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         ),
                         label: Text(
                           AppLocalizations.of(context)!
-                              .shareImagedEditorSendImage,
+                              .shareImagedEditorShareWith,
                           style: TextStyle(fontSize: 17),
                         ),
                       ),

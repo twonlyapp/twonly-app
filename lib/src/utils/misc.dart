@@ -85,3 +85,36 @@ String errorCodeToText(BuildContext context, ErrorCode code) {
       return code.toString(); // Fallback for unrecognized keys
   }
 }
+
+String formatDuration(int seconds) {
+  if (seconds < 60) {
+    return '$seconds Sec.';
+  } else if (seconds < 3600) {
+    int minutes = seconds ~/ 60;
+    return '$minutes Min.';
+  } else if (seconds < 86400) {
+    int hours = seconds ~/ 3600;
+    return '$hours Hrs.'; // Assuming "Stu." is for hours
+  } else {
+    int days = seconds ~/ 86400;
+    return '$days Days';
+  }
+}
+
+InputDecoration getInputDecoration(context, hintText) {
+  final primaryColor =
+      Theme.of(context).colorScheme.primary; // Get the primary color
+  return InputDecoration(
+    hintText: hintText,
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(9.0),
+      borderSide: BorderSide(color: primaryColor, width: 1.0),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide:
+          BorderSide(color: Theme.of(context).colorScheme.outline, width: 1.0),
+    ),
+    contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+  );
+}

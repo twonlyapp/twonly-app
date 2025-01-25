@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/providers/notify_provider.dart';
@@ -97,14 +98,8 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                 .allContacts
                 .where((contact) => !contact.accepted)
                 .isNotEmpty)
-              Container(
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
-                child: Text(
-                  AppLocalizations.of(context)!.searchUsernameNewFollowerTitle,
-                  style: TextStyle(fontSize: 20),
-                ),
-              ),
+              HeadLineComponent(
+                  AppLocalizations.of(context)!.searchUsernameNewFollowerTitle),
             Expanded(
               child: ContactsListView(),
             )

@@ -3,8 +3,11 @@ import 'dart:collection';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/components/best_friends_selector.dart';
+import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView({super.key, required this.image});
@@ -15,8 +18,11 @@ class ShareImageView extends StatefulWidget {
 }
 
 class _ShareImageView extends State<ShareImageView> {
-  List<Contact> _knownUsers = [];
+  List<Contact> _users = [];
+  List<Contact> _usersFiltered = [];
   final HashSet<Int64> _selectedUserIds = HashSet<Int64>();
+  String _lastSearchQuery = '';
+  final TextEditingController searchUserName = TextEditingController();
 
   @override
   void initState() {
@@ -25,10 +31,30 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   Future<void> _loadUsers() async {
-    final users = await DbContacts.getUsers();
+    final users = await DbContacts.getActiveUsers();
     setState(() {
-      _knownUsers = users;
+      _users = users;
+      _usersFiltered = _users;
     });
+  }
+
+  Future _filterUsers(String query) async {
+    if (query.isEmpty) {
+      _usersFiltered = _users;
+      return;
+    }
+    if (_lastSearchQuery.length < query.length) {
+      _usersFiltered = _users
+          .where((user) =>
+              user.displayName.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    } else {
+      _usersFiltered = _usersFiltered
+          .where((user) =>
+              user.displayName.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
+    _lastSearchQuery = query;
   }
 
   @override
@@ -41,182 +67,127 @@ class _ShareImageView extends State<ShareImageView> {
         padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
         child: Column(
           children: [
-            Expanded(
-              child: ListView(
-                children: [
-                  Container(
-                    alignment: Alignment.centerLeft,
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
-                    child: Text(
-                      AppLocalizations.of(context)!.shareImageBestFriends,
-                      style: TextStyle(fontSize: 20),
-                    ),
-                  ),
-                  UserCheckboxList(
-                    users: _knownUsers,
-                    onChanged: (userId, checkedId) {
-                      setState(() {
-                        if (checkedId) {
-                          _selectedUserIds.add(userId);
-                        } else {
-                          _selectedUserIds.remove(userId);
-                        }
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  // Expanded(
-                  // child: UserList(_filteredUsers),
-                  // )
-                ],
-              ),
+            Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: TextField(
+                    onChanged: _filterUsers,
+                    decoration: getInputDecoration(context,
+                        AppLocalizations.of(context)!.searchUsernameInput))),
+            const SizedBox(height: 10),
+            BestFriendsSelector(
+              users: _usersFiltered,
+              selectedUserIds: _selectedUserIds,
+              updateStatus: (userId, checked) {
+                if (checked) {
+                  _selectedUserIds.add(userId);
+                } else {
+                  _selectedUserIds.remove(userId);
+                }
+              },
             ),
-            SizedBox(
-              height: 120,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    FilledButton.icon(
-                      icon: Icon(Icons.send),
-                      onPressed: () async {
-                        print(_selectedUserIds);
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //       builder: (context) =>
-                        //           ShareImageView(image: widget.image)),
-                        // );
-                      },
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                        ),
-                      ),
-                      label: Text(
-                        AppLocalizations.of(context)!
-                            .shareImagedEditorSendImage,
-                        style: TextStyle(fontSize: 17),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            const SizedBox(height: 10),
+            HeadLineComponent(AppLocalizations.of(context)!.shareImageAllUsers),
+            Expanded(
+              child: UserList(_usersFiltered),
             )
           ],
         ),
       ),
-    );
-  }
-}
-
-class UserCheckboxList extends StatelessWidget {
-  final List<Contact> users;
-  final Function(Int64, bool) onChanged;
-
-  const UserCheckboxList(
-      {super.key, required this.users, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    // Limit the number of users to 8
-    final limitedUsers = users.length > 8 ? users.sublist(0, 8) : users;
-
-    return Column(
-      spacing: 8,
-      children: List.generate((limitedUsers.length + 1) ~/ 2, (rowIndex) {
-        final firstUserIndex = rowIndex * 2;
-        final secondUserIndex = firstUserIndex + 1;
-
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Expanded(
-                child: UserCheckbox(
-                    user: limitedUsers[firstUserIndex], onChanged: onChanged)),
-            (secondUserIndex < limitedUsers.length)
-                ? Expanded(
-                    child: UserCheckbox(
-                        user: limitedUsers[secondUserIndex],
-                        onChanged: onChanged),
-                  )
-                : Expanded(
-                    child: Container(),
-                  ),
-          ],
-        );
-      }),
-    );
-  }
-}
-
-class UserCheckbox extends StatefulWidget {
-  final Contact user;
-  final Function(Int64, bool) onChanged;
-
-  const UserCheckbox({super.key, required this.user, required this.onChanged});
-
-  @override
-  State<UserCheckbox> createState() => _UserCheckboxState();
-}
-
-class _UserCheckboxState extends State<UserCheckbox> {
-  bool isChecked = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding:
-          EdgeInsets.symmetric(horizontal: 3), // Padding inside the container
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            isChecked = !isChecked;
-            widget.onChanged(widget.user.userId, isChecked);
-          });
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(
-              horizontal: 10, vertical: 0), // Padding inside the container
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
-              // color: Colors.blue, // Border color
-              width: 1.0, // Border width
-            ),
-            borderRadius:
-                BorderRadius.circular(8.0), // Optional: Rounded corners
-          ),
+      floatingActionButton: SizedBox(
+        height: 120,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              InitialsAvatar(
-                  fontSize: 15,
-                  displayName: widget
-                      .user.displayName), // Display first letter of the name
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  widget.user.displayName.length > 10
-                      ? '${widget.user.displayName.substring(0, 10)}...' // Trim if too long
-                      : widget.user.displayName,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Checkbox(
-                value: isChecked,
-                onChanged: (bool? value) {
-                  setState(() {
-                    isChecked = value ?? false;
-                    widget.onChanged(widget.user.userId, isChecked);
-                  });
+              FilledButton.icon(
+                icon: Icon(Icons.send),
+                onPressed: () async {
+                  print(_selectedUserIds);
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //       builder: (context) =>
+                  //           ShareImageView(image: widget.image)),
+                  // );
                 },
+                style: ButtonStyle(
+                  padding: WidgetStateProperty.all<EdgeInsets>(
+                    EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                  ),
+                ),
+                label: Text(
+                  AppLocalizations.of(context)!.shareImagedEditorSendImage,
+                  style: TextStyle(fontSize: 17),
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class UserList extends StatelessWidget {
+  const UserList(this._knownUsers, {super.key});
+  final List<Contact> _knownUsers;
+
+  @override
+  Widget build(BuildContext context) {
+    // Step 1: Sort the users alphabetically
+    _knownUsers.sort((a, b) => a.displayName.compareTo(b.displayName));
+
+    // Step 2: Group users by their initials
+    Map<String, List<String>> groupedUsers = {};
+    for (var user in _knownUsers) {
+      String initial = user.displayName[0].toUpperCase();
+      if (!groupedUsers.containsKey(initial)) {
+        groupedUsers[initial] = [];
+      }
+      groupedUsers[initial]!.add(user.displayName);
+    }
+
+    // Step 3: Create a list of sections
+    List<MapEntry<String, List<String>>> sections =
+        groupedUsers.entries.toList();
+
+    return ListView.builder(
+      restorationId: 'new_message_users_list',
+      itemCount: sections.length,
+      itemBuilder: (BuildContext context, int sectionIndex) {
+        final section = sections[sectionIndex];
+        final initial = section.key;
+        final users = section.value;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header for the initial
+            // Padding(
+            //   padding:
+            //       const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            //   child: Text(
+            //     initial,
+            //     style: TextStyle(fontWeight: FontWeight.normal, fontSize: 18),
+            //   ),
+            // ),
+            // List of users under this initial
+            ...users.map((username) {
+              return ListTile(
+                title: Text(username),
+                leading: InitialsAvatar(
+                  displayName: username,
+                  fontSize: 15,
+                ),
+                onTap: () {
+                  // Handle tap
+                },
+              );
+            }).toList(),
+          ],
+        );
+      },
     );
   }
 }
