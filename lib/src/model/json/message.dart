@@ -1,5 +1,5 @@
+import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:twonly/src/utils/json.dart';
 part 'message.g.dart';
 
@@ -14,23 +14,19 @@ class _MessageKind {
 @JsonSerializable()
 class Message {
   @Int64Converter()
-  final Int64 fromUserId;
   final MessageKind kind;
   final MessageContent? content;
   DateTime timestamp;
 
-  Message(
-      {required this.fromUserId,
-      required this.kind,
-      this.content,
-      required this.timestamp});
+  Message({required this.kind, this.content, required this.timestamp});
 
   @override
   String toString() {
     return 'Message(kind: $kind, content: $content, timestamp: $timestamp)';
   }
 
-  Message fromJson(Map<String, dynamic> json) {
+  static Message fromJson(String jsonString) {
+    Map<String, dynamic> json = jsonDecode(jsonString);
     dynamic content;
     MessageKind kind = $enumDecode(_$MessageKindEnumMap, json['kind']);
     switch (kind) {
@@ -44,22 +40,19 @@ class Message {
     }
 
     return Message(
-      fromUserId: const Int64Converter().fromJson(json['fromUserId'] as String),
       kind: kind,
       timestamp: DateTime.parse(json['timestamp'] as String),
       content: content,
     );
   }
 
-  Map<String, dynamic> toJson(Message instance) {
+  String toJson() {
     var json = <String, dynamic>{
-      'fromUserId': const Int64Converter().toJson(instance.fromUserId),
-      'kind': _$MessageKindEnumMap[instance.kind]!,
-      'timestamp': instance.timestamp.toIso8601String(),
-      'content': instance.content
+      'kind': _$MessageKindEnumMap[kind]!,
+      'timestamp': timestamp.toIso8601String(),
+      'content': content
     };
-
-    return json;
+    return jsonEncode(json);
   }
 }
 

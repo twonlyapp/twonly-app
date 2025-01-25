@@ -1,4 +1,5 @@
 import 'package:twonly/src/components/initialsavatar_component.dart';
+import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/views/search_username_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'new_message_view.dart';
@@ -56,12 +57,19 @@ class ChatListView extends StatefulWidget {
 
 class _ChatListViewState extends State<ChatListView> {
   int _secondsSinceOpen = 0;
+  int _newContactRequests = 0;
   late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
+    _checkNewContactRequests();
+  }
+
+  Future _checkNewContactRequests() async {
+    _newContactRequests = (await DbContacts.getUsers()).length;
+    setState(() {});
   }
 
   void _startTimer() {
@@ -172,17 +180,41 @@ class _ChatListViewState extends State<ChatListView> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.chatsTitle),
         actions: [
-          IconButton(
-            icon: Icon(Icons.person_add), // User with add icon
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SearchUsernameView(),
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.person_add), // User with add icon
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SearchUsernameView(),
+                    ),
+                  );
+                },
+              ),
+              if (_newContactRequests > 0)
+                Positioned(
+                  right: 5,
+                  top: 0,
+                  child: Container(
+                    padding: EdgeInsets.all(5.0), // Add some padding
+                    decoration: BoxDecoration(
+                      color: Colors.red, // Background color
+                      shape: BoxShape.circle, // Make it circular
+                    ),
+                    child: Center(
+                      child: Text(
+                        _newContactRequests.toString(),
+                        style: TextStyle(
+                            color: Colors.white, // Text color
+                            fontSize: 10),
+                      ),
+                    ),
+                  ),
                 ),
-              );
-            },
-          ),
+            ],
+          )
         ],
       ),
       body: ListView.builder(

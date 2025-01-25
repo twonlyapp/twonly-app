@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 // ignore: library_prefixes
@@ -12,11 +15,30 @@ Future<bool> addNewContact(String username) async {
   final res = await apiProvider.getUserData(username);
 
   if (res.isSuccess) {
+    bool added = await DbContacts.insertNewContact(
+        username, res.value.userdata.userId.toInt(), false);
+
+    if (!added) {
+      print("RETURN FALSE HIER!!!");
+      // return false;
+    }
+
     if (await SignalHelper.addNewContact(res.value.userdata)) {
-      await dbProvider.db!.insert(DbContacts.tableName, {
-        DbContacts.columnDisplayName: username,
-        DbContacts.columnUserId: res.value.userdata.userId.toInt()
-      });
+      Message msg =
+          Message(kind: MessageKind.contactRequest, timestamp: DateTime.now());
+
+      Uint8List? bytes =
+          await SignalHelper.encryptMessage(msg, res.value.userdata.userId);
+
+      if (bytes == null) {
+        Logger("utils/api").shout("Error encryption message!");
+        return res.error(ErrorCode.InternalError);
+      }
+
+      Result resp =
+          await apiProvider.sendTextMessage(res.value.userdata.userId, bytes);
+
+      return resp.isSuccess;
     }
   }
   return res.isSuccess;

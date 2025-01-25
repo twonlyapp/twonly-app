@@ -197,10 +197,14 @@ class V0 extends $pb.GeneratedMessage {
 class NewMessage extends $pb.GeneratedMessage {
   factory NewMessage({
     $core.List<$core.int>? body,
+    $fixnum.Int64? fromUserId,
   }) {
     final $result = create();
     if (body != null) {
       $result.body = body;
+    }
+    if (fromUserId != null) {
+      $result.fromUserId = fromUserId;
     }
     return $result;
   }
@@ -210,6 +214,7 @@ class NewMessage extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NewMessage', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
+    ..aInt64(2, _omitFieldNames ? '' : 'fromUserId')
     ..hasRequiredFields = false
   ;
 
@@ -242,6 +247,15 @@ class NewMessage extends $pb.GeneratedMessage {
   $core.bool hasBody() => $_has(0);
   @$pb.TagNumber(1)
   void clearBody() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get fromUserId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set fromUserId($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasFromUserId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFromUserId() => clearField(2);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {
@@ -316,6 +330,7 @@ class Response_UserData extends $pb.GeneratedMessage {
     $core.List<$core.int>? signedPrekey,
     $core.List<$core.int>? signedPrekeySignature,
     $fixnum.Int64? signedPrekeyId,
+    $core.List<$core.int>? username,
   }) {
     final $result = create();
     if (userId != null) {
@@ -336,6 +351,9 @@ class Response_UserData extends $pb.GeneratedMessage {
     if (signedPrekeyId != null) {
       $result.signedPrekeyId = signedPrekeyId;
     }
+    if (username != null) {
+      $result.username = username;
+    }
     return $result;
   }
   Response_UserData._() : super();
@@ -349,6 +367,7 @@ class Response_UserData extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
     ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
     ..aInt64(6, _omitFieldNames ? '' : 'signedPrekeyId')
+    ..a<$core.List<$core.int>>(7, _omitFieldNames ? '' : 'username', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
@@ -420,6 +439,15 @@ class Response_UserData extends $pb.GeneratedMessage {
   $core.bool hasSignedPrekeyId() => $_has(5);
   @$pb.TagNumber(6)
   void clearSignedPrekeyId() => clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.List<$core.int> get username => $_getN(6);
+  @$pb.TagNumber(7)
+  set username($core.List<$core.int> v) { $_setBytes(6, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasUsername() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearUsername() => clearField(7);
 }
 
 enum Response_Ok_Ok {

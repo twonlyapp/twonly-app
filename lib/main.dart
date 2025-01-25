@@ -36,10 +36,10 @@ void main() async {
 
   var apiUrl = "ws://api.twonly.eu/api/client";
   var backupApiUrl = "ws://api2.twonly.eu/api/client";
-  if (!kReleaseMode) {
-    // Overwrite the domain in your local network so you can test the app locally
-    apiUrl = "ws://10.99.0.6:3030/api/client";
-  }
+  // if (!kReleaseMode) {
+  // Overwrite the domain in your local network so you can test the app locally
+  apiUrl = "ws://10.99.0.6:3030/api/client";
+  // }
 
   apiProvider = ApiProvider(apiUrl: apiUrl, backupApiUrl: backupApiUrl);
 

@@ -641,6 +641,56 @@ class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
   void clearUsername() => clearField(1);
 }
 
+class ApplicationData_GetUserById extends $pb.GeneratedMessage {
+  factory ApplicationData_GetUserById({
+    $fixnum.Int64? userId,
+  }) {
+    final $result = create();
+    if (userId != null) {
+      $result.userId = userId;
+    }
+    return $result;
+  }
+  ApplicationData_GetUserById._() : super();
+  factory ApplicationData_GetUserById.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetUserById.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetUserById', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetUserById clone() => ApplicationData_GetUserById()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetUserById copyWith(void Function(ApplicationData_GetUserById) updates) => super.copyWith((message) => updates(message as ApplicationData_GetUserById)) as ApplicationData_GetUserById;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetUserById create() => ApplicationData_GetUserById._();
+  ApplicationData_GetUserById createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_GetUserById> createRepeated() => $pb.PbList<ApplicationData_GetUserById>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetUserById getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUserById>(create);
+  static ApplicationData_GetUserById? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+}
+
 class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
   factory ApplicationData_GetPrekeysByUserId({
     $fixnum.Int64? userId,
@@ -825,6 +875,7 @@ enum ApplicationData_ApplicationData {
   getprekeysbyuserid, 
   getuploadtoken, 
   uploaddata, 
+  getuserbyid, 
   notSet
 }
 
@@ -835,6 +886,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_GetPrekeysByUserId? getprekeysbyuserid,
     ApplicationData_GetUploadToken? getuploadtoken,
     ApplicationData_UploadData? uploaddata,
+    ApplicationData_GetUserById? getuserbyid,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -852,6 +904,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (uploaddata != null) {
       $result.uploaddata = uploaddata;
     }
+    if (getuserbyid != null) {
+      $result.getuserbyid = getuserbyid;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -864,15 +919,17 @@ class ApplicationData extends $pb.GeneratedMessage {
     3 : ApplicationData_ApplicationData.getprekeysbyuserid,
     4 : ApplicationData_ApplicationData.getuploadtoken,
     5 : ApplicationData_ApplicationData.uploaddata,
+    6 : ApplicationData_ApplicationData.getuserbyid,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5])
+    ..oo(0, [1, 2, 3, 4, 5, 6])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
     ..aOM<ApplicationData_GetUploadToken>(4, _omitFieldNames ? '' : 'getuploadtoken', subBuilder: ApplicationData_GetUploadToken.create)
     ..aOM<ApplicationData_UploadData>(5, _omitFieldNames ? '' : 'uploaddata', subBuilder: ApplicationData_UploadData.create)
+    ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getuserbyid', subBuilder: ApplicationData_GetUserById.create)
     ..hasRequiredFields = false
   ;
 
@@ -954,6 +1011,17 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearUploaddata() => clearField(5);
   @$pb.TagNumber(5)
   ApplicationData_UploadData ensureUploaddata() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  ApplicationData_GetUserById get getuserbyid => $_getN(5);
+  @$pb.TagNumber(6)
+  set getuserbyid(ApplicationData_GetUserById v) { setField(6, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasGetuserbyid() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearGetuserbyid() => clearField(6);
+  @$pb.TagNumber(6)
+  ApplicationData_GetUserById ensureGetuserbyid() => $_ensure(5);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

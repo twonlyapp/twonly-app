@@ -1,9 +1,13 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:math';
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
@@ -127,7 +131,6 @@ class ApiProvider {
         messagesV0[msg.v0.seq] = msg;
       } else {
         _handleServerMessage(msg);
-        log.shout("Got a new message from the server: $msg");
       }
     } catch (e) {
       log.shout("Error parsing the servers message: $e");
@@ -137,7 +140,7 @@ class ApiProvider {
   Future _handleServerMessage(server.ServerToClient msg) async {
     client.Response? response;
 
-    if (msg.v0.requestNewPreKeys) {
+    if (msg.v0.hasRequestNewPreKeys()) {
       List<PreKeyRecord> localPreKeys = await SignalHelper.getPreKeys();
 
       List<client.Response_PreKey> prekeysList = [];
@@ -149,9 +152,26 @@ class ApiProvider {
       var prekeys = client.Response_Prekeys(prekeys: prekeysList);
       var ok = client.Response_Ok()..prekeys = prekeys;
       response = client.Response()..ok = ok;
+    } else if (msg.v0.hasNewMessage()) {
+      Uint8List body = Uint8List.fromList(msg.v0.newMessage.body);
+      Int64 fromUserId = msg.v0.newMessage.fromUserId;
+      Message? message = await SignalHelper.getDecryptedText(fromUserId, body);
+      if (message != null) {
+        Result username = await getUsername(fromUserId);
+        if (username.isSuccess) {
+          print(username.value);
+          Uint8List name = username.value.userdata.username;
+          DbContacts.insertNewContact(
+              utf8.decode(name), fromUserId.toInt(), true);
+          print(message);
+        }
+      }
+      var ok = client.Response_Ok()..none = true;
+      response = client.Response()..ok = ok;
+    } else {
+      log.shout("Got a new message from the server: $msg");
+      return;
     }
-
-    if (response == null) return;
 
     var v0 = client.V0()
       ..seq = msg.v0.seq
@@ -308,8 +328,7 @@ class ApiProvider {
   Future<Result> register(String username, String? inviteCode) async {
     final signalIdentity = await SignalHelper.getSignalIdentity();
     if (signalIdentity == null) {
-      return Result.error(
-          "There was an fatal error. Try reinstalling the app.");
+      return Result.error(ErrorCode.InternalError);
     }
 
     final signalStore =
@@ -336,7 +355,18 @@ class ApiProvider {
 
     final resp = await _sendRequestV0(req);
     if (resp == null) {
-      return Result.error("Server is not reachable!");
+      return Result.error(ErrorCode.InternalError);
+    }
+    return _asResult(resp);
+  }
+
+  Future<Result> getUsername(Int64 userId) async {
+    var get = ApplicationData_GetUserById()..userId = userId;
+    var appData = ApplicationData()..getuserbyid = get;
+    var req = createClientToServerFromApplicationData(appData);
+    final resp = await _sendRequestV0(req);
+    if (resp == null) {
+      return Result.error(ErrorCode.InternalError);
     }
     return _asResult(resp);
   }
@@ -348,7 +378,22 @@ class ApiProvider {
 
     final resp = await _sendRequestV0(req);
     if (resp == null) {
-      return Result.error("Server is not reachable!");
+      return Result.error(ErrorCode.InternalError);
+    }
+    return _asResult(resp);
+  }
+
+  Future<Result> sendTextMessage(Int64 target, Uint8List msg) async {
+    var testMessage = ApplicationData_TextMessage()
+      ..userId = target
+      ..body = msg;
+
+    var appData = ApplicationData()..textmessage = testMessage;
+    var req = createClientToServerFromApplicationData(appData);
+
+    final resp = await _sendRequestV0(req);
+    if (resp == null) {
+      return Result.error(ErrorCode.InternalError);
     }
     return _asResult(resp);
   }

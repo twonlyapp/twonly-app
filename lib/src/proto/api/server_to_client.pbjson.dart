@@ -54,13 +54,15 @@ final $typed_data.Uint8List v0Descriptor = $convert.base64Decode(
 const NewMessage$json = {
   '1': 'NewMessage',
   '2': [
+    {'1': 'from_user_id', '3': 2, '4': 1, '5': 3, '10': 'fromUserId'},
     {'1': 'body', '3': 1, '4': 1, '5': 12, '10': 'body'},
   ],
 };
 
 /// Descriptor for `NewMessage`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List newMessageDescriptor = $convert.base64Decode(
-    'CgpOZXdNZXNzYWdlEhIKBGJvZHkYASABKAxSBGJvZHk=');
+    'CgpOZXdNZXNzYWdlEiAKDGZyb21fdXNlcl9pZBgCIAEoA1IKZnJvbVVzZXJJZBISCgRib2R5GA'
+    'EgASgMUgRib2R5');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {
@@ -90,12 +92,14 @@ const Response_UserData$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'prekeys', '3': 2, '4': 3, '5': 11, '6': '.server_to_client.Response.PreKey', '10': 'prekeys'},
-    {'1': 'public_identity_key', '3': 3, '4': 1, '5': 12, '9': 0, '10': 'publicIdentityKey', '17': true},
-    {'1': 'signed_prekey', '3': 4, '4': 1, '5': 12, '9': 1, '10': 'signedPrekey', '17': true},
-    {'1': 'signed_prekey_signature', '3': 5, '4': 1, '5': 12, '9': 2, '10': 'signedPrekeySignature', '17': true},
-    {'1': 'signed_prekey_id', '3': 6, '4': 1, '5': 3, '9': 3, '10': 'signedPrekeyId', '17': true},
+    {'1': 'username', '3': 7, '4': 1, '5': 12, '9': 0, '10': 'username', '17': true},
+    {'1': 'public_identity_key', '3': 3, '4': 1, '5': 12, '9': 1, '10': 'publicIdentityKey', '17': true},
+    {'1': 'signed_prekey', '3': 4, '4': 1, '5': 12, '9': 2, '10': 'signedPrekey', '17': true},
+    {'1': 'signed_prekey_signature', '3': 5, '4': 1, '5': 12, '9': 3, '10': 'signedPrekeySignature', '17': true},
+    {'1': 'signed_prekey_id', '3': 6, '4': 1, '5': 3, '9': 4, '10': 'signedPrekeyId', '17': true},
   ],
   '8': [
+    {'1': '_username'},
     {'1': '_public_identity_key'},
     {'1': '_signed_prekey'},
     {'1': '_signed_prekey_signature'},
@@ -122,16 +126,17 @@ const Response_Ok$json = {
 final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'CghSZXNwb25zZRIvCgJvaxgBIAEoCzIdLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuT2tIAF'
     'ICb2sSKAoFZXJyb3IYAiABKA4yEC5lcnJvci5FcnJvckNvZGVIAFIFZXJyb3IaMAoGUHJlS2V5'
-    'Eg4KAmlkGAEgASgDUgJpZBIWCgZwcmVrZXkYAiABKAxSBnByZWtleRqGAwoIVXNlckRhdGESFw'
+    'Eg4KAmlkGAEgASgDUgJpZBIWCgZwcmVrZXkYAiABKAxSBnByZWtleRq0AwoIVXNlckRhdGESFw'
     'oHdXNlcl9pZBgBIAEoA1IGdXNlcklkEjsKB3ByZWtleXMYAiADKAsyIS5zZXJ2ZXJfdG9fY2xp'
-    'ZW50LlJlc3BvbnNlLlByZUtleVIHcHJla2V5cxIzChNwdWJsaWNfaWRlbnRpdHlfa2V5GAMgAS'
-    'gMSABSEXB1YmxpY0lkZW50aXR5S2V5iAEBEigKDXNpZ25lZF9wcmVrZXkYBCABKAxIAVIMc2ln'
-    'bmVkUHJla2V5iAEBEjsKF3NpZ25lZF9wcmVrZXlfc2lnbmF0dXJlGAUgASgMSAJSFXNpZ25lZF'
-    'ByZWtleVNpZ25hdHVyZYgBARItChBzaWduZWRfcHJla2V5X2lkGAYgASgDSANSDnNpZ25lZFBy'
-    'ZWtleUlkiAEBQhYKFF9wdWJsaWNfaWRlbnRpdHlfa2V5QhAKDl9zaWduZWRfcHJla2V5QhoKGF'
-    '9zaWduZWRfcHJla2V5X3NpZ25hdHVyZUITChFfc2lnbmVkX3ByZWtleV9pZBrBAQoCT2sSFAoE'
-    'Tm9uZRgBIAEoCEgAUgROb25lEhgKBnVzZXJpZBgCIAEoA0gAUgZ1c2VyaWQSHgoJY2hhbGxlbm'
-    'dlGAMgASgMSABSCWNoYWxsZW5nZRIiCgt1cGxvYWR0b2tlbhgEIAEoDEgAUgt1cGxvYWR0b2tl'
-    'bhJBCgh1c2VyZGF0YRgFIAEoCzIjLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuVXNlckRhdG'
-    'FIAFIIdXNlcmRhdGFCBAoCT2tCCgoIUmVzcG9uc2U=');
+    'ZW50LlJlc3BvbnNlLlByZUtleVIHcHJla2V5cxIfCgh1c2VybmFtZRgHIAEoDEgAUgh1c2Vybm'
+    'FtZYgBARIzChNwdWJsaWNfaWRlbnRpdHlfa2V5GAMgASgMSAFSEXB1YmxpY0lkZW50aXR5S2V5'
+    'iAEBEigKDXNpZ25lZF9wcmVrZXkYBCABKAxIAlIMc2lnbmVkUHJla2V5iAEBEjsKF3NpZ25lZF'
+    '9wcmVrZXlfc2lnbmF0dXJlGAUgASgMSANSFXNpZ25lZFByZWtleVNpZ25hdHVyZYgBARItChBz'
+    'aWduZWRfcHJla2V5X2lkGAYgASgDSARSDnNpZ25lZFByZWtleUlkiAEBQgsKCV91c2VybmFtZU'
+    'IWChRfcHVibGljX2lkZW50aXR5X2tleUIQCg5fc2lnbmVkX3ByZWtleUIaChhfc2lnbmVkX3By'
+    'ZWtleV9zaWduYXR1cmVCEwoRX3NpZ25lZF9wcmVrZXlfaWQawQEKAk9rEhQKBE5vbmUYASABKA'
+    'hIAFIETm9uZRIYCgZ1c2VyaWQYAiABKANIAFIGdXNlcmlkEh4KCWNoYWxsZW5nZRgDIAEoDEgA'
+    'UgljaGFsbGVuZ2USIgoLdXBsb2FkdG9rZW4YBCABKAxIAFILdXBsb2FkdG9rZW4SQQoIdXNlcm'
+    'RhdGEYBSABKAsyIy5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlVzZXJEYXRhSABSCHVzZXJk'
+    'YXRhQgQKAk9rQgoKCFJlc3BvbnNl');
 

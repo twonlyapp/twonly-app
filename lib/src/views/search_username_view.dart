@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/utils/api.dart';
 import 'package:twonly/src/views/register_view.dart';
 
@@ -14,28 +15,24 @@ class SearchUsernameView extends StatefulWidget {
 
 class _SearchUsernameView extends State<SearchUsernameView> {
   final TextEditingController searchUserName = TextEditingController();
-
   bool _isLoading = false;
 
   Future _addNewUser(BuildContext context) async {
-    Timer timer = Timer(Duration(milliseconds: 500), () {
-      setState(() {
-        _isLoading = true;
-      });
+    setState(() {
+      _isLoading = true;
     });
 
     final status = await addNewContact(searchUserName.text);
 
-    timer.cancel();
-    // loaderDelay.timeout(Duration(microseconds: 0));
     setState(() {
       _isLoading = false;
     });
+
     Logger("search_user_name").warning("Replace instead of pop");
 
     if (context.mounted) {
       if (status) {
-        Navigator.pop(context);
+        // Navigator.pop(context);
       } else if (context.mounted) {
         showAlertDialog(
             context,
@@ -84,7 +81,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                     controller: searchUserName,
                     decoration: getInputDecoration(
                         AppLocalizations.of(context)!.searchUsernameInput))),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             OutlinedButton.icon(
               icon: Icon(Icons.qr_code),
               onPressed: () {
@@ -93,9 +90,18 @@ class _SearchUsernameView extends State<SearchUsernameView> {
               },
               label: Text("QR-Code scannen"),
             ),
-            SizedBox(height: 20),
-            const SizedBox(height: 40),
-            if (_isLoading) const Center(child: CircularProgressIndicator())
+            SizedBox(height: 30),
+            Container(
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
+              child: Text(
+                "Neue Followanfragen",
+                style: TextStyle(fontSize: 20),
+              ),
+            ),
+            Expanded(
+              child: ContactsListView(),
+            )
           ],
         ),
       ),
@@ -103,11 +109,73 @@ class _SearchUsernameView extends State<SearchUsernameView> {
         padding: const EdgeInsets.only(bottom: 30.0),
         child: FloatingActionButton(
           onPressed: () {
-            _addNewUser(context);
+            if (!_isLoading) _addNewUser(context);
           },
-          child: const Icon(Icons.arrow_right_rounded),
+          child: (_isLoading)
+              ? const Center(child: CircularProgressIndicator())
+              : Icon(Icons.arrow_right_rounded),
         ),
       ),
+    );
+  }
+}
+
+class ContactsListView extends StatefulWidget {
+  @override
+  State<ContactsListView> createState() => _ContactsListViewState();
+}
+
+class _ContactsListViewState extends State<ContactsListView> {
+  List<Contact> _allContacts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
+  }
+
+  Future _loadContacts() async {
+    List<Contact> allContacts = await DbContacts.getUsers();
+    _allContacts = allContacts.where((contact) => !contact.accepted).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: _allContacts.length,
+      itemBuilder: (context, index) {
+        final contact = _allContacts[index];
+
+        if (!contact.requested) {
+          return ListTile(
+            title: Text(contact.displayName),
+            subtitle: Text('Pending'),
+          );
+        }
+
+        return ListTile(
+          title: Text(contact.displayName),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(Icons.close, color: Colors.red),
+                onPressed: () {
+                  // Handle reject action
+                  print('Rejected ${contact.displayName}');
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.check, color: Colors.green),
+                onPressed: () {
+                  // Handle accept action
+                  print('Accepted ${contact.displayName}');
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

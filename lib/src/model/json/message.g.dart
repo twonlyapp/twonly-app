@@ -22,7 +22,6 @@ const _$MessageKindEnumMap = {
 };
 
 Message _$MessageFromJson(Map<String, dynamic> json) => Message(
-      fromUserId: const Int64Converter().fromJson(json['fromUserId'] as String),
       kind: $enumDecode(_$MessageKindEnumMap, json['kind']),
       content: json['content'] == null
           ? null
@@ -31,7 +30,6 @@ Message _$MessageFromJson(Map<String, dynamic> json) => Message(
     );
 
 Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
-      'fromUserId': const Int64Converter().toJson(instance.fromUserId),
       'kind': _$MessageKindEnumMap[instance.kind]!,
       'content': instance.content,
       'timestamp': instance.timestamp.toIso8601String(),

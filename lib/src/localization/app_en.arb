@@ -20,7 +20,7 @@
   "errorUnknown": "An unexpected error has occurred. Please try again later.",
   "errorBadRequest": "The request could not be understood by the server due to malformed syntax. Please check your input and try again.",
   "errorTooManyRequests": "You have made too many requests in a short period. Please wait a moment before trying again.",
-  "errorInternalError": "The server encountered an internal error. Please try again later.",
+  "errorInternalError": "The server is currently not available. Please try again later.",
   "errorInvalidInvitationCode": "The invitation code you provided is invalid. Please check the code and try again.",
   "errorUsernameAlreadyTaken": "The username you want to use is already taken. Please choose a different username.",
   "errorSignatureNotValid": "The provided signature is not valid. Please check your credentials and try again.",

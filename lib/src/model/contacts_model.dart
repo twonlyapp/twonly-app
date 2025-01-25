@@ -1,11 +1,18 @@
 import 'package:cv/cv.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 
 class Contact {
-  Contact({required this.userId, required this.displayName});
+  Contact(
+      {required this.userId,
+      required this.displayName,
+      required this.accepted,
+      required this.requested});
   final Int64 userId;
   final String displayName;
+  final bool accepted;
+  final bool requested;
 }
 
 class DbContacts extends CvModelBase {
@@ -17,6 +24,12 @@ class DbContacts extends CvModelBase {
   static const columnDisplayName = "display_name";
   final displayName = CvField<String>(columnDisplayName);
 
+  static const columnAccepted = "accepted";
+  final accepted = CvField<int>(columnAccepted);
+
+  static const columnRequested = "requested";
+  final requested = CvField<int>(columnRequested);
+
   static const columnCreatedAt = "created_at";
   final createdAt = CvField<DateTime>(columnCreatedAt);
 
@@ -25,25 +38,60 @@ class DbContacts extends CvModelBase {
       CREATE TABLE $tableName (
       $columnUserId INTEGER NOT NULL PRIMARY KEY,
       $columnDisplayName TEXT,
+      $columnAccepted INT NOT NULL DEFAULT 0,
+      $columnRequested INT NOT NULL DEFAULT 0,
       $columnCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """;
   }
 
-  static Future<List<Contact>> getUsers() async {
-    var users = await dbProvider.db!.query(tableName,
-        columns: [columnUserId, columnDisplayName, columnCreatedAt]);
-    if (users.isEmpty) return [];
+  @override
+  List<CvField> get fields =>
+      [userId, displayName, accepted, requested, createdAt];
 
-    List<Contact> parsedUsers = [];
-    for (int i = 0; i < users.length; i++) {
-      parsedUsers.add(Contact(
-          userId: Int64(users.cast()[i][columnUserId]),
-          displayName: users.cast()[i][columnDisplayName]));
+  static Future<List<Contact>> getUsers() async {
+    try {
+      var users = await dbProvider.db!.query(tableName, columns: [
+        columnUserId,
+        columnDisplayName,
+        columnAccepted,
+        columnRequested,
+        columnCreatedAt
+      ]);
+      if (users.isEmpty) return [];
+
+      List<Contact> parsedUsers = [];
+      for (int i = 0; i < users.length; i++) {
+        print(users[i]);
+        parsedUsers.add(
+          Contact(
+            userId: Int64(users.cast()[i][columnUserId]),
+            displayName: users.cast()[i][columnDisplayName],
+            accepted: users[i][columnAccepted] == 1,
+            requested: users[i][columnRequested] == 1,
+          ),
+        );
+      }
+      return parsedUsers;
+    } catch (e) {
+      Logger("contacts_model/getUsers").shout("$e");
+      return [];
     }
-    return parsedUsers;
   }
 
-  @override
-  List<CvField> get fields => [userId, createdAt];
+  static Future<bool> insertNewContact(
+      String username, int userId, bool requested) async {
+    try {
+      int a = requested ? 1 : 0;
+      await dbProvider.db!.insert(DbContacts.tableName, {
+        DbContacts.columnDisplayName: username,
+        DbContacts.columnUserId: userId,
+        DbContacts.columnRequested: a
+      });
+      return true;
+    } catch (e) {
+      Logger("contacts_model/getUsers").shout("$e");
+      return false;
+    }
+  }
 }

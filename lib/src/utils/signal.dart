@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:ffi';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/signal_identity.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart';
 import 'package:twonly/src/signal/connect_signal_protocol_store.dart';
@@ -86,13 +89,17 @@ Future<ConnectSignalProtocolStore?> getSignalStore() async {
 }
 
 Future<SignalIdentity?> getSignalIdentity() async {
-  final storage = getSecureStorage();
-  final signalIdentityJson = await storage.read(key: "signal_identity");
-  if (signalIdentityJson == null) {
+  try {
+    final storage = getSecureStorage();
+    final signalIdentityJson = await storage.read(key: "signal_identity");
+    if (signalIdentityJson == null) {
+      return null;
+    }
+    return SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
+  } catch (e) {
+    Logger("signal.dart/getSignalIdentity").shout(e);
     return null;
   }
-
-  return SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
 }
 
 Future<ConnectSignalProtocolStore> getSignalStoreFromIdentity(
@@ -139,4 +146,100 @@ Future createIfNotExistsSignalIdentity() async {
 
   await storage.write(
       key: "signal_identity", value: jsonEncode(storedSignalIdentity));
+}
+
+// Future<Fingerprint?> generateSessionFingerPrint(String target) async {
+//   try {
+//     IdentityKey? targetIdentity = await signalStore
+//         .getIdentity(SignalProtocolAddress(target, defaultDeviceId));
+//     if (targetIdentity != null) {
+//       final generator = NumericFingerprintGenerator(5200);
+//       final localFingerprint = generator.createFor(
+//         1,
+//         userId,
+//         (await signalStore.getIdentityKeyPair()).getPublicKey(),
+//         Uint8List.fromList(utf8.encode(target)),
+//         targetIdentity,
+//       );
+//       return localFingerprint;
+//     }
+//     return null;
+//   } catch (e) {
+//     return null;
+//   }
+// }
+
+Uint8List intToBytes(int value) {
+  final byteData = ByteData(4);
+  byteData.setInt32(0, value, Endian.big);
+  return byteData.buffer.asUint8List();
+}
+
+int bytesToInt(Uint8List bytes) {
+  final byteData = ByteData.sublistView(bytes);
+  return byteData.getInt32(0, Endian.big);
+}
+
+List<Uint8List>? removeLastFourBytes(Uint8List original) {
+  if (original.length < 4) {
+    return null;
+  }
+  final newList = Uint8List(original.length - 4);
+  newList.setAll(0, original.sublist(0, original.length - 4));
+
+  final lastFourBytes = original.sublist(original.length - 4);
+  return [newList, lastFourBytes];
+}
+
+Future<Uint8List?> encryptMessage(Message msg, Int64 target) async {
+  try {
+    ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
+
+    SessionCipher session = SessionCipher.fromStore(
+        signalStore, SignalProtocolAddress(target.toString(), defaultDeviceId));
+
+    final ciphertext = await session
+        .encrypt(Uint8List.fromList(gzip.encode(utf8.encode(msg.toJson()))));
+
+    var b = BytesBuilder();
+    b.add(ciphertext.serialize());
+    b.add(intToBytes(ciphertext.getType()));
+
+    return b.takeBytes();
+  } catch (e) {
+    Logger("utils/signal").shout(e.toString());
+    return null;
+  }
+}
+
+Future<Message?> getDecryptedText(Int64 source, Uint8List msg) async {
+  try {
+    ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
+
+    SessionCipher session = SessionCipher.fromStore(
+        signalStore, SignalProtocolAddress(source.toString(), defaultDeviceId));
+
+    List<Uint8List>? msgs = removeLastFourBytes(msg);
+    if (msgs == null) return null;
+    Uint8List body = msgs[0];
+    int type = bytesToInt(msgs[1]);
+
+    //  gzip.decode(body);
+
+    Uint8List plaintext;
+    if (type == CiphertextMessage.prekeyType) {
+      PreKeySignalMessage pre = PreKeySignalMessage(body);
+      plaintext = await session.decrypt(pre);
+    } else if (type == CiphertextMessage.whisperType) {
+      SignalMessage signalMsg = SignalMessage.fromSerialized(body);
+      plaintext = await session.decryptFromSignal(signalMsg);
+    } else {
+      return null;
+    }
+    Message dectext = Message.fromJson(utf8.decode(gzip.decode(plaintext)));
+    return dectext;
+  } catch (e) {
+    Logger("utils/signal").shout(e.toString());
+    return null;
+  }
 }

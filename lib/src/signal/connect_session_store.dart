@@ -57,7 +57,7 @@ class ConnectSessionStore extends SessionStore {
   @override
   Future<void> storeSession(
       SignalProtocolAddress address, SessionRecord record) async {
-    if (await containsSession(address)) {
+    if (!await containsSession(address)) {
       await dbProvider.db!.insert(DB.tableName, {
         DB.columnDeviceId: address.getDeviceId(),
         DB.columnName: address.getName(),

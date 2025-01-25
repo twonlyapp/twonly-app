@@ -40,7 +40,7 @@ class DbProvider {
       await _createDb(db);
     }, onUpgrade: (db, oldVersion, newVersion) async {
       if (oldVersion < kVersion1) {
-        await _createDb(db);
+        //await _createDb(db);
       }
     });
   }
