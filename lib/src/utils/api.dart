@@ -1,12 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/providers/api_provider.dart';
+import 'package:twonly/src/providers/notify_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
@@ -55,6 +59,9 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
 
   Result resp = await apiProvider.sendTextMessage(userId, bytes);
 
+  Logger("encryptAndSendMessage")
+      .shout("handle errors here and store them in the database");
+
   return resp;
 }
 
@@ -85,4 +92,44 @@ Future<Result> createNewUser(String username, String inviteCode) async {
   }
 
   return res;
+}
+
+Future sendImage(
+    BuildContext context, List<Contact> users, String imagePath) async {
+  // 1. set notifier provider
+
+  context.read<NotifyProvider>().addSendingTo(users);
+
+  File imageFile = File(imagePath);
+
+  Uint8List? imageBytes = await getCompressedImage(imageFile);
+  if (imageBytes == null) {
+    Logger("api.dart").shout("Error compressing image!");
+    return;
+  }
+
+  for (int i = 0; i < users.length; i++) {
+    Int64 target = users[i].userId;
+    Uint8List? encryptedImage =
+        await SignalHelper.encryptBytes(imageBytes, target);
+    if (encryptedImage == null) {
+      Logger("api.dart").shout("Error encrypting image!");
+      continue;
+    }
+
+    List<int>? imageToken = await apiProvider.uploadData(encryptedImage);
+    if (imageToken == null) {
+      Logger("api.dart").shout("handle error uploading like saving...");
+      continue;
+    }
+
+    Message msg = Message(
+      kind: MessageKind.image,
+      content: ImageContent(imageToken),
+      timestamp: DateTime.timestamp(),
+    );
+
+    print("Send image to $target");
+    encryptAndSendMessage(target, msg);
+  }
 }

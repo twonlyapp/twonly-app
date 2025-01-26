@@ -88,7 +88,7 @@ class TextContent extends MessageContent {
 
 @JsonSerializable()
 class ImageContent extends MessageContent {
-  final String imageToken;
+  final List<int> imageToken;
 
   ImageContent(this.imageToken);
 

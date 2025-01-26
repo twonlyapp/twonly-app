@@ -190,6 +190,27 @@ List<Uint8List>? removeLastFourBytes(Uint8List original) {
   return [newList, lastFourBytes];
 }
 
+Future<Uint8List?> encryptBytes(Uint8List bytes, Int64 target) async {
+  try {
+    ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
+
+    SessionCipher session = SessionCipher.fromStore(
+        signalStore, SignalProtocolAddress(target.toString(), defaultDeviceId));
+
+    final ciphertext =
+        await session.encrypt(Uint8List.fromList(gzip.encode(bytes)));
+
+    var b = BytesBuilder();
+    b.add(ciphertext.serialize());
+    b.add(intToBytes(ciphertext.getType()));
+
+    return b.takeBytes();
+  } catch (e) {
+    Logger("utils/signal").shout(e.toString());
+    return null;
+  }
+}
+
 Future<Uint8List?> encryptMessage(Message msg, Int64 target) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;

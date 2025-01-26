@@ -178,6 +178,8 @@ class ApiProvider {
             DbContacts.acceptUser(fromUserId.toInt());
             updateNotifier();
             break;
+          case MessageKind.image:
+            log.info("Got image: ${message.content}");
           default:
             log.shout("Got unknown MessageKind $message");
         }
@@ -358,6 +360,43 @@ class ApiProvider {
       return Result.error(ErrorCode.InternalError);
     }
     return _asResult(resp);
+  }
+
+  Future<Result> getUploadToken(int size) async {
+    var get = ApplicationData_GetUploadToken()..len = size;
+    var appData = ApplicationData()..getuploadtoken = get;
+    var req = createClientToServerFromApplicationData(appData);
+    final resp = await _sendRequestV0(req);
+    if (resp == null) {
+      return Result.error(ErrorCode.InternalError);
+    }
+    return _asResult(resp);
+  }
+
+  Future<List<int>?> uploadData(Uint8List data) async {
+    Result res = await getUploadToken(data.length);
+
+    if (res.isError || !res.value.hasUploadtoken()) {
+      Logger("api.dart").shout("Error getting upload token!");
+      return null;
+    }
+    List<int> uploadToken = res.value.uploadtoken;
+    log.info("Got token: $uploadToken");
+
+    log.shout("fragmentate the data");
+
+    var get = ApplicationData_UploadData()
+      ..uploadToken = uploadToken
+      ..data = data
+      ..offset = 0;
+
+    var appData = ApplicationData()..uploaddata = get;
+    var req = createClientToServerFromApplicationData(appData);
+    final resp = await _sendRequestV0(req);
+    if (resp == null) {
+      return null;
+    }
+    return _asResult(resp).isSuccess ? uploadToken : null;
   }
 
   Future<Result> getUserData(String username) async {

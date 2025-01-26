@@ -66,35 +66,69 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   Widget build(BuildContext context) {
+    List<Contact> sendingCurrentlyTo =
+        context.watch<NotifyProvider>().sendingCurrentlyTo;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.chatsTitle),
-        actions: [
-          NotificationBadge(
-            count: context.watch<NotifyProvider>().newContactRequests,
-            child: IconButton(
-              icon: Icon(Icons.person_add),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => SearchUsernameView(),
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.chatsTitle),
+          actions: [
+            NotificationBadge(
+              count: context.watch<NotifyProvider>().newContactRequests,
+              child: IconButton(
+                icon: Icon(Icons.person_add),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SearchUsernameView(),
+                    ),
+                  );
+                },
+              ),
+            )
+          ],
+        ),
+        body: Column(
+          children: [
+            if (sendingCurrentlyTo.isNotEmpty)
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                child: ListTile(
+                  leading: Stack(
+                    // child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        strokeWidth: 1,
+                      ),
+                      Icon(
+                        Icons.send, // Replace with your desired icon
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20, // Adjust the size as needed
+                      ),
+                    ],
+                    // ),
                   ),
-                );
-              },
-            ),
-          )
-        ],
-      ),
-      body: ListView.builder(
-        restorationId: 'chat_list_view',
-        itemCount: _activeUsers.length,
-        itemBuilder: (BuildContext context, int index) {
-          final user = _activeUsers[index];
-          return UserListItem(user: user, secondsSinceOpen: _secondsSinceOpen);
-        },
-      ),
-    );
+                  title: Text(sendingCurrentlyTo
+                      .map((e) => e.displayName)
+                      .toList()
+                      .join(", ")),
+                ),
+              ),
+            Expanded(
+              child: ListView.builder(
+                restorationId: 'chat_list_view',
+                itemCount: _activeUsers.length,
+                itemBuilder: (BuildContext context, int index) {
+                  final user = _activeUsers[index];
+                  return UserListItem(
+                      user: user, secondsSinceOpen: _secondsSinceOpen);
+                },
+              ),
+            )
+          ],
+        ));
   }
 }
 

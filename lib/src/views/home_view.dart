@@ -1,10 +1,14 @@
 import 'package:pie_menu/pie_menu.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/src/providers/notify_provider.dart';
 
 import 'camera_preview_view.dart';
 import 'chat_list_view.dart';
 import 'profile_view.dart';
 import '../settings/settings_controller.dart';
 import 'package:flutter/material.dart';
+
+final PageController homeViewPageController = PageController(initialPage: 0);
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key, required this.settingsController});
@@ -15,8 +19,6 @@ class HomeView extends StatefulWidget {
 }
 
 class HomeViewState extends State<HomeView> {
-  int _activePageIdx = 0;
-  final PageController _pageController = PageController(initialPage: 0);
   @override
   Widget build(BuildContext context) {
     return PieCanvas(
@@ -43,11 +45,9 @@ class HomeViewState extends State<HomeView> {
       ),
       child: Scaffold(
         body: PageView(
-          controller: _pageController,
+          controller: homeViewPageController,
           onPageChanged: (index) {
-            setState(() {
-              _activePageIdx = index;
-            });
+            context.read<NotifyProvider>().setActivePageIdx(index);
           },
           children: [
             ChatListView(),
@@ -69,14 +69,14 @@ class HomeViewState extends State<HomeView> {
             BottomNavigationBarItem(icon: Icon(Icons.verified_user), label: ""),
           ],
           onTap: (int index) {
+            context.read<NotifyProvider>().setActivePageIdx(index);
             setState(() {
-              _activePageIdx = index;
-              _pageController.animateToPage(_activePageIdx,
+              homeViewPageController.animateToPage(index,
                   duration: const Duration(milliseconds: 100),
                   curve: Curves.bounceIn);
             });
           },
-          currentIndex: _activePageIdx,
+          currentIndex: context.watch<NotifyProvider>().activePageIdx,
         ),
       ),
     );

@@ -47,7 +47,9 @@ Map<String, dynamic> _$TextContentToJson(TextContent instance) =>
     };
 
 ImageContent _$ImageContentFromJson(Map<String, dynamic> json) => ImageContent(
-      json['imageToken'] as String,
+      (json['imageToken'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
     );
 
 Map<String, dynamic> _$ImageContentToJson(ImageContent instance) =>

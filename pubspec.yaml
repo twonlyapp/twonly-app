@@ -16,6 +16,7 @@ dependencies:
   fixnum: ^1.1.1
   flutter:
     sdk: flutter
+  flutter_image_compress: ^2.4.0
   flutter_localizations:
     sdk: flutter
   flutter_secure_storage: ^9.2.2

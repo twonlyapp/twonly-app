@@ -77,17 +77,17 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     Navigator.push(
                       context,
                       PageRouteBuilder(
-                          opaque: false,
-                          pageBuilder: (context, a1, a2) =>
-                              ShareImageEditorView(image: path),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            return child;
-                          },
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero),
+                        opaque: false,
+                        pageBuilder: (context, a1, a2) =>
+                            ShareImageEditorView(image: path),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                          return child;
+                        },
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
                     );
-                    debugPrint('Picture saved: ${path}');
                   },
                   multiple: (multiple) {
                     multiple.fileBySensor.forEach((key, value) {

@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
+import 'package:image/image.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -117,4 +120,14 @@ InputDecoration getInputDecoration(context, hintText) {
     ),
     contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
   );
+}
+
+Future<Uint8List?> getCompressedImage(File file) async {
+  var result = await FlutterImageCompress.compressWithFile(
+    file.absolute.path,
+    quality: 90,
+  );
+  print(file.lengthSync());
+  print(result!.length);
+  return result;
 }
