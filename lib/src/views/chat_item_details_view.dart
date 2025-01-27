@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 
 class AlignedTextBox extends StatelessWidget {
@@ -39,8 +40,8 @@ class AlignedTextBox extends StatelessWidget {
 }
 
 /// Displays detailed information about a SampleItem.
-class SampleItemDetailsView extends StatelessWidget {
-  const SampleItemDetailsView({super.key, required this.user});
+class ChatItemDetailsView extends StatelessWidget {
+  const ChatItemDetailsView({super.key, required this.user});
 
   final Contact user;
 
@@ -86,24 +87,50 @@ class SampleItemDetailsView extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(
-            height: 10,
-          ),
           Padding(
-            padding: const EdgeInsets.only(bottom: 40, left: 10, right: 10),
-            child: TextField(
-              decoration: InputDecoration(
-                // border: OutlineInputBorder(),
-                labelText: 'Enter your message',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.send),
+            padding:
+                const EdgeInsets.only(bottom: 30, left: 20, right: 20, top: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    // controller: _controller,
+                    decoration: InputDecoration(
+                        hintText: 'Type a message',
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10)
+                        // border: OutlineInputBorder(),
+                        ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                IconButton(
+                  icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
                   onPressed: () {
                     // Handle send action
                   },
                 ),
-              ),
+              ],
             ),
           ),
+          // Container(
+          //   child: Row(children: [
+          //     Padding(
+          //       padding: const EdgeInsets.only(bottom: 40, left: 10, right: 10),
+          //       child: TextField(
+          //         decoration: InputDecoration(
+          //           // border: OutlineInputBorder(),
+          //           hintText: 'Enter your message',
+          //         ),
+          //       ),
+          //     ),
+          //     IconButton(
+          //       icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+          //       onPressed: () {
+          //         // Handle send action
+          //       },
+          //     ),
+          //   ]),
+          // ),
         ],
       ),
     );

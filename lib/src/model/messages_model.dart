@@ -11,7 +11,7 @@ class DbMessage {
     required this.messageId,
     required this.messageOtherId,
     required this.otherUserId,
-    required this.messageMessageKind,
+    required this.messageKind,
     required this.messageContent,
     required this.messageOpenedAt,
     required this.messageAcknowledgeByUser,
@@ -23,12 +23,17 @@ class DbMessage {
   // is this null then the message was sent from the user itself
   int? messageOtherId;
   int otherUserId;
-  MessageKind messageMessageKind;
+  MessageKind messageKind;
   MessageContent? messageContent;
   DateTime? messageOpenedAt;
   bool messageAcknowledgeByUser;
   bool messageAcknowledgeByServer;
   DateTime sendOrReceivedAt;
+
+  bool containsOtherMedia() {
+    if (messageOtherId == null) return false;
+    return messageKind == MessageKind.image || messageKind == MessageKind.video;
+  }
 }
 
 class DbMessages extends CvModelBase {
@@ -44,7 +49,7 @@ class DbMessages extends CvModelBase {
   final otherUserId = CvField<int>(columnOtherUserId);
 
   static const columnMessageKind = "message_kind";
-  final messageMessageKind = CvField<int>(columnMessageKind);
+  final messageKind = CvField<int>(columnMessageKind);
 
   static const columnMessageContentJson = "message_json";
   final messageContentJson = CvField<String?>(columnMessageContentJson);
@@ -135,7 +140,8 @@ class DbMessages extends CvModelBase {
         columnMessageAcknowledgeByServer: 1,
         columnMessageAcknowledgeByUser:
             0, // ack in case of sending corresponds to the opened flag
-        columnOtherUserId: userIdFrom
+        columnOtherUserId: userIdFrom,
+        columnSendOrReceivedAt: DateTime.now().toIso8601String()
       });
       globalCallBackOnMessageChange(userIdFrom);
       return true;
@@ -204,7 +210,7 @@ class DbMessages extends CvModelBase {
   @override
   List<CvField> get fields => [
         messageId,
-        messageMessageKind,
+        messageKind,
         messageContentJson,
         messageOpenedAt,
         sendOrReceivedAt
@@ -230,7 +236,7 @@ class DbMessages extends CvModelBase {
             messageId: fromDb[i][columnMessageId],
             messageOtherId: fromDb[i][columnMessageOtherId],
             otherUserId: fromDb[i][columnOtherUserId],
-            messageMessageKind:
+            messageKind:
                 MessageKindExtension.fromIndex(fromDb[i][columnMessageKind]),
             messageContent: content,
             messageOpenedAt: messageOpenedAt,

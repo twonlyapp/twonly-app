@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/share_image_view.dart';
 
@@ -63,10 +64,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     // mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        icon: Icon(
-                          Icons.close,
-                          size: 30,
-                        ),
+                        icon: Icon(Icons.close, size: 30),
                         color: Colors.white,
                         onPressed: () async {
                           Navigator.pop(context);
@@ -87,7 +85,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       OutlinedButton.icon(
                         icon: _imageSaved
                             ? Icon(Icons.check)
-                            : Icon(Icons.save_rounded),
+                            : FaIcon(FontAwesomeIcons.floppyDisk),
                         style: OutlinedButton.styleFrom(
                           iconColor: _imageSaved
                               ? Theme.of(context).colorScheme.outline
@@ -113,7 +111,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       ),
                       const SizedBox(width: 20),
                       FilledButton.icon(
-                        icon: Icon(Icons.send),
+                        icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
                         onPressed: () async {
                           Navigator.push(
                             context,

@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/best_friends_selector.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
@@ -107,7 +108,7 @@ class _ShareImageView extends State<ShareImageView> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FilledButton.icon(
-                icon: Icon(Icons.send),
+                icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
                 onPressed: () async {
                   sendImage(_selectedUserIds.toList(), widget.image);
 

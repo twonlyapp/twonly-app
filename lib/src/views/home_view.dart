@@ -1,3 +1,4 @@
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'camera_preview_view.dart';
 import 'chat_list_view.dart';
@@ -79,12 +80,14 @@ class HomeViewState extends State<HomeView> {
           selectedIconTheme:
               IconThemeData(color: const Color.fromARGB(255, 255, 255, 255)),
           items: [
-            BottomNavigationBarItem(icon: Icon(Icons.chat), label: ""),
             BottomNavigationBarItem(
-              icon: Icon(Icons.camera_alt),
+                icon: FaIcon(FontAwesomeIcons.solidComments), label: ""),
+            BottomNavigationBarItem(
+              icon: FaIcon(FontAwesomeIcons.camera),
               label: "",
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.verified_user), label: ""),
+            BottomNavigationBarItem(
+                icon: FaIcon(FontAwesomeIcons.userShield), label: ""),
           ],
           onTap: (int index) {
             activePageIdx = index;

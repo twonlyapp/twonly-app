@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 
@@ -22,7 +23,6 @@ class _UserContextMenuState extends State<UserContextMenu> {
           tooltip: const Text('Verify user'),
           onSelect: () {
             print('Verify user selected');
-            // Add your verification logic here
           },
           child: const Icon(Icons.gpp_maybe_rounded), // Can be any widget
         ),
@@ -30,9 +30,8 @@ class _UserContextMenuState extends State<UserContextMenu> {
           tooltip: const Text('Send image'),
           onSelect: () {
             print('Send image selected');
-            // Add your image sending logic here
           },
-          child: const Icon(Icons.camera_alt_rounded), // Can be any widget
+          child: const FaIcon(FontAwesomeIcons.camera),
         ),
       ],
       child: widget.child,

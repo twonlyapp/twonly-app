@@ -5,11 +5,13 @@ import 'package:twonly/src/components/notification_badge.dart';
 import 'package:twonly/src/components/user_context_menu.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/messages_model.dart';
+import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chat_item_details_view.dart';
 import 'package:twonly/src/views/home_view.dart';
+import 'package:twonly/src/views/media_viewer_view.dart';
 import 'package:twonly/src/views/search_username_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +49,11 @@ class _ChatListViewState extends State<ChatListView> {
     List<Contact> activeUsers = allUsers
         .where((x) => lastMessages.containsKey(x.userId.toInt()))
         .toList();
+    activeUsers.sort((b, a) {
+      return lastMessages[a.userId.toInt()]!
+          .sendOrReceivedAt
+          .compareTo(lastMessages[b.userId.toInt()]!.sendOrReceivedAt);
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -125,24 +132,28 @@ class UserListItem extends StatefulWidget {
 class _UserListItem extends State<UserListItem> {
   int flames = 0;
   int lastMessageInSeconds = 0;
+  bool isDownloaded = true;
 
   @override
   void initState() {
     super.initState();
-    //_loadAsync();
+    _loadAsync();
   }
 
-  // Future _loadAsync() async {
-  // flames = await widget.user.getFlames();
-  // lastMessageInSeconds = await widget.user.getLastMessageInSeconds();
-  //   setState(() {});
-  // }
+  Future _loadAsync() async {
+    // flames = await widget.user.getFlames();
+    //   setState(() {});
+
+    if (widget.lastMessage.containsOtherMedia()) {
+      isDownloaded = await isMediaDownloaded(
+          widget.lastMessage.messageContent!.downloadToken!);
+      setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     MessageSendState state;
-    // int lastMessageInSeconds = widget.lastMessage.sendOrReceivedAt;
-    //print(widget.lastMessage.sendOrReceivedAt);
     int lastMessageInSeconds = DateTime.now()
         .difference(widget.lastMessage.sendOrReceivedAt)
         .inSeconds;
@@ -173,7 +184,8 @@ class _UserListItem extends State<UserListItem> {
         title: Text(widget.user.displayName),
         subtitle: Row(
           children: [
-            MessageSendStateIcon(state),
+            MessageSendStateIcon(
+                state, isDownloaded, widget.lastMessage.messageKind),
             Text("•"),
             const SizedBox(width: 5),
             Text(
@@ -203,11 +215,19 @@ class _UserListItem extends State<UserListItem> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => SampleItemDetailsView(
-                user: widget.user,
-              ),
-            ),
+            MaterialPageRoute(builder: (context) {
+              if (state == MessageSendState.received &&
+                  widget.lastMessage.containsOtherMedia()) {
+                List<int> token =
+                    widget.lastMessage.messageContent!.downloadToken!;
+                if (isDownloaded) {
+                  return MediaViewerView(widget.user);
+                } else {
+                  tryDownloadMedia(token);
+                }
+              }
+              return ChatItemDetailsView(user: widget.user);
+            }),
           );
         },
       ),

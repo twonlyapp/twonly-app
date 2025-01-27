@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
+import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/model/json/message.dart';
@@ -104,4 +106,42 @@ Future tryDownloadMedia(List<int> imageToken, {bool force = false}) async {
   print("check if free network connection");
 
   print("Downloading: " + imageToken.toString());
+
+  final box = await getMediaStorage();
+
+  Uint8List imageBytes = Uint8List.fromList([0]);
+
+  box.put(imageToken.toString(), imageBytes);
+}
+
+Future<bool> isMediaDownloaded(List<int> mediaToken) async {
+  final box = await getMediaStorage();
+
+  // box.put('secret', 'Hive is awesome');
+
+  return box.containsKey(mediaToken.toString());
+}
+
+Future initMediaStorage() async {
+  final storage = getSecureStorage();
+  var containsEncryptionKey =
+      await storage.containsKey(key: 'hive_encryption_key');
+  if (!containsEncryptionKey) {
+    var key = Hive.generateSecureKey();
+    await storage.write(
+      key: 'hive_encryption_key',
+      value: base64UrlEncode(key),
+    );
+  }
+}
+
+Future<Box> getMediaStorage() async {
+  await initMediaStorage();
+
+  final storage = getSecureStorage();
+  var encryptionKey =
+      base64Url.decode((await storage.read(key: 'hive_encryption_key'))!);
+
+  return await Hive.openBox('media_storage',
+      encryptionCipher: HiveAesCipher(encryptionKey));
 }

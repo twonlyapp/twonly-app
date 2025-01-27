@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/providers/db_provider.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +20,7 @@ late ApiProvider apiProvider;
 void main() async {
   final settingsController = SettingsController(SettingsService());
 
-  // Load the user's peganreferred theme while the splash screen is displayed.
+  // Load the user's preferred theme while the splash screen is displayed.
   // This prevents a sudden theme change when the app is first displayed.
   await settingsController.loadSettings();
 
@@ -32,6 +35,11 @@ void main() async {
           '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
     }
   });
+
+  final dir = await getApplicationDocumentsDirectory();
+  Hive.init(dir.path);
+
+  await initMediaStorage();
 
   dbProvider = DbProvider();
   // Database is just a file, so this will not block the loading of the app much

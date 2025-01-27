@@ -152,7 +152,9 @@ class ApiProvider {
 
   Future<Result> _sendRequestV0(ClientToServer request) async {
     if (_channel == null) {
-      return Result.error(ErrorCode.InternalError);
+      if (!await connect()) {
+        return Result.error(ErrorCode.InternalError);
+      }
     }
     var seq = Int64(Random().nextInt(4294967296));
     while (messagesV0.containsKey(seq)) {

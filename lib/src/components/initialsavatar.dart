@@ -25,18 +25,31 @@ class InitialsAvatar extends StatelessWidget {
     Color avatarColor = _getColorFromUsername(
         displayName, Theme.of(context).brightness == Brightness.dark);
 
-    return CircleAvatar(
-      backgroundColor: avatarColor,
-      radius: fontSize,
-      child: Text(
-        initials,
-        style: TextStyle(
-          color: _getTextColor(avatarColor),
-          fontWeight: FontWeight.normal,
-          fontSize: fontSize,
-        ),
+    Widget child = Text(
+      initials,
+      style: TextStyle(
+        color: _getTextColor(avatarColor),
+        fontWeight: FontWeight.normal,
+        fontSize: fontSize,
       ),
     );
+
+    bool isPro = initials[0] == "T";
+
+    double proSize = (fontSize == null) ? 40 : (fontSize! * 2);
+
+    return isPro
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(12.0), //or 15.0
+            child: Container(
+              height: proSize,
+              width: proSize,
+              color: avatarColor,
+              child: Center(child: child),
+            ),
+          )
+        : CircleAvatar(
+            backgroundColor: avatarColor, radius: fontSize, child: child);
   }
 
   Color _getTextColor(Color color) {
