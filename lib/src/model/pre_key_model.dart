@@ -15,7 +15,7 @@ class DbSignalPreKeyStore extends CvModelBase {
 
   static String getCreateTableString() {
     return """
-      CREATE TABLE $tableName (
+      CREATE TABLE IF NOT EXISTS $tableName (
       $columnPreKeyId INTEGER NOT NULL,
       $columnPreKey BLOB NOT NULL,
       $columnCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,

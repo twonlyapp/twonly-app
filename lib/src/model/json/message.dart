@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:twonly/src/utils/json.dart';
 part 'message.g.dart';
@@ -9,7 +8,22 @@ enum MessageKind {
   video,
   contactRequest,
   rejectRequest,
-  acceptRequest
+  acceptRequest,
+  ack
+}
+
+extension MessageKindExtension on MessageKind {
+  String get name => toString().split('.').last;
+
+  static MessageKind fromString(String name) {
+    return MessageKind.values.firstWhere((e) => e.name == name);
+  }
+
+  int get index => this.index;
+
+  static MessageKind fromIndex(int index) {
+    return MessageKind.values[index];
+  }
 }
 
 // so _$MessageKindEnumMap gets generated
@@ -23,84 +37,33 @@ class Message {
   @Int64Converter()
   final MessageKind kind;
   final MessageContent? content;
+  final int? messageId;
   DateTime timestamp;
 
-  Message({required this.kind, this.content, required this.timestamp});
+  Message(
+      {required this.kind,
+      this.messageId,
+      this.content,
+      required this.timestamp});
 
   @override
   String toString() {
     return 'Message(kind: $kind, content: $content, timestamp: $timestamp)';
   }
 
-  static Message fromJson(String jsonString) {
-    Map<String, dynamic> json = jsonDecode(jsonString);
-    dynamic content;
-    MessageKind kind = $enumDecode(_$MessageKindEnumMap, json['kind']);
-    switch (kind) {
-      case MessageKind.textMessage:
-        content = TextContent.fromJson(json["content"]);
-        break;
-      case MessageKind.image:
-        content = ImageContent.fromJson(json["content"]);
-        break;
-      default:
-    }
-
-    return Message(
-      kind: kind,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      content: content,
-    );
-  }
-
-  String toJson() {
-    var json = <String, dynamic>{
-      'kind': _$MessageKindEnumMap[kind]!,
-      'timestamp': timestamp.toIso8601String(),
-      'content': content
-    };
-    return jsonEncode(json);
-  }
-}
-
-abstract class MessageContent {
-  MessageContent();
-  factory MessageContent.fromJson(Map<String, dynamic> json) {
-    return TextContent("");
-  }
-
-  Map<String, dynamic> toJson();
-}
-// factory MessageContent.fromJson(Map<String, dynamic> json) =>
-//     _$MessageContentFromJson(json);
-
-@JsonSerializable()
-class TextContent extends MessageContent {
-  final String text;
-
-  TextContent(this.text);
-
-  factory TextContent.fromJson(Map<String, dynamic> json) =>
-      _$TextContentFromJson(json);
-  @override
-  Map<String, dynamic> toJson() => _$TextContentToJson(this);
+  factory Message.fromJson(Map<String, dynamic> json) =>
+      _$MessageFromJson(json);
+  Map<String, dynamic> toJson() => _$MessageToJson(this);
 }
 
 @JsonSerializable()
-class ImageContent extends MessageContent {
-  final List<int> imageToken;
+class MessageContent {
+  final String? text;
+  final List<int>? downloadToken;
 
-  ImageContent(this.imageToken);
+  MessageContent({required this.text, required this.downloadToken});
 
-  factory ImageContent.fromJson(Map<String, dynamic> json) =>
-      _$ImageContentFromJson(json);
-  @override
-  Map<String, dynamic> toJson() => _$ImageContentToJson(this);
+  factory MessageContent.fromJson(Map<String, dynamic> json) =>
+      _$MessageContentFromJson(json);
+  Map<String, dynamic> toJson() => _$MessageContentToJson(this);
 }
-
-// @JsonSerializable()
-// class VideoContent extends MessageContent {
-//   final String videoUrl;
-
-//   VideoContent(this.videoUrl);
-// }

@@ -21,10 +21,12 @@ const _$MessageKindEnumMap = {
   MessageKind.contactRequest: 'contactRequest',
   MessageKind.rejectRequest: 'rejectRequest',
   MessageKind.acceptRequest: 'acceptRequest',
+  MessageKind.ack: 'ack',
 };
 
 Message _$MessageFromJson(Map<String, dynamic> json) => Message(
       kind: $enumDecode(_$MessageKindEnumMap, json['kind']),
+      messageId: (json['messageId'] as num?)?.toInt(),
       content: json['content'] == null
           ? null
           : MessageContent.fromJson(json['content'] as Map<String, dynamic>),
@@ -34,25 +36,20 @@ Message _$MessageFromJson(Map<String, dynamic> json) => Message(
 Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
       'kind': _$MessageKindEnumMap[instance.kind]!,
       'content': instance.content,
+      'messageId': instance.messageId,
       'timestamp': instance.timestamp.toIso8601String(),
     };
 
-TextContent _$TextContentFromJson(Map<String, dynamic> json) => TextContent(
-      json['text'] as String,
-    );
-
-Map<String, dynamic> _$TextContentToJson(TextContent instance) =>
-    <String, dynamic>{
-      'text': instance.text,
-    };
-
-ImageContent _$ImageContentFromJson(Map<String, dynamic> json) => ImageContent(
-      (json['imageToken'] as List<dynamic>)
-          .map((e) => (e as num).toInt())
+MessageContent _$MessageContentFromJson(Map<String, dynamic> json) =>
+    MessageContent(
+      text: json['text'] as String?,
+      downloadToken: (json['downloadToken'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
           .toList(),
     );
 
-Map<String, dynamic> _$ImageContentToJson(ImageContent instance) =>
+Map<String, dynamic> _$MessageContentToJson(MessageContent instance) =>
     <String, dynamic>{
-      'imageToken': instance.imageToken,
+      'text': instance.text,
+      'downloadToken': instance.downloadToken,
     };

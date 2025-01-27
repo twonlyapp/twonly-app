@@ -7,10 +7,12 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
+import 'package:twonly/src/utils/api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 // ignore: library_prefixes
@@ -167,23 +169,47 @@ class ApiProvider {
               Uint8List name = username.value.userdata.username;
               DbContacts.insertNewContact(
                   utf8.decode(name), fromUserId.toInt(), true);
-              updateNotifier();
             }
             break;
           case MessageKind.rejectRequest:
             DbContacts.deleteUser(fromUserId.toInt());
-            updateNotifier();
             break;
           case MessageKind.acceptRequest:
             DbContacts.acceptUser(fromUserId.toInt());
-            updateNotifier();
             break;
-          case MessageKind.image:
-            log.info("Got image: ${message.content}");
+          case MessageKind.ack:
+            DbMessages.acknowledgeMessage(
+                fromUserId.toInt(), message.messageId!);
+            break;
           default:
-            log.shout("Got unknown MessageKind $message");
+            if (message.kind != MessageKind.textMessage &&
+                message.kind != MessageKind.video &&
+                message.kind != MessageKind.image) {
+              log.shout("Got unknown MessageKind $message");
+            } else {
+              String content = jsonEncode(message.content!.toJson());
+              await DbMessages.insertOtherMessage(fromUserId.toInt(),
+                  message.kind, message.messageId!, content);
+
+              encryptAndSendMessage(
+                fromUserId,
+                Message(
+                  kind: MessageKind.ack,
+                  messageId: message.messageId!,
+                  timestamp: DateTime.now(),
+                ),
+              );
+
+              if (message.kind == MessageKind.video ||
+                  message.kind == MessageKind.image) {
+                dynamic content = message.content!;
+                List<int> downloadToken = content.downloadToken;
+                tryDownloadMedia(downloadToken);
+              }
+            }
         }
       }
+      updateNotifier();
       var ok = client.Response_Ok()..none = true;
       response = client.Response()..ok = ok;
     } else {
@@ -373,16 +399,7 @@ class ApiProvider {
     return _asResult(resp);
   }
 
-  Future<List<int>?> uploadData(Uint8List data) async {
-    Result res = await getUploadToken(data.length);
-
-    if (res.isError || !res.value.hasUploadtoken()) {
-      Logger("api.dart").shout("Error getting upload token!");
-      return null;
-    }
-    List<int> uploadToken = res.value.uploadtoken;
-    log.info("Got token: $uploadToken");
-
+  Future<List<int>?> uploadData(List<int> uploadToken, Uint8List data) async {
     log.shout("fragmentate the data");
 
     var get = ApplicationData_UploadData()

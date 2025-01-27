@@ -18,7 +18,7 @@ class DbSignalSessionStore extends CvModelBase {
 
   static String getCreateTableString() {
     return """
-      CREATE TABLE $tableName (
+      CREATE TABLE IF NOT EXISTS $tableName (
       $columnDeviceId INTEGER NOT NULL,
       $columnName TEXT NOT NULL,
       $columnSessionRecord BLOB NOT NULL,

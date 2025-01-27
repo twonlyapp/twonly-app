@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/identity_key_store_model.dart';
+import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/model/model_constants.dart';
 import 'package:twonly/src/model/pre_key_model.dart';
 import 'package:twonly/src/model/sender_key_store_model.dart';
@@ -53,21 +54,12 @@ class DbProvider {
   }
 
   Future _createDb(Database db) async {
-    await db.execute('DROP TABLE If EXISTS ${DbSignalSessionStore.tableName}');
     await db.execute(DbSignalSessionStore.getCreateTableString());
-
-    await db.execute('DROP TABLE If EXISTS ${DbSignalPreKeyStore.tableName}');
     await db.execute(DbSignalPreKeyStore.getCreateTableString());
-
-    await db
-        .execute('DROP TABLE If EXISTS ${DbSignalSenderKeyStore.tableName}');
     await db.execute(DbSignalSenderKeyStore.getCreateTableString());
-
-    await db
-        .execute('DROP TABLE If EXISTS ${DbSignalIdentityKeyStore.tableName}');
     await db.execute(DbSignalIdentityKeyStore.getCreateTableString());
-    await db.execute('DROP TABLE If EXISTS ${DbContacts.tableName}');
     await db.execute(DbContacts.getCreateTableString());
+    await db.execute(DbMessages.getCreateTableString());
   }
 
   Future open() async {

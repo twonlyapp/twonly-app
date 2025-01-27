@@ -218,8 +218,8 @@ Future<Uint8List?> encryptMessage(Message msg, Int64 target) async {
     SessionCipher session = SessionCipher.fromStore(
         signalStore, SignalProtocolAddress(target.toString(), defaultDeviceId));
 
-    final ciphertext = await session
-        .encrypt(Uint8List.fromList(gzip.encode(utf8.encode(msg.toJson()))));
+    final ciphertext = await session.encrypt(
+        Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson())))));
 
     var b = BytesBuilder();
     b.add(ciphertext.serialize());
@@ -256,7 +256,8 @@ Future<Message?> getDecryptedText(Int64 source, Uint8List msg) async {
     } else {
       return null;
     }
-    Message dectext = Message.fromJson(utf8.decode(gzip.decode(plaintext)));
+    Message dectext =
+        Message.fromJson(jsonDecode(utf8.decode(gzip.decode(plaintext))));
     return dectext;
   } catch (e) {
     Logger("utils/signal").shout(e.toString());

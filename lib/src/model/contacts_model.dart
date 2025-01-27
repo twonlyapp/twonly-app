@@ -38,7 +38,7 @@ class DbContacts extends CvModelBase {
 
   static String getCreateTableString() {
     return """
-      CREATE TABLE $tableName (
+      CREATE TABLE IF NOT EXISTS $tableName (
       $columnUserId INTEGER NOT NULL PRIMARY KEY,
       $columnDisplayName TEXT,
       $columnAccepted INT NOT NULL DEFAULT 0,

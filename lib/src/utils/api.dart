@@ -6,8 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
+import 'package:twonly/src/app.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/providers/notify_provider.dart';
@@ -25,7 +27,7 @@ Future<bool> addNewContact(String username) async {
 
     if (!added) {
       print("RETURN FALSE HIER!!!");
-      // return false;
+      return false;
     }
 
     if (await SignalHelper.addNewContact(res.value.userdata)) {
@@ -59,8 +61,11 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
 
   Result resp = await apiProvider.sendTextMessage(userId, bytes);
 
-  Logger("encryptAndSendMessage")
-      .shout("handle errors here and store them in the database");
+  if (resp.isError) {
+    // TODO:
+    Logger("encryptAndSendMessage")
+        .shout("handle errors here and store them in the database");
+  }
 
   return resp;
 }
@@ -94,11 +99,48 @@ Future<Result> createNewUser(String username, String inviteCode) async {
   return res;
 }
 
+Future sendImageToSingleTarget(
+    BuildContext context, Int64 target, Uint8List encryptBytes) async {
+  Result res = await apiProvider.getUploadToken(encryptBytes.length);
+
+  if (res.isError || !res.value.hasUploadtoken()) {
+    Logger("api.dart").shout("Error getting upload token!");
+    return null;
+  }
+  List<int> uploadToken = res.value.uploadtoken;
+  Logger("sendImageToSingleTarget").info("Got token: $uploadToken");
+
+  MessageContent content =
+      MessageContent(text: null, downloadToken: uploadToken);
+  int? messageId = await DbMessages.insertMyMessage(
+      target.toInt(), MessageKind.image, jsonEncode(content.toJson()));
+  if (messageId == null) return;
+
+  updateNotifyProvider();
+
+  List<int>? imageToken =
+      await apiProvider.uploadData(uploadToken, encryptBytes);
+  if (imageToken == null) {
+    Logger("api.dart").shout("handle error uploading like saving...");
+    return;
+  }
+
+  print("TODO: insert into DB and then create this MESSAGE");
+
+  Message msg = Message(
+    kind: MessageKind.image,
+    messageId: messageId,
+    content: content,
+    timestamp: DateTime.now(),
+  );
+
+  await encryptAndSendMessage(target, msg);
+  removeSendingTo(target);
+}
+
 Future sendImage(
     BuildContext context, List<Contact> users, String imagePath) async {
   // 1. set notifier provider
-
-  context.read<NotifyProvider>().addSendingTo(users);
 
   File imageFile = File(imagePath);
 
@@ -116,20 +158,12 @@ Future sendImage(
       Logger("api.dart").shout("Error encrypting image!");
       continue;
     }
-
-    List<int>? imageToken = await apiProvider.uploadData(encryptedImage);
-    if (imageToken == null) {
-      Logger("api.dart").shout("handle error uploading like saving...");
-      continue;
-    }
-
-    Message msg = Message(
-      kind: MessageKind.image,
-      content: ImageContent(imageToken),
-      timestamp: DateTime.timestamp(),
-    );
-
-    print("Send image to $target");
-    encryptAndSendMessage(target, msg);
+    sendImageToSingleTarget(context, target, encryptedImage);
   }
+}
+
+Future tryDownloadMedia(List<int> imageToken, {bool force = false}) async {
+  print("check if free network connection");
+
+  print("Downloading: " + imageToken.toString());
 }

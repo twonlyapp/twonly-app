@@ -1,3 +1,4 @@
+import 'package:fixnum/fixnum.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/providers/notify_provider.dart';
@@ -10,6 +11,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'settings/settings_controller.dart';
+
+Function(Int64) addSendingTo = (a) {};
+Function(Int64) removeSendingTo = (a) {};
+Function() updateNotifyProvider = () {};
 
 /// The Widget that configures your application.
 class MyApp extends StatefulWidget {
@@ -42,6 +47,18 @@ class _MyAppState extends State<MyApp> {
     apiProvider.setUpdatedContacts(() {
       context.read<NotifyProvider>().update();
     });
+
+    addSendingTo = (a) {
+      context.read<NotifyProvider>().addSendingTo(a);
+    };
+
+    removeSendingTo = (a) {
+      context.read<NotifyProvider>().removeSendingTo(a);
+    };
+
+    updateNotifyProvider = () {
+      context.read<NotifyProvider>().update();
+    };
 
     context.read<NotifyProvider>().update();
     apiProvider.connect();

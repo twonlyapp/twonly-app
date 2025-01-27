@@ -1,9 +1,13 @@
+import 'dart:collection';
+
+import 'package:fixnum/fixnum.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/components/notification_badge.dart';
 import 'package:twonly/src/components/user_context_menu.dart';
 import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/notify_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chat_item_details_view.dart';
@@ -35,40 +39,19 @@ class ChatListView extends StatefulWidget {
 }
 
 class _ChatListViewState extends State<ChatListView> {
-  int _secondsSinceOpen = 0;
-  late Timer _timer;
-  List<Contact> _activeUsers = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _startTimer();
-    _loadActiveUsers();
-  }
-
-  Future _loadActiveUsers() async {
-    _activeUsers = context.read<NotifyProvider>().allContacts;
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        _secondsSinceOpen++;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel(); // Cancel the timer when the widget is disposed
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    List<Contact> sendingCurrentlyTo =
+    Map<int, DbMessage> lastMessages =
+        context.watch<NotifyProvider>().lastMessagesGroupedByUser;
+
+    HashSet<Int64> sendingCurrentlyTo =
         context.watch<NotifyProvider>().sendingCurrentlyTo;
 
+    List<Contact> activeUsers = context
+        .read<NotifyProvider>()
+        .allContacts
+        .where((x) => lastMessages.containsKey(x.userId.toInt()))
+        .toList();
     return Scaffold(
         appBar: AppBar(
           title: Text(AppLocalizations.of(context)!.chatsTitle),
@@ -91,39 +74,44 @@ class _ChatListViewState extends State<ChatListView> {
         ),
         body: Column(
           children: [
-            if (sendingCurrentlyTo.isNotEmpty)
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                child: ListTile(
-                  leading: Stack(
-                    // child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        strokeWidth: 1,
-                      ),
-                      Icon(
-                        Icons.send, // Replace with your desired icon
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 20, // Adjust the size as needed
-                      ),
-                    ],
-                    // ),
-                  ),
-                  title: Text(sendingCurrentlyTo
-                      .map((e) => e.displayName)
-                      .toList()
-                      .join(", ")),
-                ),
-              ),
+            // if (sendingCurrentlyTo.isNotEmpty)
+            //   Container(
+            //     padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            //     child: ListTile(
+            //       leading: Stack(
+            //         // child: Stack(
+            //         alignment: Alignment.center,
+            //         children: [
+            //           CircularProgressIndicator(
+            //             strokeWidth: 1,
+            //           ),
+            //           Icon(
+            //             Icons.send, // Replace with your desired icon
+            //             color: Theme.of(context).colorScheme.primary,
+            //             size: 20, // Adjust the size as needed
+            //           ),
+            //         ],
+            //         // ),
+            //       ),
+            //       title: Text(sendingCurrentlyTo
+            //           .map((e) => _activeUsers
+            //               .where((c) => c.userId == e)
+            //               .map((c) => c.displayName))
+            //           .toList()
+            //           .join(", ")),
+            //     ),
+            // ), //
             Expanded(
               child: ListView.builder(
                 restorationId: 'chat_list_view',
-                itemCount: _activeUsers.length,
+                itemCount: activeUsers.length,
                 itemBuilder: (BuildContext context, int index) {
-                  final user = _activeUsers[index];
+                  final user = activeUsers[index];
                   return UserListItem(
-                      user: user, secondsSinceOpen: _secondsSinceOpen);
+                    user: user,
+                    lastMessage: lastMessages[user.userId.toInt()]!,
+                    isSending: sendingCurrentlyTo.contains(user.userId),
+                  );
                 },
               ),
             )
@@ -134,12 +122,14 @@ class _ChatListViewState extends State<ChatListView> {
 
 class UserListItem extends StatefulWidget {
   final Contact user;
-  final int secondsSinceOpen;
+  final DbMessage lastMessage;
+  final bool isSending;
 
   const UserListItem({
     super.key,
     required this.user,
-    required this.secondsSinceOpen,
+    required this.isSending,
+    required this.lastMessage,
   });
 
   @override
@@ -153,7 +143,7 @@ class _UserListItem extends State<UserListItem> {
   @override
   void initState() {
     super.initState();
-    _loadAsync();
+    //_loadAsync();
   }
 
   Future _loadAsync() async {
@@ -164,19 +154,44 @@ class _UserListItem extends State<UserListItem> {
 
   @override
   Widget build(BuildContext context) {
+    MessageSendState state;
+    // int lastMessageInSeconds = widget.lastMessage.sendOrReceivedAt;
+    //print(widget.lastMessage.sendOrReceivedAt);
+    int lastMessageInSeconds = DateTime.now()
+        .difference(widget.lastMessage.sendOrReceivedAt)
+        .inSeconds;
+
+    if (widget.isSending) {
+      state = MessageSendState.sending;
+    } else {
+      if (widget.lastMessage.messageOtherId == null) {
+        // message send
+        if (widget.lastMessage.messageOpenedAt == null) {
+          state = MessageSendState.send;
+        } else {
+          state = MessageSendState.sendOpened;
+        }
+      } else {
+        // message received
+        if (widget.lastMessage.messageOpenedAt == null) {
+          state = MessageSendState.received;
+        } else {
+          state = MessageSendState.receivedOpened;
+        }
+      }
+    }
+
     return UserContextMenu(
       user: widget.user,
       child: ListTile(
         title: Text(widget.user.displayName),
         subtitle: Row(
           children: [
-            // MessageSendStateIcon(
-            //   state: widget.user.state,
-            // ),
+            MessageSendStateIcon(state),
             Text("•"),
             const SizedBox(width: 5),
             Text(
-              formatDuration(lastMessageInSeconds + widget.secondsSinceOpen),
+              formatDuration(lastMessageInSeconds),
               style: TextStyle(fontSize: 12),
             ),
             if (flames > 0)

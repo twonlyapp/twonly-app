@@ -3,6 +3,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/app.dart';
 import 'package:twonly/src/components/best_friends_selector.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
@@ -111,6 +112,10 @@ class _ShareImageView extends State<ShareImageView> {
               FilledButton.icon(
                 icon: Icon(Icons.send),
                 onPressed: () async {
+                  for (Int64 a in _selectedUserIds) {
+                    addSendingTo(a);
+                  }
+
                   sendImage(
                       context,
                       _users

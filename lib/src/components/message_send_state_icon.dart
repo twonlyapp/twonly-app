@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 
 enum MessageSendState {
-  opened,
   received,
+  receivedOpened,
+  receiving,
   send,
+  sendOpened,
   sending,
 }
 
 class MessageSendStateIcon extends StatelessWidget {
   final MessageSendState state;
 
-  const MessageSendStateIcon({super.key, required this.state});
+  const MessageSendStateIcon(this.state, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,8 @@ class MessageSendStateIcon extends StatelessWidget {
     String text = "";
 
     switch (state) {
-      case MessageSendState.opened:
+      case MessageSendState.receivedOpened:
+      case MessageSendState.sendOpened:
         icon = Icon(
           Icons.crop_square,
           size: 14,
@@ -42,6 +45,7 @@ class MessageSendStateIcon extends StatelessWidget {
         text = "Send";
         break;
       case MessageSendState.sending:
+      case MessageSendState.receiving:
         icon = Row(
           children: [
             SizedBox(
