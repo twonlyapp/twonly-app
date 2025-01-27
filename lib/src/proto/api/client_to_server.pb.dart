@@ -742,21 +742,12 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
 }
 
 class ApplicationData_GetUploadToken extends $pb.GeneratedMessage {
-  factory ApplicationData_GetUploadToken({
-    $core.int? len,
-  }) {
-    final $result = create();
-    if (len != null) {
-      $result.len = len;
-    }
-    return $result;
-  }
+  factory ApplicationData_GetUploadToken() => create();
   ApplicationData_GetUploadToken._() : super();
   factory ApplicationData_GetUploadToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory ApplicationData_GetUploadToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetUploadToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.int>(1, _omitFieldNames ? '' : 'len', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
 
@@ -780,15 +771,6 @@ class ApplicationData_GetUploadToken extends $pb.GeneratedMessage {
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetUploadToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUploadToken>(create);
   static ApplicationData_GetUploadToken? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.int get len => $_getIZ(0);
-  @$pb.TagNumber(1)
-  set len($core.int v) { $_setUnsignedInt32(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasLen() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearLen() => clearField(1);
 }
 
 class ApplicationData_UploadData extends $pb.GeneratedMessage {
@@ -869,6 +851,56 @@ class ApplicationData_UploadData extends $pb.GeneratedMessage {
   void clearData() => clearField(3);
 }
 
+class ApplicationData_DownloadData extends $pb.GeneratedMessage {
+  factory ApplicationData_DownloadData({
+    $core.List<$core.int>? uploadToken,
+  }) {
+    final $result = create();
+    if (uploadToken != null) {
+      $result.uploadToken = uploadToken;
+    }
+    return $result;
+  }
+  ApplicationData_DownloadData._() : super();
+  factory ApplicationData_DownloadData.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_DownloadData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.DownloadData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DownloadData clone() => ApplicationData_DownloadData()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DownloadData copyWith(void Function(ApplicationData_DownloadData) updates) => super.copyWith((message) => updates(message as ApplicationData_DownloadData)) as ApplicationData_DownloadData;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DownloadData create() => ApplicationData_DownloadData._();
+  ApplicationData_DownloadData createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_DownloadData> createRepeated() => $pb.PbList<ApplicationData_DownloadData>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DownloadData getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_DownloadData>(create);
+  static ApplicationData_DownloadData? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get uploadToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUploadToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUploadToken() => clearField(1);
+}
+
 enum ApplicationData_ApplicationData {
   textmessage, 
   getuserbyusername, 
@@ -876,6 +908,7 @@ enum ApplicationData_ApplicationData {
   getuploadtoken, 
   uploaddata, 
   getuserbyid, 
+  downloaddata, 
   notSet
 }
 
@@ -887,6 +920,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_GetUploadToken? getuploadtoken,
     ApplicationData_UploadData? uploaddata,
     ApplicationData_GetUserById? getuserbyid,
+    ApplicationData_DownloadData? downloaddata,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -907,6 +941,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (getuserbyid != null) {
       $result.getuserbyid = getuserbyid;
     }
+    if (downloaddata != null) {
+      $result.downloaddata = downloaddata;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -920,16 +957,18 @@ class ApplicationData extends $pb.GeneratedMessage {
     4 : ApplicationData_ApplicationData.getuploadtoken,
     5 : ApplicationData_ApplicationData.uploaddata,
     6 : ApplicationData_ApplicationData.getuserbyid,
+    7 : ApplicationData_ApplicationData.downloaddata,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
     ..aOM<ApplicationData_GetUploadToken>(4, _omitFieldNames ? '' : 'getuploadtoken', subBuilder: ApplicationData_GetUploadToken.create)
     ..aOM<ApplicationData_UploadData>(5, _omitFieldNames ? '' : 'uploaddata', subBuilder: ApplicationData_UploadData.create)
     ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getuserbyid', subBuilder: ApplicationData_GetUserById.create)
+    ..aOM<ApplicationData_DownloadData>(7, _omitFieldNames ? '' : 'downloaddata', subBuilder: ApplicationData_DownloadData.create)
     ..hasRequiredFields = false
   ;
 
@@ -1022,6 +1061,17 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearGetuserbyid() => clearField(6);
   @$pb.TagNumber(6)
   ApplicationData_GetUserById ensureGetuserbyid() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  ApplicationData_DownloadData get downloaddata => $_getN(6);
+  @$pb.TagNumber(7)
+  set downloaddata(ApplicationData_DownloadData v) { setField(7, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasDownloaddata() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearDownloaddata() => clearField(7);
+  @$pb.TagNumber(7)
+  ApplicationData_DownloadData ensureDownloaddata() => $_ensure(6);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

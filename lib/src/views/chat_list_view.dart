@@ -1,6 +1,3 @@
-import 'dart:collection';
-
-import 'package:fixnum/fixnum.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
@@ -8,13 +5,14 @@ import 'package:twonly/src/components/notification_badge.dart';
 import 'package:twonly/src/components/user_context_menu.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/messages_model.dart';
-import 'package:twonly/src/providers/notify_provider.dart';
+import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chat_item_details_view.dart';
+import 'package:twonly/src/views/home_view.dart';
 import 'package:twonly/src/views/search_username_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 
 class ChatItem {
   const ChatItem(
@@ -42,93 +40,81 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) {
     Map<int, DbMessage> lastMessages =
-        context.watch<NotifyProvider>().lastMessagesGroupedByUser;
+        context.watch<MessagesChangeProvider>().lastMessage;
 
-    HashSet<Int64> sendingCurrentlyTo =
-        context.watch<NotifyProvider>().sendingCurrentlyTo;
+    List<Contact> allUsers = context.read<ContactChangeProvider>().allContacts;
 
-    List<Contact> activeUsers = context
-        .read<NotifyProvider>()
-        .allContacts
+    List<Contact> activeUsers = allUsers
         .where((x) => lastMessages.containsKey(x.userId.toInt()))
         .toList();
+
     return Scaffold(
-        appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.chatsTitle),
-          actions: [
-            NotificationBadge(
-              count: context.watch<NotifyProvider>().newContactRequests,
-              child: IconButton(
-                icon: Icon(Icons.person_add),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SearchUsernameView(),
-                    ),
-                  );
-                },
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.chatsTitle),
+        actions: [
+          NotificationBadge(
+            count: context.watch<ContactChangeProvider>().newContactRequests,
+            child: IconButton(
+              icon: Icon(Icons.person_add),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SearchUsernameView(),
+                  ),
+                );
+              },
+            ),
+          )
+        ],
+      ),
+      body: (activeUsers.isEmpty)
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: OutlinedButton.icon(
+                    icon: Icon((allUsers.isEmpty)
+                        ? Icons.person_add
+                        : Icons.camera_alt),
+                    onPressed: () {
+                      (allUsers.isEmpty)
+                          ? Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchUsernameView(),
+                              ),
+                            )
+                          : globalUpdateOfHomeViewPageIndex(1);
+                    },
+                    label: Text((allUsers.isEmpty)
+                        ? AppLocalizations.of(context)!
+                            .chatListViewSearchUserNameBtn
+                        : AppLocalizations.of(context)!
+                            .chatListViewSendFirstTwonly)),
               ),
             )
-          ],
-        ),
-        body: Column(
-          children: [
-            // if (sendingCurrentlyTo.isNotEmpty)
-            //   Container(
-            //     padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            //     child: ListTile(
-            //       leading: Stack(
-            //         // child: Stack(
-            //         alignment: Alignment.center,
-            //         children: [
-            //           CircularProgressIndicator(
-            //             strokeWidth: 1,
-            //           ),
-            //           Icon(
-            //             Icons.send, // Replace with your desired icon
-            //             color: Theme.of(context).colorScheme.primary,
-            //             size: 20, // Adjust the size as needed
-            //           ),
-            //         ],
-            //         // ),
-            //       ),
-            //       title: Text(sendingCurrentlyTo
-            //           .map((e) => _activeUsers
-            //               .where((c) => c.userId == e)
-            //               .map((c) => c.displayName))
-            //           .toList()
-            //           .join(", ")),
-            //     ),
-            // ), //
-            Expanded(
-              child: ListView.builder(
-                restorationId: 'chat_list_view',
-                itemCount: activeUsers.length,
-                itemBuilder: (BuildContext context, int index) {
-                  final user = activeUsers[index];
-                  return UserListItem(
-                    user: user,
-                    lastMessage: lastMessages[user.userId.toInt()]!,
-                    isSending: sendingCurrentlyTo.contains(user.userId),
-                  );
-                },
-              ),
-            )
-          ],
-        ));
+          : ListView.builder(
+              restorationId: 'chat_list_view',
+              itemCount: activeUsers.length,
+              itemBuilder: (BuildContext context, int index) {
+                final user = activeUsers[index];
+                return UserListItem(
+                  user: user,
+                  lastMessage: lastMessages[user.userId.toInt()]!,
+                );
+              },
+            ),
+    );
   }
 }
 
 class UserListItem extends StatefulWidget {
   final Contact user;
   final DbMessage lastMessage;
-  final bool isSending;
 
   const UserListItem({
     super.key,
     required this.user,
-    required this.isSending,
     required this.lastMessage,
   });
 
@@ -146,11 +132,11 @@ class _UserListItem extends State<UserListItem> {
     //_loadAsync();
   }
 
-  Future _loadAsync() async {
-    // flames = await widget.user.getFlames();
-    // lastMessageInSeconds = await widget.user.getLastMessageInSeconds();
-    setState(() {});
-  }
+  // Future _loadAsync() async {
+  // flames = await widget.user.getFlames();
+  // lastMessageInSeconds = await widget.user.getLastMessageInSeconds();
+  //   setState(() {});
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +147,7 @@ class _UserListItem extends State<UserListItem> {
         .difference(widget.lastMessage.sendOrReceivedAt)
         .inSeconds;
 
-    if (widget.isSending) {
+    if (!widget.lastMessage.messageAcknowledgeByServer) {
       state = MessageSendState.sending;
     } else {
       if (widget.lastMessage.messageOtherId == null) {

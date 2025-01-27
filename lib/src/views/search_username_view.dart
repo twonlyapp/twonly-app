@@ -2,12 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/main.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
-import 'package:twonly/src/providers/notify_provider.dart';
-import 'package:twonly/src/utils/api.dart';
+import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/views/register_view.dart';
+// ignore: library_prefixes
+import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
 class SearchUsernameView extends StatefulWidget {
   const SearchUsernameView({super.key});
@@ -25,24 +29,30 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       _isLoading = true;
     });
 
-    final status = await addNewContact(searchUserName.text);
+    final res = await apiProvider.getUserData(searchUserName.text);
 
+    if (res.isSuccess) {
+      bool added = await DbContacts.insertNewContact(
+        searchUserName.text,
+        res.value.userdata.userId.toInt(),
+        false,
+      );
+
+      if (added) {
+        if (await SignalHelper.addNewContact(res.value.userdata)) {
+          encryptAndSendMessage(
+            res.value.userdata.userId,
+            Message(
+              kind: MessageKind.contactRequest,
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+      }
+    }
     setState(() {
       _isLoading = false;
     });
-
-    if (context.mounted) {
-      if (status) {
-        context.read<NotifyProvider>().update();
-      } else if (context.mounted) {
-        showAlertDialog(
-            context,
-            AppLocalizations.of(context)!.searchUsernameNotFound,
-            AppLocalizations.of(context)!
-                .searchUsernameNotFoundLong(searchUserName.text));
-      }
-    }
-    return status;
   }
 
   @override
@@ -94,7 +104,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
             ),
             SizedBox(height: 30),
             if (context
-                .read<NotifyProvider>()
+                .read<ContactChangeProvider>()
                 .allContacts
                 .where((contact) => !contact.accepted)
                 .isNotEmpty)
@@ -122,6 +132,8 @@ class _SearchUsernameView extends State<SearchUsernameView> {
 }
 
 class ContactsListView extends StatefulWidget {
+  const ContactsListView({super.key});
+
   @override
   State<ContactsListView> createState() => _ContactsListViewState();
 }
@@ -130,7 +142,7 @@ class _ContactsListViewState extends State<ContactsListView> {
   @override
   Widget build(BuildContext context) {
     List<Contact> contacts = context
-        .read<NotifyProvider>()
+        .read<ContactChangeProvider>()
         .allContacts
         .where((contact) => !contact.accepted)
         .toList();
@@ -143,46 +155,50 @@ class _ContactsListViewState extends State<ContactsListView> {
           leading: InitialsAvatar(displayName: contact.displayName),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
-            children: (!contact.requested)
-                ? [Text('Pending')]
-                : [
-                    Tooltip(
-                      message: "Block the user without informing.",
-                      child: IconButton(
-                        icon: Icon(Icons.person_off_rounded,
-                            color: const Color.fromARGB(164, 244, 67, 54)),
-                        onPressed: () async {
-                          await DbContacts.blockUser(contact.userId.toInt());
-                          if (context.mounted) {
-                            context.read<NotifyProvider>().update();
-                          }
-                        },
+            children: [
+              if (!contact.requested) Text('Pending'),
+              if (contact.requested) ...[
+                Tooltip(
+                  message: "Block the user without informing.",
+                  child: IconButton(
+                    icon: Icon(Icons.person_off_rounded,
+                        color: const Color.fromARGB(164, 244, 67, 54)),
+                    onPressed: () async {
+                      await DbContacts.blockUser(contact.userId.toInt());
+                    },
+                  ),
+                ),
+                Tooltip(
+                  message: "Reject the request and let the requester know.",
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: Colors.red),
+                    onPressed: () async {
+                      await DbContacts.deleteUser(contact.userId.toInt());
+                      encryptAndSendMessage(
+                        contact.userId,
+                        Message(
+                          kind: MessageKind.rejectRequest,
+                          timestamp: DateTime.now(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.check, color: Colors.green),
+                  onPressed: () async {
+                    await DbContacts.acceptUser(contact.userId.toInt());
+                    encryptAndSendMessage(
+                      contact.userId,
+                      Message(
+                        kind: MessageKind.acceptRequest,
+                        timestamp: DateTime.now(),
                       ),
-                    ),
-                    Tooltip(
-                      message: "Reject the request and let the requester know.",
-                      child: IconButton(
-                        icon: Icon(Icons.close, color: Colors.red),
-                        onPressed: () async {
-                          await DbContacts.deleteUser(contact.userId.toInt());
-                          if (context.mounted) {
-                            context.read<NotifyProvider>().update();
-                          }
-                          rejectUserRequest(contact.userId);
-                        },
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.check, color: Colors.green),
-                      onPressed: () async {
-                        await DbContacts.acceptUser(contact.userId.toInt());
-                        if (context.mounted) {
-                          context.read<NotifyProvider>().update();
-                        }
-                        acceptUserRequest(contact.userId);
-                      },
-                    ),
-                  ],
+                    );
+                  },
+                ),
+              ],
+            ],
           ),
         );
       },

@@ -1,9 +1,12 @@
+import 'dart:convert';
+import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:twonly/src/utils/api.dart';
+import 'package:twonly/src/model/json/user_data.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/signal.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key, required this.callbackOnSuccess});
@@ -18,6 +21,41 @@ class _RegisterViewState extends State<RegisterView> {
   final TextEditingController inviteCodeController = TextEditingController();
 
   bool _isTryingToRegister = false;
+
+  Future createNewUser() async {
+    String username = usernameController.text;
+    String inviteCode = inviteCodeController.text;
+    setState(() {
+      _isTryingToRegister = true;
+    });
+
+    final storage = getSecureStorage();
+
+    await createIfNotExistsSignalIdentity();
+
+    final res = await apiProvider.register(username, inviteCode);
+
+    if (res.isSuccess) {
+      Logger("create_new_user").info("Got user_id ${res.value} from server");
+      final userData = UserData(
+          userId: res.value.userid, username: username, displayName: username);
+      storage.write(key: "user_data", value: jsonEncode(userData));
+    }
+
+    setState(() {
+      _isTryingToRegister = false;
+    });
+
+    if (res.isSuccess) {
+      apiProvider.authenticate();
+      widget.callbackOnSuccess();
+      return;
+    }
+
+    if (context.mounted) {
+      showAlertDialog(context, "Oh no!", errorCodeToText(context, res.error));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,23 +155,7 @@ class _RegisterViewState extends State<RegisterView> {
                           )
                         : Icon(Icons.group),
                     onPressed: () async {
-                      setState(() {
-                        _isTryingToRegister = true;
-                      });
-                      final res = await createNewUser(
-                          usernameController.text, inviteCodeController.text);
-                      setState(() {
-                        _isTryingToRegister = false;
-                        apiProvider.authenticate();
-                      });
-                      if (res.isSuccess) {
-                        widget.callbackOnSuccess();
-                        return;
-                      }
-                      if (context.mounted) {
-                        final errMsg = errorCodeToText(context, res.error);
-                        showAlertDialog(context, "Oh no!", errMsg);
-                      }
+                      createNewUser();
                     },
                     style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(

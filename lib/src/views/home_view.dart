@@ -1,14 +1,11 @@
 import 'package:pie_menu/pie_menu.dart';
-import 'package:provider/provider.dart';
-import 'package:twonly/src/providers/notify_provider.dart';
-
 import 'camera_preview_view.dart';
 import 'chat_list_view.dart';
 import 'profile_view.dart';
 import '../settings/settings_controller.dart';
 import 'package:flutter/material.dart';
 
-final PageController homeViewPageController = PageController(initialPage: 0);
+Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key, required this.settingsController});
@@ -19,6 +16,27 @@ class HomeView extends StatefulWidget {
 }
 
 class HomeViewState extends State<HomeView> {
+  int activePageIdx = 0;
+  final PageController homeViewPageController = PageController(initialPage: 0);
+
+  @override
+  void initState() {
+    super.initState();
+    globalUpdateOfHomeViewPageIndex = (index) {
+      homeViewPageController.jumpToPage(index);
+      setState(() {
+        activePageIdx = index;
+      });
+    };
+  }
+
+  @override
+  void dispose() {
+    // disable globalCallbacks to the flutter tree
+    globalUpdateOfHomeViewPageIndex = (a) {};
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return PieCanvas(
@@ -47,7 +65,7 @@ class HomeViewState extends State<HomeView> {
         body: PageView(
           controller: homeViewPageController,
           onPageChanged: (index) {
-            context.read<NotifyProvider>().setActivePageIdx(index);
+            activePageIdx = index;
           },
           children: [
             ChatListView(),
@@ -69,14 +87,16 @@ class HomeViewState extends State<HomeView> {
             BottomNavigationBarItem(icon: Icon(Icons.verified_user), label: ""),
           ],
           onTap: (int index) {
-            context.read<NotifyProvider>().setActivePageIdx(index);
+            activePageIdx = index;
             setState(() {
-              homeViewPageController.animateToPage(index,
-                  duration: const Duration(milliseconds: 100),
-                  curve: Curves.bounceIn);
+              homeViewPageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 100),
+                curve: Curves.bounceIn,
+              );
             });
           },
-          currentIndex: context.watch<NotifyProvider>().activePageIdx,
+          currentIndex: activePageIdx,
         ),
       ),
     );

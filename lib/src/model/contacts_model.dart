@@ -2,6 +2,7 @@ import 'package:cv/cv.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
+import 'package:twonly/src/app.dart';
 
 class Contact {
   Contact(
@@ -98,6 +99,7 @@ class DbContacts extends CvModelBase {
       where: "$columnUserId = ?",
       whereArgs: [userId],
     );
+    globalCallBackOnContactChange();
   }
 
   static Future acceptUser(int userId) async {
@@ -111,6 +113,7 @@ class DbContacts extends CvModelBase {
       where: "$columnUserId = ?",
       whereArgs: [userId],
     );
+    globalCallBackOnContactChange();
   }
 
   static Future deleteUser(int userId) async {
@@ -119,6 +122,7 @@ class DbContacts extends CvModelBase {
       where: "$columnUserId = ?",
       whereArgs: [userId],
     );
+    globalCallBackOnContactChange();
   }
 
   static Future<bool> insertNewContact(
@@ -130,6 +134,7 @@ class DbContacts extends CvModelBase {
         DbContacts.columnUserId: userId,
         DbContacts.columnRequested: a
       });
+      globalCallBackOnContactChange();
       return true;
     } catch (e) {
       Logger("contacts_model/getUsers").shout("$e");

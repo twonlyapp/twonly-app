@@ -85,6 +85,7 @@ enum V0_Kind {
   response, 
   newMessage, 
   requestNewPreKeys, 
+  downloaddata, 
   notSet
 }
 
@@ -94,6 +95,7 @@ class V0 extends $pb.GeneratedMessage {
     Response? response,
     NewMessage? newMessage,
     $core.bool? requestNewPreKeys,
+    DownloadData? downloaddata,
   }) {
     final $result = create();
     if (seq != null) {
@@ -108,6 +110,9 @@ class V0 extends $pb.GeneratedMessage {
     if (requestNewPreKeys != null) {
       $result.requestNewPreKeys = requestNewPreKeys;
     }
+    if (downloaddata != null) {
+      $result.downloaddata = downloaddata;
+    }
     return $result;
   }
   V0._() : super();
@@ -118,14 +123,16 @@ class V0 extends $pb.GeneratedMessage {
     2 : V0_Kind.response,
     3 : V0_Kind.newMessage,
     4 : V0_Kind.requestNewPreKeys,
+    5 : V0_Kind.downloaddata,
     0 : V0_Kind.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'V0', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..oo(0, [2, 3, 4])
+    ..oo(0, [2, 3, 4, 5])
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'seq', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<Response>(2, _omitFieldNames ? '' : 'response', subBuilder: Response.create)
     ..aOM<NewMessage>(3, _omitFieldNames ? '' : 'newMessage', protoName: 'newMessage', subBuilder: NewMessage.create)
     ..aOB(4, _omitFieldNames ? '' : 'RequestNewPreKeys', protoName: 'RequestNewPreKeys')
+    ..aOM<DownloadData>(5, _omitFieldNames ? '' : 'downloaddata', subBuilder: DownloadData.create)
     ..hasRequiredFields = false
   ;
 
@@ -192,6 +199,17 @@ class V0 extends $pb.GeneratedMessage {
   $core.bool hasRequestNewPreKeys() => $_has(3);
   @$pb.TagNumber(4)
   void clearRequestNewPreKeys() => clearField(4);
+
+  @$pb.TagNumber(5)
+  DownloadData get downloaddata => $_getN(4);
+  @$pb.TagNumber(5)
+  set downloaddata(DownloadData v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasDownloaddata() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearDownloaddata() => clearField(5);
+  @$pb.TagNumber(5)
+  DownloadData ensureDownloaddata() => $_ensure(4);
 }
 
 class NewMessage extends $pb.GeneratedMessage {
@@ -256,6 +274,84 @@ class NewMessage extends $pb.GeneratedMessage {
   $core.bool hasFromUserId() => $_has(1);
   @$pb.TagNumber(2)
   void clearFromUserId() => clearField(2);
+}
+
+class DownloadData extends $pb.GeneratedMessage {
+  factory DownloadData({
+    $core.List<$core.int>? uploadToken,
+    $core.int? offset,
+    $core.List<$core.int>? data,
+  }) {
+    final $result = create();
+    if (uploadToken != null) {
+      $result.uploadToken = uploadToken;
+    }
+    if (offset != null) {
+      $result.offset = offset;
+    }
+    if (data != null) {
+      $result.data = data;
+    }
+    return $result;
+  }
+  DownloadData._() : super();
+  factory DownloadData.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory DownloadData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DownloadData', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
+    ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  DownloadData clone() => DownloadData()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  DownloadData copyWith(void Function(DownloadData) updates) => super.copyWith((message) => updates(message as DownloadData)) as DownloadData;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static DownloadData create() => DownloadData._();
+  DownloadData createEmptyInstance() => create();
+  static $pb.PbList<DownloadData> createRepeated() => $pb.PbList<DownloadData>();
+  @$core.pragma('dart2js:noInline')
+  static DownloadData getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<DownloadData>(create);
+  static DownloadData? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get uploadToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUploadToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUploadToken() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get offset => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set offset($core.int v) { $_setUnsignedInt32(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasOffset() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOffset() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get data => $_getN(2);
+  @$pb.TagNumber(3)
+  set data($core.List<$core.int> v) { $_setBytes(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasData() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearData() => clearField(3);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

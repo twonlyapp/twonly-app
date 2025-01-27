@@ -20,6 +20,8 @@
   "searchUsernameNotFound": "Username not found",
   "searchUsernameNewFollowerTitle": "Follow requests",
   "searchUsernameQrCodeBtn": "Scan QR code",
+  "chatListViewSearchUserNameBtn": "Add user",
+  "chatListViewSendFirstTwonly": "Send your first twonly!",
   "searchUsernameNotFoundLong": "\"{username}\" is not a twonly user. Please check the username and try again.",
   "errorUnknown": "An unexpected error has occurred. Please try again later.",
   "errorBadRequest": "The request could not be understood by the server due to malformed syntax. Please check your input and try again.",

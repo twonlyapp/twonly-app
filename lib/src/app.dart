@@ -1,7 +1,7 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
-import 'package:twonly/src/providers/notify_provider.dart';
+import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding_view.dart';
 import 'package:twonly/src/views/home_view.dart';
@@ -12,9 +12,16 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
 import 'settings/settings_controller.dart';
 
-Function(Int64) addSendingTo = (a) {};
-Function(Int64) removeSendingTo = (a) {};
-Function() updateNotifyProvider = () {};
+// these global function can be called from anywhere to update
+// the ui when something changed. The callbacks will be set by
+// MyApp widget.
+
+// this callback is called by the apiProvider
+Function(bool) globalCallbackConnectionState = (a) {};
+
+// these two callbacks are called on updated to the corresponding database
+Function globalCallBackOnContactChange = () {};
+Function(int) globalCallBackOnMessageChange = (a) {};
 
 /// The Widget that configures your application.
 class MyApp extends StatefulWidget {
@@ -28,7 +35,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Future<bool> _isUserCreated = isUserCreated();
-  bool _showOnboarding = true;
+  bool _showOnboarding = false;
   bool _isConnected = false;
   int redColorOpacity = 0; // Start with dark red
   bool redColorGoUp = true;
@@ -39,29 +46,36 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _startColorAnimation();
 
-    apiProvider.setConnectionStateCallback((isConnected) {
+    // init change provider to load data from the database
+    context.read<ContactChangeProvider>().update();
+    context.read<MessagesChangeProvider>().init();
+
+    // register global callbacks to the widget tree
+    globalCallbackConnectionState = (isConnected) {
       setState(() {
         _isConnected = isConnected;
       });
-    });
-    apiProvider.setUpdatedContacts(() {
-      context.read<NotifyProvider>().update();
-    });
-
-    addSendingTo = (a) {
-      context.read<NotifyProvider>().addSendingTo(a);
     };
 
-    removeSendingTo = (a) {
-      context.read<NotifyProvider>().removeSendingTo(a);
+    globalCallBackOnContactChange = () {
+      context.read<ContactChangeProvider>().update();
     };
 
-    updateNotifyProvider = () {
-      context.read<NotifyProvider>().update();
+    globalCallBackOnMessageChange = (userId) {
+      context.read<MessagesChangeProvider>().updateLastMessageFor(userId);
     };
 
-    context.read<NotifyProvider>().update();
+    // connect async to the backend api
     apiProvider.connect();
+  }
+
+  @override
+  void dispose() {
+    // disable globalCallbacks to the flutter tree
+    globalCallbackConnectionState = (a) {};
+    globalCallBackOnContactChange = () {};
+    globalCallBackOnMessageChange = (a) {};
+    super.dispose();
   }
 
   void _startColorAnimation() {

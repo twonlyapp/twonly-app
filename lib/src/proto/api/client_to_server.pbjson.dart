@@ -117,12 +117,13 @@ const ApplicationData$json = {
   '2': [
     {'1': 'textmessage', '3': 1, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.TextMessage', '9': 0, '10': 'textmessage'},
     {'1': 'getuserbyusername', '3': 2, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetUserByUsername', '9': 0, '10': 'getuserbyusername'},
-    {'1': 'getuserbyid', '3': 6, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetUserById', '9': 0, '10': 'getuserbyid'},
     {'1': 'getprekeysbyuserid', '3': 3, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetPrekeysByUserId', '9': 0, '10': 'getprekeysbyuserid'},
     {'1': 'getuploadtoken', '3': 4, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetUploadToken', '9': 0, '10': 'getuploadtoken'},
     {'1': 'uploaddata', '3': 5, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.UploadData', '9': 0, '10': 'uploaddata'},
+    {'1': 'getuserbyid', '3': 6, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetUserById', '9': 0, '10': 'getuserbyid'},
+    {'1': 'downloaddata', '3': 7, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.DownloadData', '9': 0, '10': 'downloaddata'},
   ],
-  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_GetUserById$json, ApplicationData_GetPrekeysByUserId$json, ApplicationData_GetUploadToken$json, ApplicationData_UploadData$json],
+  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_GetUserById$json, ApplicationData_GetPrekeysByUserId$json, ApplicationData_GetUploadToken$json, ApplicationData_UploadData$json, ApplicationData_DownloadData$json],
   '8': [
     {'1': 'ApplicationData'},
   ],
@@ -164,9 +165,6 @@ const ApplicationData_GetPrekeysByUserId$json = {
 @$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData_GetUploadToken$json = {
   '1': 'GetUploadToken',
-  '2': [
-    {'1': 'len', '3': 1, '4': 1, '5': 13, '10': 'len'},
-  ],
 };
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
@@ -179,25 +177,35 @@ const ApplicationData_UploadData$json = {
   ],
 };
 
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_DownloadData$json = {
+  '1': 'DownloadData',
+  '2': [
+    {'1': 'upload_token', '3': 1, '4': 1, '5': 12, '10': 'uploadToken'},
+  ],
+};
+
 /// Descriptor for `ApplicationData`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'Cg9BcHBsaWNhdGlvbkRhdGESUQoLdGV4dG1lc3NhZ2UYASABKAsyLS5jbGllbnRfdG9fc2Vydm'
     'VyLkFwcGxpY2F0aW9uRGF0YS5UZXh0TWVzc2FnZUgAUgt0ZXh0bWVzc2FnZRJjChFnZXR1c2Vy'
     'Ynl1c2VybmFtZRgCIAEoCzIzLmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkdldF'
-    'VzZXJCeVVzZXJuYW1lSABSEWdldHVzZXJieXVzZXJuYW1lElEKC2dldHVzZXJieWlkGAYgASgL'
-    'Mi0uY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuR2V0VXNlckJ5SWRIAFILZ2V0dX'
-    'NlcmJ5aWQSZgoSZ2V0cHJla2V5c2J5dXNlcmlkGAMgASgLMjQuY2xpZW50X3RvX3NlcnZlci5B'
-    'cHBsaWNhdGlvbkRhdGEuR2V0UHJla2V5c0J5VXNlcklkSABSEmdldHByZWtleXNieXVzZXJpZB'
-    'JaCg5nZXR1cGxvYWR0b2tlbhgEIAEoCzIwLmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25E'
-    'YXRhLkdldFVwbG9hZFRva2VuSABSDmdldHVwbG9hZHRva2VuEk4KCnVwbG9hZGRhdGEYBSABKA'
-    'syLC5jbGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5VcGxvYWREYXRhSABSCnVwbG9h'
-    'ZGRhdGEaOgoLVGV4dE1lc3NhZ2USFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEhIKBGJvZHkYAy'
-    'ABKAxSBGJvZHkaLwoRR2V0VXNlckJ5VXNlcm5hbWUSGgoIdXNlcm5hbWUYASABKAlSCHVzZXJu'
-    'YW1lGiYKC0dldFVzZXJCeUlkEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBotChJHZXRQcmVrZX'
-    'lzQnlVc2VySWQSFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkGiIKDkdldFVwbG9hZFRva2VuEhAK'
-    'A2xlbhgBIAEoDVIDbGVuGlsKClVwbG9hZERhdGESIQoMdXBsb2FkX3Rva2VuGAEgASgMUgt1cG'
-    'xvYWRUb2tlbhIWCgZvZmZzZXQYAiABKA1SBm9mZnNldBISCgRkYXRhGAMgASgMUgRkYXRhQhEK'
-    'D0FwcGxpY2F0aW9uRGF0YQ==');
+    'VzZXJCeVVzZXJuYW1lSABSEWdldHVzZXJieXVzZXJuYW1lEmYKEmdldHByZWtleXNieXVzZXJp'
+    'ZBgDIAEoCzI0LmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkdldFByZWtleXNCeV'
+    'VzZXJJZEgAUhJnZXRwcmVrZXlzYnl1c2VyaWQSWgoOZ2V0dXBsb2FkdG9rZW4YBCABKAsyMC5j'
+    'bGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5HZXRVcGxvYWRUb2tlbkgAUg5nZXR1cG'
+    'xvYWR0b2tlbhJOCgp1cGxvYWRkYXRhGAUgASgLMiwuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNh'
+    'dGlvbkRhdGEuVXBsb2FkRGF0YUgAUgp1cGxvYWRkYXRhElEKC2dldHVzZXJieWlkGAYgASgLMi'
+    '0uY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuR2V0VXNlckJ5SWRIAFILZ2V0dXNl'
+    'cmJ5aWQSVAoMZG93bmxvYWRkYXRhGAcgASgLMi4uY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdG'
+    'lvbkRhdGEuRG93bmxvYWREYXRhSABSDGRvd25sb2FkZGF0YRo6CgtUZXh0TWVzc2FnZRIXCgd1'
+    'c2VyX2lkGAEgASgDUgZ1c2VySWQSEgoEYm9keRgDIAEoDFIEYm9keRovChFHZXRVc2VyQnlVc2'
+    'VybmFtZRIaCgh1c2VybmFtZRgBIAEoCVIIdXNlcm5hbWUaJgoLR2V0VXNlckJ5SWQSFwoHdXNl'
+    'cl9pZBgBIAEoA1IGdXNlcklkGi0KEkdldFByZWtleXNCeVVzZXJJZBIXCgd1c2VyX2lkGAEgAS'
+    'gDUgZ1c2VySWQaEAoOR2V0VXBsb2FkVG9rZW4aWwoKVXBsb2FkRGF0YRIhCgx1cGxvYWRfdG9r'
+    'ZW4YASABKAxSC3VwbG9hZFRva2VuEhYKBm9mZnNldBgCIAEoDVIGb2Zmc2V0EhIKBGRhdGEYAy'
+    'ABKAxSBGRhdGEaMQoMRG93bmxvYWREYXRhEiEKDHVwbG9hZF90b2tlbhgBIAEoDFILdXBsb2Fk'
+    'VG9rZW5CEQoPQXBwbGljYXRpb25EYXRh');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

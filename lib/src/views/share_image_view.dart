@@ -2,14 +2,11 @@ import 'dart:collection';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:provider/provider.dart';
-import 'package:twonly/src/app.dart';
 import 'package:twonly/src/components/best_friends_selector.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
-import 'package:twonly/src/providers/notify_provider.dart';
-import 'package:twonly/src/utils/api.dart';
+import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
 
@@ -112,21 +109,12 @@ class _ShareImageView extends State<ShareImageView> {
               FilledButton.icon(
                 icon: Icon(Icons.send),
                 onPressed: () async {
-                  for (Int64 a in _selectedUserIds) {
-                    addSendingTo(a);
-                  }
+                  sendImage(_selectedUserIds.toList(), widget.image);
 
-                  sendImage(
-                      context,
-                      _users
-                          .where((c) => _selectedUserIds.contains(c.userId))
-                          .toList(),
-                      widget.image);
-
+                  // TODO: pop back to the HomeView page popUntil did not work. check later how to improve in case of pushing more then 2
                   Navigator.pop(context);
                   Navigator.pop(context);
-                  context.read<NotifyProvider>().setActivePageIdx(0);
-                  homeViewPageController.jumpToPage(0);
+                  globalUpdateOfHomeViewPageIndex(0);
                 },
                 style: ButtonStyle(
                   padding: WidgetStateProperty.all<EdgeInsets>(
