@@ -4,6 +4,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
@@ -109,9 +110,10 @@ Future tryDownloadMedia(List<int> imageToken, {bool force = false}) async {
 
   final box = await getMediaStorage();
 
-  Uint8List imageBytes = Uint8List.fromList([0]);
+  // Uint8List imageBytes = Uint8List.fromList([0]);
 
-  box.put(imageToken.toString(), imageBytes);
+  // box.put(imageToken.toString(), imageBytes);
+  box.close();
 }
 
 Future<bool> isMediaDownloaded(List<int> mediaToken) async {
@@ -133,6 +135,8 @@ Future initMediaStorage() async {
       value: base64UrlEncode(key),
     );
   }
+  final dir = await getApplicationDocumentsDirectory();
+  Hive.init(dir.path);
 }
 
 Future<Box> getMediaStorage() async {

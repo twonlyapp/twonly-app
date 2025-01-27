@@ -36,9 +36,6 @@ void main() async {
     }
   });
 
-  final dir = await getApplicationDocumentsDirectory();
-  Hive.init(dir.path);
-
   await initMediaStorage();
 
   dbProvider = DbProvider();
