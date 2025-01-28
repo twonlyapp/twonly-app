@@ -5,6 +5,7 @@ import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/app.dart';
 import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/providers/api/api.dart';
 
 class DbMessage {
   DbMessage({
@@ -15,6 +16,7 @@ class DbMessage {
     required this.messageContent,
     required this.messageOpenedAt,
     required this.messageAcknowledgeByUser,
+    required this.isDownloaded,
     required this.messageAcknowledgeByServer,
     required this.sendOrReceivedAt,
   });
@@ -27,6 +29,7 @@ class DbMessage {
   MessageContent? messageContent;
   DateTime? messageOpenedAt;
   bool messageAcknowledgeByUser;
+  bool isDownloaded;
   bool messageAcknowledgeByServer;
   DateTime sendOrReceivedAt;
 
@@ -130,11 +133,11 @@ class DbMessages extends CvModelBase {
     }
   }
 
-  static Future insertOtherMessage(int userIdFrom, MessageKind kind,
-      int messageId, String jsonContent) async {
+  static Future<int?> insertOtherMessage(int userIdFrom, MessageKind kind,
+      int messageOtherId, String jsonContent) async {
     try {
-      await dbProvider.db!.insert(tableName, {
-        columnMessageOtherId: messageId,
+      int messageId = await dbProvider.db!.insert(tableName, {
+        columnMessageOtherId: messageOtherId,
         columnMessageKind: kind.index,
         columnMessageContentJson: jsonContent,
         columnMessageAcknowledgeByServer: 1,
@@ -144,11 +147,24 @@ class DbMessages extends CvModelBase {
         columnSendOrReceivedAt: DateTime.now().toIso8601String()
       });
       globalCallBackOnMessageChange(userIdFrom);
-      return true;
+      return messageId;
     } catch (e) {
       Logger("contacts_model/getUsers").shout("$e");
-      return false;
+      return null;
     }
+  }
+
+  static Future<List<DbMessage>> getAllMessagesForUser(int otherUserId) async {
+    var rows = await dbProvider.db!.query(
+      tableName,
+      where: "$columnOtherUserId = ?",
+      whereArgs: [otherUserId],
+      orderBy: "$columnUpdatedAt DESC",
+    );
+
+    List<DbMessage> messages = await convertToDbMessage(rows);
+
+    return messages;
   }
 
   static Future<DbMessage?> getLastMessagesForPreviewForUser(
@@ -161,7 +177,7 @@ class DbMessages extends CvModelBase {
       limit: 10,
     );
 
-    List<DbMessage> messages = convertToDbMessage(rows);
+    List<DbMessage> messages = await convertToDbMessage(rows);
 
     // check if there is a message which was not ack by the server
     List<DbMessage> notAckByServer =
@@ -177,13 +193,11 @@ class DbMessages extends CvModelBase {
     return messages[0];
   }
 
-  static Future acknowledgeMessageByServer(int messageId) async {
-    Map<String, dynamic> valuesToUpdate = {
-      columnMessageAcknowledgeByServer: 1,
-    };
+  static Future _updateByMessageId(
+      int messageId, Map<String, dynamic> data) async {
     await dbProvider.db!.update(
       tableName,
-      valuesToUpdate,
+      data,
       where: "$messageId = ?",
       whereArgs: [messageId],
     );
@@ -191,6 +205,20 @@ class DbMessages extends CvModelBase {
     if (fromUserId != null) {
       globalCallBackOnMessageChange(fromUserId);
     }
+  }
+
+  static Future userOpenedMessage(int messageId) async {
+    Map<String, dynamic> data = {
+      columnMessageOpenedAt: DateTime.now().toIso8601String(),
+    };
+    await _updateByMessageId(messageId, data);
+  }
+
+  static Future acknowledgeMessageByServer(int messageId) async {
+    Map<String, dynamic> data = {
+      columnMessageAcknowledgeByServer: 1,
+    };
+    await _updateByMessageId(messageId, data);
   }
 
   // check fromUserId to prevent spoofing
@@ -216,7 +244,8 @@ class DbMessages extends CvModelBase {
         sendOrReceivedAt
       ];
 
-  static List<DbMessage> convertToDbMessage(List<dynamic> fromDb) {
+  static Future<List<DbMessage>> convertToDbMessage(
+      List<dynamic> fromDb) async {
     try {
       List<DbMessage> parsedUsers = [];
       for (int i = 0; i < fromDb.length; i++) {
@@ -229,6 +258,16 @@ class DbMessages extends CvModelBase {
           content = MessageContent.fromJson(
               jsonDecode(fromDb[i][columnMessageContentJson]));
         }
+        MessageKind messageKind =
+            MessageKindExtension.fromIndex(fromDb[i][columnMessageKind]);
+        bool isDownloaded = true;
+        if (messageKind == MessageKind.image ||
+            messageKind == MessageKind.video) {
+          // when the media was send from the user itself the content is null
+          if (content != null) {
+            isDownloaded = await isMediaDownloaded(content.downloadToken!);
+          }
+        }
         parsedUsers.add(
           DbMessage(
             sendOrReceivedAt:
@@ -236,9 +275,9 @@ class DbMessages extends CvModelBase {
             messageId: fromDb[i][columnMessageId],
             messageOtherId: fromDb[i][columnMessageOtherId],
             otherUserId: fromDb[i][columnOtherUserId],
-            messageKind:
-                MessageKindExtension.fromIndex(fromDb[i][columnMessageKind]),
+            messageKind: messageKind,
             messageContent: content,
+            isDownloaded: isDownloaded,
             messageOpenedAt: messageOpenedAt,
             messageAcknowledgeByUser:
                 fromDb[i][columnMessageAcknowledgeByUser] == 1,

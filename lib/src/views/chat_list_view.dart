@@ -132,23 +132,10 @@ class UserListItem extends StatefulWidget {
 class _UserListItem extends State<UserListItem> {
   int flames = 0;
   int lastMessageInSeconds = 0;
-  bool isDownloaded = true;
 
   @override
   void initState() {
     super.initState();
-    _loadAsync();
-  }
-
-  Future _loadAsync() async {
-    // flames = await widget.user.getFlames();
-    //   setState(() {});
-
-    if (widget.lastMessage.containsOtherMedia()) {
-      isDownloaded = await isMediaDownloaded(
-          widget.lastMessage.messageContent!.downloadToken!);
-      setState(() {});
-    }
   }
 
   @override
@@ -184,8 +171,8 @@ class _UserListItem extends State<UserListItem> {
         title: Text(widget.user.displayName),
         subtitle: Row(
           children: [
-            MessageSendStateIcon(
-                state, isDownloaded, widget.lastMessage.messageKind),
+            MessageSendStateIcon(state, widget.lastMessage.isDownloaded,
+                widget.lastMessage.messageKind),
             Text("•"),
             const SizedBox(width: 5),
             Text(
@@ -213,18 +200,17 @@ class _UserListItem extends State<UserListItem> {
         ),
         leading: InitialsAvatar(displayName: widget.user.displayName),
         onTap: () {
+          if (!widget.lastMessage.isDownloaded) {
+            List<int> token = widget.lastMessage.messageContent!.downloadToken!;
+            tryDownloadMedia(token, force: true);
+            return;
+          }
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
               if (state == MessageSendState.received &&
                   widget.lastMessage.containsOtherMedia()) {
-                List<int> token =
-                    widget.lastMessage.messageContent!.downloadToken!;
-                if (isDownloaded) {
-                  return MediaViewerView(widget.user);
-                } else {
-                  tryDownloadMedia(token);
-                }
+                return MediaViewerView(widget.user, widget.lastMessage);
               }
               return ChatItemDetailsView(user: widget.user);
             }),

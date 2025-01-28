@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/model/messages_model.dart';
 
-class AlignedTextBox extends StatelessWidget {
-  const AlignedTextBox({super.key, required this.text, required this.right});
-  final String text;
-  final bool right;
+class ChatListEntry extends StatelessWidget {
+  const ChatListEntry(this.message, {super.key});
+  final DbMessage message;
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: right ? Alignment.centerRight : Alignment.centerLeft,
-      child: Padding(
-        padding: EdgeInsets.all(10),
-        child: Container(
+    bool right = message.messageOtherId == null;
+
+    Widget child = Container();
+
+    switch (message.messageKind) {
+      case MessageKind.textMessage:
+        child = Container(
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width *
                 0.8, // Maximum 80% of the screen width
@@ -26,64 +29,65 @@ class AlignedTextBox extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.0), // Set border radius
           ),
           child: Text(
-            text,
+            message.messageContent!.text!,
             style: TextStyle(
               color: Colors.white, // Set text color for contrast
               fontSize: 17,
             ),
             textAlign: TextAlign.left, // Center the text
           ),
-        ),
-      ),
+        );
+        break;
+      default:
+        return Container();
+    }
+
+    return Align(
+      alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+      child: Padding(padding: EdgeInsets.all(10), child: child),
     );
   }
 }
 
 /// Displays detailed information about a SampleItem.
-class ChatItemDetailsView extends StatelessWidget {
+class ChatItemDetailsView extends StatefulWidget {
   const ChatItemDetailsView({super.key, required this.user});
 
   final Contact user;
 
   @override
+  State<ChatItemDetailsView> createState() => _ChatItemDetailsViewState();
+}
+
+class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
+  List<DbMessage> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAsync();
+  }
+
+  Future _loadAsync() async {
+    _messages =
+        await DbMessages.getAllMessagesForUser(widget.user.userId.toInt());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    List<List<dynamic>> messages = [
-      ["Hallo", true],
-      ["Wie geht's?", false],
-      ["Das ist ein Test.", true],
-      ["Flutter ist großartig!", false],
-      ["Ich liebe Programmieren.", true],
-      ["Das Wetter ist schön.", false],
-      ["Hast du Pläne für heute?", true],
-      ["Ich mag Pizza.", false],
-      ["Lass uns einen Film schauen.", false],
-      ["Das ist interessant.", false],
-      ["Ich bin müde.", true],
-      ["Was machst du gerade?", true],
-      ["Ich habe ein neues Hobby.", true],
-      ["Das ist eine lange Nachricht.", false],
-      ["Ich freue mich auf das Wochenende.", true],
-      ["Das ist eine zufällige Nachricht.", false],
-      ["Ich lerne Dart.", true],
-      ["Wie war dein Tag?", true],
-      ["Ich genieße die Natur.", true],
-      ["Das ist ein schöner Ort.", false],
-      ["Meine letzte Nachricht.", false],
-    ];
-    messages = messages.reversed.toList();
+    // messages = messages.reversed.toList();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Your Chat with ${user.displayName}'),
+        title: Text('Your Chat with ${widget.user.displayName}'),
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              itemCount: messages.length, // Number of items in the list
+              itemCount: _messages.length, // Number of items in the list
               reverse: true,
               itemBuilder: (context, i) {
-                return AlignedTextBox(
-                    text: messages[i][0], right: messages[i][1]);
+                return ChatListEntry(_messages[i]);
               },
             ),
           ),

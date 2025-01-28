@@ -211,6 +211,36 @@ Future<Uint8List?> encryptBytes(Uint8List bytes, Int64 target) async {
   }
 }
 
+Future<Uint8List?> decryptBytes(Uint8List bytes, Int64 target) async {
+  try {
+    ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
+
+    SessionCipher session = SessionCipher.fromStore(
+        signalStore, SignalProtocolAddress(target.toString(), defaultDeviceId));
+
+    List<Uint8List>? msgs = removeLastFourBytes(bytes);
+    if (msgs == null) return null;
+    Uint8List body = msgs[0];
+    int type = bytesToInt(msgs[1]);
+
+    Uint8List plaintext;
+    if (type == CiphertextMessage.prekeyType) {
+      PreKeySignalMessage pre = PreKeySignalMessage(body);
+      plaintext = await session.decrypt(pre);
+    } else if (type == CiphertextMessage.whisperType) {
+      SignalMessage signalMsg = SignalMessage.fromSerialized(body);
+      plaintext = await session.decryptFromSignal(signalMsg);
+    } else {
+      return null;
+    }
+    List<int>? plainBytes = gzip.decode(Uint8List.fromList(plaintext));
+    return Uint8List.fromList(plainBytes);
+  } catch (e) {
+    Logger("utils/signal").shout(e.toString());
+    return null;
+  }
+}
+
 Future<Uint8List?> encryptMessage(Message msg, Int64 target) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;

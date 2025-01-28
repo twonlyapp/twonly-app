@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
@@ -104,24 +105,34 @@ Future sendImage(List<Int64> userIds, String imagePath) async {
 }
 
 Future tryDownloadMedia(List<int> imageToken, {bool force = false}) async {
-  print("check if free network connection");
+  if (!force) {
+    // TODO: create option to enable download via mobile data
+    final List<ConnectivityResult> connectivityResult =
+        await (Connectivity().checkConnectivity());
+    if (connectivityResult.contains(ConnectivityResult.mobile)) {
+      Logger("tryDownloadMedia").info("abort download over mobile connection");
+      return;
+    }
+  }
+  Logger("tryDownloadMedia").info("Downloading: $imageToken");
+  apiProvider.triggerDownload(imageToken);
+}
 
-  print("Downloading: " + imageToken.toString());
-
+Future<Uint8List?> getDownloadedMedia(
+    List<int> mediaToken, int messageId) async {
   final box = await getMediaStorage();
+  Uint8List? media = box.get("${mediaToken}_downloaded");
+  // box.delete(mediaToken.toString());
+  // box.delete("${mediaToken}_downloaded");
+  // box.delete("${mediaToken}_fromUserId");
+  // await DbMessages.userOpenedMessage(messageId);
 
-  // Uint8List imageBytes = Uint8List.fromList([0]);
-
-  // box.put(imageToken.toString(), imageBytes);
-  box.close();
+  return media;
 }
 
 Future<bool> isMediaDownloaded(List<int> mediaToken) async {
   final box = await getMediaStorage();
-
-  // box.put('secret', 'Hive is awesome');
-
-  return box.containsKey(mediaToken.toString());
+  return box.containsKey("${mediaToken}_downloaded");
 }
 
 Future initMediaStorage() async {

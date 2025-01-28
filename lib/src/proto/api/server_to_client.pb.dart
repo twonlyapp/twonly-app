@@ -281,6 +281,7 @@ class DownloadData extends $pb.GeneratedMessage {
     $core.List<$core.int>? uploadToken,
     $core.int? offset,
     $core.List<$core.int>? data,
+    $core.bool? fin,
   }) {
     final $result = create();
     if (uploadToken != null) {
@@ -292,6 +293,9 @@ class DownloadData extends $pb.GeneratedMessage {
     if (data != null) {
       $result.data = data;
     }
+    if (fin != null) {
+      $result.fin = fin;
+    }
     return $result;
   }
   DownloadData._() : super();
@@ -302,6 +306,7 @@ class DownloadData extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..aOB(4, _omitFieldNames ? '' : 'fin')
     ..hasRequiredFields = false
   ;
 
@@ -352,6 +357,15 @@ class DownloadData extends $pb.GeneratedMessage {
   $core.bool hasData() => $_has(2);
   @$pb.TagNumber(3)
   void clearData() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get fin => $_getBF(3);
+  @$pb.TagNumber(4)
+  set fin($core.bool v) { $_setBool(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasFin() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearFin() => clearField(4);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {
