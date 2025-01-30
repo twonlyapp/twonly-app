@@ -17,6 +17,33 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
 // this functions ensures that the message is received by the server and in case of errors will try again later
+
+Future tryTransmitMessages() async {
+  List<DbMessage> retransmit =
+      await DbMessages.getAllMessagesForRetransmitting();
+
+  debugPrint("tryTransmitMessages: ${retransmit.length}");
+
+  Box box = await getMediaStorage();
+  for (int i = 0; i < retransmit.length; i++) {
+    int msgId = retransmit[i].messageId;
+    debugPrint("msgId=$msgId");
+    Uint8List? bytes = box.get("retransmit-$msgId");
+    debugPrint("bytes == null =${bytes == null}");
+    if (bytes != null) {
+      Result resp = await apiProvider.sendTextMessage(
+          Int64(retransmit[i].otherUserId), bytes);
+
+      if (resp.isSuccess) {
+        DbMessages.acknowledgeMessageByServer(msgId);
+        box.delete("retransmit-$msgId");
+      } else {
+        // in case of error do nothing. As the message is not removed the app will try again when relaunched
+      }
+    }
+  }
+}
+
 Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
   Uint8List? bytes = await SignalHelper.encryptMessage(msg, userId);
 
@@ -25,18 +52,19 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
     return Result.error(ErrorCode.InternalError);
   }
 
-  Logger("api.dart").shout(
-      "TODO: store encrypted message and send later again. STORE: userId, bytes and messageId");
+  Box box = await getMediaStorage();
+  if (msg.messageId != null) {
+    debugPrint("putting=${msg.messageId}");
+    box.put("retransmit-${msg.messageId}", bytes);
+  }
 
   Result resp = await apiProvider.sendTextMessage(userId, bytes);
 
   if (resp.isSuccess) {
     if (msg.messageId != null) {
       DbMessages.acknowledgeMessageByServer(msg.messageId!);
+      box.delete("retransmit-${msg.messageId}");
     }
-    // TODO: remove encrypted tmp file
-  } else {
-    // in case of error do nothing. As the message is not removed the app will try again when relaunched
   }
 
   return resp;
@@ -65,22 +93,6 @@ Future sendImageToSingleTarget(Int64 target, Uint8List imageBytes) async {
       await DbMessages.insertMyMessage(target.toInt(), MessageKind.image);
   if (messageId == null) return;
 
-  Result res = await apiProvider.getUploadToken();
-
-  if (res.isError || !res.value.hasUploadtoken()) {
-    Logger("api.dart").shout("Error getting upload token!");
-
-    // TODO store message for later and try again
-
-    return null;
-  }
-
-  List<int> uploadToken = res.value.uploadtoken;
-  Logger("sendImageToSingleTarget").fine("Got token: $uploadToken");
-
-  MessageContent content =
-      MessageContent(text: null, downloadToken: uploadToken);
-
   Uint8List? encryptBytes = await SignalHelper.encryptBytes(imageBytes, target);
   if (encryptBytes == null) {
     await DbMessages.deleteMessageById(messageId);
@@ -88,14 +100,25 @@ Future sendImageToSingleTarget(Int64 target, Uint8List imageBytes) async {
     return;
   }
 
-  List<int>? imageToken =
-      await apiProvider.uploadData(uploadToken, encryptBytes);
-  if (imageToken == null) {
-    Logger("api.dart").shout("handle error uploading like saving...");
-    return;
+  Result res = await apiProvider.getUploadToken();
+
+  if (res.isError || !res.value.hasUploadtoken()) {
+    print("store encryptBytes in box to retransmit without an upload token");
+    Logger("api.dart").shout("Error getting upload token!");
+    return null;
   }
 
-  print("TODO: insert into DB and then create this MESSAGE");
+  List<int> uploadToken = res.value.uploadtoken;
+
+  MessageContent content =
+      MessageContent(text: null, downloadToken: uploadToken);
+
+  print("fragmentate the data");
+
+  if (!await apiProvider.uploadData(uploadToken, encryptBytes, 0)) {
+    Logger("api.dart").shout("error while uploading image");
+    return;
+  }
 
   Message msg = Message(
     kind: MessageKind.image,
@@ -140,7 +163,7 @@ Future tryDownloadMedia(List<int> mediaToken, {bool force = false}) async {
   if (media != null && media.isNotEmpty) {
     offset = media.length;
   }
-  globalCallBackOnDownloadChange(mediaToken, true);
+  //globalCallBackOnDownloadChange(mediaToken, true);
   apiProvider.triggerDownload(mediaToken, offset);
 }
 

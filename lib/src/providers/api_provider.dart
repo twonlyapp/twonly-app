@@ -8,6 +8,7 @@ import 'package:twonly/src/app.dart';
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
+import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/server_messages.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -52,6 +53,14 @@ class ApiProvider {
     }
   }
 
+  Future onConnected() async {
+    await authenticate();
+    globalCallbackConnectionState(true);
+    _reconnectionDelay = 5;
+
+    tryTransmitMessages();
+  }
+
   Future<bool> connect() async {
     if (_channel != null && _channel!.closeCode != null) {
       return true;
@@ -63,17 +72,13 @@ class ApiProvider {
 
     log.info("Trying to connect to the backend $apiUrl!");
     if (await _connectTo(apiUrl)) {
-      await authenticate();
-      globalCallbackConnectionState(true);
-      _reconnectionDelay = 5;
+      onConnected();
       return true;
     }
     if (backupApiUrl != null) {
       log.info("Trying to connect to the backup backend $backupApiUrl!");
       if (await _connectTo(backupApiUrl!)) {
-        globalCallbackConnectionState(true);
-        await authenticate();
-        _reconnectionDelay = 5;
+        onConnected();
         return true;
       }
     }
@@ -265,18 +270,16 @@ class ApiProvider {
     return await _sendRequestV0(req);
   }
 
-  Future<List<int>?> uploadData(List<int> uploadToken, Uint8List data) async {
-    log.shout("fragmentate the data");
-
+  Future<bool> uploadData(
+      List<int> uploadToken, Uint8List data, int offset) async {
     var get = ApplicationData_UploadData()
       ..uploadToken = uploadToken
       ..data = data
-      ..offset = 0;
-
+      ..offset = offset;
     var appData = ApplicationData()..uploaddata = get;
     var req = createClientToServerFromApplicationData(appData);
     final result = await _sendRequestV0(req);
-    return result.isSuccess ? uploadToken : null;
+    return result.isSuccess;
   }
 
   Future<Result> getUserData(String username) async {

@@ -26,13 +26,13 @@ class ChatListEntry extends StatelessWidget {
     MessageSendState state = message.getSendState();
 
     bool isDownloading = false;
-    if (message.messageContent != null &&
-        message.messageContent!.downloadToken != null) {
-      isDownloading = context
-          .watch<DownloadChangeProvider>()
-          .currentlyDownloading
-          .contains(message.messageContent!.downloadToken!);
-    }
+    // if (message.messageContent != null &&
+    //     message.messageContent!.downloadToken != null) {
+    //   isDownloading = context
+    //       .watch<DownloadChangeProvider>()
+    //       .currentlyDownloading
+    //       .contains(message.messageContent!.downloadToken!);
+    // }
 
     Widget child = Container();
 
@@ -148,7 +148,14 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       _messages.insertAll(0, toAppend);
     }
 
-    setState(() {});
+    try {
+      if (context.mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      // state should be disposed
+      return;
+    }
 
     if (updateOpenStatus) {
       _messages.where((x) => x.messageOpenedAt == null).forEach((message) {

@@ -151,13 +151,13 @@ class _UserListItem extends State<UserListItem> {
 
     MessageSendState state = widget.lastMessage.getSendState();
     bool isDownloading = false;
-    if (widget.lastMessage.messageContent != null &&
-        widget.lastMessage.messageContent!.downloadToken != null) {
-      isDownloading = context
-          .watch<DownloadChangeProvider>()
-          .currentlyDownloading
-          .contains(widget.lastMessage.messageContent!.downloadToken!);
-    }
+    // if (widget.lastMessage.messageContent != null &&
+    //     widget.lastMessage.messageContent!.downloadToken != null) {
+    //   isDownloading = context
+    //       .watch<DownloadChangeProvider>()
+    //       .currentlyDownloading
+    //       .contains(widget.lastMessage.messageContent!.downloadToken!);
+    // }
 
     return UserContextMenu(
       user: widget.user,

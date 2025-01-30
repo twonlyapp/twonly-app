@@ -21,6 +21,7 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
       changeCounter[targetUserId] = 0;
     }
     changeCounter[targetUserId] = changeCounter[targetUserId]! + 1;
+    notifyListeners();
   }
 
   void init() async {
@@ -33,5 +34,6 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
         _lastMessage[last.otherUserId] = last;
       }
     }
+    notifyListeners();
   }
 }
