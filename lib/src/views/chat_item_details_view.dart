@@ -1,4 +1,5 @@
-import 'package:cv/cv.dart';
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -17,10 +18,10 @@ class ChatListEntry extends StatelessWidget {
   final DbMessage message;
   final Contact user;
   final bool lastMessageFromSameUser;
+
   @override
   Widget build(BuildContext context) {
     bool right = message.messageOtherId == null;
-
     MessageSendState state = message.getSendState();
 
     Widget child = Container();
@@ -29,15 +30,15 @@ class ChatListEntry extends StatelessWidget {
       case MessageKind.textMessage:
         child = Container(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width *
-                0.8, // Maximum 80% of the screen width
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
           ),
           padding: EdgeInsets.symmetric(
               vertical: 4, horizontal: 10), // Add some padding around the text
           decoration: BoxDecoration(
             color: right
-                ? Colors.deepPurpleAccent
-                : Colors.blueAccent, // Set the background color
+                ? const Color.fromARGB(107, 124, 77, 255)
+                : const Color.fromARGB(
+                    83, 68, 137, 255), // Set the background color
             borderRadius: BorderRadius.circular(12.0), // Set border radius
           ),
           child: Text(
@@ -71,7 +72,7 @@ class ChatListEntry extends StatelessWidget {
           },
           child: Container(
             padding: EdgeInsets.all(10),
-            width: 200,
+            width: 150,
             decoration: BoxDecoration(
               border: Border.all(
                 color: color, // Set the background color
@@ -79,10 +80,13 @@ class ChatListEntry extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(12.0), // Set border radius
             ),
-            child: MessageSendStateIcon(
-              state,
-              message.isDownloaded,
-              message.messageKind,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: MessageSendStateIcon(
+                message,
+                mainAxisAlignment:
+                    right ? MainAxisAlignment.center : MainAxisAlignment.center,
+              ),
             ),
           ),
         );
@@ -94,7 +98,7 @@ class ChatListEntry extends StatelessWidget {
       child: Padding(
           padding: lastMessageFromSameUser
               ? EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10)
-              : EdgeInsets.all(10),
+              : EdgeInsets.only(top: 5, bottom: 20, right: 10, left: 10),
           child: child),
     );
   }
@@ -112,34 +116,50 @@ class ChatItemDetailsView extends StatefulWidget {
 
 class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   List<DbMessage> _messages = [];
+  int lastChangeCounter = 0;
   final TextEditingController newMessageController = TextEditingController();
+  HashSet<int> alreadyReportedOpened = HashSet<int>();
 
   @override
   void initState() {
     super.initState();
-    _loadAsync();
+    _loadAsync(updateOpenStatus: true);
   }
 
-  Future _loadAsync() async {
+  Future _loadAsync({bool updateOpenStatus = false}) async {
     _messages =
         await DbMessages.getAllMessagesForUser(widget.user.userId.toInt());
+    setState(() {});
+
+    if (updateOpenStatus) {
+      _messages.where((x) => x.messageOpenedAt == null).forEach((message) {
+        if (message.messageOtherId != null &&
+            message.messageKind == MessageKind.textMessage) {
+          if (!alreadyReportedOpened.contains(message.messageOtherId!)) {
+            userOpenedOtherMessage(
+                message.otherUserId, message.messageOtherId!);
+            alreadyReportedOpened.add(message.messageOtherId!);
+          }
+        }
+      });
+    }
   }
 
   Future _sendMessage() async {
     String text = newMessageController.text;
     if (text == "") return;
-    sendTextMessage(widget.user.userId, newMessageController.text);
+    await sendTextMessage(widget.user.userId, newMessageController.text);
+    _loadAsync();
     newMessageController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
-    final messages = context.watch<MessagesChangeProvider>().lastMessage;
-    if (messages.containsKey(widget.user.userId.toInt()) &&
-        _messages.isNotEmpty) {
-      final lastMessage = messages[widget.user.userId.toInt()];
-      if (lastMessage!.messageId != _messages[0].messageId) {
-        _loadAsync();
+    final changeCounter = context.watch<MessagesChangeProvider>().changeCounter;
+    if (changeCounter.containsKey(widget.user.userId.toInt())) {
+      if (changeCounter[widget.user.userId.toInt()] != lastChangeCounter) {
+        _loadAsync(updateOpenStatus: true);
+        lastChangeCounter = changeCounter[widget.user.userId.toInt()]!;
       }
     }
     // messages = messages.reversed.toList();
@@ -163,7 +183,10 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                               _messages[i].messageOtherId != null);
                 }
                 return ChatListEntry(
-                    _messages[i], widget.user, lastMessageFromSameUser);
+                  _messages[i],
+                  widget.user,
+                  lastMessageFromSameUser,
+                );
               },
             ),
           ),

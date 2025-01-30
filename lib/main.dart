@@ -7,6 +7,7 @@ import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/providers/db_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -61,6 +62,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MessagesChangeProvider()),
+        ChangeNotifierProvider(create: (_) => DownloadChangeProvider()),
         ChangeNotifierProvider(create: (_) => ContactChangeProvider()),
       ],
       child: MyApp(settingsController: settingsController),

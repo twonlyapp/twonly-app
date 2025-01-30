@@ -854,10 +854,14 @@ class ApplicationData_UploadData extends $pb.GeneratedMessage {
 class ApplicationData_DownloadData extends $pb.GeneratedMessage {
   factory ApplicationData_DownloadData({
     $core.List<$core.int>? uploadToken,
+    $core.int? offset,
   }) {
     final $result = create();
     if (uploadToken != null) {
       $result.uploadToken = uploadToken;
+    }
+    if (offset != null) {
+      $result.offset = offset;
     }
     return $result;
   }
@@ -867,6 +871,7 @@ class ApplicationData_DownloadData extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.DownloadData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
+    ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
 
@@ -899,6 +904,15 @@ class ApplicationData_DownloadData extends $pb.GeneratedMessage {
   $core.bool hasUploadToken() => $_has(0);
   @$pb.TagNumber(1)
   void clearUploadToken() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get offset => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set offset($core.int v) { $_setUnsignedInt32(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasOffset() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOffset() => clearField(2);
 }
 
 enum ApplicationData_ApplicationData {

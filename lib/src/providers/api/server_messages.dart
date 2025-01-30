@@ -57,7 +57,8 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   Uint8List downloadedBytes;
   if (buffered != null) {
     if (data.offset != buffered.length) {
-      return client.Response()..error = ErrorCode.BadRequest;
+      // Logger("handleDownloadData").error(object)
+      return client.Response()..error = ErrorCode.InvalidOffset;
     }
     var b = BytesBuilder();
     b.add(buffered);
@@ -70,16 +71,20 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 
   if (data.fin) {
     SignalHelper.getSignalStore();
-    int fromUserId = box.get("${data.uploadToken}_fromUserId")!;
-    Uint8List? rawBytes =
-        await SignalHelper.decryptBytes(downloadedBytes, Int64(fromUserId));
+    int? fromUserId = box.get("${data.uploadToken}_fromUserId");
+    if (fromUserId != null) {
+      print(fromUserId);
+      Uint8List? rawBytes =
+          await SignalHelper.decryptBytes(downloadedBytes, Int64(fromUserId));
 
-    if (rawBytes != null) {
-      box.put("${data.uploadToken}_downloaded", rawBytes);
+      if (rawBytes != null) {
+        box.put("${data.uploadToken}_downloaded", rawBytes);
+      }
+
+      box.delete(boxId);
+      globalCallBackOnMessageChange(fromUserId);
+      globalCallBackOnDownloadChange(data.uploadToken, false);
     }
-
-    box.delete(boxId);
-    globalCallBackOnMessageChange(fromUserId);
   } else {
     box.put(boxId, downloadedBytes);
   }
@@ -102,7 +107,7 @@ Future<client.Response> handleNewMessage(
         }
         break;
       case MessageKind.opened:
-        await DbMessages.userOpenedMessageOtherUser(
+        await DbMessages.otherUserOpenedMyMessage(
           fromUserId.toInt(),
           message.messageId!,
           message.timestamp,

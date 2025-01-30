@@ -7,6 +7,7 @@ import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/main.dart';
+import 'package:twonly/src/app.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
@@ -56,7 +57,7 @@ Future sendTextMessage(Int64 target, String message) async {
     timestamp: DateTime.now(),
   );
 
-  await encryptAndSendMessage(target, msg);
+  encryptAndSendMessage(target, msg);
 }
 
 Future sendImageToSingleTarget(Int64 target, Uint8List imageBytes) async {
@@ -122,7 +123,7 @@ Future sendImage(List<Int64> userIds, String imagePath) async {
   }
 }
 
-Future tryDownloadMedia(List<int> imageToken, {bool force = false}) async {
+Future tryDownloadMedia(List<int> mediaToken, {bool force = false}) async {
   if (!force) {
     // TODO: create option to enable download via mobile data
     final List<ConnectivityResult> connectivityResult =
@@ -132,32 +133,39 @@ Future tryDownloadMedia(List<int> imageToken, {bool force = false}) async {
       return;
     }
   }
-  Logger("tryDownloadMedia").info("Downloading: $imageToken");
-  apiProvider.triggerDownload(imageToken);
+  Logger("tryDownloadMedia").info("Downloading: $mediaToken");
+  int offset = 0;
+  final box = await getMediaStorage();
+  Uint8List? media = box.get("$mediaToken");
+  if (media != null && media.isNotEmpty) {
+    offset = media.length;
+  }
+  globalCallBackOnDownloadChange(mediaToken, true);
+  apiProvider.triggerDownload(mediaToken, offset);
 }
 
-Future userOpenedMessage(int fromUserId, int messageId) async {
-  await DbMessages.userOpenedMessage(messageId);
+Future userOpenedOtherMessage(int fromUserId, int messageOtherId) async {
+  await DbMessages.userOpenedOtherMessage(messageOtherId, fromUserId);
 
   encryptAndSendMessage(
     Int64(fromUserId),
     Message(
       kind: MessageKind.opened,
-      messageId: messageId,
+      messageId: messageOtherId,
       timestamp: DateTime.now(),
     ),
   );
 }
 
 Future<Uint8List?> getDownloadedMedia(
-    List<int> mediaToken, int messageId) async {
+    List<int> mediaToken, int messageOtherId) async {
   final box = await getMediaStorage();
   Uint8List? media = box.get("${mediaToken}_downloaded");
   int fromUserId = box.get("${mediaToken}_fromUserId");
-  await userOpenedMessage(fromUserId, messageId);
-  box.delete(mediaToken.toString());
-  box.put("${mediaToken}_downloaded", "deleted");
-  box.delete("${mediaToken}_fromUserId");
+  await userOpenedOtherMessage(fromUserId, messageOtherId);
+  // box.delete(mediaToken.toString());
+  // box.put("${mediaToken}_downloaded", "deleted");
+  // box.delete("${mediaToken}_fromUserId");
   return media;
 }
 

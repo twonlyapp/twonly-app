@@ -27,7 +27,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   Future _initAsync() async {
     List<int> token = widget.message.messageContent!.downloadToken!;
-    _imageByte = await getDownloadedMedia(token, widget.message.messageId);
+    _imageByte =
+        await getDownloadedMedia(token, widget.message.messageOtherId!);
     setState(() {});
   }
 

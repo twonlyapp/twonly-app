@@ -255,8 +255,11 @@ class ApiProvider {
     return await _sendRequestV0(req);
   }
 
-  Future<Result> triggerDownload(List<int> token) async {
-    var get = ApplicationData_DownloadData()..uploadToken = token;
+  Future<Result> triggerDownload(List<int> token, int offset) async {
+    log.info("Offset: ${offset}");
+    var get = ApplicationData_DownloadData()
+      ..uploadToken = token
+      ..offset = offset;
     var appData = ApplicationData()..downloaddata = get;
     var req = createClientToServerFromApplicationData(appData);
     return await _sendRequestV0(req);

@@ -238,6 +238,17 @@ class DbMessages extends CvModelBase {
     }
   }
 
+  static Future _updateByOtherMessageId(
+      int fromUserId, int messageId, Map<String, dynamic> data) async {
+    await dbProvider.db!.update(
+      tableName,
+      data,
+      where: "$columnMessageOtherId = ?",
+      whereArgs: [messageId],
+    );
+    globalCallBackOnMessageChange(fromUserId);
+  }
+
   // this ensures that the message id can be spoofed by another person
   static Future _updateByMessageIdOther(
       int fromUserId, int messageId, Map<String, dynamic> data) async {
@@ -250,14 +261,15 @@ class DbMessages extends CvModelBase {
     globalCallBackOnMessageChange(fromUserId);
   }
 
-  static Future userOpenedMessage(int messageId) async {
+  static Future userOpenedOtherMessage(
+      int otherMessageId, int fromUserId) async {
     Map<String, dynamic> data = {
       columnMessageOpenedAt: DateTime.now().toIso8601String(),
     };
-    await _updateByMessageId(messageId, data);
+    await _updateByOtherMessageId(fromUserId, otherMessageId, data);
   }
 
-  static Future userOpenedMessageOtherUser(
+  static Future otherUserOpenedMyMessage(
       int fromUserId, int messageId, DateTime openedAt) async {
     Map<String, dynamic> data = {
       columnMessageOpenedAt: openedAt.toIso8601String(),

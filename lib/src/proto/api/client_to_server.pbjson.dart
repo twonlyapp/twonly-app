@@ -182,6 +182,7 @@ const ApplicationData_DownloadData$json = {
   '1': 'DownloadData',
   '2': [
     {'1': 'upload_token', '3': 1, '4': 1, '5': 12, '10': 'uploadToken'},
+    {'1': 'offset', '3': 2, '4': 1, '5': 13, '10': 'offset'},
   ],
 };
 
@@ -204,8 +205,8 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'cl9pZBgBIAEoA1IGdXNlcklkGi0KEkdldFByZWtleXNCeVVzZXJJZBIXCgd1c2VyX2lkGAEgAS'
     'gDUgZ1c2VySWQaEAoOR2V0VXBsb2FkVG9rZW4aWwoKVXBsb2FkRGF0YRIhCgx1cGxvYWRfdG9r'
     'ZW4YASABKAxSC3VwbG9hZFRva2VuEhYKBm9mZnNldBgCIAEoDVIGb2Zmc2V0EhIKBGRhdGEYAy'
-    'ABKAxSBGRhdGEaMQoMRG93bmxvYWREYXRhEiEKDHVwbG9hZF90b2tlbhgBIAEoDFILdXBsb2Fk'
-    'VG9rZW5CEQoPQXBwbGljYXRpb25EYXRh');
+    'ABKAxSBGRhdGEaSQoMRG93bmxvYWREYXRhEiEKDHVwbG9hZF90b2tlbhgBIAEoDFILdXBsb2Fk'
+    'VG9rZW4SFgoGb2Zmc2V0GAIgASgNUgZvZmZzZXRCEQoPQXBwbGljYXRpb25EYXRh');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

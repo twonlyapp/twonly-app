@@ -156,8 +156,7 @@ class _UserListItem extends State<UserListItem> {
         title: Text(widget.user.displayName),
         subtitle: Row(
           children: [
-            MessageSendStateIcon(state, widget.lastMessage.isDownloaded,
-                widget.lastMessage.messageKind),
+            MessageSendStateIcon(widget.lastMessage),
             Text("•"),
             const SizedBox(width: 5),
             Text(
@@ -190,13 +189,19 @@ class _UserListItem extends State<UserListItem> {
             tryDownloadMedia(token, force: true);
             return;
           }
+          if (state == MessageSendState.received &&
+              widget.lastMessage.containsOtherMedia()) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) {
+                return MediaViewerView(widget.user, widget.lastMessage);
+              }),
+            );
+            return;
+          }
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
-              if (state == MessageSendState.received &&
-                  widget.lastMessage.containsOtherMedia()) {
-                return MediaViewerView(widget.user, widget.lastMessage);
-              }
               return ChatItemDetailsView(user: widget.user);
             }),
           );

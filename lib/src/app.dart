@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding_view.dart';
@@ -22,6 +23,7 @@ Function(bool) globalCallbackConnectionState = (a) {};
 // these two callbacks are called on updated to the corresponding database
 Function globalCallBackOnContactChange = () {};
 Function(int) globalCallBackOnMessageChange = (a) {};
+Function(List<int>, bool) globalCallBackOnDownloadChange = (a, b) {};
 
 /// The Widget that configures your application.
 class MyApp extends StatefulWidget {
@@ -61,6 +63,10 @@ class _MyAppState extends State<MyApp> {
       context.read<ContactChangeProvider>().update();
     };
 
+    globalCallBackOnDownloadChange = (token, add) {
+      context.read<DownloadChangeProvider>().update(token, add);
+    };
+
     globalCallBackOnMessageChange = (userId) {
       context.read<MessagesChangeProvider>().updateLastMessageFor(userId);
     };
@@ -73,6 +79,7 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     // disable globalCallbacks to the flutter tree
     globalCallbackConnectionState = (a) {};
+    globalCallBackOnDownloadChange = (a, b) {};
     globalCallBackOnContactChange = () {};
     globalCallBackOnMessageChange = (a) {};
     super.dispose();
@@ -143,7 +150,8 @@ class _MyAppState extends State<MyApp> {
                     if (snapshot.hasData) {
                       return snapshot.data!
                           ? HomeView(
-                              settingsController: widget.settingsController)
+                              settingsController: widget.settingsController,
+                            )
                           : _showOnboarding
                               ? OnboardingView(
                                   callbackOnSuccess: () {
@@ -152,10 +160,12 @@ class _MyAppState extends State<MyApp> {
                                     });
                                   },
                                 )
-                              : RegisterView(callbackOnSuccess: () {
-                                  _isUserCreated = isUserCreated();
-                                  setState(() {});
-                                });
+                              : RegisterView(
+                                  callbackOnSuccess: () {
+                                    _isUserCreated = isUserCreated();
+                                    setState(() {});
+                                  },
+                                );
                     } else {
                       return Container();
                     }

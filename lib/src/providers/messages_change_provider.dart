@@ -6,7 +6,10 @@ import 'package:twonly/src/model/messages_model.dart';
 /// for every contact.
 class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   final Map<int, DbMessage> _lastMessage = <int, DbMessage>{};
+  final Map<int, int> _changeCounter = <int, int>{};
+
   Map<int, DbMessage> get lastMessage => _lastMessage;
+  Map<int, int> get changeCounter => _changeCounter;
 
   void updateLastMessageFor(int targetUserId) async {
     DbMessage? last =
@@ -14,6 +17,10 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
     if (last != null) {
       _lastMessage[last.otherUserId] = last;
     }
+    if (!changeCounter.containsKey(targetUserId)) {
+      changeCounter[targetUserId] = 0;
+    }
+    changeCounter[targetUserId] = changeCounter[targetUserId]! + 1;
   }
 
   void init() async {
