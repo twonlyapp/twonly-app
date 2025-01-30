@@ -8,6 +8,7 @@ import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/views/media_viewer_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -23,6 +24,15 @@ class ChatListEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     bool right = message.messageOtherId == null;
     MessageSendState state = message.getSendState();
+
+    bool isDownloading = false;
+    if (message.messageContent != null &&
+        message.messageContent!.downloadToken != null) {
+      isDownloading = context
+          .watch<DownloadChangeProvider>()
+          .currentlyDownloading
+          .contains(message.messageContent!.downloadToken!);
+    }
 
     Widget child = Container();
 
@@ -56,7 +66,7 @@ class ChatListEntry extends StatelessWidget {
             message.messageKind.getColor(Theme.of(context).colorScheme.primary);
         child = GestureDetector(
           onTap: () {
-            if (state == MessageSendState.received) {
+            if (state == MessageSendState.received && !isDownloading) {
               if (message.isDownloaded) {
                 Navigator.push(
                   context,
@@ -127,8 +137,17 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   }
 
   Future _loadAsync({bool updateOpenStatus = false}) async {
-    _messages =
-        await DbMessages.getAllMessagesForUser(widget.user.userId.toInt());
+    if (_messages.isEmpty) {
+      _messages =
+          await DbMessages.getAllMessagesForUser(widget.user.userId.toInt());
+    } else {
+      int lastMessageId = _messages.first.messageId;
+      List<DbMessage> toAppend =
+          await DbMessages.getAllMessagesForUserWithHigherMessageId(
+              widget.user.userId.toInt(), lastMessageId);
+      _messages.insertAll(0, toAppend);
+    }
+
     setState(() {});
 
     if (updateOpenStatus) {
@@ -149,7 +168,6 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     String text = newMessageController.text;
     if (text == "") return;
     await sendTextMessage(widget.user.userId, newMessageController.text);
-    _loadAsync();
     newMessageController.clear();
   }
 
@@ -162,10 +180,10 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         lastChangeCounter = changeCounter[widget.user.userId.toInt()]!;
       }
     }
-    // messages = messages.reversed.toList();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Your Chat with ${widget.user.displayName}'),
+        title: Text(AppLocalizations.of(context)!
+            .chatListDetailTitle(widget.user.displayName)),
       ),
       body: Column(
         children: [

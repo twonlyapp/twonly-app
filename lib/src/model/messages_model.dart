@@ -150,6 +150,7 @@ class DbMessages extends CvModelBase {
         columnOtherUserId: userIdFrom,
         columnSendOrReceivedAt: DateTime.now().toIso8601String()
       });
+      print("insertl");
       globalCallBackOnMessageChange(userIdFrom);
       return messageId;
     } catch (e) {
@@ -177,6 +178,20 @@ class DbMessages extends CvModelBase {
       Logger("contacts_model/getUsers").shout("$e");
       return null;
     }
+  }
+
+  static Future<List<DbMessage>> getAllMessagesForUserWithHigherMessageId(
+      int otherUserId, int lastMessageId) async {
+    var rows = await dbProvider.db!.query(
+      tableName,
+      where: "$columnOtherUserId = ? AND $columnMessageId > ?",
+      whereArgs: [otherUserId, lastMessageId],
+      orderBy: "$columnUpdatedAt DESC",
+    );
+
+    List<DbMessage> messages = await convertToDbMessage(rows);
+
+    return messages;
   }
 
   static Future<List<DbMessage>> getAllMessagesForUser(int otherUserId) async {

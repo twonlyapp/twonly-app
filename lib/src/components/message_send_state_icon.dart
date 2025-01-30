@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 enum MessageSendState {
   received,
@@ -43,29 +44,29 @@ class MessageSendStateIcon extends StatelessWidget {
     switch (message.getSendState()) {
       case MessageSendState.receivedOpened:
         icon = Icon(Icons.crop_square, size: 14, color: color);
-        text = "Received";
+        text = AppLocalizations.of(context)!.messageSendState_Received;
         break;
       case MessageSendState.sendOpened:
         icon = FaIcon(FontAwesomeIcons.paperPlane, size: 12, color: color);
-        text = "Opened";
+        text = AppLocalizations.of(context)!.messageSendState_Opened;
         break;
       case MessageSendState.received:
         icon = Icon(Icons.square_rounded, size: 14, color: color);
-        text = "Received";
+        text = AppLocalizations.of(context)!.messageSendState_Received;
         break;
       case MessageSendState.send:
         icon = FaIcon(FontAwesomeIcons.solidPaperPlane, size: 12, color: color);
-        text = "Send";
+        text = AppLocalizations.of(context)!.messageSendState_Send;
         break;
       case MessageSendState.sending:
       case MessageSendState.receiving:
         icon = loaderIcon;
-        text = "Sending";
+        text = AppLocalizations.of(context)!.messageSendState_Sending;
         break;
     }
 
     if (!message.isDownloaded) {
-      text = "Tap do load";
+      text = AppLocalizations.of(context)!.messageSendState_TapToLoad;
     }
 
     bool isDownloading = false;
@@ -78,7 +79,7 @@ class MessageSendStateIcon extends StatelessWidget {
     }
 
     if (isDownloading) {
-      text = "Downloading";
+      text = AppLocalizations.of(context)!.messageSendState_Loading;
       icon = loaderIcon;
     }
 
