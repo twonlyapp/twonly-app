@@ -84,14 +84,16 @@ class _SearchUsernameView extends State<SearchUsernameView> {
         child: Column(
           children: [
             Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                    onSubmitted: (_) {
-                      _addNewUser(context);
-                    },
-                    controller: searchUserName,
-                    decoration: getInputDecoration(
-                        AppLocalizations.of(context)!.searchUsernameInput))),
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: TextField(
+                onSubmitted: (_) {
+                  _addNewUser(context);
+                },
+                controller: searchUserName,
+                decoration: getInputDecoration(
+                    AppLocalizations.of(context)!.searchUsernameInput),
+              ),
+            ),
             const SizedBox(height: 20),
             OutlinedButton.icon(
               icon: Icon(Icons.qr_code),

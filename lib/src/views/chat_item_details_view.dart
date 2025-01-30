@@ -1,15 +1,27 @@
+import 'package:cv/cv.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
+import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/messages_change_provider.dart';
+import 'package:twonly/src/views/media_viewer_view.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ChatListEntry extends StatelessWidget {
-  const ChatListEntry(this.message, {super.key});
+  const ChatListEntry(this.message, this.user, this.lastMessageFromSameUser,
+      {super.key});
   final DbMessage message;
+  final Contact user;
+  final bool lastMessageFromSameUser;
   @override
   Widget build(BuildContext context) {
     bool right = message.messageOtherId == null;
+
+    MessageSendState state = message.getSendState();
 
     Widget child = Container();
 
@@ -38,13 +50,52 @@ class ChatListEntry extends StatelessWidget {
           ),
         );
         break;
+      case MessageKind.image:
+        Color color =
+            message.messageKind.getColor(Theme.of(context).colorScheme.primary);
+        child = GestureDetector(
+          onTap: () {
+            if (state == MessageSendState.received) {
+              if (message.isDownloaded) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) {
+                    return MediaViewerView(user, message);
+                  }),
+                );
+              } else {
+                List<int> token = message.messageContent!.downloadToken!;
+                tryDownloadMedia(token, force: true);
+              }
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.all(10),
+            width: 200,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: color, // Set the background color
+                width: 1.0, // Set the border width here
+              ),
+              borderRadius: BorderRadius.circular(12.0), // Set border radius
+            ),
+            child: MessageSendStateIcon(
+              state,
+              message.isDownloaded,
+              message.messageKind,
+            ),
+          ),
+        );
       default:
         return Container();
     }
-
     return Align(
       alignment: right ? Alignment.centerRight : Alignment.centerLeft,
-      child: Padding(padding: EdgeInsets.all(10), child: child),
+      child: Padding(
+          padding: lastMessageFromSameUser
+              ? EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10)
+              : EdgeInsets.all(10),
+          child: child),
     );
   }
 }
@@ -61,6 +112,7 @@ class ChatItemDetailsView extends StatefulWidget {
 
 class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   List<DbMessage> _messages = [];
+  final TextEditingController newMessageController = TextEditingController();
 
   @override
   void initState() {
@@ -73,8 +125,23 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         await DbMessages.getAllMessagesForUser(widget.user.userId.toInt());
   }
 
+  Future _sendMessage() async {
+    String text = newMessageController.text;
+    if (text == "") return;
+    sendTextMessage(widget.user.userId, newMessageController.text);
+    newMessageController.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final messages = context.watch<MessagesChangeProvider>().lastMessage;
+    if (messages.containsKey(widget.user.userId.toInt()) &&
+        _messages.isNotEmpty) {
+      final lastMessage = messages[widget.user.userId.toInt()];
+      if (lastMessage!.messageId != _messages[0].messageId) {
+        _loadAsync();
+      }
+    }
     // messages = messages.reversed.toList();
     return Scaffold(
       appBar: AppBar(
@@ -87,7 +154,16 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
               itemCount: _messages.length, // Number of items in the list
               reverse: true,
               itemBuilder: (context, i) {
-                return ChatListEntry(_messages[i]);
+                bool lastMessageFromSameUser = false;
+                if (i > 0) {
+                  lastMessageFromSameUser =
+                      (_messages[i - 1].messageOtherId == null &&
+                              _messages[i].messageOtherId == null) ||
+                          (_messages[i - 1].messageOtherId != null &&
+                              _messages[i].messageOtherId != null);
+                }
+                return ChatListEntry(
+                    _messages[i], widget.user, lastMessageFromSameUser);
               },
             ),
           ),
@@ -98,9 +174,13 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
               children: [
                 Expanded(
                   child: TextField(
-                    // controller: _controller,
+                    controller: newMessageController,
+                    onSubmitted: (_) {
+                      _sendMessage();
+                    },
                     decoration: InputDecoration(
-                        hintText: 'Type a message',
+                        hintText:
+                            AppLocalizations.of(context)!.chatListDetailInput,
                         contentPadding: EdgeInsets.symmetric(horizontal: 10)
                         // border: OutlineInputBorder(),
                         ),
@@ -110,31 +190,12 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                 IconButton(
                   icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
                   onPressed: () {
-                    // Handle send action
+                    _sendMessage();
                   },
                 ),
               ],
             ),
           ),
-          // Container(
-          //   child: Row(children: [
-          //     Padding(
-          //       padding: const EdgeInsets.only(bottom: 40, left: 10, right: 10),
-          //       child: TextField(
-          //         decoration: InputDecoration(
-          //           // border: OutlineInputBorder(),
-          //           hintText: 'Enter your message',
-          //         ),
-          //       ),
-          //     ),
-          //     IconButton(
-          //       icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-          //       onPressed: () {
-          //         // Handle send action
-          //       },
-          //     ),
-          //   ]),
-          // ),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:cv/cv.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/app.dart';
+import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 
@@ -36,6 +37,30 @@ class DbMessage {
   bool containsOtherMedia() {
     if (messageOtherId == null) return false;
     return messageKind == MessageKind.image || messageKind == MessageKind.video;
+  }
+
+  MessageSendState getSendState() {
+    MessageSendState state;
+    if (!messageAcknowledgeByServer) {
+      state = MessageSendState.sending;
+    } else {
+      if (messageOtherId == null) {
+        // message send
+        if (messageOpenedAt == null) {
+          state = MessageSendState.send;
+        } else {
+          state = MessageSendState.sendOpened;
+        }
+      } else {
+        // message received
+        if (messageOpenedAt == null) {
+          state = MessageSendState.received;
+        } else {
+          state = MessageSendState.receivedOpened;
+        }
+      }
+    }
+    return state;
   }
 }
 
@@ -179,6 +204,12 @@ class DbMessages extends CvModelBase {
 
     List<DbMessage> messages = await convertToDbMessage(rows);
 
+    // check if you received a message which the user has not already opened
+    List<DbMessage> receivedByOther = messages
+        .where((c) => c.messageOtherId != null && c.messageOpenedAt == null)
+        .toList();
+    if (receivedByOther.isNotEmpty) return receivedByOther[0];
+
     // check if there is a message which was not ack by the server
     List<DbMessage> notAckByServer =
         messages.where((c) => !c.messageAcknowledgeByServer).toList();
@@ -198,7 +229,7 @@ class DbMessages extends CvModelBase {
     await dbProvider.db!.update(
       tableName,
       data,
-      where: "$messageId = ?",
+      where: "$columnMessageId = ?",
       whereArgs: [messageId],
     );
     int? fromUserId = await getFromUserIdByMessageId(messageId);
@@ -207,11 +238,31 @@ class DbMessages extends CvModelBase {
     }
   }
 
+  // this ensures that the message id can be spoofed by another person
+  static Future _updateByMessageIdOther(
+      int fromUserId, int messageId, Map<String, dynamic> data) async {
+    await dbProvider.db!.update(
+      tableName,
+      data,
+      where: "$columnMessageId = ? AND $columnOtherUserId = ?",
+      whereArgs: [messageId, fromUserId],
+    );
+    globalCallBackOnMessageChange(fromUserId);
+  }
+
   static Future userOpenedMessage(int messageId) async {
     Map<String, dynamic> data = {
       columnMessageOpenedAt: DateTime.now().toIso8601String(),
     };
     await _updateByMessageId(messageId, data);
+  }
+
+  static Future userOpenedMessageOtherUser(
+      int fromUserId, int messageId, DateTime openedAt) async {
+    Map<String, dynamic> data = {
+      columnMessageOpenedAt: openedAt.toIso8601String(),
+    };
+    await _updateByMessageIdOther(fromUserId, messageId, data);
   }
 
   static Future acknowledgeMessageByServer(int messageId) async {

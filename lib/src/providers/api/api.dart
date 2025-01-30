@@ -41,6 +41,24 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
   return resp;
 }
 
+Future sendTextMessage(Int64 target, String message) async {
+  MessageContent content = MessageContent(text: message, downloadToken: null);
+
+  int? messageId = await DbMessages.insertMyMessage(
+      target.toInt(), MessageKind.textMessage,
+      jsonContent: jsonEncode(content.toJson()));
+  if (messageId == null) return;
+
+  Message msg = Message(
+    kind: MessageKind.textMessage,
+    messageId: messageId,
+    content: content,
+    timestamp: DateTime.now(),
+  );
+
+  await encryptAndSendMessage(target, msg);
+}
+
 Future sendImageToSingleTarget(Int64 target, Uint8List imageBytes) async {
   int? messageId =
       await DbMessages.insertMyMessage(target.toInt(), MessageKind.image);
@@ -118,15 +136,28 @@ Future tryDownloadMedia(List<int> imageToken, {bool force = false}) async {
   apiProvider.triggerDownload(imageToken);
 }
 
+Future userOpenedMessage(int fromUserId, int messageId) async {
+  await DbMessages.userOpenedMessage(messageId);
+
+  encryptAndSendMessage(
+    Int64(fromUserId),
+    Message(
+      kind: MessageKind.opened,
+      messageId: messageId,
+      timestamp: DateTime.now(),
+    ),
+  );
+}
+
 Future<Uint8List?> getDownloadedMedia(
     List<int> mediaToken, int messageId) async {
   final box = await getMediaStorage();
   Uint8List? media = box.get("${mediaToken}_downloaded");
-  // box.delete(mediaToken.toString());
-  // box.delete("${mediaToken}_downloaded");
-  // box.delete("${mediaToken}_fromUserId");
-  // await DbMessages.userOpenedMessage(messageId);
-
+  int fromUserId = box.get("${mediaToken}_fromUserId");
+  await userOpenedMessage(fromUserId, messageId);
+  box.delete(mediaToken.toString());
+  box.put("${mediaToken}_downloaded", "deleted");
+  box.delete("${mediaToken}_fromUserId");
   return media;
 }
 

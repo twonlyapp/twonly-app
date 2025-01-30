@@ -179,7 +179,7 @@ class ApiProvider {
 
     final result = await _sendRequestV0(req);
     if (result.isError) {
-      log.shout(result);
+      log.shout("Error auth", result);
       return;
     }
 
@@ -203,7 +203,7 @@ class ApiProvider {
 
     final result2 = await _sendRequestV0(req2);
     if (result2.isError) {
-      log.shout(result2);
+      log.shout("send request failed: ${result2.error}");
       return;
     }
 

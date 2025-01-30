@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:twonly/src/utils/json.dart';
 part 'message.g.dart';
@@ -9,6 +10,7 @@ enum MessageKind {
   contactRequest,
   rejectRequest,
   acceptRequest,
+  opened,
   ack
 }
 
@@ -23,6 +25,16 @@ extension MessageKindExtension on MessageKind {
 
   static MessageKind fromIndex(int index) {
     return MessageKind.values[index];
+  }
+
+  Color getColor(Color primary) {
+    Color color = primary;
+    if (this == MessageKind.textMessage) {
+      color = Colors.lightBlue;
+    } else if (this == MessageKind.video) {
+      color = Colors.deepPurple;
+    }
+    return color;
   }
 }
 

@@ -24,12 +24,7 @@ class MessageSendStateIcon extends StatelessWidget {
     Widget icon = Placeholder();
     String text = "";
 
-    Color color = Theme.of(context).colorScheme.primary;
-    if (kind == MessageKind.textMessage) {
-      color = Colors.lightBlue;
-    } else if (kind == MessageKind.video) {
-      color = Colors.deepPurple;
-    }
+    Color color = kind.getColor(Theme.of(context).colorScheme.primary);
 
     switch (state) {
       case MessageSendState.receivedOpened:

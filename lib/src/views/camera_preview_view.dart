@@ -141,6 +141,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           });
                         }
                       },
+                      onDoubleTap: () async {
+                        cameraState.switchCameraSensor(
+                            aspectRatio: CameraAspectRatios.ratio_16_9);
+                      },
                     ),
                   ),
                   Positioned(

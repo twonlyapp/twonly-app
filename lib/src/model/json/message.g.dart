@@ -21,6 +21,7 @@ const _$MessageKindEnumMap = {
   MessageKind.contactRequest: 'contactRequest',
   MessageKind.rejectRequest: 'rejectRequest',
   MessageKind.acceptRequest: 'acceptRequest',
+  MessageKind.opened: 'opened',
   MessageKind.ack: 'ack',
 };
 

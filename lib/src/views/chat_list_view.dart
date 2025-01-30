@@ -44,7 +44,11 @@ class _ChatListViewState extends State<ChatListView> {
     Map<int, DbMessage> lastMessages =
         context.watch<MessagesChangeProvider>().lastMessage;
 
-    List<Contact> allUsers = context.read<ContactChangeProvider>().allContacts;
+    List<Contact> allUsers = context
+        .read<ContactChangeProvider>()
+        .allContacts
+        .where((c) => c.accepted)
+        .toList();
 
     List<Contact> activeUsers = allUsers
         .where((x) => lastMessages.containsKey(x.userId.toInt()))
@@ -80,11 +84,11 @@ class _ChatListViewState extends State<ChatListView> {
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: OutlinedButton.icon(
-                    icon: Icon((allUsers.isEmpty)
+                    icon: Icon((activeUsers.isEmpty)
                         ? Icons.person_add
                         : Icons.camera_alt),
                     onPressed: () {
-                      (allUsers.isEmpty)
+                      (activeUsers.isEmpty)
                           ? Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -93,7 +97,7 @@ class _ChatListViewState extends State<ChatListView> {
                             )
                           : globalUpdateOfHomeViewPageIndex(1);
                     },
-                    label: Text((allUsers.isEmpty)
+                    label: Text((activeUsers.isEmpty)
                         ? AppLocalizations.of(context)!
                             .chatListViewSearchUserNameBtn
                         : AppLocalizations.of(context)!
@@ -140,30 +144,11 @@ class _UserListItem extends State<UserListItem> {
 
   @override
   Widget build(BuildContext context) {
-    MessageSendState state;
     int lastMessageInSeconds = DateTime.now()
         .difference(widget.lastMessage.sendOrReceivedAt)
         .inSeconds;
 
-    if (!widget.lastMessage.messageAcknowledgeByServer) {
-      state = MessageSendState.sending;
-    } else {
-      if (widget.lastMessage.messageOtherId == null) {
-        // message send
-        if (widget.lastMessage.messageOpenedAt == null) {
-          state = MessageSendState.send;
-        } else {
-          state = MessageSendState.sendOpened;
-        }
-      } else {
-        // message received
-        if (widget.lastMessage.messageOpenedAt == null) {
-          state = MessageSendState.received;
-        } else {
-          state = MessageSendState.receivedOpened;
-        }
-      }
-    }
+    MessageSendState state = widget.lastMessage.getSendState();
 
     return UserContextMenu(
       user: widget.user,

@@ -6,7 +6,6 @@ import 'package:twonly/src/model/messages_model.dart';
 /// for every contact.
 class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   final Map<int, DbMessage> _lastMessage = <int, DbMessage>{};
-
   Map<int, DbMessage> get lastMessage => _lastMessage;
 
   void updateLastMessageFor(int targetUserId) async {

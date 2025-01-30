@@ -101,6 +101,13 @@ Future<client.Response> handleNewMessage(
               utf8.decode(name), fromUserId.toInt(), true);
         }
         break;
+      case MessageKind.opened:
+        await DbMessages.userOpenedMessageOtherUser(
+          fromUserId.toInt(),
+          message.messageId!,
+          message.timestamp,
+        );
+        break;
       case MessageKind.rejectRequest:
         DbContacts.deleteUser(fromUserId.toInt());
         break;
