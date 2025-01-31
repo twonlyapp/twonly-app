@@ -7,6 +7,7 @@ import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/views/media_viewer_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -24,13 +25,13 @@ class ChatListEntry extends StatelessWidget {
     MessageSendState state = message.getSendState();
 
     bool isDownloading = false;
-    // if (message.messageContent != null &&
-    //     message.messageContent!.downloadToken != null) {
-    //   isDownloading = context
-    //       .watch<DownloadChangeProvider>()
-    //       .currentlyDownloading
-    //       .contains(message.messageContent!.downloadToken!);
-    // }
+    if (message.messageContent != null &&
+        message.messageContent!.downloadToken != null) {
+      isDownloading = context
+          .watch<DownloadChangeProvider>()
+          .currentlyDownloading
+          .contains(message.messageContent!.downloadToken!.toString());
+    }
 
     Widget child = Container();
 

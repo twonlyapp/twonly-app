@@ -73,7 +73,6 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     SignalHelper.getSignalStore();
     int? fromUserId = box.get("${data.uploadToken}_fromUserId");
     if (fromUserId != null) {
-      print(fromUserId);
       Uint8List? rawBytes =
           await SignalHelper.decryptBytes(downloadedBytes, Int64(fromUserId));
 

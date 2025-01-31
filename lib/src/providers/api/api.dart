@@ -16,8 +16,6 @@ import 'package:twonly/src/utils/misc.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
-// this functions ensures that the message is received by the server and in case of errors will try again later
-
 Future tryTransmitMessages() async {
   List<DbMessage> retransmit =
       await DbMessages.getAllMessagesForRetransmitting();
@@ -28,22 +26,28 @@ Future tryTransmitMessages() async {
   for (int i = 0; i < retransmit.length; i++) {
     int msgId = retransmit[i].messageId;
     debugPrint("msgId=$msgId");
-    Uint8List? bytes = box.get("retransmit-$msgId");
-    debugPrint("bytes == null =${bytes == null}");
+
+    Uint8List? bytes = box.get("retransmit-$msgId-textmessage");
     if (bytes != null) {
       Result resp = await apiProvider.sendTextMessage(
           Int64(retransmit[i].otherUserId), bytes);
 
       if (resp.isSuccess) {
         DbMessages.acknowledgeMessageByServer(msgId);
-        box.delete("retransmit-$msgId");
+        box.delete("retransmit-$msgId-textmessage");
       } else {
         // in case of error do nothing. As the message is not removed the app will try again when relaunched
       }
     }
+
+    Uint8List? encryptedMedia = await box.get("retransmit-$msgId-media");
+    if (encryptedMedia != null) {
+      uploadMediaFile(msgId, Int64(retransmit[i].otherUserId), encryptedMedia);
+    }
   }
 }
 
+// this functions ensures that the message is received by the server and in case of errors will try again later
 Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
   Uint8List? bytes = await SignalHelper.encryptMessage(msg, userId);
 
@@ -55,7 +59,7 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
   Box box = await getMediaStorage();
   if (msg.messageId != null) {
     debugPrint("putting=${msg.messageId}");
-    box.put("retransmit-${msg.messageId}", bytes);
+    box.put("retransmit-${msg.messageId}-textmessage", bytes);
   }
 
   Result resp = await apiProvider.sendTextMessage(userId, bytes);
@@ -63,7 +67,7 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
   if (resp.isSuccess) {
     if (msg.messageId != null) {
       DbMessages.acknowledgeMessageByServer(msg.messageId!);
-      box.delete("retransmit-${msg.messageId}");
+      box.delete("retransmit-${msg.messageId}-textmessage");
     }
   }
 
@@ -88,7 +92,53 @@ Future sendTextMessage(Int64 target, String message) async {
   encryptAndSendMessage(target, msg);
 }
 
-Future sendImageToSingleTarget(Int64 target, Uint8List imageBytes) async {
+// this will send the media file and ensures retransmission when errors occur
+Future uploadMediaFile(
+    int messageId, Int64 target, Uint8List encryptedMedia) async {
+  Box box = await getMediaStorage();
+
+  if ((await box.get("retransmit-$messageId-media") == null)) {
+    await box.put("retransmit-$messageId-media", encryptedMedia);
+  }
+
+  List<int>? uploadToken = await box.get("retransmit-$messageId-uploadtoken");
+  if (uploadToken == null) {
+    Result res = await apiProvider.getUploadToken();
+
+    if (res.isError || !res.value.hasUploadtoken()) {
+      Logger("api.dart").shout("Error getting upload token!");
+      return; // will be retried on next app start
+    }
+
+    uploadToken = res.value.uploadtoken;
+
+    await box.put("retransmit-$messageId-uploadtoken", uploadToken);
+  }
+
+  if (uploadToken == null) return;
+
+  // TODO: fragmented upload...
+  if (!await apiProvider.uploadData(uploadToken, encryptedMedia, 0)) {
+    Logger("api.dart").shout("error while uploading media");
+    return;
+  }
+
+  box.delete("retransmit-$messageId-media");
+  box.delete("retransmit-$messageId-uploadtoken");
+
+  // Ensures the retransmit of the message
+  await encryptAndSendMessage(
+    target,
+    Message(
+      kind: MessageKind.image,
+      messageId: messageId,
+      content: MessageContent(text: null, downloadToken: uploadToken),
+      timestamp: DateTime.now(),
+    ),
+  );
+}
+
+Future encryptAndUploadMediaFile(Int64 target, Uint8List imageBytes) async {
   int? messageId =
       await DbMessages.insertMyMessage(target.toInt(), MessageKind.image);
   if (messageId == null) return;
@@ -96,38 +146,11 @@ Future sendImageToSingleTarget(Int64 target, Uint8List imageBytes) async {
   Uint8List? encryptBytes = await SignalHelper.encryptBytes(imageBytes, target);
   if (encryptBytes == null) {
     await DbMessages.deleteMessageById(messageId);
-    Logger("api.dart").shout("Error encrypting image! Deleting image.");
+    Logger("api.dart").shout("Error encrypting media! Deleting media.");
     return;
   }
 
-  Result res = await apiProvider.getUploadToken();
-
-  if (res.isError || !res.value.hasUploadtoken()) {
-    print("store encryptBytes in box to retransmit without an upload token");
-    Logger("api.dart").shout("Error getting upload token!");
-    return null;
-  }
-
-  List<int> uploadToken = res.value.uploadtoken;
-
-  MessageContent content =
-      MessageContent(text: null, downloadToken: uploadToken);
-
-  print("fragmentate the data");
-
-  if (!await apiProvider.uploadData(uploadToken, encryptBytes, 0)) {
-    Logger("api.dart").shout("error while uploading image");
-    return;
-  }
-
-  Message msg = Message(
-    kind: MessageKind.image,
-    messageId: messageId,
-    content: content,
-    timestamp: DateTime.now(),
-  );
-
-  await encryptAndSendMessage(target, msg);
+  await uploadMediaFile(messageId, target, encryptBytes);
 }
 
 Future sendImage(List<Int64> userIds, String imagePath) async {
@@ -142,7 +165,7 @@ Future sendImage(List<Int64> userIds, String imagePath) async {
   }
 
   for (int i = 0; i < userIds.length; i++) {
-    sendImageToSingleTarget(userIds[i], imageBytes);
+    encryptAndUploadMediaFile(userIds[i], imageBytes);
   }
 }
 
@@ -163,7 +186,7 @@ Future tryDownloadMedia(List<int> mediaToken, {bool force = false}) async {
   if (media != null && media.isNotEmpty) {
     offset = media.length;
   }
-  //globalCallBackOnDownloadChange(mediaToken, true);
+  globalCallBackOnDownloadChange(mediaToken, true);
   apiProvider.triggerDownload(mediaToken, offset);
 }
 

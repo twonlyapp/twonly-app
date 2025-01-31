@@ -7,6 +7,7 @@ import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chat_item_details_view.dart';
@@ -150,13 +151,15 @@ class _UserListItem extends State<UserListItem> {
 
     MessageSendState state = widget.lastMessage.getSendState();
     bool isDownloading = false;
-    // if (widget.lastMessage.messageContent != null &&
-    //     widget.lastMessage.messageContent!.downloadToken != null) {
-    //   isDownloading = context
-    //       .watch<DownloadChangeProvider>()
-    //       .currentlyDownloading
-    //       .contains(widget.lastMessage.messageContent!.downloadToken!);
-    // }
+
+    if (widget.lastMessage.messageContent != null &&
+        widget.lastMessage.messageContent!.downloadToken != null) {
+      isDownloading = context
+          .watch<DownloadChangeProvider>()
+          .currentlyDownloading
+          .contains(
+              widget.lastMessage.messageContent!.downloadToken!.toString());
+    }
 
     return UserContextMenu(
       user: widget.user,

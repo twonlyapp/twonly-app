@@ -154,7 +154,6 @@ class DbMessages extends CvModelBase {
         columnOtherUserId: userIdFrom,
         columnSendOrReceivedAt: DateTime.now().toIso8601String()
       });
-      print("insertl");
       globalCallBackOnMessageChange(userIdFrom);
       return messageId;
     } catch (e) {
