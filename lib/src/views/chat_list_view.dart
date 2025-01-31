@@ -185,7 +185,7 @@ class _UserListItem extends State<UserListItem> {
                     widget.user.flameCounter.toString(),
                     style: TextStyle(fontSize: 12),
                   ),
-                  const SizedBox(width: 1),
+                  const SizedBox(width: 3),
                   FaIcon(
                     FontAwesomeIcons.fireFlameCurved,
                     color: const Color.fromARGB(255, 215, 131, 58),
