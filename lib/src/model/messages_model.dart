@@ -36,6 +36,10 @@ class DbMessage {
 
   bool containsOtherMedia() {
     if (messageOtherId == null) return false;
+    return isMedia();
+  }
+
+  bool isMedia() {
     return messageKind == MessageKind.image || messageKind == MessageKind.video;
   }
 

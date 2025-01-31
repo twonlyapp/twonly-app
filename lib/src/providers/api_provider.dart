@@ -261,7 +261,6 @@ class ApiProvider {
   }
 
   Future<Result> triggerDownload(List<int> token, int offset) async {
-    log.info("Offset: ${offset}");
     var get = ApplicationData_DownloadData()
       ..uploadToken = token
       ..offset = offset;

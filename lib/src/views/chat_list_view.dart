@@ -7,7 +7,6 @@ import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
-import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chat_item_details_view.dart';
