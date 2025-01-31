@@ -1,3 +1,4 @@
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
@@ -174,20 +175,21 @@ class _UserListItem extends State<UserListItem> {
               formatDuration(lastMessageInSeconds),
               style: TextStyle(fontSize: 12),
             ),
-            if (flames > 0)
+            if (widget.user.flameCounter > 0)
               Row(
                 children: [
                   const SizedBox(width: 5),
                   Text("•"),
                   const SizedBox(width: 5),
                   Text(
-                    flames.toString(),
+                    widget.user.flameCounter.toString(),
                     style: TextStyle(fontSize: 12),
                   ),
-                  Icon(
-                    Icons.local_fire_department_sharp,
+                  const SizedBox(width: 1),
+                  FaIcon(
+                    FontAwesomeIcons.fireFlameCurved,
                     color: const Color.fromARGB(255, 215, 73, 58),
-                    size: 16,
+                    size: 10,
                   ),
                 ],
               ),

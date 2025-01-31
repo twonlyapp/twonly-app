@@ -197,15 +197,6 @@ class DbMessages extends CvModelBase {
     return messages;
   }
 
-  static Future<List<DbMessage>> getAllMessagesForRetransmitting() async {
-    var rows = await dbProvider.db!.query(
-      tableName,
-      where: "$columnMessageAcknowledgeByServer = 0",
-    );
-    List<DbMessage> messages = await convertToDbMessage(rows);
-    return messages;
-  }
-
   static Future<List<DbMessage>> getAllMessagesForUser(int otherUserId) async {
     var rows = await dbProvider.db!.query(
       tableName,
@@ -216,6 +207,15 @@ class DbMessages extends CvModelBase {
 
     List<DbMessage> messages = await convertToDbMessage(rows);
 
+    return messages;
+  }
+
+  static Future<List<DbMessage>> getAllMessagesForRetransmitting() async {
+    var rows = await dbProvider.db!.query(
+      tableName,
+      where: "$columnMessageAcknowledgeByServer = 0",
+    );
+    List<DbMessage> messages = await convertToDbMessage(rows);
     return messages;
   }
 

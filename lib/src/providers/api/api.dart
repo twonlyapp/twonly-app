@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/app.dart';
+import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
@@ -125,6 +126,7 @@ Future uploadMediaFile(
 
   box.delete("retransmit-$messageId-media");
   box.delete("retransmit-$messageId-uploadtoken");
+  await DbContacts.checkAndUpdateFlames(target.toInt());
 
   // Ensures the retransmit of the message
   await encryptAndSendMessage(

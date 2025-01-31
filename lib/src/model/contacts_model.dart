@@ -9,11 +9,15 @@ class Contact {
       {required this.userId,
       required this.displayName,
       required this.accepted,
+      required this.flameCounter,
+      required this.lastUpdateOfFlameCounter,
       required this.requested});
   final Int64 userId;
   final String displayName;
   final bool accepted;
   final bool requested;
+  final int flameCounter;
+  final DateTime lastUpdateOfFlameCounter;
 }
 
 class DbContacts extends CvModelBase {
@@ -34,6 +38,13 @@ class DbContacts extends CvModelBase {
   static const columnBlocked = "blocked";
   final blocked = CvField<int>(columnBlocked);
 
+  static const columnFlameCounter = "flame_counter";
+  final flameCounter = CvField<int>(columnFlameCounter);
+
+  static const columnLastUpdateOfFlameCounter = "last_update_flame_counter";
+  final lastUpdateOfFlameCounter =
+      CvField<DateTime>(columnLastUpdateOfFlameCounter);
+
   static const columnCreatedAt = "created_at";
   final createdAt = CvField<DateTime>(columnCreatedAt);
 
@@ -45,6 +56,8 @@ class DbContacts extends CvModelBase {
       $columnAccepted INT NOT NULL DEFAULT 0,
       $columnRequested INT NOT NULL DEFAULT 0,
       $columnBlocked INT NOT NULL DEFAULT 0,
+      $columnFlameCounter INT NOT NULL DEFAULT 0,
+      $columnLastUpdateOfFlameCounter DATETIME DEFAULT CURRENT_TIMESTAMP,
       $columnCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """;
@@ -58,6 +71,42 @@ class DbContacts extends CvModelBase {
     return (await getUsers()).where((u) => u.accepted).toList();
   }
 
+  static Future checkAndUpdateFlames(int userId) async {
+    List<Map<String, dynamic>> result = await dbProvider.db!.query(
+      tableName,
+      columns: [columnLastUpdateOfFlameCounter, columnFlameCounter],
+      where: '$columnUserId = ?',
+      whereArgs: [userId],
+    );
+
+    if (result.isNotEmpty) {
+      String lastUpdateString = result.first[columnLastUpdateOfFlameCounter];
+      DateTime? lastUpdate = DateTime.tryParse(lastUpdateString);
+
+      int currentCount = result.first.cast()[columnFlameCounter];
+      if (lastUpdate != null &&
+          lastUpdate.isAfter(DateTime.now().subtract(Duration(hours: 24)))) {
+        _updateFlameCounter(userId, currentCount); // just update the time
+      } else {
+        _updateFlameCounter(userId, (currentCount + 1));
+      }
+    }
+    globalCallBackOnContactChange();
+  }
+
+  static Future _updateFlameCounter(int userId, int newCount) async {
+    Map<String, dynamic> valuesToUpdate = {
+      columnFlameCounter: newCount,
+      columnLastUpdateOfFlameCounter: DateTime.now().toIso8601String()
+    };
+    await dbProvider.db!.update(
+      tableName,
+      valuesToUpdate,
+      where: "$columnUserId = ?",
+      whereArgs: [userId],
+    );
+  }
+
   static Future<List<Contact>> getUsers() async {
     try {
       var users = await dbProvider.db!.query(tableName,
@@ -66,6 +115,8 @@ class DbContacts extends CvModelBase {
             columnDisplayName,
             columnAccepted,
             columnRequested,
+            columnFlameCounter,
+            columnLastUpdateOfFlameCounter,
             columnCreatedAt
           ],
           where: "$columnBlocked = 0");
@@ -73,11 +124,25 @@ class DbContacts extends CvModelBase {
 
       List<Contact> parsedUsers = [];
       for (int i = 0; i < users.length; i++) {
+        DateTime lastUpdate =
+            DateTime.tryParse(users.cast()[i][columnLastUpdateOfFlameCounter])!;
+
+        int userId = users.cast()[i][columnUserId];
+
+        int flameCounter = users.cast()[i][columnFlameCounter];
+
+        if (lastUpdate.isBefore(DateTime.now().subtract(Duration(days: 2)))) {
+          _updateFlameCounter(userId, 0);
+          flameCounter = 0;
+        }
+
         parsedUsers.add(
           Contact(
-            userId: Int64(users.cast()[i][columnUserId]),
+            userId: Int64(userId),
             displayName: users.cast()[i][columnDisplayName],
             accepted: users[i][columnAccepted] == 1,
+            flameCounter: flameCounter,
+            lastUpdateOfFlameCounter: lastUpdate,
             requested: users[i][columnRequested] == 1,
           ),
         );
