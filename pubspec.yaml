@@ -68,6 +68,8 @@ flutter:
   assets:
     # Add assets from the images directory to the application.
     - assets/images/
+    - assets/icons/
+    - assets/icons/flame.png
     - assets/images/onboarding/01.png
     - assets/images/onboarding/02.png
     - assets/images/onboarding/03.png

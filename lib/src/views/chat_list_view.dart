@@ -186,11 +186,15 @@ class _UserListItem extends State<UserListItem> {
                     style: TextStyle(fontSize: 12),
                   ),
                   const SizedBox(width: 3),
-                  FaIcon(
-                    FontAwesomeIcons.fireFlameCurved,
-                    color: const Color.fromARGB(255, 215, 131, 58),
-                    size: 10,
+                  Image.asset(
+                    "assets/icons/flame.png",
+                    width: 9,
                   ),
+                  // FaIcon(
+                  //   FontAwesomeIcons.fireFlameCurved,
+                  //   color: const Color.fromARGB(255, 215, 131, 58),
+                  //   size: 10,
+                  // ),
                 ],
               ),
           ],
