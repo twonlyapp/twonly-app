@@ -155,19 +155,17 @@ Future encryptAndUploadMediaFile(Int64 target, Uint8List imageBytes) async {
   await uploadMediaFile(messageId, target, encryptBytes);
 }
 
-Future sendImage(List<Int64> userIds, String imagePath) async {
+Future sendImage(List<Int64> userIds, Uint8List imageBytes) async {
   // 1. set notifier provider
 
-  File imageFile = File(imagePath);
-
-  Uint8List? imageBytes = await getCompressedImage(imageFile);
-  if (imageBytes == null) {
+  Uint8List? imageBytesCompressed = await getCompressedImage(imageBytes);
+  if (imageBytesCompressed == null) {
     Logger("api.dart").shout("Error compressing image!");
     return;
   }
 
   for (int i = 0; i < userIds.length; i++) {
-    encryptAndUploadMediaFile(userIds[i], imageBytes);
+    encryptAndUploadMediaFile(userIds[i], imageBytesCompressed);
   }
 }
 

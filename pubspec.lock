@@ -262,22 +262,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.11"
-  device_info_plus:
-    dependency: transitive
-    description:
-      name: device_info_plus
-      sha256: b37d37c2f912ad4e8ec694187de87d05de2a3cb82b465ff1f65f65a2d05de544
-      url: "https://pub.dev"
-    source: hosted
-    version: "11.2.1"
-  device_info_plus_platform_interface:
-    dependency: transitive
-    description:
-      name: device_info_plus_platform_interface
-      sha256: "0b04e02b30791224b31969eb1b50d723498f402971bff3630bca2ba839bd1ed2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.0.2"
   dots_indicator:
     dependency: transitive
     description:
@@ -294,14 +278,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.1"
-  emoji_picker_flutter:
-    dependency: transitive
-    description:
-      name: emoji_picker_flutter
-      sha256: "63dee6be976c51c8b971eccbc73fc637f021b6b679eed1b2ec3b503947304734"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.2.0"
   fake_async:
     dependency: transitive
     description:
@@ -334,6 +310,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  flex_color_picker:
+    dependency: "direct main"
+    description:
+      name: flex_color_picker
+      sha256: c083b79f1c57eaeed9f464368be376951230b3cb1876323b784626152a86e480
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.7.0"
+  flex_seed_scheme:
+    dependency: transitive
+    description:
+      name: flex_seed_scheme
+      sha256: d3ba3c5c92d2d79d45e94b4c6c71d01fac3c15017da1545880c53864da5dfeb0
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.5.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -562,6 +554,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.2"
+  hand_signature:
+    dependency: "direct main"
+    description:
+      name: hand_signature
+      sha256: e007153776b9558234761150b6b3ae98a6b3008e9b824da9911475794a982994
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.3"
   hive:
     dependency: "direct main"
     description:
@@ -938,14 +938,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.1"
-  pro_image_editor:
-    dependency: "direct main"
-    description:
-      name: pro_image_editor
-      sha256: "918f156f28a72b9185d950f865032f6aa83da485d6d45b22fb63d78b63bf7e21"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.6.4"
   protobuf:
     dependency: "direct main"
     description:
@@ -978,6 +970,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  reorderables:
+    dependency: "direct main"
+    description:
+      name: reorderables
+      sha256: "004a886e4878df1ee27321831c838bc1c976311f4ca6a74ce7d561e506540a77"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.0"
   restart_app:
     dependency: "direct main"
     description:
@@ -994,62 +994,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
-  shared_preferences:
-    dependency: transitive
+  screenshot:
+    dependency: "direct main"
     description:
-      name: shared_preferences
-      sha256: a752ce92ea7540fc35a0d19722816e04d0e72828a4200e83a98cf1a1eb524c9a
+      name: screenshot
+      sha256: "63817697a7835e6ce82add4228e15d233b74d42975c143ad8cfe07009fab866b"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.5"
-  shared_preferences_android:
-    dependency: transitive
-    description:
-      name: shared_preferences_android
-      sha256: "138b7bbbc7f59c56236e426c37afb8f78cbc57b094ac64c440e0bb90e380a4f5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.2"
-  shared_preferences_foundation:
-    dependency: transitive
-    description:
-      name: shared_preferences_foundation
-      sha256: "6a52cfcdaeac77cad8c97b539ff688ccfc458c007b4db12be584fbe5c0e49e03"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.5.4"
-  shared_preferences_linux:
-    dependency: transitive
-    description:
-      name: shared_preferences_linux
-      sha256: "580abfd40f415611503cae30adf626e6656dfb2f0cee8f465ece7b6defb40f2f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.1"
-  shared_preferences_platform_interface:
-    dependency: transitive
-    description:
-      name: shared_preferences_platform_interface
-      sha256: "57cbf196c486bc2cf1f02b85784932c6094376284b3ad5779d1b1c6c6a816b80"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.1"
-  shared_preferences_web:
-    dependency: transitive
-    description:
-      name: shared_preferences_web
-      sha256: d2ca4132d3946fec2184261726b355836a82c33d7d5b67af32692aff18a4684e
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.2"
-  shared_preferences_windows:
-    dependency: transitive
-    description:
-      name: shared_preferences_windows
-      sha256: "94ef0f72b2d71bc3e700e025db3710911bd51a71cefb65cc609dd0d9a982e3c1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.4.1"
+    version: "3.0.0"
   shelf:
     dependency: transitive
     description:
@@ -1183,14 +1135,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-  universal_io:
-    dependency: transitive
-    description:
-      name: universal_io
-      sha256: "1722b2dcc462b4b2f3ee7d188dad008b6eb4c40bbd03a3de451d82c78bba9aad"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.2"
   vector_math:
     dependency: transitive
     description:
@@ -1207,22 +1151,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.1.0"
-  vibration:
-    dependency: transitive
-    description:
-      name: vibration
-      sha256: "3b08a0579c2f9c18d5d78cb5c74f1005f731e02eeca6d72561a2e8059bf98ec3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.0"
-  vibration_platform_interface:
-    dependency: transitive
-    description:
-      name: vibration_platform_interface
-      sha256: "6ffeee63547562a6fef53c05a41d4fdcae2c0595b83ef59a4813b0612cd2bc36"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.3"
   vm_service:
     dependency: transitive
     description:
@@ -1271,14 +1199,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.10.0"
-  win32_registry:
-    dependency: transitive
-    description:
-      name: win32_registry
-      sha256: "21ec76dfc731550fd3e2ce7a33a9ea90b828fdf19a5c3bcf556fa992cfa99852"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.5"
   x25519:
     dependency: transitive
     description:

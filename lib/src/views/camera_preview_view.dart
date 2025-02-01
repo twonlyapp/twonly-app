@@ -71,15 +71,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 debugPrint('Capturing picture...');
               case (MediaCaptureStatus.success, true, false):
                 event.captureRequest.when(
-                  single: (single) {
-                    final path = single.file?.path;
-                    if (path == null) return;
+                  single: (single) async {
+                    final imageBytes = await single.file?.readAsBytes();
+                    if (imageBytes == null) return;
                     Navigator.push(
                       context,
                       PageRouteBuilder(
                         opaque: false,
                         pageBuilder: (context, a1, a2) =>
-                            ShareImageEditorView(image: path),
+                            ShareImageEditorView(imageBytes: imageBytes),
                         transitionsBuilder:
                             (context, animation, secondaryAnimation, child) {
                           return child;

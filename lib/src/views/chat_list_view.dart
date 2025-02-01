@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/initialsavatar.dart';

@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -13,8 +14,8 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
 
 class ShareImageView extends StatefulWidget {
-  const ShareImageView({super.key, required this.image});
-  final String image;
+  const ShareImageView({super.key, required this.imageBytes});
+  final Uint8List imageBytes;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -26,7 +27,6 @@ class _ShareImageView extends State<ShareImageView> {
   List<Contact> _bestFriends = [];
   int maxTotalMediaCounter = 0;
   final HashSet<Int64> _selectedUserIds = HashSet<Int64>();
-  String _lastSearchQuery = '';
   final TextEditingController searchUserName = TextEditingController();
 
   @override
@@ -90,7 +90,6 @@ class _ShareImageView extends State<ShareImageView> {
             user.displayName.toLowerCase().contains(query.toLowerCase()))
         .toList();
     _updateUsers(usersFiltered);
-    _lastSearchQuery = query;
   }
 
   @override
@@ -146,7 +145,7 @@ class _ShareImageView extends State<ShareImageView> {
               FilledButton.icon(
                 icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
                 onPressed: () async {
-                  sendImage(_selectedUserIds.toList(), widget.image);
+                  sendImage(_selectedUserIds.toList(), widget.imageBytes);
 
                   // TODO: pop back to the HomeView page popUntil did not work. check later how to improve in case of pushing more then 2
                   Navigator.pop(context);

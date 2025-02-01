@@ -30,13 +30,13 @@ FlutterSecureStorage getSecureStorage() {
   return FlutterSecureStorage(aOptions: _getAndroidOptions());
 }
 
-Future<String?> saveImageToGallery(path) async {
+Future<String?> saveImageToGallery(Uint8List imageBytes) async {
   final hasAccess = await Gal.hasAccess();
   if (!hasAccess) {
     await Gal.requestAccess();
   }
   try {
-    await Gal.putImage(path);
+    await Gal.putImageBytes(imageBytes);
     return null;
   } on GalException catch (e) {
     return e.type.message;
@@ -120,9 +120,9 @@ InputDecoration getInputDecoration(context, hintText) {
   );
 }
 
-Future<Uint8List?> getCompressedImage(File file) async {
-  var result = await FlutterImageCompress.compressWithFile(
-    file.absolute.path,
+Future<Uint8List?> getCompressedImage(Uint8List imageBytes) async {
+  var result = await FlutterImageCompress.compressWithList(
+    imageBytes,
     quality: 90,
   );
   return result;
