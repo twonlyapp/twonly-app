@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
@@ -61,6 +63,13 @@ class _ChatListViewState extends State<ChatListView> {
           .compareTo(lastMessages[b.userId.toInt()]!.sendOrReceivedAt);
     });
 
+    int maxTotalMediaCounter = 0;
+    if (allUsers.isNotEmpty) {
+      maxTotalMediaCounter = allUsers
+          .map((x) => x.totalMediaCounter)
+          .reduce((a, b) => a > b ? a : b);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.chatsTitle),
@@ -113,6 +122,7 @@ class _ChatListViewState extends State<ChatListView> {
                 final user = activeUsers[index];
                 return UserListItem(
                   user: user,
+                  maxTotalMediaCounter: maxTotalMediaCounter,
                   lastMessage: lastMessages[user.userId.toInt()]!,
                 );
               },
@@ -124,12 +134,13 @@ class _ChatListViewState extends State<ChatListView> {
 class UserListItem extends StatefulWidget {
   final Contact user;
   final DbMessage lastMessage;
+  final int maxTotalMediaCounter;
 
-  const UserListItem({
-    super.key,
-    required this.user,
-    required this.lastMessage,
-  });
+  const UserListItem(
+      {super.key,
+      required this.user,
+      required this.lastMessage,
+      required this.maxTotalMediaCounter});
 
   @override
   State<UserListItem> createState() => _UserListItem();
@@ -186,15 +197,13 @@ class _UserListItem extends State<UserListItem> {
                     style: TextStyle(fontSize: 12),
                   ),
                   const SizedBox(width: 3),
-                  Image.asset(
-                    "assets/icons/flame.png",
-                    width: 9,
-                  ),
-                  // FaIcon(
-                  //   FontAwesomeIcons.fireFlameCurved,
-                  //   color: const Color.fromARGB(255, 215, 131, 58),
-                  //   size: 10,
-                  // ),
+                  Text(
+                    (widget.maxTotalMediaCounter ==
+                            widget.user.totalMediaCounter)
+                        ? "❤️‍🔥"
+                        : "🔥",
+                    style: TextStyle(fontSize: 10),
+                  )
                 ],
               ),
           ],

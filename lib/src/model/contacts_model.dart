@@ -10,6 +10,7 @@ class Contact {
       required this.displayName,
       required this.accepted,
       required this.flameCounter,
+      required this.totalMediaCounter,
       required this.lastUpdateOfFlameCounter,
       required this.requested});
   final Int64 userId;
@@ -17,6 +18,7 @@ class Contact {
   final bool accepted;
   final bool requested;
   final int flameCounter;
+  final int totalMediaCounter;
   final DateTime lastUpdateOfFlameCounter;
 }
 
@@ -41,6 +43,9 @@ class DbContacts extends CvModelBase {
   static const columnFlameCounter = "flame_counter";
   final flameCounter = CvField<int>(columnFlameCounter);
 
+  static const columnTotalMediaCounter = "total_media_counter";
+  final totalMediaCounter = CvField<int>(columnTotalMediaCounter);
+
   static const columnLastUpdateOfFlameCounter = "last_update_flame_counter";
   final lastUpdateOfFlameCounter =
       CvField<DateTime>(columnLastUpdateOfFlameCounter);
@@ -56,6 +61,7 @@ class DbContacts extends CvModelBase {
       $columnAccepted INT NOT NULL DEFAULT 0,
       $columnRequested INT NOT NULL DEFAULT 0,
       $columnBlocked INT NOT NULL DEFAULT 0,
+      $columnTotalMediaCounter INT NOT NULL DEFAULT 0,
       $columnFlameCounter INT NOT NULL DEFAULT 0,
       $columnLastUpdateOfFlameCounter DATETIME DEFAULT CURRENT_TIMESTAMP,
       $columnCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -74,7 +80,11 @@ class DbContacts extends CvModelBase {
   static Future checkAndUpdateFlames(int userId) async {
     List<Map<String, dynamic>> result = await dbProvider.db!.query(
       tableName,
-      columns: [columnLastUpdateOfFlameCounter, columnFlameCounter],
+      columns: [
+        columnLastUpdateOfFlameCounter,
+        columnFlameCounter,
+        columnTotalMediaCounter
+      ],
       where: '$columnUserId = ?',
       whereArgs: [userId],
     );
@@ -84,21 +94,28 @@ class DbContacts extends CvModelBase {
       DateTime? lastUpdate = DateTime.tryParse(lastUpdateString);
 
       int currentCount = result.first.cast()[columnFlameCounter];
+      int totalMediaCounter = result.first.cast()[columnTotalMediaCounter];
       if (lastUpdate != null &&
           lastUpdate.isAfter(DateTime.now().subtract(Duration(hours: 24)))) {
-        _updateFlameCounter(userId, currentCount); // just update the time
+        _updateFlameCounter(userId, currentCount,
+            totalMediaCounter: totalMediaCounter + 1); // just update the time
       } else {
-        _updateFlameCounter(userId, (currentCount + 1));
+        _updateFlameCounter(userId, (currentCount + 1),
+            totalMediaCounter: totalMediaCounter + 1);
       }
     }
     globalCallBackOnContactChange();
   }
 
-  static Future _updateFlameCounter(int userId, int newCount) async {
+  static Future _updateFlameCounter(int userId, int newCount,
+      {int? totalMediaCounter}) async {
     Map<String, dynamic> valuesToUpdate = {
       columnFlameCounter: newCount,
       columnLastUpdateOfFlameCounter: DateTime.now().toIso8601String()
     };
+    if (totalMediaCounter != null) {
+      valuesToUpdate[columnTotalMediaCounter] = totalMediaCounter;
+    }
     await dbProvider.db!.update(
       tableName,
       valuesToUpdate,
@@ -116,6 +133,7 @@ class DbContacts extends CvModelBase {
             columnAccepted,
             columnRequested,
             columnFlameCounter,
+            columnTotalMediaCounter,
             columnLastUpdateOfFlameCounter,
             columnCreatedAt
           ],
@@ -139,6 +157,7 @@ class DbContacts extends CvModelBase {
         parsedUsers.add(
           Contact(
             userId: Int64(userId),
+            totalMediaCounter: users.cast()[i][columnTotalMediaCounter],
             displayName: users.cast()[i][columnDisplayName],
             accepted: users[i][columnAccepted] == 1,
             flameCounter: flameCounter,
