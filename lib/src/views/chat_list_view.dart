@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/components/notification_badge.dart';
@@ -187,25 +188,7 @@ class _UserListItem extends State<UserListItem> {
               style: TextStyle(fontSize: 12),
             ),
             if (widget.user.flameCounter > 0)
-              Row(
-                children: [
-                  const SizedBox(width: 5),
-                  Text("•"),
-                  const SizedBox(width: 5),
-                  Text(
-                    widget.user.flameCounter.toString(),
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    (widget.maxTotalMediaCounter ==
-                            widget.user.totalMediaCounter)
-                        ? "❤️‍🔥"
-                        : "🔥",
-                    style: TextStyle(fontSize: 10),
-                  )
-                ],
-              ),
+              FlameCounterWidget(widget.user, widget.maxTotalMediaCounter),
           ],
         ),
         leading: InitialsAvatar(displayName: widget.user.displayName),

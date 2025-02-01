@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
@@ -10,10 +11,12 @@ class BestFriendsSelector extends StatelessWidget {
   final List<Contact> users;
   final Function(Int64, bool) updateStatus;
   final HashSet<Int64> selectedUserIds;
+  final int maxTotalMediaCounter;
 
   const BestFriendsSelector({
     super.key,
     required this.users,
+    required this.maxTotalMediaCounter,
     required this.updateStatus,
     required this.selectedUserIds,
   });
@@ -24,14 +27,13 @@ class BestFriendsSelector extends StatelessWidget {
       return Container();
     }
 
-    final limitedUsers = users.length > 8 ? users.sublist(0, 8) : users;
     return Column(
       children: [
         HeadLineComponent(AppLocalizations.of(context)!.shareImageBestFriends),
         Column(
           spacing: 8,
           children: List.generate(
-            (limitedUsers.length + 1) ~/ 2,
+            (users.length + 1) ~/ 2,
             (rowIndex) {
               final firstUserIndex = rowIndex * 2;
               final secondUserIndex = firstUserIndex + 1;
@@ -41,19 +43,20 @@ class BestFriendsSelector extends StatelessWidget {
                   Expanded(
                     child: UserCheckbox(
                       isChecked: selectedUserIds
-                          .contains(limitedUsers[firstUserIndex].userId),
-                      user: limitedUsers[firstUserIndex],
+                          .contains(users[firstUserIndex].userId),
+                      user: users[firstUserIndex],
                       onChanged: updateStatus,
+                      maxTotalMediaCounter: maxTotalMediaCounter,
                     ),
                   ),
-                  (secondUserIndex < limitedUsers.length)
+                  (secondUserIndex < users.length)
                       ? Expanded(
                           child: UserCheckbox(
-                            isChecked: selectedUserIds
-                                .contains(limitedUsers[secondUserIndex].userId),
-                            user: limitedUsers[secondUserIndex],
-                            onChanged: updateStatus,
-                          ),
+                              isChecked: selectedUserIds
+                                  .contains(users[secondUserIndex].userId),
+                              user: users[secondUserIndex],
+                              onChanged: updateStatus,
+                              maxTotalMediaCounter: maxTotalMediaCounter),
                         )
                       : Expanded(
                           child: Container(),
@@ -72,10 +75,12 @@ class UserCheckbox extends StatelessWidget {
   final Contact user;
   final Function(Int64, bool) onChanged;
   final bool isChecked;
+  final int maxTotalMediaCounter;
 
   const UserCheckbox({
     super.key,
     required this.user,
+    required this.maxTotalMediaCounter,
     required this.onChanged,
     required this.isChecked,
   });
@@ -105,14 +110,15 @@ class UserCheckbox extends StatelessWidget {
                 displayName: user.displayName,
               ),
               SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  user.displayName.length > 10
-                      ? '${user.displayName.substring(0, 10)}...'
-                      : user.displayName,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Text(
+                user.displayName.length > 10
+                    ? '${user.displayName.substring(0, 10)}...'
+                    : user.displayName,
+                overflow: TextOverflow.ellipsis,
               ),
+              if (user.flameCounter > 0)
+                FlameCounterWidget(user, maxTotalMediaCounter),
+              Expanded(child: Container()),
               Checkbox(
                 value: isChecked,
                 onChanged: (bool? value) {

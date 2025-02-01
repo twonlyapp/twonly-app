@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/best_friends_selector.dart';
+import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
@@ -21,7 +22,9 @@ class ShareImageView extends StatefulWidget {
 
 class _ShareImageView extends State<ShareImageView> {
   List<Contact> _users = [];
-  List<Contact> _usersFiltered = [];
+  List<Contact> _otherUsers = [];
+  List<Contact> _bestFriends = [];
+  int maxTotalMediaCounter = 0;
   final HashSet<Int64> _selectedUserIds = HashSet<Int64>();
   String _lastSearchQuery = '';
   final TextEditingController searchUserName = TextEditingController();
@@ -36,26 +39,57 @@ class _ShareImageView extends State<ShareImageView> {
     final users = await DbContacts.getActiveUsers();
     setState(() {
       _users = users;
-      _usersFiltered = _users;
+      _updateUsers(_users);
+    });
+  }
+
+  Future _updateUsers(List<Contact> users) async {
+    // Sort contacts by flameCounter and then by totalMediaCounter
+    users.sort((a, b) {
+      // First, compare by flameCounter
+      int flameComparison = b.flameCounter.compareTo(a.flameCounter);
+      if (flameComparison != 0) {
+        return flameComparison; // Sort by flameCounter in descending order
+      }
+      // If flameCounter is the same, compare by totalMediaCounter
+      return b.totalMediaCounter.compareTo(
+          a.totalMediaCounter); // Sort by totalMediaCounter in descending order
+    });
+
+    maxTotalMediaCounter = 0;
+    if (users.isNotEmpty) {
+      maxTotalMediaCounter =
+          users.map((x) => x.totalMediaCounter).reduce((a, b) => a > b ? a : b);
+    }
+
+    // Separate best friends and other users
+    List<Contact> bestFriends = [];
+    List<Contact> otherUsers = [];
+
+    for (var contact in users) {
+      if (contact.flameCounter > 0 && bestFriends.length < 6) {
+        bestFriends.add(contact);
+      } else {
+        otherUsers.add(contact);
+      }
+    }
+
+    setState(() {
+      _bestFriends = bestFriends;
+      _otherUsers = otherUsers;
     });
   }
 
   Future _filterUsers(String query) async {
     if (query.isEmpty) {
-      _usersFiltered = _users;
+      _updateUsers(_users);
       return;
     }
-    if (_lastSearchQuery.length < query.length) {
-      _usersFiltered = _users
-          .where((user) =>
-              user.displayName.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    } else {
-      _usersFiltered = _usersFiltered
-          .where((user) =>
-              user.displayName.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    }
+    List<Contact> usersFiltered = _users
+        .where((user) =>
+            user.displayName.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+    _updateUsers(usersFiltered);
     _lastSearchQuery = query;
   }
 
@@ -77,8 +111,9 @@ class _ShareImageView extends State<ShareImageView> {
                         AppLocalizations.of(context)!.searchUsernameInput))),
             const SizedBox(height: 10),
             BestFriendsSelector(
-              users: _usersFiltered,
+              users: _bestFriends,
               selectedUserIds: _selectedUserIds,
+              maxTotalMediaCounter: maxTotalMediaCounter,
               updateStatus: (userId, checked) {
                 if (checked) {
                   _selectedUserIds.add(userId);
@@ -88,12 +123,13 @@ class _ShareImageView extends State<ShareImageView> {
               },
             ),
             const SizedBox(height: 10),
-            if (_usersFiltered.isNotEmpty)
+            if (_otherUsers.isNotEmpty)
               HeadLineComponent(
                   AppLocalizations.of(context)!.shareImageAllUsers),
             Expanded(
               child: UserList(
-                List.from(_usersFiltered),
+                List.from(_otherUsers),
+                maxTotalMediaCounter,
                 selectedUserIds: _selectedUserIds,
               ),
             )
@@ -136,8 +172,10 @@ class _ShareImageView extends State<ShareImageView> {
 }
 
 class UserList extends StatelessWidget {
-  const UserList(this.users, {super.key, required this.selectedUserIds});
+  const UserList(this.users, this.maxTotalMediaCounter,
+      {super.key, required this.selectedUserIds});
   final List<Contact> users;
+  final int maxTotalMediaCounter;
   final HashSet<Int64> selectedUserIds;
 
   @override
@@ -151,7 +189,11 @@ class UserList extends StatelessWidget {
       itemBuilder: (BuildContext context, int i) {
         Contact user = users[i];
         return ListTile(
-          title: Text(user.displayName),
+          title: Row(children: [
+            Text(user.displayName),
+            if (user.flameCounter > 0)
+              FlameCounterWidget(user, maxTotalMediaCounter),
+          ]),
           leading: InitialsAvatar(
             displayName: user.displayName,
             fontSize: 15,
