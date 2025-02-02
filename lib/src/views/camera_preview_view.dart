@@ -1,8 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/views/permissions_view.dart';
 import 'package:twonly/src/views/share_image_editor_view.dart';
 
@@ -45,6 +45,7 @@ class CameraPreviewView extends StatefulWidget {
 class _CameraPreviewViewState extends State<CameraPreviewView> {
   double _lastZoom = 1;
   double _basePanY = 0;
+  bool sharePreviewIsShown = false;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
@@ -54,11 +55,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 50, horizontal: 0),
-      child: ClipRRect(
+    return MediaViewSizing(
+      ClipRRect(
         borderRadius: BorderRadius.circular(22),
         child: CameraAwesomeBuilder.custom(
+          previewAlignment: Alignment.topLeft,
           sensorConfig: SensorConfig.single(
             aspectRatio: CameraAspectRatios.ratio_16_9,
             zoom: 0.07,
@@ -73,8 +74,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 event.captureRequest.when(
                   single: (single) async {
                     final imageBytes = await single.file?.readAsBytes();
-                    if (imageBytes == null) return;
-                    Navigator.push(
+                    if (imageBytes == null || !context.mounted) return;
+                    setState(() {
+                      sharePreviewIsShown = true;
+                    });
+                    await Navigator.push(
                       context,
                       PageRouteBuilder(
                         opaque: false,
@@ -88,6 +92,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                         reverseTransitionDuration: Duration.zero,
                       ),
                     );
+                    setState(() {
+                      sharePreviewIsShown = false;
+                    });
                   },
                   multiple: (multiple) {
                     multiple.fileBySensor.forEach((key, value) {
@@ -117,36 +124,36 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
             }
           },
           builder: (cameraState, preview) {
-            return Container(
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                children: [
-                  Positioned.fill(
-                    child: GestureDetector(
-                      onPanStart: (details) async {
+            return Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    onPanStart: (details) async {
+                      setState(() {
+                        _basePanY = details.localPosition.dy;
+                      });
+                    },
+                    onPanUpdate: (details) async {
+                      var diff = _basePanY - details.localPosition.dy;
+                      if (diff > 200) diff = 200;
+                      if (diff < 0) diff = 0;
+                      var tmp = (diff / 200 * 50).toInt() / 50;
+                      if (tmp != _lastZoom) {
+                        cameraState.sensorConfig.setZoom(tmp);
                         setState(() {
-                          _basePanY = details.localPosition.dy;
+                          (tmp);
+                          _lastZoom = tmp;
                         });
-                      },
-                      onPanUpdate: (details) async {
-                        var diff = _basePanY - details.localPosition.dy;
-                        if (diff > 200) diff = 200;
-                        if (diff < 0) diff = 0;
-                        var tmp = (diff / 200 * 50).toInt() / 50;
-                        if (tmp != _lastZoom) {
-                          cameraState.sensorConfig.setZoom(tmp);
-                          setState(() {
-                            (tmp);
-                            _lastZoom = tmp;
-                          });
-                        }
-                      },
-                      onDoubleTap: () async {
-                        cameraState.switchCameraSensor(
-                            aspectRatio: CameraAspectRatios.ratio_16_9);
-                      },
-                    ),
+                      }
+                    },
+                    onDoubleTap: () async {
+                      cameraState.switchCameraSensor(
+                          aspectRatio: CameraAspectRatios.ratio_16_9);
+                    },
                   ),
+                ),
+                if (!sharePreviewIsShown)
                   Positioned(
                     bottom: 30,
                     left: 0,
@@ -186,8 +193,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       ),
                     ),
                   ),
-                ],
-              ),
+              ],
             );
           },
           saveConfig: SaveConfig.photoAndVideo(
