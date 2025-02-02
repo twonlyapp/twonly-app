@@ -34,21 +34,4 @@ class ImageItem {
       return loader.complete(false);
     }
   }
-
-  static ImageItem fromJson(Map json) {
-    var image = ImageItem(json['bytes']);
-
-    image.width = json['width'];
-    image.height = json['height'];
-
-    return image;
-  }
-
-  Map toJson() {
-    return {
-      'height': height,
-      'width': width,
-      'bytes': bytes,
-    };
-  }
 }

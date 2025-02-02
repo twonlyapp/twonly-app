@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/components/image_editor/data/layer.dart';
-import 'package:twonly/src/components/image_editor/layers/background_blur_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/background_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/emoji_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/image_layer.dart';
@@ -36,15 +35,6 @@ class LayersViewer extends StatelessWidget {
         // Image layer
         if (layerItem is ImageLayerData) {
           return ImageLayer(
-            layerData: layerItem,
-            onUpdate: onUpdate,
-            editable: editable,
-          );
-        }
-
-        // Background blur layer
-        if (layerItem is BackgroundBlurLayerData && layerItem.radius > 0) {
-          return BackgroundBlurLayer(
             layerData: layerItem,
             onUpdate: onUpdate,
             editable: editable,

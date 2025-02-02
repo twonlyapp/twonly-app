@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/components/image_editor/data/layer.dart';
-import 'package:twonly/src/components/image_editor/image_editor.dart';
-import 'package:twonly/src/components/image_editor/modules/emoji_layer_overlay.dart';
 
 /// Emoji layer
 class EmojiLayer extends StatefulWidget {
@@ -33,30 +31,7 @@ class _EmojiLayerState extends State<EmojiLayer> {
       left: widget.layerData.offset.dx,
       top: widget.layerData.offset.dy,
       child: GestureDetector(
-        onTap: widget.editable
-            ? () {
-                showModalBottomSheet(
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(10),
-                      topLeft: Radius.circular(10),
-                    ),
-                  ),
-                  context: context,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) {
-                    return EmojiLayerOverlay(
-                      index: layers.indexOf(widget.layerData),
-                      layer: widget.layerData,
-                      onUpdate: () {
-                        if (widget.onUpdate != null) widget.onUpdate!();
-                        setState(() {});
-                      },
-                    );
-                  },
-                );
-              }
-            : null,
+        onTap: widget.editable ? () {} : null,
         onScaleUpdate: widget.editable
             ? (detail) {
                 if (detail.pointerCount == 1) {

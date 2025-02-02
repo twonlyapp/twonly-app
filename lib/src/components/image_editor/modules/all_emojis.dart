@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/components/image_editor/data/data.dart';
 import 'package:twonly/src/components/image_editor/data/layer.dart';
-import 'package:twonly/src/components/image_editor/image_editor.dart';
 
-class Emojies extends StatefulWidget {
-  const Emojies({super.key});
+class Emojis extends StatefulWidget {
+  const Emojis({super.key});
 
   @override
-  createState() => _EmojiesState();
+  createState() => _EmojisState();
 }
 
-class _EmojiesState extends State<Emojies> {
+class _EmojisState extends State<Emojis> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -35,7 +34,7 @@ class _EmojiesState extends State<Emojies> {
             const SizedBox(height: 16),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(
-                i18n('Select Emoji'),
+                ('Select Emoji'),
                 style: const TextStyle(color: Colors.white),
               ),
             ]),
