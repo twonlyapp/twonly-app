@@ -1,3 +1,4 @@
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
@@ -14,6 +15,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chat_item_details_view.dart';
 import 'package:twonly/src/views/home_view.dart';
 import 'package:twonly/src/views/media_viewer_view.dart';
+import 'package:twonly/src/views/profile_view.dart';
 import 'package:twonly/src/views/search_username_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -70,12 +72,23 @@ class _ChatListViewState extends State<ChatListView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.chatsTitle),
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfileView(),
+              ),
+            );
+          },
+          child: Text("twonly"),
+        ),
+        // title:
         actions: [
           NotificationBadge(
             count: context.watch<ContactChangeProvider>().newContactRequests,
             child: IconButton(
-              icon: Icon(Icons.person_add),
+              icon: FaIcon(FontAwesomeIcons.userPlus, size: 18),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -85,6 +98,17 @@ class _ChatListViewState extends State<ChatListView> {
                 );
               },
             ),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileView(),
+                ),
+              );
+            },
+            icon: FaIcon(FontAwesomeIcons.gear, size: 19),
           )
         ],
       ),

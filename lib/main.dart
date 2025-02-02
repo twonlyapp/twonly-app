@@ -8,16 +8,15 @@ import 'package:logging/logging.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'src/app.dart';
-import 'src/settings/settings_controller.dart';
-import 'src/settings/settings_service.dart';
 
 late DbProvider dbProvider;
 late ApiProvider apiProvider;
 
 void main() async {
-  final settingsController = SettingsController(SettingsService());
+  final settingsController = SettingsChangeProvider();
 
   // Load the user's preferred theme while the splash screen is displayed.
   // This prevents a sudden theme change when the app is first displayed.
@@ -62,8 +61,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MessagesChangeProvider()),
         ChangeNotifierProvider(create: (_) => DownloadChangeProvider()),
         ChangeNotifierProvider(create: (_) => ContactChangeProvider()),
+        ChangeNotifierProvider(create: (_) => settingsController),
       ],
-      child: MyApp(settingsController: settingsController),
+      child: MyApp(),
     ),
   );
 }

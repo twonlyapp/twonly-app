@@ -3,6 +3,7 @@ import 'package:twonly/main.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
+import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding_view.dart';
 import 'package:twonly/src/views/home_view.dart';
@@ -11,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
-import 'settings/settings_controller.dart';
 
 // these global function can be called from anywhere to update
 // the ui when something changed. The callbacks will be set by
@@ -27,9 +27,7 @@ Function(List<int>, bool) globalCallBackOnDownloadChange = (a, b) {};
 
 /// The Widget that configures your application.
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, required this.settingsController});
-
-  final SettingsController settingsController;
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -114,7 +112,7 @@ class _MyAppState extends State<MyApp> {
     // The ListenableBuilder Widget listens to the SettingsController for changes.
     // Whenever the user updates their settings, the MaterialApp is rebuilt.
     return ListenableBuilder(
-      listenable: widget.settingsController,
+      listenable: context.watch<SettingsChangeProvider>(),
       builder: (BuildContext context, Widget? child) {
         return MaterialApp(
           restorationScopeId: 'app',
@@ -141,7 +139,7 @@ class _MyAppState extends State<MyApp> {
             inputDecorationTheme:
                 const InputDecorationTheme(border: OutlineInputBorder()),
           ),
-          themeMode: widget.settingsController.themeMode,
+          themeMode: context.watch<SettingsChangeProvider>().themeMode,
           home: Stack(
             children: [
               FutureBuilder<bool>(
@@ -149,9 +147,7 @@ class _MyAppState extends State<MyApp> {
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       return snapshot.data!
-                          ? HomeView(
-                              settingsController: widget.settingsController,
-                            )
+                          ? HomeView()
                           : _showOnboarding
                               ? OnboardingView(
                                   callbackOnSuccess: () {

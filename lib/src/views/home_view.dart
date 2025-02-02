@@ -2,15 +2,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'camera_preview_view.dart';
 import 'chat_list_view.dart';
-import 'profile_view.dart';
-import '../settings/settings_controller.dart';
 import 'package:flutter/material.dart';
 
 Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key, required this.settingsController});
-  final SettingsController settingsController;
+  const HomeView({super.key});
 
   @override
   State<HomeView> createState() => HomeViewState();
@@ -71,7 +68,7 @@ class HomeViewState extends State<HomeView> {
           children: [
             ChatListView(),
             CameraPreviewViewPermission(),
-            ProfileView(settingsController: widget.settingsController)
+            // ProfileView(settingsController: widget.settingsController)
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -86,8 +83,8 @@ class HomeViewState extends State<HomeView> {
               icon: FaIcon(FontAwesomeIcons.camera),
               label: "",
             ),
-            BottomNavigationBarItem(
-                icon: FaIcon(FontAwesomeIcons.userShield), label: ""),
+            // BottomNavigationBarItem(
+            //     icon: FaIcon(FontAwesomeIcons.userShield), label: ""),
           ],
           onTap: (int index) {
             activePageIdx = index;
