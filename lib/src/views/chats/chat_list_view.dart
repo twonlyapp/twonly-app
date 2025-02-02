@@ -12,11 +12,11 @@ import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/chat_item_details_view.dart';
+import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/home_view.dart';
-import 'package:twonly/src/views/media_viewer_view.dart';
+import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/views/profile_view.dart';
-import 'package:twonly/src/views/search_username_view.dart';
+import 'package:twonly/src/views/chats/search_username_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 

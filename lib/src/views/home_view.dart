@@ -1,7 +1,7 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
-import 'camera_preview_view.dart';
-import 'chat_list_view.dart';
+import 'camera_to_share/camera_preview_view.dart';
+import 'chats/chat_list_view.dart';
 import 'package:flutter/material.dart';
 
 Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
@@ -68,7 +68,6 @@ class HomeViewState extends State<HomeView> {
           children: [
             ChatListView(),
             CameraPreviewViewPermission(),
-            // ProfileView(settingsController: widget.settingsController)
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(

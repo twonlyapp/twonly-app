@@ -3,7 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/share_image_view.dart';
+import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:twonly/src/components/image_editor/data/image_item.dart';
@@ -322,10 +322,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 class BottomButton extends StatelessWidget {
   final VoidCallback? onTap, onLongPress;
   final IconData icon;
+  final Color color;
 
   const BottomButton({
     super.key,
     this.onTap,
+    this.color = Colors.white,
     this.onLongPress,
     required this.icon,
   });
@@ -341,7 +343,7 @@ class BottomButton extends StatelessWidget {
           children: [
             FaIcon(
               icon,
-              color: Colors.white,
+              color: color,
               shadows: ShareImageEditorView.iconShadow,
             ),
             const SizedBox(height: 8),

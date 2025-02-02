@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
-import 'package:twonly/src/views/permissions_view.dart';
-import 'package:twonly/src/views/share_image_editor_view.dart';
+import 'package:twonly/src/components/permissions_view.dart';
+import 'package:twonly/src/views/camera_to_share/share_image_editor_view.dart';
 
 class CameraPreviewViewPermission extends StatefulWidget {
   const CameraPreviewViewPermission({super.key});
@@ -46,6 +47,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   double _lastZoom = 1;
   double _basePanY = 0;
   bool sharePreviewIsShown = false;
+  bool isFlashOn = false;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
@@ -125,7 +127,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           },
           builder: (cameraState, preview) {
             return Stack(
-              alignment: Alignment.bottomCenter,
+              //alignment: Alignment.bottomCenter,
               children: [
                 Positioned.fill(
                   child: GestureDetector(
@@ -155,6 +157,49 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 ),
                 if (!sharePreviewIsShown)
                   Positioned(
+                    right: 0,
+                    top: 100,
+                    child: Container(
+                      alignment: Alignment.bottomCenter,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: SafeArea(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            BottomButton(
+                              icon: FontAwesomeIcons.repeat,
+                              onTap: () async {
+                                cameraState.switchCameraSensor(
+                                    aspectRatio: CameraAspectRatios.ratio_16_9);
+                              },
+                            ),
+                            SizedBox(height: 20),
+                            BottomButton(
+                              icon: FontAwesomeIcons.bolt,
+                              color: isFlashOn
+                                  ? const Color.fromARGB(255, 255, 230, 0)
+                                  : const Color.fromARGB(158, 255, 255, 255),
+                              onTap: () async {
+                                if (isFlashOn) {
+                                  cameraState.sensorConfig
+                                      .setFlashMode(FlashMode.none);
+                                  isFlashOn = false;
+                                } else {
+                                  cameraState.sensorConfig
+                                      .setFlashMode(FlashMode.always);
+                                  isFlashOn = true;
+                                }
+                                setState(() {});
+                                //cameraState.sensorConfig.switchCameraFlash();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                if (!sharePreviewIsShown)
+                  Positioned(
                     bottom: 30,
                     left: 0,
                     right: 0,
@@ -169,7 +214,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               cameraState.when(
                                   onPhotoMode: (picState) =>
                                       picState.takePhoto());
-                              // await takePicture();
                             },
                             onLongPress: () async {},
                             child: Align(

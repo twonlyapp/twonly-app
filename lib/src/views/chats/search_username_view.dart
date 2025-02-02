@@ -9,7 +9,7 @@ import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/views/register_view.dart';
+import 'package:twonly/src/views/onboarding/register_view.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 

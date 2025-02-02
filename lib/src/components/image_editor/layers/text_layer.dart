@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/image_editor/data/layer.dart';
-import 'package:twonly/src/views/share_image_editor_view.dart';
+import 'package:twonly/src/views/camera_to_share/share_image_editor_view.dart';
 
 /// Text layer
 class TextLayer extends StatefulWidget {

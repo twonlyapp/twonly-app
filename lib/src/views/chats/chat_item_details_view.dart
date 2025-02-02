@@ -9,7 +9,7 @@ import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
-import 'package:twonly/src/views/media_viewer_view.dart';
+import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ChatListEntry extends StatelessWidget {
