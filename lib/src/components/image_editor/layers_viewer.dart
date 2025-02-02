@@ -9,12 +9,10 @@ import 'package:twonly/src/components/image_editor/layers/text_layer.dart';
 class LayersViewer extends StatelessWidget {
   final List<Layer> layers;
   final Function()? onUpdate;
-  final bool editable;
 
   const LayersViewer({
     super.key,
     required this.layers,
-    required this.editable,
     this.onUpdate,
   });
 
@@ -28,7 +26,6 @@ class LayersViewer extends StatelessWidget {
           return BackgroundLayer(
             layerData: layerItem,
             onUpdate: onUpdate,
-            editable: editable,
           );
         }
 
@@ -37,7 +34,6 @@ class LayersViewer extends StatelessWidget {
           return ImageLayer(
             layerData: layerItem,
             onUpdate: onUpdate,
-            editable: editable,
           );
         }
 
@@ -46,7 +42,6 @@ class LayersViewer extends StatelessWidget {
           return EmojiLayer(
             layerData: layerItem,
             onUpdate: onUpdate,
-            editable: editable,
           );
         }
 
@@ -55,7 +50,6 @@ class LayersViewer extends StatelessWidget {
           return TextLayer(
             layerData: layerItem,
             onUpdate: onUpdate,
-            editable: editable,
           );
         }
 

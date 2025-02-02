@@ -5,13 +5,11 @@ import 'package:twonly/src/components/image_editor/data/layer.dart';
 class ImageLayer extends StatefulWidget {
   final ImageLayerData layerData;
   final VoidCallback? onUpdate;
-  final bool editable;
 
   const ImageLayer({
     super.key,
     required this.layerData,
     this.onUpdate,
-    this.editable = false,
   });
 
   @override

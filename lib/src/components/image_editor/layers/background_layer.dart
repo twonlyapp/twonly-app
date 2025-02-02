@@ -5,13 +5,11 @@ import 'package:twonly/src/components/image_editor/data/layer.dart';
 class BackgroundLayer extends StatefulWidget {
   final BackgroundLayerData layerData;
   final VoidCallback? onUpdate;
-  final bool editable;
 
   const BackgroundLayer({
     super.key,
     required this.layerData,
     this.onUpdate,
-    this.editable = false,
   });
 
   @override

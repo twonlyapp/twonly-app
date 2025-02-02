@@ -20,7 +20,12 @@ List<Layer> removedLayers = [];
 class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView({super.key, required this.imageBytes});
   final Uint8List imageBytes;
-
+  static List<Shadow> get iconShadow => [
+        Shadow(
+          color: const Color.fromARGB(122, 0, 0, 0),
+          blurRadius: 5.0,
+        )
+      ];
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -44,17 +49,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     super.dispose();
   }
 
-  static List<Shadow> get iconShadow => [
-        Shadow(
-          color: const Color.fromARGB(122, 0, 0, 0),
-          blurRadius: 5.0,
-        )
-      ];
-
   List<Widget> get filterActions {
     return [
       IconButton(
-        icon: FaIcon(FontAwesomeIcons.xmark, size: 30, shadows: iconShadow),
+        icon: FaIcon(FontAwesomeIcons.xmark,
+            size: 30, shadows: ShareImageEditorView.iconShadow),
         color: Colors.white,
         onPressed: () async {
           Navigator.pop(context);
@@ -67,13 +66,14 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             color: layers.length > 1 || removedLayers.isNotEmpty
                 ? Colors.white
                 : Colors.grey,
-            shadows: iconShadow),
+            shadows: ShareImageEditorView.iconShadow),
         onPressed: () {
           if (removedLayers.isNotEmpty) {
             layers.add(removedLayers.removeLast());
             setState(() {});
             return;
           }
+          layers = layers.where((x) => !x.isDeleted).toList();
           if (layers.length <= 1) return; // do not remove image layer
           undoLayers.add(layers.removeLast());
           setState(() {});
@@ -83,7 +83,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         icon: FaIcon(FontAwesomeIcons.rotateRight,
             color: undoLayers.isNotEmpty ? Colors.white : Colors.grey,
-            shadows: iconShadow),
+            shadows: ShareImageEditorView.iconShadow),
         onPressed: () {
           if (undoLayers.isEmpty) return;
 
@@ -132,21 +132,32 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     return Scaffold(
       backgroundColor: Colors.white.withAlpha(0),
+      resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          MediaViewSizing(
-            SizedBox(
-              height: currentImage.height / pixelRatio,
-              width: currentImage.width / pixelRatio,
-              child: Screenshot(
-                controller: screenshotController,
-                child: LayersViewer(
-                  layers: layers,
-                  onUpdate: () {
-                    setState(() {});
-                  },
-                  editable: true,
+          GestureDetector(
+            onTap: () {
+              if (layers.any((x) => x.isEditing)) {
+                return;
+              }
+              undoLayers.clear();
+              removedLayers.clear();
+              layers.add(TextLayerData());
+              setState(() {});
+            },
+            child: MediaViewSizing(
+              SizedBox(
+                height: currentImage.height / pixelRatio,
+                width: currentImage.width / pixelRatio,
+                child: Screenshot(
+                  controller: screenshotController,
+                  child: LayersViewer(
+                    layers: layers.where((x) => !x.isDeleted).toList(),
+                    onUpdate: () {
+                      setState(() {});
+                    },
+                  ),
                 ),
               ),
             ),
@@ -165,17 +176,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             right: 0,
             top: 100,
             child: Container(
-              // color: Colors.black45,
               alignment: Alignment.bottomCenter,
-              // height: 86 + MediaQuery.of(context).padding.bottom,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: const BoxDecoration(
-                  // color: Colors.black87,
-                  // shape: BoxShape.rectangle,
-                  //   boxShadow: [
-                  //     BoxShadow(blurRadius: 1),
-                  //   ],
-                  ),
               child: SafeArea(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -185,13 +187,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       onTap: () async {
                         undoLayers.clear();
                         removedLayers.clear();
-
-                        layers.add(
-                          TextLayerData(
-                            text: "Test",
-                          ),
-                        );
-
+                        layers.add(TextLayerData());
                         setState(() {});
                       },
                     ),
@@ -346,7 +342,7 @@ class BottomButton extends StatelessWidget {
             FaIcon(
               icon,
               color: Colors.white,
-              shadows: _ShareImageEditorView.iconShadow,
+              shadows: ShareImageEditorView.iconShadow,
             ),
             const SizedBox(height: 8),
           ],

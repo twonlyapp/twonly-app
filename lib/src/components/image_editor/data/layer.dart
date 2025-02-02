@@ -5,10 +5,14 @@ import 'package:twonly/src/components/image_editor/data/image_item.dart';
 class Layer {
   Offset offset;
   double rotation, scale, opacity;
+  bool isEditing;
+  bool isDeleted;
 
   Layer({
-    this.offset = const Offset(64, 64),
+    this.offset = const Offset(0, 0),
     this.opacity = 1,
+    this.isEditing = false,
+    this.isDeleted = false,
     this.rotation = 0,
     this.scale = 1,
   });
@@ -35,6 +39,7 @@ class EmojiLayerData extends Layer {
     super.opacity,
     super.rotation,
     super.scale,
+    super.isEditing,
   });
 }
 
@@ -50,40 +55,19 @@ class ImageLayerData extends Layer {
     super.opacity,
     super.rotation,
     super.scale,
+    super.isEditing,
   });
 }
 
 /// Attributes used by [TextLayer]
 class TextLayerData extends Layer {
   String text;
-
   TextLayerData({
-    required this.text,
+    this.text = "",
     super.offset,
     super.opacity,
     super.rotation,
     super.scale,
-  });
-}
-
-/// Attributes used by [TextLayer]
-class LinkLayerData extends Layer {
-  String text;
-  double size;
-  Color color, background;
-  double backgroundOpacity;
-  TextAlign align;
-
-  LinkLayerData({
-    required this.text,
-    this.size = 64,
-    this.color = Colors.white,
-    this.background = Colors.transparent,
-    this.backgroundOpacity = 0,
-    this.align = TextAlign.left,
-    super.offset,
-    super.opacity,
-    super.rotation,
-    super.scale,
+    super.isEditing = true,
   });
 }
