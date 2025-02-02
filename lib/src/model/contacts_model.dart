@@ -1,5 +1,6 @@
 import 'package:cv/cv.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/app.dart';
@@ -53,6 +54,8 @@ class DbContacts extends CvModelBase {
   static const columnCreatedAt = "created_at";
   final createdAt = CvField<DateTime>(columnCreatedAt);
 
+  static const nextFlameCounterInSeconds = kDebugMode ? 60 : 60 * 60 * 24;
+
   static String getCreateTableString() {
     return """
       CREATE TABLE IF NOT EXISTS $tableName (
@@ -77,7 +80,9 @@ class DbContacts extends CvModelBase {
     return (await getUsers()).where((u) => u.accepted).toList();
   }
 
-  static Future checkAndUpdateFlames(int userId) async {
+  static Future checkAndUpdateFlames(int userId, {DateTime? timestamp}) async {
+    timestamp ??= DateTime.now();
+
     List<Map<String, dynamic>> result = await dbProvider.db!.query(
       tableName,
       columns: [
@@ -91,27 +96,31 @@ class DbContacts extends CvModelBase {
 
     if (result.isNotEmpty) {
       String lastUpdateString = result.first[columnLastUpdateOfFlameCounter];
-      DateTime? lastUpdate = DateTime.tryParse(lastUpdateString);
+      DateTime lastUpdate = DateTime.tryParse(lastUpdateString)!;
 
-      int currentCount = result.first.cast()[columnFlameCounter];
-      int totalMediaCounter = result.first.cast()[columnTotalMediaCounter];
-      if (lastUpdate != null &&
-          lastUpdate.isAfter(DateTime.now().subtract(Duration(hours: 24)))) {
-        _updateFlameCounter(userId, currentCount,
-            totalMediaCounter: totalMediaCounter + 1); // just update the time
-      } else {
-        _updateFlameCounter(userId, (currentCount + 1),
-            totalMediaCounter: totalMediaCounter + 1);
+      if (timestamp.isAfter(lastUpdate)) {
+        int currentCount = result.first.cast()[columnFlameCounter];
+        int totalMediaCounter = result.first.cast()[columnTotalMediaCounter];
+        if (lastUpdate.isAfter(DateTime.now()
+            .subtract(Duration(seconds: nextFlameCounterInSeconds)))) {
+          _updateFlameCounter(userId, currentCount,
+              totalMediaCounter: totalMediaCounter + 1,
+              timestamp: timestamp); // just update the time
+        } else {
+          _updateFlameCounter(userId, (currentCount + 1),
+              totalMediaCounter: totalMediaCounter + 1, timestamp: timestamp);
+        }
       }
     }
     globalCallBackOnContactChange();
   }
 
   static Future _updateFlameCounter(int userId, int newCount,
-      {int? totalMediaCounter}) async {
+      {DateTime? timestamp, int? totalMediaCounter}) async {
+    timestamp ??= DateTime.now();
     Map<String, dynamic> valuesToUpdate = {
       columnFlameCounter: newCount,
-      columnLastUpdateOfFlameCounter: DateTime.now().toIso8601String()
+      columnLastUpdateOfFlameCounter: timestamp.toIso8601String()
     };
     if (totalMediaCounter != null) {
       valuesToUpdate[columnTotalMediaCounter] = totalMediaCounter;
@@ -149,10 +158,11 @@ class DbContacts extends CvModelBase {
 
         int flameCounter = users.cast()[i][columnFlameCounter];
 
-        if (lastUpdate.isBefore(DateTime.now().subtract(Duration(days: 2)))) {
-          _updateFlameCounter(userId, 0);
-          flameCounter = 0;
-        }
+        // if (lastUpdate.isBefore(DateTime.now()
+        //     .subtract(Duration(seconds: nextFlameCounterInSeconds * 2)))) {
+        //   _updateFlameCounter(userId, 0);
+        //   flameCounter = 0;
+        // }
 
         parsedUsers.add(
           Contact(

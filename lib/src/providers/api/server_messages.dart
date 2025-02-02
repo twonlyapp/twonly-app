@@ -148,7 +148,8 @@ Future<client.Response> handleNewMessage(
 
           if (message.kind == MessageKind.video ||
               message.kind == MessageKind.image) {
-            await DbContacts.checkAndUpdateFlames(fromUserId.toInt());
+            await DbContacts.checkAndUpdateFlames(fromUserId.toInt(),
+                timestamp: message.timestamp);
 
             dynamic content = message.content!;
             List<int> downloadToken = content.downloadToken;

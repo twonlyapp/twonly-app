@@ -94,9 +94,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                         reverseTransitionDuration: Duration.zero,
                       ),
                     );
-                    setState(() {
-                      sharePreviewIsShown = false;
-                    });
+                    if (context.mounted) {
+                      setState(() {
+                        sharePreviewIsShown = false;
+                      });
+                    }
                   },
                   multiple: (multiple) {
                     multiple.fileBySensor.forEach((key, value) {
