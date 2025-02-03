@@ -150,6 +150,7 @@ class _TextViewState extends State<TextLayer> {
                 },
                 child: ActionButton(
                   FontAwesomeIcons.trashCan,
+                  tooltipText: "",
                   color: deleteLayer ? Colors.red : Colors.white,
                 ),
               ),

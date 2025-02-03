@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/components/headline.dart';
@@ -77,7 +77,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.searchUsernameTitle),
+        title: Text(context.lang.searchUsernameTitle),
       ),
       body: Padding(
         padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
@@ -90,8 +90,8 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                   _addNewUser(context);
                 },
                 controller: searchUserName,
-                decoration: getInputDecoration(
-                    AppLocalizations.of(context)!.searchUsernameInput),
+                decoration:
+                    getInputDecoration(context.lang.searchUsernameInput),
               ),
             ),
             const SizedBox(height: 20),
@@ -101,8 +101,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                 showAlertDialog(context, "Coming soon",
                     "This feature is not yet implemented!");
               },
-              label:
-                  Text(AppLocalizations.of(context)!.searchUsernameQrCodeBtn),
+              label: Text(context.lang.searchUsernameQrCodeBtn),
             ),
             SizedBox(height: 30),
             if (context
@@ -110,8 +109,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                 .allContacts
                 .where((contact) => !contact.accepted)
                 .isNotEmpty)
-              HeadLineComponent(
-                  AppLocalizations.of(context)!.searchUsernameNewFollowerTitle),
+              HeadLineComponent(context.lang.searchUsernameNewFollowerTitle),
             Expanded(
               child: ContactsListView(),
             )

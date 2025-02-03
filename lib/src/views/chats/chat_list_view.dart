@@ -17,7 +17,6 @@ import 'package:twonly/src/views/home_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/views/profile_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ChatItem {
@@ -86,7 +85,10 @@ class _ChatListViewState extends State<ChatListView> {
         // title:
         actions: [
           NotificationBadge(
-            count: context.watch<ContactChangeProvider>().newContactRequests,
+            count: context
+                .watch<ContactChangeProvider>()
+                .newContactRequests
+                .toString(),
             child: IconButton(
               icon: FaIcon(FontAwesomeIcons.userPlus, size: 18),
               onPressed: () {
@@ -131,10 +133,8 @@ class _ChatListViewState extends State<ChatListView> {
                           : globalUpdateOfHomeViewPageIndex(1);
                     },
                     label: Text((activeUsers.isEmpty)
-                        ? AppLocalizations.of(context)!
-                            .chatListViewSearchUserNameBtn
-                        : AppLocalizations.of(context)!
-                            .chatListViewSendFirstTwonly)),
+                        ? context.lang.chatListViewSearchUserNameBtn
+                        : context.lang.chatListViewSendFirstTwonly)),
               ),
             )
           : ListView.builder(

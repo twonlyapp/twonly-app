@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
+import 'package:twonly/src/components/notification_badge.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'dart:async';
@@ -27,6 +27,8 @@ class ShareImageEditorView extends StatefulWidget {
 class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _imageSaved = false;
   bool _imageSaving = false;
+  bool _isRealTwonly = false;
+  int _maxShowTime = 18;
 
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
@@ -51,26 +53,31 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       return [];
     }
     return <Widget>[
-      BottomButton(
-        icon: FontAwesomeIcons.font,
-        onTap: () async {
+      ActionButton(
+        FontAwesomeIcons.font,
+        tooltipText: context.lang.addTextItem,
+        onPressed: () async {
           undoLayers.clear();
           removedLayers.clear();
           layers.add(TextLayerData());
           setState(() {});
         },
       ),
-      BottomButton(
-        icon: FontAwesomeIcons.pencil,
-        onTap: () async {
+      const SizedBox(height: 8),
+      ActionButton(
+        FontAwesomeIcons.pencil,
+        tooltipText: context.lang.addDrawing,
+        onPressed: () async {
           undoLayers.clear();
           removedLayers.clear();
           layers.add(DrawLayerData());
         },
       ),
-      BottomButton(
-        icon: FontAwesomeIcons.faceGrinWide,
-        onTap: () async {
+      const SizedBox(height: 8),
+      ActionButton(
+        FontAwesomeIcons.faceGrinWide,
+        tooltipText: context.lang.addEmoji,
+        onPressed: () async {
           EmojiLayerData? layer = await showModalBottomSheet(
             context: context,
             backgroundColor: Colors.black,
@@ -78,14 +85,47 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               return const Emojis();
             },
           );
-
           if (layer == null) return;
-
           undoLayers.clear();
           removedLayers.clear();
           layers.add(layer);
-
           setState(() {});
+        },
+      ),
+      const SizedBox(height: 8),
+      NotificationBadge(
+        count: _maxShowTime == 999999 ? "∞" : _maxShowTime.toString(),
+        // count: "",
+        child: ActionButton(
+          FontAwesomeIcons.stopwatch,
+          tooltipText: context.lang.protectAsARealTwonly,
+          disable: _isRealTwonly,
+          onPressed: () async {
+            if (_maxShowTime == 999999) {
+              _maxShowTime = 4;
+            } else if (_maxShowTime >= 22) {
+              _maxShowTime = 999999;
+            } else {
+              _maxShowTime = _maxShowTime + 4;
+            }
+
+            // _maxShowTime =
+            // _isRealTwonly = !_isRealTwonly;
+          },
+        ),
+      ),
+      const SizedBox(height: 8),
+      ActionButton(
+        FontAwesomeIcons.shieldHeart,
+        tooltipText: context.lang.protectAsARealTwonly,
+        color: _isRealTwonly
+            ? Theme.of(context).colorScheme.primary
+            : Colors.white,
+        onPressed: () async {
+          _isRealTwonly = !_isRealTwonly;
+          if (_isRealTwonly) {
+            _maxShowTime = 12;
+          }
         },
       ),
     ];
@@ -100,6 +140,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     return [
       ActionButton(
         FontAwesomeIcons.xmark,
+        tooltipText: context.lang.close,
         onPressed: () async {
           Navigator.pop(context);
         },
@@ -108,9 +149,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       const SizedBox(width: 8),
       ActionButton(
         FontAwesomeIcons.rotateLeft,
-        color: layers.length > 1 || removedLayers.isNotEmpty
-            ? Colors.white
-            : Colors.grey,
+        tooltipText: context.lang.undo,
+        disable: layers.length <= 1 && removedLayers.isEmpty,
         onPressed: () {
           if (removedLayers.isNotEmpty) {
             layers.add(removedLayers.removeLast());
@@ -126,7 +166,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       const SizedBox(width: 8),
       ActionButton(
         FontAwesomeIcons.rotateRight,
-        color: undoLayers.isNotEmpty ? Colors.white : Colors.grey,
+        tooltipText: context.lang.redo,
+        disable: undoLayers.isEmpty,
         onPressed: () {
           if (undoLayers.isEmpty) return;
           layers.add(undoLayers.removeLast());
@@ -211,7 +252,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             ),
           ),
           Positioned(
-            right: 0,
+            right: 6,
             top: 100,
             child: Container(
               alignment: Alignment.bottomCenter,
@@ -266,10 +307,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     }
                   },
                   label: Text(_imageSaved
-                      ? AppLocalizations.of(context)!
-                          .shareImagedEditorSavedImage
-                      : AppLocalizations.of(context)!
-                          .shareImagedEditorSaveImage),
+                      ? context.lang.shareImagedEditorSavedImage
+                      : context.lang.shareImagedEditorSaveImage),
                 ),
                 const SizedBox(width: 20),
                 FilledButton.icon(
@@ -280,8 +319,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              ShareImageView(imageBytes: imageBytes)),
+                        builder: (context) => ShareImageView(
+                          imageBytes: imageBytes,
+                          isRealTwonly: _isRealTwonly,
+                          maxShowTime: _maxShowTime,
+                        ),
+                      ),
                     );
                   },
                   style: ButtonStyle(
@@ -290,7 +333,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     ),
                   ),
                   label: Text(
-                    AppLocalizations.of(context)!.shareImagedEditorShareWith,
+                    context.lang.shareImagedEditorShareWith,
                     style: TextStyle(fontSize: 17),
                   ),
                 ),
@@ -302,57 +345,3 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     );
   }
 }
-
-/// Button used in bottomNavigationBar in ImageEditor
-class BottomButton extends StatelessWidget {
-  final VoidCallback? onTap, onLongPress;
-  final IconData icon;
-  final Color color;
-
-  const BottomButton({
-    super.key,
-    this.onTap,
-    this.color = Colors.white,
-    this.onLongPress,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Column(
-          children: [
-            ActionButton(
-              icon,
-              color: color,
-              onPressed: onTap ?? () {},
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// /// Show image drawing surface over image
-// class ImageEditorDrawing extends StatefulWidget {
-//   final ImageItem image;
-
-//   const ImageEditorDrawing({
-//     super.key,
-//     required this.image,
-//   });
-
-//   @override
-//   State<ImageEditorDrawing> createState() => _ImageEditorDrawingState();
-// }
-
-// class _ImageEditorDrawingState extends State<ImageEditorDrawing> {
-
-//   }
-// }

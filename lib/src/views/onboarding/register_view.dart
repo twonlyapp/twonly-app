@@ -3,7 +3,6 @@ import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:twonly/src/model/json/user_data.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/signal.dart';
@@ -75,14 +74,14 @@ class _RegisterViewState extends State<RegisterView> {
               children: [
                 const SizedBox(height: 50),
                 Text(
-                  AppLocalizations.of(context)!.registerTitle,
+                  context.lang.registerTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 30),
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 30),
                   child: Text(
-                    AppLocalizations.of(context)!.registerSlogan,
+                    context.lang.registerSlogan,
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12),
                   ),
@@ -92,7 +91,7 @@ class _RegisterViewState extends State<RegisterView> {
                   child: Padding(
                     padding: EdgeInsets.only(left: 10, right: 10),
                     child: Text(
-                      AppLocalizations.of(context)!.registerUsernameSlogan,
+                      context.lang.registerUsernameSlogan,
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 15),
                     ),
@@ -107,7 +106,7 @@ class _RegisterViewState extends State<RegisterView> {
                   ],
                   style: TextStyle(fontSize: 17),
                   decoration: getInputDecoration(
-                    AppLocalizations.of(context)!.registerUsernameDecoration,
+                    context.lang.registerUsernameDecoration,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -115,7 +114,7 @@ class _RegisterViewState extends State<RegisterView> {
                   child: Padding(
                     padding: EdgeInsets.only(left: 10, right: 10),
                     child: Text(
-                      AppLocalizations.of(context)!.registerUsernameLimits,
+                      context.lang.registerUsernameLimits,
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 7),
                     ),
@@ -166,7 +165,7 @@ class _RegisterViewState extends State<RegisterView> {
                                 Colors.grey)
                             : null),
                     label: Text(
-                      AppLocalizations.of(context)!.registerSubmitButton,
+                      context.lang.registerSubmitButton,
                       style: TextStyle(fontSize: 17),
                     ),
                   ),

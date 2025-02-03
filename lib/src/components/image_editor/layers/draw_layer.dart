@@ -4,6 +4,7 @@ import 'package:hand_signature/signature.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/image_editor/data/layer.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class DrawLayer extends StatefulWidget {
   final DrawLayerData layerData;
@@ -106,6 +107,7 @@ class _DrawLayerState extends State<DrawLayer> {
               children: [
                 ActionButton(
                   FontAwesomeIcons.check,
+                  tooltipText: context.lang.imageEditorDrawOk,
                   onPressed: () async {
                     widget.layerData.isEditing = false;
                   },
@@ -113,6 +115,7 @@ class _DrawLayerState extends State<DrawLayer> {
                 Expanded(child: Container()),
                 ActionButton(
                   FontAwesomeIcons.arrowRotateLeft,
+                  tooltipText: context.lang.undo,
                   color: widget.layerData.control.paths.isNotEmpty
                       ? Colors.white
                       : Colors.white.withAlpha(80),
@@ -125,6 +128,7 @@ class _DrawLayerState extends State<DrawLayer> {
                   },
                 ),
                 ActionButton(
+                  tooltipText: context.lang.redo,
                   FontAwesomeIcons.arrowRotateRight,
                   color: undoList.isNotEmpty
                       ? Colors.white

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/components/permissions_view.dart';
@@ -176,6 +177,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               children: <Widget>[
                                 ActionButton(
                                   FontAwesomeIcons.repeat,
+                                  tooltipText:
+                                      context.lang.switchFrontAndBackCamera,
                                   onPressed: () async {
                                     cameraState.switchCameraSensor(
                                         aspectRatio:
@@ -185,6 +188,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                 // SizedBox(height: 20),
                                 ActionButton(
                                   FontAwesomeIcons.bolt,
+                                  tooltipText: context.lang.toogleFlashLight,
                                   color: isFlashOn
                                       ? const Color.fromARGB(255, 255, 230, 0)
                                       : const Color.fromARGB(

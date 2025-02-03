@@ -2,7 +2,6 @@ import 'dart:collection';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/best_friends_selector.dart';
 import 'package:twonly/src/components/flame.dart';
@@ -14,8 +13,14 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
 
 class ShareImageView extends StatefulWidget {
-  const ShareImageView({super.key, required this.imageBytes});
+  const ShareImageView(
+      {super.key,
+      required this.imageBytes,
+      required this.isRealTwonly,
+      required this.maxShowTime});
   final Uint8List imageBytes;
+  final bool isRealTwonly;
+  final int maxShowTime;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -92,11 +97,22 @@ class _ShareImageView extends State<ShareImageView> {
     _updateUsers(usersFiltered);
   }
 
+  void updateStatus(Int64 userId, bool checked) {
+    if (checked) {
+      if (widget.isRealTwonly) {
+        _selectedUserIds.clear();
+      }
+      _selectedUserIds.add(userId);
+    } else {
+      _selectedUserIds.remove(userId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.shareImageTitle),
+        title: Text(context.lang.shareImageTitle),
       ),
       body: Padding(
         padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
@@ -106,30 +122,24 @@ class _ShareImageView extends State<ShareImageView> {
                 padding: EdgeInsets.symmetric(horizontal: 10),
                 child: TextField(
                     onChanged: _filterUsers,
-                    decoration: getInputDecoration(context,
-                        AppLocalizations.of(context)!.searchUsernameInput))),
+                    decoration: getInputDecoration(
+                        context, context.lang.searchUsernameInput))),
             const SizedBox(height: 10),
             BestFriendsSelector(
               users: _bestFriends,
               selectedUserIds: _selectedUserIds,
               maxTotalMediaCounter: maxTotalMediaCounter,
-              updateStatus: (userId, checked) {
-                if (checked) {
-                  _selectedUserIds.add(userId);
-                } else {
-                  _selectedUserIds.remove(userId);
-                }
-              },
+              updateStatus: updateStatus,
             ),
             const SizedBox(height: 10),
             if (_otherUsers.isNotEmpty)
-              HeadLineComponent(
-                  AppLocalizations.of(context)!.shareImageAllUsers),
+              HeadLineComponent(context.lang.shareImageAllUsers),
             Expanded(
               child: UserList(
                 List.from(_otherUsers),
                 maxTotalMediaCounter,
                 selectedUserIds: _selectedUserIds,
+                updateStatus: updateStatus,
               ),
             )
           ],
@@ -145,7 +155,12 @@ class _ShareImageView extends State<ShareImageView> {
               FilledButton.icon(
                 icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
                 onPressed: () async {
-                  sendImage(_selectedUserIds.toList(), widget.imageBytes);
+                  sendImage(
+                    _selectedUserIds.toList(),
+                    widget.imageBytes,
+                    widget.isRealTwonly,
+                    widget.maxShowTime,
+                  );
 
                   // TODO: pop back to the HomeView page popUntil did not work. check later how to improve in case of pushing more then 2
                   Navigator.pop(context);
@@ -158,7 +173,7 @@ class _ShareImageView extends State<ShareImageView> {
                   ),
                 ),
                 label: Text(
-                  AppLocalizations.of(context)!.shareImagedEditorSendImage,
+                  context.lang.shareImagedEditorSendImage,
                   style: TextStyle(fontSize: 17),
                 ),
               ),
@@ -172,7 +187,8 @@ class _ShareImageView extends State<ShareImageView> {
 
 class UserList extends StatelessWidget {
   const UserList(this.users, this.maxTotalMediaCounter,
-      {super.key, required this.selectedUserIds});
+      {super.key, required this.selectedUserIds, required this.updateStatus});
+  final Function(Int64, bool) updateStatus;
   final List<Contact> users;
   final int maxTotalMediaCounter;
   final HashSet<Int64> selectedUserIds;
@@ -201,19 +217,11 @@ class UserList extends StatelessWidget {
             value: selectedUserIds.contains(user.userId),
             onChanged: (bool? value) {
               if (value == null) return;
-              if (value) {
-                selectedUserIds.add(user.userId);
-              } else {
-                selectedUserIds.remove(user.userId);
-              }
+              updateStatus(user.userId, value);
             },
           ),
           onTap: () {
-            if (!selectedUserIds.contains(user.userId)) {
-              selectedUserIds.add(user.userId);
-            } else {
-              selectedUserIds.remove(user.userId);
-            }
+            updateStatus(user.userId, !selectedUserIds.contains(user.userId));
           },
         );
       },

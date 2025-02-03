@@ -10,7 +10,7 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class ChatListEntry extends StatelessWidget {
   const ChatListEntry(this.message, this.user, this.lastMessageFromSameUser,
@@ -188,8 +188,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!
-            .chatListDetailTitle(widget.user.displayName)),
+        title: Text(context.lang.chatListDetailTitle(widget.user.displayName)),
       ),
       body: Column(
         children: [
@@ -226,8 +225,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                       _sendMessage();
                     },
                     decoration: InputDecoration(
-                        hintText:
-                            AppLocalizations.of(context)!.chatListDetailInput,
+                        hintText: context.lang.chatListDetailInput,
                         contentPadding: EdgeInsets.symmetric(horizontal: 10)
                         // border: OutlineInputBorder(),
                         ),

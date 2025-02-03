@@ -1,7 +1,7 @@
 import 'dart:collection';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
@@ -29,7 +29,7 @@ class BestFriendsSelector extends StatelessWidget {
 
     return Column(
       children: [
-        HeadLineComponent(AppLocalizations.of(context)!.shareImageBestFriends),
+        HeadLineComponent(context.lang.shareImageBestFriends),
         Column(
           spacing: 8,
           children: List.generate(

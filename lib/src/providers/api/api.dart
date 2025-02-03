@@ -154,7 +154,8 @@ Future encryptAndUploadMediaFile(Int64 target, Uint8List imageBytes) async {
   await uploadMediaFile(messageId, target, encryptBytes);
 }
 
-Future sendImage(List<Int64> userIds, Uint8List imageBytes) async {
+Future sendImage(List<Int64> userIds, Uint8List imageBytes, bool isRealTwonly,
+    int maxShowTime) async {
   // 1. set notifier provider
 
   Uint8List? imageBytesCompressed = await getCompressedImage(imageBytes);

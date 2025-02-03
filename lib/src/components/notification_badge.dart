@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class NotificationBadge extends StatelessWidget {
-  final int count;
+  final String count;
   final Widget child;
 
   const NotificationBadge(
@@ -9,25 +9,29 @@ class NotificationBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (count == 0) return child;
+    if (count == "0") return child;
+    bool infinity = count == "∞";
     return Stack(
       children: [
         child,
         Positioned(
-          right: 5,
+          right: 3,
           top: 0,
-          child: Container(
-            padding: EdgeInsets.all(5.0), // Add some padding
-            decoration: BoxDecoration(
-              color: Colors.red, // Background color
-              shape: BoxShape.circle, // Make it circular
-            ),
-            child: Center(
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  color: Colors.white, // Text color
-                  fontSize: 10,
+          child: SizedBox(
+            height: 18,
+            width: 18,
+            child: CircleAvatar(
+              backgroundColor: Colors.red,
+              child: Center(
+                child: Transform.rotate(
+                  angle: infinity ? 90 * (3.141592653589793 / 180) : 0,
+                  child: Text(
+                    infinity ? "8" : count,
+                    style: TextStyle(
+                      color: Colors.white, // Text color
+                      fontSize: 10,
+                    ),
+                  ),
                 ),
               ),
             ),

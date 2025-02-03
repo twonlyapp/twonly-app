@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 enum MessageSendState {
   received,
@@ -44,29 +44,29 @@ class MessageSendStateIcon extends StatelessWidget {
     switch (message.getSendState()) {
       case MessageSendState.receivedOpened:
         icon = Icon(Icons.crop_square, size: 14, color: color);
-        text = AppLocalizations.of(context)!.messageSendState_Received;
+        text = context.lang.messageSendState_Received;
         break;
       case MessageSendState.sendOpened:
         icon = FaIcon(FontAwesomeIcons.paperPlane, size: 12, color: color);
-        text = AppLocalizations.of(context)!.messageSendState_Opened;
+        text = context.lang.messageSendState_Opened;
         break;
       case MessageSendState.received:
         icon = Icon(Icons.square_rounded, size: 14, color: color);
-        text = AppLocalizations.of(context)!.messageSendState_Received;
+        text = context.lang.messageSendState_Received;
         break;
       case MessageSendState.send:
         icon = FaIcon(FontAwesomeIcons.solidPaperPlane, size: 12, color: color);
-        text = AppLocalizations.of(context)!.messageSendState_Send;
+        text = context.lang.messageSendState_Send;
         break;
       case MessageSendState.sending:
       case MessageSendState.receiving:
         icon = loaderIcon;
-        text = AppLocalizations.of(context)!.messageSendState_Sending;
+        text = context.lang.messageSendState_Sending;
         break;
     }
 
     if (!message.isDownloaded) {
-      text = AppLocalizations.of(context)!.messageSendState_TapToLoad;
+      text = context.lang.messageSendState_TapToLoad;
     }
 
     bool isDownloading = false;
@@ -78,7 +78,7 @@ class MessageSendStateIcon extends StatelessWidget {
     }
 
     if (isDownloading) {
-      text = AppLocalizations.of(context)!.messageSendState_Loading;
+      text = context.lang.messageSendState_Loading;
       icon = loaderIcon;
     }
 
