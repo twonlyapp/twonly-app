@@ -63,26 +63,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       BottomButton(
         icon: FontAwesomeIcons.pencil,
         onTap: () async {
-          // var drawing = await Navigator.push(
-          //   context,
-          //   PageRouteBuilder(
-          //     opaque: false,
-          //     pageBuilder: (context, a, b) => ImageEditorDrawing(
-          //       image: currentImage,
-          //     ),
-          //     transitionDuration: Duration.zero,
-          //     reverseTransitionDuration: Duration.zero,
-          //   ),
-          // );
-
-          // if (drawing != null) {
           undoLayers.clear();
           removedLayers.clear();
-
           layers.add(DrawLayerData());
-
-          //   setState(() {});
-          // }
         },
       ),
       BottomButton(
@@ -156,7 +139,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   double widthRatio = 1, heightRatio = 1, pixelRatio = 1;
 
-  /// obtain image Uint8List by merging layers
   Future<Uint8List?> getMergedImage() async {
     Uint8List? image;
 
@@ -165,8 +147,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     } else if (layers.length == 1) {
       if (layers.first is BackgroundLayerData) {
         image = (layers.first as BackgroundLayerData).image.bytes;
-      } else if (layers.first is ImageLayerData) {
-        image = (layers.first as ImageLayerData).image.bytes;
       }
     }
     return image;

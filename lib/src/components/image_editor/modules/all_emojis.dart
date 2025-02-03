@@ -32,13 +32,6 @@ class _EmojisState extends State<Emojis> {
         child: Column(
           children: [
             const SizedBox(height: 16),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text(
-                ('Select Emoji'),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ]),
-            const SizedBox(height: 16),
             Container(
               height: 315,
               padding: const EdgeInsets.all(0.0),

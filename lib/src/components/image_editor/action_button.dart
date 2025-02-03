@@ -14,7 +14,7 @@ class ActionButton extends StatelessWidget {
       icon: FaIcon(
         icon,
         size: 30,
-        color: color,
+        color: color ?? Colors.white,
         shadows: [
           Shadow(
             color: const Color.fromARGB(122, 0, 0, 0),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/components/permissions_view.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_editor_view.dart';
@@ -173,22 +174,22 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
-                                BottomButton(
-                                  icon: FontAwesomeIcons.repeat,
-                                  onTap: () async {
+                                ActionButton(
+                                  FontAwesomeIcons.repeat,
+                                  onPressed: () async {
                                     cameraState.switchCameraSensor(
                                         aspectRatio:
                                             CameraAspectRatios.ratio_16_9);
                                   },
                                 ),
-                                SizedBox(height: 20),
-                                BottomButton(
-                                  icon: FontAwesomeIcons.bolt,
+                                // SizedBox(height: 20),
+                                ActionButton(
+                                  FontAwesomeIcons.bolt,
                                   color: isFlashOn
                                       ? const Color.fromARGB(255, 255, 230, 0)
                                       : const Color.fromARGB(
                                           158, 255, 255, 255),
-                                  onTap: () async {
+                                  onPressed: () async {
                                     if (isFlashOn) {
                                       cameraState.sensorConfig
                                           .setFlashMode(FlashMode.none);

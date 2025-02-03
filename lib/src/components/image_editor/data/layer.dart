@@ -46,22 +46,6 @@ class EmojiLayerData extends Layer {
   });
 }
 
-/// Attributes used by [ImageLayer]
-class ImageLayerData extends Layer {
-  ImageItem image;
-  double size;
-
-  ImageLayerData({
-    required this.image,
-    this.size = 64,
-    super.offset,
-    super.opacity,
-    super.rotation,
-    super.scale,
-    super.isEditing,
-  });
-}
-
 /// Attributes used by [TextLayer]
 class TextLayerData extends Layer {
   String text;
