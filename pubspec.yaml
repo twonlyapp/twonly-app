@@ -11,6 +11,8 @@ environment:
 
 dependencies:
   camerawesome: ^2.1.0
+  # camerawesome: 
+  #   path: ../CamerAwesome
   collection: ^1.18.0
   connectivity_plus: ^6.1.2
   cv: ^1.1.3

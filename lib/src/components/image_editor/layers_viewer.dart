@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/components/image_editor/data/layer.dart';
 import 'package:twonly/src/components/image_editor/layers/background_layer.dart';
+import 'package:twonly/src/components/image_editor/layers/draw_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/emoji_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/image_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/text_layer.dart';
@@ -20,42 +21,53 @@ class LayersViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       alignment: Alignment.center,
-      children: layers.map((layerItem) {
-        // Background layer
-        if (layerItem is BackgroundLayerData) {
-          return BackgroundLayer(
+      children: [
+        // Background and Image layers at the bottom
+        ...layers
+            .where((layerItem) =>
+                layerItem is BackgroundLayerData || layerItem is ImageLayerData)
+            .map((layerItem) {
+          if (layerItem is BackgroundLayerData) {
+            return BackgroundLayer(
+              layerData: layerItem,
+              onUpdate: onUpdate,
+            );
+          } else if (layerItem is ImageLayerData) {
+            return ImageLayer(
+              layerData: layerItem,
+              onUpdate: onUpdate,
+            );
+          }
+          return Container(); // Fallback, should not reach here
+        }),
+
+        // Draw layer (if needed, can be placed anywhere)
+        ...layers.whereType<DrawLayerData>().map((layerItem) {
+          return DrawLayer(
             layerData: layerItem,
             onUpdate: onUpdate,
           );
-        }
+        }),
 
-        // Image layer
-        if (layerItem is ImageLayerData) {
-          return ImageLayer(
-            layerData: layerItem,
-            onUpdate: onUpdate,
-          );
-        }
-
-        // Emoji layer
-        if (layerItem is EmojiLayerData) {
-          return EmojiLayer(
-            layerData: layerItem,
-            onUpdate: onUpdate,
-          );
-        }
-
-        // Text layer
-        if (layerItem is TextLayerData) {
-          return TextLayer(
-            layerData: layerItem,
-            onUpdate: onUpdate,
-          );
-        }
-
-        // Blank layer
-        return Container();
-      }).toList(),
+        // Emoji and Text layers at the top
+        ...layers
+            .where((layerItem) =>
+                layerItem is EmojiLayerData || layerItem is TextLayerData)
+            .map((layerItem) {
+          if (layerItem is EmojiLayerData) {
+            return EmojiLayer(
+              layerData: layerItem,
+              onUpdate: onUpdate,
+            );
+          } else if (layerItem is TextLayerData) {
+            return TextLayer(
+              layerData: layerItem,
+              onUpdate: onUpdate,
+            );
+          }
+          return Container(); // Fallback, should not reach here
+        }),
+      ],
     );
   }
 }
