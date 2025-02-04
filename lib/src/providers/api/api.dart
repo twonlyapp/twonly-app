@@ -152,10 +152,10 @@ Future uploadMediaFile(
       kind: MessageKind.image,
       messageId: messageId,
       content: MediaMessageContent(
-        downloadToken: uploadToken,
-        maxShowTime: maxShowTime,
-        isRealTwonly: isRealTwonly,
-      ),
+          downloadToken: uploadToken,
+          maxShowTime: maxShowTime,
+          isRealTwonly: isRealTwonly,
+          isVideo: false),
       timestamp: DateTime.now(),
     ),
   );
@@ -171,10 +171,10 @@ Future encryptAndUploadMediaFile(
       target.toInt(),
       MessageKind.image,
       MediaMessageContent(
-        downloadToken: [],
-        maxShowTime: maxShowTime,
-        isRealTwonly: isRealTwonly,
-      ));
+          downloadToken: [],
+          maxShowTime: maxShowTime,
+          isRealTwonly: isRealTwonly,
+          isVideo: false));
   // isRealTwonly,
   if (messageId == null) return;
 
@@ -252,11 +252,13 @@ Future<Uint8List?> getDownloadedMedia(
     List<int> mediaToken, int messageOtherId) async {
   final box = await getMediaStorage();
   Uint8List? media = box.get("${mediaToken}_downloaded");
-  int fromUserId = box.get("${mediaToken}_fromUserId");
-  await userOpenedOtherMessage(fromUserId, messageOtherId);
+
+  // int fromUserId = box.get("${mediaToken}_fromUserId");
+  // await userOpenedOtherMessage(fromUserId, messageOtherId);
   // box.delete(mediaToken.toString());
   // box.put("${mediaToken}_downloaded", "deleted");
   // box.delete("${mediaToken}_fromUserId");
+
   return media;
 }
 

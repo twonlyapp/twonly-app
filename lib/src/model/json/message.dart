@@ -23,16 +23,6 @@ extension MessageKindExtension on MessageKind {
   static MessageKind fromIndex(int index) {
     return MessageKind.values[index];
   }
-
-  Color getColor(Color primary) {
-    Color color = primary;
-    if (this == MessageKind.textMessage) {
-      color = Colors.lightBlue;
-    } else if (this == MessageKind.video) {
-      color = Colors.deepPurple;
-    }
-    return color;
-  }
 }
 
 // TODO: use message as base class, remove kind and flatten content
@@ -72,6 +62,29 @@ class Message {
 class MessageContent {
   MessageContent();
 
+  Color getColor(Color primary) {
+    Color color;
+    if (this is TextMessageContent) {
+      color = Colors.lightBlue;
+    } else {
+      final content = this;
+      if (content is MediaMessageContent) {
+        if (content.isRealTwonly) {
+          color = primary;
+        } else {
+          if (content.isVideo) {
+            color = Colors.deepPurple;
+          } else {
+            color = const Color.fromARGB(255, 214, 47, 47);
+          }
+        }
+      } else {
+        return Colors.black; // this should not happen
+      }
+    }
+    return color;
+  }
+
   static MessageContent fromJson(Map json) {
     switch (json['type']) {
       case 'MediaMessageContent':
@@ -92,10 +105,12 @@ class MediaMessageContent extends MessageContent {
   final List<int> downloadToken;
   final int maxShowTime;
   final bool isRealTwonly;
+  final bool isVideo;
   MediaMessageContent({
     required this.downloadToken,
     required this.maxShowTime,
     required this.isRealTwonly,
+    required this.isVideo,
   });
 
   static MediaMessageContent fromJson(Map json) {
@@ -103,6 +118,7 @@ class MediaMessageContent extends MessageContent {
       downloadToken: List<int>.from(json['downloadToken']),
       maxShowTime: json['maxShowTime'],
       isRealTwonly: json['isRealTwonly'],
+      isVideo: json['isVideo'] ?? false,
     );
   }
 

@@ -48,6 +48,8 @@
 	<key>NSCameraUsageDescription</key>
 	<string>To create photos that can be shared.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Explanation on why the microphone access is needed.</string>
+	<string>To create videos that can be securely shared.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>To protect others twonlies!</string>
 </dict>
 </plist>

@@ -28,7 +28,7 @@ class MessageSendStateIcon extends StatelessWidget {
     String text = "";
 
     Color color =
-        message.messageKind.getColor(Theme.of(context).colorScheme.primary);
+        message.messageContent.getColor(Theme.of(context).colorScheme.primary);
 
     Widget loaderIcon = Row(
       children: [

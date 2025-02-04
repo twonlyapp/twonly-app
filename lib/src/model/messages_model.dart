@@ -27,7 +27,7 @@ class DbMessage {
   int? messageOtherId;
   int otherUserId;
   MessageKind messageKind;
-  MessageContent? messageContent;
+  MessageContent messageContent;
   DateTime? messageOpenedAt;
   bool messageAcknowledgeByUser;
   bool isDownloaded;

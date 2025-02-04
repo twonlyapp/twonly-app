@@ -67,8 +67,8 @@ class ChatListEntry extends StatelessWidget {
         }
         break;
       case MessageKind.image:
-        Color color =
-            message.messageKind.getColor(Theme.of(context).colorScheme.primary);
+        Color color = message.messageContent
+            .getColor(Theme.of(context).colorScheme.primary);
         child = GestureDetector(
           onTap: () {
             if (state == MessageSendState.received && !isDownloading) {
