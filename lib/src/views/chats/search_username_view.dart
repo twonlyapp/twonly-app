@@ -45,6 +45,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
             Message(
               kind: MessageKind.contactRequest,
               timestamp: DateTime.now(),
+              content: MessageContent(),
             ),
           );
         }
@@ -179,6 +180,7 @@ class _ContactsListViewState extends State<ContactsListView> {
                         Message(
                           kind: MessageKind.rejectRequest,
                           timestamp: DateTime.now(),
+                          content: MessageContent(),
                         ),
                       );
                     },
@@ -193,6 +195,7 @@ class _ContactsListViewState extends State<ContactsListView> {
                       Message(
                         kind: MessageKind.acceptRequest,
                         timestamp: DateTime.now(),
+                        content: MessageContent(),
                       ),
                     );
                   },

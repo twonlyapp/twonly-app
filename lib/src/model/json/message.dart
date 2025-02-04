@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:json_annotation/json_annotation.dart';
-import 'package:twonly/src/utils/json.dart';
-part 'message.g.dart';
 
 enum MessageKind {
   textMessage,
@@ -38,24 +35,17 @@ extension MessageKindExtension on MessageKind {
   }
 }
 
-// so _$MessageKindEnumMap gets generated
-@JsonSerializable()
-class _MessageKind {
-  MessageKind? kind;
-}
-
-@JsonSerializable()
+// TODO: use message as base class, remove kind and flatten content
 class Message {
-  @Int64Converter()
   final MessageKind kind;
-  final MessageContent? content;
+  final MessageContent content;
   final int? messageId;
   DateTime timestamp;
 
   Message(
       {required this.kind,
       this.messageId,
-      this.content,
+      required this.content,
       required this.timestamp});
 
   @override
@@ -63,19 +53,85 @@ class Message {
     return 'Message(kind: $kind, content: $content, timestamp: $timestamp)';
   }
 
-  factory Message.fromJson(Map<String, dynamic> json) =>
-      _$MessageFromJson(json);
-  Map<String, dynamic> toJson() => _$MessageToJson(this);
+  static Message fromJson(Map<String, dynamic> json) => Message(
+        kind: MessageKindExtension.fromString(json["kind"]),
+        messageId: (json['messageId'] as num?)?.toInt(),
+        content:
+            MessageContent.fromJson(json['content'] as Map<String, dynamic>),
+        timestamp: DateTime.parse(json['timestamp'] as String),
+      );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'kind': kind.name,
+        'content': content.toJson(),
+        'messageId': messageId,
+        'timestamp': timestamp.toIso8601String(),
+      };
 }
 
-@JsonSerializable()
 class MessageContent {
-  final String? text;
-  final List<int>? downloadToken;
+  MessageContent();
 
-  MessageContent({required this.text, required this.downloadToken});
+  static MessageContent fromJson(Map json) {
+    switch (json['type']) {
+      case 'MediaMessageContent':
+        return MediaMessageContent.fromJson(json);
+      case 'TextMessageContent':
+        return TextMessageContent.fromJson(json);
+      default:
+        return MessageContent();
+    }
+  }
 
-  factory MessageContent.fromJson(Map<String, dynamic> json) =>
-      _$MessageContentFromJson(json);
-  Map<String, dynamic> toJson() => _$MessageContentToJson(this);
+  Map toJson() {
+    return {};
+  }
+}
+
+class MediaMessageContent extends MessageContent {
+  final List<int> downloadToken;
+  final int maxShowTime;
+  final bool isRealTwonly;
+  MediaMessageContent({
+    required this.downloadToken,
+    required this.maxShowTime,
+    required this.isRealTwonly,
+  });
+
+  static MediaMessageContent fromJson(Map json) {
+    return MediaMessageContent(
+      downloadToken: List<int>.from(json['downloadToken']),
+      maxShowTime: json['maxShowTime'],
+      isRealTwonly: json['isRealTwonly'],
+    );
+  }
+
+  @override
+  Map toJson() {
+    return {
+      'type': 'MediaMessageContent',
+      'downloadToken': downloadToken,
+      'isRealTwonly': isRealTwonly,
+      'maxShowTime': maxShowTime,
+    };
+  }
+}
+
+class TextMessageContent extends MessageContent {
+  final String text;
+  TextMessageContent({required this.text});
+
+  static TextMessageContent fromJson(Map json) {
+    return TextMessageContent(
+      text: json['text'],
+    );
+  }
+
+  @override
+  Map toJson() {
+    return {
+      'type': 'TextMessageContent',
+      'text': text,
+    };
+  }
 }

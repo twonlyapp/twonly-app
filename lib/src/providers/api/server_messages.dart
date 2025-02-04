@@ -129,7 +129,7 @@ Future<client.Response> handleNewMessage(
           Logger("handleServerMessages")
               .shout("Got unknown MessageKind $message");
         } else {
-          String content = jsonEncode(message.content!.toJson());
+          String content = jsonEncode(message.content.toJson());
           int? messageId = await DbMessages.insertOtherMessage(
               fromUserId.toInt(), message.kind, message.messageId!, content);
 
@@ -142,6 +142,7 @@ Future<client.Response> handleNewMessage(
             Message(
               kind: MessageKind.ack,
               messageId: message.messageId!,
+              content: MessageContent(),
               timestamp: DateTime.now(),
             ),
           );
@@ -151,13 +152,13 @@ Future<client.Response> handleNewMessage(
             await DbContacts.checkAndUpdateFlames(fromUserId.toInt(),
                 timestamp: message.timestamp);
 
-            dynamic content = message.content!;
-            List<int> downloadToken = content.downloadToken;
-
-            Box box = await getMediaStorage();
-            box.put("${downloadToken}_fromUserId", fromUserId.toInt());
-
-            tryDownloadMedia(downloadToken);
+            final content = message.content;
+            if (content is MediaMessageContent) {
+              List<int> downloadToken = content.downloadToken;
+              Box box = await getMediaStorage();
+              box.put("${downloadToken}_fromUserId", fromUserId.toInt());
+              tryDownloadMedia(downloadToken);
+            }
           }
         }
     }

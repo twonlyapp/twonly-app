@@ -70,11 +70,10 @@ class MessageSendStateIcon extends StatelessWidget {
     }
 
     bool isDownloading = false;
-    if (message.messageContent != null &&
-        message.messageContent!.downloadToken != null) {
+    final content = message.messageContent;
+    if (message.messageReceived && content is MediaMessageContent) {
       final test = context.watch<DownloadChangeProvider>().currentlyDownloading;
-      isDownloading =
-          test.contains(message.messageContent!.downloadToken.toString());
+      isDownloading = test.contains(content.downloadToken.toString());
     }
 
     if (isDownloading) {

@@ -99,7 +99,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         child: ActionButton(
           FontAwesomeIcons.stopwatch,
           tooltipText: context.lang.protectAsARealTwonly,
-          disable: _isRealTwonly,
+          // disable: _isRealTwonly,
           onPressed: () async {
             if (_maxShowTime == 999999) {
               _maxShowTime = 4;
@@ -184,7 +184,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     Uint8List? image;
 
     if (layers.length > 1) {
+      for (var x in layers) {
+        x.showCustomButtons = false;
+      }
       image = await screenshotController.capture(pixelRatio: pixelRatio);
+      for (var x in layers) {
+        x.showCustomButtons = true;
+      }
     } else if (layers.length == 1) {
       if (layers.first is BackgroundLayerData) {
         image = (layers.first as BackgroundLayerData).image.bytes;
@@ -313,14 +319,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 const SizedBox(width: 20),
                 FilledButton.icon(
                   icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-                  onPressed: () async {
-                    Uint8List? imageBytes = await getMergedImage();
-                    if (imageBytes == null || !context.mounted) return;
+                  onPressed: () {
+                    Future<Uint8List?> imageBytes = getMergedImage();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ShareImageView(
-                          imageBytes: imageBytes,
+                          imageBytesFuture: imageBytes,
                           isRealTwonly: _isRealTwonly,
                           maxShowTime: _maxShowTime,
                         ),

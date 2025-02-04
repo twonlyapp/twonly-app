@@ -15,10 +15,10 @@ import 'package:twonly/src/views/home_view.dart';
 class ShareImageView extends StatefulWidget {
   const ShareImageView(
       {super.key,
-      required this.imageBytes,
+      required this.imageBytesFuture,
       required this.isRealTwonly,
       required this.maxShowTime});
-  final Uint8List imageBytes;
+  final Future<Uint8List?> imageBytesFuture;
   final bool isRealTwonly;
   final int maxShowTime;
 
@@ -31,21 +31,23 @@ class _ShareImageView extends State<ShareImageView> {
   List<Contact> _otherUsers = [];
   List<Contact> _bestFriends = [];
   int maxTotalMediaCounter = 0;
+  Uint8List? imageBytes;
   final HashSet<Int64> _selectedUserIds = HashSet<Int64>();
   final TextEditingController searchUserName = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadUsers();
+    _loadAsync();
   }
 
-  Future<void> _loadUsers() async {
+  Future<void> _loadAsync() async {
     final users = await DbContacts.getActiveUsers();
     setState(() {
       _users = users;
       _updateUsers(_users);
     });
+    imageBytes = await widget.imageBytesFuture;
   }
 
   Future _updateUsers(List<Contact> users) async {
@@ -153,11 +155,23 @@ class _ShareImageView extends State<ShareImageView> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FilledButton.icon(
-                icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                icon: imageBytes == null
+                    ? SizedBox(
+                        height: 12,
+                        width: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                        ),
+                      )
+                    : FaIcon(FontAwesomeIcons.solidPaperPlane),
                 onPressed: () async {
+                  if (imageBytes == null || _selectedUserIds.isEmpty) {
+                    return;
+                  }
                   sendImage(
                     _selectedUserIds.toList(),
-                    widget.imageBytes,
+                    imageBytes!,
                     widget.isRealTwonly,
                     widget.maxShowTime,
                   );
@@ -168,10 +182,14 @@ class _ShareImageView extends State<ShareImageView> {
                   globalUpdateOfHomeViewPageIndex(0);
                 },
                 style: ButtonStyle(
-                  padding: WidgetStateProperty.all<EdgeInsets>(
-                    EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                  ),
-                ),
+                    padding: WidgetStateProperty.all<EdgeInsets>(
+                      EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                    ),
+                    backgroundColor: WidgetStateProperty.all<Color>(
+                      imageBytes == null || _selectedUserIds.isEmpty
+                          ? Theme.of(context).colorScheme.secondary
+                          : Theme.of(context).colorScheme.primary,
+                    )),
                 label: Text(
                   context.lang.shareImagedEditorSendImage,
                   style: TextStyle(fontSize: 17),

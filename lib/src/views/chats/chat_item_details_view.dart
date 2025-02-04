@@ -25,40 +25,46 @@ class ChatListEntry extends StatelessWidget {
     MessageSendState state = message.getSendState();
 
     bool isDownloading = false;
-    if (message.messageContent != null &&
-        message.messageContent!.downloadToken != null) {
+    List<int> token = [];
+
+    final content = message.messageContent;
+    if (message.messageReceived && content is MediaMessageContent) {
+      token = content.downloadToken;
       isDownloading = context
           .watch<DownloadChangeProvider>()
           .currentlyDownloading
-          .contains(message.messageContent!.downloadToken!.toString());
+          .contains(token.toString());
     }
 
     Widget child = Container();
 
     switch (message.messageKind) {
       case MessageKind.textMessage:
-        child = Container(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
-          ),
-          padding: EdgeInsets.symmetric(
-              vertical: 4, horizontal: 10), // Add some padding around the text
-          decoration: BoxDecoration(
-            color: right
-                ? const Color.fromARGB(107, 124, 77, 255)
-                : const Color.fromARGB(
-                    83, 68, 137, 255), // Set the background color
-            borderRadius: BorderRadius.circular(12.0), // Set border radius
-          ),
-          child: Text(
-            message.messageContent!.text!,
-            style: TextStyle(
-              color: Colors.white, // Set text color for contrast
-              fontSize: 17,
+        if (content is TextMessageContent) {
+          child = Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.8,
             ),
-            textAlign: TextAlign.left, // Center the text
-          ),
-        );
+            padding: EdgeInsets.symmetric(
+                vertical: 4,
+                horizontal: 10), // Add some padding around the text
+            decoration: BoxDecoration(
+              color: right
+                  ? const Color.fromARGB(107, 124, 77, 255)
+                  : const Color.fromARGB(
+                      83, 68, 137, 255), // Set the background color
+              borderRadius: BorderRadius.circular(12.0), // Set border radius
+            ),
+            child: Text(
+              content.text,
+              style: TextStyle(
+                color: Colors.white, // Set text color for contrast
+                fontSize: 17,
+              ),
+              textAlign: TextAlign.left, // Center the text
+            ),
+          );
+        }
         break;
       case MessageKind.image:
         Color color =
@@ -74,7 +80,6 @@ class ChatListEntry extends StatelessWidget {
                   }),
                 );
               } else {
-                List<int> token = message.messageContent!.downloadToken!;
                 tryDownloadMedia(token, force: true);
               }
             }

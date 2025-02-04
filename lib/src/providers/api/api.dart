@@ -30,7 +30,9 @@ Future tryTransmitMessages() async {
     Uint8List? bytes = box.get("retransmit-$msgId-textmessage");
     if (bytes != null) {
       Result resp = await apiProvider.sendTextMessage(
-          Int64(retransmit[i].otherUserId), bytes);
+        Int64(retransmit[i].otherUserId),
+        bytes,
+      );
 
       if (resp.isSuccess) {
         DbMessages.acknowledgeMessageByServer(msgId);
@@ -42,7 +44,16 @@ Future tryTransmitMessages() async {
 
     Uint8List? encryptedMedia = await box.get("retransmit-$msgId-media");
     if (encryptedMedia != null) {
-      uploadMediaFile(msgId, Int64(retransmit[i].otherUserId), encryptedMedia);
+      final content = retransmit[i].messageContent;
+      if (content is MediaMessageContent) {
+        uploadMediaFile(
+          msgId,
+          Int64(retransmit[i].otherUserId),
+          encryptedMedia,
+          content.isRealTwonly,
+          content.maxShowTime,
+        );
+      }
     }
   }
 }
@@ -75,11 +86,13 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
 }
 
 Future sendTextMessage(Int64 target, String message) async {
-  MessageContent content = MessageContent(text: message, downloadToken: null);
+  MessageContent content = TextMessageContent(text: message);
 
   int? messageId = await DbMessages.insertMyMessage(
-      target.toInt(), MessageKind.textMessage,
-      jsonContent: jsonEncode(content.toJson()));
+    target.toInt(),
+    MessageKind.textMessage,
+    content,
+  );
   if (messageId == null) return;
 
   Message msg = Message(
@@ -94,7 +107,12 @@ Future sendTextMessage(Int64 target, String message) async {
 
 // this will send the media file and ensures retransmission when errors occur
 Future uploadMediaFile(
-    int messageId, Int64 target, Uint8List encryptedMedia) async {
+  int messageId,
+  Int64 target,
+  Uint8List encryptedMedia,
+  bool isRealTwonly,
+  int maxShowTime,
+) async {
   Box box = await getMediaStorage();
 
   if ((await box.get("retransmit-$messageId-media") == null)) {
@@ -133,15 +151,31 @@ Future uploadMediaFile(
     Message(
       kind: MessageKind.image,
       messageId: messageId,
-      content: MessageContent(text: null, downloadToken: uploadToken),
+      content: MediaMessageContent(
+        downloadToken: uploadToken,
+        maxShowTime: maxShowTime,
+        isRealTwonly: isRealTwonly,
+      ),
       timestamp: DateTime.now(),
     ),
   );
 }
 
-Future encryptAndUploadMediaFile(Int64 target, Uint8List imageBytes) async {
-  int? messageId =
-      await DbMessages.insertMyMessage(target.toInt(), MessageKind.image);
+Future encryptAndUploadMediaFile(
+  Int64 target,
+  Uint8List imageBytes,
+  bool isRealTwonly,
+  int maxShowTime,
+) async {
+  int? messageId = await DbMessages.insertMyMessage(
+      target.toInt(),
+      MessageKind.image,
+      MediaMessageContent(
+        downloadToken: [],
+        maxShowTime: maxShowTime,
+        isRealTwonly: isRealTwonly,
+      ));
+  // isRealTwonly,
   if (messageId == null) return;
 
   Uint8List? encryptBytes = await SignalHelper.encryptBytes(imageBytes, target);
@@ -151,11 +185,16 @@ Future encryptAndUploadMediaFile(Int64 target, Uint8List imageBytes) async {
     return;
   }
 
-  await uploadMediaFile(messageId, target, encryptBytes);
+  await uploadMediaFile(
+      messageId, target, encryptBytes, isRealTwonly, maxShowTime);
 }
 
-Future sendImage(List<Int64> userIds, Uint8List imageBytes, bool isRealTwonly,
-    int maxShowTime) async {
+Future sendImage(
+  List<Int64> userIds,
+  Uint8List imageBytes,
+  bool isRealTwonly,
+  int maxShowTime,
+) async {
   // 1. set notifier provider
 
   Uint8List? imageBytesCompressed = await getCompressedImage(imageBytes);
@@ -165,7 +204,12 @@ Future sendImage(List<Int64> userIds, Uint8List imageBytes, bool isRealTwonly,
   }
 
   for (int i = 0; i < userIds.length; i++) {
-    encryptAndUploadMediaFile(userIds[i], imageBytesCompressed);
+    encryptAndUploadMediaFile(
+      userIds[i],
+      imageBytesCompressed,
+      isRealTwonly,
+      maxShowTime,
+    );
   }
 }
 
@@ -198,6 +242,7 @@ Future userOpenedOtherMessage(int fromUserId, int messageOtherId) async {
     Message(
       kind: MessageKind.opened,
       messageId: messageOtherId,
+      content: MessageContent(),
       timestamp: DateTime.now(),
     ),
   );

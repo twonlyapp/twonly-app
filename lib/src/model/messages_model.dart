@@ -39,6 +39,8 @@ class DbMessage {
     return isMedia();
   }
 
+  bool get messageReceived => messageOtherId != null;
+
   bool isMedia() {
     return messageKind == MessageKind.image || messageKind == MessageKind.video;
   }
@@ -84,7 +86,7 @@ class DbMessages extends CvModelBase {
   final messageKind = CvField<int>(columnMessageKind);
 
   static const columnMessageContentJson = "message_json";
-  final messageContentJson = CvField<String?>(columnMessageContentJson);
+  final messageContentJson = CvField<String>(columnMessageContentJson);
 
   static const columnMessageOpenedAt = "message_opened_at";
   final messageOpenedAt = CvField<DateTime?>(columnMessageOpenedAt);
@@ -112,7 +114,7 @@ class DbMessages extends CvModelBase {
       $columnMessageKind INTEGER NOT NULL,
       $columnMessageAcknowledgeByUser INTEGER NOT NULL DEFAULT 0,
       $columnMessageAcknowledgeByServer INTEGER NOT NULL DEFAULT 0,
-      $columnMessageContentJson TEXT DEFAULT NULL,
+      $columnMessageContentJson TEXT NOT NULL,
       $columnMessageOpenedAt DATETIME DEFAULT NULL,
       $columnSendOrReceivedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       $columnUpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -145,12 +147,12 @@ class DbMessages extends CvModelBase {
     return null;
   }
 
-  static Future<int?> insertMyMessage(int userIdFrom, MessageKind kind,
-      {String? jsonContent}) async {
+  static Future<int?> insertMyMessage(
+      int userIdFrom, MessageKind kind, MessageContent content) async {
     try {
       int messageId = await dbProvider.db!.insert(tableName, {
         columnMessageKind: kind.index,
-        columnMessageContentJson: jsonContent,
+        columnMessageContentJson: jsonEncode(content.toJson()),
         columnOtherUserId: userIdFrom,
         columnSendOrReceivedAt: DateTime.now().toIso8601String()
       });
@@ -235,7 +237,9 @@ class DbMessages extends CvModelBase {
     List<DbMessage> receivedByOther = messages
         .where((c) => c.messageOtherId != null && c.messageOpenedAt == null)
         .toList();
-    if (receivedByOther.isNotEmpty) return receivedByOther[0];
+    if (receivedByOther.isNotEmpty) {
+      return receivedByOther[receivedByOther.length - 1];
+    }
 
     // check if there is a message which was not ack by the server
     List<DbMessage> notAckByServer =
@@ -343,19 +347,16 @@ class DbMessages extends CvModelBase {
         if (messageOpenedAt != null) {
           messageOpenedAt = DateTime.tryParse(fromDb[i][columnMessageOpenedAt]);
         }
-        dynamic content = fromDb[i][columnMessageContentJson];
-        if (content != null) {
-          content = MessageContent.fromJson(
-              jsonDecode(fromDb[i][columnMessageContentJson]));
-        }
+        int? messageOtherId = fromDb[i][columnMessageOtherId];
+        MessageContent content = MessageContent.fromJson(
+            jsonDecode(fromDb[i][columnMessageContentJson]));
         MessageKind messageKind =
             MessageKindExtension.fromIndex(fromDb[i][columnMessageKind]);
         bool isDownloaded = true;
-        if (messageKind == MessageKind.image ||
-            messageKind == MessageKind.video) {
-          // when the media was send from the user itself the content is null
-          if (content != null) {
-            isDownloaded = await isMediaDownloaded(content.downloadToken!);
+        if (messageOtherId != null) {
+          if (content is MediaMessageContent) {
+            // when the media was send from the user itself the content is null
+            isDownloaded = await isMediaDownloaded(content.downloadToken);
           }
         }
         parsedUsers.add(
@@ -363,7 +364,7 @@ class DbMessages extends CvModelBase {
             sendOrReceivedAt:
                 DateTime.tryParse(fromDb[i][columnSendOrReceivedAt])!,
             messageId: fromDb[i][columnMessageId],
-            messageOtherId: fromDb[i][columnMessageOtherId],
+            messageOtherId: messageOtherId,
             otherUserId: fromDb[i][columnOtherUserId],
             messageKind: messageKind,
             messageContent: content,

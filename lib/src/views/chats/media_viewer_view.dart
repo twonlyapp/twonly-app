@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 
@@ -25,10 +26,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future _initAsync() async {
-    List<int> token = widget.message.messageContent!.downloadToken!;
-    _imageByte =
-        await getDownloadedMedia(token, widget.message.messageOtherId!);
-    setState(() {});
+    final content = widget.message.messageContent;
+    if (content is MediaMessageContent) {
+      List<int> token = content.downloadToken;
+      _imageByte =
+          await getDownloadedMedia(token, widget.message.messageOtherId!);
+      setState(() {});
+    }
   }
 
   @override

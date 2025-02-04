@@ -9,6 +9,7 @@ class Layer {
   bool isEditing;
   bool isDeleted;
   bool hasCustomActionButtons;
+  bool showCustomButtons;
 
   Layer({
     this.offset = const Offset(0, 0),
@@ -16,6 +17,7 @@ class Layer {
     this.isEditing = false,
     this.isDeleted = false,
     this.hasCustomActionButtons = false,
+    this.showCustomButtons = true,
     this.rotation = 0,
     this.scale = 1,
   });

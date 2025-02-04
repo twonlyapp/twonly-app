@@ -98,7 +98,7 @@ class _DrawLayerState extends State<DrawLayer> {
             ),
           ),
         ),
-        if (widget.layerData.isEditing)
+        if (widget.layerData.isEditing && widget.layerData.showCustomButtons)
           Positioned(
             top: 5,
             left: 5,
@@ -143,7 +143,7 @@ class _DrawLayerState extends State<DrawLayer> {
               ],
             ),
           ),
-        if (widget.layerData.isEditing)
+        if (widget.layerData.isEditing && widget.layerData.showCustomButtons)
           Positioned(
             right: 20,
             top: 50,

@@ -6,6 +6,7 @@ import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/components/notification_badge.dart';
 import 'package:twonly/src/components/user_context_menu.dart';
 import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
@@ -18,20 +19,6 @@ import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/views/profile_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
 import 'package:flutter/material.dart';
-
-class ChatItem {
-  const ChatItem(
-      {required this.username,
-      required this.flames,
-      required this.userId,
-      required this.state,
-      required this.lastMessageInSeconds});
-  final String username;
-  final int lastMessageInSeconds;
-  final int flames;
-  final int userId;
-  final MessageSendState state;
-}
 
 /// Displays a list of SampleItems.
 class ChatListView extends StatefulWidget {
@@ -169,7 +156,6 @@ class UserListItem extends StatefulWidget {
 }
 
 class _UserListItem extends State<UserListItem> {
-  int flames = 0;
   int lastMessageInSeconds = 0;
 
   @override
@@ -186,13 +172,15 @@ class _UserListItem extends State<UserListItem> {
     MessageSendState state = widget.lastMessage.getSendState();
     bool isDownloading = false;
 
-    if (widget.lastMessage.messageContent != null &&
-        widget.lastMessage.messageContent!.downloadToken != null) {
+    final content = widget.lastMessage.messageContent;
+    List<int> token = [];
+
+    if (widget.lastMessage.messageReceived && content is MediaMessageContent) {
+      token = content.downloadToken;
       isDownloading = context
           .watch<DownloadChangeProvider>()
           .currentlyDownloading
-          .contains(
-              widget.lastMessage.messageContent!.downloadToken!.toString());
+          .contains(token.toString());
     }
 
     return UserContextMenu(
@@ -216,7 +204,6 @@ class _UserListItem extends State<UserListItem> {
         onTap: () {
           if (isDownloading) return;
           if (!widget.lastMessage.isDownloaded) {
-            List<int> token = widget.lastMessage.messageContent!.downloadToken!;
             tryDownloadMedia(token, force: true);
             return;
           }

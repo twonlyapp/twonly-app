@@ -20,11 +20,11 @@ class FlameCounterWidget extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           user.flameCounter.toString(),
-          style: const TextStyle(fontSize: 12),
+          style: const TextStyle(fontSize: 13),
         ),
         Text(
           (maxTotalMediaCounter == user.totalMediaCounter) ? "❤️‍🔥" : "🔥",
-          style: const TextStyle(fontSize: 10),
+          style: const TextStyle(fontSize: 14),
         ),
       ],
     );
