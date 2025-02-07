@@ -4,16 +4,19 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 
 
 ## TODOS bevor first beta
-- Add no_screenshot plugin: https://pub.dev/packages/no_screenshot
-- Bei mehreren neu Empfangen Nachrichten fixen
 - Settings
     - Delete and Block active users
-- Onboarding Slide, Text und Animationen
 - MessageKind -> Ausbauen?
 - Nachrichten nach 24h Stunden löschen
-- Real deployment aufsetzen direkt auf Netcup?
+- Real deployment aufsetzen, direkt auf Netcup?
 - Pro Invitation codes
+- FIX: Problem Bild falsch, wenn handy schräg...
+- MediaView:
+    - Bei weiteren geladenen Bildern -> Direkt anzeigen ohne zu popen
 
+## TODOS bevor first release
+- Webpage
+- Instagam
 ## Later todos
 - Videos
 - Sealed Sender

@@ -4,11 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:lottie/lottie.dart';
+import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
+
+final _noScreenshot = NoScreenshot.instance;
 
 class MediaViewerView extends StatefulWidget {
   final Contact otherUser;
@@ -40,6 +43,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future loadMedia({bool force = false}) async {
+    bool result = await _noScreenshot.screenshotOff();
+    debugPrint('Screenshot Off: $result');
     final content = widget.message.messageContent;
     if (content is MediaMessageContent) {
       if (content.isRealTwonly) {
@@ -97,8 +102,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   @override
   void dispose() {
     super.dispose();
-
     _timer?.cancel();
+    _noScreenshot.screenshotOn();
   }
 
   @override

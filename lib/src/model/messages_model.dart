@@ -126,9 +126,9 @@ class DbMessages extends CvModelBase {
     final List<Map<String, dynamic>> maps = await dbProvider.db!.rawQuery('''
       SELECT $columnSendAt, $columnMessageOtherId
       FROM $tableName
-      WHERE $columnOtherUserId = ?
+      WHERE $columnOtherUserId = ? AND ($columnMessageKind = ? OR $columnMessageKind = ?)
       ORDER BY $columnSendAt DESC;
-    ''', [otherUserId]);
+    ''', [otherUserId, MessageKind.image.index, MessageKind.video.index]);
 
     try {
       return List.generate(maps.length, (i) {
