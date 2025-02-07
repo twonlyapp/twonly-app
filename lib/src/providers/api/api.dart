@@ -46,13 +46,8 @@ Future tryTransmitMessages() async {
     if (encryptedMedia != null) {
       final content = retransmit[i].messageContent;
       if (content is MediaMessageContent) {
-        uploadMediaFile(
-          msgId,
-          Int64(retransmit[i].otherUserId),
-          encryptedMedia,
-          content.isRealTwonly,
-          content.maxShowTime,
-        );
+        uploadMediaFile(msgId, Int64(retransmit[i].otherUserId), encryptedMedia,
+            content.isRealTwonly, content.maxShowTime, retransmit[i].sendAt);
       }
     }
   }
@@ -88,18 +83,18 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
 Future sendTextMessage(Int64 target, String message) async {
   MessageContent content = TextMessageContent(text: message);
 
+  DateTime messageSendAt =
+      DateTime.now().subtract(Duration(days: 1, minutes: 120));
+
   int? messageId = await DbMessages.insertMyMessage(
-    target.toInt(),
-    MessageKind.textMessage,
-    content,
-  );
+      target.toInt(), MessageKind.textMessage, content, messageSendAt);
   if (messageId == null) return;
 
   Message msg = Message(
     kind: MessageKind.textMessage,
     messageId: messageId,
     content: content,
-    timestamp: DateTime.now(),
+    timestamp: messageSendAt,
   );
 
   encryptAndSendMessage(target, msg);
@@ -112,6 +107,7 @@ Future uploadMediaFile(
   Uint8List encryptedMedia,
   bool isRealTwonly,
   int maxShowTime,
+  DateTime messageSendAt,
 ) async {
   Box box = await getMediaStorage();
 
@@ -156,7 +152,7 @@ Future uploadMediaFile(
           maxShowTime: maxShowTime,
           isRealTwonly: isRealTwonly,
           isVideo: false),
-      timestamp: DateTime.now(),
+      timestamp: messageSendAt,
     ),
   );
 }
@@ -167,14 +163,17 @@ Future encryptAndUploadMediaFile(
   bool isRealTwonly,
   int maxShowTime,
 ) async {
+  DateTime messageSendAt = DateTime.now();
   int? messageId = await DbMessages.insertMyMessage(
       target.toInt(),
       MessageKind.image,
       MediaMessageContent(
-          downloadToken: [],
-          maxShowTime: maxShowTime,
-          isRealTwonly: isRealTwonly,
-          isVideo: false));
+        downloadToken: [],
+        maxShowTime: maxShowTime,
+        isRealTwonly: isRealTwonly,
+        isVideo: false,
+      ),
+      messageSendAt);
   // isRealTwonly,
   if (messageId == null) return;
 
@@ -185,8 +184,8 @@ Future encryptAndUploadMediaFile(
     return;
   }
 
-  await uploadMediaFile(
-      messageId, target, encryptBytes, isRealTwonly, maxShowTime);
+  await uploadMediaFile(messageId, target, encryptBytes, isRealTwonly,
+      maxShowTime, messageSendAt);
 }
 
 Future sendImage(
@@ -253,11 +252,11 @@ Future<Uint8List?> getDownloadedMedia(
   final box = await getMediaStorage();
   Uint8List? media = box.get("${mediaToken}_downloaded");
 
-  // int fromUserId = box.get("${mediaToken}_fromUserId");
-  // await userOpenedOtherMessage(fromUserId, messageOtherId);
-  // box.delete(mediaToken.toString());
-  // box.put("${mediaToken}_downloaded", "deleted");
-  // box.delete("${mediaToken}_fromUserId");
+  int fromUserId = box.get("${mediaToken}_fromUserId");
+  await userOpenedOtherMessage(fromUserId, messageOtherId);
+  box.delete(mediaToken.toString());
+  box.put("${mediaToken}_downloaded", "deleted");
+  box.delete("${mediaToken}_fromUserId");
 
   return media;
 }

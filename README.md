@@ -4,7 +4,6 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 
 
 ## TODOS bevor first beta
-- Flammen Problem fixen
 - Add no_screenshot plugin: https://pub.dev/packages/no_screenshot
 - Bei mehreren neu Empfangen Nachrichten fixen
 - Settings

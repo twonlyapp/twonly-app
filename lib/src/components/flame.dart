@@ -4,9 +4,11 @@ import 'package:twonly/src/model/contacts_model.dart';
 class FlameCounterWidget extends StatelessWidget {
   final Contact user;
   final int maxTotalMediaCounter;
+  final int flameCounter;
 
   const FlameCounterWidget(
     this.user,
+    this.flameCounter,
     this.maxTotalMediaCounter, {
     super.key,
   });
@@ -19,7 +21,7 @@ class FlameCounterWidget extends StatelessWidget {
         Text("•"),
         const SizedBox(width: 5),
         Text(
-          user.flameCounter.toString(),
+          flameCounter.toString(),
           style: const TextStyle(fontSize: 13),
         ),
         Text(

@@ -7,6 +7,7 @@ import 'package:gal/gal.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -130,4 +131,49 @@ Future<Uint8List?> getCompressedImage(Uint8List imageBytes) async {
     quality: 90,
   );
   return result;
+}
+
+int getFlameCounter(List<DateTime> dates) {
+  if (dates.isEmpty) return 0;
+
+  int flamesCount = 0;
+  DateTime lastFlameCount = DateTime.now();
+
+  if (dates[0].difference(lastFlameCount).inDays == 0) {
+    flamesCount = 1;
+    lastFlameCount = dates[0];
+  }
+
+  // print(dates[0]);
+  for (int i = 1; i < dates.length; i++) {
+    // print(
+    //     "${dates[i]} ${dates[i].difference(dates[i - 1]).inDays} ${dates[i].difference(lastFlameCount).inDays}");
+    if (dates[i].difference(dates[i - 1]).inDays == 0) {
+      if (lastFlameCount.difference(dates[i]).inDays == 1) {
+        flamesCount++;
+        lastFlameCount = dates[i];
+      }
+    } else {
+      break; // Stop counting if there's a break in the sequence
+    }
+  }
+  return flamesCount;
+}
+
+Future<int> getFlamesForOtherUser(int otherUserId) async {
+  List<(DateTime, int?)> dates = await DbMessages.getMessageDates(otherUserId);
+  // print("Dates ${dates.length}");
+  if (dates.isEmpty) return 0;
+
+  List<DateTime> received =
+      dates.where((x) => x.$2 != null).map((x) => x.$1).toList();
+  List<DateTime> send =
+      dates.where((x) => x.$2 == null).map((x) => x.$1).toList();
+
+  // print("Received ${received.length} and send ${send.length}");
+
+  int a = getFlameCounter(received);
+  int b = getFlameCounter(send);
+  // print("Received $a and send $b");
+  return min(a, b);
 }

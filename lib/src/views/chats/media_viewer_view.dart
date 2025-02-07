@@ -24,6 +24,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   DateTime? canBeSeenUntil;
   int maxShowTime = 999999;
   bool isRealTwonly = false;
+  Timer? _timer;
   // DateTime opened;
 
   @override
@@ -72,7 +73,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   startTimer() {
-    Future.delayed(canBeSeenUntil!.difference(DateTime.now()), () {
+    _timer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
       if (context.mounted) {
         Navigator.pop(context);
       }
@@ -96,6 +97,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   @override
   void dispose() {
     super.dispose();
+
+    _timer?.cancel();
   }
 
   @override

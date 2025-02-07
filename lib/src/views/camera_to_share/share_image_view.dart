@@ -3,12 +3,14 @@ import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/src/components/best_friends_selector.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
 
@@ -51,10 +53,14 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   Future _updateUsers(List<Contact> users) async {
+    Map<int, int> flameCounters =
+        context.read<MessagesChangeProvider>().flamesCounter;
+
     // Sort contacts by flameCounter and then by totalMediaCounter
     users.sort((a, b) {
       // First, compare by flameCounter
-      int flameComparison = b.flameCounter.compareTo(a.flameCounter);
+      int flameComparison = flameCounters[b.userId.toInt()]!
+          .compareTo(flameCounters[a.userId.toInt()]!);
       if (flameComparison != 0) {
         return flameComparison; // Sort by flameCounter in descending order
       }
@@ -74,7 +80,8 @@ class _ShareImageView extends State<ShareImageView> {
     List<Contact> otherUsers = [];
 
     for (var contact in users) {
-      if (contact.flameCounter > 0 && bestFriends.length < 6) {
+      if (flameCounters[contact.userId.toInt()]! > 0 &&
+          bestFriends.length < 6) {
         bestFriends.add(contact);
       } else {
         otherUsers.add(contact);
@@ -179,7 +186,7 @@ class _ShareImageView extends State<ShareImageView> {
                   // TODO: pop back to the HomeView page popUntil did not work. check later how to improve in case of pushing more then 2
                   Navigator.pop(context);
                   Navigator.pop(context);
-                  globalUpdateOfHomeViewPageIndex(0);
+                  globalUpdateOfHomeViewPageIndex(1);
                 },
                 style: ButtonStyle(
                     padding: WidgetStateProperty.all<EdgeInsets>(
@@ -216,16 +223,21 @@ class UserList extends StatelessWidget {
     // Step 1: Sort the users alphabetically
     users.sort((a, b) => a.displayName.compareTo(b.displayName));
 
+    Map<int, int> flameCounters =
+        context.watch<MessagesChangeProvider>().flamesCounter;
+
     return ListView.builder(
       restorationId: 'new_message_users_list',
       itemCount: users.length,
       itemBuilder: (BuildContext context, int i) {
         Contact user = users[i];
+        int? flameCounter = flameCounters[user.userId.toInt()];
+        flameCounter ??= 0;
         return ListTile(
           title: Row(children: [
             Text(user.displayName),
-            if (user.flameCounter > 0)
-              FlameCounterWidget(user, maxTotalMediaCounter),
+            if (flameCounter > 0)
+              FlameCounterWidget(user, flameCounter, maxTotalMediaCounter),
           ]),
           leading: InitialsAvatar(
             displayName: user.displayName,

@@ -131,7 +131,11 @@ Future<client.Response> handleNewMessage(
         } else {
           String content = jsonEncode(message.content.toJson());
           int? messageId = await DbMessages.insertOtherMessage(
-              fromUserId.toInt(), message.kind, message.messageId!, content);
+              fromUserId.toInt(),
+              message.kind,
+              message.messageId!,
+              content,
+              message.timestamp);
 
           if (messageId == null) {
             return client.Response()..error = ErrorCode.InternalError;

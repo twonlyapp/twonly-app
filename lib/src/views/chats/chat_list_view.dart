@@ -45,8 +45,8 @@ class _ChatListViewState extends State<ChatListView> {
         .toList();
     activeUsers.sort((b, a) {
       return lastMessages[a.userId.toInt()]!
-          .sendOrReceivedAt
-          .compareTo(lastMessages[b.userId.toInt()]!.sendOrReceivedAt);
+          .sendAt
+          .compareTo(lastMessages[b.userId.toInt()]!.sendAt);
     });
 
     int maxTotalMediaCounter = 0;
@@ -165,9 +165,8 @@ class _UserListItem extends State<UserListItem> {
 
   @override
   Widget build(BuildContext context) {
-    int lastMessageInSeconds = DateTime.now()
-        .difference(widget.lastMessage.sendOrReceivedAt)
-        .inSeconds;
+    int lastMessageInSeconds =
+        DateTime.now().difference(widget.lastMessage.sendAt).inSeconds;
 
     MessageSendState state = widget.lastMessage.getSendState();
     bool isDownloading = false;
@@ -183,6 +182,11 @@ class _UserListItem extends State<UserListItem> {
           .contains(token.toString());
     }
 
+    int? flameCounter = context
+        .watch<MessagesChangeProvider>()
+        .flamesCounter[widget.user.userId.toInt()];
+    flameCounter ??= 0;
+
     return UserContextMenu(
       user: widget.user,
       child: ListTile(
@@ -196,8 +200,9 @@ class _UserListItem extends State<UserListItem> {
               formatDuration(lastMessageInSeconds),
               style: TextStyle(fontSize: 12),
             ),
-            if (widget.user.flameCounter > 0)
-              FlameCounterWidget(widget.user, widget.maxTotalMediaCounter),
+            if (flameCounter > 0)
+              FlameCounterWidget(
+                  widget.user, flameCounter, widget.maxTotalMediaCounter),
           ],
         ),
         leading: InitialsAvatar(displayName: widget.user.displayName),

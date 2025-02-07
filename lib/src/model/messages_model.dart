@@ -19,7 +19,7 @@ class DbMessage {
     required this.messageAcknowledgeByUser,
     required this.isDownloaded,
     required this.messageAcknowledgeByServer,
-    required this.sendOrReceivedAt,
+    required this.sendAt,
   });
 
   int messageId;
@@ -32,7 +32,7 @@ class DbMessage {
   bool messageAcknowledgeByUser;
   bool isDownloaded;
   bool messageAcknowledgeByServer;
-  DateTime sendOrReceivedAt;
+  DateTime sendAt;
 
   bool containsOtherMedia() {
     if (messageOtherId == null) return false;
@@ -99,8 +99,8 @@ class DbMessages extends CvModelBase {
   final messageAcknowledgeByServer =
       CvField<int>(columnMessageAcknowledgeByServer);
 
-  static const columnSendOrReceivedAt = "message_send_or_received_at";
-  final sendOrReceivedAt = CvField<DateTime>(columnSendOrReceivedAt);
+  static const columnSendAt = "message_send_or_received_at";
+  final sendAt = CvField<DateTime>(columnSendAt);
 
   static const columnUpdatedAt = "updated_at";
   final updatedAt = CvField<DateTime>(columnUpdatedAt);
@@ -116,10 +116,31 @@ class DbMessages extends CvModelBase {
       $columnMessageAcknowledgeByServer INTEGER NOT NULL DEFAULT 0,
       $columnMessageContentJson TEXT NOT NULL,
       $columnMessageOpenedAt DATETIME DEFAULT NULL,
-      $columnSendOrReceivedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      $columnSendAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       $columnUpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """;
+  }
+
+  static Future<List<(DateTime, int?)>> getMessageDates(int otherUserId) async {
+    final List<Map<String, dynamic>> maps = await dbProvider.db!.rawQuery('''
+      SELECT $columnSendAt, $columnMessageOtherId
+      FROM $tableName
+      WHERE $columnOtherUserId = ?
+      ORDER BY $columnSendAt DESC;
+    ''', [otherUserId]);
+
+    try {
+      return List.generate(maps.length, (i) {
+        return (
+          DateTime.tryParse(maps[i][columnSendAt])!,
+          maps[i][columnMessageOtherId]
+        );
+      });
+    } catch (e) {
+      Logger("error parsing datetime: $e");
+      return [];
+    }
   }
 
   static Future deleteMessageById(int messageId) async {
@@ -147,14 +168,14 @@ class DbMessages extends CvModelBase {
     return null;
   }
 
-  static Future<int?> insertMyMessage(
-      int userIdFrom, MessageKind kind, MessageContent content) async {
+  static Future<int?> insertMyMessage(int userIdFrom, MessageKind kind,
+      MessageContent content, DateTime messageSendAt) async {
     try {
       int messageId = await dbProvider.db!.insert(tableName, {
         columnMessageKind: kind.index,
         columnMessageContentJson: jsonEncode(content.toJson()),
         columnOtherUserId: userIdFrom,
-        columnSendOrReceivedAt: DateTime.now().toIso8601String()
+        columnSendAt: messageSendAt.toIso8601String()
       });
       globalCallBackOnMessageChange(userIdFrom);
       return messageId;
@@ -165,7 +186,7 @@ class DbMessages extends CvModelBase {
   }
 
   static Future<int?> insertOtherMessage(int userIdFrom, MessageKind kind,
-      int messageOtherId, String jsonContent) async {
+      int messageOtherId, String jsonContent, DateTime messageSendAt) async {
     try {
       int messageId = await dbProvider.db!.insert(tableName, {
         columnMessageOtherId: messageOtherId,
@@ -175,7 +196,7 @@ class DbMessages extends CvModelBase {
         columnMessageAcknowledgeByUser:
             0, // ack in case of sending corresponds to the opened flag
         columnOtherUserId: userIdFrom,
-        columnSendOrReceivedAt: DateTime.now().toIso8601String()
+        columnSendAt: messageSendAt.toIso8601String()
       });
       globalCallBackOnMessageChange(userIdFrom);
       return messageId;
@@ -330,13 +351,8 @@ class DbMessages extends CvModelBase {
   }
 
   @override
-  List<CvField> get fields => [
-        messageId,
-        messageKind,
-        messageContentJson,
-        messageOpenedAt,
-        sendOrReceivedAt
-      ];
+  List<CvField> get fields =>
+      [messageId, messageKind, messageContentJson, messageOpenedAt, sendAt];
 
   static Future<List<DbMessage>> convertToDbMessage(
       List<dynamic> fromDb) async {
@@ -366,8 +382,7 @@ class DbMessages extends CvModelBase {
         }
         parsedUsers.add(
           DbMessage(
-            sendOrReceivedAt:
-                DateTime.tryParse(fromDb[i][columnSendOrReceivedAt])!,
+            sendAt: DateTime.tryParse(fromDb[i][columnSendAt])!,
             messageId: fromDb[i][columnMessageId],
             messageOtherId: messageOtherId,
             otherUserId: fromDb[i][columnOtherUserId],

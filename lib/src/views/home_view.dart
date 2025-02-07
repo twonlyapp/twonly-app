@@ -66,8 +66,8 @@ class HomeViewState extends State<HomeView> {
             activePageIdx = index;
           },
           children: [
-            ChatListView(),
             CameraPreviewViewPermission(),
+            ChatListView(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -77,11 +77,11 @@ class HomeViewState extends State<HomeView> {
               IconThemeData(color: const Color.fromARGB(255, 255, 255, 255)),
           items: [
             BottomNavigationBarItem(
-                icon: FaIcon(FontAwesomeIcons.solidComments), label: ""),
-            BottomNavigationBarItem(
               icon: FaIcon(FontAwesomeIcons.camera),
               label: "",
             ),
+            BottomNavigationBarItem(
+                icon: FaIcon(FontAwesomeIcons.solidComments), label: ""),
             // BottomNavigationBarItem(
             //     icon: FaIcon(FontAwesomeIcons.userShield), label: ""),
           ],

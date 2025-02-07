@@ -1,6 +1,8 @@
 import 'dart:collection';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
@@ -87,6 +89,11 @@ class UserCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    int? flameCounter = context
+        .watch<MessagesChangeProvider>()
+        .flamesCounter[user.userId.toInt()];
+    flameCounter ??= 0;
+
     return Container(
       padding:
           EdgeInsets.symmetric(horizontal: 3), // Padding inside the container
@@ -116,8 +123,8 @@ class UserCheckbox extends StatelessWidget {
                     : user.displayName,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (user.flameCounter > 0)
-                FlameCounterWidget(user, maxTotalMediaCounter),
+              if (flameCounter > 0)
+                FlameCounterWidget(user, flameCounter, maxTotalMediaCounter),
               Expanded(child: Container()),
               Checkbox(
                 value: isChecked,

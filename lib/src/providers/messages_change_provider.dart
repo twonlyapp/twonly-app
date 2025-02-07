@@ -1,15 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/messages_model.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 /// This provider does always contains the latest messages send or received
 /// for every contact.
 class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   final Map<int, DbMessage> _lastMessage = <int, DbMessage>{};
   final Map<int, int> _changeCounter = <int, int>{};
+  final Map<int, int> _flamesCounter = <int, int>{};
 
   Map<int, DbMessage> get lastMessage => _lastMessage;
   Map<int, int> get changeCounter => _changeCounter;
+  Map<int, int> get flamesCounter => _flamesCounter;
 
   void updateLastMessageFor(int targetUserId) async {
     DbMessage? last =
@@ -21,6 +24,7 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
       changeCounter[targetUserId] = 0;
     }
     changeCounter[targetUserId] = changeCounter[targetUserId]! + 1;
+    flamesCounter[targetUserId] = await getFlamesForOtherUser(targetUserId);
     notifyListeners();
   }
 
@@ -33,6 +37,8 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
       if (last != null) {
         _lastMessage[last.otherUserId] = last;
       }
+      flamesCounter[contact.userId.toInt()] =
+          await getFlamesForOtherUser(contact.userId.toInt());
     }
     notifyListeners();
   }
