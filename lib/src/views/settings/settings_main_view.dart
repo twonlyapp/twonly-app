@@ -1,13 +1,13 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/json/user_data.dart';
-import 'package:restart_app/restart_app.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/providers/settings_change_provider.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/settings/appearance_view.dart';
+import 'package:twonly/src/views/settings/help_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -33,7 +33,7 @@ class _ProfileViewState extends State<ProfileView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Settings"),
+        title: Text(context.lang.settingsTitle),
       ),
       body: (userData == null)
           ? null
@@ -79,100 +79,66 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
                 SettingsListTile(
                   icon: FontAwesomeIcons.user,
-                  text: "Konto",
+                  text: context.lang.settingsAccount,
                   onTap: () {},
                 ),
                 SettingsListTile(
                   icon: FontAwesomeIcons.shieldHeart,
-                  text: "Subscription",
+                  text: context.lang.settingsSubscription,
                   onTap: () {},
                 ),
                 const Divider(),
                 SettingsListTile(
                   icon: FontAwesomeIcons.sun,
-                  text: "Darstellung",
-                  onTap: () {},
+                  text: context.lang.settingsAppearance,
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return AppearanceView();
+                    }));
+                  },
                 ),
                 SettingsListTile(
                   icon: FontAwesomeIcons.lock,
-                  text: "Datenschutz",
+                  text: context.lang.settingsPrivacy,
                   onTap: () {},
                 ),
                 SettingsListTile(
                   icon: FontAwesomeIcons.bell,
-                  text: "Benachrichtigungen",
+                  text: context.lang.settingsNotification,
                   onTap: () async {
                     const AndroidNotificationDetails
                         androidNotificationDetails = AndroidNotificationDetails(
                       '0',
-                      'Messages',
+                      'Messages2',
                       channelDescription: 'Messages from other users.',
                       importance: Importance.max,
-                      priority: Priority.high,
+                      priority: Priority.max,
                       ticker: 'ticker',
                     );
                     const NotificationDetails notificationDetails =
                         NotificationDetails(
                             android: androidNotificationDetails);
-                    await flutterLocalNotificationsPlugin.show(0, 'New message',
-                        'You got a new message from XX', notificationDetails,
-                        payload: 'item x');
+                    await flutterLocalNotificationsPlugin.show(
+                        1,
+                        'New message from x',
+                        'You got a new message from XX',
+                        notificationDetails,
+                        payload: 'test');
                   },
                 ),
                 const Divider(),
                 SettingsListTile(
                   icon: FontAwesomeIcons.circleQuestion,
-                  text: "Help",
-                  onTap: () {},
+                  text: context.lang.settingsHelp,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return HelpView();
+                      },
+                    ));
+                  },
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.all(16),
-                //   // Glue the SettingsController to the theme selection DropdownButton.
-                //   //
-                //   // When a user selects a theme from the dropdown list, the
-                //   // SettingsController is updated, which rebuilds the MaterialApp.
-                //   child: DropdownButton<ThemeMode>(
-                //     // Read the selected themeMode from the controller
-                //     value: context.watch<SettingsChangeProvider>().themeMode,
-                //     // Call the updateThemeMode method any time the user selects a theme.
-                //     onChanged: (theme) {
-                //       context
-                //           .read<SettingsChangeProvider>()
-                //           .updateThemeMode(theme);
-                //     },
-                //     items: const [
-                //       DropdownMenuItem(
-                //         value: ThemeMode.system,
-                //         child: Text('System Theme'),
-                //       ),
-                //       DropdownMenuItem(
-                //         value: ThemeMode.light,
-                //         child: Text('Light Theme'),
-                //       ),
-                //       DropdownMenuItem(
-                //         value: ThemeMode.dark,
-                //         child: Text('Dark Theme'),
-                //       )
-                //     ],
-                //   ),
-                // ),
-                // ElevatedButton(
-                //   onPressed: () {
-                //     showLicensePage(context: context);
-                //   },
-                //   child: Text('Show Licenses'),
-                // ),
-                // FilledButton.icon(
-                //   onPressed: () async {
-                //     await deleteLocalUserData();
-                //     Restart.restartApp(
-                //       notificationTitle: 'Successfully logged out',
-                //       notificationBody: 'Click here to open the app again',
-                //     );
-                //   },
-                //   label: Text("Logout"),
-                //   icon: Icon(Icons.no_accounts),
-                // ),
               ],
             ),
     );

@@ -33,7 +33,7 @@ class _CameraPreviewViewPermission extends State<CameraPreviewViewPermission> {
               });
             }
           } else {
-            return const CircularProgressIndicator();
+            return Container();
           }
         });
   }

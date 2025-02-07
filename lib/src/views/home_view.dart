@@ -73,8 +73,8 @@ class HomeViewState extends State<HomeView> {
         bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,
-          selectedIconTheme:
-              IconThemeData(color: const Color.fromARGB(255, 255, 255, 255)),
+          selectedIconTheme: IconThemeData(
+              color: Theme.of(context).colorScheme.inverseSurface),
           items: [
             BottomNavigationBarItem(
               icon: FaIcon(FontAwesomeIcons.camera),
@@ -82,8 +82,6 @@ class HomeViewState extends State<HomeView> {
             ),
             BottomNavigationBarItem(
                 icon: FaIcon(FontAwesomeIcons.solidComments), label: ""),
-            // BottomNavigationBarItem(
-            //     icon: FaIcon(FontAwesomeIcons.userShield), label: ""),
           ],
           onTap: (int index) {
             activePageIdx = index;
