@@ -26,7 +26,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.camera,
       Permission.microphone,
-      //add more permission to request here.
+      Permission.notification
     ].request();
 
     if (statuses[Permission.microphone]!.isPermanentlyDenied) {

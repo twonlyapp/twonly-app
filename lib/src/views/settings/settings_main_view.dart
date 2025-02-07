@@ -6,6 +6,7 @@ import 'package:twonly/src/model/json/user_data.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/settings/account_view.dart';
 import 'package:twonly/src/views/settings/appearance_view.dart';
 import 'package:twonly/src/views/settings/help_view.dart';
 
@@ -80,7 +81,12 @@ class _ProfileViewState extends State<ProfileView> {
                 SettingsListTile(
                   icon: FontAwesomeIcons.user,
                   text: context.lang.settingsAccount,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return AccountView();
+                    }));
+                  },
                 ),
                 SettingsListTile(
                   icon: FontAwesomeIcons.shieldHeart,
@@ -110,17 +116,17 @@ class _ProfileViewState extends State<ProfileView> {
                     const AndroidNotificationDetails
                         androidNotificationDetails = AndroidNotificationDetails(
                       '0',
-                      'Messages2',
+                      'Messages',
                       channelDescription: 'Messages from other users.',
                       importance: Importance.max,
                       priority: Priority.max,
-                      ticker: 'ticker',
+                      ticker: 'You got a new message.',
                     );
                     const NotificationDetails notificationDetails =
                         NotificationDetails(
                             android: androidNotificationDetails);
                     await flutterLocalNotificationsPlugin.show(
-                        1,
+                        0,
                         'New message from x',
                         'You got a new message from XX',
                         notificationDetails,

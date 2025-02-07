@@ -10,13 +10,17 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 - Nachrichten nach 24h Stunden löschen
 - Real deployment aufsetzen, direkt auf Netcup?
 - Pro Invitation codes
+- Push Notification (Android)
 - FIX: Problem Bild falsch, wenn handy schräg...
 - MediaView:
     - Bei weiteren geladenen Bildern -> Direkt anzeigen ohne zu popen
 
 ## TODOS bevor first release
 - Webpage
-- Instagam
+- Instagam & Marketing vorbereiten
+- IT-Startup der TU Darmstadt anschreiben
+- iOS version
+
 ## Later todos
 - Videos
 - Sealed Sender

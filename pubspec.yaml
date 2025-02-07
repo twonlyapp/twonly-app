@@ -77,6 +77,16 @@ flutter:
 
   assets:
     # Add assets from the images directory to the application.
-    # - assets/images/
-    # - assets/images/logo.jpg
+    - assets/images/logo.jpg
     - assets/
+    - assets/images/
+    - assets/animations/present.lottie.json
+    - assets/animations/selfie.json
+    - assets/animations/messages.json
+    - assets/animations/local.json
+    - assets/animations/test.json
+    - assets/animations/product.json
+    - assets/animations/twonlies.json
+    - assets/animations/rocket.json
+    - assets/animations/e2e.json
+

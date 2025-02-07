@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
@@ -186,11 +187,22 @@ class _RegisterViewState extends State<RegisterView> {
   }
 }
 
-showAlertDialog(BuildContext context, String title, String content) {
+Future<bool> showAlertDialog(
+    BuildContext context, String title, String content) async {
+  Completer<bool> completer = Completer<bool>();
   // set up the button
   Widget okButton = TextButton(
-    child: Text("OK"),
+    child: Text(context.lang.ok),
     onPressed: () {
+      completer.complete(true); // Complete the future with true
+      Navigator.pop(context);
+    },
+  );
+
+  Widget cancelButton = TextButton(
+    child: Text(context.lang.cancel),
+    onPressed: () {
+      completer.complete(false); // Complete the future with true
       Navigator.pop(context);
     },
   );
@@ -200,6 +212,7 @@ showAlertDialog(BuildContext context, String title, String content) {
     title: Text(title),
     content: Text(content),
     actions: [
+      cancelButton,
       okButton,
     ],
   );
@@ -211,4 +224,5 @@ showAlertDialog(BuildContext context, String title, String content) {
       return alert;
     },
   );
+  return completer.future;
 }
