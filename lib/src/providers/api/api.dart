@@ -83,8 +83,7 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
 Future sendTextMessage(Int64 target, String message) async {
   MessageContent content = TextMessageContent(text: message);
 
-  DateTime messageSendAt =
-      DateTime.now().subtract(Duration(days: 1, minutes: 120));
+  DateTime messageSendAt = DateTime.now();
 
   int? messageId = await DbMessages.insertMyMessage(
       target.toInt(), MessageKind.textMessage, content, messageSendAt);

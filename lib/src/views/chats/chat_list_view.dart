@@ -182,10 +182,10 @@ class _UserListItem extends State<UserListItem> {
           .contains(token.toString());
     }
 
-    int? flameCounter = context
-        .watch<MessagesChangeProvider>()
-        .flamesCounter[widget.user.userId.toInt()];
-    flameCounter ??= 0;
+    int flameCounter = context
+            .watch<MessagesChangeProvider>()
+            .flamesCounter[widget.user.userId.toInt()] ??
+        0;
 
     return UserContextMenu(
       user: widget.user,

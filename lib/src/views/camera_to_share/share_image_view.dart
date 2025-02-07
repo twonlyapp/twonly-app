@@ -59,8 +59,8 @@ class _ShareImageView extends State<ShareImageView> {
     // Sort contacts by flameCounter and then by totalMediaCounter
     users.sort((a, b) {
       // First, compare by flameCounter
-      int flameComparison = flameCounters[b.userId.toInt()]!
-          .compareTo(flameCounters[a.userId.toInt()]!);
+      int flameComparison = (flameCounters[b.userId.toInt()] ?? 0)
+          .compareTo((flameCounters[a.userId.toInt()] ?? 0));
       if (flameComparison != 0) {
         return flameComparison; // Sort by flameCounter in descending order
       }
@@ -80,7 +80,7 @@ class _ShareImageView extends State<ShareImageView> {
     List<Contact> otherUsers = [];
 
     for (var contact in users) {
-      if (flameCounters[contact.userId.toInt()]! > 0 &&
+      if ((flameCounters[contact.userId.toInt()] ?? 0) > 0 &&
           bestFriends.length < 6) {
         bestFriends.add(contact);
       } else {
@@ -231,8 +231,7 @@ class UserList extends StatelessWidget {
       itemCount: users.length,
       itemBuilder: (BuildContext context, int i) {
         Contact user = users[i];
-        int? flameCounter = flameCounters[user.userId.toInt()];
-        flameCounter ??= 0;
+        int flameCounter = flameCounters[user.userId.toInt()] ?? 0;
         return ListTile(
           title: Row(children: [
             Text(user.displayName),

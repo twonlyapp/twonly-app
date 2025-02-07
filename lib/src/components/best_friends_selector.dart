@@ -89,10 +89,10 @@ class UserCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int? flameCounter = context
-        .watch<MessagesChangeProvider>()
-        .flamesCounter[user.userId.toInt()];
-    flameCounter ??= 0;
+    int flameCounter = context
+            .watch<MessagesChangeProvider>()
+            .flamesCounter[user.userId.toInt()] ??
+        0;
 
     return Container(
       padding:

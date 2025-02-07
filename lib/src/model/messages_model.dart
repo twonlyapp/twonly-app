@@ -225,7 +225,7 @@ class DbMessages extends CvModelBase {
       tableName,
       where: "$columnOtherUserId = ?",
       whereArgs: [otherUserId],
-      orderBy: "$columnUpdatedAt DESC",
+      orderBy: "$columnSendAt DESC",
     );
 
     List<DbMessage> messages = await convertToDbMessage(rows);
