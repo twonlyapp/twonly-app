@@ -346,6 +346,11 @@ class DbMessages extends CvModelBase {
         dynamic messageOpenedAt = fromDb[i][columnMessageOpenedAt];
         if (messageOpenedAt != null) {
           messageOpenedAt = DateTime.tryParse(fromDb[i][columnMessageOpenedAt]);
+          // if (messageOpenedAt != null) {
+          // if (messageOpenedAt.difference()) {
+
+          // }
+          // }
         }
         int? messageOtherId = fromDb[i][columnMessageOtherId];
         MessageContent content = MessageContent.fromJson(

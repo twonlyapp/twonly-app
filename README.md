@@ -2,6 +2,39 @@
 
 Don't be lonely, get twonly! Send pictures to a friend in real time and be sure you are the only two people who can see them.
 
+
+## TODOS bevor first beta
+- Flammen Problem fixen
+- Add no_screenshot plugin: https://pub.dev/packages/no_screenshot
+- Bei mehreren neu Empfangen Nachrichten fixen
+- Settings
+    - Delete and Block active users
+- Onboarding Slide, Text und Animationen
+- MessageKind -> Ausbauen?
+- Nachrichten nach 24h Stunden löschen
+- Real deployment aufsetzen direkt auf Netcup?
+- Pro Invitation codes
+
+## Later todos
+- Videos
+- Sealed Sender
+- Settings
+    - Profilbilder erstellen.
+- Pro Version
+- Media Shower -> Recap of the day
+- Send normal images via twonly
+
+
+
+## Pro Version
+
+- Send and receive unlimited pictures
+- This includes a free pro version for your twonly partner!
+- Get up to 3 tokens 
+- Get for your twonly partner a second a additional pro version
+
+
+
 ## Features
 
 This app was started because of the three main features I missed out by popular alternatives.

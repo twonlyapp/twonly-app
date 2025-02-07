@@ -75,11 +75,11 @@ flutter:
     # Add assets from the images directory to the application.
     - assets/images/
     - assets/animations/present.lottie.json
-    - assets/icons/
-    - assets/icons/flame.png
-    - assets/images/onboarding/01.png
-    - assets/images/onboarding/02.png
-    - assets/images/onboarding/03.png
-    - assets/images/onboarding/04.png
-    - assets/images/onboarding/05.png
-    - assets/images/onboarding/06.png
+    - assets/animations/selfie2.json
+    - assets/animations/messages.json
+    - assets/animations/local.json
+    - assets/animations/test.json
+    - assets/animations/product.json
+    - assets/animations/twonlies.json
+    - assets/animations/rocket.json
+    - assets/animations/e2e.json

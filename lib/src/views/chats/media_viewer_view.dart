@@ -151,7 +151,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     children: [
                       Expanded(
                         child: Lottie.asset(
-                            'assets/animations/present.lottie.json'),
+                          'assets/animations/present.lottie.json',
+                        ),
                       ),
                       Container(
                         padding: EdgeInsets.only(bottom: 200),

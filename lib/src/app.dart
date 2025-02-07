@@ -35,7 +35,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Future<bool> _isUserCreated = isUserCreated();
-  bool _showOnboarding = false;
+  bool _showOnboarding = true;
   bool _isConnected = false;
   int redColorOpacity = 0; // Start with dark red
   bool redColorGoUp = true;
