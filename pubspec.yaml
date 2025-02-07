@@ -20,6 +20,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_image_compress: ^2.4.0
+  flutter_local_notifications: ^18.0.1
   flutter_localizations:
     sdk: flutter
   flutter_secure_storage: ^9.2.2
@@ -74,13 +75,6 @@ flutter:
 
   assets:
     # Add assets from the images directory to the application.
-    - assets/images/
-    - assets/animations/present.lottie.json
-    - assets/animations/selfie2.json
-    - assets/animations/messages.json
-    - assets/animations/local.json
-    - assets/animations/test.json
-    - assets/animations/product.json
-    - assets/animations/twonlies.json
-    - assets/animations/rocket.json
-    - assets/animations/e2e.json
+    # - assets/images/
+    # - assets/images/logo.jpg
+    - assets/
