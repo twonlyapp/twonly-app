@@ -4,18 +4,22 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 
 
 ## TODOS bevor first beta
-- Settings
-    - Delete and Block active users
 - MessageKind -> Ausbauen?
 - Nachrichten nach 24h Stunden löschen
-- Real deployment aufsetzen, direkt auf Netcup?
 - Pro Invitation codes
 - Push Notification (Android)
-- FIX: Problem Bild falsch, wenn handy schräg...
+- Settings
+    - Notification
+- Real deployment aufsetzen, direkt auf Netcup?
 - MediaView:
-    - Bei weiteren geladenen Bildern -> Direkt anzeigen ohne zu popen
+    - Bei weiteren geladenen Bildern -> Direkt anzeigen ohne pop
+
+## Not my issues
+- FIX: Problem Bild falsch, wenn handy schräg... -> Issue already openend
 
 ## TODOS bevor first release
+- Settings
+    - Subscription
 - Webpage
 - Instagam & Marketing vorbereiten
 - IT-Startup der TU Darmstadt anschreiben

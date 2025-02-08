@@ -44,12 +44,10 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   Future<void> _loadAsync() async {
-    final users = await DbContacts.getActiveUsers();
-    setState(() {
-      _users = users;
-      _updateUsers(_users);
-    });
+    _users = await DbContacts.getActiveUsers();
+    _updateUsers(_users);
     imageBytes = await widget.imageBytesFuture;
+    setState(() {});
   }
 
   Future _updateUsers(List<Contact> users) async {

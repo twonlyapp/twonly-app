@@ -1,14 +1,15 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/main.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/json/user_data.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/account_view.dart';
 import 'package:twonly/src/views/settings/appearance_view.dart';
 import 'package:twonly/src/views/settings/help_view.dart';
+import 'package:twonly/src/views/settings/privacy_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -107,7 +108,12 @@ class _ProfileViewState extends State<ProfileView> {
                 SettingsListTile(
                   icon: FontAwesomeIcons.lock,
                   text: context.lang.settingsPrivacy,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return PrivacyView();
+                    }));
+                  },
                 ),
                 SettingsListTile(
                   icon: FontAwesomeIcons.bell,

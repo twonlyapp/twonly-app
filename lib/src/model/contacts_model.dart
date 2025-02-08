@@ -10,12 +10,14 @@ class Contact {
       {required this.userId,
       required this.displayName,
       required this.accepted,
+      required this.blocked,
       required this.totalMediaCounter,
       required this.requested});
   final Int64 userId;
   final String displayName;
   final bool accepted;
   final bool requested;
+  final bool blocked;
   final int totalMediaCounter;
 }
 
@@ -64,7 +66,21 @@ class DbContacts extends CvModelBase {
       [userId, displayName, accepted, requested, blocked, createdAt];
 
   static Future<List<Contact>> getActiveUsers() async {
-    return (await getUsers()).where((u) => u.accepted).toList();
+    return (await _getAllUsers())
+        .where((u) => u.accepted && !u.blocked)
+        .toList();
+  }
+
+  static Future<List<Contact>> getBlockedUsers() async {
+    return (await _getAllUsers()).where((u) => u.blocked).toList();
+  }
+
+  static Future<List<Contact>> getUsers() async {
+    return (await _getAllUsers()).where((u) => !u.blocked).toList();
+  }
+
+  static Future<List<Contact>> getAllUsers() async {
+    return await _getAllUsers();
   }
 
   static Future checkAndUpdateFlames(int userId, {DateTime? timestamp}) async {
@@ -96,18 +112,17 @@ class DbContacts extends CvModelBase {
     );
   }
 
-  static Future<List<Contact>> getUsers() async {
+  static Future<List<Contact>> _getAllUsers() async {
     try {
-      var users = await dbProvider.db!.query(tableName,
-          columns: [
-            columnUserId,
-            columnDisplayName,
-            columnAccepted,
-            columnRequested,
-            columnTotalMediaCounter,
-            columnCreatedAt
-          ],
-          where: "$columnBlocked = 0");
+      var users = await dbProvider.db!.query(tableName, columns: [
+        columnUserId,
+        columnDisplayName,
+        columnAccepted,
+        columnRequested,
+        columnBlocked,
+        columnTotalMediaCounter,
+        columnCreatedAt
+      ]);
       if (users.isEmpty) return [];
 
       List<Contact> parsedUsers = [];
@@ -119,6 +134,7 @@ class DbContacts extends CvModelBase {
             totalMediaCounter: users.cast()[i][columnTotalMediaCounter],
             displayName: users.cast()[i][columnDisplayName],
             accepted: users[i][columnAccepted] == 1,
+            blocked: users[i][columnBlocked] == 1,
             requested: users[i][columnRequested] == 1,
           ),
         );
@@ -130,9 +146,9 @@ class DbContacts extends CvModelBase {
     }
   }
 
-  static Future blockUser(int userId) async {
+  static Future blockUser(int userId, {bool unblock = false}) async {
     Map<String, dynamic> valuesToUpdate = {
-      columnBlocked: 1,
+      columnBlocked: unblock ? 0 : 1,
     };
     await dbProvider.db!.update(
       tableName,
