@@ -5,8 +5,6 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 
 ## TODOS bevor first beta
 - Send a picture first to only one person -> Kamera button
-- Context Menu
-- Invitation codes
 - Settings
 - Real deployment aufsetzen, direkt auf Netcup?
 - Firebase Push Notification
@@ -33,7 +31,6 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 - Pro Version
 - Media Shower -> Recap of the day
 - Send normal images via twonly
-
 
 
 ## Pro Version

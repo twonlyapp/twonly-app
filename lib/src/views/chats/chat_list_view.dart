@@ -202,7 +202,11 @@ class _UserListItem extends State<UserListItem> {
             ),
             if (flameCounter > 0)
               FlameCounterWidget(
-                  widget.user, flameCounter, widget.maxTotalMediaCounter),
+                widget.user,
+                flameCounter,
+                widget.maxTotalMediaCounter,
+                prefix: true,
+              ),
           ],
         ),
         leading: InitialsAvatar(displayName: widget.user.displayName),

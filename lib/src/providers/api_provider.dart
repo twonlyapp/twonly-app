@@ -71,6 +71,8 @@ class ApiProvider {
       reconnectionTimer!.cancel();
     }
 
+    isAuthenticated = false;
+
     log.info("Trying to connect to the backend $apiUrl!");
     if (await _connectTo(apiUrl)) {
       await onConnected();
