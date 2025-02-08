@@ -5,11 +5,13 @@ class FlameCounterWidget extends StatelessWidget {
   final Contact user;
   final int maxTotalMediaCounter;
   final int flameCounter;
+  final bool prefix;
 
   const FlameCounterWidget(
     this.user,
     this.flameCounter,
     this.maxTotalMediaCounter, {
+    this.prefix = false,
     super.key,
   });
 
@@ -17,9 +19,9 @@ class FlameCounterWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const SizedBox(width: 5),
-        Text("•"),
-        const SizedBox(width: 5),
+        if (prefix) const SizedBox(width: 5),
+        if (prefix) Text("•"),
+        if (prefix) const SizedBox(width: 5),
         Text(
           flameCounter.toString(),
           style: const TextStyle(fontSize: 13),

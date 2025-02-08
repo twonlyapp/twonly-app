@@ -4,7 +4,7 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 
 
 ## TODOS bevor first beta
-- Verify contact view
+- Send a picture first to only one person -> Kamera button
 - Context Menu
 
 - Pro Invitation codes

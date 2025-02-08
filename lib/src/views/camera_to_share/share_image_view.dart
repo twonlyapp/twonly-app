@@ -8,6 +8,7 @@ import 'package:twonly/src/components/best_friends_selector.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
+import 'package:twonly/src/components/verified_shield.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
@@ -36,6 +37,7 @@ class _ShareImageView extends State<ShareImageView> {
   Uint8List? imageBytes;
   final HashSet<Int64> _selectedUserIds = HashSet<Int64>();
   final TextEditingController searchUserName = TextEditingController();
+  bool showRealTwonlyWarning = false;
 
   @override
   void initState() {
@@ -105,6 +107,14 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   void updateStatus(Int64 userId, bool checked) {
+    if (widget.isRealTwonly) {
+      Contact user = _users.firstWhere((x) => x.userId == userId);
+      if (!user.verified) {
+        showRealTwonlyWarning = true;
+        return;
+      }
+    }
+    showRealTwonlyWarning = false;
     if (checked) {
       if (widget.isRealTwonly) {
         _selectedUserIds.clear();
@@ -126,16 +136,25 @@ class _ShareImageView extends State<ShareImageView> {
         child: Column(
           children: [
             Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                    onChanged: _filterUsers,
-                    decoration: getInputDecoration(
-                        context, context.lang.searchUsernameInput))),
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: TextField(
+                onChanged: _filterUsers,
+                decoration: getInputDecoration(
+                    context, context.lang.searchUsernameInput),
+              ),
+            ),
+            if (showRealTwonlyWarning) const SizedBox(height: 10),
+            if (showRealTwonlyWarning)
+              Text(
+                context.lang.shareImageAllTwonlyWarning,
+                style: TextStyle(color: Colors.orange),
+              ),
             const SizedBox(height: 10),
             BestFriendsSelector(
               users: _bestFriends,
               selectedUserIds: _selectedUserIds,
               maxTotalMediaCounter: maxTotalMediaCounter,
+              isRealTwonly: widget.isRealTwonly,
               updateStatus: updateStatus,
             ),
             const SizedBox(height: 10),
@@ -146,6 +165,7 @@ class _ShareImageView extends State<ShareImageView> {
                 List.from(_otherUsers),
                 maxTotalMediaCounter,
                 selectedUserIds: _selectedUserIds,
+                isRealTwonly: widget.isRealTwonly,
                 updateStatus: updateStatus,
               ),
             )
@@ -206,11 +226,18 @@ class _ShareImageView extends State<ShareImageView> {
 }
 
 class UserList extends StatelessWidget {
-  const UserList(this.users, this.maxTotalMediaCounter,
-      {super.key, required this.selectedUserIds, required this.updateStatus});
+  const UserList(
+    this.users,
+    this.maxTotalMediaCounter, {
+    super.key,
+    required this.selectedUserIds,
+    required this.updateStatus,
+    required this.isRealTwonly,
+  });
   final Function(Int64, bool) updateStatus;
   final List<Contact> users;
   final int maxTotalMediaCounter;
+  final bool isRealTwonly;
   final HashSet<Int64> selectedUserIds;
 
   @override
@@ -228,11 +255,25 @@ class UserList extends StatelessWidget {
         Contact user = users[i];
         int flameCounter = flameCounters[user.userId.toInt()] ?? 0;
         return ListTile(
-          title: Row(children: [
-            Text(user.displayName),
-            if (flameCounter > 0)
-              FlameCounterWidget(user, flameCounter, maxTotalMediaCounter),
-          ]),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.start, // Center horizontally
+            crossAxisAlignment: CrossAxisAlignment.center, // Center vertically
+            children: [
+              if (isRealTwonly)
+                Padding(
+                  padding: const EdgeInsets.only(right: 1),
+                  child: VerifiedShield(user),
+                ),
+              Text(user.displayName),
+              if (flameCounter >= 0)
+                FlameCounterWidget(
+                  user,
+                  flameCounter,
+                  maxTotalMediaCounter,
+                  prefix: true,
+                ),
+            ],
+          ),
           leading: InitialsAvatar(
             displayName: user.displayName,
             fontSize: 15,

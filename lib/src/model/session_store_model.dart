@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:cv/cv.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class DbSignalSessionStore extends CvModelBase {
   static const tableName = "signal_session_store";
@@ -16,8 +17,8 @@ class DbSignalSessionStore extends CvModelBase {
   static const columnCreatedAt = "created_at";
   final createdAt = CvField<DateTime>(columnCreatedAt);
 
-  static String getCreateTableString() {
-    return """
+  static Future setupDatabaseTable(Database db) async {
+    String createTableString = """
       CREATE TABLE IF NOT EXISTS $tableName (
       $columnDeviceId INTEGER NOT NULL,
       $columnName TEXT NOT NULL,
@@ -26,6 +27,7 @@ class DbSignalSessionStore extends CvModelBase {
       PRIMARY KEY ($columnDeviceId, $columnName)
     )
     """;
+    await db.execute(createTableString);
   }
 
   @override

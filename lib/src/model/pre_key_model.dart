@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:cv/cv.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 
 class DbSignalPreKeyStore extends CvModelBase {
   static const tableName = "signal_pre_key_store";
@@ -13,8 +14,8 @@ class DbSignalPreKeyStore extends CvModelBase {
   static const columnCreatedAt = "created_at";
   final createdAt = CvField<DateTime>(columnCreatedAt);
 
-  static String getCreateTableString() {
-    return """
+  static Future setupDatabaseTable(Database db) async {
+    String createTableString = """
       CREATE TABLE IF NOT EXISTS $tableName (
       $columnPreKeyId INTEGER NOT NULL,
       $columnPreKey BLOB NOT NULL,
@@ -22,6 +23,7 @@ class DbSignalPreKeyStore extends CvModelBase {
       PRIMARY KEY ($columnPreKeyId)
     )
     """;
+    await db.execute(createTableString);
   }
 
   @override

@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
+import 'package:twonly/src/components/verified_shield.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
@@ -205,7 +206,13 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
               Expanded(
                 child: Container(
                   color: Colors.transparent,
-                  child: Text(widget.user.displayName),
+                  child: Row(
+                    children: [
+                      Text(widget.user.displayName),
+                      SizedBox(width: 10),
+                      VerifiedShield(widget.user),
+                    ],
+                  ),
                 ),
               ),
             ],

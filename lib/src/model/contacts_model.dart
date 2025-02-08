@@ -2,8 +2,10 @@ import 'package:cv/cv.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/app.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class Contact {
   Contact(
@@ -11,6 +13,7 @@ class Contact {
       required this.displayName,
       required this.accepted,
       required this.blocked,
+      required this.verified,
       required this.totalMediaCounter,
       required this.requested});
   final Int64 userId;
@@ -18,6 +21,7 @@ class Contact {
   final bool accepted;
   final bool requested;
   final bool blocked;
+  final bool verified;
   final int totalMediaCounter;
 }
 
@@ -39,6 +43,9 @@ class DbContacts extends CvModelBase {
   static const columnBlocked = "blocked";
   final blocked = CvField<int>(columnBlocked);
 
+  static const columnVerified = "verified";
+  final verified = CvField<int>(columnVerified);
+
   static const columnTotalMediaCounter = "total_media_counter";
   final totalMediaCounter = CvField<int>(columnTotalMediaCounter);
 
@@ -47,18 +54,28 @@ class DbContacts extends CvModelBase {
 
   static const nextFlameCounterInSeconds = kDebugMode ? 60 : 60 * 60 * 24;
 
-  static String getCreateTableString() {
-    return """
+  static Future setupDatabaseTable(Database db) async {
+    String createTableString = """
       CREATE TABLE IF NOT EXISTS $tableName (
       $columnUserId INTEGER NOT NULL PRIMARY KEY,
       $columnDisplayName TEXT,
       $columnAccepted INT NOT NULL DEFAULT 0,
       $columnRequested INT NOT NULL DEFAULT 0,
       $columnBlocked INT NOT NULL DEFAULT 0,
+      $columnVerified INTEGER NOT NULL DEFAULT 0,
       $columnTotalMediaCounter INT NOT NULL DEFAULT 0,
       $columnCreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """;
+    await db.execute(createTableString);
+
+    if (!await columnExists(db, tableName, columnVerified)) {
+      String alterTableString = """
+      ALTER TABLE $tableName 
+      ADD COLUMN $columnVerified INTEGER NOT NULL DEFAULT 0
+    """;
+      await db.execute(alterTableString);
+    }
   }
 
   @override
@@ -108,6 +125,7 @@ class DbContacts extends CvModelBase {
         columnAccepted,
         columnRequested,
         columnBlocked,
+        columnVerified,
         columnTotalMediaCounter,
         columnCreatedAt
       ]);
@@ -123,6 +141,7 @@ class DbContacts extends CvModelBase {
             displayName: users.cast()[i][columnDisplayName],
             accepted: users[i][columnAccepted] == 1,
             blocked: users[i][columnBlocked] == 1,
+            verified: users[i][columnVerified] == 1,
             requested: users[i][columnRequested] == 1,
           ),
         );
@@ -171,6 +190,13 @@ class DbContacts extends CvModelBase {
     Map<String, dynamic> updates = {
       columnAccepted: 1,
       columnRequested: 0,
+    };
+    await _update(userId, updates);
+  }
+
+  static Future updateVerificationStatus(int userId, bool status) async {
+    Map<String, dynamic> updates = {
+      columnVerified: status ? 1 : 0,
     };
     await _update(userId, updates);
   }

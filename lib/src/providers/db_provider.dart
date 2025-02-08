@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/identity_key_store_model.dart';
 import 'package:twonly/src/model/messages_model.dart';
-import 'package:twonly/src/model/model_constants.dart';
 import 'package:twonly/src/model/pre_key_model.dart';
 import 'package:twonly/src/model/sender_key_store_model.dart';
 import 'package:twonly/src/model/session_store_model.dart';
@@ -12,6 +11,8 @@ import 'package:twonly/src/utils/misc.dart';
 
 class DbProvider {
   Database? db;
+
+  static const String dbName = 'twonly.db';
 
   Future openPath(String path) async {
     // Read the password for the database from the secure storage. If there is no, then create a
@@ -36,14 +37,10 @@ class DbProvider {
       await storage.write(key: "sqflite_database_password", value: password);
     }
 
-    db = await openDatabase(path, password: password, version: kVersion1,
-        onCreate: (db, version) async {
-      await _createDb(db);
-    }, onUpgrade: (db, oldVersion, newVersion) async {
-      if (oldVersion < kVersion1) {
-        //await _createDb(db);
-      }
-    });
+    db = await openDatabase(path, password: password);
+    if (db != null) {
+      await setupDatabaseTable(db!);
+    }
   }
 
   Future<Database?> get ready async {
@@ -53,13 +50,13 @@ class DbProvider {
     return db;
   }
 
-  Future _createDb(Database db) async {
-    await db.execute(DbSignalSessionStore.getCreateTableString());
-    await db.execute(DbSignalPreKeyStore.getCreateTableString());
-    await db.execute(DbSignalSenderKeyStore.getCreateTableString());
-    await db.execute(DbSignalIdentityKeyStore.getCreateTableString());
-    await db.execute(DbContacts.getCreateTableString());
-    await db.execute(DbMessages.getCreateTableString());
+  Future setupDatabaseTable(Database db) async {
+    await DbSignalSessionStore.setupDatabaseTable(db);
+    await DbSignalPreKeyStore.setupDatabaseTable(db);
+    await DbSignalSenderKeyStore.setupDatabaseTable(db);
+    await DbSignalIdentityKeyStore.setupDatabaseTable(db);
+    await DbContacts.setupDatabaseTable(db);
+    await DbMessages.setupDatabaseTable(db);
   }
 
   Future open() async {

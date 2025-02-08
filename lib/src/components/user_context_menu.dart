@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/views/contact/contact_verify_view.dart';
 
 class UserContextMenu extends StatefulWidget {
   final Widget child;
@@ -22,9 +23,15 @@ class _UserContextMenuState extends State<UserContextMenu> {
         PieAction(
           tooltip: const Text('Verify user'),
           onSelect: () {
-            print('Verify user selected');
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) {
+                return ContactVerifyView(widget.user);
+              },
+            ));
           },
-          child: const Icon(Icons.gpp_maybe_rounded), // Can be any widget
+          child: widget.user.verified
+              ? FaIcon(FontAwesomeIcons.shieldHeart)
+              : const Icon(Icons.gpp_maybe_rounded), // Can be any widget
         ),
         PieAction(
           tooltip: const Text('Send image'),

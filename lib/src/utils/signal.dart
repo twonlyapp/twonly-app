@@ -6,9 +6,11 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/signal_identity.dart';
+import 'package:twonly/src/model/json/user_data.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart';
 import 'package:twonly/src/signal/connect_signal_protocol_store.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 
 const int defaultDeviceId = 1;
 
@@ -147,26 +149,30 @@ Future createIfNotExistsSignalIdentity() async {
       key: "signal_identity", value: jsonEncode(storedSignalIdentity));
 }
 
-// Future<Fingerprint?> generateSessionFingerPrint(String target) async {
-//   try {
-//     IdentityKey? targetIdentity = await signalStore
-//         .getIdentity(SignalProtocolAddress(target, defaultDeviceId));
-//     if (targetIdentity != null) {
-//       final generator = NumericFingerprintGenerator(5200);
-//       final localFingerprint = generator.createFor(
-//         1,
-//         userId,
-//         (await signalStore.getIdentityKeyPair()).getPublicKey(),
-//         Uint8List.fromList(utf8.encode(target)),
-//         targetIdentity,
-//       );
-//       return localFingerprint;
-//     }
-//     return null;
-//   } catch (e) {
-//     return null;
-//   }
-// }
+Future<Fingerprint?> generateSessionFingerPrint(Int64 target) async {
+  ConnectSignalProtocolStore? signalStore = await getSignalStore();
+  UserData? user = await getUser();
+  if (signalStore == null || user == null) return null;
+  try {
+    IdentityKey? targetIdentity = await signalStore
+        .getIdentity(SignalProtocolAddress(target.toString(), defaultDeviceId));
+    if (targetIdentity != null) {
+      final generator = NumericFingerprintGenerator(5200);
+      final localFingerprint = generator.createFor(
+        1,
+        Uint8List.fromList([user.userId.toInt()]),
+        (await signalStore.getIdentityKeyPair()).getPublicKey(),
+        Uint8List.fromList([target.toInt()]),
+        targetIdentity,
+      );
+
+      return localFingerprint;
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
 
 Uint8List intToBytes(int value) {
   final byteData = ByteData(4);

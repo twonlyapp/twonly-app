@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cv/cv.dart';
 import 'package:logging/logging.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:twonly/main.dart';
 import 'package:twonly/src/app.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
@@ -103,8 +104,8 @@ class DbMessages extends CvModelBase {
   static const columnUpdatedAt = "updated_at";
   final updatedAt = CvField<DateTime>(columnUpdatedAt);
 
-  static String getCreateTableString() {
-    return """
+  static Future setupDatabaseTable(Database db) async {
+    String createTableString = """
       CREATE TABLE IF NOT EXISTS $tableName (
       $columnMessageId INTEGER NOT NULL PRIMARY KEY,
       $columnMessageOtherId INTEGER DEFAULT NULL,
@@ -118,6 +119,7 @@ class DbMessages extends CvModelBase {
       $columnUpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
     """;
+    await db.execute(createTableString);
   }
 
   static Future<List<(DateTime, int?)>> getMessageDates(int otherUserId) async {

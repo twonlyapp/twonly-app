@@ -101,7 +101,6 @@ class UserList extends StatelessWidget {
       itemCount: users.length,
       itemBuilder: (BuildContext context, int i) {
         Contact user = users[i];
-        print(user.blocked);
         return ListTile(
           title: Row(children: [
             Text(user.displayName),
@@ -113,7 +112,6 @@ class UserList extends StatelessWidget {
           trailing: Checkbox(
             value: user.blocked,
             onChanged: (bool? value) {
-              print(value);
               block(value, user.userId.toInt());
             },
           ),

@@ -1,0 +1,38 @@
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/views/contact/contact_verify_view.dart';
+
+class VerifiedShield extends StatelessWidget {
+  final Contact contact;
+  final double size;
+
+  const VerifiedShield(this.contact, {super.key, this.size = 18});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(
+          builder: (context) {
+            return ContactVerifyView(contact);
+          },
+        ));
+      },
+      child: Tooltip(
+        message: contact.verified
+            ? "You verified this contact"
+            : "Click here to verify your contact.",
+        child: FaIcon(
+          contact.verified
+              ? FontAwesomeIcons.shieldHeart
+              : Icons.gpp_maybe_rounded,
+          color: contact.verified
+              ? Theme.of(context).colorScheme.primary
+              : Colors.red,
+          size: size,
+        ),
+      ),
+    );
+  }
+}
