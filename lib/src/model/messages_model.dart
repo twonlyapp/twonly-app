@@ -13,7 +13,6 @@ class DbMessage {
     required this.messageId,
     required this.messageOtherId,
     required this.otherUserId,
-    required this.messageKind,
     required this.messageContent,
     required this.messageOpenedAt,
     required this.messageAcknowledgeByUser,
@@ -26,7 +25,6 @@ class DbMessage {
   // is this null then the message was sent from the user itself
   int? messageOtherId;
   int otherUserId;
-  MessageKind messageKind;
   MessageContent messageContent;
   DateTime? messageOpenedAt;
   bool messageAcknowledgeByUser;
@@ -42,7 +40,8 @@ class DbMessage {
   bool get messageReceived => messageOtherId != null;
 
   bool isMedia() {
-    return messageKind == MessageKind.image || messageKind == MessageKind.video;
+    return messageContent is TextMessageContent ||
+        messageContent is MediaMessageContent;
   }
 
   MessageSendState getSendState() {
@@ -276,17 +275,19 @@ class DbMessages extends CvModelBase {
     return messages[0];
   }
 
-  static Future _updateByMessageId(
-      int messageId, Map<String, dynamic> data) async {
+  static Future _updateByMessageId(int messageId, Map<String, dynamic> data,
+      {bool notifyFlutterState = true}) async {
     await dbProvider.db!.update(
       tableName,
       data,
       where: "$columnMessageId = ?",
       whereArgs: [messageId],
     );
-    int? fromUserId = await getFromUserIdByMessageId(messageId);
-    if (fromUserId != null) {
-      globalCallBackOnMessageChange(fromUserId);
+    if (notifyFlutterState) {
+      int? fromUserId = await getFromUserIdByMessageId(messageId);
+      if (fromUserId != null) {
+        globalCallBackOnMessageChange(fromUserId);
+      }
     }
   }
 
@@ -354,25 +355,39 @@ class DbMessages extends CvModelBase {
   List<CvField> get fields =>
       [messageId, messageKind, messageContentJson, messageOpenedAt, sendAt];
 
+  // TODO: The message meta is needed to maintain the flame. Delete if not.
+  // This function should calculate if this message is needed for the flame calculation and delete the message complete and not only
+  // the message content.
+  static Future deleteTextContent(
+      int messageId, TextMessageContent oldMessage) async {
+    oldMessage.text = "";
+    Map<String, dynamic> data = {
+      columnMessageContentJson: jsonEncode(oldMessage.toJson()),
+    };
+    await _updateByMessageId(messageId, data, notifyFlutterState: false);
+  }
+
   static Future<List<DbMessage>> convertToDbMessage(
       List<dynamic> fromDb) async {
     try {
       List<DbMessage> parsedUsers = [];
       for (int i = 0; i < fromDb.length; i++) {
         dynamic messageOpenedAt = fromDb[i][columnMessageOpenedAt];
-        if (messageOpenedAt != null) {
-          messageOpenedAt = DateTime.tryParse(fromDb[i][columnMessageOpenedAt]);
-          // if (messageOpenedAt != null) {
-          // if (messageOpenedAt.difference()) {
 
-          // }
-          // }
-        }
-        int? messageOtherId = fromDb[i][columnMessageOtherId];
         MessageContent content = MessageContent.fromJson(
             jsonDecode(fromDb[i][columnMessageContentJson]));
-        MessageKind messageKind =
-            MessageKindExtension.fromIndex(fromDb[i][columnMessageKind]);
+
+        var tmp = content;
+        if (tmp is TextMessageContent && messageOpenedAt != null) {
+          messageOpenedAt = DateTime.tryParse(fromDb[i][columnMessageOpenedAt]);
+          if (messageOpenedAt != null) {
+            if ((DateTime.now()).difference(messageOpenedAt).inHours >= 24) {
+              deleteTextContent(fromDb[i][columnMessageId], tmp);
+            }
+          }
+        }
+        int? messageOtherId = fromDb[i][columnMessageOtherId];
+
         bool isDownloaded = true;
         if (messageOtherId != null) {
           if (content is MediaMessageContent) {
@@ -386,7 +401,6 @@ class DbMessages extends CvModelBase {
             messageId: fromDb[i][columnMessageId],
             messageOtherId: messageOtherId,
             otherUserId: fromDb[i][columnOtherUserId],
-            messageKind: messageKind,
             messageContent: content,
             isDownloaded: isDownloaded,
             messageOpenedAt: messageOpenedAt,

@@ -134,7 +134,7 @@ class MediaMessageContent extends MessageContent {
 }
 
 class TextMessageContent extends MessageContent {
-  final String text;
+  String text;
   TextMessageContent({required this.text});
 
   static TextMessageContent fromJson(Map json) {

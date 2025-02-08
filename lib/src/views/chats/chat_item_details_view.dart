@@ -38,75 +38,69 @@ class ChatListEntry extends StatelessWidget {
 
     Widget child = Container();
 
-    switch (message.messageKind) {
-      case MessageKind.textMessage:
-        if (content is TextMessageContent) {
-          child = Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.8,
-            ),
-            padding: EdgeInsets.symmetric(
-                vertical: 4,
-                horizontal: 10), // Add some padding around the text
-            decoration: BoxDecoration(
-              color: right
-                  ? const Color.fromARGB(107, 124, 77, 255)
-                  : const Color.fromARGB(
-                      83, 68, 137, 255), // Set the background color
-              borderRadius: BorderRadius.circular(12.0), // Set border radius
-            ),
-            child: Text(
-              content.text,
-              style: TextStyle(
-                color: Colors.white, // Set text color for contrast
-                fontSize: 17,
-              ),
-              textAlign: TextAlign.left, // Center the text
-            ),
-          );
-        }
-        break;
-      case MessageKind.image:
-        Color color = message.messageContent
-            .getColor(Theme.of(context).colorScheme.primary);
-        child = GestureDetector(
-          onTap: () {
-            if (state == MessageSendState.received && !isDownloading) {
-              if (message.isDownloaded) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) {
-                    return MediaViewerView(user, message);
-                  }),
-                );
-              } else {
-                tryDownloadMedia(token, force: true);
-              }
+    if (content is TextMessageContent) {
+      child = Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
+        padding: EdgeInsets.symmetric(
+            vertical: 4, horizontal: 10), // Add some padding around the text
+        decoration: BoxDecoration(
+          color: right
+              ? const Color.fromARGB(107, 124, 77, 255)
+              : const Color.fromARGB(
+                  83, 68, 137, 255), // Set the background color
+          borderRadius: BorderRadius.circular(12.0), // Set border radius
+        ),
+        child: Text(
+          content.text,
+          style: TextStyle(
+            color: Colors.white, // Set text color for contrast
+            fontSize: 17,
+          ),
+          textAlign: TextAlign.left, // Center the text
+        ),
+      );
+    } else if (content is MediaMessageContent && !content.isVideo) {
+      Color color = message.messageContent
+          .getColor(Theme.of(context).colorScheme.primary);
+      child = GestureDetector(
+        onTap: () {
+          if (state == MessageSendState.received && !isDownloading) {
+            if (message.isDownloaded) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) {
+                  return MediaViewerView(user, message);
+                }),
+              );
+            } else {
+              tryDownloadMedia(token, force: true);
             }
-          },
-          child: Container(
-            padding: EdgeInsets.all(10),
-            width: 150,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: color, // Set the background color
-                width: 1.0, // Set the border width here
-              ),
-              borderRadius: BorderRadius.circular(12.0), // Set border radius
+          }
+        },
+        child: Container(
+          padding: EdgeInsets.all(10),
+          width: 150,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: color, // Set the background color
+              width: 1.0, // Set the border width here
             ),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: MessageSendStateIcon(
-                message,
-                mainAxisAlignment:
-                    right ? MainAxisAlignment.center : MainAxisAlignment.center,
-              ),
+            borderRadius: BorderRadius.circular(12.0), // Set border radius
+          ),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: MessageSendStateIcon(
+              message,
+              mainAxisAlignment:
+                  right ? MainAxisAlignment.center : MainAxisAlignment.center,
             ),
           ),
-        );
-      default:
-        return Container();
+        ),
+      );
     }
+
     return Align(
       alignment: right ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
@@ -164,7 +158,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     if (updateOpenStatus) {
       _messages.where((x) => x.messageOpenedAt == null).forEach((message) {
         if (message.messageOtherId != null &&
-            message.messageKind == MessageKind.textMessage) {
+            message.messageContent is TextMessageContent) {
           if (!alreadyReportedOpened.contains(message.messageOtherId!)) {
             userOpenedOtherMessage(
                 message.otherUserId, message.messageOtherId!);
@@ -209,6 +203,14 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                               _messages[i].messageOtherId == null) ||
                           (_messages[i - 1].messageOtherId != null &&
                               _messages[i].messageOtherId != null);
+                }
+                if (_messages[i].messageOpenedAt != null) {
+                  if ((DateTime.now())
+                          .difference(_messages[i].messageOpenedAt!)
+                          .inHours >=
+                      24) {
+                    return Container();
+                  }
                 }
                 return ChatListEntry(
                   _messages[i],
