@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:twonly/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:twonly/src/components/alert_dialog.dart';
 import 'package:twonly/src/model/json/user_data.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/signal.dart';
@@ -185,44 +186,4 @@ class _RegisterViewState extends State<RegisterView> {
           )),
     );
   }
-}
-
-Future<bool> showAlertDialog(
-    BuildContext context, String title, String content) async {
-  Completer<bool> completer = Completer<bool>();
-  // set up the button
-  Widget okButton = TextButton(
-    child: Text(context.lang.ok),
-    onPressed: () {
-      completer.complete(true); // Complete the future with true
-      Navigator.pop(context);
-    },
-  );
-
-  Widget cancelButton = TextButton(
-    child: Text(context.lang.cancel),
-    onPressed: () {
-      completer.complete(false); // Complete the future with true
-      Navigator.pop(context);
-    },
-  );
-
-  // set up the AlertDialog
-  AlertDialog alert = AlertDialog(
-    title: Text(title),
-    content: Text(content),
-    actions: [
-      cancelButton,
-      okButton,
-    ],
-  );
-
-  // show the dialog
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-  return completer.future;
 }

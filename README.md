@@ -4,11 +4,11 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 
 
 ## TODOS bevor first beta
-- Pro Invitation codes
-- Push Notification (Android)
-- Contact view page
 - Verify contact view
 - Context Menu
+
+- Pro Invitation codes
+- Push Notification (Android)
 - Settings
     - Notification
 - Real deployment aufsetzen, direkt auf Netcup?

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/components/alert_dialog.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/main.dart';
@@ -9,7 +10,6 @@ import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/views/onboarding/register_view.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 

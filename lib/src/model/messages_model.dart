@@ -40,8 +40,7 @@ class DbMessage {
   bool get messageReceived => messageOtherId != null;
 
   bool isMedia() {
-    return messageContent is TextMessageContent ||
-        messageContent is MediaMessageContent;
+    return messageContent is MediaMessageContent;
   }
 
   MessageSendState getSendState() {
@@ -378,9 +377,9 @@ class DbMessages extends CvModelBase {
             jsonDecode(fromDb[i][columnMessageContentJson]));
 
         var tmp = content;
-        if (tmp is TextMessageContent && messageOpenedAt != null) {
+        if (messageOpenedAt != null) {
           messageOpenedAt = DateTime.tryParse(fromDb[i][columnMessageOpenedAt]);
-          if (messageOpenedAt != null) {
+          if (tmp is TextMessageContent && messageOpenedAt != null) {
             if ((DateTime.now()).difference(messageOpenedAt).inHours >= 24) {
               deleteTextContent(fromDb[i][columnMessageId], tmp);
             }

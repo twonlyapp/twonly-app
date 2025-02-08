@@ -100,18 +100,6 @@ class DbContacts extends CvModelBase {
     }
   }
 
-  static Future _updateFlameCounter(int userId, int totalMediaCounter) async {
-    Map<String, dynamic> valuesToUpdate = {
-      columnTotalMediaCounter: totalMediaCounter
-    };
-    await dbProvider.db!.update(
-      tableName,
-      valuesToUpdate,
-      where: "$columnUserId = ?",
-      whereArgs: [userId],
-    );
-  }
-
   static Future<List<Contact>> _getAllUsers() async {
     try {
       var users = await dbProvider.db!.query(tableName, columns: [
@@ -146,31 +134,45 @@ class DbContacts extends CvModelBase {
     }
   }
 
-  static Future blockUser(int userId, {bool unblock = false}) async {
-    Map<String, dynamic> valuesToUpdate = {
-      columnBlocked: unblock ? 0 : 1,
-    };
+  static Future _update(int userId, Map<String, dynamic> updates,
+      {bool notifyFlutter = true}) async {
     await dbProvider.db!.update(
       tableName,
-      valuesToUpdate,
+      updates,
       where: "$columnUserId = ?",
       whereArgs: [userId],
     );
-    globalCallBackOnContactChange();
+    if (notifyFlutter) {
+      globalCallBackOnContactChange();
+    }
+  }
+
+  static Future changeDisplayName(int userId, String newDisplayName) async {
+    if (newDisplayName == "") return;
+    Map<String, dynamic> updates = {
+      columnDisplayName: newDisplayName,
+    };
+    await _update(userId, updates);
+  }
+
+  static Future _updateFlameCounter(int userId, int totalMediaCounter) async {
+    Map<String, dynamic> updates = {columnTotalMediaCounter: totalMediaCounter};
+    await _update(userId, updates, notifyFlutter: false);
+  }
+
+  static Future blockUser(int userId, {bool unblock = false}) async {
+    Map<String, dynamic> updates = {
+      columnBlocked: unblock ? 0 : 1,
+    };
+    await _update(userId, updates);
   }
 
   static Future acceptUser(int userId) async {
-    Map<String, dynamic> valuesToUpdate = {
+    Map<String, dynamic> updates = {
       columnAccepted: 1,
       columnRequested: 0,
     };
-    await dbProvider.db!.update(
-      tableName,
-      valuesToUpdate,
-      where: "$columnUserId = ?",
-      whereArgs: [userId],
-    );
-    globalCallBackOnContactChange();
+    await _update(userId, updates);
   }
 
   static Future deleteUser(int userId) async {

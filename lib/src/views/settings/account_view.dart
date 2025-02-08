@@ -1,8 +1,8 @@
 import 'package:restart_app/restart_app.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/components/alert_dialog.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/onboarding/register_view.dart';
 
 class AccountView extends StatelessWidget {
   const AccountView({super.key});

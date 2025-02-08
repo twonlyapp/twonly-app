@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/components/better_list_title.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/json/user_data.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +80,7 @@ class _ProfileViewState extends State<ProfileView> {
                     ],
                   ),
                 ),
-                SettingsListTile(
+                BetterListTile(
                   icon: FontAwesomeIcons.user,
                   text: context.lang.settingsAccount,
                   onTap: () {
@@ -89,13 +90,13 @@ class _ProfileViewState extends State<ProfileView> {
                     }));
                   },
                 ),
-                SettingsListTile(
+                BetterListTile(
                   icon: FontAwesomeIcons.shieldHeart,
                   text: context.lang.settingsSubscription,
                   onTap: () {},
                 ),
                 const Divider(),
-                SettingsListTile(
+                BetterListTile(
                   icon: FontAwesomeIcons.sun,
                   text: context.lang.settingsAppearance,
                   onTap: () {
@@ -105,7 +106,7 @@ class _ProfileViewState extends State<ProfileView> {
                     }));
                   },
                 ),
-                SettingsListTile(
+                BetterListTile(
                   icon: FontAwesomeIcons.lock,
                   text: context.lang.settingsPrivacy,
                   onTap: () {
@@ -115,7 +116,7 @@ class _ProfileViewState extends State<ProfileView> {
                     }));
                   },
                 ),
-                SettingsListTile(
+                BetterListTile(
                   icon: FontAwesomeIcons.bell,
                   text: context.lang.settingsNotification,
                   onTap: () async {
@@ -140,7 +141,7 @@ class _ProfileViewState extends State<ProfileView> {
                   },
                 ),
                 const Divider(),
-                SettingsListTile(
+                BetterListTile(
                   icon: FontAwesomeIcons.circleQuestion,
                   text: context.lang.settingsHelp,
                   onTap: () {
@@ -153,37 +154,6 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ],
             ),
-    );
-  }
-}
-
-class SettingsListTile extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final VoidCallback onTap;
-
-  const SettingsListTile({
-    super.key,
-    required this.icon,
-    required this.text,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Padding(
-        padding: const EdgeInsets.only(
-          right: 10,
-          left: 19,
-        ),
-        child: FaIcon(
-          icon,
-          size: 20,
-        ),
-      ),
-      title: Text(text),
-      onTap: onTap,
     );
   }
 }

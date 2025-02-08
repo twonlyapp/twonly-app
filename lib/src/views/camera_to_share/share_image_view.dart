@@ -180,10 +180,7 @@ class _ShareImageView extends State<ShareImageView> {
                     widget.isRealTwonly,
                     widget.maxShowTime,
                   );
-
-                  // TODO: pop back to the HomeView page popUntil did not work. check later how to improve in case of pushing more then 2
-                  Navigator.pop(context);
-                  Navigator.pop(context);
+                  Navigator.popUntil(context, (route) => route.isFirst);
                   globalUpdateOfHomeViewPageIndex(1);
                 },
                 style: ButtonStyle(

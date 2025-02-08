@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
@@ -11,6 +12,7 @@ import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/contact/contact_view.dart';
 
 class ChatListEntry extends StatelessWidget {
   const ChatListEntry(this.message, this.user, this.lastMessageFromSameUser,
@@ -187,7 +189,28 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.lang.chatListDetailTitle(widget.user.displayName)),
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) {
+              return ContactView(widget.user);
+            }));
+          },
+          child: Row(
+            children: [
+              InitialsAvatar(
+                displayName: widget.user.displayName,
+                fontSize: 19,
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Container(
+                  color: Colors.transparent,
+                  child: Text(widget.user.displayName),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       body: Column(
         children: [
