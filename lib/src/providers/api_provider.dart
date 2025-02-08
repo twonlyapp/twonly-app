@@ -26,6 +26,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class ApiProvider {
   final String apiUrl;
   final String? backupApiUrl;
+  bool isAuthenticated = false;
   ApiProvider({required this.apiUrl, required this.backupApiUrl});
 
   final log = Logger("ApiProvider");
@@ -72,13 +73,13 @@ class ApiProvider {
 
     log.info("Trying to connect to the backend $apiUrl!");
     if (await _connectTo(apiUrl)) {
-      onConnected();
+      await onConnected();
       return true;
     }
     if (backupApiUrl != null) {
       log.info("Trying to connect to the backup backend $backupApiUrl!");
       if (await _connectTo(backupApiUrl!)) {
-        onConnected();
+        await onConnected();
         return true;
       }
     }
@@ -90,12 +91,14 @@ class ApiProvider {
   void _onDone() {
     globalCallbackConnectionState(false);
     _channel = null;
+    isAuthenticated = false;
     tryToReconnect();
   }
 
   void _onError(dynamic e) {
     globalCallbackConnectionState(false);
     _channel = null;
+    isAuthenticated = false;
     tryToReconnect();
   }
 
@@ -155,11 +158,15 @@ class ApiProvider {
     _channel!.sink.add(response.writeToBuffer());
   }
 
-  Future<Result> _sendRequestV0(ClientToServer request) async {
+  Future<Result> _sendRequestV0(ClientToServer request,
+      {bool authenticated = true}) async {
     if (_channel == null) {
       if (!await connect()) {
         return Result.error(ErrorCode.InternalError);
       }
+    }
+    if (authenticated) {
+      await authenticate();
     }
     var seq = Int64(Random().nextInt(4294967296));
     while (messagesV0.containsKey(seq)) {
@@ -175,6 +182,7 @@ class ApiProvider {
   }
 
   Future authenticate() async {
+    if (isAuthenticated) return;
     if (await SignalHelper.getSignalIdentity() == null) {
       return;
     }
@@ -182,7 +190,7 @@ class ApiProvider {
     var handshake = Handshake()..getchallenge = Handshake_GetChallenge();
     var req = createClientToServerFromHandshake(handshake);
 
-    final result = await _sendRequestV0(req);
+    final result = await _sendRequestV0(req, authenticated: false);
     if (result.isError) {
       log.shout("Error auth", result);
       return;
@@ -206,13 +214,14 @@ class ApiProvider {
 
     var req2 = createClientToServerFromHandshake(opensession);
 
-    final result2 = await _sendRequestV0(req2);
+    final result2 = await _sendRequestV0(req2, authenticated: false);
     if (result2.isError) {
       log.shout("send request failed: ${result2.error}");
       return;
     }
 
     log.info("Authenticated!");
+    isAuthenticated = true;
   }
 
   Future<Result> register(String username, String? inviteCode) async {

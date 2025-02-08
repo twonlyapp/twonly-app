@@ -1,10 +1,8 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/better_list_title.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/json/user_data.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/account_view.dart';
@@ -119,26 +117,7 @@ class _ProfileViewState extends State<ProfileView> {
                 BetterListTile(
                   icon: FontAwesomeIcons.bell,
                   text: context.lang.settingsNotification,
-                  onTap: () async {
-                    const AndroidNotificationDetails
-                        androidNotificationDetails = AndroidNotificationDetails(
-                      '0',
-                      'Messages',
-                      channelDescription: 'Messages from other users.',
-                      importance: Importance.max,
-                      priority: Priority.max,
-                      ticker: 'You got a new message.',
-                    );
-                    const NotificationDetails notificationDetails =
-                        NotificationDetails(
-                            android: androidNotificationDetails);
-                    await flutterLocalNotificationsPlugin.show(
-                        0,
-                        'New message from x',
-                        'You got a new message from XX',
-                        notificationDetails,
-                        payload: 'test');
-                  },
+                  onTap: () async {},
                 ),
                 const Divider(),
                 BetterListTile(

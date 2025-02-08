@@ -6,12 +6,10 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 ## TODOS bevor first beta
 - Send a picture first to only one person -> Kamera button
 - Context Menu
-
-- Pro Invitation codes
-- Push Notification (Android)
+- Invitation codes
 - Settings
-    - Notification
 - Real deployment aufsetzen, direkt auf Netcup?
+- Firebase Push Notification
 - MediaView:
     - Bei weiteren geladenen Bildern -> Direkt anzeigen ohne pop
 
@@ -21,6 +19,7 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 ## TODOS bevor first release
 - Settings
     - Subscription
+    - Notification
 - Webpage
 - Instagam & Marketing vorbereiten
 - IT-Startup der TU Darmstadt anschreiben

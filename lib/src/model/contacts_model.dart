@@ -117,6 +117,53 @@ class DbContacts extends CvModelBase {
     }
   }
 
+  static List<Contact> _parseContacts(List<dynamic> users) {
+    List<Contact> parsedUsers = [];
+    for (int i = 0; i < users.length; i++) {
+      try {
+        int userId = users.cast()[i][columnUserId];
+        parsedUsers.add(
+          Contact(
+            userId: Int64(userId),
+            totalMediaCounter: users.cast()[i][columnTotalMediaCounter],
+            displayName: users.cast()[i][columnDisplayName],
+            accepted: users[i][columnAccepted] == 1,
+            blocked: users[i][columnBlocked] == 1,
+            verified: users[i][columnVerified] == 1,
+            requested: users[i][columnRequested] == 1,
+          ),
+        );
+      } catch (e) {
+        Logger("contacts_model/parse_single_user").shout("$e");
+        return [];
+      }
+    }
+    return parsedUsers;
+  }
+
+  static Future<Contact?> getUserById(int userId) async {
+    try {
+      var user = await dbProvider.db!.query(tableName,
+          columns: [
+            columnUserId,
+            columnDisplayName,
+            columnAccepted,
+            columnRequested,
+            columnBlocked,
+            columnVerified,
+            columnTotalMediaCounter,
+            columnCreatedAt
+          ],
+          where: "$columnUserId = ?",
+          whereArgs: [userId]);
+      if (user.isEmpty) return null;
+      return _parseContacts(user)[0];
+    } catch (e) {
+      Logger("contacts_model/getUserById").shout("$e");
+      return null;
+    }
+  }
+
   static Future<List<Contact>> _getAllUsers() async {
     try {
       var users = await dbProvider.db!.query(tableName, columns: [
@@ -130,23 +177,7 @@ class DbContacts extends CvModelBase {
         columnCreatedAt
       ]);
       if (users.isEmpty) return [];
-
-      List<Contact> parsedUsers = [];
-      for (int i = 0; i < users.length; i++) {
-        int userId = users.cast()[i][columnUserId];
-        parsedUsers.add(
-          Contact(
-            userId: Int64(userId),
-            totalMediaCounter: users.cast()[i][columnTotalMediaCounter],
-            displayName: users.cast()[i][columnDisplayName],
-            accepted: users[i][columnAccepted] == 1,
-            blocked: users[i][columnBlocked] == 1,
-            verified: users[i][columnVerified] == 1,
-            requested: users[i][columnRequested] == 1,
-          ),
-        );
-      }
-      return parsedUsers;
+      return _parseContacts(users);
     } catch (e) {
       Logger("contacts_model/getUsers").shout("$e");
       return [];

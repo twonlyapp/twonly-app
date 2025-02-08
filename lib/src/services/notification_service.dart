@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:logging/logging.dart';
+import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/model/json/message.dart' as my;
 
 /// Streams are created so that app can respond to notification-related events
 /// since the plugin is initialized in the `main` function
@@ -128,5 +132,88 @@ Future<void> setupPushNotification() async {
     initializationSettings,
     onDidReceiveNotificationResponse: selectNotificationStream.add,
     onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+  );
+}
+
+String getPushNotificationText(String key, String userName) {
+  String systemLanguage = Platform.localeName;
+
+  Map<String, String> pushNotificationText;
+
+  if (systemLanguage.contains("de")) {
+    pushNotificationText = {
+      "newTextMessage": "%userName% hat die eine Nachricht gesendet.",
+      "newTwonly": "%userName% hat dir einen twonly gesendet.",
+      "newVideo": "%userName% hat die eine Video gesendet.",
+      "newImage": "%userName% hat die eine Bild gesendet.",
+      "contactRequest": "%userName% möchte sich mir dir vernetzen.",
+      "acceptRequest": "%userName%  ist jetzt mit dir vernetzt.",
+    };
+  } else {
+    pushNotificationText = {
+      "newTextMessage": "%userName% has sent you a message.",
+      "newTwonly": "%userName% has sent you a twonly.",
+      "newVideo": "%userName% has sent you a video.",
+      "newImage": "%userName% has sent you an image.",
+      "contactRequest": "%userName% wants to connect with you.",
+      "acceptRequest": "%userName% is now connected with you.",
+    };
+  }
+
+  // Replace %userName% with the actual user name
+  return pushNotificationText[key]?.replaceAll("%userName%", userName) ?? "";
+}
+
+Future localPushNotificationNewMessage(
+    int fromUserId, my.Message message, int messageId) async {
+  Contact? user = await DbContacts.getUserById(fromUserId);
+  if (user == null) return;
+
+  String msg = "";
+
+  final content = message.content;
+
+  if (content is my.TextMessageContent) {
+    msg = getPushNotificationText("newTextMessage", user.displayName);
+  } else if (content is my.MediaMessageContent) {
+    if (content.isRealTwonly) {
+      msg = getPushNotificationText("newTwonly", user.displayName);
+    } else if (content.isVideo) {
+      msg = getPushNotificationText("newVideo", user.displayName);
+    } else {
+      msg = getPushNotificationText("newImage", user.displayName);
+    }
+  }
+
+  if (message.kind == my.MessageKind.contactRequest) {
+    msg = getPushNotificationText("contactRequest", user.displayName);
+  }
+
+  if (message.kind == my.MessageKind.acceptRequest) {
+    msg = getPushNotificationText("acceptRequest", user.displayName);
+  }
+
+  if (msg == "") {
+    Logger("localPushNotificationNewMessage")
+        .shout("No push notification type defined!");
+  }
+
+  const AndroidNotificationDetails androidNotificationDetails =
+      AndroidNotificationDetails(
+    '0',
+    'Messages',
+    channelDescription: 'Messages from other users.',
+    importance: Importance.max,
+    priority: Priority.max,
+    ticker: 'You got a new message.',
+  );
+  const NotificationDetails notificationDetails =
+      NotificationDetails(android: androidNotificationDetails);
+  await flutterLocalNotificationsPlugin.show(
+    messageId,
+    user.displayName,
+    msg,
+    notificationDetails,
+    // payload: 'test',
   );
 }

@@ -17,6 +17,7 @@ import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
 import 'package:twonly/src/proto/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
+import 'package:twonly/src/services/notification_service.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
@@ -103,6 +104,7 @@ Future<client.Response> handleNewMessage(
           Uint8List name = username.value.userdata.username;
           DbContacts.insertNewContact(
               utf8.decode(name), fromUserId.toInt(), true);
+          localPushNotificationNewMessage(fromUserId.toInt(), message, 999999);
         }
         break;
       case MessageKind.opened:
@@ -117,6 +119,7 @@ Future<client.Response> handleNewMessage(
         break;
       case MessageKind.acceptRequest:
         DbContacts.acceptUser(fromUserId.toInt());
+        localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
         break;
       case MessageKind.ack:
         DbMessages.acknowledgeMessageByUser(
@@ -164,6 +167,8 @@ Future<client.Response> handleNewMessage(
               tryDownloadMedia(downloadToken);
             }
           }
+          localPushNotificationNewMessage(
+              fromUserId.toInt(), message, messageId);
         }
     }
   }

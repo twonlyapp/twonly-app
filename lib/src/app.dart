@@ -33,7 +33,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<bool> _isUserCreated = isUserCreated();
   bool _showOnboarding = true;
   bool _isConnected = false;
@@ -44,6 +44,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startColorAnimation();
 
     // init change provider to load data from the database
@@ -74,7 +75,17 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    print("STATE: $state");
+    if (state == AppLifecycleState.resumed) {
+      apiProvider.connect();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     // disable globalCallbacks to the flutter tree
     globalCallbackConnectionState = (a) {};
     globalCallBackOnDownloadChange = (a, b) {};
@@ -143,29 +154,30 @@ class _MyAppState extends State<MyApp> {
           home: Stack(
             children: [
               FutureBuilder<bool>(
-                  future: _isUserCreated,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return snapshot.data!
-                          ? HomeView()
-                          : _showOnboarding
-                              ? OnboardingView(
-                                  callbackOnSuccess: () {
-                                    setState(() {
-                                      _showOnboarding = false;
-                                    });
-                                  },
-                                )
-                              : RegisterView(
-                                  callbackOnSuccess: () {
-                                    _isUserCreated = isUserCreated();
-                                    setState(() {});
-                                  },
-                                );
-                    } else {
-                      return Container();
-                    }
-                  }),
+                future: _isUserCreated,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return snapshot.data!
+                        ? HomeView()
+                        : _showOnboarding
+                            ? OnboardingView(
+                                callbackOnSuccess: () {
+                                  setState(() {
+                                    _showOnboarding = false;
+                                  });
+                                },
+                              )
+                            : RegisterView(
+                                callbackOnSuccess: () {
+                                  _isUserCreated = isUserCreated();
+                                  setState(() {});
+                                },
+                              );
+                  } else {
+                    return Container();
+                  }
+                },
+              ),
               if (!_isConnected)
                 Positioned(
                   top: 3, // Position it at the top
@@ -178,7 +190,8 @@ class _MyAppState extends State<MyApp> {
                           color: Colors.red[600]!.withAlpha(redColorOpacity),
                           width: 2.0), // Red border
                       borderRadius: BorderRadius.all(
-                          Radius.circular(10.0)), // Rounded top corners
+                        Radius.circular(10.0),
+                      ), // Rounded top corners
                     ),
                   ),
                 ),
