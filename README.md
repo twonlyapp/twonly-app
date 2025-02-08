@@ -4,10 +4,12 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 
 
 ## TODOS bevor first beta
-- Send a picture first to only one person -> Kamera button
-- Settings
 - Real deployment aufsetzen, direkt auf Netcup?
 - Firebase Push Notification
+
+
+## Maybe
+- Send a picture first to only one person -> Kamera button
 - MediaView:
     - Bei weiteren geladenen Bildern -> Direkt anzeigen ohne pop
 
