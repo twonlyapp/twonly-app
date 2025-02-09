@@ -26,12 +26,12 @@ void main() async {
 
   Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
   Logger.root.onRecord.listen((record) {
-    if (kReleaseMode) {
-      writeLogToFile(record);
-    } else {
-      debugPrint(
-          '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
-    }
+    // if (kReleaseMode) {
+    //   writeLogToFile(record);
+    // } else {
+    print(
+        '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
+    // }
   });
 
   await setupPushNotification();
