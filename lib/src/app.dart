@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/components/connection_state.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
@@ -22,10 +23,11 @@ import 'dart:async';
 
 // this callback is called by the apiProvider
 Function(bool) globalCallbackConnectionState = (a) {};
+bool globalIsAppInBackground = true;
 
 // these two callbacks are called on updated to the corresponding database
 Function globalCallBackOnContactChange = () {};
-Function(int) globalCallBackOnMessageChange = (a) {};
+Future Function(int) globalCallBackOnMessageChange = (a) async {};
 Function(List<int>, bool) globalCallBackOnDownloadChange = (a, b) {};
 
 /// The Widget that configures your application.
@@ -37,18 +39,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  Future<bool> _isUserCreated = isUserCreated();
-  bool _showOnboarding = true;
   bool _isConnected = false;
-  int redColorOpacity = 0; // Start with dark red
-  bool redColorGoUp = true;
-  bool isConnected = false;
+  bool wasPaused = false;
 
   @override
   void initState() {
     super.initState();
+    globalIsAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
-    _startColorAnimation();
 
     // init change provider to load data from the database
     context.read<ContactChangeProvider>().update();
@@ -69,17 +67,23 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       context.read<DownloadChangeProvider>().update(token, add);
     };
 
-    globalCallBackOnMessageChange = (userId) {
-      context.read<MessagesChangeProvider>().updateLastMessageFor(userId);
+    globalCallBackOnMessageChange = (userId) async {
+      await context.read<MessagesChangeProvider>().updateLastMessageFor(userId);
     };
 
-    // connect async to the backend api
-    apiProvider.connect();
-    FlutterForegroundTask.addTaskDataCallback(_onReceiveTaskData);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestPermissions();
       _initService();
     });
+    initAsync();
+  }
+
+  Future initAsync() async {
+    // make sure the front end service will be killed
+    FlutterForegroundTask.sendDataToTask("");
+    await FlutterForegroundTask.stopService();
+    // connect async to the backend api
+    apiProvider.connect();
   }
 
   Future<void> _requestPermissions() async {
@@ -114,17 +118,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }
   }
 
-  void _onReceiveTaskData(Object data) {
-    if (data is Map<String, dynamic>) {
-      final dynamic timestampMillis = data["timestampMillis"];
-      if (timestampMillis != null) {
-        final DateTime timestamp =
-            DateTime.fromMillisecondsSinceEpoch(timestampMillis, isUtc: true);
-        print('timestamp: ${timestamp.toString()}');
-      }
-    }
-  }
-
   void _initService() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
@@ -154,18 +147,23 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     } else {
       return FlutterForegroundTask.startService(
         serviceId: 256,
-        notificationTitle: 'Foreground Service is running',
+        notificationTitle: 'Staying connected to the server.',
         notificationText: 'Tap to return to the app',
         notificationIcon:
             NotificationIcon(metaDataName: "eu.twonly.service.TWONLY_LOGO"),
-        notificationInitialRoute: '/',
+        notificationInitialRoute: '/chats',
         callback: startCallback,
       );
     }
   }
 
   Future _stopService() async {
+    FlutterForegroundTask.sendDataToTask("");
     await FlutterForegroundTask.stopService();
+    if (context.mounted) {
+      context.read<MessagesChangeProvider>().init();
+      context.read<ContactChangeProvider>().update();
+    }
     if (!apiProvider.isAuthenticated) {
       apiProvider.connect();
     }
@@ -174,11 +172,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    print("STATE: $state");
     if (state == AppLifecycleState.resumed) {
-      _stopService();
-      //apiProvider.connect();
+      if (wasPaused) {
+        globalIsAppInBackground = false;
+        _stopService();
+      }
     } else if (state == AppLifecycleState.paused) {
+      wasPaused = true;
+      globalIsAppInBackground = true;
       apiProvider.close(() {
         _startService();
       });
@@ -187,41 +188,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    print("STATE: dispose");
     // apiProvider.close(() {});
     WidgetsBinding.instance.removeObserver(this);
     // disable globalCallbacks to the flutter tree
     globalCallbackConnectionState = (a) {};
     globalCallBackOnDownloadChange = (a, b) {};
     globalCallBackOnContactChange = () {};
-    globalCallBackOnMessageChange = (a) {};
-    FlutterForegroundTask.removeTaskDataCallback(_onReceiveTaskData);
+    globalCallBackOnMessageChange = (a) async {};
     super.dispose();
-  }
-
-  void _startColorAnimation() {
-    // Change the color every second
-    Future.delayed(Duration(milliseconds: 200), () {
-      setState(() {
-        if (redColorOpacity <= 100) {
-          redColorGoUp = true;
-        }
-        if (redColorOpacity >= 150) {
-          redColorGoUp = false;
-        }
-        if (redColorGoUp) {
-          redColorOpacity += 10;
-        } else {
-          redColorOpacity -= 10;
-        }
-      });
-      _startColorAnimation(); // Repeat the animation
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
     // var isConnected = context.watch<ApiProvider>().isConnected;
     // Glue the SettingsController to the MaterialApp.
     //
@@ -256,54 +234,72 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 const InputDecorationTheme(border: OutlineInputBorder()),
           ),
           themeMode: context.watch<SettingsChangeProvider>().themeMode,
-          home: Stack(
-            children: [
-              FutureBuilder<bool>(
-                future: _isUserCreated,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return snapshot.data!
-                        ? HomeView()
-                        : _showOnboarding
-                            ? OnboardingView(
-                                callbackOnSuccess: () {
-                                  setState(() {
-                                    _showOnboarding = false;
-                                  });
-                                },
-                              )
-                            : RegisterView(
-                                callbackOnSuccess: () {
-                                  _isUserCreated = isUserCreated();
-                                  setState(() {});
-                                },
-                              );
-                  } else {
-                    return Container();
-                  }
-                },
-              ),
-              if (!_isConnected)
-                Positioned(
-                  top: 3, // Position it at the top
-                  left: (screenWidth * 0.5) / 2, // Center it horizontally
-                  child: AnimatedContainer(
-                    duration: Duration(milliseconds: 100),
-                    width: screenWidth * 0.5, // 50% of the screen width
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                          color: Colors.red[600]!.withAlpha(redColorOpacity),
-                          width: 2.0), // Red border
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(10.0),
-                      ), // Rounded top corners
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          initialRoute: '/',
+          routes: {
+            "/": (context) =>
+                MyAppMainWidget(isConnected: _isConnected, initialPage: 0),
+            "/chats": (context) =>
+                MyAppMainWidget(isConnected: _isConnected, initialPage: 1)
+            // home: MyAppMainWidget(isConnected: _isConnected, initialPage: 0),
+          },
         );
       },
+    );
+  }
+}
+
+class MyAppMainWidget extends StatefulWidget {
+  const MyAppMainWidget(
+      {super.key, required this.isConnected, required this.initialPage});
+
+  final bool isConnected;
+  final int initialPage;
+
+  @override
+  State<MyAppMainWidget> createState() => _MyAppMainWidgetState();
+}
+
+class _MyAppMainWidgetState extends State<MyAppMainWidget> {
+  Future<bool> _isUserCreated =
+      isUserCreated(); // Assume this is a function that checks if the user is created
+  bool _showOnboarding = true; // Initial state for onboarding
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        FutureBuilder<bool>(
+          future: _isUserCreated,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              if (snapshot.data!) {
+                return HomeView(initialPage: widget.initialPage);
+              }
+
+              if (_showOnboarding) {
+                return OnboardingView(
+                  callbackOnSuccess: () {
+                    setState(() {
+                      _showOnboarding = false;
+                    });
+                  },
+                );
+              }
+
+              return RegisterView(
+                callbackOnSuccess: () {
+                  setState(() {
+                    _isUserCreated = isUserCreated();
+                  });
+                },
+              );
+            } else {
+              return Center(child: Container());
+            }
+          },
+        ),
+        if (!widget.isConnected) ConnectionInfo()
+      ],
     );
   }
 }

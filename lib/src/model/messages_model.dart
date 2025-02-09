@@ -181,7 +181,7 @@ class DbMessages extends CvModelBase {
       globalCallBackOnMessageChange(userIdFrom);
       return messageId;
     } catch (e) {
-      Logger("contacts_model/getUsers").shout("$e");
+      Logger("messsage_model/insertMyMessage").shout("$e");
       return null;
     }
   }
@@ -202,7 +202,7 @@ class DbMessages extends CvModelBase {
       globalCallBackOnMessageChange(userIdFrom);
       return messageId;
     } catch (e) {
-      Logger("contacts_model/getUsers").shout("$e");
+      Logger("messsage_model/insertOtherMessage").shout("$e");
       return null;
     }
   }

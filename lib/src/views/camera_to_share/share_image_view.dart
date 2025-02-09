@@ -123,6 +123,7 @@ class _ShareImageView extends State<ShareImageView> {
     } else {
       _selectedUserIds.remove(userId);
     }
+    setState(() {});
   }
 
   @override

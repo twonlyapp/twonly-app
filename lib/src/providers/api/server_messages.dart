@@ -105,7 +105,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
       }
 
       box.delete(boxId);
-      globalCallBackOnMessageChange(fromUserId);
+      await globalCallBackOnMessageChange(fromUserId);
       globalCallBackOnDownloadChange(data.uploadToken, false);
     }
   } else {
@@ -187,6 +187,9 @@ Future<client.Response> handleNewMessage(
               List<int> downloadToken = content.downloadToken;
               Box box = await getMediaStorage();
               box.put("${downloadToken}_fromUserId", fromUserId.toInt());
+              if (box.get("${downloadToken}_fromUserId") == null) {
+                debugPrint("BOX IS NOT WORKING");
+              }
               tryDownloadMedia(messageId, downloadToken);
             }
           }

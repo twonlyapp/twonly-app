@@ -14,7 +14,7 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   Map<int, int> get changeCounter => _changeCounter;
   Map<int, int> get flamesCounter => _flamesCounter;
 
-  void updateLastMessageFor(int targetUserId) async {
+  Future updateLastMessageFor(int targetUserId) async {
     DbMessage? last =
         await DbMessages.getLastMessagesForPreviewForUser(targetUserId);
     if (last != null) {

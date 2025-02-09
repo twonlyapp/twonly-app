@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  const HomeView({super.key, required this.initialPage});
+  final int initialPage;
 
   @override
   State<HomeView> createState() => HomeViewState();
@@ -15,11 +16,13 @@ class HomeView extends StatefulWidget {
 
 class HomeViewState extends State<HomeView> {
   int activePageIdx = 0;
-  final PageController homeViewPageController = PageController(initialPage: 0);
+  late PageController homeViewPageController;
 
   @override
   void initState() {
     super.initState();
+    activePageIdx = widget.initialPage;
+    homeViewPageController = PageController(initialPage: widget.initialPage);
     globalUpdateOfHomeViewPageIndex = (index) {
       homeViewPageController.jumpToPage(index);
       setState(() {
@@ -32,6 +35,7 @@ class HomeViewState extends State<HomeView> {
   void dispose() {
     // disable globalCallbacks to the flutter tree
     globalUpdateOfHomeViewPageIndex = (a) {};
+    //homeViewPageController.dispose();
     super.dispose();
   }
 
@@ -64,6 +68,7 @@ class HomeViewState extends State<HomeView> {
           controller: homeViewPageController,
           onPageChanged: (index) {
             activePageIdx = index;
+            setState(() {});
           },
           children: [
             CameraPreviewViewPermission(),
@@ -73,6 +78,9 @@ class HomeViewState extends State<HomeView> {
         bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,
+          unselectedIconTheme: IconThemeData(
+              color:
+                  Theme.of(context).colorScheme.inverseSurface.withAlpha(150)),
           selectedIconTheme: IconThemeData(
               color: Theme.of(context).colorScheme.inverseSurface),
           items: [

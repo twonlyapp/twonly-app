@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class ConnectionInfo extends StatefulWidget {
@@ -12,6 +14,8 @@ class _ConnectionInfoWidgetState extends State<ConnectionInfo> {
   bool redColorGoUp = true; // Direction of the opacity change
   double screenWidth = 0; // To hold the screen width
 
+  Timer? _colorAnimationTimer;
+
   @override
   void initState() {
     super.initState();
@@ -20,7 +24,7 @@ class _ConnectionInfoWidgetState extends State<ConnectionInfo> {
 
   void _startColorAnimation() {
     // Change the color every 200 milliseconds
-    Future.delayed(Duration(milliseconds: 200), () {
+    _colorAnimationTimer = Timer.periodic(Duration(milliseconds: 200), (timer) {
       setState(() {
         if (redColorOpacity <= 100) {
           redColorGoUp = true;
@@ -34,8 +38,13 @@ class _ConnectionInfoWidgetState extends State<ConnectionInfo> {
           redColorOpacity -= 10;
         }
       });
-      _startColorAnimation(); // Repeat the animation
     });
+  }
+
+  @override
+  void dispose() {
+    _colorAnimationTimer?.cancel();
+    super.dispose();
   }
 
   @override
