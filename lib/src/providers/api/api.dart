@@ -216,7 +216,7 @@ Future sendImage(
   }
 }
 
-Future tryDownloadMedia(int messageId, List<int> mediaToken,
+Future tryDownloadMedia(int messageId, int fromUserId, List<int> mediaToken,
     {bool force = false}) async {
   if (globalIsAppInBackground) return;
   if (!force) {
@@ -237,6 +237,7 @@ Future tryDownloadMedia(int messageId, List<int> mediaToken,
   }
   globalCallBackOnDownloadChange(mediaToken, true);
   box.put("${mediaToken}_messageId", messageId);
+  box.put("${mediaToken}_fromUserId", fromUserId);
   apiProvider.triggerDownload(mediaToken, offset);
 }
 
@@ -255,7 +256,7 @@ Future userOpenedOtherMessage(int fromUserId, int messageOtherId) async {
 }
 
 Future<Uint8List?> getDownloadedMedia(
-    List<int> mediaToken, int messageOtherId) async {
+    List<int> mediaToken, int messageOtherId, int otherUserId) async {
   final box = await getMediaStorage();
   Uint8List? media;
   try {
@@ -265,13 +266,11 @@ Future<Uint8List?> getDownloadedMedia(
   }
   if (media == null) return null;
 
-  int fromUserId = box.get("${mediaToken}_fromUserId");
-  await userOpenedOtherMessage(fromUserId, messageOtherId);
+  await userOpenedOtherMessage(otherUserId, messageOtherId);
   box.delete(mediaToken.toString());
   box.put("${mediaToken}_downloaded", "deleted");
-  box.delete("${mediaToken}_fromUserId");
   box.delete("${mediaToken}_messageId");
-
+  box.delete("${mediaToken}_fromUserId");
   return media;
 }
 

@@ -73,8 +73,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
       flutterLocalNotificationsPlugin.cancel(widget.message.messageId);
       List<int> token = content.downloadToken;
-      _imageByte =
-          await getDownloadedMedia(token, widget.message.messageOtherId!);
+      _imageByte = await getDownloadedMedia(
+          token, widget.message.messageOtherId!, widget.message.otherUserId);
       if (_imageByte == null) {
         // image already deleted
         if (context.mounted) {

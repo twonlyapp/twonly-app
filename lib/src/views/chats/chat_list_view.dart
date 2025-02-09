@@ -208,7 +208,9 @@ class _UserListItem extends State<UserListItem> {
         onTap: () {
           if (isDownloading) return;
           if (!widget.lastMessage.isDownloaded) {
-            tryDownloadMedia(widget.lastMessage.messageId, token, force: true);
+            tryDownloadMedia(widget.lastMessage.messageId,
+                widget.lastMessage.otherUserId, token,
+                force: true);
             return;
           }
           if (state == MessageSendState.received &&

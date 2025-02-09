@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
@@ -50,6 +49,10 @@ Future handleServerMessage(server.ServerToClient msg) async {
 }
 
 Future<client.Response> handleDownloadData(DownloadData data) async {
+  if (globalIsAppInBackground) {
+    // download should only be done when the app is open
+    return client.Response()..error = ErrorCode.InternalError;
+  }
   debugPrint("Downloading: ${data.uploadToken} ${data.fin}");
   final box = await getMediaStorage();
 
@@ -61,7 +64,6 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     if (messageId != null) {
       int? fromUserId = await DbMessages.deleteMessageById(messageId);
       box.delete(boxId);
-      // int? fromUserId = box.get("${data.uploadToken}_fromUserId");
       if (fromUserId != null) {
         globalCallBackOnMessageChange(fromUserId);
       }
@@ -181,16 +183,12 @@ Future<client.Response> handleNewMessage(
               message.kind == MessageKind.image) {
             await DbContacts.checkAndUpdateFlames(fromUserId.toInt(),
                 timestamp: message.timestamp);
-
-            final content = message.content;
-            if (content is MediaMessageContent) {
-              List<int> downloadToken = content.downloadToken;
-              Box box = await getMediaStorage();
-              box.put("${downloadToken}_fromUserId", fromUserId.toInt());
-              if (box.get("${downloadToken}_fromUserId") == null) {
-                debugPrint("BOX IS NOT WORKING");
+            if (!globalIsAppInBackground) {
+              final content = message.content;
+              if (content is MediaMessageContent) {
+                List<int> downloadToken = content.downloadToken;
+                tryDownloadMedia(messageId, fromUserId.toInt(), downloadToken);
               }
-              tryDownloadMedia(messageId, downloadToken);
             }
           }
           localPushNotificationNewMessage(

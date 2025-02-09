@@ -80,7 +80,8 @@ class ChatListEntry extends StatelessWidget {
                 }),
               );
             } else {
-              tryDownloadMedia(message.messageId, token, force: true);
+              tryDownloadMedia(message.messageId, message.otherUserId, token,
+                  force: true);
             }
           }
         },
