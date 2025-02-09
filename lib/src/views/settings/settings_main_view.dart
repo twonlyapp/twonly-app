@@ -28,6 +28,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   Future initAsync() async {
     userData = await getUser();
+    setState(() {});
   }
 
   @override

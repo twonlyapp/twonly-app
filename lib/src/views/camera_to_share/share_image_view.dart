@@ -111,6 +111,7 @@ class _ShareImageView extends State<ShareImageView> {
       Contact user = _users.firstWhere((x) => x.userId == userId);
       if (!user.verified) {
         showRealTwonlyWarning = true;
+        setState(() {});
         return;
       }
     }

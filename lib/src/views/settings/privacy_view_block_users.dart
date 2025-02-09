@@ -24,12 +24,14 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
   Future loadAsync() async {
     allUsers = await DbContacts.getAllUsers();
     _filterUsers(lastQuery);
+    setState(() {});
   }
 
   Future _filterUsers(String query) async {
     lastQuery = query;
     if (query.isEmpty) {
       filteredUsers = allUsers;
+      setState(() {});
       return;
     }
     filteredUsers = allUsers

@@ -70,6 +70,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           undoLayers.clear();
           removedLayers.clear();
           layers.add(DrawLayerData());
+          setState(() {});
         },
       ),
       const SizedBox(height: 8),
@@ -107,6 +108,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             } else {
               _maxShowTime = _maxShowTime + 4;
             }
+            setState(() {});
 
             // _maxShowTime =
             // _isRealTwonly = !_isRealTwonly;
@@ -125,6 +127,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           if (_isRealTwonly) {
             _maxShowTime = 12;
           }
+          setState(() {});
         },
       ),
     ];

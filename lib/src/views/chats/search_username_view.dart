@@ -106,7 +106,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
             ),
             SizedBox(height: 30),
             if (context
-                .read<ContactChangeProvider>()
+                .watch<ContactChangeProvider>()
                 .allContacts
                 .where((contact) => !contact.accepted)
                 .isNotEmpty)

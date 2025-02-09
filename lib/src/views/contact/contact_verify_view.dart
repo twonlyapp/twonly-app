@@ -29,6 +29,7 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
 
   Future loadAsync() async {
     fingerprint = await generateSessionFingerPrint(widget.contact.userId);
+    setState(() {});
   }
 
   @override

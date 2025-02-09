@@ -179,6 +179,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     if (text == "") return;
     await sendTextMessage(widget.user.userId, newMessageController.text);
     newMessageController.clear();
+    setState(() {});
   }
 
   @override
@@ -186,9 +187,9 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     final changeCounter = context.watch<MessagesChangeProvider>().changeCounter;
     if (changeCounter.containsKey(widget.user.userId.toInt())) {
       if (changeCounter[widget.user.userId.toInt()] != lastChangeCounter) {
-        print("FORCE reload");
         _loadAsync(updateOpenStatus: true);
         lastChangeCounter = changeCounter[widget.user.userId.toInt()]!;
+        setState(() {});
       }
     }
     return Scaffold(

@@ -159,11 +159,6 @@ class _UserListItem extends State<UserListItem> {
   int lastMessageInSeconds = 0;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     int lastMessageInSeconds =
         DateTime.now().difference(widget.lastMessage.sendAt).inSeconds;

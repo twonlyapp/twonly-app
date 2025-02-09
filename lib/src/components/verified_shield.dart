@@ -21,7 +21,7 @@ class VerifiedShield extends StatelessWidget {
       child: Tooltip(
         message: contact.verified
             ? "You verified this contact"
-            : "Click here to verify your contact.",
+            : "You have not verifies this contact.",
         child: FaIcon(
           contact.verified
               ? FontAwesomeIcons.shieldHeart

@@ -54,11 +54,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return MediaViewSizing(
       Stack(

@@ -66,7 +66,7 @@ int id = 0;
 
 Future<void> setupPushNotification() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings("logo");
+      AndroidInitializationSettings("ic_launcher_foreground");
 
   final List<DarwinNotificationCategory> darwinNotificationCategories =
       <DarwinNotificationCategory>[

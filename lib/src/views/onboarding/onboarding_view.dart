@@ -118,15 +118,15 @@ class OnboardingView extends StatelessWidget {
                   style: TextStyle(fontSize: 18),
                 ),
                 Padding(
-                    padding:
-                        const EdgeInsets.only(left: 50, right: 50, top: 20),
-                    child: FilledButton(
-                      onPressed: () {
-                        callbackOnSuccess();
-                        // On button pressed
-                      },
-                      child: Text(context.lang.onboardingTryForFree),
-                    )),
+                  padding: const EdgeInsets.only(left: 50, right: 50, top: 20),
+                  child: FilledButton(
+                    onPressed: () {
+                      callbackOnSuccess();
+                      // On button pressed
+                    },
+                    child: Text(context.lang.onboardingTryForFree),
+                  ),
+                ),
               ],
             ),
             image: Center(
