@@ -27,7 +27,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   DateTime? canBeSeenUntil;
   int maxShowTime = 999999;
   bool isRealTwonly = false;
+  double progress = 0;
   Timer? _timer;
+  Timer? _timer2;
   // DateTime opened;
 
   @override
@@ -78,8 +80,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         if (context.mounted) {
           Navigator.pop(context);
         }
+        return;
       }
-
+      // image loading does require some time
+      Future.delayed(Duration(milliseconds: 200), () {
+        setState(() {
+          mediaOpened();
+        });
+      });
       setState(() {});
     }
   }
@@ -88,6 +96,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _timer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
       if (context.mounted) {
         Navigator.pop(context);
+      }
+    });
+    _timer2 = Timer.periodic(Duration(milliseconds: 10), (timer) {
+      if (canBeSeenUntil != null) {
+        Duration difference = canBeSeenUntil!.difference(DateTime.now());
+        // Calculate the progress as a value between 0.0 and 1.0
+        progress = (difference.inMilliseconds / (maxShowTime * 1000));
+        setState(() {});
       }
     });
   }
@@ -102,6 +118,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         );
         maxShowTime = content.maxShowTime;
         startTimer();
+        setState(() {});
       }
     }
   }
@@ -110,38 +127,24 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   void dispose() {
     super.dispose();
     _timer?.cancel();
+    _timer2?.cancel();
     _noScreenshot.screenshotOn();
   }
 
   @override
   Widget build(BuildContext context) {
-    double progress = 0;
-    if (canBeSeenUntil != null) {
-      Duration difference = canBeSeenUntil!.difference(DateTime.now());
-      print(difference.inMilliseconds);
-      // Calculate the progress as a value between 0.0 and 1.0
-      progress = (difference.inMilliseconds / (maxShowTime * 1000));
-      if (progress <= 0) {
-        return Scaffold();
-      }
-    }
-    // progress = 0.8;
-
     return Scaffold(
       body: SafeArea(
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (_imageByte != null)
+            if (_imageByte != null && (canBeSeenUntil == null || progress >= 0))
               MediaViewSizing(
                 Image.memory(
                   _imageByte!,
                   fit: BoxFit.contain,
                   frameBuilder:
                       ((context, child, frame, wasSynchronouslyLoaded) {
-                    if (frame != null || wasSynchronouslyLoaded) {
-                      mediaOpened();
-                    }
                     if (wasSynchronouslyLoaded) return child;
                     return AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),

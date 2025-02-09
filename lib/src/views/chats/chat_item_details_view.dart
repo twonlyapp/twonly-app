@@ -276,10 +276,29 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                       _sendMessage();
                     },
                     decoration: InputDecoration(
-                        hintText: context.lang.chatListDetailInput,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10)
-                        // border: OutlineInputBorder(),
-                        ),
+                      hintText: context.lang.chatListDetailInput,
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                            20), // Set the border radius here
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 2.0), // Customize border color and width
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                            20.0), // Same radius for focused border
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 2.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                            20.0), // Same radius for enabled border
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(width: 8),
