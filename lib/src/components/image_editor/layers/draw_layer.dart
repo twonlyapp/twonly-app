@@ -111,6 +111,9 @@ class _DrawLayerState extends State<DrawLayer> {
                   tooltipText: context.lang.imageEditorDrawOk,
                   onPressed: () async {
                     widget.layerData.isEditing = false;
+                    if (widget.onUpdate != null) {
+                      widget.onUpdate!();
+                    }
                     setState(() {});
                   },
                 ),

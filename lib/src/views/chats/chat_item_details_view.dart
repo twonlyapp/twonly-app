@@ -9,6 +9,7 @@ import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/services/notification_service.dart';
@@ -131,25 +132,29 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   int lastChangeCounter = 0;
   final TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
+  int sendTextMessages = 0;
+  late Contact user;
 
   @override
   void initState() {
     super.initState();
+    user = widget.user;
     _loadAsync(updateOpenStatus: true);
   }
 
   Future _loadAsync({bool updateOpenStatus = false}) async {
     // if (_messages.isEmpty || updateOpenStatus) {
-    _messages =
-        await DbMessages.getAllMessagesForUser(widget.user.userId.toInt());
-    // } else {
-    // will not update older message states like when they now downloaded...
-    // int lastMessageId = _messages.first.messageId;
-    // List<DbMessage> toAppend =
-    //     await DbMessages.getAllMessagesForUserWithHigherMessageId(
-    //         widget.user.userId.toInt(), lastMessageId);
-    // _messages.insertAll(0, toAppend);
-    // }
+    if (sendTextMessages <= 0) {
+      _messages = await DbMessages.getAllMessagesForUser(user.userId.toInt());
+    } else {
+      sendTextMessages--;
+      // will not update older message states like when they now downloaded...
+      int lastMessageId = _messages.first.messageId;
+      List<DbMessage> toAppend =
+          await DbMessages.getAllMessagesForUserWithHigherMessageId(
+              user.userId.toInt(), lastMessageId);
+      _messages.insertAll(0, toAppend);
+    }
 
     if (updateOpenStatus) {
       _messages.where((x) => x.messageOpenedAt == null).forEach((message) {
@@ -175,20 +180,25 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   }
 
   Future _sendMessage() async {
+    sendTextMessages++;
     String text = newMessageController.text;
     if (text == "") return;
-    await sendTextMessage(widget.user.userId, newMessageController.text);
+    await sendTextMessage(user.userId, newMessageController.text);
     newMessageController.clear();
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    user = context
+        .watch<ContactChangeProvider>()
+        .allContacts
+        .firstWhere((c) => c.userId == widget.user.userId);
     final changeCounter = context.watch<MessagesChangeProvider>().changeCounter;
-    if (changeCounter.containsKey(widget.user.userId.toInt())) {
-      if (changeCounter[widget.user.userId.toInt()] != lastChangeCounter) {
+    if (changeCounter.containsKey(user.userId.toInt())) {
+      if (changeCounter[user.userId.toInt()] != lastChangeCounter) {
         _loadAsync(updateOpenStatus: true);
-        lastChangeCounter = changeCounter[widget.user.userId.toInt()]!;
+        lastChangeCounter = changeCounter[user.userId.toInt()]!;
         setState(() {});
       }
     }
@@ -197,13 +207,13 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         title: GestureDetector(
           onTap: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return ContactView(widget.user);
+              return ContactView(user.userId.toInt());
             }));
           },
           child: Row(
             children: [
               InitialsAvatar(
-                displayName: widget.user.displayName,
+                displayName: user.displayName,
                 fontSize: 19,
               ),
               SizedBox(width: 10),
@@ -212,9 +222,9 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                   color: Colors.transparent,
                   child: Row(
                     children: [
-                      Text(widget.user.displayName),
+                      Text(user.displayName),
                       SizedBox(width: 10),
-                      VerifiedShield(widget.user),
+                      VerifiedShield(user),
                     ],
                   ),
                 ),
@@ -248,7 +258,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                 }
                 return ChatListEntry(
                   _messages[i],
-                  widget.user,
+                  user,
                   lastMessageFromSameUser,
                 );
               },

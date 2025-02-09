@@ -68,7 +68,7 @@
   "contactVerifyNumberMarkAsVerified": "Mark as verified",
   "contactVerifyNumberClearVerification": "Clear verification",
   "contactVerifyNumberLongDesc": "To verify the end-to-end encryption with {username}, compare the numbers with their device. The person can also scan your code with their device.",
-  "contactNickame": "Nickname",
+  "contactNickname": "Nickname",
   "contactBlock": "Block",
   "contactBlockTitle": "Block {username}",
   "contactBlockBody": "A blocked user will no longer be able to send you messages and their profile will be hidden from view. To unblock a user, simply navigate to Settings > Privacy > Blocked Users.",

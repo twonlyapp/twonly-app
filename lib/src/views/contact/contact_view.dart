@@ -7,14 +7,15 @@ import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/verified_shield.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_verify_view.dart';
 
 class ContactView extends StatefulWidget {
-  const ContactView(this.contact, {super.key});
+  const ContactView(this.userId, {super.key});
 
-  final Contact contact;
+  final int userId;
 
   @override
   State<ContactView> createState() => _ContactViewState();
@@ -22,15 +23,15 @@ class ContactView extends StatefulWidget {
 
 class _ContactViewState extends State<ContactView> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    Contact contact = context
+        .watch<ContactChangeProvider>()
+        .allContacts
+        .firstWhere((c) => c.userId == widget.userId);
+
     int flameCounter = context
             .watch<MessagesChangeProvider>()
-            .flamesCounter[widget.contact.userId.toInt()] ??
+            .flamesCounter[contact.userId.toInt()] ??
         0;
 
     return Scaffold(
@@ -42,7 +43,7 @@ class _ContactViewState extends State<ContactView> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: InitialsAvatar(
-              displayName: widget.contact.displayName,
+              displayName: contact.displayName,
               fontSize: 30,
             ),
           ),
@@ -51,14 +52,14 @@ class _ContactViewState extends State<ContactView> {
             children: [
               Padding(
                   padding: EdgeInsets.only(right: 10),
-                  child: VerifiedShield(widget.contact)),
+                  child: VerifiedShield(contact)),
               Text(
-                widget.contact.displayName,
+                contact.displayName,
                 style: TextStyle(fontSize: 20),
               ),
               if (flameCounter > 0)
                 FlameCounterWidget(
-                  widget.contact,
+                  contact,
                   flameCounter,
                   110000000,
                   prefix: true,
@@ -68,13 +69,13 @@ class _ContactViewState extends State<ContactView> {
           SizedBox(height: 50),
           BetterListTile(
             icon: FontAwesomeIcons.pencil,
-            text: context.lang.contactNickame,
+            text: context.lang.contactNickname,
             onTap: () async {
               String? newUsername =
-                  await showNicknameChangeDialog(context, widget.contact);
+                  await showNicknameChangeDialog(context, contact);
               if (newUsername != null && newUsername != "") {
                 await DbContacts.changeDisplayName(
-                    widget.contact.userId.toInt(), newUsername);
+                    contact.userId.toInt(), newUsername);
               }
             },
           ),
@@ -85,7 +86,7 @@ class _ContactViewState extends State<ContactView> {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(
                 builder: (context) {
-                  return ContactVerifyView(widget.contact);
+                  return ContactVerifyView(contact);
                 },
               ));
             },
@@ -97,11 +98,11 @@ class _ContactViewState extends State<ContactView> {
             onTap: () async {
               bool block = await showAlertDialog(
                 context,
-                context.lang.contactBlockTitle(widget.contact.displayName),
+                context.lang.contactBlockTitle(contact.displayName),
                 context.lang.contactBlockBody,
               );
               if (block) {
-                await DbContacts.blockUser(widget.contact.userId.toInt());
+                await DbContacts.blockUser(contact.userId.toInt());
                 // go back to the first
                 if (context.mounted) {
                   Navigator.popUntil(context, (route) => route.isFirst);
@@ -140,8 +141,8 @@ Future<String?> showNicknameChangeDialog(
           TextButton(
             child: Text('Submit'),
             onPressed: () {
-              String inputText = controller.text;
-              Navigator.of(context).pop(inputText); // Return the input text
+              Navigator.of(context)
+                  .pop(controller.text); // Return the input text
             },
           ),
         ],
