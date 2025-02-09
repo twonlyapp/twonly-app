@@ -143,7 +143,7 @@ class DbMessages extends CvModelBase {
     }
   }
 
-  static Future deleteMessageById(int messageId) async {
+  static Future<int?> deleteMessageById(int messageId) async {
     await dbProvider.db!.delete(
       tableName,
       where: '$columnMessageId = ?',
@@ -153,6 +153,7 @@ class DbMessages extends CvModelBase {
     if (fromUserId != null) {
       globalCallBackOnMessageChange(fromUserId);
     }
+    return fromUserId;
   }
 
   static Future<int?> getFromUserIdByMessageId(int messageId) async {

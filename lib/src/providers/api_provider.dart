@@ -179,20 +179,31 @@ class ApiProvider {
         return Result.error(ErrorCode.InternalError);
       }
     }
-    if (authenticated) {
-      await authenticate();
+    if (_channel == null) {
+      return Result.error(ErrorCode.InternalError);
     }
+
     var seq = Int64(Random().nextInt(4294967296));
     while (messagesV0.containsKey(seq)) {
       seq = Int64(Random().nextInt(4294967296));
     }
+
     request.v0.seq = seq;
-
     final requestBytes = request.writeToBuffer();
-
     _channel!.sink.add(requestBytes);
 
-    return asResult(await _waitForResponse(seq));
+    Result res = asResult(await _waitForResponse(seq));
+    if (res.isError) {
+      if (res.error == ErrorCode.SessionNotAuthenticated) {
+        isAuthenticated = false;
+        if (authenticated) {
+          await authenticate();
+          // this will send the request one more time.
+          return _sendRequestV0(request, authenticated: false);
+        }
+      }
+    }
+    return res;
   }
 
   Future authenticate() async {

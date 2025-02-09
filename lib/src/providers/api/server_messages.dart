@@ -59,14 +59,18 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 
     int? messageId = box.get("${data.uploadToken}_messageId");
     if (messageId != null) {
-      await DbMessages.deleteMessageById(messageId);
+      int? fromUserId = await DbMessages.deleteMessageById(messageId);
       box.delete(boxId);
-      int? fromUserId = box.get("${data.uploadToken}_fromUserId");
+      // int? fromUserId = box.get("${data.uploadToken}_fromUserId");
       if (fromUserId != null) {
         globalCallBackOnMessageChange(fromUserId);
       }
       box.delete("${data.uploadToken}_fromUserId");
       box.delete("${data.uploadToken}_downloaded");
+      globalCallBackOnDownloadChange(data.uploadToken, false);
+      var ok = client.Response_Ok()..none = true;
+      return client.Response()..ok = ok;
+    } else {
       globalCallBackOnDownloadChange(data.uploadToken, false);
       var ok = client.Response_Ok()..none = true;
       return client.Response()..ok = ok;
@@ -183,8 +187,7 @@ Future<client.Response> handleNewMessage(
               List<int> downloadToken = content.downloadToken;
               Box box = await getMediaStorage();
               box.put("${downloadToken}_fromUserId", fromUserId.toInt());
-              box.put("${downloadToken}_messageId", messageId);
-              tryDownloadMedia(downloadToken);
+              tryDownloadMedia(messageId, downloadToken);
             }
           }
           localPushNotificationNewMessage(

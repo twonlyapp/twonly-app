@@ -41,6 +41,7 @@ class WebsocketForegroundTask extends TaskHandler {
   // Called when data is sent using `FlutterForegroundTask.sendDataToTask`.
   @override
   void onReceiveData(Object data) {
+    apiProvider.close(() {});
     print('onReceiveData: $data');
   }
 
@@ -53,7 +54,7 @@ class WebsocketForegroundTask extends TaskHandler {
   // Called when the notification itself is pressed.
   @override
   void onNotificationPressed() {
-    print('onNotificationPressed');
+    apiProvider.close(() {});
   }
 
   // Called when the notification itself is dismissed.

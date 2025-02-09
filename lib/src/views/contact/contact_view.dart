@@ -8,6 +8,7 @@ import 'package:twonly/src/components/verified_shield.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_verify_view.dart';
 
 class ContactView extends StatefulWidget {
@@ -67,7 +68,7 @@ class _ContactViewState extends State<ContactView> {
           SizedBox(height: 50),
           BetterListTile(
             icon: FontAwesomeIcons.pencil,
-            text: "Nickname",
+            text: context.lang.contactNickame,
             onTap: () async {
               String? newUsername =
                   await showNicknameChangeDialog(context, widget.contact);
@@ -80,7 +81,7 @@ class _ContactViewState extends State<ContactView> {
           const Divider(),
           BetterListTile(
             icon: FontAwesomeIcons.shieldHeart,
-            text: "Verify safety number",
+            text: context.lang.contactVerifyNumberTitle,
             onTap: () {
               Navigator.push(context, MaterialPageRoute(
                 builder: (context) {
@@ -92,12 +93,13 @@ class _ContactViewState extends State<ContactView> {
           BetterListTile(
             icon: FontAwesomeIcons.ban,
             color: Colors.red,
-            text: "Block",
+            text: context.lang.contactBlock,
             onTap: () async {
               bool block = await showAlertDialog(
-                  context,
-                  "Block ${widget.contact.displayName}",
-                  "A blocked user will no longer be able to send you messages and their profile will be hidden from view. To unblock a user, simply navigate to Settings > Privacy > Blocked Users..");
+                context,
+                context.lang.contactBlockTitle(widget.contact.displayName),
+                context.lang.contactBlockBody,
+              );
               if (block) {
                 await DbContacts.blockUser(widget.contact.userId.toInt());
                 // go back to the first

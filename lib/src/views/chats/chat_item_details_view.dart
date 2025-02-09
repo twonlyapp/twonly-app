@@ -79,7 +79,7 @@ class ChatListEntry extends StatelessWidget {
                 }),
               );
             } else {
-              tryDownloadMedia(token, force: true);
+              tryDownloadMedia(message.messageId, token, force: true);
             }
           }
         },

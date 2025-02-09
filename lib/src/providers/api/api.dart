@@ -216,7 +216,9 @@ Future sendImage(
   }
 }
 
-Future tryDownloadMedia(List<int> mediaToken, {bool force = false}) async {
+Future tryDownloadMedia(int messageId, List<int> mediaToken,
+    {bool force = false}) async {
+  if (globalIsAppInBackground) return;
   if (!force) {
     // TODO: create option to enable download via mobile data
     final List<ConnectivityResult> connectivityResult =
@@ -234,6 +236,7 @@ Future tryDownloadMedia(List<int> mediaToken, {bool force = false}) async {
     offset = media.length;
   }
   globalCallBackOnDownloadChange(mediaToken, true);
+  box.put("${mediaToken}_messageId", messageId);
   apiProvider.triggerDownload(mediaToken, offset);
 }
 
@@ -254,7 +257,13 @@ Future userOpenedOtherMessage(int fromUserId, int messageOtherId) async {
 Future<Uint8List?> getDownloadedMedia(
     List<int> mediaToken, int messageOtherId) async {
   final box = await getMediaStorage();
-  Uint8List? media = box.get("${mediaToken}_downloaded");
+  Uint8List? media;
+  try {
+    media = box.get("${mediaToken}_downloaded");
+  } catch (e) {
+    return null;
+  }
+  if (media == null) return null;
 
   int fromUserId = box.get("${mediaToken}_fromUserId");
   await userOpenedOtherMessage(fromUserId, messageOtherId);
