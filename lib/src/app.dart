@@ -77,7 +77,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    print("STATE: $state");
     if (state == AppLifecycleState.resumed) {
       apiProvider.connect();
     }

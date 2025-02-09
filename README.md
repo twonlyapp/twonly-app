@@ -13,9 +13,6 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 - MediaView:
     - Bei weiteren geladenen Bildern -> Direkt anzeigen ohne pop
 
-## Not my issues
-- FIX: Problem Bild falsch, wenn handy schräg... -> Issue already openend
-
 ## TODOS bevor first release
 - Settings
     - Subscription

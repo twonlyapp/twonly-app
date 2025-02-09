@@ -35,9 +35,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   @override
   void initState() {
-    loadImage(widget.imageBytes);
-
     super.initState();
+    loadImage(widget.imageBytes);
   }
 
   @override
