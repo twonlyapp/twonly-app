@@ -20,6 +20,7 @@ dependencies:
   fixnum: ^1.1.1
   flutter:
     sdk: flutter
+  flutter_foreground_task: ^8.17.0
   flutter_image_compress: ^2.4.0
   flutter_local_notifications: ^18.0.1
   flutter_localizations:
@@ -82,9 +83,11 @@ flutter:
     - assets/images/logo.jpg
     - assets/
     - assets/images/
+    - assets/images/onboarding/ricky_the_greedy_racoon.png
     - assets/animations/present.lottie.json
+    - assets/animations/selfie2.json
     - assets/animations/selfie.json
-    - assets/animations/messages.json
+    - assets/animations/takephoto.json
     - assets/animations/local.json
     - assets/animations/test.json
     - assets/animations/product.json

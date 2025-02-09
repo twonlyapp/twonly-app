@@ -265,7 +265,7 @@ class UserList extends StatelessWidget {
                   child: VerifiedShield(user),
                 ),
               Text(user.displayName),
-              if (flameCounter >= 0)
+              if (flameCounter >= 1)
                 FlameCounterWidget(
                   user,
                   flameCounter,

@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:twonly/main.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/session_store_model.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 

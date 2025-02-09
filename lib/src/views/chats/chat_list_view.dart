@@ -35,7 +35,7 @@ class _ChatListViewState extends State<ChatListView> {
         context.watch<MessagesChangeProvider>().lastMessage;
 
     List<Contact> allUsers = context
-        .read<ContactChangeProvider>()
+        .watch<ContactChangeProvider>()
         .allContacts
         .where((c) => c.accepted)
         .toList();
@@ -106,20 +106,20 @@ class _ChatListViewState extends State<ChatListView> {
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: OutlinedButton.icon(
-                    icon: Icon((activeUsers.isEmpty)
+                    icon: Icon((allUsers.isEmpty)
                         ? Icons.person_add
                         : Icons.camera_alt),
                     onPressed: () {
-                      (activeUsers.isEmpty)
+                      (allUsers.isEmpty)
                           ? Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SearchUsernameView(),
                               ),
                             )
-                          : globalUpdateOfHomeViewPageIndex(1);
+                          : globalUpdateOfHomeViewPageIndex(0);
                     },
-                    label: Text((activeUsers.isEmpty)
+                    label: Text((allUsers.isEmpty)
                         ? context.lang.chatListViewSearchUserNameBtn
                         : context.lang.chatListViewSendFirstTwonly)),
               ),

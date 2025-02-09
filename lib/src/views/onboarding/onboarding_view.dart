@@ -1,6 +1,7 @@
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 // Slide 1: Welcome to [App Name]
 // Text: "Experience a new way to connect with friends through secure, spontaneous image sharing."
@@ -29,23 +30,21 @@ class OnboardingView extends StatelessWidget {
         bodyPadding: EdgeInsets.only(top: 75, left: 10, right: 10),
         pages: [
           PageViewModel(
-            title: "Welcome to twonly!",
-            body:
-                "Experience a new way to connect with friends through secure, spontaneous image sharing.",
+            title: context.lang.onboardingWelcomeTitle,
+            body: context.lang.onboardingWelcomeBody,
             image: Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
                 // child: Image.asset('assets/animations/messages.gif'),
                 child: Lottie.asset(
-                  'assets/animations/messages.json',
+                  'assets/animations/selfie2.json',
                 ),
               ),
             ),
           ),
           PageViewModel(
-            title: "End-to-End Encryption",
-            body:
-                "Your privacy matters. Enjoy peace of mind with end-to-end encryption, ensuring only you and your friends can see your images.",
+            title: context.lang.onboardingE2eTitle,
+            body: context.lang.onboardingE2eBody,
             image: Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
@@ -57,22 +56,19 @@ class OnboardingView extends StatelessWidget {
             ),
           ),
           PageViewModel(
-            title: "Focus on sharing moments",
-            body:
-                "Say goodbye to addictive features! Our app is designed for sharing moments, no useless distractions or ads.",
+            title: context.lang.onboardingFocusTitle,
+            body: context.lang.onboardingFocusBody,
             image: Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
-                child: Lottie.asset(
-                  'assets/animations/selfie2.json',
-                ),
+                child: Lottie.asset('assets/animations/takephoto.json',
+                    repeat: false),
               ),
             ),
           ),
           PageViewModel(
-            title: "Send twonlies",
-            body:
-                "Share moments securely with just one other person. twonly ensures that only you and your chosen friend can view the picture, keeping your moments private.",
+            title: context.lang.onboardingSendTwonliesTitle,
+            body: context.lang.onboardingSendTwonliesBody,
             image: Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
@@ -84,44 +80,40 @@ class OnboardingView extends StatelessWidget {
             ),
           ),
           PageViewModel(
-            title: "You are not the product!",
-            body:
-                "If you don't pay, your data is the product that is sold. So we decided to develop a sustainable business model where everyone wins. You can keep your data private and we can create a beautiful app.",
+            title: context.lang.onboardingNotProductTitle,
+            body: context.lang.onboardingNotProductBody,
             image: Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
-                child: Lottie.asset(
-                  'assets/animations/product.json',
+                child: Image.asset(
+                  'assets/images/onboarding/ricky_the_greedy_racoon.png',
                 ),
               ),
             ),
           ),
           PageViewModel(
-            title: "Pricing",
+            title: context.lang.onboardingBuyOneGetTwoTitle,
             bodyWidget: Column(
               children: [
                 Text(
-                  "To be able to create a sustainable privacy focused app which does not show ads, we have to rely on you! You can get twonly for only 0,99€ / monthly or 9,99€ / yearly. As twonly is for at least two, you get a second user for free, so your twonly partner does not have to pay!",
+                  context.lang.onboardingBuyOneGetTwoBody,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 18),
                 ),
               ],
             ),
             image: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 100),
-                child: Lottie.asset(
-                  'assets/animations/selfie.json',
-                ),
+              child: Lottie.asset(
+                'assets/animations/present.lottie.json',
               ),
             ),
           ),
           PageViewModel(
-            title: "Let's get started!",
+            title: context.lang.onboardingGetStartedTitle,
             bodyWidget: Column(
               children: [
                 Text(
-                  "You can test twonly free for 14 days and then decide if it is worth to you.",
+                  context.lang.onboardingGetStartedBody,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 18),
                 ),
@@ -133,7 +125,7 @@ class OnboardingView extends StatelessWidget {
                         callbackOnSuccess();
                         // On button pressed
                       },
-                      child: const Text("Try for free"),
+                      child: Text(context.lang.onboardingTryForFree),
                     )),
               ],
             ),
@@ -148,8 +140,8 @@ class OnboardingView extends StatelessWidget {
           ),
         ],
         showNextButton: true,
-        done: const Text("Our plans"),
-        next: const Text("Next"),
+        done: Text("Our plans"),
+        next: Text(context.lang.next),
         // done: RegisterView(callbackOnSuccess: callbackOnSuccess),
         onDone: () {
           callbackOnSuccess();

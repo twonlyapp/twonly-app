@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/components/alert_dialog.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:provider/provider.dart';
-import 'package:twonly/main.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/model/contacts_model.dart';

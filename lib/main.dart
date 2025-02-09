@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/providers/db_provider.dart';
@@ -12,9 +14,6 @@ import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'src/app.dart';
-
-late DbProvider dbProvider;
-late ApiProvider apiProvider;
 
 void main() async {
   final settingsController = SettingsChangeProvider();
@@ -39,23 +38,11 @@ void main() async {
   await initMediaStorage();
 
   dbProvider = DbProvider();
-  // Database is just a file, so this will not block the loading of the app much
   await dbProvider.ready;
 
-  var apiUrl = "ws://api.twonly.eu/api/client";
-  var backupApiUrl = "ws://api2.twonly.eu/api/client";
-  // if (!kReleaseMode) {
-  // Overwrite the domain in your local network so you can test the app locally
-  apiUrl = "ws://10.99.0.6:3030/api/client";
-  // }
+  apiProvider = ApiProvider();
 
-  apiProvider = ApiProvider(apiUrl: apiUrl, backupApiUrl: backupApiUrl);
-
-  // Workmanager.executeTask((task, inputData) async {
-  //   await _HomeState().manager();
-  //   print('Background Services are Working!');//This is Working
-  //   return true;
-  // });
+  FlutterForegroundTask.initCommunicationPort();
 
   runApp(
     MultiProvider(

@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:twonly/main.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
@@ -130,11 +130,16 @@ Future uploadMediaFile(
 
   if (uploadToken == null) return;
 
+  bool wasSend = await apiProvider.uploadData(uploadToken, encryptedMedia, 0);
+
+  Logger("api.dart").shout("UPDATE...");
   // TODO: fragmented upload...
-  if (!await apiProvider.uploadData(uploadToken, encryptedMedia, 0)) {
+  if (!wasSend) {
     Logger("api.dart").shout("error while uploading media");
     return;
   }
+
+  Logger("api.dart").shout("DOING UPDATE");
 
   box.delete("retransmit-$messageId-media");
   box.delete("retransmit-$messageId-uploadtoken");
@@ -256,6 +261,7 @@ Future<Uint8List?> getDownloadedMedia(
   box.delete(mediaToken.toString());
   box.put("${mediaToken}_downloaded", "deleted");
   box.delete("${mediaToken}_fromUserId");
+  box.delete("${mediaToken}_messageId");
 
   return media;
 }

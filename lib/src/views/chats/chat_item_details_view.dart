@@ -11,6 +11,7 @@ import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
+import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_view.dart';
@@ -138,25 +139,17 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   }
 
   Future _loadAsync({bool updateOpenStatus = false}) async {
-    if (_messages.isEmpty) {
-      _messages =
-          await DbMessages.getAllMessagesForUser(widget.user.userId.toInt());
-    } else {
-      int lastMessageId = _messages.first.messageId;
-      List<DbMessage> toAppend =
-          await DbMessages.getAllMessagesForUserWithHigherMessageId(
-              widget.user.userId.toInt(), lastMessageId);
-      _messages.insertAll(0, toAppend);
-    }
-
-    try {
-      if (context.mounted) {
-        setState(() {});
-      }
-    } catch (e) {
-      // state should be disposed
-      return;
-    }
+    // if (_messages.isEmpty || updateOpenStatus) {
+    _messages =
+        await DbMessages.getAllMessagesForUser(widget.user.userId.toInt());
+    // } else {
+    // will not update older message states like when they now downloaded...
+    // int lastMessageId = _messages.first.messageId;
+    // List<DbMessage> toAppend =
+    //     await DbMessages.getAllMessagesForUserWithHigherMessageId(
+    //         widget.user.userId.toInt(), lastMessageId);
+    // _messages.insertAll(0, toAppend);
+    // }
 
     if (updateOpenStatus) {
       _messages.where((x) => x.messageOpenedAt == null).forEach((message) {
@@ -165,10 +158,19 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
           if (!alreadyReportedOpened.contains(message.messageOtherId!)) {
             userOpenedOtherMessage(
                 message.otherUserId, message.messageOtherId!);
+            flutterLocalNotificationsPlugin.cancel(message.messageId);
             alreadyReportedOpened.add(message.messageOtherId!);
           }
         }
       });
+    }
+    try {
+      if (context.mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      // state should be disposed
+      return;
     }
   }
 
@@ -184,6 +186,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     final changeCounter = context.watch<MessagesChangeProvider>().changeCounter;
     if (changeCounter.containsKey(widget.user.userId.toInt())) {
       if (changeCounter[widget.user.userId.toInt()] != lastChangeCounter) {
+        print("FORCE reload");
         _loadAsync(updateOpenStatus: true);
         lastChangeCounter = changeCounter[widget.user.userId.toInt()]!;
       }

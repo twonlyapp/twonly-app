@@ -24,10 +24,11 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 /// It handles errors and does automatically tries to reconnect on
 /// errors or network changes.
 class ApiProvider {
-  final String apiUrl;
-  final String? backupApiUrl;
+  final String apiUrl = "ws://10.99.0.6:3030/api/client";
+  // ws://api.twonly.eu/api/client
+  final String? backupApiUrl = "ws://10.99.0.6:3030/api/client";
   bool isAuthenticated = false;
-  ApiProvider({required this.apiUrl, required this.backupApiUrl});
+  ApiProvider();
 
   final log = Logger("ApiProvider");
 
@@ -62,6 +63,15 @@ class ApiProvider {
     tryTransmitMessages();
   }
 
+  Future close(Function callback) async {
+    if (_channel != null) {
+      await _channel!.sink.close();
+      callback();
+      return;
+    }
+    callback();
+  }
+
   Future<bool> connect() async {
     if (_channel != null && _channel!.closeCode != null) {
       return true;
@@ -94,7 +104,7 @@ class ApiProvider {
     globalCallbackConnectionState(false);
     _channel = null;
     isAuthenticated = false;
-    tryToReconnect();
+    // tryToReconnect();
   }
 
   void _onError(dynamic e) {
@@ -157,7 +167,9 @@ class ApiProvider {
   }
 
   Future sendResponse(ClientToServer response) async {
-    _channel!.sink.add(response.writeToBuffer());
+    if (_channel != null) {
+      _channel!.sink.add(response.writeToBuffer());
+    }
   }
 
   Future<Result> _sendRequestV0(ClientToServer request,
@@ -184,6 +196,7 @@ class ApiProvider {
   }
 
   Future authenticate() async {
+    print("try authenticate $isAuthenticated");
     if (isAuthenticated) return;
     if (await SignalHelper.getSignalIdentity() == null) {
       return;
@@ -192,6 +205,7 @@ class ApiProvider {
     var handshake = Handshake()..getchallenge = Handshake_GetChallenge();
     var req = createClientToServerFromHandshake(handshake);
 
+    print("try authenticate send to server");
     final result = await _sendRequestV0(req, authenticated: false);
     if (result.isError) {
       log.shout("Error auth", result);

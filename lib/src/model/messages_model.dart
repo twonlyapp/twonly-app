@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:cv/cv.dart';
 import 'package:logging/logging.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:twonly/main.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/model/json/message.dart';

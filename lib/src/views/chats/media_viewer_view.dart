@@ -10,6 +10,7 @@ import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/services/notification_service.dart';
 
 final _noScreenshot = NoScreenshot.instance;
 
@@ -69,6 +70,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         }
       }
 
+      flutterLocalNotificationsPlugin.cancel(widget.message.messageId);
       List<int> token = content.downloadToken;
       _imageByte =
           await getDownloadedMedia(token, widget.message.messageOtherId!);
@@ -202,7 +204,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 ],
               ),
             ),
-            if (_imageByte != null)
+            if (_imageByte != null && false)
               Positioned(
                 bottom: 30,
                 left: 0,

@@ -144,10 +144,10 @@ String getPushNotificationText(String key, String userName) {
     pushNotificationText = {
       "newTextMessage": "%userName% hat die eine Nachricht gesendet.",
       "newTwonly": "%userName% hat dir einen twonly gesendet.",
-      "newVideo": "%userName% hat die eine Video gesendet.",
-      "newImage": "%userName% hat die eine Bild gesendet.",
+      "newVideo": "%userName% hat dir eine Video gesendet.",
+      "newImage": "%userName% hat dir eine Bild gesendet.",
       "contactRequest": "%userName% möchte sich mir dir vernetzen.",
-      "acceptRequest": "%userName%  ist jetzt mit dir vernetzt.",
+      "acceptRequest": "%userName% ist jetzt mit dir vernetzt.",
     };
   } else {
     pushNotificationText = {
@@ -214,6 +214,6 @@ Future localPushNotificationNewMessage(
     user.displayName,
     msg,
     notificationDetails,
-    // payload: 'test',
+    payload: message.kind.index.toString(),
   );
 }

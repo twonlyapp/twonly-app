@@ -39,13 +39,25 @@ class InitialsAvatar extends StatelessWidget {
     double proSize = (fontSize == null) ? 40 : (fontSize! * 2);
 
     return isPro
-        ? ClipRRect(
-            borderRadius: BorderRadius.circular(12.0), //or 15.0
-            child: Container(
-              height: proSize,
-              width: proSize,
-              color: avatarColor,
-              child: Center(child: child),
+        ? //or 15.0
+        Container(
+            constraints: BoxConstraints(
+              minHeight: 2 * (fontSize ?? 20),
+              minWidth: 2 * (fontSize ?? 20),
+              maxWidth: 2 * (fontSize ?? 20),
+              maxHeight: 2 * (fontSize ?? 20),
+            ),
+            child: Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12.0),
+                child: Container(
+                  height: proSize,
+                  width: proSize,
+                  //padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  color: avatarColor,
+                  child: Center(child: child),
+                ),
+              ),
             ),
           )
         : CircleAvatar(

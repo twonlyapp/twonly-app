@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/main.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
@@ -54,6 +54,25 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   final box = await getMediaStorage();
 
   String boxId = data.uploadToken.toString();
+  if (data.fin && data.data.isEmpty) {
+    // media file was deleted by the server. remove the media from device
+
+    int? messageId = box.get("${data.uploadToken}_messageId");
+    if (messageId != null) {
+      await DbMessages.deleteMessageById(messageId);
+      box.delete(boxId);
+      int? fromUserId = box.get("${data.uploadToken}_fromUserId");
+      if (fromUserId != null) {
+        globalCallBackOnMessageChange(fromUserId);
+      }
+      box.delete("${data.uploadToken}_fromUserId");
+      box.delete("${data.uploadToken}_downloaded");
+      globalCallBackOnDownloadChange(data.uploadToken, false);
+      var ok = client.Response_Ok()..none = true;
+      return client.Response()..ok = ok;
+    }
+  }
+
   Uint8List? buffered = box.get(boxId);
   Uint8List downloadedBytes;
   if (buffered != null) {
@@ -164,6 +183,7 @@ Future<client.Response> handleNewMessage(
               List<int> downloadToken = content.downloadToken;
               Box box = await getMediaStorage();
               box.put("${downloadToken}_fromUserId", fromUserId.toInt());
+              box.put("${downloadToken}_messageId", messageId);
               tryDownloadMedia(downloadToken);
             }
           }

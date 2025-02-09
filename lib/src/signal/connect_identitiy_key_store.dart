@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:collection/collection.dart';
-import 'package:twonly/main.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/identity_key_store_model.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
