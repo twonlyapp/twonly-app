@@ -12,6 +12,7 @@ import 'package:twonly/src/components/verified_shield.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
+import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
 
@@ -46,6 +47,11 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   Future<void> _loadAsync() async {
+    int? sendNextMediaToUserId =
+        context.read<SendNextMediaTo>().sendNextMediaToUserId;
+    if (sendNextMediaToUserId != null) {
+      _selectedUserIds.add(Int64(sendNextMediaToUserId));
+    }
     _users = await DbContacts.getActiveUsers();
     _updateUsers(_users);
     imageBytes = await widget.imageBytesFuture;

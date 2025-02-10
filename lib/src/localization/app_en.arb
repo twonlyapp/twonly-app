@@ -83,7 +83,7 @@
   "protectAsARealTwonly": "Send as real twonly!",
   "addDrawing": "Drawing",
   "addEmoji": "Emoji",
-  "toogleFlashLight": "Toggle the flash light",
+  "toggleFlashLight": "Toggle the flash light",
   "searchUsernameNotFoundLong": "\"{username}\" is not a twonly user. Please check the username and try again.",
   "errorUnknown": "An unexpected error has occurred. Please try again later.",
   "errorBadRequest": "The request could not be understood by the server due to malformed syntax. Please check your input and try again.",

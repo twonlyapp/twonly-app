@@ -83,7 +83,7 @@
     "protectAsARealTwonly": "Als echtes twonly senden!",
     "addDrawing": "Zeichnung",
     "addEmoji": "Emoji",
-    "toogleFlashLight": "Taschenlampe umschalten",
+    "toggleFlashLight": "Taschenlampe umschalten",
     "searchUsernameNotFoundLong": "\"{username}\" ist kein twonly-Benutzer. Bitte überprüfe den Benutzernamen und versuche es erneut.",
     "errorUnknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.",
     "errorBadRequest": "Die Anfrage konnte vom Server aufgrund einer fehlerhaften Syntax nicht verstanden werden. Bitte überprüfe deine Eingabe und versuche es erneut.",

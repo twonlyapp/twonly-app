@@ -1,8 +1,13 @@
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/components/notification_badge.dart';
+import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'dart:async';
@@ -12,6 +17,7 @@ import 'package:twonly/src/components/image_editor/data/layer.dart';
 import 'package:twonly/src/components/image_editor/layers_viewer.dart';
 import 'package:twonly/src/components/image_editor/modules/all_emojis.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:twonly/src/views/home_view.dart';
 
 List<Layer> layers = [];
 List<Layer> undoLayers = [];
@@ -221,6 +227,17 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
+    int? sendNextMediaToUserId =
+        context.watch<SendNextMediaTo>().sendNextMediaToUserId;
+    String? sendNextMediaToUserName;
+    if (sendNextMediaToUserId != null) {
+      sendNextMediaToUserName = context
+          .watch<ContactChangeProvider>()
+          .allContacts
+          .firstWhere((x) => x.userId == sendNextMediaToUserId)
+          .displayName;
+    }
+
     return Scaffold(
       backgroundColor: Colors.white.withAlpha(0),
       resizeToAvoidBottomInset: false,
@@ -287,15 +304,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                OutlinedButton.icon(
-                  icon: _imageSaving
-                      ? SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(strokeWidth: 1))
-                      : _imageSaved
-                          ? Icon(Icons.check)
-                          : FaIcon(FontAwesomeIcons.floppyDisk),
+                OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     iconColor: _imageSaved
                         ? Theme.of(context).colorScheme.outline
@@ -318,14 +327,64 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       });
                     }
                   },
-                  label: Text(_imageSaved
-                      ? context.lang.shareImagedEditorSavedImage
-                      : context.lang.shareImagedEditorSaveImage),
+                  child: Row(
+                    children: [
+                      _imageSaving
+                          ? SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 1))
+                          : _imageSaved
+                              ? Icon(Icons.check)
+                              : FaIcon(FontAwesomeIcons.floppyDisk),
+                      if (sendNextMediaToUserName == null) SizedBox(width: 10),
+                      if (sendNextMediaToUserName == null)
+                        Text(_imageSaved
+                            ? context.lang.shareImagedEditorSavedImage
+                            : context.lang.shareImagedEditorSaveImage)
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 20),
+                if (sendNextMediaToUserName != null) SizedBox(width: 10),
+                if (sendNextMediaToUserName != null)
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      iconColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                    onPressed: () async {
+                      Future<Uint8List?> imageBytes = getMergedImage();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ShareImageView(
+                            imageBytesFuture: imageBytes,
+                            isRealTwonly: _isRealTwonly,
+                            maxShowTime: _maxShowTime,
+                          ),
+                        ),
+                      );
+                    },
+                    child: FaIcon(FontAwesomeIcons.userPlus),
+                  ),
+                if (sendNextMediaToUserName != null) SizedBox(width: 10),
+                if (sendNextMediaToUserName == null) SizedBox(width: 20),
                 FilledButton.icon(
                   icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-                  onPressed: () {
+                  onPressed: () async {
+                    if (sendNextMediaToUserId != null) {
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                      Uint8List? imageBytes = await getMergedImage();
+                      globalUpdateOfHomeViewPageIndex(1);
+                      sendImage(
+                        [Int64(sendNextMediaToUserId)],
+                        imageBytes!,
+                        _isRealTwonly,
+                        _maxShowTime,
+                      );
+                      // send hier...
+                      return;
+                    }
                     Future<Uint8List?> imageBytes = getMergedImage();
                     Navigator.push(
                       context,
@@ -344,7 +403,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     ),
                   ),
                   label: Text(
-                    context.lang.shareImagedEditorShareWith,
+                    (sendNextMediaToUserName == null)
+                        ? context.lang.shareImagedEditorShareWith
+                        : sendNextMediaToUserName,
                     style: TextStyle(fontSize: 17),
                   ),
                 ),

@@ -1,5 +1,7 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'camera_to_share/camera_preview_view.dart';
 import 'chats/chat_list_view.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +26,9 @@ class HomeViewState extends State<HomeView> {
     activePageIdx = widget.initialPage;
     homeViewPageController = PageController(initialPage: widget.initialPage);
     globalUpdateOfHomeViewPageIndex = (index) {
+      if (index == 1) {
+        context.read<SendNextMediaTo>().updateSendNextMediaTo(null);
+      }
       homeViewPageController.jumpToPage(index);
       setState(() {
         activePageIdx = index;
@@ -35,7 +40,6 @@ class HomeViewState extends State<HomeView> {
   void dispose() {
     // disable globalCallbacks to the flutter tree
     globalUpdateOfHomeViewPageIndex = (a) {};
-    //homeViewPageController.dispose();
     super.dispose();
   }
 
@@ -67,6 +71,9 @@ class HomeViewState extends State<HomeView> {
         body: PageView(
           controller: homeViewPageController,
           onPageChanged: (index) {
+            if (index == 1) {
+              context.read<SendNextMediaTo>().updateSendNextMediaTo(null);
+            }
             activePageIdx = index;
             setState(() {});
           },
@@ -93,6 +100,9 @@ class HomeViewState extends State<HomeView> {
           ],
           onTap: (int index) {
             activePageIdx = index;
+            if (index == 1) {
+              context.read<SendNextMediaTo>().updateSendNextMediaTo(null);
+            }
             setState(() {
               homeViewPageController.animateToPage(
                 index,

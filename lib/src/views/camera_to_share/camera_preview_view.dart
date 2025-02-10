@@ -133,7 +133,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               },
               builder: (cameraState, preview) {
                 return Stack(
-                  //alignment: Alignment.bottomCenter,
                   children: [
                     Positioned.fill(
                       child: GestureDetector(
@@ -185,7 +184,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                 // SizedBox(height: 20),
                                 ActionButton(
                                   FontAwesomeIcons.bolt,
-                                  tooltipText: context.lang.toogleFlashLight,
+                                  tooltipText: context.lang.toggleFlashLight,
                                   color: isFlashOn
                                       ? const Color.fromARGB(255, 255, 230, 0)
                                       : const Color.fromARGB(
@@ -276,110 +275,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               ),
             )
         ],
-      ),
-    );
-  }
-}
-
-String beautifulZoomScale(double scale) {
-  var tmp = scale.toStringAsFixed(1);
-  if (tmp[0] == "0") {
-    tmp = tmp.substring(1, tmp.length);
-  }
-  return tmp;
-}
-
-class CameraZoomButtons extends StatefulWidget {
-  const CameraZoomButtons(
-      {super.key,
-      required this.isFront,
-      required this.updateScaleFactor,
-      required this.scaleFactor});
-
-  final bool isFront;
-  final double scaleFactor;
-  final Function updateScaleFactor;
-
-  @override
-  State<CameraZoomButtons> createState() => _CameraZoomButtonsState();
-}
-
-class _CameraZoomButtonsState extends State<CameraZoomButtons> {
-  @override
-  Widget build(BuildContext context) {
-    final zoomButtonStyle = TextButton.styleFrom(
-        padding: EdgeInsets.zero,
-        foregroundColor: Colors.white,
-        minimumSize: Size(40, 40),
-        alignment: Alignment.center,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap);
-
-    final zoomTextStyle = TextStyle(fontSize: 13);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(40.0),
-      child: Container(
-        color: const Color.fromARGB(90, 0, 0, 0),
-        child: Row(
-          children: widget.isFront
-              ? []
-              : [
-                  TextButton(
-                    style: zoomButtonStyle,
-                    onPressed: () async {
-                      // var level = await widget.controller.getMinZoomLevel();
-                      // widget.updateScaleFactor(level);
-                    },
-                    child: Text(""),
-                    // child: FutureBuilder(
-                    //     future: widget.controller.getMinZoomLevel(),
-                    //     builder: (context, snap) {
-                    //       if (snap.hasData) {
-                    //         var minLevel =
-                    //             beautifulZoomScale(snap.data!.toDouble());
-                    //         var currentLevel =
-                    //             beautifulZoomScale(widget.scaleFactor);
-                    //         return Text(
-                    //           widget.scaleFactor < 1
-                    //               ? "${currentLevel}x"
-                    //               : "${minLevel}x",
-                    //           style: zoomTextStyle,
-                    //         );
-                    //       } else {
-                    //         return Text("");
-                    //       }
-                    //     }),
-                  ),
-                  TextButton(
-                      style: zoomButtonStyle,
-                      onPressed: () {
-                        widget.updateScaleFactor(1.0);
-                      },
-                      child: Text(
-                        widget.scaleFactor >= 1
-                            ? "${beautifulZoomScale(widget.scaleFactor)}x"
-                            : "1.0x",
-                        style: zoomTextStyle,
-                      )),
-                  TextButton(
-                    style: zoomButtonStyle,
-                    onPressed: () async {
-                      // var level = await widget.controller.getMaxZoomLevel();
-                      // widget.updateScaleFactor(level);
-                    },
-                    child: Text(""),
-                    // child: FutureBuilder(
-                    //     future: widget.controller.getMaxZoomLevel(),
-                    //     builder: (context, snap) {
-                    //       if (snap.hasData) {
-                    //         var maxLevel = snap.data?.toInt();
-                    //         return Text("${maxLevel}x", style: zoomTextStyle);
-                    //       } else {
-                    //         return Text("");
-                    //       }
-                    //     }),
-                  )
-                ],
-        ),
       ),
     );
   }

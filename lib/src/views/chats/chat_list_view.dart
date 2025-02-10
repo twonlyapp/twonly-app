@@ -12,9 +12,11 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
+import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
+import 'package:twonly/src/views/home_view.dart';
 import 'package:twonly/src/views/settings/settings_main_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
 import 'package:flutter/material.dart';
@@ -206,7 +208,10 @@ class _UserListItem extends State<UserListItem> {
         leading: InitialsAvatar(displayName: widget.user.displayName),
         onTap: () {
           if (widget.lastMessage == null) {
-            print("TODO: implement sending to one person!");
+            context
+                .read<SendNextMediaTo>()
+                .updateSendNextMediaTo(widget.user.userId.toInt());
+            globalUpdateOfHomeViewPageIndex(0);
             return;
           }
           if (isDownloading) return;

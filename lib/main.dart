@@ -10,6 +10,7 @@ import 'package:logging/logging.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'src/app.dart';
@@ -49,6 +50,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MessagesChangeProvider()),
         ChangeNotifierProvider(create: (_) => DownloadChangeProvider()),
         ChangeNotifierProvider(create: (_) => ContactChangeProvider()),
+        ChangeNotifierProvider(create: (_) => SendNextMediaTo()),
         ChangeNotifierProvider(create: (_) => settingsController),
       ],
       child: MyApp(),

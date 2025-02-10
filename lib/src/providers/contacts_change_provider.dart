@@ -4,9 +4,6 @@ import 'package:twonly/src/model/messages_model.dart';
 
 // This provider will update the UI on changes in the contact list
 class ContactChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
-  // The page index of the HomeView widget
-  // int _activePageIdx = 0;
-
   List<Contact> _allContacts = [];
   final Map<int, DbMessage> _lastMessagesGroupedByUser = <int, DbMessage>{};
 
@@ -14,13 +11,6 @@ class ContactChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
       .where((contact) => !contact.accepted && contact.requested)
       .length;
   List<Contact> get allContacts => _allContacts;
-
-  // int get activePageIdx => _activePageIdx;
-
-  // void setActivePageIdx(int idx) {
-  //   _activePageIdx = idx;
-  //   notifyListeners();
-  // }
 
   void update() async {
     _allContacts = await DbContacts.getUsers();

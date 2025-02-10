@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/views/home_view.dart';
 
 final _noScreenshot = NoScreenshot.instance;
 
@@ -212,31 +216,36 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 ],
               ),
             ),
-            // if (_imageByte != null)
-            //   Positioned(
-            //     bottom: 30,
-            //     left: 0,
-            //     right: 0,
-            //     child: Row(
-            //       mainAxisAlignment: MainAxisAlignment.center,
-            //       children: [
-            //         // const SizedBox(width: 20),
-            //         FilledButton.icon(
-            //           icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-            //           onPressed: () async {},
-            //           style: ButtonStyle(
-            //             padding: WidgetStateProperty.all<EdgeInsets>(
-            //               EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-            //             ),
-            //           ),
-            //           label: Text(
-            //             "Respond",
-            //             style: TextStyle(fontSize: 17),
-            //           ),
-            //         ),
-            //       ],
-            //     ),
-            //   ),
+            if (_imageByte != null)
+              Positioned(
+                bottom: 30,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // const SizedBox(width: 20),
+                    FilledButton.icon(
+                      icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                      onPressed: () async {
+                        context.read<SendNextMediaTo>().updateSendNextMediaTo(
+                            widget.otherUser.userId.toInt());
+                        globalUpdateOfHomeViewPageIndex(0);
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                        ),
+                      ),
+                      label: Text(
+                        "Respond",
+                        style: TextStyle(fontSize: 17),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

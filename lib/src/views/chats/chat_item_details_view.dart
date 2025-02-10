@@ -12,10 +12,12 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
+import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_view.dart';
+import 'package:twonly/src/views/home_view.dart';
 
 class ChatListEntry extends StatelessWidget {
   const ChatListEntry(this.message, this.user, this.lastMessageFromSameUser,
@@ -130,9 +132,10 @@ class ChatItemDetailsView extends StatefulWidget {
 
 class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   int lastChangeCounter = 0;
-  final TextEditingController newMessageController = TextEditingController();
+  TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late Contact user;
+  String currentInputText = "";
 
   @override
   void initState() {
@@ -148,6 +151,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     setState(() {});
     await sendTextMessage(user.userId, newMessageController.text);
     newMessageController.clear();
+    currentInputText = "";
   }
 
   @override
@@ -247,6 +251,10 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                 Expanded(
                   child: TextField(
                     controller: newMessageController,
+                    onChanged: (value) {
+                      currentInputText = value;
+                      setState(() {});
+                    },
                     onSubmitted: (_) {
                       _sendMessage();
                     },
@@ -277,12 +285,22 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                   ),
                 ),
                 SizedBox(width: 8),
-                IconButton(
-                  icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-                  onPressed: () {
-                    _sendMessage();
-                  },
-                ),
+                (currentInputText != "")
+                    ? IconButton(
+                        icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                        onPressed: () {
+                          _sendMessage();
+                        },
+                      )
+                    : IconButton(
+                        icon: FaIcon(FontAwesomeIcons.camera),
+                        onPressed: () {
+                          context.read<SendNextMediaTo>().updateSendNextMediaTo(
+                              widget.user.userId.toInt());
+                          globalUpdateOfHomeViewPageIndex(0);
+                          Navigator.popUntil(context, (route) => route.isFirst);
+                        },
+                      )
               ],
             ),
           ),
