@@ -51,7 +51,6 @@ class _EmojisState extends State<Emojis> {
                         context,
                         EmojiLayerData(
                           text: emoji,
-                          size: 32.0,
                         ),
                       );
                     },

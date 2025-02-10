@@ -19,8 +19,11 @@ class EmojiLayer extends StatefulWidget {
 class _EmojiLayerState extends State<EmojiLayer> {
   double initialRotation = 0;
   Offset initialOffset = Offset.zero;
+  Offset initialFocalPoint = Offset.zero;
   double initialScale = 1.0;
+  bool twoPointerWhereDown = false;
   final GlobalKey _key = GlobalKey();
+  int pointers = 0;
 
   @override
   void initState() {
@@ -43,44 +46,68 @@ class _EmojiLayerState extends State<EmojiLayer> {
     return Positioned(
       left: widget.layerData.offset.dx,
       top: widget.layerData.offset.dy,
-      child: GestureDetector(
-        onTap: () {},
-        onScaleStart: (details) {
-          // Store the initial scale and rotation
-          initialScale = widget.layerData.size; // Reset initial scale
-          initialRotation = widget.layerData.rotation;
-          initialOffset = widget.layerData.offset;
-        },
-        onScaleUpdate: (details) {
+      child: Listener(
+        onPointerUp: (details) {
           setState(() {
-            // Update the size based on the scale factor
-
-            widget.layerData.size = initialScale * details.scale;
-
-            // Update the rotation based on the rotation angle
-            widget.layerData.rotation = initialRotation + details.rotation;
-
-            // Update the position based on the translation
-            final RenderBox renderBox =
-                _key.currentContext?.findRenderObject() as RenderBox;
-            var dx = details.focalPoint.dx - (renderBox.size.width / 2);
-            var dy = details.focalPoint.dy - (renderBox.size.height / 2 + 34);
-            widget.layerData.offset = Offset(dx, dy);
+            pointers--;
+            if (pointers == 0) {
+              twoPointerWhereDown = false;
+            }
           });
         },
-        onScaleEnd: (details) {
-          // Optionally, you can handle the end of the scale gesture here
+        onPointerDown: (details) {
+          setState(() {
+            pointers++;
+          });
         },
-        child: Transform.rotate(
-          key: _key,
-          angle: widget.layerData.rotation,
-          child: Container(
-            padding: const EdgeInsets.all(34),
-            color: Colors.transparent,
-            child: Text(
-              widget.layerData.text.toString(),
-              style: TextStyle(
-                fontSize: widget.layerData.size,
+        child: GestureDetector(
+          onScaleStart: (details) {
+            // Store the initial scale and rotation
+            initialScale = widget.layerData.size; // Reset initial scale
+            initialRotation = widget.layerData.rotation;
+            initialOffset = widget.layerData.offset;
+            initialFocalPoint =
+                Offset(details.focalPoint.dx, details.focalPoint.dy);
+
+            setState(() {});
+          },
+          onScaleUpdate: (details) {
+            if (twoPointerWhereDown == true && details.pointerCount != 2) {
+              return;
+            }
+            setState(() {
+              // Update the size based on the scale factor
+
+              twoPointerWhereDown = details.pointerCount >= 2;
+
+              widget.layerData.size = initialScale * details.scale;
+
+              // Update the rotation based on the rotation angle
+              widget.layerData.rotation = initialRotation + details.rotation;
+
+              // Update the position based on the translation
+              var dx = (initialOffset.dx) +
+                  (details.focalPoint.dx - initialFocalPoint.dx);
+              var dy = (initialOffset.dy) +
+                  (details.focalPoint.dy - initialFocalPoint.dy);
+              // var dy = details.focalPoint.dy - (renderBox.size.height / 2 + 34);
+              widget.layerData.offset = Offset(dx, dy);
+            });
+          },
+          onScaleEnd: (details) {
+            // Optionally, you can handle the end of the scale gesture here
+          },
+          child: Transform.rotate(
+            key: _key,
+            angle: widget.layerData.rotation,
+            child: Container(
+              padding: const EdgeInsets.all(44),
+              color: Colors.transparent,
+              child: Text(
+                widget.layerData.text.toString(),
+                style: TextStyle(
+                  fontSize: widget.layerData.size,
+                ),
               ),
             ),
           ),
