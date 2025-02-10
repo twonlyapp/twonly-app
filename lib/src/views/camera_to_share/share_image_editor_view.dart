@@ -189,10 +189,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       for (var x in layers) {
         x.showCustomButtons = false;
       }
+      setState(() {});
       image = await screenshotController.capture(pixelRatio: pixelRatio);
       for (var x in layers) {
         x.showCustomButtons = true;
       }
+      setState(() {});
     } else if (layers.length == 1) {
       if (layers.first is BackgroundLayerData) {
         image = (layers.first as BackgroundLayerData).image.bytes;
