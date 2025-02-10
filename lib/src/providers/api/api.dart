@@ -135,8 +135,12 @@ Future uploadMediaFile(
     if (offset + fragmentedTransportSize < encryptedMedia.length) {
       end = offset + fragmentedTransportSize;
     }
+
     bool wasSend = await apiProvider.uploadData(
-        uploadToken, encryptedMedia.sublist(offset, end), offset);
+      uploadToken,
+      encryptedMedia.sublist(offset, end),
+      offset,
+    );
 
     if (!wasSend) {
       Logger("api.dart").shout("error while uploading media");

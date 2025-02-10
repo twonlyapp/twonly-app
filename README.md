@@ -2,35 +2,7 @@
 
 Don't be lonely, get twonly! Send pictures to a friend in real time and be sure you are the only two people who can see them.
 
-
-## TODOS bevor first beta
-- Real deployment aufsetzen, direkt auf Netcup?
-- Firebase Push Notification
-
-
-## Maybe
-- Send a picture first to only one person -> Kamera button
-- Response to a image
-- MediaView:
-    - Bei weiteren geladenen Bildern -> Direkt anzeigen ohne pop
-
-## TODOS bevor first release
-- Settings
-    - Subscription
-    - Notification
-- Webpage
-- Instagam & Marketing vorbereiten
-- IT-Startup der TU Darmstadt anschreiben
-- iOS version
-
-## Later todos
-- Videos
-- Sealed Sender
-- Settings
-    - Profilbilder erstellen.
-- Pro Version
-- Media Shower -> Recap of the day
-- Send normal images via twonly
+run-as eu.twonly.testing ls /data/user/0/eu.twonly.testing/
 
 
 ## Pro Version
@@ -39,8 +11,6 @@ Don't be lonely, get twonly! Send pictures to a friend in real time and be sure 
 - This includes a free pro version for your twonly partner!
 - Get up to 3 tokens 
 - Get for your twonly partner a second a additional pro version
-
-
 
 ## Features
 

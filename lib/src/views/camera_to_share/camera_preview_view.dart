@@ -77,6 +77,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       single: (single) async {
                         final imageBytes = await single.file?.readAsBytes();
                         if (imageBytes == null || !context.mounted) return;
+                        debugPrint("Delete ${single.path!}");
+                        File(single.path!).delete();
                         setState(() {
                           sharePreviewIsShown = true;
                         });
@@ -199,7 +201,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                       isFlashOn = true;
                                     }
                                     setState(() {});
-                                    //cameraState.sensorConfig.switchCameraFlash();
                                   },
                                 ),
                               ],
@@ -258,40 +259,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   final String filePath =
                       '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
                   return SingleCaptureRequest(filePath, sensors.first);
-                  // // Separate pictures taken with front and back camera
-                  // return MultipleCaptureRequest(
-                  //   {
-                  //     for (final sensor in sensors)
-                  //       sensor:
-                  //           '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
-                  //   },
-                  // );
                 },
               ),
-              // onPreviewTapBuilder: (state) => OnPreviewTap(
-              //   onTap: (Offset position, PreviewSize flutterPreviewSize,
-              //       PreviewSize pixelPreviewSize) {
-              //     state.when(onPhotoMode: (picState) => picState.takePhoto());
-              //   },
-              //   onTapPainter: (tapPosition) => TweenAnimationBuilder(
-              //     key: ValueKey(tapPosition),
-              //     tween: Tween<double>(begin: 1.0, end: 0.0),
-              //     duration: const Duration(milliseconds: 500),
-              //     builder: (context, anim, child) {
-              //       return Transform.rotate(
-              //         angle: anim * 2 * pi,
-              //         child: Transform.scale(
-              //           scale: 4 * anim,
-              //           child: child,
-              //         ),
-              //       );
-              //     },
-              //     child: const Icon(
-              //       Icons.camera,
-              //       color: Colors.white,
-              //     ),
-              //   ),
-              // ),
             ),
           ),
           if (sharePreviewIsShown)
