@@ -158,7 +158,8 @@ class _UserListItem extends State<UserListItem> {
   Widget build(BuildContext context) {
     if (widget.lastMessage != null) {
       lastMessageInSeconds =
-          DateTime.now().difference(widget.lastMessage!.sendAt).inSeconds;
+          calculateTimeDifference(DateTime.now(), widget.lastMessage!.sendAt)
+              .inSeconds;
 
       state = widget.lastMessage!.getSendState();
 

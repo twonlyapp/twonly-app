@@ -224,8 +224,8 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                               messages[i].messageOtherId != null);
                 }
                 if (messages[i].messageOpenedAt != null) {
-                  if ((DateTime.now())
-                          .difference(messages[i].messageOpenedAt!)
+                  if (calculateTimeDifference(
+                              DateTime.now(), messages[i].messageOpenedAt!)
                           .inHours >=
                       24) {
                     return Container();

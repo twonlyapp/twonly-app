@@ -152,7 +152,7 @@ int getFlameCounter(List<DateTime> dates) {
   int flamesCount = 0;
   DateTime lastFlameCount = DateTime.now();
 
-  if (dates[0].difference(lastFlameCount).inDays == 0) {
+  if (calculateTimeDifference(dates[0], lastFlameCount).inDays == 0) {
     flamesCount = 1;
     lastFlameCount = dates[0];
   }
@@ -161,7 +161,7 @@ int getFlameCounter(List<DateTime> dates) {
   for (int i = 1; i < dates.length; i++) {
     // print(
     //     "${dates[i]} ${dates[i].difference(dates[i - 1]).inDays} ${dates[i].difference(lastFlameCount).inDays}");
-    if (dates[i].difference(dates[i - 1]).inDays == 0) {
+    if (calculateTimeDifference(dates[i], dates[i - 1]).inDays == 0) {
       if (lastFlameCount.difference(dates[i]).inDays == 1) {
         flamesCount++;
         lastFlameCount = dates[i];
@@ -189,4 +189,17 @@ Future<int> getFlamesForOtherUser(int otherUserId) async {
   int b = getFlameCounter(send);
   // print("Received $a and send $b");
   return min(a, b);
+}
+
+Duration calculateTimeDifference(DateTime now, DateTime startTime) {
+  // Get the timezone offsets
+  Duration nowOffset = now.timeZoneOffset;
+  Duration startTimeOffset = startTime.timeZoneOffset;
+
+  // Convert both DateTime objects to UTC
+  DateTime nowInUTC = now.subtract(nowOffset);
+  DateTime startTimeInUTC = startTime.subtract(startTimeOffset);
+
+  // Calculate the difference
+  return nowInUTC.difference(startTimeInUTC);
 }

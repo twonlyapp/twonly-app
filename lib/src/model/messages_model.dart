@@ -8,6 +8,7 @@ import 'package:twonly/src/app.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class DbMessage {
   DbMessage({
@@ -383,7 +384,9 @@ class DbMessages extends CvModelBase {
         if (messageOpenedAt != null) {
           messageOpenedAt = DateTime.tryParse(fromDb[i][columnMessageOpenedAt]);
           if (tmp is TextMessageContent && messageOpenedAt != null) {
-            if ((DateTime.now()).difference(messageOpenedAt).inHours >= 24) {
+            if (calculateTimeDifference(DateTime.now(), messageOpenedAt)
+                    .inHours >=
+                24) {
               deleteTextContent(fromDb[i][columnMessageId], tmp);
             }
           }
