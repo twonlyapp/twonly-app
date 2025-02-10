@@ -158,12 +158,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   Future _stopService() async {
-    FlutterForegroundTask.sendDataToTask("");
-    await FlutterForegroundTask.stopService();
     if (context.mounted) {
-      context.read<MessagesChangeProvider>().init();
+      context.read<MessagesChangeProvider>().init(afterPaused: true);
       context.read<ContactChangeProvider>().update();
     }
+    FlutterForegroundTask.sendDataToTask("");
+    await FlutterForegroundTask.stopService();
     if (!apiProvider.isAuthenticated) {
       apiProvider.connect();
     }

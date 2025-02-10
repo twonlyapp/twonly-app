@@ -7,10 +7,13 @@ import 'package:twonly/src/utils/misc.dart';
 /// for every contact.
 class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   final Map<int, DbMessage> _lastMessage = <int, DbMessage>{};
+  final Map<int, List<DbMessage>> _allMessagesFromUser =
+      <int, List<DbMessage>>{};
   final Map<int, int> _changeCounter = <int, int>{};
   final Map<int, int> _flamesCounter = <int, int>{};
 
   Map<int, DbMessage> get lastMessage => _lastMessage;
+  Map<int, List<DbMessage>> get allMessagesFromUser => _allMessagesFromUser;
   Map<int, int> get changeCounter => _changeCounter;
   Map<int, int> get flamesCounter => _flamesCounter;
 
@@ -20,15 +23,20 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
     if (last != null) {
       _lastMessage[last.otherUserId] = last;
     }
-    if (!changeCounter.containsKey(targetUserId)) {
-      changeCounter[targetUserId] = 0;
-    }
-    changeCounter[targetUserId] = changeCounter[targetUserId]! + 1;
     flamesCounter[targetUserId] = await getFlamesForOtherUser(targetUserId);
+    notifyListeners();
+
+    loadMessagesForUser(targetUserId, force: true);
+  }
+
+  Future loadMessagesForUser(int targetUserId, {bool force = false}) async {
+    if (!force && _allMessagesFromUser[targetUserId] != null) return;
+    _allMessagesFromUser[targetUserId] =
+        await DbMessages.getAllMessagesForUser(targetUserId);
     notifyListeners();
   }
 
-  void init() async {
+  void init({bool afterPaused = false}) async {
     // load everything from the database
     List<Contact> allContacts = await DbContacts.getUsers();
     for (Contact contact in allContacts) {
@@ -41,5 +49,10 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
           await getFlamesForOtherUser(contact.userId.toInt());
     }
     notifyListeners();
+    if (afterPaused) {
+      for (int targetUserId in _allMessagesFromUser.keys) {
+        loadMessagesForUser(targetUserId, force: true);
+      }
+    }
   }
 }

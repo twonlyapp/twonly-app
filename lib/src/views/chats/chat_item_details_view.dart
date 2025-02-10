@@ -129,64 +129,25 @@ class ChatItemDetailsView extends StatefulWidget {
 }
 
 class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
-  List<DbMessage> _messages = [];
   int lastChangeCounter = 0;
   final TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
-  int sendTextMessages = 0;
   late Contact user;
 
   @override
   void initState() {
     super.initState();
     user = widget.user;
-    _loadAsync(updateOpenStatus: true);
-  }
-
-  Future _loadAsync({bool updateOpenStatus = false}) async {
-    // if (_messages.isEmpty || updateOpenStatus) {
-    if (sendTextMessages <= 0) {
-      _messages = await DbMessages.getAllMessagesForUser(user.userId.toInt());
-    } else {
-      sendTextMessages--;
-      // will not update older message states like when they now downloaded...
-      int lastMessageId = _messages.first.messageId;
-      List<DbMessage> toAppend =
-          await DbMessages.getAllMessagesForUserWithHigherMessageId(
-              user.userId.toInt(), lastMessageId);
-      _messages.insertAll(0, toAppend);
-    }
-
-    if (updateOpenStatus) {
-      _messages.where((x) => x.messageOpenedAt == null).forEach((message) {
-        if (message.messageOtherId != null &&
-            message.messageContent is TextMessageContent) {
-          if (!alreadyReportedOpened.contains(message.messageOtherId!)) {
-            userOpenedOtherMessage(
-                message.otherUserId, message.messageOtherId!);
-            flutterLocalNotificationsPlugin.cancel(message.messageId);
-            alreadyReportedOpened.add(message.messageOtherId!);
-          }
-        }
-      });
-    }
-    try {
-      if (context.mounted) {
-        setState(() {});
-      }
-    } catch (e) {
-      // state should be disposed
-      return;
-    }
+    context
+        .read<MessagesChangeProvider>()
+        .loadMessagesForUser(user.userId.toInt());
   }
 
   Future _sendMessage() async {
-    sendTextMessages++;
-    String text = newMessageController.text;
-    if (text == "") return;
+    if (newMessageController.text == "") return;
+    setState(() {});
     await sendTextMessage(user.userId, newMessageController.text);
     newMessageController.clear();
-    setState(() {});
   }
 
   @override
@@ -195,14 +156,27 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         .watch<ContactChangeProvider>()
         .allContacts
         .firstWhere((c) => c.userId == widget.user.userId);
-    final changeCounter = context.watch<MessagesChangeProvider>().changeCounter;
-    if (changeCounter.containsKey(user.userId.toInt())) {
-      if (changeCounter[user.userId.toInt()] != lastChangeCounter) {
-        _loadAsync(updateOpenStatus: true);
-        lastChangeCounter = changeCounter[user.userId.toInt()]!;
-        setState(() {});
+
+    List<DbMessage> messages = context
+            .watch<MessagesChangeProvider>()
+            .allMessagesFromUser[user.userId.toInt()] ??
+        [];
+
+    messages.where((x) => x.messageOpenedAt == null).forEach((message) {
+      if (message.messageOtherId != null &&
+          message.messageContent is TextMessageContent) {
+        if (!alreadyReportedOpened.contains(message.messageOtherId!)) {
+          setState(() {
+            // so the _loadAsync will not be called again by this update
+            lastChangeCounter++;
+          });
+          userOpenedOtherMessage(message.otherUserId, message.messageOtherId!);
+          flutterLocalNotificationsPlugin.cancel(message.messageId);
+          alreadyReportedOpened.add(message.messageOtherId!);
+        }
       }
-    }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
@@ -223,7 +197,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                   color: Colors.transparent,
                   child: Row(
                     children: [
-                      Text(user.displayName),
+                      Text(user.userId.toString()),
                       SizedBox(width: 10),
                       VerifiedShield(user),
                     ],
@@ -238,27 +212,27 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         children: [
           Expanded(
             child: ListView.builder(
-              itemCount: _messages.length, // Number of items in the list
+              itemCount: messages.length, // Number of items in the list
               reverse: true,
               itemBuilder: (context, i) {
                 bool lastMessageFromSameUser = false;
                 if (i > 0) {
                   lastMessageFromSameUser =
-                      (_messages[i - 1].messageOtherId == null &&
-                              _messages[i].messageOtherId == null) ||
-                          (_messages[i - 1].messageOtherId != null &&
-                              _messages[i].messageOtherId != null);
+                      (messages[i - 1].messageOtherId == null &&
+                              messages[i].messageOtherId == null) ||
+                          (messages[i - 1].messageOtherId != null &&
+                              messages[i].messageOtherId != null);
                 }
-                if (_messages[i].messageOpenedAt != null) {
+                if (messages[i].messageOpenedAt != null) {
                   if ((DateTime.now())
-                          .difference(_messages[i].messageOpenedAt!)
+                          .difference(messages[i].messageOpenedAt!)
                           .inHours >=
                       24) {
                     return Container();
                   }
                 }
                 return ChatListEntry(
-                  _messages[i],
+                  messages[i],
                   user,
                   lastMessageFromSameUser,
                 );
