@@ -201,7 +201,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                   color: Colors.transparent,
                   child: Row(
                     children: [
-                      Text(user.userId.toString()),
+                      Text(user.displayName),
                       SizedBox(width: 10),
                       VerifiedShield(user),
                     ],
