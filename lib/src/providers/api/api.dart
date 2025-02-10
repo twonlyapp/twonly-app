@@ -110,10 +110,6 @@ Future uploadMediaFile(
 ) async {
   Box box = await getMediaStorage();
 
-  if ((await box.get("retransmit-$messageId-media") == null)) {
-    await box.put("retransmit-$messageId-media", encryptedMedia);
-  }
-
   List<int>? uploadToken = await box.get("retransmit-$messageId-uploadtoken");
   if (uploadToken == null) {
     Result res = await apiProvider.getUploadToken();
@@ -130,20 +126,34 @@ Future uploadMediaFile(
 
   if (uploadToken == null) return;
 
-  bool wasSend = await apiProvider.uploadData(uploadToken, encryptedMedia, 0);
+  int offset = await box.get("retransmit-$messageId-offset") ?? 0;
 
-  Logger("api.dart").shout("UPDATE...");
-  // TODO: fragmented upload...
-  if (!wasSend) {
-    Logger("api.dart").shout("error while uploading media");
-    return;
+  int fragmentedTransportSize = 100000;
+
+  while (offset < encryptedMedia.length) {
+    int end = encryptedMedia.length;
+    if (offset + fragmentedTransportSize < encryptedMedia.length) {
+      end = offset + fragmentedTransportSize;
+    }
+    bool wasSend = await apiProvider.uploadData(
+        uploadToken, encryptedMedia.sublist(offset, end), offset);
+
+    if (!wasSend) {
+      Logger("api.dart").shout("error while uploading media");
+      return;
+    }
+
+    await box.put("retransmit-$messageId-offset", offset);
+
+    offset = end;
   }
 
   Logger("api.dart").shout("DOING UPDATE");
 
   box.delete("retransmit-$messageId-media");
   box.delete("retransmit-$messageId-uploadtoken");
-  await DbContacts.checkAndUpdateFlames(target.toInt());
+
+  await DbContacts.updateTotalMediaCounter(target.toInt());
 
   // Ensures the retransmit of the message
   await encryptAndSendMessage(
@@ -161,15 +171,40 @@ Future uploadMediaFile(
   );
 }
 
-Future encryptAndUploadMediaFile(
-  Int64 target,
-  Uint8List imageBytes,
-  bool isRealTwonly,
-  int maxShowTime,
-) async {
-  DateTime messageSendAt = DateTime.now();
-  int? messageId = await DbMessages.insertMyMessage(
-      target.toInt(),
+class SendImage {
+  final Int64 userId;
+  final Uint8List imageBytes;
+  final bool isRealTwonly;
+  final int maxShowTime;
+  DateTime? messageSendAt;
+  int? messageId;
+  Uint8List? encryptBytes;
+
+  SendImage({
+    required this.userId,
+    required this.imageBytes,
+    required this.isRealTwonly,
+    required this.maxShowTime,
+  });
+
+  Future upload() async {
+    if (messageId == null || encryptBytes == null || messageSendAt == null) {
+      return;
+    }
+    await uploadMediaFile(messageId!, userId, encryptBytes!, isRealTwonly,
+        maxShowTime, messageSendAt!);
+  }
+
+  Future encryptAndStore() async {
+    encryptBytes = await SignalHelper.encryptBytes(imageBytes, userId);
+    if (encryptBytes == null) {
+      Logger("api.dart").shout("Error encrypting media! Aborting");
+      return;
+    }
+
+    messageSendAt = DateTime.now();
+    messageId = await DbMessages.insertMyMessage(
+      userId.toInt(),
       MessageKind.image,
       MediaMessageContent(
         downloadToken: [],
@@ -177,19 +212,15 @@ Future encryptAndUploadMediaFile(
         isRealTwonly: isRealTwonly,
         isVideo: false,
       ),
-      messageSendAt);
-  // isRealTwonly,
-  if (messageId == null) return;
+      messageSendAt!,
+    );
+    // should only happen when there is no space left on the smartphone -> abort message
+    if (messageId == null) return;
 
-  Uint8List? encryptBytes = await SignalHelper.encryptBytes(imageBytes, target);
-  if (encryptBytes == null) {
-    await DbMessages.deleteMessageById(messageId);
-    Logger("api.dart").shout("Error encrypting media! Deleting media.");
-    return;
+    Box box = await getMediaStorage();
+    await box.put("retransmit-$messageId-media", encryptBytes);
+    // message is safe until now -> would be retransmitted if sending would fail..
   }
-
-  await uploadMediaFile(messageId, target, encryptBytes, isRealTwonly,
-      maxShowTime, messageSendAt);
 }
 
 Future sendImage(
@@ -198,21 +229,38 @@ Future sendImage(
   bool isRealTwonly,
   int maxShowTime,
 ) async {
-  // 1. set notifier provider
-
   Uint8List? imageBytesCompressed = await getCompressedImage(imageBytes);
   if (imageBytesCompressed == null) {
     Logger("api.dart").shout("Error compressing image!");
     return;
   }
 
+  if (imageBytesCompressed.length >= 10000000) {
+    Logger("api.dart").shout("Image to big aborting!");
+    return;
+  }
+
+  List<SendImage> tasks = [];
+
   for (int i = 0; i < userIds.length; i++) {
-    encryptAndUploadMediaFile(
-      userIds[i],
-      imageBytesCompressed,
-      isRealTwonly,
-      maxShowTime,
+    tasks.add(
+      SendImage(
+        userId: userIds[i],
+        imageBytes: imageBytesCompressed,
+        isRealTwonly: isRealTwonly,
+        maxShowTime: maxShowTime,
+      ),
     );
+  }
+
+  // first step encrypt and store the encrypted image
+  for (SendImage task in tasks) {
+    await task.encryptAndStore();
+  }
+
+  // after the images are safely stored try do upload them one by one
+  for (SendImage task in tasks) {
+    await task.upload();
   }
 }
 

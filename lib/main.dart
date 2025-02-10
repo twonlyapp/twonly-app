@@ -12,7 +12,6 @@ import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/services/notification_service.dart';
-import 'package:twonly/src/utils/misc.dart';
 import 'src/app.dart';
 
 void main() async {

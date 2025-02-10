@@ -1,6 +1,5 @@
 import 'package:cv/cv.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:twonly/globals.dart';
@@ -52,8 +51,6 @@ class DbContacts extends CvModelBase {
   static const columnCreatedAt = "created_at";
   final createdAt = CvField<DateTime>(columnCreatedAt);
 
-  static const nextFlameCounterInSeconds = kDebugMode ? 60 : 60 * 60 * 24;
-
   static Future setupDatabaseTable(Database db) async {
     String createTableString = """
       CREATE TABLE IF NOT EXISTS $tableName (
@@ -100,9 +97,9 @@ class DbContacts extends CvModelBase {
     return await _getAllUsers();
   }
 
-  static Future checkAndUpdateFlames(int userId, {DateTime? timestamp}) async {
-    timestamp ??= DateTime.now();
-
+  static Future updateTotalMediaCounter(
+    int userId,
+  ) async {
     List<Map<String, dynamic>> result = await dbProvider.db!.query(
       tableName,
       columns: [columnTotalMediaCounter],
@@ -112,7 +109,7 @@ class DbContacts extends CvModelBase {
 
     if (result.isNotEmpty) {
       int totalMediaCounter = result.first.cast()[columnTotalMediaCounter];
-      _updateFlameCounter(userId, totalMediaCounter + 1);
+      _updateTotalMediaCounter(userId, totalMediaCounter + 1);
       globalCallBackOnContactChange();
     }
   }
@@ -205,7 +202,8 @@ class DbContacts extends CvModelBase {
     await _update(userId, updates);
   }
 
-  static Future _updateFlameCounter(int userId, int totalMediaCounter) async {
+  static Future _updateTotalMediaCounter(
+      int userId, int totalMediaCounter) async {
     Map<String, dynamic> updates = {columnTotalMediaCounter: totalMediaCounter};
     await _update(userId, updates, notifyFlutter: false);
   }

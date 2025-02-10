@@ -14,7 +14,6 @@ import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
-import 'package:twonly/src/views/home_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/views/settings/settings_main_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
@@ -40,13 +39,13 @@ class _ChatListViewState extends State<ChatListView> {
         .where((c) => c.accepted)
         .toList();
 
-    List<Contact> activeUsers = allUsers
-        .where((x) => lastMessages.containsKey(x.userId.toInt()))
-        .toList();
-    activeUsers.sort((b, a) {
-      return lastMessages[a.userId.toInt()]!
-          .sendAt
-          .compareTo(lastMessages[b.userId.toInt()]!.sendAt);
+    allUsers.sort((b, a) {
+      DbMessage? msgA = lastMessages[a.userId.toInt()];
+      DbMessage? msgB = lastMessages[a.userId.toInt()];
+      if (msgA == null) return 1;
+      if (msgB == null) return -1;
+
+      return msgA.sendAt.compareTo(msgB.sendAt);
     });
 
     int maxTotalMediaCounter = 0;
@@ -101,38 +100,32 @@ class _ChatListViewState extends State<ChatListView> {
           )
         ],
       ),
-      body: (activeUsers.isEmpty)
+      body: (allUsers.isEmpty)
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: OutlinedButton.icon(
-                    icon: Icon((allUsers.isEmpty)
-                        ? Icons.person_add
-                        : Icons.camera_alt),
+                    icon: Icon(Icons.person_add),
                     onPressed: () {
-                      (allUsers.isEmpty)
-                          ? Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SearchUsernameView(),
-                              ),
-                            )
-                          : globalUpdateOfHomeViewPageIndex(0);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SearchUsernameView(),
+                        ),
+                      );
                     },
-                    label: Text((allUsers.isEmpty)
-                        ? context.lang.chatListViewSearchUserNameBtn
-                        : context.lang.chatListViewSendFirstTwonly)),
+                    label: Text(context.lang.chatListViewSearchUserNameBtn)),
               ),
             )
           : ListView.builder(
               restorationId: 'chat_list_view',
-              itemCount: activeUsers.length,
+              itemCount: allUsers.length,
               itemBuilder: (BuildContext context, int index) {
-                final user = activeUsers[index];
+                final user = allUsers[index];
                 return UserListItem(
                   user: user,
                   maxTotalMediaCounter: maxTotalMediaCounter,
-                  lastMessage: lastMessages[user.userId.toInt()]!,
+                  lastMessage: lastMessages[user.userId.toInt()],
                 );
               },
             ),
@@ -142,7 +135,7 @@ class _ChatListViewState extends State<ChatListView> {
 
 class UserListItem extends StatefulWidget {
   final Contact user;
-  final DbMessage lastMessage;
+  final DbMessage? lastMessage;
   final int maxTotalMediaCounter;
 
   const UserListItem(
@@ -157,26 +150,29 @@ class UserListItem extends StatefulWidget {
 
 class _UserListItem extends State<UserListItem> {
   int lastMessageInSeconds = 0;
+  MessageSendState state = MessageSendState.send;
+  bool isDownloading = false;
+  List<int> token = [];
 
   @override
   Widget build(BuildContext context) {
-    int lastMessageInSeconds =
-        DateTime.now().difference(widget.lastMessage.sendAt).inSeconds;
+    if (widget.lastMessage != null) {
+      lastMessageInSeconds =
+          DateTime.now().difference(widget.lastMessage!.sendAt).inSeconds;
 
-    MessageSendState state = widget.lastMessage.getSendState();
-    bool isDownloading = false;
+      state = widget.lastMessage!.getSendState();
 
-    final content = widget.lastMessage.messageContent;
-    List<int> token = [];
+      final content = widget.lastMessage!.messageContent;
 
-    if (widget.lastMessage.messageReceived && content is MediaMessageContent) {
-      token = content.downloadToken;
-      isDownloading = context
-          .watch<DownloadChangeProvider>()
-          .currentlyDownloading
-          .contains(token.toString());
+      if (widget.lastMessage!.messageReceived &&
+          content is MediaMessageContent) {
+        token = content.downloadToken;
+        isDownloading = context
+            .watch<DownloadChangeProvider>()
+            .currentlyDownloading
+            .contains(token.toString());
+      }
     }
-
     int flameCounter = context
             .watch<MessagesChangeProvider>()
             .flamesCounter[widget.user.userId.toInt()] ??
@@ -186,39 +182,45 @@ class _UserListItem extends State<UserListItem> {
       user: widget.user,
       child: ListTile(
         title: Text(widget.user.displayName),
-        subtitle: Row(
-          children: [
-            MessageSendStateIcon(widget.lastMessage),
-            Text("•"),
-            const SizedBox(width: 5),
-            Text(
-              formatDuration(lastMessageInSeconds),
-              style: TextStyle(fontSize: 12),
-            ),
-            if (flameCounter > 0)
-              FlameCounterWidget(
-                widget.user,
-                flameCounter,
-                widget.maxTotalMediaCounter,
-                prefix: true,
+        subtitle: (widget.lastMessage == null)
+            ? Text("Tap to send your first image.")
+            : Row(
+                children: [
+                  MessageSendStateIcon(widget.lastMessage!),
+                  Text("•"),
+                  const SizedBox(width: 5),
+                  Text(
+                    formatDuration(lastMessageInSeconds),
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  if (flameCounter > 0)
+                    FlameCounterWidget(
+                      widget.user,
+                      flameCounter,
+                      widget.maxTotalMediaCounter,
+                      prefix: true,
+                    ),
+                ],
               ),
-          ],
-        ),
         leading: InitialsAvatar(displayName: widget.user.displayName),
         onTap: () {
+          if (widget.lastMessage == null) {
+            print("TODO: implement sending to one person!");
+            return;
+          }
           if (isDownloading) return;
-          if (!widget.lastMessage.isDownloaded) {
-            tryDownloadMedia(widget.lastMessage.messageId,
-                widget.lastMessage.otherUserId, token,
+          if (!widget.lastMessage!.isDownloaded) {
+            tryDownloadMedia(widget.lastMessage!.messageId,
+                widget.lastMessage!.otherUserId, token,
                 force: true);
             return;
           }
           if (state == MessageSendState.received &&
-              widget.lastMessage.containsOtherMedia()) {
+              widget.lastMessage!.containsOtherMedia()) {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) {
-                return MediaViewerView(widget.user, widget.lastMessage);
+                return MediaViewerView(widget.user, widget.lastMessage!);
               }),
             );
             return;

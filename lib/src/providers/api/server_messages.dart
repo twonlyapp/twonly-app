@@ -181,8 +181,7 @@ Future<client.Response> handleNewMessage(
 
           if (message.kind == MessageKind.video ||
               message.kind == MessageKind.image) {
-            await DbContacts.checkAndUpdateFlames(fromUserId.toInt(),
-                timestamp: message.timestamp);
+            await DbContacts.updateTotalMediaCounter(fromUserId.toInt());
             if (!globalIsAppInBackground) {
               final content = message.content;
               if (content is MediaMessageContent) {
