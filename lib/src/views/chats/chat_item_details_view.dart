@@ -57,7 +57,7 @@ class ChatListEntry extends StatelessWidget {
                   83, 68, 137, 255), // Set the background color
           borderRadius: BorderRadius.circular(12.0), // Set border radius
         ),
-        child: Text(
+        child: SelectableText(
           content.text,
           style: TextStyle(
             color: Colors.white, // Set text color for contrast

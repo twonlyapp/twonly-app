@@ -28,7 +28,7 @@ class FormattedStringWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
+    return SelectableText(
       formatString(longString),
       style: TextStyle(fontSize: 18, color: Colors.black),
       textAlign: TextAlign.center,
