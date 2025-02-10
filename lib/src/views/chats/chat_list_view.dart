@@ -183,7 +183,7 @@ class _UserListItem extends State<UserListItem> {
       child: ListTile(
         title: Text(widget.user.displayName),
         subtitle: (widget.lastMessage == null)
-            ? Text("Tap to send your first image.")
+            ? Text(context.lang.chatsTapToSend)
             : Row(
                 children: [
                   MessageSendStateIcon(widget.lastMessage!),
