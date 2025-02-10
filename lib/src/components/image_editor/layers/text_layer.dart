@@ -42,7 +42,7 @@ class _TextViewState extends State<TextLayer> {
 
   @override
   Widget build(BuildContext context) {
-    if (isDeleted) return Container();
+    if (widget.layerData.isDeleted) return Container();
 
     if (widget.layerData.isEditing) {
       return Positioned(
@@ -58,6 +58,7 @@ class _TextViewState extends State<TextLayer> {
             autofocus: true,
             onEditingComplete: () {
               setState(() {
+                widget.layerData.isDeleted = textController.text == "";
                 widget.layerData.isEditing = false;
                 widget.layerData.text = textController.text;
               });
@@ -65,9 +66,12 @@ class _TextViewState extends State<TextLayer> {
             onTapOutside: (a) {
               widget.layerData.text = textController.text;
               Future.delayed(Duration(milliseconds: 100), () {
-                setState(() {
-                  widget.layerData.isEditing = false;
-                });
+                if (context.mounted) {
+                  setState(() {
+                    widget.layerData.isDeleted = textController.text == "";
+                    widget.layerData.isEditing = false;
+                  });
+                }
               });
             },
             decoration: InputDecoration(
@@ -98,7 +102,7 @@ class _TextViewState extends State<TextLayer> {
               });
             },
             onScaleEnd: (d) {
-              if (deleteLayer) isDeleted = true;
+              if (deleteLayer) widget.layerData.isDeleted = true;
               elementIsScaled = false;
               setState(() {});
             },

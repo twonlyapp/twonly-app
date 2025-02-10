@@ -56,6 +56,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         FontAwesomeIcons.font,
         tooltipText: context.lang.addTextItem,
         onPressed: () async {
+          layers = layers.where((x) => !x.isDeleted).toList();
+          if (layers.any((x) => x.isEditing)) return;
           undoLayers.clear();
           removedLayers.clear();
           layers.add(TextLayerData());
