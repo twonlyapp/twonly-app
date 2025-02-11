@@ -220,7 +220,6 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
               itemCount: messages.length, // Number of items in the list
               reverse: true,
               itemBuilder: (context, i) {
-                print(i);
                 bool lastMessageFromSameUser = false;
                 if (i > 0) {
                   lastMessageFromSameUser =
