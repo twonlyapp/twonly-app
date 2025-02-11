@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/flame.dart';
@@ -155,13 +157,35 @@ class _UserListItem extends State<UserListItem> {
   bool isDownloading = false;
   List<int> token = [];
 
+  Timer? updateTime;
+
+  @override
+  void initState() {
+    super.initState();
+    lastUpdateTime();
+  }
+
+  void lastUpdateTime() {
+    // Change the color every 200 milliseconds
+    updateTime = Timer.periodic(Duration(milliseconds: 200), (timer) {
+      setState(() {
+        lastMessageInSeconds =
+            calculateTimeDifference(DateTime.now(), widget.lastMessage!.sendAt)
+                .inSeconds;
+        setState(() {});
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    updateTime?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.lastMessage != null) {
-      lastMessageInSeconds =
-          calculateTimeDifference(DateTime.now(), widget.lastMessage!.sendAt)
-              .inSeconds;
-
       state = widget.lastMessage!.getSendState();
 
       final content = widget.lastMessage!.messageContent;
@@ -175,6 +199,7 @@ class _UserListItem extends State<UserListItem> {
             .contains(token.toString());
       }
     }
+
     int flameCounter = context
             .watch<MessagesChangeProvider>()
             .flamesCounter[widget.user.userId.toInt()] ??
