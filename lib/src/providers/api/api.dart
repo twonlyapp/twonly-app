@@ -46,8 +46,13 @@ Future tryTransmitMessages() async {
     if (encryptedMedia != null) {
       final content = retransmit[i].messageContent;
       if (content is MediaMessageContent) {
-        uploadMediaFile(msgId, Int64(retransmit[i].otherUserId), encryptedMedia,
-            content.isRealTwonly, content.maxShowTime, retransmit[i].sendAt);
+        await uploadMediaFile(
+            msgId,
+            Int64(retransmit[i].otherUserId),
+            encryptedMedia,
+            content.isRealTwonly,
+            content.maxShowTime,
+            retransmit[i].sendAt);
       }
     }
   }
@@ -110,7 +115,7 @@ Future uploadMediaFile(
 ) async {
   Box box = await getMediaStorage();
 
-  List<int>? uploadToken = await box.get("retransmit-$messageId-uploadtoken");
+  List<int>? uploadToken = box.get("retransmit-$messageId-uploadtoken");
   if (uploadToken == null) {
     Result res = await apiProvider.getUploadToken();
 
@@ -120,34 +125,35 @@ Future uploadMediaFile(
     }
 
     uploadToken = res.value.uploadtoken;
-
-    await box.put("retransmit-$messageId-uploadtoken", uploadToken);
   }
 
   if (uploadToken == null) return;
 
-  int offset = await box.get("retransmit-$messageId-offset") ?? 0;
+  int offset = box.get("retransmit-$messageId-offset") ?? 0;
 
   int fragmentedTransportSize = 100000;
 
   while (offset < encryptedMedia.length) {
+    debugPrint("offset: $offset");
     int end = encryptedMedia.length;
     if (offset + fragmentedTransportSize < encryptedMedia.length) {
       end = offset + fragmentedTransportSize;
     }
 
-    bool wasSend = await apiProvider.uploadData(
+    Result wasSend = await apiProvider.uploadData(
       uploadToken,
       encryptedMedia.sublist(offset, end),
       offset,
     );
 
-    if (!wasSend) {
+    if (wasSend.isError) {
+      await box.put("retransmit-$messageId-offset", 0);
+      await box.delete("retransmit-$messageId-uploadtoken");
       Logger("api.dart").shout("error while uploading media");
       return;
     }
 
-    await box.put("retransmit-$messageId-offset", offset);
+    box.put("retransmit-$messageId-offset", offset);
 
     offset = end;
   }

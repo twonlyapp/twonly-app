@@ -112,6 +112,7 @@ class ApiProvider {
   }
 
   void _onError(dynamic e) {
+    log.shout("WebSocket Error: $e");
     globalCallbackConnectionState(false);
     _channel = null;
     isAuthenticated = false;
@@ -309,7 +310,7 @@ class ApiProvider {
     return await _sendRequestV0(req);
   }
 
-  Future<bool> uploadData(
+  Future<Result> uploadData(
       List<int> uploadToken, Uint8List data, int offset) async {
     var get = ApplicationData_UploadData()
       ..uploadToken = uploadToken
@@ -318,7 +319,7 @@ class ApiProvider {
     var appData = ApplicationData()..uploaddata = get;
     var req = createClientToServerFromApplicationData(appData);
     final result = await _sendRequestV0(req);
-    return result.isSuccess;
+    return result;
   }
 
   Future<Result> getUserData(String username) async {

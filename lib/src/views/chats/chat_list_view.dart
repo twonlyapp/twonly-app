@@ -43,10 +43,9 @@ class _ChatListViewState extends State<ChatListView> {
 
     allUsers.sort((b, a) {
       DbMessage? msgA = lastMessages[a.userId.toInt()];
-      DbMessage? msgB = lastMessages[a.userId.toInt()];
+      DbMessage? msgB = lastMessages[b.userId.toInt()];
       if (msgA == null) return 1;
       if (msgB == null) return -1;
-
       return msgA.sendAt.compareTo(msgB.sendAt);
     });
 
