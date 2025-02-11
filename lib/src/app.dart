@@ -27,7 +27,7 @@ bool globalIsAppInBackground = true;
 
 // these two callbacks are called on updated to the corresponding database
 Function globalCallBackOnContactChange = () {};
-Future Function(int) globalCallBackOnMessageChange = (a) async {};
+Future Function(int, int?) globalCallBackOnMessageChange = (a, b) async {};
 Function(List<int>, bool) globalCallBackOnDownloadChange = (a, b) {};
 
 /// The Widget that configures your application.
@@ -67,8 +67,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       context.read<DownloadChangeProvider>().update(token, add);
     };
 
-    globalCallBackOnMessageChange = (userId) async {
-      await context.read<MessagesChangeProvider>().updateLastMessageFor(userId);
+    globalCallBackOnMessageChange = (userId, messageId) async {
+      await context
+          .read<MessagesChangeProvider>()
+          .updateLastMessageFor(userId, messageId);
     };
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -194,7 +196,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     globalCallbackConnectionState = (a) {};
     globalCallBackOnDownloadChange = (a, b) {};
     globalCallBackOnContactChange = () {};
-    globalCallBackOnMessageChange = (a) async {};
+    globalCallBackOnMessageChange = (a, b) async {};
     super.dispose();
   }
 

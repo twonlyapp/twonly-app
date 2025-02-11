@@ -165,6 +165,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
             .watch<MessagesChangeProvider>()
             .allMessagesFromUser[user.userId.toInt()] ??
         [];
+    print(messages.length);
 
     messages.where((x) => x.messageOpenedAt == null).forEach((message) {
       if (message.messageOtherId != null &&
@@ -219,6 +220,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
               itemCount: messages.length, // Number of items in the list
               reverse: true,
               itemBuilder: (context, i) {
+                print(i);
                 bool lastMessageFromSameUser = false;
                 if (i > 0) {
                   lastMessageFromSameUser =

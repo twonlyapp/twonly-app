@@ -91,7 +91,11 @@ Future sendTextMessage(Int64 target, String message) async {
   DateTime messageSendAt = DateTime.now();
 
   int? messageId = await DbMessages.insertMyMessage(
-      target.toInt(), MessageKind.textMessage, content, messageSendAt);
+    target.toInt(),
+    MessageKind.textMessage,
+    content,
+    messageSendAt,
+  );
   if (messageId == null) return;
 
   Message msg = Message(
@@ -264,13 +268,11 @@ Future sendImage(
   }
 
   // first step encrypt and store the encrypted image
-  for (SendImage task in tasks) {
-    await task.encryptAndStore();
-  }
+  await Future.wait(tasks.map((task) => task.encryptAndStore()));
 
   // after the images are safely stored try do upload them one by one
   for (SendImage task in tasks) {
-    await task.upload();
+    task.upload();
   }
 }
 
@@ -330,11 +332,6 @@ Future<Uint8List?> getDownloadedMedia(
   box.delete("${mediaToken}_messageId");
   box.delete("${mediaToken}_fromUserId");
   return media;
-}
-
-Future<bool> isMediaDownloaded(List<int> mediaToken) async {
-  final box = await getMediaStorage();
-  return box.containsKey("${mediaToken}_downloaded");
 }
 
 Future initMediaStorage() async {

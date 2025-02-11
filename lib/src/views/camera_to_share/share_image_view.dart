@@ -36,6 +36,7 @@ class _ShareImageView extends State<ShareImageView> {
   List<Contact> _bestFriends = [];
   int maxTotalMediaCounter = 0;
   Uint8List? imageBytes;
+  bool sendingImage = false;
   final HashSet<Int64> _selectedUserIds = HashSet<Int64>();
   final TextEditingController searchUserName = TextEditingController();
   bool showRealTwonlyWarning = false;
@@ -188,7 +189,7 @@ class _ShareImageView extends State<ShareImageView> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FilledButton.icon(
-                icon: imageBytes == null
+                icon: imageBytes == null || sendingImage
                     ? SizedBox(
                         height: 12,
                         width: 12,
@@ -202,14 +203,19 @@ class _ShareImageView extends State<ShareImageView> {
                   if (imageBytes == null || _selectedUserIds.isEmpty) {
                     return;
                   }
-                  sendImage(
+                  setState(() {
+                    sendingImage = true;
+                  });
+                  await sendImage(
                     _selectedUserIds.toList(),
                     imageBytes!,
                     widget.isRealTwonly,
                     widget.maxShowTime,
                   );
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                  globalUpdateOfHomeViewPageIndex(1);
+                  if (context.mounted) {
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                    globalUpdateOfHomeViewPageIndex(1);
+                  }
                 },
                 style: ButtonStyle(
                     padding: WidgetStateProperty.all<EdgeInsets>(

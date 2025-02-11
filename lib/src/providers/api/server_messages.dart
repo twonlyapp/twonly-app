@@ -57,15 +57,15 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   final box = await getMediaStorage();
 
   String boxId = data.uploadToken.toString();
+  int? messageId = box.get("${data.uploadToken}_messageId");
   if (data.fin && data.data.isEmpty) {
     // media file was deleted by the server. remove the media from device
 
-    int? messageId = box.get("${data.uploadToken}_messageId");
     if (messageId != null) {
       int? fromUserId = await DbMessages.deleteMessageById(messageId);
       box.delete(boxId);
       if (fromUserId != null) {
-        globalCallBackOnMessageChange(fromUserId);
+        globalCallBackOnMessageChange(fromUserId, messageId);
       }
       box.delete("${data.uploadToken}_fromUserId");
       box.delete("${data.uploadToken}_downloaded");
@@ -107,7 +107,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
       }
 
       box.delete(boxId);
-      await globalCallBackOnMessageChange(fromUserId);
+      await globalCallBackOnMessageChange(fromUserId, messageId);
       globalCallBackOnDownloadChange(data.uploadToken, false);
     }
   } else {

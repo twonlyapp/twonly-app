@@ -152,7 +152,7 @@ class DbMessages extends CvModelBase {
     );
     int? fromUserId = await getFromUserIdByMessageId(messageId);
     if (fromUserId != null) {
-      globalCallBackOnMessageChange(fromUserId);
+      globalCallBackOnMessageChange(fromUserId, messageId);
     }
     return fromUserId;
   }
@@ -179,7 +179,7 @@ class DbMessages extends CvModelBase {
         columnOtherUserId: userIdFrom,
         columnSendAt: messageSendAt.toIso8601String()
       });
-      globalCallBackOnMessageChange(userIdFrom);
+      globalCallBackOnMessageChange(userIdFrom, messageId);
       return messageId;
     } catch (e) {
       Logger("messsage_model/insertMyMessage").shout("$e");
@@ -200,7 +200,7 @@ class DbMessages extends CvModelBase {
         columnOtherUserId: userIdFrom,
         columnSendAt: messageSendAt.toIso8601String()
       });
-      globalCallBackOnMessageChange(userIdFrom);
+      globalCallBackOnMessageChange(userIdFrom, messageId);
       return messageId;
     } catch (e) {
       Logger("messsage_model/insertOtherMessage").shout("$e");
@@ -233,6 +233,13 @@ class DbMessages extends CvModelBase {
     List<DbMessage> messages = await convertToDbMessage(rows);
 
     return messages;
+  }
+
+  static Future<DbMessage?> getMessageById(int messageId) async {
+    var rows = await dbProvider.db!.query(tableName,
+        where: "$columnMessageId = ?", whereArgs: [messageId]);
+    List<DbMessage> messages = await convertToDbMessage(rows);
+    return messages.firstOrNull;
   }
 
   static Future<List<DbMessage>> getAllMessagesForRetransmitting() async {
@@ -289,7 +296,7 @@ class DbMessages extends CvModelBase {
     if (notifyFlutterState) {
       int? fromUserId = await getFromUserIdByMessageId(messageId);
       if (fromUserId != null) {
-        globalCallBackOnMessageChange(fromUserId);
+        globalCallBackOnMessageChange(fromUserId, messageId);
       }
     }
   }
@@ -302,7 +309,7 @@ class DbMessages extends CvModelBase {
       where: "$columnMessageOtherId = ?",
       whereArgs: [messageId],
     );
-    globalCallBackOnMessageChange(fromUserId);
+    globalCallBackOnMessageChange(fromUserId, messageId);
   }
 
   // this ensures that the message id can be spoofed by another person
@@ -314,7 +321,7 @@ class DbMessages extends CvModelBase {
       where: "$columnMessageId = ? AND $columnOtherUserId = ?",
       whereArgs: [messageId, fromUserId],
     );
-    globalCallBackOnMessageChange(fromUserId);
+    globalCallBackOnMessageChange(fromUserId, messageId);
   }
 
   static Future userOpenedOtherMessage(
@@ -351,7 +358,7 @@ class DbMessages extends CvModelBase {
       where: "$messageId = ? AND $columnOtherUserId = ?",
       whereArgs: [messageId, fromUserId],
     );
-    globalCallBackOnMessageChange(fromUserId);
+    globalCallBackOnMessageChange(fromUserId, messageId);
   }
 
   @override
@@ -374,6 +381,7 @@ class DbMessages extends CvModelBase {
       List<dynamic> fromDb) async {
     try {
       List<DbMessage> parsedUsers = [];
+      final box = await getMediaStorage();
       for (int i = 0; i < fromDb.length; i++) {
         dynamic messageOpenedAt = fromDb[i][columnMessageOpenedAt];
 
@@ -397,7 +405,8 @@ class DbMessages extends CvModelBase {
         if (messageOtherId != null) {
           if (content is MediaMessageContent) {
             // when the media was send from the user itself the content is null
-            isDownloaded = await isMediaDownloaded(content.downloadToken);
+            isDownloaded =
+                box.containsKey("${content.downloadToken}_downloaded");
           }
         }
         parsedUsers.add(

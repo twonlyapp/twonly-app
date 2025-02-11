@@ -17,16 +17,31 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   Map<int, int> get changeCounter => _changeCounter;
   Map<int, int> get flamesCounter => _flamesCounter;
 
-  Future updateLastMessageFor(int targetUserId) async {
+  Future updateLastMessageFor(int targetUserId, int? messageId) async {
     DbMessage? last =
         await DbMessages.getLastMessagesForPreviewForUser(targetUserId);
     if (last != null) {
       _lastMessage[last.otherUserId] = last;
     }
     flamesCounter[targetUserId] = await getFlamesForOtherUser(targetUserId);
-    notifyListeners();
+    // notifyListeners();
 
-    loadMessagesForUser(targetUserId, force: true);
+    if (messageId == null || _allMessagesFromUser[targetUserId] == null) {
+      loadMessagesForUser(targetUserId, force: true);
+    } else {
+      DbMessage? msg = await DbMessages.getMessageById(messageId);
+      if (msg != null) {
+        int index = _allMessagesFromUser[targetUserId]!
+            .indexWhere((x) => x.messageId == messageId);
+        if (index == -1) {
+          _allMessagesFromUser[targetUserId]!.insert(0, msg);
+        } else {
+          _allMessagesFromUser[targetUserId]![index] = msg;
+        }
+      }
+      _allMessagesFromUser[targetUserId] = allMessagesFromUser[targetUserId]!;
+      notifyListeners();
+    }
   }
 
   Future loadMessagesForUser(int targetUserId, {bool force = false}) async {

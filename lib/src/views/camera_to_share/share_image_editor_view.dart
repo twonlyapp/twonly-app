@@ -373,15 +373,16 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
                   onPressed: () async {
                     if (sendNextMediaToUserId != null) {
-                      Navigator.popUntil(context, (route) => route.isFirst);
                       Uint8List? imageBytes = await getMergedImage();
-                      globalUpdateOfHomeViewPageIndex(1);
                       sendImage(
                         [Int64(sendNextMediaToUserId)],
                         imageBytes!,
                         _isRealTwonly,
                         _maxShowTime,
                       );
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                      globalUpdateOfHomeViewPageIndex(1);
+
                       // send hier...
                       return;
                     }
