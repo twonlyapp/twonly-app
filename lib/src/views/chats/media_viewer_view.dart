@@ -207,12 +207,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 children: [
                   if (canBeSeenUntil != null)
                     SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          value: progress,
-                          strokeWidth: 2.0,
-                        )),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 2.0,
+                      ),
+                    ),
                 ],
               ),
             ),

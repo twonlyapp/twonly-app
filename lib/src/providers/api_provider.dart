@@ -25,11 +25,11 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 /// It handles errors and does automatically tries to reconnect on
 /// errors or network changes.
 class ApiProvider {
-  final String apiUrl = kDebugMode
+  final String apiUrl = (kDebugMode && false)
       ? "ws://10.99.0.6:3030/api/client"
       : "wss://api.twonly.eu/api/client";
   // ws://api.twonly.eu/api/client
-  final String? backupApiUrl = kDebugMode
+  final String? backupApiUrl = (kDebugMode && false)
       ? "ws://10.99.0.6:3030/api/client"
       : "wss://api2.twonly.eu/api/client";
   bool isAuthenticated = false;
@@ -70,10 +70,13 @@ class ApiProvider {
     globalCallbackConnectionState(true);
     _reconnectionDelay = 5;
 
-    tryTransmitMessages();
+    if (!globalIsAppInBackground) {
+      tryTransmitMessages();
+    }
   }
 
   Future close(Function callback) async {
+    log.info("Closing the websocket connection!");
     if (_channel != null) {
       await _channel!.sink.close();
       callback();
@@ -83,7 +86,7 @@ class ApiProvider {
   }
 
   Future<bool> connect() async {
-    if (_channel != null && _channel!.closeCode != null) {
+    if (_channel != null) {
       return true;
     }
     // ensure that the connect function is not called again by the timer.
@@ -93,13 +96,13 @@ class ApiProvider {
 
     isAuthenticated = false;
 
-    log.info("Trying to connect to the backend $apiUrl!");
+    log.fine("Trying to connect to the backend $apiUrl!");
     if (await _connectTo(apiUrl)) {
       await onConnected();
       return true;
     }
     if (backupApiUrl != null) {
-      log.info("Trying to connect to the backup backend $backupApiUrl!");
+      log.fine("Trying to connect to the backup backend $backupApiUrl!");
       if (await _connectTo(backupApiUrl!)) {
         await onConnected();
         return true;
@@ -111,6 +114,7 @@ class ApiProvider {
   bool get isConnected => _channel != null && _channel!.closeCode != null;
 
   void _onDone() {
+    log.info("WebSocket Closed");
     globalCallbackConnectionState(false);
     _channel = null;
     isAuthenticated = false;
@@ -118,7 +122,7 @@ class ApiProvider {
   }
 
   void _onError(dynamic e) {
-    log.shout("WebSocket Error: $e");
+    log.info("WebSocket Error: $e");
     globalCallbackConnectionState(false);
     _channel = null;
     isAuthenticated = false;
@@ -126,6 +130,8 @@ class ApiProvider {
   }
 
   void tryToReconnect() {
+    return;
+    if (globalIsAppInBackground) return;
     if (reconnectionTimer != null) {
       reconnectionTimer!.cancel();
     }
@@ -186,6 +192,7 @@ class ApiProvider {
   Future<Result> _sendRequestV0(ClientToServer request,
       {bool authenticated = true}) async {
     if (_channel == null) {
+      log.shout("sending request, but api is not connected.");
       if (!await connect()) {
         return Result.error(ErrorCode.InternalError);
       }
@@ -209,8 +216,13 @@ class ApiProvider {
         isAuthenticated = false;
         if (authenticated) {
           await authenticate();
-          // this will send the request one more time.
-          return _sendRequestV0(request, authenticated: false);
+          if (isAuthenticated) {
+            // this will send the request one more time.
+            return _sendRequestV0(request, authenticated: false);
+          } else {
+            log.shout("Session is not authenticated.");
+            return Result.error(ErrorCode.InternalError);
+          }
         }
       }
     }

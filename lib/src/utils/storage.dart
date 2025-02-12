@@ -20,7 +20,6 @@ Future<UserData?> getUser() async {
   }
   try {
     final userMap = jsonDecode(userJson) as Map<String, dynamic>;
-    Logger("get_user").info("Found user: $userMap");
     final user = UserData.fromJson(userMap);
     return user;
   } catch (e) {

@@ -34,6 +34,7 @@
   "searchUsernameInput": "Username",
   "searchUsernameTitle": "Search username",
   "searchUsernameNotFound": "Username not found",
+  "searchUsernameNotFoundBody": "There is no user with the username \"{username}\" registered.",
   "searchUsernameNewFollowerTitle": "Follow requests",
   "searchUsernameQrCodeBtn": "Scan QR code",
   "chatListViewSearchUserNameBtn": "Add your first twonly contact!",

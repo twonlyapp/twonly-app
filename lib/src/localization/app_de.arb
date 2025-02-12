@@ -34,6 +34,7 @@
     "searchUsernameInput": "Benutzername",
     "searchUsernameTitle": "Benutzernamen suchen",
     "searchUsernameNotFound": "Benutzername nicht gefunden",
+    "searchUsernameNotFoundBody": "Es wurde kein Benutzer mit dem Benutzernamen \"{username}\" gefunden.",
     "searchUsernameNewFollowerTitle": "Folgeanfragen",
     "searchUsernameQrCodeBtn": "QR-Code scannen",
     "chatListViewSearchUserNameBtn": "Füge deinen ersten twonly-Kontakt hinzu!",

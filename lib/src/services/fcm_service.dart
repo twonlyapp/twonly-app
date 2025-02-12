@@ -89,7 +89,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   final stopwatch = Stopwatch()..start();
   while (!gotMessage) {
-    print("gotMessage: $gotMessage");
     if (stopwatch.elapsed >= Duration(seconds: 20)) {
       Logger("firebase-background").shout('Timeout reached. Exiting the loop.');
       break; // Exit the loop if the timeout is reached.

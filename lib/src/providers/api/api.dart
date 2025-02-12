@@ -19,13 +19,13 @@ import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 Future tryTransmitMessages() async {
   List<DbMessage> retransmit =
       await DbMessages.getAllMessagesForRetransmitting();
+  if (retransmit.isEmpty) return;
 
-  debugPrint("tryTransmitMessages: ${retransmit.length}");
+  Logger("api.dart").info("try sending messages: ${retransmit.length}");
 
   Box box = await getMediaStorage();
   for (int i = 0; i < retransmit.length; i++) {
     int msgId = retransmit[i].messageId;
-    debugPrint("msgId=$msgId");
 
     Uint8List? bytes = box.get("retransmit-$msgId-textmessage");
     if (bytes != null) {
@@ -46,13 +46,8 @@ Future tryTransmitMessages() async {
     if (encryptedMedia != null) {
       final content = retransmit[i].messageContent;
       if (content is MediaMessageContent) {
-        await uploadMediaFile(
-            msgId,
-            Int64(retransmit[i].otherUserId),
-            encryptedMedia,
-            content.isRealTwonly,
-            content.maxShowTime,
-            retransmit[i].sendAt);
+        uploadMediaFile(msgId, Int64(retransmit[i].otherUserId), encryptedMedia,
+            content.isRealTwonly, content.maxShowTime, retransmit[i].sendAt);
       }
     }
   }
@@ -69,7 +64,6 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
 
   Box box = await getMediaStorage();
   if (msg.messageId != null) {
-    debugPrint("putting=${msg.messageId}");
     box.put("retransmit-${msg.messageId}-textmessage", bytes);
   }
 
@@ -118,6 +112,7 @@ Future uploadMediaFile(
   DateTime messageSendAt,
 ) async {
   Box box = await getMediaStorage();
+  Logger("api.dart").info("Uploading image $messageId");
 
   List<int>? uploadToken = box.get("retransmit-$messageId-uploadtoken");
   if (uploadToken == null) {
@@ -135,10 +130,10 @@ Future uploadMediaFile(
 
   int offset = box.get("retransmit-$messageId-offset") ?? 0;
 
-  int fragmentedTransportSize = 100000;
+  int fragmentedTransportSize = 50000;
 
   while (offset < encryptedMedia.length) {
-    debugPrint("offset: $offset");
+    Logger("api.dart").info("Uploading image $messageId with offset: $offset");
     int end = encryptedMedia.length;
     if (offset + fragmentedTransportSize < encryptedMedia.length) {
       end = offset + fragmentedTransportSize;
@@ -161,8 +156,6 @@ Future uploadMediaFile(
 
     offset = end;
   }
-
-  Logger("api.dart").shout("DOING UPDATE");
 
   box.delete("retransmit-$messageId-media");
   box.delete("retransmit-$messageId-uploadtoken");
@@ -302,7 +295,7 @@ Future tryDownloadMedia(int messageId, int fromUserId, List<int> mediaToken,
 }
 
 Future userOpenedOtherMessage(int fromUserId, int messageOtherId) async {
-  await DbMessages.userOpenedOtherMessage(messageOtherId, fromUserId);
+  await DbMessages.userOpenedOtherMessage(fromUserId, messageOtherId);
 
   encryptAndSendMessage(
     Int64(fromUserId),

@@ -50,6 +50,9 @@ class _SearchUsernameView extends State<SearchUsernameView> {
           );
         }
       }
+    } else if (context.mounted) {
+      showAlertDialog(context, context.lang.searchUsernameNotFound,
+          context.lang.searchUsernameNotFoundBody(searchUserName.text));
     }
     setState(() {
       _isLoading = false;

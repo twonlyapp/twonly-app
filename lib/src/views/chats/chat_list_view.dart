@@ -162,17 +162,31 @@ class _UserListItem extends State<UserListItem> {
   @override
   void initState() {
     super.initState();
+    initAsync();
     lastUpdateTime();
+  }
+
+  Future initAsync() async {
+    if (widget.lastMessage != null) {
+      if (!widget.lastMessage!.isDownloaded) {
+        final content = widget.lastMessage!.messageContent;
+        if (content is MediaMessageContent) {
+          tryDownloadMedia(widget.lastMessage!.messageId,
+              widget.lastMessage!.otherUserId, content.downloadToken);
+        }
+      }
+    }
   }
 
   void lastUpdateTime() {
     // Change the color every 200 milliseconds
     updateTime = Timer.periodic(Duration(milliseconds: 200), (timer) {
       setState(() {
-        lastMessageInSeconds =
-            calculateTimeDifference(DateTime.now(), widget.lastMessage!.sendAt)
-                .inSeconds;
-        setState(() {});
+        if (widget.lastMessage != null) {
+          lastMessageInSeconds = calculateTimeDifference(
+                  DateTime.now(), widget.lastMessage!.sendAt)
+              .inSeconds;
+        }
       });
     });
   }

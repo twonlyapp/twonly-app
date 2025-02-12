@@ -325,7 +325,7 @@ class DbMessages extends CvModelBase {
   }
 
   static Future userOpenedOtherMessage(
-      int otherMessageId, int fromUserId) async {
+      int fromUserId, int otherMessageId) async {
     Map<String, dynamic> data = {
       columnMessageOpenedAt: DateTime.now().toIso8601String(),
     };

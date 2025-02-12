@@ -53,7 +53,8 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     // download should only be done when the app is open
     return client.Response()..error = ErrorCode.InternalError;
   }
-  debugPrint("Downloading: ${data.uploadToken} ${data.fin}");
+  Logger("server_messages")
+      .info("downloading: ${data.uploadToken} ${data.fin}");
   final box = await getMediaStorage();
 
   String boxId = data.uploadToken.toString();
@@ -83,6 +84,8 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   Uint8List downloadedBytes;
   if (buffered != null) {
     if (data.offset != buffered.length) {
+      Logger("server_messages")
+          .info("server send wrong offset: ${data.offset} ${buffered.length}");
       // Logger("handleDownloadData").error(object)
       return client.Response()..error = ErrorCode.InvalidOffset;
     }
@@ -104,6 +107,9 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 
       if (rawBytes != null) {
         box.put("${data.uploadToken}_downloaded", rawBytes);
+      } else {
+        Logger("server_messages")
+            .shout("error decrypting the message: ${data.uploadToken}");
       }
 
       box.delete(boxId);
