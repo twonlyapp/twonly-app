@@ -73,17 +73,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           .updateLastMessageFor(userId, messageId);
     };
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _requestPermissions();
-      _initService();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _requestPermissions();
+    //   _initService();
+    // });
     initAsync();
   }
 
   Future initAsync() async {
     // make sure the front end service will be killed
-    FlutterForegroundTask.sendDataToTask("");
-    await FlutterForegroundTask.stopService();
+    // FlutterForegroundTask.sendDataToTask("");
+    // await FlutterForegroundTask.stopService();
     // connect async to the backend api
     apiProvider.connect();
   }
@@ -177,13 +177,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       if (wasPaused) {
         globalIsAppInBackground = false;
-        _stopService();
+        apiProvider.connect();
+        // _stopService();
       }
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;
       globalIsAppInBackground = true;
       apiProvider.close(() {
-        _startService();
+        // use this only when uploading an image
+        // _startService();
       });
     }
   }

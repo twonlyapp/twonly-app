@@ -641,6 +641,56 @@ class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
   void clearUsername() => clearField(1);
 }
 
+class ApplicationData_UpdateGoogleFcmToken extends $pb.GeneratedMessage {
+  factory ApplicationData_UpdateGoogleFcmToken({
+    $core.String? googleFcm,
+  }) {
+    final $result = create();
+    if (googleFcm != null) {
+      $result.googleFcm = googleFcm;
+    }
+    return $result;
+  }
+  ApplicationData_UpdateGoogleFcmToken._() : super();
+  factory ApplicationData_UpdateGoogleFcmToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_UpdateGoogleFcmToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UpdateGoogleFcmToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'googleFcm')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdateGoogleFcmToken clone() => ApplicationData_UpdateGoogleFcmToken()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdateGoogleFcmToken copyWith(void Function(ApplicationData_UpdateGoogleFcmToken) updates) => super.copyWith((message) => updates(message as ApplicationData_UpdateGoogleFcmToken)) as ApplicationData_UpdateGoogleFcmToken;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UpdateGoogleFcmToken create() => ApplicationData_UpdateGoogleFcmToken._();
+  ApplicationData_UpdateGoogleFcmToken createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_UpdateGoogleFcmToken> createRepeated() => $pb.PbList<ApplicationData_UpdateGoogleFcmToken>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UpdateGoogleFcmToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdateGoogleFcmToken>(create);
+  static ApplicationData_UpdateGoogleFcmToken? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get googleFcm => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set googleFcm($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasGoogleFcm() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearGoogleFcm() => clearField(1);
+}
+
 class ApplicationData_GetUserById extends $pb.GeneratedMessage {
   factory ApplicationData_GetUserById({
     $fixnum.Int64? userId,
@@ -923,6 +973,7 @@ enum ApplicationData_ApplicationData {
   uploaddata, 
   getuserbyid, 
   downloaddata, 
+  updategooglefcmtoken, 
   notSet
 }
 
@@ -935,6 +986,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_UploadData? uploaddata,
     ApplicationData_GetUserById? getuserbyid,
     ApplicationData_DownloadData? downloaddata,
+    ApplicationData_UpdateGoogleFcmToken? updategooglefcmtoken,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -958,6 +1010,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (downloaddata != null) {
       $result.downloaddata = downloaddata;
     }
+    if (updategooglefcmtoken != null) {
+      $result.updategooglefcmtoken = updategooglefcmtoken;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -972,10 +1027,11 @@ class ApplicationData extends $pb.GeneratedMessage {
     5 : ApplicationData_ApplicationData.uploaddata,
     6 : ApplicationData_ApplicationData.getuserbyid,
     7 : ApplicationData_ApplicationData.downloaddata,
+    8 : ApplicationData_ApplicationData.updategooglefcmtoken,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
@@ -983,6 +1039,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_UploadData>(5, _omitFieldNames ? '' : 'uploaddata', subBuilder: ApplicationData_UploadData.create)
     ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getuserbyid', subBuilder: ApplicationData_GetUserById.create)
     ..aOM<ApplicationData_DownloadData>(7, _omitFieldNames ? '' : 'downloaddata', subBuilder: ApplicationData_DownloadData.create)
+    ..aOM<ApplicationData_UpdateGoogleFcmToken>(8, _omitFieldNames ? '' : 'updategooglefcmtoken', subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
     ..hasRequiredFields = false
   ;
 
@@ -1086,6 +1143,17 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearDownloaddata() => clearField(7);
   @$pb.TagNumber(7)
   ApplicationData_DownloadData ensureDownloaddata() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  ApplicationData_UpdateGoogleFcmToken get updategooglefcmtoken => $_getN(7);
+  @$pb.TagNumber(8)
+  set updategooglefcmtoken(ApplicationData_UpdateGoogleFcmToken v) { setField(8, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasUpdategooglefcmtoken() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearUpdategooglefcmtoken() => clearField(8);
+  @$pb.TagNumber(8)
+  ApplicationData_UpdateGoogleFcmToken ensureUpdategooglefcmtoken() => $_ensure(7);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

@@ -56,6 +56,7 @@
   "settingsPrivacyBlockUsersCount": "{len} contact(s)",
   "settingsNotification": "Notification",
   "settingsHelp": "Help",
+  "settingsHelpDiagnostics": "Diagnostic protocol",
   "settingsHelpSupport": "Support Center",
   "settingsHelpVersion": "Version",
   "settingsHelpLicenses": "Licenses",

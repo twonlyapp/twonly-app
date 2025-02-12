@@ -33,6 +33,7 @@ const ErrorCode$json = {
     {'1': 'UploadLimitReached', '2': 1011},
     {'1': 'InvalidUpdateToken', '2': 1012},
     {'1': 'InvalidOffset', '2': 1013},
+    {'1': 'InvalidGoogleFcmToken', '2': 1014},
   ],
 };
 
@@ -45,5 +46,5 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'bGljS2V5EO8HEiAKG1Nlc3Npb25BbHJlYWR5QXV0aGVudGljYXRlZBDwBxIcChdTZXNzaW9uTm'
     '90QXV0aGVudGljYXRlZBDxBxIaChVPbmx5T25lU2Vzc2lvbkFsbG93ZWQQ8gcSFwoSVXBsb2Fk'
     'TGltaXRSZWFjaGVkEPMHEhcKEkludmFsaWRVcGRhdGVUb2tlbhD0BxISCg1JbnZhbGlkT2Zmc2'
-    'V0EPUH');
+    'V0EPUHEhoKFUludmFsaWRHb29nbGVGY21Ub2tlbhD2Bw==');
 

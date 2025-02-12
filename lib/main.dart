@@ -12,7 +12,9 @@ import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
+import 'package:twonly/src/services/fcm_service.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'src/app.dart';
 
 void main() async {
@@ -26,16 +28,16 @@ void main() async {
 
   Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
   Logger.root.onRecord.listen((record) {
-    // if (kReleaseMode) {
-    //   writeLogToFile(record);
-    // } else {
-    print(
-        '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
-    // }
+    writeLogToFile(record);
+    if (kDebugMode) {
+      print(
+          '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
+    }
   });
 
   await setupPushNotification();
   await initMediaStorage();
+  await initFCMService();
 
   dbProvider = DbProvider();
   await dbProvider.ready;

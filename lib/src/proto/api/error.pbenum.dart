@@ -30,6 +30,7 @@ class ErrorCode extends $pb.ProtobufEnum {
   static const ErrorCode UploadLimitReached = ErrorCode._(1011, _omitEnumNames ? '' : 'UploadLimitReached');
   static const ErrorCode InvalidUpdateToken = ErrorCode._(1012, _omitEnumNames ? '' : 'InvalidUpdateToken');
   static const ErrorCode InvalidOffset = ErrorCode._(1013, _omitEnumNames ? '' : 'InvalidOffset');
+  static const ErrorCode InvalidGoogleFcmToken = ErrorCode._(1014, _omitEnumNames ? '' : 'InvalidGoogleFcmToken');
 
   static const $core.List<ErrorCode> values = <ErrorCode> [
     Unknown,
@@ -48,6 +49,7 @@ class ErrorCode extends $pb.ProtobufEnum {
     UploadLimitReached,
     InvalidUpdateToken,
     InvalidOffset,
+    InvalidGoogleFcmToken,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue = $pb.ProtobufEnum.initByValue(values);

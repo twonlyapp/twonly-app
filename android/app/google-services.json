@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "650346093942",
+    "project_id": "twonly-ff605",
+    "storage_bucket": "twonly-ff605.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650346093942:android:040816fb819b1bfb81ae57",
+        "android_client_info": {
+          "package_name": "eu.twonly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4d5ORP11WpuVgmoYtWmOcMzZYWLPVtBk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650346093942:android:706cb87c3131dabe81ae57",
+        "android_client_info": {
+          "package_name": "eu.twonly.testing"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4d5ORP11WpuVgmoYtWmOcMzZYWLPVtBk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

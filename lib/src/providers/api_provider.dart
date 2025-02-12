@@ -11,6 +11,7 @@ import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/server_messages.dart';
+import 'package:twonly/src/services/fcm_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 // ignore: library_prefixes
@@ -57,6 +58,11 @@ class ApiProvider {
       log.shout("Error: $e");
       return false;
     }
+  }
+
+  // Function is called after the user is authenticated at the server
+  Future onAuthenticated() async {
+    initFCMAfterAuthenticated();
   }
 
   Future onConnected() async {
@@ -212,7 +218,6 @@ class ApiProvider {
   }
 
   Future authenticate() async {
-    print("try authenticate $isAuthenticated");
     if (isAuthenticated) return;
     if (await SignalHelper.getSignalIdentity() == null) {
       return;
@@ -221,7 +226,6 @@ class ApiProvider {
     var handshake = Handshake()..getchallenge = Handshake_GetChallenge();
     var req = createClientToServerFromHandshake(handshake);
 
-    print("try authenticate send to server");
     final result = await _sendRequestV0(req, authenticated: false);
     if (result.isError) {
       log.shout("Error auth", result);
@@ -253,6 +257,7 @@ class ApiProvider {
     }
 
     log.info("Authenticated!");
+    onAuthenticated();
     isAuthenticated = true;
   }
 
@@ -325,6 +330,13 @@ class ApiProvider {
   Future<Result> getUserData(String username) async {
     var get = ApplicationData_GetUserByUsername()..username = username;
     var appData = ApplicationData()..getuserbyusername = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await _sendRequestV0(req);
+  }
+
+  Future<Result> updateFCMToken(String googleFcm) async {
+    var get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
+    var appData = ApplicationData()..updategooglefcmtoken = get;
     var req = createClientToServerFromApplicationData(appData);
     return await _sendRequestV0(req);
   }
