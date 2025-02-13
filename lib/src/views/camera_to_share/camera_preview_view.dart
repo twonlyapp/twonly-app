@@ -165,8 +165,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     ),
                     if (!sharePreviewIsShown)
                       Positioned(
-                        right: 0,
-                        top: 100,
+                        right: 5,
+                        top: 0,
                         child: Container(
                           alignment: Alignment.bottomCenter,
                           padding: const EdgeInsets.symmetric(vertical: 16),
