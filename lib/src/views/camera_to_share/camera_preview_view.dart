@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/src/components/zoom_selector.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
@@ -65,7 +66,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               previewAlignment: Alignment.topLeft,
               sensorConfig: SensorConfig.single(
                 aspectRatio: CameraAspectRatios.ratio_16_9,
-                zoom: 0.07,
+                zoom: 0.5,
               ),
               previewFit: CameraPreviewFit.contain,
               progressIndicator: Container(),
@@ -138,11 +139,19 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     Positioned.fill(
                       child: GestureDetector(
                         onPanStart: (details) async {
+                          if (cameraState.sensorConfig.sensors.first.position ==
+                              SensorPosition.front) {
+                            return;
+                          }
                           setState(() {
                             _basePanY = details.localPosition.dy;
                           });
                         },
                         onPanUpdate: (details) async {
+                          if (cameraState.sensorConfig.sensors.first.position ==
+                              SensorPosition.front) {
+                            return;
+                          }
                           var diff = _basePanY - details.localPosition.dy;
                           if (diff > 200) diff = 200;
                           if (diff < 0) diff = 0;
@@ -156,9 +165,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           }
                         },
                         onDoubleTap: () async {
+                          bool isFront =
+                              cameraState.sensorConfig.sensors.first.position ==
+                                  SensorPosition.front;
                           cameraState.switchCameraSensor(
                             aspectRatio: CameraAspectRatios.ratio_16_9,
                             flash: isFlashOn ? FlashMode.on : FlashMode.none,
+                            zoom: isFront ? 0.5 : 0,
                           );
                         },
                       ),
@@ -222,7 +235,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           alignment: Alignment.bottomCenter,
                           child: Column(
                             children: [
-                              AwesomeZoomSelector(state: cameraState),
+                              ZoomSelector(state: cameraState),
                               const SizedBox(height: 30),
                               GestureDetector(
                                 onTap: () async {
