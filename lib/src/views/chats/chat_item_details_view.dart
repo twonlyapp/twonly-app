@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/components/verified_shield.dart';
@@ -46,28 +47,39 @@ class ChatListEntry extends StatelessWidget {
     Widget child = Container();
 
     if (content is TextMessageContent) {
-      child = Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.8,
-        ),
-        padding: EdgeInsets.symmetric(
-            vertical: 4, horizontal: 10), // Add some padding around the text
-        decoration: BoxDecoration(
-          color: right
-              ? const Color.fromARGB(107, 124, 77, 255)
-              : const Color.fromARGB(
-                  83, 68, 137, 255), // Set the background color
-          borderRadius: BorderRadius.circular(12.0), // Set border radius
-        ),
-        child: SelectableText(
-          content.text,
-          style: TextStyle(
-            color: Colors.white, // Set text color for contrast
-            fontSize: 17,
+      if (EmojiAnimation.supported(content.text)) {
+        child = child = Container(
+          constraints: BoxConstraints(
+            maxWidth: 100,
           ),
-          textAlign: TextAlign.left, // Center the text
-        ),
-      );
+          padding: EdgeInsets.symmetric(
+              vertical: 4, horizontal: 10), // Add some padding around the text
+          child: EmojiAnimation(emoji: content.text),
+        );
+      } else {
+        child = Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
+          ),
+          padding: EdgeInsets.symmetric(
+              vertical: 4, horizontal: 10), // Add some padding around the text
+          decoration: BoxDecoration(
+            color: right
+                ? const Color.fromARGB(107, 124, 77, 255)
+                : const Color.fromARGB(
+                    83, 68, 137, 255), // Set the background color
+            borderRadius: BorderRadius.circular(12.0), // Set border radius
+          ),
+          child: SelectableText(
+            content.text,
+            style: TextStyle(
+              color: Colors.white, // Set text color for contrast
+              fontSize: 17,
+            ),
+            textAlign: TextAlign.left, // Center the text
+          ),
+        );
+      }
     } else if (content is MediaMessageContent && !content.isVideo) {
       Color color = message.messageContent
           .getColor(Theme.of(context).colorScheme.primary);
