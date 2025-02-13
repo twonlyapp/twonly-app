@@ -143,7 +143,6 @@ class ChatItemDetailsView extends StatefulWidget {
 }
 
 class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
-  int lastChangeCounter = 0;
   TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late Contact user;
@@ -185,16 +184,11 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
             .watch<MessagesChangeProvider>()
             .allMessagesFromUser[user.userId.toInt()] ??
         [];
-    print(messages.length);
 
     messages.where((x) => x.messageOpenedAt == null).forEach((message) {
       if (message.messageOtherId != null &&
           message.messageContent is TextMessageContent) {
         if (!alreadyReportedOpened.contains(message.messageOtherId!)) {
-          setState(() {
-            // so the _loadAsync will not be called again by this update
-            lastChangeCounter++;
-          });
           userOpenedOtherMessage(message.otherUserId, message.messageOtherId!);
           flutterLocalNotificationsPlugin.cancel(message.messageId);
           alreadyReportedOpened.add(message.messageOtherId!);

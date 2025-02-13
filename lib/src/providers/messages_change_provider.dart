@@ -35,13 +35,14 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
             .indexWhere((x) => x.messageId == messageId);
         if (index == -1) {
           _allMessagesFromUser[targetUserId]!.insert(0, msg);
+          // reload all messages but async
+          loadMessagesForUser(targetUserId, force: true);
         } else {
           _allMessagesFromUser[targetUserId]![index] = msg;
         }
       }
-      _allMessagesFromUser[targetUserId] = allMessagesFromUser[targetUserId]!;
-      notifyListeners();
     }
+    notifyListeners();
   }
 
   Future loadMessagesForUser(int targetUserId, {bool force = false}) async {
