@@ -51,6 +51,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   double _basePanY = 0;
   bool sharePreviewIsShown = false;
   bool isFlashOn = false;
+  bool showSelfieFlash = false;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
@@ -156,7 +157,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                         },
                         onDoubleTap: () async {
                           cameraState.switchCameraSensor(
-                              aspectRatio: CameraAspectRatios.ratio_16_9);
+                            aspectRatio: CameraAspectRatios.ratio_16_9,
+                            flash: isFlashOn ? FlashMode.on : FlashMode.none,
+                          );
                         },
                       ),
                     ),
@@ -177,13 +180,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                       context.lang.switchFrontAndBackCamera,
                                   onPressed: () async {
                                     cameraState.switchCameraSensor(
-                                        aspectRatio:
-                                            CameraAspectRatios.ratio_16_9);
+                                      aspectRatio:
+                                          CameraAspectRatios.ratio_16_9,
+                                      flash: isFlashOn
+                                          ? FlashMode.on
+                                          : FlashMode.none,
+                                    );
                                   },
                                 ),
-                                // SizedBox(height: 20),
                                 ActionButton(
-                                  FontAwesomeIcons.bolt,
+                                  FontAwesomeIcons.boltLightning,
                                   tooltipText: context.lang.toggleFlashLight,
                                   color: isFlashOn
                                       ? const Color.fromARGB(255, 255, 230, 0)
@@ -196,7 +202,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                       isFlashOn = false;
                                     } else {
                                       cameraState.sensorConfig
-                                          .setFlashMode(FlashMode.always);
+                                          .setFlashMode(FlashMode.on);
                                       isFlashOn = true;
                                     }
                                     setState(() {});
@@ -220,9 +226,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               const SizedBox(height: 30),
                               GestureDetector(
                                 onTap: () async {
+                                  if (cameraState.sensorConfig.flashMode ==
+                                          FlashMode.on &&
+                                      cameraState.sensorConfig.sensors.first
+                                              .position ==
+                                          SensorPosition.front) {
+                                    setState(() {
+                                      showSelfieFlash = true;
+                                    });
+                                    await Future.delayed(
+                                        Duration(milliseconds: 500));
+                                  }
                                   cameraState.when(
                                       onPhotoMode: (picState) =>
                                           picState.takePhoto());
+                                  setState(() {
+                                    showSelfieFlash = false;
+                                  });
                                 },
                                 onLongPress: () async {},
                                 child: Align(
@@ -262,6 +282,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               ),
             ),
           ),
+          if (showSelfieFlash)
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Container(
+                  color: Colors.white,
+                ),
+              ),
+            ),
           if (sharePreviewIsShown)
             Positioned.fill(
               child: BackdropFilter(
