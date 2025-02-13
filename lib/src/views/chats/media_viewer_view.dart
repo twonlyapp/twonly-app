@@ -2,17 +2,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/home_view.dart';
 
 final _noScreenshot = NoScreenshot.instance;
@@ -27,82 +30,142 @@ class MediaViewerView extends StatefulWidget {
 }
 
 class _MediaViewerViewState extends State<MediaViewerView> {
-  Uint8List? _imageByte;
+  Timer? nextMediaTimer;
+  Timer? progressTimer;
+
+  bool showShortReactions = false;
+  int selectedShortReaction = -1;
+
+  // current image related
+  Uint8List? imageBytes;
   DateTime? canBeSeenUntil;
   int maxShowTime = 999999;
-  bool isRealTwonly = false;
   double progress = 0;
-  Timer? _timer;
-  Timer? _timer2;
-  // DateTime opened;
+  bool isRealTwonly = false;
+  bool isDownloading = false;
+
+  List<DbMessage> allMediaFiles = [];
 
   @override
   void initState() {
     super.initState();
-    final content = widget.message.messageContent;
-    if (content is MediaMessageContent) {
-      if (content.isRealTwonly) {
-        isRealTwonly = true;
-      }
-    }
-    loadMedia();
+
+    allMediaFiles = [widget.message];
+    asyncLoadNextMedia();
+    loadCurrentMediaFile();
   }
 
-  Future loadMedia({bool force = false}) async {
-    bool result = await _noScreenshot.screenshotOff();
-    debugPrint('Screenshot Off: $result');
-    final content = widget.message.messageContent;
+  Future asyncLoadNextMedia() async {
+    await context
+        .read<MessagesChangeProvider>()
+        .loadMessagesForUser(widget.otherUser.userId.toInt());
+    if (!context.mounted) return;
+    final allMessages = context
+        .read<MessagesChangeProvider>()
+        .allMessagesFromUser[widget.otherUser.userId.toInt()];
+    if (allMessages == null) {
+      return;
+    }
+    final nextMediaFiles = allMessages.where((x) =>
+        x.isMedia() &&
+        x.messageOtherId != null &&
+        x.messageOpenedAt == null &&
+        x.messageId != widget.message.messageId);
+    allMediaFiles.addAll(nextMediaFiles.map((x) => x));
+    setState(() {});
+  }
+
+  Future nextMediaOrExit() async {
+    nextMediaTimer?.cancel();
+    progressTimer?.cancel();
+    if (allMediaFiles.isEmpty || allMediaFiles.length == 1) {
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+    } else {
+      allMediaFiles.removeAt(0);
+      loadCurrentMediaFile();
+    }
+  }
+
+  Future loadCurrentMediaFile({bool showTwonly = false}) async {
+    await _noScreenshot.screenshotOff();
+    if (!context.mounted || allMediaFiles.isEmpty) return;
+
+    final DbMessage current = allMediaFiles.first;
+
+    setState(() {
+      // reset current image values
+      imageBytes = null;
+      canBeSeenUntil = null;
+      maxShowTime = 999999;
+      progress = 0;
+      isDownloading = false;
+      isRealTwonly = current.isRealTwonly();
+    });
+
+    // This will show the extra screen for the twonly
+    if (current.isRealTwonly() && !showTwonly) {
+      return;
+    }
+
+    final content = current.messageContent;
     if (content is MediaMessageContent) {
-      if (content.isRealTwonly) {
-        if (!force) {
+      if (isRealTwonly) {
+        bool isAuth = await authenticateUser(context.lang.mediaViewerAuthReason,
+            force: false);
+        if (!isAuth) {
+          nextMediaOrExit();
           return;
         }
-        try {
-          final LocalAuthentication auth = LocalAuthentication();
-          bool didAuthenticate = await auth.authenticate(
-              localizedReason: 'Please authenticate to see this twonly!',
-              options: const AuthenticationOptions(useErrorDialogs: false));
-          if (!didAuthenticate) {
-            if (context.mounted) {
-              Navigator.pop(context);
-            }
-            return;
-          }
-        } on PlatformException catch (e) {
-          debugPrint(e.toString());
-          // these errors because of hardware not available or bio is not enrolled
-          // as this is just a nice gimig, do not interrupt the user experience
-        }
       }
-
-      flutterLocalNotificationsPlugin.cancel(widget.message.messageId);
-      List<int> token = content.downloadToken;
-      _imageByte = await getDownloadedMedia(
-          token, widget.message.messageOtherId!, widget.message.otherUserId);
-      if (_imageByte == null) {
-        // image already deleted
-        if (context.mounted) {
-          Navigator.pop(context);
+      flutterLocalNotificationsPlugin.cancel(current.messageId);
+      if (!current.isDownloaded) {
+        setState(() {
+          isDownloading = true;
+        });
+        await tryDownloadMedia(
+            current.messageId, current.otherUserId, content.downloadToken,
+            force: true);
+      }
+      do {
+        if (isDownloading) {
+          await Future.delayed(Duration(milliseconds: 100));
         }
+        imageBytes = await getDownloadedMedia(
+          content.downloadToken,
+          current.messageOtherId!,
+          current.otherUserId,
+        );
+      } while (isDownloading && imageBytes == null);
+
+      isDownloading = false;
+
+      if (imageBytes == null) {
+        nextMediaOrExit();
         return;
       }
-      // image loading does require some time
-      Future.delayed(Duration(milliseconds: 200), () {
-        setState(() {
-          mediaOpened();
-        });
-      });
+
+      if (content.maxShowTime != 999999) {
+        canBeSeenUntil = DateTime.now().add(
+          Duration(seconds: content.maxShowTime),
+        );
+        maxShowTime = content.maxShowTime;
+        startTimer();
+      }
       setState(() {});
     }
   }
 
   startTimer() {
-    _timer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
+    nextMediaTimer?.cancel();
+    progressTimer?.cancel();
+    nextMediaTimer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
       if (context.mounted) {
-        Navigator.pop(context);
+        nextMediaOrExit();
       }
     });
-    _timer2 = Timer.periodic(Duration(milliseconds: 10), (timer) {
+    progressTimer = Timer.periodic(Duration(milliseconds: 10), (timer) {
       if (canBeSeenUntil != null) {
         Duration difference = canBeSeenUntil!.difference(DateTime.now());
         // Calculate the progress as a value between 0.0 and 1.0
@@ -112,26 +175,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     });
   }
 
-  mediaOpened() {
-    if (canBeSeenUntil != null) return;
-    final content = widget.message.messageContent;
-    if (content is MediaMessageContent) {
-      if (content.maxShowTime != 999999) {
-        canBeSeenUntil = DateTime.now().add(
-          Duration(seconds: content.maxShowTime),
-        );
-        maxShowTime = content.maxShowTime;
-        startTimer();
-        setState(() {});
-      }
-    }
-  }
-
   @override
   void dispose() {
     super.dispose();
-    _timer?.cancel();
-    _timer2?.cancel();
+    nextMediaTimer?.cancel();
+    progressTimer?.cancel();
     _noScreenshot.screenshotOn();
   }
 
@@ -142,32 +190,38 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (_imageByte != null && (canBeSeenUntil == null || progress >= 0))
-              MediaViewSizing(
-                Image.memory(
-                  _imageByte!,
-                  fit: BoxFit.contain,
-                  frameBuilder:
-                      ((context, child, frame, wasSynchronouslyLoaded) {
-                    if (wasSynchronouslyLoaded) return child;
-                    return AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: frame != null
-                          ? child
-                          : SizedBox(
-                              height: 60,
-                              width: 60,
-                              child: CircularProgressIndicator(strokeWidth: 6),
-                            ),
-                    );
-                  }),
+            if (imageBytes != null && (canBeSeenUntil == null || progress >= 0))
+              GestureDetector(
+                onTap: () {
+                  nextMediaOrExit();
+                },
+                child: MediaViewSizing(
+                  Image.memory(
+                    imageBytes!,
+                    fit: BoxFit.contain,
+                    frameBuilder:
+                        ((context, child, frame, wasSynchronouslyLoaded) {
+                      if (wasSynchronouslyLoaded) return child;
+                      return AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: frame != null
+                            ? child
+                            : SizedBox(
+                                height: 60,
+                                width: 60,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 6),
+                              ),
+                      );
+                    }),
+                  ),
                 ),
               ),
-            if (isRealTwonly && _imageByte == null)
+            if (isRealTwonly && imageBytes == null)
               Positioned.fill(
                 child: GestureDetector(
                   onTap: () {
-                    loadMedia(force: true);
+                    loadCurrentMediaFile(showTwonly: true);
                   },
                   child: Column(
                     children: [
@@ -188,7 +242,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               left: 10,
               top: 10,
               child: Row(
-                // mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
                     icon: Icon(Icons.close, size: 30),
@@ -200,6 +253,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 ],
               ),
             ),
+            if (isDownloading)
+              Positioned.fill(
+                child: Center(
+                  child: SizedBox(
+                    height: 60,
+                    width: 60,
+                    child: CircularProgressIndicator(strokeWidth: 6),
+                  ),
+                ),
+              ),
             Positioned(
               right: 20,
               top: 27,
@@ -217,7 +280,67 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 ],
               ),
             ),
-            if (_imageByte != null)
+            AnimatedPositioned(
+              duration: Duration(milliseconds: 200), // Animation duration
+              bottom: showShortReactions ? 130 : 90,
+              left: showShortReactions ? 0 : 150,
+              right: showShortReactions ? 0 : 150,
+              curve: Curves.linearToEaseOut,
+              child: AnimatedOpacity(
+                opacity: showShortReactions ? 1.0 : 0.0, // Fade in/out
+                duration: Duration(milliseconds: 150),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(
+                    6,
+                    (index) {
+                      final emoji =
+                          EmojiAnimation.animatedIcons.keys.toList()[index];
+                      return AnimatedSize(
+                        duration:
+                            Duration(milliseconds: 200), // Animation duration
+                        curve: Curves.linearToEaseOut,
+                        child: GestureDetector(
+                          onTap: () {
+                            sendTextMessage(widget.otherUser.userId, emoji);
+                            setState(() {
+                              selectedShortReaction = index;
+                            });
+                            Future.delayed(Duration(milliseconds: 300), () {
+                              setState(() {
+                                showShortReactions = false;
+                              });
+                            });
+                          },
+                          child: (selectedShortReaction == index)
+                              ? EmojiAnimationFlying(
+                                  emoji: emoji,
+                                  duration: Duration(milliseconds: 300),
+                                  startPosition: 0.0,
+                                  size: (showShortReactions) ? 40 : 10)
+                              : AnimatedOpacity(
+                                  opacity: (selectedShortReaction == -1)
+                                      ? 1
+                                      : 0, // Fade in/out
+                                  duration: Duration(milliseconds: 150),
+                                  child: SizedBox(
+                                    width: showShortReactions ? 40 : 10,
+                                    child: Center(
+                                      child: EmojiAnimation(
+                                        emoji: emoji,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            if (imageBytes != null)
               Positioned(
                 bottom: 30,
                 left: 0,
@@ -225,9 +348,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // const SizedBox(width: 20),
-                    FilledButton.icon(
-                      icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                    IconButton.outlined(
+                      icon: FaIcon(FontAwesomeIcons.camera),
                       onPressed: () async {
                         context.read<SendNextMediaTo>().updateSendNextMediaTo(
                             widget.otherUser.userId.toInt());
@@ -239,9 +361,63 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           EdgeInsets.symmetric(vertical: 10, horizontal: 30),
                         ),
                       ),
-                      label: Text(
-                        "Respond",
-                        style: TextStyle(fontSize: 17),
+                    ),
+                    SizedBox(width: 10),
+                    IconButton(
+                      icon: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          children: List.generate(
+                            4,
+                            (index) {
+                              return SizedBox(
+                                width: 8,
+                                height: 8,
+                                child: Center(
+                                  child: EmojiAnimation(
+                                    emoji: EmojiAnimation.animatedIcons.keys
+                                        .toList()[index],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      onPressed: () async {
+                        setState(() {
+                          showShortReactions = !showShortReactions;
+                          selectedShortReaction = -1;
+                        });
+                        // context.read<SendNextMediaTo>().updateSendNextMediaTo(
+                        //     widget.otherUser.userId.toInt());
+                        // globalUpdateOfHomeViewPageIndex(0);
+                        // Navigator.popUntil(context, (route) => route.isFirst);
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    IconButton.outlined(
+                      icon: FaIcon(FontAwesomeIcons.message),
+                      onPressed: () async {
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) {
+                            return ChatItemDetailsView(user: widget.otherUser);
+                          }),
+                        );
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                        ),
                       ),
                     ),
                   ],

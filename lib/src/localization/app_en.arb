@@ -40,6 +40,7 @@
   "chatListViewSearchUserNameBtn": "Add your first twonly contact!",
   "chatListViewSendFirstTwonly": "Send your first twonly!",
   "chatListDetailInput": "Type a message",
+  "mediaViewerAuthReason": "Please authenticate to see this twonly!",
   "messageSendState_Received": "Received",
   "messageSendState_Opened": "Opened",
   "messageSendState_Send": "Send",

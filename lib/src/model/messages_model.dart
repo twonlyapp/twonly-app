@@ -41,6 +41,16 @@ class DbMessage {
 
   bool get messageReceived => messageOtherId != null;
 
+  bool isRealTwonly() {
+    final content = messageContent;
+    if (content is MediaMessageContent) {
+      if (content.isRealTwonly) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   bool isMedia() {
     return messageContent is MediaMessageContent;
   }

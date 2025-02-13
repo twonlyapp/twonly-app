@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/model/contacts_model.dart';
 
 class FlameCounterWidget extends StatelessWidget {
@@ -26,9 +27,12 @@ class FlameCounterWidget extends StatelessWidget {
           flameCounter.toString(),
           style: const TextStyle(fontSize: 13),
         ),
-        Text(
-          (maxTotalMediaCounter == user.totalMediaCounter) ? "❤️‍🔥" : "🔥",
-          style: const TextStyle(fontSize: 14),
+        SizedBox(
+          height: 15,
+          child: EmojiAnimation(
+              emoji: (maxTotalMediaCounter == user.totalMediaCounter)
+                  ? "❤️‍🔥"
+                  : "🔥"),
         ),
       ],
     );

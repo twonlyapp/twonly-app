@@ -163,6 +163,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     context
         .read<MessagesChangeProvider>()
         .loadMessagesForUser(user.userId.toInt(), force: true);
+    setState(() {});
   }
 
   Future _sendMessage() async {

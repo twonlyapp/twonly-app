@@ -10,11 +10,12 @@ class EmojiAnimation extends StatelessWidget {
     "❤": "red_heart.json",
     "💪": "💪.json",
     "🔥": "🔥.json",
-    "🤠": "🤠.json",
-    "🤯": "🤯.json",
-    "🥰": "🥰.json",
     "😂": "😂.json",
     "😭": "😭.json",
+    "🤯": "🤯.json",
+    "🥰": "🥰.json",
+    "🤠": "🤠.json",
+    "❤️‍🔥": "red_heart_fire.json"
   };
 
   const EmojiAnimation({super.key, required this.emoji});
@@ -34,8 +35,45 @@ class EmojiAnimation extends StatelessWidget {
     } else {
       return Text(
         emoji,
-        style: TextStyle(fontSize: 100), // Adjust the size as needed
+        style: TextStyle(fontSize: 15), // Adjust the size as needed
       );
     }
+  }
+}
+
+class EmojiAnimationFlying extends StatelessWidget {
+  final String emoji;
+  final Duration duration;
+  final double startPosition;
+  final int size;
+
+  const EmojiAnimationFlying({
+    super.key,
+    required this.emoji,
+    required this.duration,
+    required this.startPosition,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(
+          begin: startPosition, end: 1), // Adjust end value as needed
+      duration: duration,
+      curve: Curves.linearToEaseOut,
+      builder: (context, value, child) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: 20 * value),
+          child: Container(
+            // opacity: 1 - value,
+            child: SizedBox(
+              width: size + 30 * value,
+              child: EmojiAnimation(emoji: emoji),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

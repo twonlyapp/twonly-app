@@ -2,8 +2,10 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -202,4 +204,23 @@ Duration calculateTimeDifference(DateTime now, DateTime startTime) {
 
   // Calculate the difference
   return nowInUTC.difference(startTimeInUTC);
+}
+
+Future<bool> authenticateUser(String localizedReason,
+    {bool force = true}) async {
+  try {
+    final LocalAuthentication auth = LocalAuthentication();
+    bool didAuthenticate = await auth.authenticate(
+        localizedReason: localizedReason,
+        options: const AuthenticationOptions(useErrorDialogs: false));
+    if (didAuthenticate) {
+      return true;
+    }
+  } on PlatformException catch (e) {
+    debugPrint(e.toString());
+    if (!force) {
+      return true;
+    }
+  }
+  return false;
 }
