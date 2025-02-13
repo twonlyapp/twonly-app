@@ -142,7 +142,7 @@ String getPushNotificationText(String key, String userName) {
 
   if (systemLanguage.contains("de")) {
     pushNotificationText = {
-      "newTextMessage": "%userName% hat die eine Nachricht gesendet.",
+      "newTextMessage": "%userName% hat dir eine Nachricht gesendet.",
       "newTwonly": "%userName% hat dir einen twonly gesendet.",
       "newVideo": "%userName% hat dir eine Video gesendet.",
       "newImage": "%userName% hat dir eine Bild gesendet.",
