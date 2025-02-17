@@ -25,11 +25,11 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 /// It handles errors and does automatically tries to reconnect on
 /// errors or network changes.
 class ApiProvider {
-  final String apiUrl = (kDebugMode && false)
+  final String apiUrl = (kDebugMode)
       ? "ws://10.99.0.6:3030/api/client"
       : "wss://api.twonly.eu/api/client";
   // ws://api.twonly.eu/api/client
-  final String? backupApiUrl = (kDebugMode && false)
+  final String? backupApiUrl = (kDebugMode)
       ? "ws://10.99.0.6:3030/api/client"
       : "wss://api2.twonly.eu/api/client";
   bool isAuthenticated = false;

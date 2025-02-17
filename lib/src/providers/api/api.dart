@@ -130,7 +130,7 @@ Future uploadMediaFile(
 
   int offset = box.get("retransmit-$messageId-offset") ?? 0;
 
-  int fragmentedTransportSize = 50000;
+  int fragmentedTransportSize = 1_000_000; // per upload transfer
 
   while (offset < encryptedMedia.length) {
     Logger("api.dart").info("Uploading image $messageId with offset: $offset");
@@ -272,6 +272,7 @@ Future sendImage(
 Future tryDownloadMedia(int messageId, int fromUserId, List<int> mediaToken,
     {bool force = false}) async {
   if (globalIsAppInBackground) return;
+
   if (!force) {
     // TODO: create option to enable download via mobile data
     final List<ConnectivityResult> connectivityResult =
@@ -281,9 +282,15 @@ Future tryDownloadMedia(int messageId, int fromUserId, List<int> mediaToken,
       return;
     }
   }
+
+  final box = await getMediaStorage();
+  if (box.containsKey("${mediaToken}_downloaded")) {
+    Logger("tryDownloadMedia").shout("mediaToken already downloaded");
+    return;
+  }
+
   Logger("tryDownloadMedia").info("Downloading: $mediaToken");
   int offset = 0;
-  final box = await getMediaStorage();
   Uint8List? media = box.get("$mediaToken");
   if (media != null && media.isNotEmpty) {
     offset = media.length;

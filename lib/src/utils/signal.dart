@@ -49,22 +49,20 @@ Future<bool> addNewContact(Response_UserData userData) async {
         1);
     tempPreKeyId = userData.prekeys.first.id.toInt();
   }
-  // Signed pre key calculation
+
   int tempSignedPreKeyId = userData.signedPrekeyId.toInt();
-  // Map? tempSignedPreKey = remoteBundle["signedPreKey"];
-  ECPublicKey? tempSignedPreKeyPublic;
-  Uint8List? tempSignedPreKeySignature;
-  // if (tempSignedPreKey != null) {
-  tempSignedPreKeyPublic = Curve.decodePoint(
+
+  ECPublicKey? tempSignedPreKeyPublic = Curve.decodePoint(
       DjbECPublicKey(Uint8List.fromList(userData.signedPrekey)).serialize(), 1);
-  tempSignedPreKeySignature =
+
+  Uint8List? tempSignedPreKeySignature =
       Uint8List.fromList(userData.signedPrekeySignature);
-  // }
-  // Identity key calculation
+
   IdentityKey tempIdentityKey = IdentityKey(Curve.decodePoint(
       DjbECPublicKey(Uint8List.fromList(userData.publicIdentityKey))
           .serialize(),
       1));
+
   PreKeyBundle preKeyBundle = PreKeyBundle(
     userData.userId.toInt(),
     1,
@@ -230,6 +228,7 @@ Future<Uint8List?> decryptBytes(Uint8List bytes, Int64 target) async {
     int type = bytesToInt(msgs[1]);
 
     Uint8List plaintext;
+    Logger("utils/signal").info("got signal type: $type!");
     if (type == CiphertextMessage.prekeyType) {
       PreKeySignalMessage pre = PreKeySignalMessage(body);
       plaintext = await session.decrypt(pre);
@@ -237,6 +236,7 @@ Future<Uint8List?> decryptBytes(Uint8List bytes, Int64 target) async {
       SignalMessage signalMsg = SignalMessage.fromSerialized(body);
       plaintext = await session.decryptFromSignal(signalMsg);
     } else {
+      Logger("utils/signal").shout("signal type is not known: $type!");
       return null;
     }
     List<int>? plainBytes = gzip.decode(Uint8List.fromList(plaintext));

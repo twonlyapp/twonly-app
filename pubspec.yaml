@@ -7,7 +7,7 @@ publish_to: 'none'
 version: 0.0.4+4
 
 environment:
-  sdk: ^3.5.4
+  sdk: ^3.6.0
 
 dependencies:
   camerawesome: ^2.1.0

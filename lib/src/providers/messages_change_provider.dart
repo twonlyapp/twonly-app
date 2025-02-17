@@ -34,6 +34,8 @@ class MessagesChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
         int index = _allMessagesFromUser[targetUserId]!
             .indexWhere((x) => x.messageId == messageId);
         if (index == -1) {
+          print("should be indexed by time!!");
+
           _allMessagesFromUser[targetUserId]!.insert(0, msg);
           // reload all messages but async
           loadMessagesForUser(targetUserId, force: true);
