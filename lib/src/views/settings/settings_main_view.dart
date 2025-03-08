@@ -46,7 +46,7 @@ class _ProfileViewState extends State<ProfileView> {
                   child: Row(
                     children: [
                       InitialsAvatar(
-                        displayName: userData!.username,
+                        userData!.username,
                         fontSize: 30,
                       ),
                       SizedBox(width: 20),

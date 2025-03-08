@@ -9,7 +9,7 @@ import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/verified_shield.dart';
-import 'package:twonly/src/model/contacts_model.dart';
+import '../../../../.blocked/archives/contacts_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';

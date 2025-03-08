@@ -27,7 +27,7 @@ Future<ECPrivateKey?> getPrivateKey() async {
 }
 
 Future<bool> addNewContact(Response_UserData userData) async {
-  final Int64 userId = userData.userId;
+  final int userId = userData.userId.toInt();
 
   SignalProtocolAddress targetAddress =
       SignalProtocolAddress(userId.toString(), defaultDeviceId);
@@ -140,14 +140,15 @@ Future createIfNotExistsSignalIdentity() async {
       .storeSignedPreKey(signedPreKey.id, signedPreKey);
 
   final storedSignalIdentity = SignalIdentity(
-      identityKeyPairU8List: identityKeyPair.serialize(),
-      registrationId: Int64(registrationId));
+    identityKeyPairU8List: identityKeyPair.serialize(),
+    registrationId: registrationId,
+  );
 
   await storage.write(
       key: "signal_identity", value: jsonEncode(storedSignalIdentity));
 }
 
-Future<Fingerprint?> generateSessionFingerPrint(Int64 target) async {
+Future<Fingerprint?> generateSessionFingerPrint(int target) async {
   ConnectSignalProtocolStore? signalStore = await getSignalStore();
   UserData? user = await getUser();
   if (signalStore == null || user == null) return null;
@@ -215,7 +216,7 @@ Future<Uint8List?> encryptBytes(Uint8List bytes, Int64 target) async {
   }
 }
 
-Future<Uint8List?> decryptBytes(Uint8List bytes, Int64 target) async {
+Future<Uint8List?> decryptBytes(Uint8List bytes, int target) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
 
@@ -247,7 +248,7 @@ Future<Uint8List?> decryptBytes(Uint8List bytes, Int64 target) async {
   }
 }
 
-Future<Uint8List?> encryptMessage(Message msg, Int64 target) async {
+Future<Uint8List?> encryptMessage(Message msg, int target) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
 

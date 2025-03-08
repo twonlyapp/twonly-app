@@ -256,7 +256,7 @@ class ApiProvider {
 
     var open = Handshake_OpenSession()
       ..response = signature
-      ..userId = userData.userId;
+      ..userId = Int64(userData.userId);
 
     var opensession = Handshake()..opensession = open;
 
@@ -304,8 +304,8 @@ class ApiProvider {
     return await _sendRequestV0(req);
   }
 
-  Future<Result> getUsername(Int64 userId) async {
-    var get = ApplicationData_GetUserById()..userId = userId;
+  Future<Result> getUsername(int userId) async {
+    var get = ApplicationData_GetUserById()..userId = Int64(userId);
     var appData = ApplicationData()..getuserbyid = get;
     var req = createClientToServerFromApplicationData(appData);
     return await _sendRequestV0(req);
@@ -353,9 +353,9 @@ class ApiProvider {
     return await _sendRequestV0(req);
   }
 
-  Future<Result> sendTextMessage(Int64 target, Uint8List msg) async {
+  Future<Result> sendTextMessage(int target, Uint8List msg) async {
     var testMessage = ApplicationData_TextMessage()
-      ..userId = target
+      ..userId = Int64(target)
       ..body = msg;
 
     var appData = ApplicationData()..textmessage = testMessage;

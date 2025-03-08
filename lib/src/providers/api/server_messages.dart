@@ -5,9 +5,9 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
-import 'package:twonly/src/model/contacts_model.dart';
+import '../../../../.blocked/archives/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/messages_model.dart';
+import '../../../../.blocked/archives/messages_model.dart';
 import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
@@ -102,7 +102,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     int? fromUserId = box.get("${data.uploadToken}_fromUserId");
     if (fromUserId != null) {
       Uint8List? rawBytes =
-          await SignalHelper.decryptBytes(downloadedBytes, Int64(fromUserId));
+          await SignalHelper.decryptBytes(downloadedBytes, fromUserId);
 
       if (rawBytes != null) {
         box.put("${data.uploadToken}_downloaded", rawBytes);

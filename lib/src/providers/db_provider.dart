@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/identity_key_store_model.dart';
-import 'package:twonly/src/model/messages_model.dart';
 import 'package:twonly/src/model/pre_key_model.dart';
 import 'package:twonly/src/model/sender_key_store_model.dart';
 import 'package:twonly/src/model/session_store_model.dart';
@@ -55,8 +53,6 @@ class DbProvider {
     await DbSignalPreKeyStore.setupDatabaseTable(db);
     await DbSignalSenderKeyStore.setupDatabaseTable(db);
     await DbSignalIdentityKeyStore.setupDatabaseTable(db);
-    await DbContacts.setupDatabaseTable(db);
-    await DbMessages.setupDatabaseTable(db);
   }
 
   Future open() async {

@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/model/json/message.dart' as my;
 
 /// Streams are created so that app can respond to notification-related events
@@ -143,9 +142,9 @@ String getPushNotificationText(String key, String userName) {
   if (systemLanguage.contains("de")) {
     pushNotificationText = {
       "newTextMessage": "%userName% hat dir eine Nachricht gesendet.",
-      "newTwonly": "%userName% hat dir einen twonly gesendet.",
-      "newVideo": "%userName% hat dir eine Video gesendet.",
-      "newImage": "%userName% hat dir eine Bild gesendet.",
+      "newTwonly": "%userName% hat dir ein twonly gesendet.",
+      "newVideo": "%userName% hat dir ein Video gesendet.",
+      "newImage": "%userName% hat dir ein Bild gesendet.",
       "contactRequest": "%userName% möchte sich mir dir vernetzen.",
       "acceptRequest": "%userName% ist jetzt mit dir vernetzt.",
     };
@@ -166,7 +165,10 @@ String getPushNotificationText(String key, String userName) {
 
 Future localPushNotificationNewMessage(
     int fromUserId, my.Message message, int messageId) async {
-  Contact? user = await DbContacts.getUserById(fromUserId);
+  Contact? user = await TwonlyDatabase.provider
+      .getContactByUserId(fromUserId)
+      .getSingleOrNull();
+
   if (user == null) return;
 
   String msg = "";

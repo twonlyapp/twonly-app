@@ -1,6 +1,8 @@
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
-import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/database/contacts_db.dart';
+import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class PrivacyViewBlockUsers extends StatefulWidget {
@@ -11,35 +13,34 @@ class PrivacyViewBlockUsers extends StatefulWidget {
 }
 
 class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
-  List<Contact> allUsers = [];
+  late Stream<List<Contact>> allUsers;
   List<Contact> filteredUsers = [];
-  String lastQuery = "";
+  String filter = "";
 
   @override
   void initState() {
     super.initState();
+    allUsers = context.db.watchAllContacts();
     loadAsync();
   }
 
   Future loadAsync() async {
-    allUsers = await DbContacts.getAllUsers();
-    _filterUsers(lastQuery);
     setState(() {});
   }
 
-  Future _filterUsers(String query) async {
-    lastQuery = query;
-    if (query.isEmpty) {
-      filteredUsers = allUsers;
-      setState(() {});
-      return;
-    }
-    filteredUsers = allUsers
-        .where((user) =>
-            user.displayName.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-    setState(() {});
-  }
+  // Future _filterUsers(String query) async {
+  //   lastQuery = query;
+  //   if (query.isEmpty) {
+  //     filteredUsers = allUsers;
+  //     setState(() {});
+  //     return;
+  //   }
+  //   filteredUsers = allUsers
+  //       .where((user) =>
+  //           user.displayName.toLowerCase().contains(query.toLowerCase()))
+  //       .toList();
+  //   setState(() {});
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +55,9 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: TextField(
-                onChanged: _filterUsers,
+                onChanged: (value) => setState(() {
+                  filter = value;
+                }),
                 decoration: getInputDecoration(
                   context,
                   context.lang.searchUsernameInput,
@@ -68,10 +71,22 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
             ),
             const SizedBox(height: 30),
             Expanded(
-              child: UserList(
-                List.from(filteredUsers),
-                updateStatus: () {
-                  loadAsync();
+              child: StreamBuilder(
+                stream: allUsers,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container();
+                  }
+
+                  final filteredContacts = snapshot.data!.where((contact) {
+                    return getContactDisplayName(contact)
+                        .toLowerCase()
+                        .contains(filter.toLowerCase());
+                  }).toList();
+
+                  return UserList(
+                    List.from(filteredContacts),
+                  );
                 },
               ),
             )
@@ -83,20 +98,21 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
 }
 
 class UserList extends StatelessWidget {
-  const UserList(this.users, {super.key, required this.updateStatus});
+  const UserList(this.users, {super.key});
   final List<Contact> users;
-  final Function updateStatus;
 
-  Future block(bool? value, int userId) async {
-    if (value == null) return;
-    await DbContacts.blockUser(userId, unblock: !value);
-    updateStatus();
+  Future block(BuildContext context, int userId, bool? value) async {
+    if (value != null) {
+      final update = ContactsCompanion(blocked: Value(!value));
+      await context.db.updateContact(userId, update);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     // Step 1: Sort the users alphabetically
-    users.sort((a, b) => a.displayName.compareTo(b.displayName));
+    users.sort(
+        (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)));
 
     return ListView.builder(
       restorationId: 'new_message_users_list',
@@ -105,20 +121,20 @@ class UserList extends StatelessWidget {
         Contact user = users[i];
         return ListTile(
           title: Row(children: [
-            Text(user.displayName),
+            Text(getContactDisplayName(user)),
           ]),
           leading: InitialsAvatar(
-            displayName: user.displayName,
+            getContactDisplayName(user),
             fontSize: 15,
           ),
           trailing: Checkbox(
             value: user.blocked,
             onChanged: (bool? value) {
-              block(value, user.userId.toInt());
+              block(context, user.userId, value);
             },
           ),
           onTap: () {
-            block(!user.blocked, user.userId.toInt());
+            block(context, user.userId, !user.blocked);
           },
         );
       },

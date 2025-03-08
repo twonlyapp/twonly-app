@@ -375,7 +375,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     if (sendNextMediaToUserId != null) {
                       Uint8List? imageBytes = await getMergedImage();
                       sendImage(
-                        [Int64(sendNextMediaToUserId)],
+                        [sendNextMediaToUserId],
                         imageBytes!,
                         _isRealTwonly,
                         _maxShowTime,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/model/contacts_model.dart';
+import 'package:twonly/src/database/database.dart';
 
 class VerifiedShield extends StatelessWidget {
   final Contact contact;

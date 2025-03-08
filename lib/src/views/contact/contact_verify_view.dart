@@ -1,12 +1,12 @@
 import 'dart:convert';
+import 'package:drift/drift.dart' hide Column;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:twonly/src/components/format_long_string.dart';
-import 'package:twonly/src/model/contacts_model.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/providers/contacts_change_provider.dart';
+import 'package:twonly/src/database/contacts_db.dart';
+import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/signal.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,10 +36,9 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
 
   @override
   Widget build(BuildContext context) {
-    Contact contact = context
-        .watch<ContactChangeProvider>()
-        .allContacts
-        .firstWhere((c) => c.userId == widget.contact.userId);
+    Stream<Contact?> contact = context.db
+        .getContactByUserId(widget.contact.userId)
+        .watchSingleOrNull();
 
     return Scaffold(
       appBar: AppBar(
@@ -92,13 +91,21 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Text(
-                    context.lang
-                        .contactVerifyNumberLongDesc(contact.displayName),
-                    textAlign: TextAlign.center,
-                  ),
+                StreamBuilder(
+                  stream: contact,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData || snapshot.data == null) {
+                      return Container();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      child: Text(
+                        context.lang.contactVerifyNumberLongDesc(
+                            getContactDisplayName(snapshot.data!)),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  },
                 ),
                 Padding(
                   padding:
@@ -125,24 +132,34 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              contact.verified
-                  ? OutlinedButton.icon(
+              StreamBuilder(
+                stream: contact,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data == null) {
+                    return Container();
+                  }
+                  final contact = snapshot.data!;
+                  if (contact.verified) {
+                    return OutlinedButton.icon(
                       onPressed: () {
-                        DbContacts.updateVerificationStatus(
-                            contact.userId.toInt(), false);
+                        final update =
+                            ContactsCompanion(verified: Value(false));
+                        context.db.updateContact(contact.userId, update);
                       },
                       label: Text(
                           context.lang.contactVerifyNumberClearVerification),
-                    )
-                  : FilledButton.icon(
-                      icon: FaIcon(FontAwesomeIcons.shieldHeart),
-                      onPressed: () {
-                        DbContacts.updateVerificationStatus(
-                            contact.userId.toInt(), true);
-                      },
-                      label:
-                          Text(context.lang.contactVerifyNumberMarkAsVerified),
-                    ),
+                    );
+                  }
+                  return FilledButton.icon(
+                    icon: FaIcon(FontAwesomeIcons.shieldHeart),
+                    onPressed: () {
+                      final update = ContactsCompanion(verified: Value(true));
+                      context.db.updateContact(contact.userId, update);
+                    },
+                    label: Text(context.lang.contactVerifyNumberMarkAsVerified),
+                  );
+                },
+              ),
             ],
           ),
         ),

@@ -4,8 +4,7 @@ class InitialsAvatar extends StatelessWidget {
   final String displayName;
   final double? fontSize;
 
-  const InitialsAvatar(
-      {super.key, required this.displayName, this.fontSize = 20});
+  const InitialsAvatar(this.displayName, {super.key, this.fontSize = 20});
 
   @override
   Widget build(BuildContext context) {

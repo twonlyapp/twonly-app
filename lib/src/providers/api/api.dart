@@ -7,9 +7,9 @@ import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
-import 'package:twonly/src/model/contacts_model.dart';
+import '../../../../.blocked/archives/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/messages_model.dart';
+import '../../../../.blocked/archives/messages_model.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -30,7 +30,7 @@ Future tryTransmitMessages() async {
     Uint8List? bytes = box.get("retransmit-$msgId-textmessage");
     if (bytes != null) {
       Result resp = await apiProvider.sendTextMessage(
-        Int64(retransmit[i].otherUserId),
+        retransmit[i].otherUserId,
         bytes,
       );
 
@@ -46,7 +46,7 @@ Future tryTransmitMessages() async {
     if (encryptedMedia != null) {
       final content = retransmit[i].messageContent;
       if (content is MediaMessageContent) {
-        uploadMediaFile(msgId, Int64(retransmit[i].otherUserId), encryptedMedia,
+        uploadMediaFile(msgId, retransmit[i].otherUserId, encryptedMedia,
             content.isRealTwonly, content.maxShowTime, retransmit[i].sendAt);
       }
     }
@@ -54,7 +54,7 @@ Future tryTransmitMessages() async {
 }
 
 // this functions ensures that the message is received by the server and in case of errors will try again later
-Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
+Future<Result> encryptAndSendMessage(int userId, Message msg) async {
   Uint8List? bytes = await SignalHelper.encryptMessage(msg, userId);
 
   if (bytes == null) {
@@ -79,7 +79,7 @@ Future<Result> encryptAndSendMessage(Int64 userId, Message msg) async {
   return resp;
 }
 
-Future sendTextMessage(Int64 target, String message) async {
+Future sendTextMessage(int target, String message) async {
   MessageContent content = TextMessageContent(text: message);
 
   DateTime messageSendAt = DateTime.now();
@@ -105,7 +105,7 @@ Future sendTextMessage(Int64 target, String message) async {
 // this will send the media file and ensures retransmission when errors occur
 Future uploadMediaFile(
   int messageId,
-  Int64 target,
+  int target,
   Uint8List encryptedMedia,
   bool isRealTwonly,
   int maxShowTime,
@@ -179,7 +179,7 @@ Future uploadMediaFile(
 }
 
 class SendImage {
-  final Int64 userId;
+  final int userId;
   final Uint8List imageBytes;
   final bool isRealTwonly;
   final int maxShowTime;
@@ -231,7 +231,7 @@ class SendImage {
 }
 
 Future sendImage(
-  List<Int64> userIds,
+  List<int> userIds,
   Uint8List imageBytes,
   bool isRealTwonly,
   int maxShowTime,

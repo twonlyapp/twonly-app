@@ -1,14 +1,14 @@
 import 'dart:async';
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:twonly/src/components/alert_dialog.dart';
+import 'package:twonly/src/database/contacts_db.dart';
+import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
-import 'package:twonly/src/model/contacts_model.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/api/api.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
@@ -31,18 +31,28 @@ class _SearchUsernameView extends State<SearchUsernameView> {
 
     final res = await apiProvider.getUserData(searchUserName.text);
 
-    if (res.isSuccess) {
-      bool added = await DbContacts.insertNewContact(
-        searchUserName.text,
-        res.value.userdata.userId.toInt(),
-        false,
-      );
+    if (!context.mounted) {
+      return;
+    }
 
-      if (added) {
+    if (res.isSuccess) {
+      final addUser = await showAlertDialog(
+          context, "User found", "Do you want to create a follow request?");
+      if (!addUser || !context.mounted) {
+        return;
+      }
+
+      int added = await context.db.insertContact(ContactsCompanion(
+        username: Value(searchUserName.text),
+        userId: Value(res.value.userdata.userId),
+        requested: Value(false),
+      ));
+
+      if (added > 0) {
         if (await SignalHelper.addNewContact(res.value.userdata)) {
           encryptAndSendMessage(
             res.value.userdata.userId,
-            Message(
+            MessageJson(
               kind: MessageKind.contactRequest,
               timestamp: DateTime.now(),
               content: MessageContent(),
@@ -50,7 +60,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
           );
         }
       }
-    } else if (context.mounted) {
+    } else {
       showAlertDialog(context, context.lang.searchUsernameNotFound,
           context.lang.searchUsernameNotFoundBody(searchUserName.text));
     }
@@ -78,6 +88,8 @@ class _SearchUsernameView extends State<SearchUsernameView> {
         contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
       );
     }
+
+    Stream<List<Contact>> contacts = context.db.watchNotAcceptedContacts();
 
     return Scaffold(
       appBar: AppBar(
@@ -108,14 +120,24 @@ class _SearchUsernameView extends State<SearchUsernameView> {
               label: Text(context.lang.searchUsernameQrCodeBtn),
             ),
             SizedBox(height: 30),
-            if (context
-                .watch<ContactChangeProvider>()
-                .allContacts
-                .where((contact) => !contact.accepted)
-                .isNotEmpty)
-              HeadLineComponent(context.lang.searchUsernameNewFollowerTitle),
-            Expanded(
-              child: ContactsListView(),
+            StreamBuilder(
+              stream: contacts,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data != null) {
+                  return Container();
+                }
+                final contacts = snapshot.data!;
+                if (contacts.isEmpty) {
+                  return Container();
+                }
+                return Row(children: [
+                  HeadLineComponent(
+                      context.lang.searchUsernameNewFollowerTitle),
+                  Expanded(
+                    child: ContactsListView(contacts),
+                  )
+                ]);
+              },
             )
           ],
         ),
@@ -136,7 +158,9 @@ class _SearchUsernameView extends State<SearchUsernameView> {
 }
 
 class ContactsListView extends StatefulWidget {
-  const ContactsListView({super.key});
+  const ContactsListView(this.contacts, {super.key});
+
+  final List<Contact> contacts;
 
   @override
   State<ContactsListView> createState() => _ContactsListViewState();
@@ -145,18 +169,14 @@ class ContactsListView extends StatefulWidget {
 class _ContactsListViewState extends State<ContactsListView> {
   @override
   Widget build(BuildContext context) {
-    List<Contact> contacts = context
-        .read<ContactChangeProvider>()
-        .allContacts
-        .where((contact) => !contact.accepted)
-        .toList();
     return ListView.builder(
-      itemCount: contacts.length,
+      itemCount: widget.contacts.length,
       itemBuilder: (context, index) {
-        final contact = contacts[index];
+        final contact = widget.contacts[index];
+        final displayName = getContactDisplayName(contact);
         return ListTile(
-          title: Text(contact.displayName),
-          leading: InitialsAvatar(displayName: contact.displayName),
+          title: Text(displayName),
+          leading: InitialsAvatar(displayName),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -168,7 +188,8 @@ class _ContactsListViewState extends State<ContactsListView> {
                     icon: Icon(Icons.person_off_rounded,
                         color: const Color.fromARGB(164, 244, 67, 54)),
                     onPressed: () async {
-                      await DbContacts.blockUser(contact.userId.toInt());
+                      final update = ContactsCompanion(blocked: Value(true));
+                      await context.db.updateContact(contact.userId, update);
                     },
                   ),
                 ),
@@ -177,10 +198,10 @@ class _ContactsListViewState extends State<ContactsListView> {
                   child: IconButton(
                     icon: Icon(Icons.close, color: Colors.red),
                     onPressed: () async {
-                      await DbContacts.deleteUser(contact.userId.toInt());
+                      await context.db.deleteContactByUserId(contact.userId);
                       encryptAndSendMessage(
                         contact.userId,
-                        Message(
+                        MessageJson(
                           kind: MessageKind.rejectRequest,
                           timestamp: DateTime.now(),
                           content: MessageContent(),
@@ -192,10 +213,11 @@ class _ContactsListViewState extends State<ContactsListView> {
                 IconButton(
                   icon: Icon(Icons.check, color: Colors.green),
                   onPressed: () async {
-                    await DbContacts.acceptUser(contact.userId.toInt());
+                    final update = ContactsCompanion(accepted: Value(true));
+                    await context.db.updateContact(contact.userId, update);
                     encryptAndSendMessage(
                       contact.userId,
-                      Message(
+                      MessageJson(
                         kind: MessageKind.acceptRequest,
                         timestamp: DateTime.now(),
                         content: MessageContent(),

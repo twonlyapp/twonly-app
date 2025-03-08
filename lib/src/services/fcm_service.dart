@@ -3,8 +3,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
+import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/providers/api_provider.dart';
-import 'package:twonly/src/providers/db_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 import '../../firebase_options.dart';
@@ -65,33 +65,26 @@ Future initFCMService() async {
   });
 }
 
+late TwonlyDatabase bgTwonlyDB;
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
-
   // Wenn Tasks länger als 30 Sekunden ausgeführt werden, wird der Prozess möglicherweise automatisch vom Gerät beendet.
   // -> offer backend via http?
 
-  print("Handling a background message: ${message.messageId}");
+  Logger("firebase-background")
+      .shout('Handling a background message: ${message.messageId}');
 
-  bool gotMessage = false;
+  bgTwonlyDB = TwonlyDatabase();
 
-  globalCallBackOnMessageChange = (a, b) async {
-    gotMessage = true;
-    print("Got message can exit");
-  };
-
-  dbProvider = DbProvider();
-  await dbProvider.ready;
   apiProvider = ApiProvider();
   await apiProvider.connect();
 
   final stopwatch = Stopwatch()..start();
-  while (!gotMessage) {
+  while (true) {
     if (stopwatch.elapsed >= Duration(seconds: 20)) {
-      Logger("firebase-background").shout('Timeout reached. Exiting the loop.');
-      break; // Exit the loop if the timeout is reached.
+      Logger("firebase-background").shout('Exiting background handler');
+      break;
     }
     await Future.delayed(Duration(milliseconds: 10));
   }

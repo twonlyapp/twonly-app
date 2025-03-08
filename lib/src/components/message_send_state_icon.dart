@@ -1,9 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
+import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/messages_db.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/messages_model.dart';
-import 'package:twonly/src/providers/download_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 enum MessageSendState {
@@ -15,20 +15,74 @@ enum MessageSendState {
   sending,
 }
 
-class MessageSendStateIcon extends StatelessWidget {
-  final DbMessage message;
+MessageSendState messageSendStateFromMessage(Message msg) {
+  MessageSendState state;
+
+  if (!msg.acknowledgeByServer) {
+    state = MessageSendState.sending;
+  } else {
+    if (msg.messageOtherId == null) {
+      // message send
+      if (msg.openedAt == null) {
+        state = MessageSendState.send;
+      } else {
+        state = MessageSendState.sendOpened;
+      }
+    } else {
+      // message received
+      if (msg.openedAt == null) {
+        state = MessageSendState.received;
+      } else {
+        state = MessageSendState.receivedOpened;
+      }
+    }
+  }
+  return state;
+}
+
+class MessageSendStateIcon extends StatefulWidget {
+  final List<Message> messages;
   final MainAxisAlignment mainAxisAlignment;
 
-  const MessageSendStateIcon(this.message,
+  const MessageSendStateIcon(this.messages,
       {super.key, this.mainAxisAlignment = MainAxisAlignment.end});
+
+  @override
+  State<MessageSendStateIcon> createState() => _MessageSendStateIconState();
+}
+
+class _MessageSendStateIconState extends State<MessageSendStateIcon> {
+  bool containsVideo = false;
+  bool containsText = false;
+  bool containsImage = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    for (Message msg in widget.messages) {
+      if (msg.kind == MessageKind.textMessage) {
+        containsText = true;
+      }
+      if (msg.kind == MessageKind.media) {
+        MessageJson message =
+            MessageJson.fromJson(jsonDecode(msg.contentJson!));
+        final content = message.content;
+        if (content is MediaMessageContent) {
+          if (content.isVideo) {
+            containsVideo = true;
+          } else {
+            containsImage = true;
+          }
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     Widget icon = Placeholder();
     String text = "";
-
-    Color color =
-        message.messageContent.getColor(Theme.of(context).colorScheme.primary);
 
     Widget loaderIcon = Row(
       children: [
@@ -41,7 +95,9 @@ class MessageSendStateIcon extends StatelessWidget {
       ],
     );
 
-    switch (message.getSendState()) {
+    MessageSendState state = messageSendStateFromMessage(message);
+
+    switch (state) {
       case MessageSendState.receivedOpened:
         icon = Icon(Icons.crop_square, size: 14, color: color);
         text = context.lang.messageSendState_Received;
@@ -65,24 +121,16 @@ class MessageSendStateIcon extends StatelessWidget {
         break;
     }
 
-    if (!message.isDownloaded) {
+    if (message.downloadState == DownloadState.pending) {
       text = context.lang.messageSendState_TapToLoad;
     }
-
-    bool isDownloading = false;
-    final content = message.messageContent;
-    if (message.messageReceived && content is MediaMessageContent) {
-      final test = context.watch<DownloadChangeProvider>().currentlyDownloading;
-      isDownloading = test.contains(content.downloadToken.toString());
-    }
-
-    if (isDownloading) {
+    if (message.downloadState == DownloadState.downloaded) {
       text = context.lang.messageSendState_Loading;
       icon = loaderIcon;
     }
 
     return Row(
-      mainAxisAlignment: mainAxisAlignment,
+      mainAxisAlignment: widget.mainAxisAlignment,
       children: [
         icon,
         const SizedBox(width: 3),

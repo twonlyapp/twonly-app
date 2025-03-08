@@ -2,13 +2,36 @@ import 'package:flutter/material.dart';
 
 enum MessageKind {
   textMessage,
-  image,
-  video,
+  media,
   contactRequest,
   rejectRequest,
   acceptRequest,
   opened,
   ack
+}
+
+Color getMessageColorFromType(MessageJson msg, Color primary) {
+  Color color;
+
+  final content = msg.content;
+  if (content is TextMessageContent) {
+    color = Colors.lightBlue;
+  } else {
+    if (content is MediaMessageContent) {
+      if (content.isRealTwonly) {
+        color = primary;
+      } else {
+        if (content.isVideo) {
+          color = Colors.deepPurple;
+        } else {
+          color = const Color.fromARGB(255, 214, 47, 47);
+        }
+      }
+    } else {
+      return Colors.black; // this should not happen
+    }
+  }
+  return color;
 }
 
 extension MessageKindExtension on MessageKind {
@@ -17,22 +40,15 @@ extension MessageKindExtension on MessageKind {
   static MessageKind fromString(String name) {
     return MessageKind.values.firstWhere((e) => e.name == name);
   }
-
-  int get index => this.index;
-
-  static MessageKind fromIndex(int index) {
-    return MessageKind.values[index];
-  }
 }
 
-// TODO: use message as base class, remove kind and flatten content
-class Message {
+class MessageJson {
   final MessageKind kind;
-  final MessageContent content;
+  final MessageContent? content;
   final int? messageId;
   DateTime timestamp;
 
-  Message(
+  MessageJson(
       {required this.kind,
       this.messageId,
       required this.content,
@@ -43,17 +59,21 @@ class Message {
     return 'Message(kind: $kind, content: $content, timestamp: $timestamp)';
   }
 
-  static Message fromJson(Map<String, dynamic> json) => Message(
-        kind: MessageKindExtension.fromString(json["kind"]),
-        messageId: (json['messageId'] as num?)?.toInt(),
-        content:
-            MessageContent.fromJson(json['content'] as Map<String, dynamic>),
-        timestamp: DateTime.parse(json['timestamp'] as String),
-      );
+  static MessageJson fromJson(Map<String, dynamic> json) {
+    final kind = MessageKindExtension.fromString(json["kind"]);
+
+    return MessageJson(
+      kind: kind,
+      messageId: (json['messageId'] as num?)?.toInt(),
+      content: MessageContent.fromJson(
+          kind, json['content'] as Map<String, dynamic>),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'kind': kind.name,
-        'content': content.toJson(),
+        'content': content?.toJson(),
         'messageId': messageId,
         'timestamp': timestamp.toIso8601String(),
       };
@@ -62,37 +82,14 @@ class Message {
 class MessageContent {
   MessageContent();
 
-  Color getColor(Color primary) {
-    Color color;
-    if (this is TextMessageContent) {
-      color = Colors.lightBlue;
-    } else {
-      final content = this;
-      if (content is MediaMessageContent) {
-        if (content.isRealTwonly) {
-          color = primary;
-        } else {
-          if (content.isVideo) {
-            color = Colors.deepPurple;
-          } else {
-            color = const Color.fromARGB(255, 214, 47, 47);
-          }
-        }
-      } else {
-        return Colors.black; // this should not happen
-      }
-    }
-    return color;
-  }
-
-  static MessageContent fromJson(Map json) {
-    switch (json['type']) {
-      case 'MediaMessageContent':
+  static MessageContent? fromJson(MessageKind kind, Map json) {
+    switch (kind) {
+      case MessageKind.media:
         return MediaMessageContent.fromJson(json);
-      case 'TextMessageContent':
+      case MessageKind.textMessage:
         return TextMessageContent.fromJson(json);
       default:
-        return MessageContent();
+        return null;
     }
   }
 
@@ -125,7 +122,6 @@ class MediaMessageContent extends MessageContent {
   @override
   Map toJson() {
     return {
-      'type': 'MediaMessageContent',
       'downloadToken': downloadToken,
       'isRealTwonly': isRealTwonly,
       'maxShowTime': maxShowTime,
@@ -146,7 +142,6 @@ class TextMessageContent extends MessageContent {
   @override
   Map toJson() {
     return {
-      'type': 'TextMessageContent',
       'text': text,
     };
   }

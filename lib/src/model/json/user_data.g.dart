@@ -7,7 +7,7 @@ part of 'user_data.dart';
 // **************************************************************************
 
 UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
-      userId: const Int64Converter().fromJson(json['userId'] as String),
+      userId: (json['userId'] as num).toInt(),
       username: json['username'] as String,
       displayName: json['displayName'] as String,
     );
@@ -15,5 +15,5 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'username': instance.username,
       'displayName': instance.displayName,
-      'userId': const Int64Converter().toJson(instance.userId),
+      'userId': instance.userId,
     };

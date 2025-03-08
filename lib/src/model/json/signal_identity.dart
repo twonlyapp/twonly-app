@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-import 'package:fixnum/fixnum.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:twonly/src/utils/json.dart';
 part 'signal_identity.g.dart';
@@ -9,8 +8,7 @@ class SignalIdentity {
   const SignalIdentity(
       {required this.identityKeyPairU8List, required this.registrationId});
 
-  @Int64Converter()
-  final Int64 registrationId;
+  final int registrationId;
 
   @Uint8ListConverter()
   final Uint8List identityKeyPairU8List;

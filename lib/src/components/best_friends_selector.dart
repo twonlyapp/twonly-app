@@ -1,19 +1,17 @@
 import 'dart:collection';
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/src/components/verified_shield.dart';
-import 'package:twonly/src/providers/messages_change_provider.dart';
+import 'package:twonly/src/database/contacts_db.dart';
+import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
-import 'package:twonly/src/model/contacts_model.dart';
 
 class BestFriendsSelector extends StatelessWidget {
   final List<Contact> users;
-  final Function(Int64, bool) updateStatus;
-  final HashSet<Int64> selectedUserIds;
+  final Function(int, bool) updateStatus;
+  final HashSet<int> selectedUserIds;
   final int maxTotalMediaCounter;
   final bool isRealTwonly;
 
@@ -80,7 +78,7 @@ class BestFriendsSelector extends StatelessWidget {
 
 class UserCheckbox extends StatelessWidget {
   final Contact user;
-  final Function(Int64, bool) onChanged;
+  final Function(int, bool) onChanged;
   final bool isChecked;
   final bool isRealTwonly;
   final int maxTotalMediaCounter;
@@ -96,10 +94,7 @@ class UserCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int flameCounter = context
-            .watch<MessagesChangeProvider>()
-            .flamesCounter[user.userId.toInt()] ??
-        0;
+    String displayName = getContactDisplayName(user);
 
     return Container(
       padding:
@@ -120,8 +115,8 @@ class UserCheckbox extends StatelessWidget {
           child: Row(
             children: [
               InitialsAvatar(
+                displayName,
                 fontSize: 12,
-                displayName: user.displayName,
               ),
               SizedBox(width: 8),
               Column(
@@ -138,16 +133,23 @@ class UserCheckbox extends StatelessWidget {
                               size: 12,
                             )),
                       Text(
-                        user.displayName.length > 10
-                            ? '${user.displayName.substring(0, 10)}...'
-                            : user.displayName,
+                        displayName.length > 10
+                            ? '${displayName.substring(0, 10)}...'
+                            : displayName,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                  if (flameCounter > 0)
-                    FlameCounterWidget(
-                        user, flameCounter, maxTotalMediaCounter),
+                  StreamBuilder(
+                    stream: context.db.watchFlameCounter(user.userId),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData && snapshot.data! != 0) {
+                        return Container();
+                      }
+                      return FlameCounterWidget(
+                          user, snapshot.data!, maxTotalMediaCounter);
+                    },
+                  )
                 ],
               ),
               Expanded(child: Container()),

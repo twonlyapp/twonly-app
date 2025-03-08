@@ -1,9 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/connection_state.dart';
-import 'package:twonly/src/providers/contacts_change_provider.dart';
-import 'package:twonly/src/providers/download_change_provider.dart';
-import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding/onboarding_view.dart';
@@ -23,9 +20,6 @@ Function(bool) globalCallbackConnectionState = (a) {};
 bool globalIsAppInBackground = true;
 
 // these two callbacks are called on updated to the corresponding database
-Function globalCallBackOnContactChange = () {};
-Future Function(int, int?) globalCallBackOnMessageChange = (a, b) async {};
-Function(List<int>, bool) globalCallBackOnDownloadChange = (a, b) {};
 
 /// The Widget that configures your application.
 class MyApp extends StatefulWidget {
@@ -45,29 +39,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     globalIsAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
 
-    // init change provider to load data from the database
-    context.read<ContactChangeProvider>().update();
-    context.read<MessagesChangeProvider>().init();
-
     // register global callbacks to the widget tree
     globalCallbackConnectionState = (isConnected) {
       setState(() {
         _isConnected = isConnected;
       });
-    };
-
-    globalCallBackOnContactChange = () {
-      context.read<ContactChangeProvider>().update();
-    };
-
-    globalCallBackOnDownloadChange = (token, add) {
-      context.read<DownloadChangeProvider>().update(token, add);
-    };
-
-    globalCallBackOnMessageChange = (userId, messageId) async {
-      await context
-          .read<MessagesChangeProvider>()
-          .updateLastMessageFor(userId, messageId);
     };
 
     // WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -124,8 +100,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (wasPaused) {
         globalIsAppInBackground = false;
         apiProvider.connect();
-        context.read<ContactChangeProvider>().update();
-        context.read<MessagesChangeProvider>().init();
         // _stopService();
       }
     } else if (state == AppLifecycleState.paused) {
@@ -145,9 +119,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     // disable globalCallbacks to the flutter tree
     globalCallbackConnectionState = (a) {};
-    globalCallBackOnDownloadChange = (a, b) {};
-    globalCallBackOnContactChange = () {};
-    globalCallBackOnMessageChange = (a, b) async {};
     super.dispose();
   }
 
