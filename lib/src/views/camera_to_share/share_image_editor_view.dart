@@ -1,12 +1,12 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/components/notification_badge.dart';
+import 'package:twonly/src/database/contacts_db.dart';
+import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/contacts_change_provider.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
@@ -35,6 +35,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _imageSaving = false;
   bool _isRealTwonly = false;
   int _maxShowTime = 18;
+  String? sendNextMediaToUserName;
 
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
@@ -49,6 +50,15 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   void dispose() {
     layers.clear();
     super.dispose();
+  }
+
+  Future updateAsync(int userId) async {
+    if (sendNextMediaToUserName != null) return;
+    Contact? contact =
+        await context.db.getContactByUserId(userId).getSingleOrNull();
+    if (contact != null) {
+      sendNextMediaToUserName = getContactDisplayName(contact);
+    }
   }
 
   List<Widget> get actionsAtTheRight {
@@ -229,13 +239,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     int? sendNextMediaToUserId =
         context.watch<SendNextMediaTo>().sendNextMediaToUserId;
-    String? sendNextMediaToUserName;
+
     if (sendNextMediaToUserId != null) {
-      sendNextMediaToUserName = context
-          .watch<ContactChangeProvider>()
-          .allContacts
-          .firstWhere((x) => x.userId == sendNextMediaToUserId)
-          .displayName;
+      updateAsync(sendNextMediaToUserId);
     }
 
     return Scaffold(
@@ -406,7 +412,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   label: Text(
                     (sendNextMediaToUserName == null)
                         ? context.lang.shareImagedEditorShareWith
-                        : sendNextMediaToUserName,
+                        : sendNextMediaToUserName!,
                     style: TextStyle(fontSize: 17),
                   ),
                 ),

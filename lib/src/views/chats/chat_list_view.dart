@@ -283,7 +283,7 @@ class _UserListItem extends State<UserListItem> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) {
-                return MediaViewerView(widget.user, msg);
+                return MediaViewerView(widget.user.userId);
               }),
             );
             return;
@@ -291,7 +291,7 @@ class _UserListItem extends State<UserListItem> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
-              return ChatItemDetailsView(user: widget.user);
+              return ChatItemDetailsView(widget.user.userId);
             }),
           );
         },

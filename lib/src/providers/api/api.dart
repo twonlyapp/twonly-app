@@ -301,12 +301,12 @@ Future tryDownloadMedia(int messageId, int fromUserId, List<int> mediaToken,
   apiProvider.triggerDownload(mediaToken, offset);
 }
 
-Future userOpenedOtherMessage(int fromUserId, int messageOtherId) async {
-  await DbMessages.userOpenedOtherMessage(fromUserId, messageOtherId);
+Future notifyContactAboutOpeningMessage(int fromUserId, int messageOtherId) async {
+  //await DbMessages.userOpenedOtherMessage(fromUserId, messageOtherId);
 
   encryptAndSendMessage(
-    Int64(fromUserId),
-    Message(
+    fromUserId,
+    MessageJson(
       kind: MessageKind.opened,
       messageId: messageOtherId,
       content: MessageContent(),

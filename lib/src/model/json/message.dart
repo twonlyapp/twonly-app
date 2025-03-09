@@ -10,10 +10,9 @@ enum MessageKind {
   ack
 }
 
-Color getMessageColorFromType(MessageJson msg, Color primary) {
+Color getMessageColorFromType(MessageContent content, Color primary) {
   Color color;
 
-  final content = msg.content;
   if (content is TextMessageContent) {
     color = Colors.lightBlue;
   } else {

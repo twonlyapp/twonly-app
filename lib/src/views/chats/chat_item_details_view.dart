@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -6,13 +8,11 @@ import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/components/verified_shield.dart';
-import '../../../../.blocked/archives/contacts_model.dart';
+import 'package:twonly/src/database/contacts_db.dart';
+import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/messages_db.dart';
 import 'package:twonly/src/model/json/message.dart';
-import '../../../../.blocked/archives/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/contacts_change_provider.dart';
-import 'package:twonly/src/providers/download_change_provider.dart';
-import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
@@ -21,27 +21,25 @@ import 'package:twonly/src/views/contact/contact_view.dart';
 import 'package:twonly/src/views/home_view.dart';
 
 class ChatListEntry extends StatelessWidget {
-  const ChatListEntry(this.message, this.user, this.lastMessageFromSameUser,
+  const ChatListEntry(this.message, this.userId, this.lastMessageFromSameUser,
       {super.key});
-  final DbMessage message;
-  final Contact user;
+  final Message message;
+  final int userId;
   final bool lastMessageFromSameUser;
 
   @override
   Widget build(BuildContext context) {
     bool right = message.messageOtherId == null;
-    MessageSendState state = message.getSendState();
+    MessageSendState state = messageSendStateFromMessage(message);
 
     bool isDownloading = false;
     List<int> token = [];
 
-    final content = message.messageContent;
-    if (message.messageReceived && content is MediaMessageContent) {
+    final messageJson = MessageJson.fromJson(jsonDecode(message.contentJson!));
+    final content = messageJson.content;
+    if (message.messageOtherId != null && content is MediaMessageContent) {
       token = content.downloadToken;
-      isDownloading = context
-          .watch<DownloadChangeProvider>()
-          .currentlyDownloading
-          .contains(token.toString());
+      isDownloading = message.downloadState == DownloadState.downloading;
     }
 
     Widget child = Container();
@@ -81,20 +79,21 @@ class ChatListEntry extends StatelessWidget {
         );
       }
     } else if (content is MediaMessageContent && !content.isVideo) {
-      Color color = message.messageContent
-          .getColor(Theme.of(context).colorScheme.primary);
+      Color color = getMessageColorFromType(
+          content, Theme.of(context).colorScheme.primary);
+
       child = GestureDetector(
         onTap: () {
           if (state == MessageSendState.received && !isDownloading) {
-            if (message.isDownloaded) {
+            if (message.downloadState == DownloadState.downloaded) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) {
-                  return MediaViewerView(user, message);
+                  return MediaViewerView(userId);
                 }),
               );
             } else {
-              tryDownloadMedia(message.messageId, message.otherUserId, token,
+              tryDownloadMedia(message.messageId, message.contactId, token,
                   force: true);
             }
           }
@@ -112,7 +111,7 @@ class ChatListEntry extends StatelessWidget {
           child: Align(
             alignment: Alignment.centerRight,
             child: MessageSendStateIcon(
-              message,
+              [message],
               mainAxisAlignment:
                   right ? MainAxisAlignment.center : MainAxisAlignment.center,
             ),
@@ -134,9 +133,9 @@ class ChatListEntry extends StatelessWidget {
 
 /// Displays detailed information about a SampleItem.
 class ChatItemDetailsView extends StatefulWidget {
-  const ChatItemDetailsView({super.key, required this.user});
+  const ChatItemDetailsView(this.userid, {super.key});
 
-  final Contact user;
+  final int userid;
 
   @override
   State<ChatItemDetailsView> createState() => _ChatItemDetailsViewState();
@@ -145,86 +144,99 @@ class ChatItemDetailsView extends StatefulWidget {
 class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
-  late Contact user;
+  Contact? user;
   String currentInputText = "";
+  late StreamSubscription<Contact> userSub;
+  late StreamSubscription<List<Message>> messageSub;
+  List<Message> messages = [];
 
   @override
   void initState() {
     super.initState();
-    user = widget.user;
-    context
-        .read<MessagesChangeProvider>()
-        .loadMessagesForUser(user.userId.toInt());
-    initAsync();
+    initStreams();
   }
 
-  Future initAsync() async {
-    context
-        .read<MessagesChangeProvider>()
-        .loadMessagesForUser(user.userId.toInt(), force: true);
-    setState(() {});
+  @override
+  void dispose() {
+    super.dispose();
+    userSub.cancel();
+    messageSub.cancel();
+  }
+
+  Future initStreams() async {
+    Stream<Contact> contact = context.db.watchContact(widget.userid);
+    userSub = contact.listen((contact) {
+      setState(() {
+        user = contact;
+      });
+    });
+
+    Stream<List<Message>> msgStream =
+        context.db.watchAllMessagesFrom(widget.userid);
+    messageSub = msgStream.listen((msgs) {
+      if (!context.mounted) return;
+      var updated = false;
+      for (Message msg in msgs) {
+        if (msg.kind == MessageKind.textMessage &&
+            msg.messageOtherId != null &&
+            msg.openedAt == null) {
+          updated = true;
+          flutterLocalNotificationsPlugin.cancel(msg.messageId);
+          notifyContactAboutOpeningMessage(widget.userid, msg.messageOtherId!);
+        }
+      }
+      if (updated) {
+        context.db.openedAllTextMessages(widget.userid);
+      } else {
+        // The stream should be get an update, so only update the UI when all are opened
+        setState(() {
+          messages = msgs;
+        });
+      }
+    });
   }
 
   Future _sendMessage() async {
-    if (newMessageController.text == "") return;
-    setState(() {});
-    await sendTextMessage(user.userId, newMessageController.text);
+    if (newMessageController.text == "" || user == null) return;
+    await sendTextMessage(user!.userId, newMessageController.text);
     newMessageController.clear();
     currentInputText = "";
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    user = context
-        .watch<ContactChangeProvider>()
-        .allContacts
-        .firstWhere((c) => c.userId == widget.user.userId);
-
-    List<DbMessage> messages = context
-            .watch<MessagesChangeProvider>()
-            .allMessagesFromUser[user.userId.toInt()] ??
-        [];
-
-    messages.where((x) => x.messageOpenedAt == null).forEach((message) {
-      if (message.messageOtherId != null &&
-          message.messageContent is TextMessageContent) {
-        if (!alreadyReportedOpened.contains(message.messageOtherId!)) {
-          userOpenedOtherMessage(message.otherUserId, message.messageOtherId!);
-          flutterLocalNotificationsPlugin.cancel(message.messageId);
-          alreadyReportedOpened.add(message.messageOtherId!);
-        }
-      }
-    });
-
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return ContactView(user.userId.toInt());
+              return ContactView(widget.userid);
             }));
           },
-          child: Row(
-            children: [
-              InitialsAvatar(
-                displayName: user.displayName,
-                fontSize: 19,
-              ),
-              SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  color: Colors.transparent,
-                  child: Row(
-                    children: [
-                      Text(user.displayName),
-                      SizedBox(width: 10),
-                      VerifiedShield(user),
-                    ],
-                  ),
+          child: (user == null)
+              ? Container()
+              : Row(
+                  children: [
+                    InitialsAvatar(
+                      getContactDisplayName(user!),
+                      fontSize: 19,
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        color: Colors.transparent,
+                        child: Row(
+                          children: [
+                            Text(getContactDisplayName(user!)),
+                            SizedBox(width: 10),
+                            VerifiedShield(user!),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
       body: Column(
@@ -242,17 +254,17 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                           (messages[i - 1].messageOtherId != null &&
                               messages[i].messageOtherId != null);
                 }
-                if (messages[i].messageOpenedAt != null) {
-                  if (calculateTimeDifference(
-                              DateTime.now(), messages[i].messageOpenedAt!)
-                          .inHours >=
-                      24) {
-                    return Container();
-                  }
-                }
+                // if (messages[i].openedAt != null) {
+                //   if (calculateTimeDifference(
+                //               DateTime.now(), messages[i].openedAt!)
+                //           .inHours >=
+                //       24) {
+                //     return Container();
+                //   }
+                // }
                 return ChatListEntry(
                   messages[i],
-                  user,
+                  widget.userid,
                   lastMessageFromSameUser,
                 );
               },
@@ -310,8 +322,9 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                     : IconButton(
                         icon: FaIcon(FontAwesomeIcons.camera),
                         onPressed: () {
-                          context.read<SendNextMediaTo>().updateSendNextMediaTo(
-                              widget.user.userId.toInt());
+                          context
+                              .read<SendNextMediaTo>()
+                              .updateSendNextMediaTo(widget.userid);
                           globalUpdateOfHomeViewPageIndex(0);
                           Navigator.popUntil(context, (route) => route.isFirst);
                         },

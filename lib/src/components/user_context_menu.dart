@@ -44,7 +44,7 @@ class _UserContextMenuState extends State<UserContextMenu> {
           onSelect: () {
             Navigator.push(context, MaterialPageRoute(
               builder: (context) {
-                return ChatItemDetailsView(user: widget.contact);
+                return ChatItemDetailsView(widget.contact.userId);
               },
             ));
           },

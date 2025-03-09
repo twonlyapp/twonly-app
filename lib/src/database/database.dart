@@ -26,18 +26,33 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   // ------------
 
-  Stream<List<Message>> watchMessageNotOpened(int userId) {
+  Stream<List<Message>> watchMessageNotOpened(int contactId) {
     return (select(messages)
-          ..where((t) => t.openedAt.isNull() & t.contactId.equals(userId)))
+          ..where((t) => t.openedAt.isNull() & t.contactId.equals(contactId)))
         .watch();
   }
 
-  Stream<Message?> watchLastMessage(int userId) {
+  Stream<Message?> watchLastMessage(int contactId) {
     return (select(messages)
-          ..where((t) => t.contactId.equals(userId))
+          ..where((t) => t.contactId.equals(contactId))
           ..orderBy([(t) => OrderingTerm.desc(t.sendAt)])
           ..limit(1))
         .watchSingleOrNull();
+  }
+
+  Stream<List<Message>> watchAllMessagesFrom(int contactId) {
+    return (select(messages)..where((t) => t.contactId.equals(contactId)))
+        .watch();
+  }
+
+  Future openedAllTextMessages(int contactId) {
+    final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
+    return (update(messages)
+          ..where((t) =>
+              t.contactId.equals(contactId) &
+              t.openedAt.isNull() &
+              t.kind.equals(MessageKind.textMessage.name)))
+        .write(updates);
   }
 
   // ------------
@@ -70,6 +85,11 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   Stream<List<Contact>> watchNotAcceptedContacts() {
     return (select(contacts)..where((t) => t.accepted.equals(false))).watch();
+  }
+
+  Stream<Contact> watchContact(int userid) {
+    return (select(contacts)..where((t) => t.userId.equals(userid)))
+        .watchSingle();
   }
 
   Stream<List<Contact>> watchContactsForChatList() {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,11 +8,10 @@ import 'package:no_screenshot/no_screenshot.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
-import '../../../../.blocked/archives/contacts_model.dart';
+import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/messages_db.dart';
 import 'package:twonly/src/model/json/message.dart';
-import '../../../../.blocked/archives/messages_model.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -21,9 +21,8 @@ import 'package:twonly/src/views/home_view.dart';
 final _noScreenshot = NoScreenshot.instance;
 
 class MediaViewerView extends StatefulWidget {
-  final Contact otherUser;
-  final DbMessage message;
-  const MediaViewerView(this.otherUser, this.message, {super.key});
+  final int userId;
+  const MediaViewerView(this.userId, {super.key});
 
   @override
   State<MediaViewerView> createState() => _MediaViewerViewState();
@@ -44,35 +43,29 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   bool isRealTwonly = false;
   bool isDownloading = false;
 
-  List<DbMessage> allMediaFiles = [];
+  List<Message> allMediaFiles = [];
+  late StreamSubscription<List<Message>> _subscription;
 
   @override
   void initState() {
     super.initState();
 
-    allMediaFiles = [widget.message];
     asyncLoadNextMedia();
     loadCurrentMediaFile();
   }
 
   Future asyncLoadNextMedia() async {
-    await context
-        .read<MessagesChangeProvider>()
-        .loadMessagesForUser(widget.otherUser.userId.toInt());
-    if (!context.mounted) return;
-    final allMessages = context
-        .read<MessagesChangeProvider>()
-        .allMessagesFromUser[widget.otherUser.userId.toInt()];
-    if (allMessages == null) {
-      return;
-    }
-    final nextMediaFiles = allMessages.where((x) =>
-        x.isMedia() &&
-        x.messageOtherId != null &&
-        x.messageOpenedAt == null &&
-        x.messageId != widget.message.messageId);
-    allMediaFiles.addAll(nextMediaFiles.map((x) => x));
-    setState(() {});
+    Stream<List<Message>> messages =
+        context.db.watchMessageNotOpened(widget.userId);
+
+    _subscription = messages.listen((messages) {
+      for (Message msg in messages) {
+        if (!allMediaFiles.any((m) => m.messageId == msg.messageId)) {
+          allMediaFiles.add(msg);
+        }
+      }
+      setState(() {});
+    });
   }
 
   Future nextMediaOrExit() async {
@@ -92,7 +85,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     await _noScreenshot.screenshotOff();
     if (!context.mounted || allMediaFiles.isEmpty) return;
 
-    final DbMessage current = allMediaFiles.first;
+    final Message current = allMediaFiles.first;
+    final MessageJson messageJson =
+        MessageJson.fromJson(jsonDecode(current.contentJson!));
+    final MessageContent? content = messageJson.content;
 
     setState(() {
       // reset current image values
@@ -101,16 +97,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       maxShowTime = 999999;
       progress = 0;
       isDownloading = false;
-      isRealTwonly = current.isRealTwonly();
+      isRealTwonly = false;
     });
 
-    // This will show the extra screen for the twonly
-    if (current.isRealTwonly() && !showTwonly) {
-      return;
-    }
-
-    final content = current.messageContent;
     if (content is MediaMessageContent) {
+      if (content.isRealTwonly) {
+        setState(() {
+          isRealTwonly = true;
+        });
+        if (!showTwonly) {
+          return;
+        }
+      }
+
       if (isRealTwonly) {
         bool isAuth = await authenticateUser(context.lang.mediaViewerAuthReason,
             force: false);
@@ -120,22 +119,22 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         }
       }
       flutterLocalNotificationsPlugin.cancel(current.messageId);
-      if (!current.isDownloaded) {
+      if (current.downloadState == DownloadState.pending) {
         setState(() {
           isDownloading = true;
         });
         await tryDownloadMedia(
-            current.messageId, current.otherUserId, content.downloadToken,
+            current.messageId, current.contactId, content.downloadToken,
             force: true);
       }
       do {
         if (isDownloading) {
-          await Future.delayed(Duration(milliseconds: 100));
+          await Future.delayed(Duration(milliseconds: 10));
         }
         imageBytes = await getDownloadedMedia(
           content.downloadToken,
           current.messageOtherId!,
-          current.otherUserId,
+          current.contactId,
         );
       } while (isDownloading && imageBytes == null);
 
@@ -181,6 +180,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
     _noScreenshot.screenshotOn();
+    _subscription.cancel();
   }
 
   @override
@@ -303,7 +303,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         curve: Curves.linearToEaseOut,
                         child: GestureDetector(
                           onTap: () {
-                            sendTextMessage(widget.otherUser.userId, emoji);
+                            sendTextMessage(widget.userId, emoji);
                             setState(() {
                               selectedShortReaction = index;
                             });
@@ -351,8 +351,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     IconButton.outlined(
                       icon: FaIcon(FontAwesomeIcons.camera),
                       onPressed: () async {
-                        context.read<SendNextMediaTo>().updateSendNextMediaTo(
-                            widget.otherUser.userId.toInt());
+                        context
+                            .read<SendNextMediaTo>()
+                            .updateSendNextMediaTo(widget.userId.toInt());
                         globalUpdateOfHomeViewPageIndex(0);
                         Navigator.popUntil(context, (route) => route.isFirst);
                       },
@@ -410,7 +411,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) {
-                            return ChatItemDetailsView(user: widget.otherUser);
+                            return ChatItemDetailsView(widget.userId);
                           }),
                         );
                       },
