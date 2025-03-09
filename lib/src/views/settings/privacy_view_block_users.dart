@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/database/contacts_db.dart';
 import 'package:twonly/src/database/database.dart';
@@ -20,7 +21,7 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
   @override
   void initState() {
     super.initState();
-    allUsers = context.db.watchAllContacts();
+    allUsers = twonlyDatabase.watchAllContacts();
     loadAsync();
   }
 
@@ -104,7 +105,7 @@ class UserList extends StatelessWidget {
   Future block(BuildContext context, int userId, bool? value) async {
     if (value != null) {
       final update = ContactsCompanion(blocked: Value(!value));
-      await context.db.updateContact(userId, update);
+      await twonlyDatabase.updateContact(userId, update);
     }
   }
 

@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:fixnum/fixnum.dart';
-import 'package:flutter/foundation.dart';
+import 'package:drift/drift.dart';
 import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
-import '../../../../.blocked/archives/contacts_model.dart';
+import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/messages_db.dart';
 import 'package:twonly/src/model/json/message.dart';
-import '../../../../.blocked/archives/messages_model.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -17,8 +16,10 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
 Future tryTransmitMessages() async {
-  List<DbMessage> retransmit =
-      await DbMessages.getAllMessagesForRetransmitting();
+  List<Message> retransmit =
+      await twonlyDatabase.getAllMessagesForRetransmitting();
+
+
   if (retransmit.isEmpty) return;
 
   Logger("api.dart").info("try sending messages: ${retransmit.length}");
@@ -30,12 +31,16 @@ Future tryTransmitMessages() async {
     Uint8List? bytes = box.get("retransmit-$msgId-textmessage");
     if (bytes != null) {
       Result resp = await apiProvider.sendTextMessage(
-        retransmit[i].otherUserId,
+        retransmit[i].contactId,
         bytes,
       );
 
       if (resp.isSuccess) {
-        DbMessages.acknowledgeMessageByServer(msgId);
+          await twonlyDatabase.updateMessageByMessageId(
+    msgId,
+    MessagesCompanion(acknowledgeByServer: Value(true))
+  );
+
         box.delete("retransmit-$msgId-textmessage");
       } else {
         // in case of error do nothing. As the message is not removed the app will try again when relaunched
@@ -44,9 +49,9 @@ Future tryTransmitMessages() async {
 
     Uint8List? encryptedMedia = await box.get("retransmit-$msgId-media");
     if (encryptedMedia != null) {
-      final content = retransmit[i].messageContent;
+      final content = MessageJson.fromJson(jsonDecode(retransmit[i].contentJson!)).content;
       if (content is MediaMessageContent) {
-        uploadMediaFile(msgId, retransmit[i].otherUserId, encryptedMedia,
+        uploadMediaFile(msgId, retransmit[i].contactId, encryptedMedia,
             content.isRealTwonly, content.maxShowTime, retransmit[i].sendAt);
       }
     }
@@ -54,7 +59,7 @@ Future tryTransmitMessages() async {
 }
 
 // this functions ensures that the message is received by the server and in case of errors will try again later
-Future<Result> encryptAndSendMessage(int userId, Message msg) async {
+Future<Result> encryptAndSendMessage(int userId, MessageJson msg) async {
   Uint8List? bytes = await SignalHelper.encryptMessage(msg, userId);
 
   if (bytes == null) {
@@ -71,7 +76,12 @@ Future<Result> encryptAndSendMessage(int userId, Message msg) async {
 
   if (resp.isSuccess) {
     if (msg.messageId != null) {
-      DbMessages.acknowledgeMessageByServer(msg.messageId!);
+
+
+  await twonlyDatabase.updateMessageByMessageId(
+    msg.messageId!,
+    MessagesCompanion(acknowledgeByServer: Value(true))
+  );
       box.delete("retransmit-${msg.messageId}-textmessage");
     }
   }
@@ -84,15 +94,18 @@ Future sendTextMessage(int target, String message) async {
 
   DateTime messageSendAt = DateTime.now();
 
-  int? messageId = await DbMessages.insertMyMessage(
-    target.toInt(),
-    MessageKind.textMessage,
-    content,
-    messageSendAt,
-  );
+  int? messageId = await twonlyDatabase.insertMessage(MessagesCompanion(
+      contactId: Value(target),
+      kind: Value(MessageKind.textMessage),
+      sendAt: Value(messageSendAt),
+      downloadState: Value(DownloadState.downloaded),
+      contentJson: Value(jsonEncode(content.toJson()))
+    ),);
+
+
   if (messageId == null) return;
 
-  Message msg = Message(
+  MessageJson msg = MessageJson(
     kind: MessageKind.textMessage,
     messageId: messageId,
     content: content,
@@ -160,13 +173,19 @@ Future uploadMediaFile(
   box.delete("retransmit-$messageId-media");
   box.delete("retransmit-$messageId-uploadtoken");
 
-  await DbContacts.updateTotalMediaCounter(target.toInt());
+  twonlyDatabase.incTotalMediaCounter(target);
+  twonlyDatabase.updateContact(
+    target,
+    ContactsCompanion(
+      lastMessageReceived: Value(messageSendAt),
+    ),
+  );
 
   // Ensures the retransmit of the message
   await encryptAndSendMessage(
     target,
-    Message(
-      kind: MessageKind.image,
+    MessageJson(
+      kind: MessageKind.media,
       messageId: messageId,
       content: MediaMessageContent(
           downloadToken: uploadToken,
@@ -210,17 +229,19 @@ class SendImage {
     }
 
     messageSendAt = DateTime.now();
-    messageId = await DbMessages.insertMyMessage(
-      userId.toInt(),
-      MessageKind.image,
-      MediaMessageContent(
+    int? messageId = await twonlyDatabase.insertMessage(MessagesCompanion(
+      contactId: Value(userId),
+      kind: Value(MessageKind.media),
+      sendAt: Value(messageSendAt!),
+      downloadState: Value(DownloadState.pending),
+      contentJson: Value(jsonEncode(MediaMessageContent(
         downloadToken: [],
         maxShowTime: maxShowTime,
         isRealTwonly: isRealTwonly,
         isVideo: false,
-      ),
-      messageSendAt!,
-    );
+      ).toJson()))
+    ));
+
     // should only happen when there is no space left on the smartphone -> abort message
     if (messageId == null) return;
 
@@ -295,9 +316,15 @@ Future tryDownloadMedia(int messageId, int fromUserId, List<int> mediaToken,
   if (media != null && media.isNotEmpty) {
     offset = media.length;
   }
-  globalCallBackOnDownloadChange(mediaToken, true);
   box.put("${mediaToken}_messageId", messageId);
   box.put("${mediaToken}_fromUserId", fromUserId);
+  final update =
+          MessagesCompanion(downloadState: Value(DownloadState.downloading));
+  await twonlyDatabase.updateMessageByOtherUser(
+    fromUserId,
+    messageId,
+    update
+  );
   apiProvider.triggerDownload(mediaToken, offset);
 }
 
@@ -326,7 +353,12 @@ Future<Uint8List?> getDownloadedMedia(
   }
   if (media == null) return null;
 
-  await userOpenedOtherMessage(otherUserId, messageOtherId);
+  // await userOpenedOtherMessage(otherUserId, messageOtherId);
+  notifyContactAboutOpeningMessage(otherUserId, messageOtherId);
+  twonlyDatabase.updateMessageByOtherMessageId(otherUserId, messageOtherId, MessagesCompanion(
+    openedAt: Value(DateTime.now())
+  ));
+
   box.delete(mediaToken.toString());
   box.put("${mediaToken}_downloaded", "deleted");
   box.delete("${mediaToken}_messageId");

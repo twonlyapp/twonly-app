@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/contacts_db.dart';
 import 'package:twonly/src/database/messages_db.dart';
@@ -45,6 +46,11 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         .watch();
   }
 
+  Future<List<Message>> getAllMessagesForRetransmitting() {
+    return (select(messages)..where((t) => t.acknowledgeByServer.equals(false)))
+        .get();
+  }
+
   Future openedAllTextMessages(int contactId) {
     final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
     return (update(messages)
@@ -55,10 +61,59 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         .write(updates);
   }
 
+  Future updateMessageByOtherUser(
+      int userId, int messageId, MessagesCompanion updatedValues) {
+    return (update(messages)
+          ..where((c) =>
+              c.contactId.equals(userId) & c.messageId.equals(messageId)))
+        .write(updatedValues);
+  }
+
+  Future updateMessageByOtherMessageId(
+      int userId, int messageOtherId, MessagesCompanion updatedValues) {
+    return (update(messages)
+          ..where((c) =>
+              c.contactId.equals(userId) &
+              c.messageOtherId.equals(messageOtherId)))
+        .write(updatedValues);
+  }
+
+  Future updateMessageByMessageId(
+      int messageId, MessagesCompanion updatedValues) {
+    return (update(messages)..where((c) => c.messageId.equals(messageId)))
+        .write(updatedValues);
+  }
+
+  Future<int?> insertMessage(MessagesCompanion message) async {
+    try {
+      return await into(messages).insert(message);
+    } catch (e) {
+      Logger("twonlyDatabase").shout("Error while inserting message: $e");
+      return null;
+    }
+  }
+
+  Future deleteMessageById(int messageId) {
+    return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
+  }
+
   // ------------
 
   Future<int> insertContact(ContactsCompanion contact) {
     return into(contacts).insert(contact);
+  }
+
+  Future incTotalMediaCounter(int contactId) async {
+    return (update(contacts)..where((t) => t.userId.equals(contactId)))
+        .write(ContactsCompanion(
+      totalMediaCounter: Value(
+        (await (select(contacts)..where((t) => t.userId.equals(contactId)))
+                    .get())
+                .first
+                .totalMediaCounter +
+            1,
+      ),
+    ));
   }
 
   SingleOrNullSelectable<Contact> getContactByUserId(int userId) {

@@ -39,7 +39,7 @@ class ApiProvider {
 
   // reconnection params
   Timer? reconnectionTimer;
-  int _reconnectionDelay = 5;
+  // int _reconnectionDelay = 5;
 
   final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
   IOWebSocketChannel? _channel;
@@ -68,7 +68,7 @@ class ApiProvider {
   Future onConnected() async {
     await authenticate();
     globalCallbackConnectionState(true);
-    _reconnectionDelay = 5;
+    // _reconnectionDelay = 5;
 
     if (!globalIsAppInBackground) {
       tryTransmitMessages();
@@ -131,24 +131,24 @@ class ApiProvider {
 
   void tryToReconnect() {
     return;
-    if (globalIsAppInBackground) return;
-    if (reconnectionTimer != null) {
-      reconnectionTimer!.cancel();
-    }
+    // if (globalIsAppInBackground) return;
+    // if (reconnectionTimer != null) {
+    //   reconnectionTimer!.cancel();
+    // }
 
-    final int randomDelay = Random().nextInt(20);
-    final int delay = _reconnectionDelay + randomDelay;
+    // final int randomDelay = Random().nextInt(20);
+    // final int delay = _reconnectionDelay + randomDelay;
 
-    debugPrint("Delay reconnection $delay");
+    // debugPrint("Delay reconnection $delay");
 
-    reconnectionTimer = Timer(Duration(seconds: delay), () async {
-      // increase delay but set a maximum of 60 seconds (including the random delay)
-      _reconnectionDelay = _reconnectionDelay * 2;
-      if (_reconnectionDelay > 40) {
-        _reconnectionDelay = 40;
-      }
-      await connect();
-    });
+    // reconnectionTimer = Timer(Duration(seconds: delay), () async {
+    //   // increase delay but set a maximum of 60 seconds (including the random delay)
+    //   _reconnectionDelay = _reconnectionDelay * 2;
+    //   if (_reconnectionDelay > 40) {
+    //     _reconnectionDelay = 40;
+    //   }
+    //   await connect();
+    // });
   }
 
   void _onData(dynamic msgBuffer) {
@@ -289,7 +289,7 @@ class ApiProvider {
       ..username = username
       ..publicIdentityKey =
           (await signalStore.getIdentityKeyPair()).getPublicKey().serialize()
-      ..registrationId = signalIdentity.registrationId
+      ..registrationId = Int64(signalIdentity.registrationId)
       ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
       ..signedPrekeySignature = signedPreKey.signature
       ..signedPrekeyId = Int64(signedPreKey.id);

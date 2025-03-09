@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/database/database.dart';
@@ -56,7 +57,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   Future asyncLoadNextMedia() async {
     Stream<List<Message>> messages =
-        context.db.watchMessageNotOpened(widget.userId);
+        twonlyDatabase.watchMessageNotOpened(widget.userId);
 
     _subscription = messages.listen((messages) {
       for (Message msg in messages) {

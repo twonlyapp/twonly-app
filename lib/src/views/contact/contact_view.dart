@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/alert_dialog.dart';
 import 'package:twonly/src/components/better_list_title.dart';
 import 'package:twonly/src/components/flame.dart';
@@ -24,7 +25,7 @@ class _ContactViewState extends State<ContactView> {
   @override
   Widget build(BuildContext context) {
     Stream<Contact?> contact =
-        context.db.getContactByUserId(widget.userId).watchSingleOrNull();
+        twonlyDatabase.getContactByUserId(widget.userId).watchSingleOrNull();
 
     return Scaffold(
       appBar: AppBar(
@@ -76,7 +77,7 @@ class _ContactViewState extends State<ContactView> {
 
                   if (context.mounted && nickName != null && nickName != "") {
                     final update = ContactsCompanion(nickName: Value(nickName));
-                    context.db.updateContact(contact.userId, update);
+                    twonlyDatabase.updateContact(contact.userId, update);
                   }
                 },
               ),
@@ -106,7 +107,8 @@ class _ContactViewState extends State<ContactView> {
                   if (block) {
                     final update = ContactsCompanion(blocked: Value(true));
                     if (context.mounted) {
-                      await context.db.updateContact(contact.userId, update);
+                      await twonlyDatabase.updateContact(
+                          contact.userId, update);
                     }
                     if (context.mounted) {
                       Navigator.popUntil(context, (route) => route.isFirst);

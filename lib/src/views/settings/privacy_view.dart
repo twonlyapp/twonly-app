@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/privacy_view_block_users.dart';
 
@@ -26,7 +27,7 @@ class _PrivacyViewState extends State<PrivacyView> {
           ListTile(
             title: Text(context.lang.settingsPrivacyBlockUsers),
             subtitle: StreamBuilder(
-              stream: context.db.watchContactsBlocked(),
+              stream: twonlyDatabase.watchContactsBlocked(),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data != null) {
                   return Text(

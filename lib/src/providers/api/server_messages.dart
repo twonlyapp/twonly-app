@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
-import '../../../../.blocked/archives/contacts_model.dart';
+import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/messages_db.dart';
 import 'package:twonly/src/model/json/message.dart';
-import '../../../../.blocked/archives/messages_model.dart';
 import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
@@ -27,7 +28,7 @@ Future handleServerMessage(server.ServerToClient msg) async {
       response = await handleRequestNewPreKey();
     } else if (msg.v0.hasNewMessage()) {
       Uint8List body = Uint8List.fromList(msg.v0.newMessage.body);
-      Int64 fromUserId = msg.v0.newMessage.fromUserId;
+      int fromUserId = msg.v0.newMessage.fromUserId.toInt();
       response = await handleNewMessage(fromUserId, body);
     } else if (msg.v0.hasDownloaddata()) {
       response = await handleDownloadData(msg.v0.downloaddata);
@@ -62,18 +63,13 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     // media file was deleted by the server. remove the media from device
 
     if (messageId != null) {
-      int? fromUserId = await DbMessages.deleteMessageById(messageId);
+      await twonlyDatabase.deleteMessageById(messageId);
       box.delete(boxId);
-      if (fromUserId != null) {
-        globalCallBackOnMessageChange(fromUserId, messageId);
-      }
       box.delete("${data.uploadToken}_fromUserId");
       box.delete("${data.uploadToken}_downloaded");
-      globalCallBackOnDownloadChange(data.uploadToken, false);
       var ok = client.Response_Ok()..none = true;
       return client.Response()..ok = ok;
     } else {
-      globalCallBackOnDownloadChange(data.uploadToken, false);
       var ok = client.Response_Ok()..none = true;
       return client.Response()..ok = ok;
     }
@@ -111,9 +107,15 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
             .shout("error decrypting the message: ${data.uploadToken}");
       }
 
+      final update =
+          MessagesCompanion(downloadState: Value(DownloadState.downloaded));
+      await twonlyDatabase.updateMessageByOtherUser(
+        fromUserId,
+        messageId!,
+        update,
+      );
+
       box.delete(boxId);
-      await globalCallBackOnMessageChange(fromUserId, messageId);
-      globalCallBackOnDownloadChange(data.uploadToken, false);
     }
   } else {
     box.put(boxId, downloadedBytes);
@@ -123,52 +125,72 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   return client.Response()..ok = ok;
 }
 
-Future<client.Response> handleNewMessage(
-    Int64 fromUserId, Uint8List body) async {
-  Message? message = await SignalHelper.getDecryptedText(fromUserId, body);
+Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
+  MessageJson? message = await SignalHelper.getDecryptedText(fromUserId, body);
   if (message != null) {
     switch (message.kind) {
       case MessageKind.contactRequest:
         Result username = await apiProvider.getUsername(fromUserId);
         if (username.isSuccess) {
           Uint8List name = username.value.userdata.username;
-          DbContacts.insertNewContact(
-              utf8.decode(name), fromUserId.toInt(), true);
-          localPushNotificationNewMessage(fromUserId.toInt(), message, 999999);
+
+          int added = await twonlyDatabase.insertContact(ContactsCompanion(
+            username: Value(utf8.decode(name)),
+            userId: Value(fromUserId),
+            requested: Value(true),
+          ));
+          if (added > 0) {
+            localPushNotificationNewMessage(
+              fromUserId.toInt(),
+              message,
+              999999,
+            );
+          }
         }
         break;
       case MessageKind.opened:
-        await DbMessages.otherUserOpenedMyMessage(
-          fromUserId.toInt(),
+        final update = MessagesCompanion(openedAt: Value(message.timestamp));
+        await twonlyDatabase.updateMessageByOtherUser(
+          fromUserId,
           message.messageId!,
-          message.timestamp,
+          update,
         );
         break;
       case MessageKind.rejectRequest:
-        DbContacts.deleteUser(fromUserId.toInt());
+        await twonlyDatabase.deleteContactByUserId(fromUserId);
         break;
       case MessageKind.acceptRequest:
-        DbContacts.acceptUser(fromUserId.toInt());
+        final update = ContactsCompanion(accepted: Value(true));
+        twonlyDatabase.updateContact(fromUserId, update);
         localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
         break;
       case MessageKind.ack:
-        DbMessages.acknowledgeMessageByUser(
-            fromUserId.toInt(), message.messageId!);
+        final update = MessagesCompanion(acknowledgeByUser: Value(true));
+        await twonlyDatabase.updateMessageByOtherUser(
+          fromUserId,
+          message.messageId!,
+          update,
+        );
         break;
       default:
         if (message.kind != MessageKind.textMessage &&
-            message.kind != MessageKind.video &&
-            message.kind != MessageKind.image) {
+            message.kind != MessageKind.media) {
           Logger("handleServerMessages")
               .shout("Got unknown MessageKind $message");
         } else {
-          String content = jsonEncode(message.content.toJson());
-          int? messageId = await DbMessages.insertOtherMessage(
-              fromUserId.toInt(),
-              message.kind,
-              message.messageId!,
-              content,
-              message.timestamp);
+          String content = jsonEncode(message.content!.toJson());
+
+          final update = MessagesCompanion(
+            contactId: Value(fromUserId),
+            kind: Value(message.kind),
+            messageOtherId: Value(message.messageId),
+            contentJson: Value(content),
+            sendAt: Value(message.timestamp),
+          );
+
+          final messageId = await twonlyDatabase.insertMessage(
+            update,
+          );
 
           if (messageId == null) {
             return client.Response()..error = ErrorCode.InternalError;
@@ -176,7 +198,7 @@ Future<client.Response> handleNewMessage(
 
           encryptAndSendMessage(
             fromUserId,
-            Message(
+            MessageJson(
               kind: MessageKind.ack,
               messageId: message.messageId!,
               content: MessageContent(),
@@ -184,19 +206,25 @@ Future<client.Response> handleNewMessage(
             ),
           );
 
-          if (message.kind == MessageKind.video ||
-              message.kind == MessageKind.image) {
-            await DbContacts.updateTotalMediaCounter(fromUserId.toInt());
+          if (message.kind == MessageKind.media) {
+            twonlyDatabase.updateContact(
+              fromUserId,
+              ContactsCompanion(
+                lastMessageReceived: Value(message.timestamp),
+              ),
+            );
+
+            twonlyDatabase.incTotalMediaCounter(fromUserId);
+
             if (!globalIsAppInBackground) {
               final content = message.content;
               if (content is MediaMessageContent) {
                 List<int> downloadToken = content.downloadToken;
-                tryDownloadMedia(messageId, fromUserId.toInt(), downloadToken);
+                tryDownloadMedia(messageId, fromUserId, downloadToken);
               }
             }
           }
-          localPushNotificationNewMessage(
-              fromUserId.toInt(), message, messageId);
+          localPushNotificationNewMessage(fromUserId, message, messageId);
         }
     }
   }

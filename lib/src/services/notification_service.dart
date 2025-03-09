@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/contacts_db.dart';
 import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/model/json/message.dart' as my;
 
@@ -164,10 +166,9 @@ String getPushNotificationText(String key, String userName) {
 }
 
 Future localPushNotificationNewMessage(
-    int fromUserId, my.Message message, int messageId) async {
-  Contact? user = await TwonlyDatabase.provider
-      .getContactByUserId(fromUserId)
-      .getSingleOrNull();
+    int fromUserId, my.MessageJson message, int messageId) async {
+  Contact? user =
+      await twonlyDatabase.getContactByUserId(fromUserId).getSingleOrNull();
 
   if (user == null) return;
 
@@ -176,23 +177,25 @@ Future localPushNotificationNewMessage(
   final content = message.content;
 
   if (content is my.TextMessageContent) {
-    msg = getPushNotificationText("newTextMessage", user.displayName);
+    msg =
+        getPushNotificationText("newTextMessage", getContactDisplayName(user));
   } else if (content is my.MediaMessageContent) {
     if (content.isRealTwonly) {
-      msg = getPushNotificationText("newTwonly", user.displayName);
+      msg = getPushNotificationText("newTwonly", getContactDisplayName(user));
     } else if (content.isVideo) {
-      msg = getPushNotificationText("newVideo", user.displayName);
+      msg = getPushNotificationText("newVideo", getContactDisplayName(user));
     } else {
-      msg = getPushNotificationText("newImage", user.displayName);
+      msg = getPushNotificationText("newImage", getContactDisplayName(user));
     }
   }
 
   if (message.kind == my.MessageKind.contactRequest) {
-    msg = getPushNotificationText("contactRequest", user.displayName);
+    msg =
+        getPushNotificationText("contactRequest", getContactDisplayName(user));
   }
 
   if (message.kind == my.MessageKind.acceptRequest) {
-    msg = getPushNotificationText("acceptRequest", user.displayName);
+    msg = getPushNotificationText("acceptRequest", getContactDisplayName(user));
   }
 
   if (msg == "") {
@@ -213,7 +216,7 @@ Future localPushNotificationNewMessage(
       NotificationDetails(android: androidNotificationDetails);
   await flutterLocalNotificationsPlugin.show(
     messageId,
-    user.displayName,
+    getContactDisplayName(user),
     msg,
     notificationDetails,
     payload: message.kind.index.toString(),

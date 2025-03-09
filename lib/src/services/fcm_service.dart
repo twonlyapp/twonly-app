@@ -65,8 +65,6 @@ Future initFCMService() async {
   });
 }
 
-late TwonlyDatabase bgTwonlyDB;
-
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Wenn Tasks länger als 30 Sekunden ausgeführt werden, wird der Prozess möglicherweise automatisch vom Gerät beendet.
@@ -75,7 +73,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   Logger("firebase-background")
       .shout('Handling a background message: ${message.messageId}');
 
-  bgTwonlyDB = TwonlyDatabase();
+  twonlyDatabase = TwonlyDatabase();
 
   apiProvider = ApiProvider();
   await apiProvider.connect();

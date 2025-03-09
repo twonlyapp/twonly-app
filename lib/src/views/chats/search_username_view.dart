@@ -42,7 +42,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
         return;
       }
 
-      int added = await context.db.insertContact(ContactsCompanion(
+      int added = await twonlyDatabase.insertContact(ContactsCompanion(
         username: Value(searchUserName.text),
         userId: Value(res.value.userdata.userId),
         requested: Value(false),
@@ -89,7 +89,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       );
     }
 
-    Stream<List<Contact>> contacts = context.db.watchNotAcceptedContacts();
+    Stream<List<Contact>> contacts = twonlyDatabase.watchNotAcceptedContacts();
 
     return Scaffold(
       appBar: AppBar(
@@ -189,7 +189,8 @@ class _ContactsListViewState extends State<ContactsListView> {
                         color: const Color.fromARGB(164, 244, 67, 54)),
                     onPressed: () async {
                       final update = ContactsCompanion(blocked: Value(true));
-                      await context.db.updateContact(contact.userId, update);
+                      await twonlyDatabase.updateContact(
+                          contact.userId, update);
                     },
                   ),
                 ),
@@ -198,7 +199,8 @@ class _ContactsListViewState extends State<ContactsListView> {
                   child: IconButton(
                     icon: Icon(Icons.close, color: Colors.red),
                     onPressed: () async {
-                      await context.db.deleteContactByUserId(contact.userId);
+                      await twonlyDatabase
+                          .deleteContactByUserId(contact.userId);
                       encryptAndSendMessage(
                         contact.userId,
                         MessageJson(
@@ -214,7 +216,7 @@ class _ContactsListViewState extends State<ContactsListView> {
                   icon: Icon(Icons.check, color: Colors.green),
                   onPressed: () async {
                     final update = ContactsCompanion(accepted: Value(true));
-                    await context.db.updateContact(contact.userId, update);
+                    await twonlyDatabase.updateContact(contact.userId, update);
                     encryptAndSendMessage(
                       contact.userId,
                       MessageJson(

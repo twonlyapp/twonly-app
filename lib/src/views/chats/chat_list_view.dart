@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
@@ -32,7 +33,7 @@ class ChatListView extends StatefulWidget {
 class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) {
-    Stream<List<Contact>> contacts = context.db.watchContactsForChatList();
+    Stream<List<Contact>> contacts = twonlyDatabase.watchContactsForChatList();
 
     return Scaffold(
         appBar: AppBar(
@@ -50,7 +51,7 @@ class _ChatListViewState extends State<ChatListView> {
           // title:
           actions: [
             StreamBuilder(
-              stream: context.db.watchContactsRequested(),
+              stream: twonlyDatabase.watchContactsRequested(),
               builder: (context, snapshot) {
                 var count = 0;
                 if (snapshot.hasData && snapshot.data != null) {
@@ -193,8 +194,8 @@ class _UserListItem extends State<UserListItem> {
   @override
   Widget build(BuildContext context) {
     final notOpenedMessages =
-        context.db.watchMessageNotOpened(widget.user.userId);
-    final lastMessage = context.db.watchLastMessage(widget.user.userId);
+        twonlyDatabase.watchMessageNotOpened(widget.user.userId);
+    final lastMessage = twonlyDatabase.watchLastMessage(widget.user.userId);
 
     // if (widget.lastMessage != null) {
     //   state = widget.lastMessage!.getSendState();

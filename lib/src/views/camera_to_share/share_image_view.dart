@@ -1,17 +1,18 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:typed_data';
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/best_friends_selector.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/verified_shield.dart';
-import '../../../../.blocked/archives/contacts_model.dart';
+import 'package:twonly/src/database/contacts_db.dart';
+import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/messages_change_provider.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
@@ -31,43 +32,55 @@ class ShareImageView extends StatefulWidget {
 }
 
 class _ShareImageView extends State<ShareImageView> {
-  List<Contact> _users = [];
+  List<Contact> contacts = [];
   List<Contact> _otherUsers = [];
   List<Contact> _bestFriends = [];
   int maxTotalMediaCounter = 0;
   Uint8List? imageBytes;
   bool sendingImage = false;
-  final HashSet<Int64> _selectedUserIds = HashSet<Int64>();
+  final HashSet<int> _selectedUserIds = HashSet<int>();
   final TextEditingController searchUserName = TextEditingController();
   bool showRealTwonlyWarning = false;
+  late StreamSubscription<List<Contact>> contactSub;
 
   @override
   void initState() {
     super.initState();
-    _loadAsync();
-  }
 
-  Future<void> _loadAsync() async {
     int? sendNextMediaToUserId =
         context.read<SendNextMediaTo>().sendNextMediaToUserId;
     if (sendNextMediaToUserId != null) {
-      _selectedUserIds.add(Int64(sendNextMediaToUserId));
+      _selectedUserIds.add(sendNextMediaToUserId);
     }
-    _users = await DbContacts.getActiveUsers();
-    _updateUsers(_users);
-    imageBytes = await widget.imageBytesFuture;
-    setState(() {});
+
+    Stream<List<Contact>> allContacts =
+        twonlyDatabase.watchContactsForChatList();
+
+    contactSub = allContacts.listen((allContacts) {
+      setState(() {
+        contacts = allContacts;
+      });
+      updateUsers(allContacts);
+    });
+
+    //_users = await DbContacts.getActiveUsers();
+    // _updateUsers(_users);
+    // imageBytes = await widget.imageBytesFuture;
+    // setState(() {});
   }
 
-  Future _updateUsers(List<Contact> users) async {
-    Map<int, int> flameCounters =
-        context.read<MessagesChangeProvider>().flamesCounter;
+  @override
+  void dispose() {
+    super.dispose();
+    contactSub.cancel();
+  }
 
+  Future updateUsers(List<Contact> users) async {
     // Sort contacts by flameCounter and then by totalMediaCounter
     users.sort((a, b) {
       // First, compare by flameCounter
-      int flameComparison = (flameCounters[b.userId.toInt()] ?? 0)
-          .compareTo((flameCounters[a.userId.toInt()] ?? 0));
+      int flameComparison = (getFlameCounterFromContact(b))
+          .compareTo((getFlameCounterFromContact(a)));
       if (flameComparison != 0) {
         return flameComparison; // Sort by flameCounter in descending order
       }
@@ -87,8 +100,7 @@ class _ShareImageView extends State<ShareImageView> {
     List<Contact> otherUsers = [];
 
     for (var contact in users) {
-      if ((flameCounters[contact.userId.toInt()] ?? 0) > 0 &&
-          bestFriends.length < 6) {
+      if ((getFlameCounterFromContact(contact)) > 0 && bestFriends.length < 6) {
         bestFriends.add(contact);
       } else {
         otherUsers.add(contact);
@@ -103,19 +115,20 @@ class _ShareImageView extends State<ShareImageView> {
 
   Future _filterUsers(String query) async {
     if (query.isEmpty) {
-      _updateUsers(_users);
+      updateUsers(contacts);
       return;
     }
-    List<Contact> usersFiltered = _users
-        .where((user) =>
-            user.displayName.toLowerCase().contains(query.toLowerCase()))
+    List<Contact> usersFiltered = contacts
+        .where((user) => getContactDisplayName(user)
+            .toLowerCase()
+            .contains(query.toLowerCase()))
         .toList();
-    _updateUsers(usersFiltered);
+    updateUsers(usersFiltered);
   }
 
-  void updateStatus(Int64 userId, bool checked) {
+  void updateStatus(int userId, bool checked) {
     if (widget.isRealTwonly) {
-      Contact user = _users.firstWhere((x) => x.userId == userId);
+      Contact user = contacts.firstWhere((x) => x.userId == userId);
       if (!user.verified) {
         showRealTwonlyWarning = true;
         setState(() {});
@@ -248,26 +261,24 @@ class UserList extends StatelessWidget {
     required this.updateStatus,
     required this.isRealTwonly,
   });
-  final Function(Int64, bool) updateStatus;
+  final Function(int, bool) updateStatus;
   final List<Contact> users;
   final int maxTotalMediaCounter;
   final bool isRealTwonly;
-  final HashSet<Int64> selectedUserIds;
+  final HashSet<int> selectedUserIds;
 
   @override
   Widget build(BuildContext context) {
     // Step 1: Sort the users alphabetically
-    users.sort((a, b) => a.displayName.compareTo(b.displayName));
-
-    Map<int, int> flameCounters =
-        context.watch<MessagesChangeProvider>().flamesCounter;
+    users.sort(
+        (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)));
 
     return ListView.builder(
       restorationId: 'new_message_users_list',
       itemCount: users.length,
       itemBuilder: (BuildContext context, int i) {
         Contact user = users[i];
-        int flameCounter = flameCounters[user.userId.toInt()] ?? 0;
+        int flameCounter = getFlameCounterFromContact(user);
         return ListTile(
           title: Row(
             mainAxisAlignment: MainAxisAlignment.start, // Center horizontally
@@ -278,7 +289,7 @@ class UserList extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 1),
                   child: VerifiedShield(user),
                 ),
-              Text(user.displayName),
+              Text(getContactDisplayName(user)),
               if (flameCounter >= 1)
                 FlameCounterWidget(
                   user,
@@ -289,7 +300,7 @@ class UserList extends StatelessWidget {
             ],
           ),
           leading: InitialsAvatar(
-            displayName: user.displayName,
+            getContactDisplayName(user),
             fontSize: 15,
           ),
           trailing: Checkbox(

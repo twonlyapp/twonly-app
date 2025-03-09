@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/format_long_string.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/contacts_db.dart';
@@ -36,7 +37,7 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
 
   @override
   Widget build(BuildContext context) {
-    Stream<Contact?> contact = context.db
+    Stream<Contact?> contact = twonlyDatabase
         .getContactByUserId(widget.contact.userId)
         .watchSingleOrNull();
 
@@ -144,7 +145,7 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
                       onPressed: () {
                         final update =
                             ContactsCompanion(verified: Value(false));
-                        context.db.updateContact(contact.userId, update);
+                        twonlyDatabase.updateContact(contact.userId, update);
                       },
                       label: Text(
                           context.lang.contactVerifyNumberClearVerification),
@@ -154,7 +155,7 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
                     icon: FaIcon(FontAwesomeIcons.shieldHeart),
                     onPressed: () {
                       final update = ContactsCompanion(verified: Value(true));
-                      context.db.updateContact(contact.userId, update);
+                      twonlyDatabase.updateContact(contact.userId, update);
                     },
                     label: Text(context.lang.contactVerifyNumberMarkAsVerified),
                   );

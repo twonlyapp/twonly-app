@@ -18,7 +18,8 @@ class Messages extends Table {
   IntColumn get responseToOtherMessageId => integer().nullable()();
 
   BoolColumn get acknowledgeByUser => boolean().withDefault(Constant(false))();
-  IntColumn get downloadState => intEnum<DownloadState>()();
+  IntColumn get downloadState => intEnum<DownloadState>()
+      .withDefault(Constant(DownloadState.pending.index))();
 
   BoolColumn get acknowledgeByServer =>
       boolean().withDefault(Constant(false))();

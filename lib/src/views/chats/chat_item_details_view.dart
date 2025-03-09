@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
@@ -164,7 +165,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   }
 
   Future initStreams() async {
-    Stream<Contact> contact = context.db.watchContact(widget.userid);
+    Stream<Contact> contact = twonlyDatabase.watchContact(widget.userid);
     userSub = contact.listen((contact) {
       setState(() {
         user = contact;
@@ -172,7 +173,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     });
 
     Stream<List<Message>> msgStream =
-        context.db.watchAllMessagesFrom(widget.userid);
+        twonlyDatabase.watchAllMessagesFrom(widget.userid);
     messageSub = msgStream.listen((msgs) {
       if (!context.mounted) return;
       var updated = false;
@@ -186,7 +187,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         }
       }
       if (updated) {
-        context.db.openedAllTextMessages(widget.userid);
+        twonlyDatabase.openedAllTextMessages(widget.userid);
       } else {
         // The stream should be get an update, so only update the UI when all are opened
         setState(() {

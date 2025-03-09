@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/components/notification_badge.dart';
@@ -55,7 +56,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future updateAsync(int userId) async {
     if (sendNextMediaToUserName != null) return;
     Contact? contact =
-        await context.db.getContactByUserId(userId).getSingleOrNull();
+        await twonlyDatabase.getContactByUserId(userId).getSingleOrNull();
     if (contact != null) {
       sendNextMediaToUserName = getContactDisplayName(contact);
     }

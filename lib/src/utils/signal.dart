@@ -195,7 +195,7 @@ List<Uint8List>? removeLastFourBytes(Uint8List original) {
   return [newList, lastFourBytes];
 }
 
-Future<Uint8List?> encryptBytes(Uint8List bytes, Int64 target) async {
+Future<Uint8List?> encryptBytes(Uint8List bytes, int target) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
 
@@ -248,7 +248,7 @@ Future<Uint8List?> decryptBytes(Uint8List bytes, int target) async {
   }
 }
 
-Future<Uint8List?> encryptMessage(Message msg, int target) async {
+Future<Uint8List?> encryptMessage(MessageJson msg, int target) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
 
@@ -269,7 +269,7 @@ Future<Uint8List?> encryptMessage(Message msg, int target) async {
   }
 }
 
-Future<Message?> getDecryptedText(Int64 source, Uint8List msg) async {
+Future<MessageJson?> getDecryptedText(int source, Uint8List msg) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
 
@@ -293,8 +293,8 @@ Future<Message?> getDecryptedText(Int64 source, Uint8List msg) async {
     } else {
       return null;
     }
-    Message dectext =
-        Message.fromJson(jsonDecode(utf8.decode(gzip.decode(plaintext))));
+    MessageJson dectext =
+        MessageJson.fromJson(jsonDecode(utf8.decode(gzip.decode(plaintext))));
     return dectext;
   } catch (e) {
     Logger("utils/signal").shout(e.toString());

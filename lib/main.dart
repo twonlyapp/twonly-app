@@ -41,16 +41,13 @@ void main() async {
   await dbProvider.ready;
 
   apiProvider = ApiProvider();
+  twonlyDatabase = TwonlyDatabase();
 
   FlutterForegroundTask.initCommunicationPort();
 
   runApp(
     MultiProvider(
       providers: [
-        Provider<TwonlyDatabase>(
-          create: (context) => TwonlyDatabase(),
-          dispose: (context, db) => db.close(),
-        ),
         ChangeNotifierProvider(create: (_) => SendNextMediaTo()),
         ChangeNotifierProvider(create: (_) => settingsController),
       ],
