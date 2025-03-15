@@ -86,6 +86,7 @@ enum V0_Kind {
   newMessage, 
   requestNewPreKeys, 
   downloaddata, 
+  error, 
   notSet
 }
 
@@ -96,6 +97,7 @@ class V0 extends $pb.GeneratedMessage {
     NewMessage? newMessage,
     $core.bool? requestNewPreKeys,
     DownloadData? downloaddata,
+    $0.ErrorCode? error,
   }) {
     final $result = create();
     if (seq != null) {
@@ -113,6 +115,9 @@ class V0 extends $pb.GeneratedMessage {
     if (downloaddata != null) {
       $result.downloaddata = downloaddata;
     }
+    if (error != null) {
+      $result.error = error;
+    }
     return $result;
   }
   V0._() : super();
@@ -124,15 +129,17 @@ class V0 extends $pb.GeneratedMessage {
     3 : V0_Kind.newMessage,
     4 : V0_Kind.requestNewPreKeys,
     5 : V0_Kind.downloaddata,
+    6 : V0_Kind.error,
     0 : V0_Kind.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'V0', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 5])
+    ..oo(0, [2, 3, 4, 5, 6])
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'seq', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<Response>(2, _omitFieldNames ? '' : 'response', subBuilder: Response.create)
     ..aOM<NewMessage>(3, _omitFieldNames ? '' : 'newMessage', protoName: 'newMessage', subBuilder: NewMessage.create)
     ..aOB(4, _omitFieldNames ? '' : 'RequestNewPreKeys', protoName: 'RequestNewPreKeys')
     ..aOM<DownloadData>(5, _omitFieldNames ? '' : 'downloaddata', subBuilder: DownloadData.create)
+    ..e<$0.ErrorCode>(6, _omitFieldNames ? '' : 'error', $pb.PbFieldType.OE, defaultOrMaker: $0.ErrorCode.Unknown, valueOf: $0.ErrorCode.valueOf, enumValues: $0.ErrorCode.values)
     ..hasRequiredFields = false
   ;
 
@@ -210,6 +217,15 @@ class V0 extends $pb.GeneratedMessage {
   void clearDownloaddata() => clearField(5);
   @$pb.TagNumber(5)
   DownloadData ensureDownloaddata() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  $0.ErrorCode get error => $_getN(5);
+  @$pb.TagNumber(6)
+  set error($0.ErrorCode v) { setField(6, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasError() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearError() => clearField(6);
 }
 
 class NewMessage extends $pb.GeneratedMessage {
@@ -560,12 +576,71 @@ class Response_UserData extends $pb.GeneratedMessage {
   void clearUsername() => clearField(7);
 }
 
+class Response_UploadToken extends $pb.GeneratedMessage {
+  factory Response_UploadToken({
+    $core.List<$core.int>? uploadToken,
+    $core.Iterable<$core.List<$core.int>>? downloadTokens,
+  }) {
+    final $result = create();
+    if (uploadToken != null) {
+      $result.uploadToken = uploadToken;
+    }
+    if (downloadTokens != null) {
+      $result.downloadTokens.addAll(downloadTokens);
+    }
+    return $result;
+  }
+  Response_UploadToken._() : super();
+  factory Response_UploadToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_UploadToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.UploadToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
+    ..p<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'downloadTokens', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response_UploadToken clone() => Response_UploadToken()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_UploadToken copyWith(void Function(Response_UploadToken) updates) => super.copyWith((message) => updates(message as Response_UploadToken)) as Response_UploadToken;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_UploadToken create() => Response_UploadToken._();
+  Response_UploadToken createEmptyInstance() => create();
+  static $pb.PbList<Response_UploadToken> createRepeated() => $pb.PbList<Response_UploadToken>();
+  @$core.pragma('dart2js:noInline')
+  static Response_UploadToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_UploadToken>(create);
+  static Response_UploadToken? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get uploadToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUploadToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUploadToken() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.List<$core.int>> get downloadTokens => $_getList(1);
+}
+
 enum Response_Ok_Ok {
   none, 
   userid, 
-  challenge, 
+  authchallenge, 
   uploadtoken, 
   userdata, 
+  authtoken, 
   notSet
 }
 
@@ -573,9 +648,10 @@ class Response_Ok extends $pb.GeneratedMessage {
   factory Response_Ok({
     $core.bool? none,
     $fixnum.Int64? userid,
-    $core.List<$core.int>? challenge,
-    $core.List<$core.int>? uploadtoken,
+    $core.List<$core.int>? authchallenge,
+    Response_UploadToken? uploadtoken,
     Response_UserData? userdata,
+    $core.List<$core.int>? authtoken,
   }) {
     final $result = create();
     if (none != null) {
@@ -584,14 +660,17 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (userid != null) {
       $result.userid = userid;
     }
-    if (challenge != null) {
-      $result.challenge = challenge;
+    if (authchallenge != null) {
+      $result.authchallenge = authchallenge;
     }
     if (uploadtoken != null) {
       $result.uploadtoken = uploadtoken;
     }
     if (userdata != null) {
       $result.userdata = userdata;
+    }
+    if (authtoken != null) {
+      $result.authtoken = authtoken;
     }
     return $result;
   }
@@ -602,18 +681,20 @@ class Response_Ok extends $pb.GeneratedMessage {
   static const $core.Map<$core.int, Response_Ok_Ok> _Response_Ok_OkByTag = {
     1 : Response_Ok_Ok.none,
     2 : Response_Ok_Ok.userid,
-    3 : Response_Ok_Ok.challenge,
+    3 : Response_Ok_Ok.authchallenge,
     4 : Response_Ok_Ok.uploadtoken,
     5 : Response_Ok_Ok.userdata,
+    6 : Response_Ok_Ok.authtoken,
     0 : Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Ok', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5])
+    ..oo(0, [1, 2, 3, 4, 5, 6])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'challenge', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'uploadtoken', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'authchallenge', $pb.PbFieldType.OY)
+    ..aOM<Response_UploadToken>(4, _omitFieldNames ? '' : 'uploadtoken', subBuilder: Response_UploadToken.create)
     ..aOM<Response_UserData>(5, _omitFieldNames ? '' : 'userdata', subBuilder: Response_UserData.create)
+    ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'authtoken', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
@@ -660,22 +741,24 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearUserid() => clearField(2);
 
   @$pb.TagNumber(3)
-  $core.List<$core.int> get challenge => $_getN(2);
+  $core.List<$core.int> get authchallenge => $_getN(2);
   @$pb.TagNumber(3)
-  set challenge($core.List<$core.int> v) { $_setBytes(2, v); }
+  set authchallenge($core.List<$core.int> v) { $_setBytes(2, v); }
   @$pb.TagNumber(3)
-  $core.bool hasChallenge() => $_has(2);
+  $core.bool hasAuthchallenge() => $_has(2);
   @$pb.TagNumber(3)
-  void clearChallenge() => clearField(3);
+  void clearAuthchallenge() => clearField(3);
 
   @$pb.TagNumber(4)
-  $core.List<$core.int> get uploadtoken => $_getN(3);
+  Response_UploadToken get uploadtoken => $_getN(3);
   @$pb.TagNumber(4)
-  set uploadtoken($core.List<$core.int> v) { $_setBytes(3, v); }
+  set uploadtoken(Response_UploadToken v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasUploadtoken() => $_has(3);
   @$pb.TagNumber(4)
   void clearUploadtoken() => clearField(4);
+  @$pb.TagNumber(4)
+  Response_UploadToken ensureUploadtoken() => $_ensure(3);
 
   @$pb.TagNumber(5)
   Response_UserData get userdata => $_getN(4);
@@ -687,6 +770,15 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearUserdata() => clearField(5);
   @$pb.TagNumber(5)
   Response_UserData ensureUserdata() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  $core.List<$core.int> get authtoken => $_getN(5);
+  @$pb.TagNumber(6)
+  set authtoken($core.List<$core.int> v) { $_setBytes(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasAuthtoken() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearAuthtoken() => clearField(6);
 }
 
 enum Response_Response {

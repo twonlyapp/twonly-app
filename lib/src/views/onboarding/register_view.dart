@@ -39,7 +39,10 @@ class _RegisterViewState extends State<RegisterView> {
     if (res.isSuccess) {
       Logger("create_new_user").info("Got user_id ${res.value} from server");
       final userData = UserData(
-          userId: res.value.userid, username: username, displayName: username);
+        userId: res.value.userid.toInt(),
+        username: username,
+        displayName: username,
+      );
       storage.write(key: "user_data", value: jsonEncode(userData));
     }
 

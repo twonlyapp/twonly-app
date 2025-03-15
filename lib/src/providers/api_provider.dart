@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:math';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
@@ -62,6 +63,7 @@ class ApiProvider {
 
   // Function is called after the user is authenticated at the server
   Future onAuthenticated() async {
+    isAuthenticated = true;
     initFCMAfterAuthenticated();
   }
 
@@ -118,7 +120,6 @@ class ApiProvider {
     globalCallbackConnectionState(false);
     _channel = null;
     isAuthenticated = false;
-    // tryToReconnect();
   }
 
   void _onError(dynamic e) {
@@ -126,29 +127,6 @@ class ApiProvider {
     globalCallbackConnectionState(false);
     _channel = null;
     isAuthenticated = false;
-    tryToReconnect();
-  }
-
-  void tryToReconnect() {
-    return;
-    // if (globalIsAppInBackground) return;
-    // if (reconnectionTimer != null) {
-    //   reconnectionTimer!.cancel();
-    // }
-
-    // final int randomDelay = Random().nextInt(20);
-    // final int delay = _reconnectionDelay + randomDelay;
-
-    // debugPrint("Delay reconnection $delay");
-
-    // reconnectionTimer = Timer(Duration(seconds: delay), () async {
-    //   // increase delay but set a maximum of 60 seconds (including the random delay)
-    //   _reconnectionDelay = _reconnectionDelay * 2;
-    //   if (_reconnectionDelay > 40) {
-    //     _reconnectionDelay = 40;
-    //   }
-    //   await connect();
-    // });
   }
 
   void _onData(dynamic msgBuffer) {
@@ -189,7 +167,7 @@ class ApiProvider {
     }
   }
 
-  Future<Result> _sendRequestV0(ClientToServer request,
+  Future<Result> sendRequestSync(ClientToServer request,
       {bool authenticated = true}) async {
     if (_channel == null) {
       log.shout("sending request, but api is not connected.");
@@ -218,7 +196,7 @@ class ApiProvider {
           await authenticate();
           if (isAuthenticated) {
             // this will send the request one more time.
-            return _sendRequestV0(request, authenticated: false);
+            return sendRequestSync(request, authenticated: false);
           } else {
             log.shout("Session is not authenticated.");
             return Result.error(ErrorCode.InternalError);
@@ -229,48 +207,86 @@ class ApiProvider {
     return res;
   }
 
+  Future<bool> tryAuthenticateWithToken(int userId) async {
+    final storage = getSecureStorage();
+    String? apiAuthToken = await storage.read(key: "api_auth_token");
+
+    if (apiAuthToken != null) {
+      final authenticate = Handshake_Authenticate()
+        ..userId = Int64(userId)
+        ..authToken = base64Decode(apiAuthToken);
+
+      final handshake = Handshake()..authenticate = authenticate;
+      final req = createClientToServerFromHandshake(handshake);
+
+      final result = await sendRequestSync(req, authenticated: false);
+
+      if (result.isSuccess) {
+        log.info("Authenticated using api_auth_token");
+        onAuthenticated();
+        return true;
+      }
+      if (result.isError) {
+        if (result.error != ErrorCode.AuthTokenNotValid) {
+          log.shout("Error while authenticating using token", result);
+          return false;
+        }
+      }
+    }
+    return false;
+  }
+
   Future authenticate() async {
     if (isAuthenticated) return;
     if (await SignalHelper.getSignalIdentity() == null) {
       return;
     }
 
-    var handshake = Handshake()..getchallenge = Handshake_GetChallenge();
-    var req = createClientToServerFromHandshake(handshake);
+    final userData = await getUser();
+    if (userData == null) return;
 
-    final result = await _sendRequestV0(req, authenticated: false);
-    if (result.isError) {
-      log.shout("Error auth", result);
+    if (await tryAuthenticateWithToken(userData.userId)) {
       return;
     }
 
-    final challenge = result.value.challenge;
+    var handshake = Handshake()
+      ..getauthchallenge = Handshake_GetAuthChallenge();
+    var req = createClientToServerFromHandshake(handshake);
+
+    final result = await sendRequestSync(req, authenticated: false);
+    if (result.isError) {
+      log.shout("Error requesting auth challenge", result);
+      return;
+    }
+
+    final challenge = result.value.authchallenge;
 
     final privKey = await SignalHelper.getPrivateKey();
     if (privKey == null) return;
     final random = getRandomUint8List(32);
     final signature = sign(privKey.serialize(), challenge, random);
 
-    final userData = await getUser();
-    if (userData == null) return;
-
-    var open = Handshake_OpenSession()
+    final getAuthToken = Handshake_GetAuthToken()
       ..response = signature
       ..userId = Int64(userData.userId);
 
-    var opensession = Handshake()..opensession = open;
+    final getauthtoken = Handshake()..getauthtoken = getAuthToken;
 
-    var req2 = createClientToServerFromHandshake(opensession);
+    var req2 = createClientToServerFromHandshake(getauthtoken);
 
-    final result2 = await _sendRequestV0(req2, authenticated: false);
+    final result2 = await sendRequestSync(req2, authenticated: false);
     if (result2.isError) {
-      log.shout("send request failed: ${result2.error}");
+      log.shout("Error while sending auth challenge: ${result2.error}");
       return;
     }
 
-    log.info("Authenticated!");
-    onAuthenticated();
-    isAuthenticated = true;
+    Uint8List apiAuthToken = result2.value.authtoken;
+    String apiAuthTokenB64 = base64Encode(apiAuthToken);
+
+    final storage = getSecureStorage();
+    await storage.write(key: "api_auth_token", value: apiAuthTokenB64);
+
+    await tryAuthenticateWithToken(userData.userId);
   }
 
   Future<Result> register(String username, String? inviteCode) async {
@@ -301,30 +317,30 @@ class ApiProvider {
     var handshake = Handshake()..register = register;
     var req = createClientToServerFromHandshake(handshake);
 
-    return await _sendRequestV0(req);
+    return await sendRequestSync(req);
   }
 
   Future<Result> getUsername(int userId) async {
     var get = ApplicationData_GetUserById()..userId = Int64(userId);
     var appData = ApplicationData()..getuserbyid = get;
     var req = createClientToServerFromApplicationData(appData);
-    return await _sendRequestV0(req);
+    return await sendRequestSync(req);
   }
 
   Future<Result> getUploadToken() async {
     var get = ApplicationData_GetUploadToken();
     var appData = ApplicationData()..getuploadtoken = get;
     var req = createClientToServerFromApplicationData(appData);
-    return await _sendRequestV0(req);
+    return await sendRequestSync(req);
   }
 
   Future<Result> triggerDownload(List<int> token, int offset) async {
     var get = ApplicationData_DownloadData()
-      ..uploadToken = token
+      ..downloadToken = token
       ..offset = offset;
     var appData = ApplicationData()..downloaddata = get;
     var req = createClientToServerFromApplicationData(appData);
-    return await _sendRequestV0(req);
+    return await sendRequestSync(req);
   }
 
   Future<Result> uploadData(
@@ -335,7 +351,7 @@ class ApiProvider {
       ..offset = offset;
     var appData = ApplicationData()..uploaddata = get;
     var req = createClientToServerFromApplicationData(appData);
-    final result = await _sendRequestV0(req);
+    final result = await sendRequestSync(req);
     return result;
   }
 
@@ -343,14 +359,14 @@ class ApiProvider {
     var get = ApplicationData_GetUserByUsername()..username = username;
     var appData = ApplicationData()..getuserbyusername = get;
     var req = createClientToServerFromApplicationData(appData);
-    return await _sendRequestV0(req);
+    return await sendRequestSync(req);
   }
 
   Future<Result> updateFCMToken(String googleFcm) async {
     var get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
     var appData = ApplicationData()..updategooglefcmtoken = get;
     var req = createClientToServerFromApplicationData(appData);
-    return await _sendRequestV0(req);
+    return await sendRequestSync(req);
   }
 
   Future<Result> sendTextMessage(int target, Uint8List msg) async {
@@ -361,6 +377,6 @@ class ApiProvider {
     var appData = ApplicationData()..textmessage = testMessage;
     var req = createClientToServerFromApplicationData(appData);
 
-    return await _sendRequestV0(req);
+    return await sendRequestSync(req);
   }
 }

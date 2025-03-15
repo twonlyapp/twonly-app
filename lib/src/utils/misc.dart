@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -44,8 +43,20 @@ Future<void> writeLogToFile(LogRecord record) async {
   await logFile.writeAsString(logMessage, mode: FileMode.append);
 }
 
+Future<bool> deleteLogFile() async {
+  final directory = await getApplicationDocumentsDirectory();
+  final logFile = File('${directory.path}/app.log');
+
+  if (await logFile.exists()) {
+    await logFile.delete();
+    return true;
+  }
+  return false;
+}
+
 // Just a helper function to get the secure storage
 FlutterSecureStorage getSecureStorage() {
+  // ignore: no_leading_underscores_for_local_identifiers
   AndroidOptions _getAndroidOptions() => const AndroidOptions(
         encryptedSharedPreferences: true,
       );

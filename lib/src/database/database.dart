@@ -99,8 +99,12 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   // ------------
 
-  Future<int> insertContact(ContactsCompanion contact) {
-    return into(contacts).insert(contact);
+  Future<int> insertContact(ContactsCompanion contact) async {
+    try {
+      return await into(contacts).insert(contact);
+    } catch (e) {
+      return 0;
+    }
   }
 
   Future incTotalMediaCounter(int contactId) async {
@@ -140,6 +144,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   Stream<List<Contact>> watchNotAcceptedContacts() {
     return (select(contacts)..where((t) => t.accepted.equals(false))).watch();
+    // return (select(contacts)).watch();
   }
 
   Stream<Contact> watchContact(int userid) {

@@ -31,6 +31,12 @@ class ErrorCode extends $pb.ProtobufEnum {
   static const ErrorCode InvalidUpdateToken = ErrorCode._(1012, _omitEnumNames ? '' : 'InvalidUpdateToken');
   static const ErrorCode InvalidOffset = ErrorCode._(1013, _omitEnumNames ? '' : 'InvalidOffset');
   static const ErrorCode InvalidGoogleFcmToken = ErrorCode._(1014, _omitEnumNames ? '' : 'InvalidGoogleFcmToken');
+  static const ErrorCode UploadTokenIsBlocked = ErrorCode._(1015, _omitEnumNames ? '' : 'UploadTokenIsBlocked');
+  static const ErrorCode UploadChecksumInvalid = ErrorCode._(1016, _omitEnumNames ? '' : 'UploadChecksumInvalid');
+  static const ErrorCode InvalidDownloadToken = ErrorCode._(1017, _omitEnumNames ? '' : 'InvalidDownloadToken');
+  static const ErrorCode ApiEndpointNotFound = ErrorCode._(1018, _omitEnumNames ? '' : 'ApiEndpointNotFound');
+  static const ErrorCode AuthTokenNotValid = ErrorCode._(1019, _omitEnumNames ? '' : 'AuthTokenNotValid');
+  static const ErrorCode InvalidPreKeys = ErrorCode._(1020, _omitEnumNames ? '' : 'InvalidPreKeys');
 
   static const $core.List<ErrorCode> values = <ErrorCode> [
     Unknown,
@@ -50,6 +56,12 @@ class ErrorCode extends $pb.ProtobufEnum {
     InvalidUpdateToken,
     InvalidOffset,
     InvalidGoogleFcmToken,
+    UploadTokenIsBlocked,
+    UploadChecksumInvalid,
+    InvalidDownloadToken,
+    ApiEndpointNotFound,
+    AuthTokenNotValid,
+    InvalidPreKeys,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue = $pb.ProtobufEnum.initByValue(values);

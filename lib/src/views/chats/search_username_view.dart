@@ -12,6 +12,7 @@ import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
+import 'package:twonly/src/utils/storage.dart';
 
 class SearchUsernameView extends StatefulWidget {
   const SearchUsernameView({super.key});
@@ -23,8 +24,14 @@ class SearchUsernameView extends StatefulWidget {
 class _SearchUsernameView extends State<SearchUsernameView> {
   final TextEditingController searchUserName = TextEditingController();
   bool _isLoading = false;
+  bool hasRequestedUsers = false;
 
   Future _addNewUser(BuildContext context) async {
+    final user = await getUser();
+    if (user == null || user.username == searchUserName.text) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
@@ -44,14 +51,14 @@ class _SearchUsernameView extends State<SearchUsernameView> {
 
       int added = await twonlyDatabase.insertContact(ContactsCompanion(
         username: Value(searchUserName.text),
-        userId: Value(res.value.userdata.userId),
+        userId: Value(res.value.userdata.userId.toInt()),
         requested: Value(false),
       ));
 
       if (added > 0) {
         if (await SignalHelper.addNewContact(res.value.userdata)) {
           encryptAndSendMessage(
-            res.value.userdata.userId,
+            res.value.userdata.userId.toInt(),
             MessageJson(
               kind: MessageKind.contactRequest,
               timestamp: DateTime.now(),
@@ -120,23 +127,21 @@ class _SearchUsernameView extends State<SearchUsernameView> {
               label: Text(context.lang.searchUsernameQrCodeBtn),
             ),
             SizedBox(height: 30),
+            if (hasRequestedUsers)
+              HeadLineComponent(
+                context.lang.searchUsernameNewFollowerTitle,
+              ),
             StreamBuilder(
               stream: contacts,
               builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data != null) {
+                if (!snapshot.hasData ||
+                    snapshot.data == null ||
+                    snapshot.data!.isEmpty) {
+                  hasRequestedUsers = false;
                   return Container();
                 }
-                final contacts = snapshot.data!;
-                if (contacts.isEmpty) {
-                  return Container();
-                }
-                return Row(children: [
-                  HeadLineComponent(
-                      context.lang.searchUsernameNewFollowerTitle),
-                  Expanded(
-                    child: ContactsListView(contacts),
-                  )
-                ]);
+                hasRequestedUsers = true;
+                return Expanded(child: ContactsListView(snapshot.data!));
               },
             )
           ],

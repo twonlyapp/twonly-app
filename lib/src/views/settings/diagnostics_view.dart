@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class DiagnosticsView extends StatelessWidget {
   const DiagnosticsView({super.key});
@@ -45,17 +46,14 @@ class DiagnosticsView extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () async {
-                          final directory =
-                              await getApplicationDocumentsDirectory();
-                          final logFile = File('${directory.path}/app.log');
-
-                          if (await logFile.exists()) {
-                            await logFile.delete();
+                          if (await deleteLogFile()) {
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text('Log file deleted!')),
                             );
                           } else {
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text('Log file does not exist.')),

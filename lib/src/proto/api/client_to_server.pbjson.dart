@@ -56,10 +56,11 @@ const Handshake$json = {
   '1': 'Handshake',
   '2': [
     {'1': 'register', '3': 1, '4': 1, '5': 11, '6': '.client_to_server.Handshake.Register', '9': 0, '10': 'register'},
-    {'1': 'getchallenge', '3': 2, '4': 1, '5': 11, '6': '.client_to_server.Handshake.GetChallenge', '9': 0, '10': 'getchallenge'},
-    {'1': 'opensession', '3': 3, '4': 1, '5': 11, '6': '.client_to_server.Handshake.OpenSession', '9': 0, '10': 'opensession'},
+    {'1': 'getauthchallenge', '3': 2, '4': 1, '5': 11, '6': '.client_to_server.Handshake.GetAuthChallenge', '9': 0, '10': 'getauthchallenge'},
+    {'1': 'getauthtoken', '3': 3, '4': 1, '5': 11, '6': '.client_to_server.Handshake.GetAuthToken', '9': 0, '10': 'getauthtoken'},
+    {'1': 'authenticate', '3': 4, '4': 1, '5': 11, '6': '.client_to_server.Handshake.Authenticate', '9': 0, '10': 'authenticate'},
   ],
-  '3': [Handshake_Register$json, Handshake_GetChallenge$json, Handshake_OpenSession$json],
+  '3': [Handshake_Register$json, Handshake_GetAuthChallenge$json, Handshake_GetAuthToken$json, Handshake_Authenticate$json],
   '8': [
     {'1': 'Handshake'},
   ],
@@ -83,33 +84,45 @@ const Handshake_Register$json = {
 };
 
 @$core.Deprecated('Use handshakeDescriptor instead')
-const Handshake_GetChallenge$json = {
-  '1': 'GetChallenge',
+const Handshake_GetAuthChallenge$json = {
+  '1': 'GetAuthChallenge',
 };
 
 @$core.Deprecated('Use handshakeDescriptor instead')
-const Handshake_OpenSession$json = {
-  '1': 'OpenSession',
+const Handshake_GetAuthToken$json = {
+  '1': 'GetAuthToken',
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'response', '3': 2, '4': 1, '5': 12, '10': 'response'},
   ],
 };
 
+@$core.Deprecated('Use handshakeDescriptor instead')
+const Handshake_Authenticate$json = {
+  '1': 'Authenticate',
+  '2': [
+    {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
+    {'1': 'auth_token', '3': 2, '4': 1, '5': 12, '10': 'authToken'},
+  ],
+};
+
 /// Descriptor for `Handshake`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'CglIYW5kc2hha2USQgoIcmVnaXN0ZXIYASABKAsyJC5jbGllbnRfdG9fc2VydmVyLkhhbmRzaG'
-    'FrZS5SZWdpc3RlckgAUghyZWdpc3RlchJOCgxnZXRjaGFsbGVuZ2UYAiABKAsyKC5jbGllbnRf'
-    'dG9fc2VydmVyLkhhbmRzaGFrZS5HZXRDaGFsbGVuZ2VIAFIMZ2V0Y2hhbGxlbmdlEksKC29wZW'
-    '5zZXNzaW9uGAMgASgLMicuY2xpZW50X3RvX3NlcnZlci5IYW5kc2hha2UuT3BlblNlc3Npb25I'
-    'AFILb3BlbnNlc3Npb24avAIKCFJlZ2lzdGVyEhoKCHVzZXJuYW1lGAEgASgJUgh1c2VybmFtZR'
-    'IkCgtpbnZpdGVfY29kZRgCIAEoCUgAUgppbnZpdGVDb2RliAEBEi4KE3B1YmxpY19pZGVudGl0'
-    'eV9rZXkYAyABKAxSEXB1YmxpY0lkZW50aXR5S2V5EiMKDXNpZ25lZF9wcmVrZXkYBCABKAxSDH'
-    'NpZ25lZFByZWtleRI2ChdzaWduZWRfcHJla2V5X3NpZ25hdHVyZRgFIAEoDFIVc2lnbmVkUHJl'
-    'a2V5U2lnbmF0dXJlEigKEHNpZ25lZF9wcmVrZXlfaWQYBiABKANSDnNpZ25lZFByZWtleUlkEi'
-    'cKD3JlZ2lzdHJhdGlvbl9pZBgHIAEoA1IOcmVnaXN0cmF0aW9uSWRCDgoMX2ludml0ZV9jb2Rl'
-    'Gg4KDEdldENoYWxsZW5nZRpCCgtPcGVuU2Vzc2lvbhIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySW'
-    'QSGgoIcmVzcG9uc2UYAiABKAxSCHJlc3BvbnNlQgsKCUhhbmRzaGFrZQ==');
+    'FrZS5SZWdpc3RlckgAUghyZWdpc3RlchJaChBnZXRhdXRoY2hhbGxlbmdlGAIgASgLMiwuY2xp'
+    'ZW50X3RvX3NlcnZlci5IYW5kc2hha2UuR2V0QXV0aENoYWxsZW5nZUgAUhBnZXRhdXRoY2hhbG'
+    'xlbmdlEk4KDGdldGF1dGh0b2tlbhgDIAEoCzIoLmNsaWVudF90b19zZXJ2ZXIuSGFuZHNoYWtl'
+    'LkdldEF1dGhUb2tlbkgAUgxnZXRhdXRodG9rZW4STgoMYXV0aGVudGljYXRlGAQgASgLMiguY2'
+    'xpZW50X3RvX3NlcnZlci5IYW5kc2hha2UuQXV0aGVudGljYXRlSABSDGF1dGhlbnRpY2F0ZRq8'
+    'AgoIUmVnaXN0ZXISGgoIdXNlcm5hbWUYASABKAlSCHVzZXJuYW1lEiQKC2ludml0ZV9jb2RlGA'
+    'IgASgJSABSCmludml0ZUNvZGWIAQESLgoTcHVibGljX2lkZW50aXR5X2tleRgDIAEoDFIRcHVi'
+    'bGljSWRlbnRpdHlLZXkSIwoNc2lnbmVkX3ByZWtleRgEIAEoDFIMc2lnbmVkUHJla2V5EjYKF3'
+    'NpZ25lZF9wcmVrZXlfc2lnbmF0dXJlGAUgASgMUhVzaWduZWRQcmVrZXlTaWduYXR1cmUSKAoQ'
+    'c2lnbmVkX3ByZWtleV9pZBgGIAEoA1IOc2lnbmVkUHJla2V5SWQSJwoPcmVnaXN0cmF0aW9uX2'
+    'lkGAcgASgDUg5yZWdpc3RyYXRpb25JZEIOCgxfaW52aXRlX2NvZGUaEgoQR2V0QXV0aENoYWxs'
+    'ZW5nZRpDCgxHZXRBdXRoVG9rZW4SFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEhoKCHJlc3Bvbn'
+    'NlGAIgASgMUghyZXNwb25zZRpGCgxBdXRoZW50aWNhdGUSFwoHdXNlcl9pZBgBIAEoA1IGdXNl'
+    'cklkEh0KCmF1dGhfdG9rZW4YAiABKAxSCWF1dGhUb2tlbkILCglIYW5kc2hha2U=');
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData$json = {
@@ -174,6 +187,9 @@ const ApplicationData_GetPrekeysByUserId$json = {
 @$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData_GetUploadToken$json = {
   '1': 'GetUploadToken',
+  '2': [
+    {'1': 'recipients_count', '3': 1, '4': 1, '5': 13, '10': 'recipientsCount'},
+  ],
 };
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
@@ -183,6 +199,10 @@ const ApplicationData_UploadData$json = {
     {'1': 'upload_token', '3': 1, '4': 1, '5': 12, '10': 'uploadToken'},
     {'1': 'offset', '3': 2, '4': 1, '5': 13, '10': 'offset'},
     {'1': 'data', '3': 3, '4': 1, '5': 12, '10': 'data'},
+    {'1': 'checksum', '3': 4, '4': 1, '5': 12, '9': 0, '10': 'checksum', '17': true},
+  ],
+  '8': [
+    {'1': '_checksum'},
   ],
 };
 
@@ -190,7 +210,7 @@ const ApplicationData_UploadData$json = {
 const ApplicationData_DownloadData$json = {
   '1': 'DownloadData',
   '2': [
-    {'1': 'upload_token', '3': 1, '4': 1, '5': 12, '10': 'uploadToken'},
+    {'1': 'download_token', '3': 1, '4': 1, '5': 12, '10': 'downloadToken'},
     {'1': 'offset', '3': 2, '4': 1, '5': 13, '10': 'offset'},
   ],
 };
@@ -215,10 +235,12 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'JuYW1lEhoKCHVzZXJuYW1lGAEgASgJUgh1c2VybmFtZRo1ChRVcGRhdGVHb29nbGVGY21Ub2tl'
     'bhIdCgpnb29nbGVfZmNtGAEgASgJUglnb29nbGVGY20aJgoLR2V0VXNlckJ5SWQSFwoHdXNlcl'
     '9pZBgBIAEoA1IGdXNlcklkGi0KEkdldFByZWtleXNCeVVzZXJJZBIXCgd1c2VyX2lkGAEgASgD'
-    'UgZ1c2VySWQaEAoOR2V0VXBsb2FkVG9rZW4aWwoKVXBsb2FkRGF0YRIhCgx1cGxvYWRfdG9rZW'
-    '4YASABKAxSC3VwbG9hZFRva2VuEhYKBm9mZnNldBgCIAEoDVIGb2Zmc2V0EhIKBGRhdGEYAyAB'
-    'KAxSBGRhdGEaSQoMRG93bmxvYWREYXRhEiEKDHVwbG9hZF90b2tlbhgBIAEoDFILdXBsb2FkVG'
-    '9rZW4SFgoGb2Zmc2V0GAIgASgNUgZvZmZzZXRCEQoPQXBwbGljYXRpb25EYXRh');
+    'UgZ1c2VySWQaOwoOR2V0VXBsb2FkVG9rZW4SKQoQcmVjaXBpZW50c19jb3VudBgBIAEoDVIPcm'
+    'VjaXBpZW50c0NvdW50GokBCgpVcGxvYWREYXRhEiEKDHVwbG9hZF90b2tlbhgBIAEoDFILdXBs'
+    'b2FkVG9rZW4SFgoGb2Zmc2V0GAIgASgNUgZvZmZzZXQSEgoEZGF0YRgDIAEoDFIEZGF0YRIfCg'
+    'hjaGVja3N1bRgEIAEoDEgAUghjaGVja3N1bYgBAUILCglfY2hlY2tzdW0aTQoMRG93bmxvYWRE'
+    'YXRhEiUKDmRvd25sb2FkX3Rva2VuGAEgASgMUg1kb3dubG9hZFRva2VuEhYKBm9mZnNldBgCIA'
+    'EoDVIGb2Zmc2V0QhEKD0FwcGxpY2F0aW9uRGF0YQ==');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

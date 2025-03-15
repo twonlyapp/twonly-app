@@ -754,7 +754,9 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   @override
   late final GeneratedColumnWithTypeConverter<DownloadState, int>
       downloadState = GeneratedColumn<int>('download_state', aliasedName, false,
-              type: DriftSqlType.int, requiredDuringInsert: true)
+              type: DriftSqlType.int,
+              requiredDuringInsert: false,
+              defaultValue: Constant(DownloadState.pending.index))
           .withConverter<DownloadState>($MessagesTable.$converterdownloadState);
   static const VerificationMeta _acknowledgeByServerMeta =
       const VerificationMeta('acknowledgeByServer');
@@ -1230,7 +1232,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.responseToMessageId = const Value.absent(),
     this.responseToOtherMessageId = const Value.absent(),
     this.acknowledgeByUser = const Value.absent(),
-    required DownloadState downloadState,
+    this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
     required MessageKind kind,
     this.contentJson = const Value.absent(),
@@ -1238,7 +1240,6 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.sendAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
   })  : contactId = Value(contactId),
-        downloadState = Value(downloadState),
         kind = Value(kind);
   static Insertable<Message> custom({
     Expression<int>? contactId,
@@ -1781,7 +1782,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<int?> responseToMessageId,
   Value<int?> responseToOtherMessageId,
   Value<bool> acknowledgeByUser,
-  required DownloadState downloadState,
+  Value<DownloadState> downloadState,
   Value<bool> acknowledgeByServer,
   required MessageKind kind,
   Value<String?> contentJson,
@@ -2098,7 +2099,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<int?> responseToMessageId = const Value.absent(),
             Value<int?> responseToOtherMessageId = const Value.absent(),
             Value<bool> acknowledgeByUser = const Value.absent(),
-            required DownloadState downloadState,
+            Value<DownloadState> downloadState = const Value.absent(),
             Value<bool> acknowledgeByServer = const Value.absent(),
             required MessageKind kind,
             Value<String?> contentJson = const Value.absent(),

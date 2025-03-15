@@ -10,24 +10,30 @@ enum MessageKind {
   ack
 }
 
+Map<String, Color> messageKindColors = {
+  "video": Colors.deepPurple,
+  "text": Colors.lightBlue,
+  "image": Color.fromARGB(255, 214, 47, 47),
+};
+
 Color getMessageColorFromType(MessageContent content, Color primary) {
   Color color;
 
   if (content is TextMessageContent) {
-    color = Colors.lightBlue;
+    color = messageKindColors["text"]!;
   } else {
     if (content is MediaMessageContent) {
       if (content.isRealTwonly) {
         color = primary;
       } else {
         if (content.isVideo) {
-          color = Colors.deepPurple;
+          color = messageKindColors["video"]!;
         } else {
-          color = const Color.fromARGB(255, 214, 47, 47);
+          color = messageKindColors["image"]!;
         }
       }
     } else {
-      return Colors.black; // this should not happen
+      return Colors.black;
     }
   }
   return color;

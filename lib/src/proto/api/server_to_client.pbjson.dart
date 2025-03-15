@@ -38,6 +38,7 @@ const V0$json = {
     {'1': 'newMessage', '3': 3, '4': 1, '5': 11, '6': '.server_to_client.NewMessage', '9': 0, '10': 'newMessage'},
     {'1': 'RequestNewPreKeys', '3': 4, '4': 1, '5': 8, '9': 0, '10': 'RequestNewPreKeys'},
     {'1': 'downloaddata', '3': 5, '4': 1, '5': 11, '6': '.server_to_client.DownloadData', '9': 0, '10': 'downloaddata'},
+    {'1': 'error', '3': 6, '4': 1, '5': 14, '6': '.error.ErrorCode', '9': 0, '10': 'error'},
   ],
   '8': [
     {'1': 'Kind'},
@@ -50,7 +51,8 @@ final $typed_data.Uint8List v0Descriptor = $convert.base64Decode(
     'llbnQuUmVzcG9uc2VIAFIIcmVzcG9uc2USPgoKbmV3TWVzc2FnZRgDIAEoCzIcLnNlcnZlcl90'
     'b19jbGllbnQuTmV3TWVzc2FnZUgAUgpuZXdNZXNzYWdlEi4KEVJlcXVlc3ROZXdQcmVLZXlzGA'
     'QgASgISABSEVJlcXVlc3ROZXdQcmVLZXlzEkQKDGRvd25sb2FkZGF0YRgFIAEoCzIeLnNlcnZl'
-    'cl90b19jbGllbnQuRG93bmxvYWREYXRhSABSDGRvd25sb2FkZGF0YUIGCgRLaW5k');
+    'cl90b19jbGllbnQuRG93bmxvYWREYXRhSABSDGRvd25sb2FkZGF0YRIoCgVlcnJvchgGIAEoDj'
+    'IQLmVycm9yLkVycm9yQ29kZUgAUgVlcnJvckIGCgRLaW5k');
 
 @$core.Deprecated('Use newMessageDescriptor instead')
 const NewMessage$json = {
@@ -89,7 +91,7 @@ const Response$json = {
     {'1': 'ok', '3': 1, '4': 1, '5': 11, '6': '.server_to_client.Response.Ok', '9': 0, '10': 'ok'},
     {'1': 'error', '3': 2, '4': 1, '5': 14, '6': '.error.ErrorCode', '9': 0, '10': 'error'},
   ],
-  '3': [Response_PreKey$json, Response_UserData$json, Response_Ok$json],
+  '3': [Response_PreKey$json, Response_UserData$json, Response_UploadToken$json, Response_Ok$json],
   '8': [
     {'1': 'Response'},
   ],
@@ -126,13 +128,23 @@ const Response_UserData$json = {
 };
 
 @$core.Deprecated('Use responseDescriptor instead')
+const Response_UploadToken$json = {
+  '1': 'UploadToken',
+  '2': [
+    {'1': 'upload_token', '3': 1, '4': 1, '5': 12, '10': 'uploadToken'},
+    {'1': 'download_tokens', '3': 2, '4': 3, '5': 12, '10': 'downloadTokens'},
+  ],
+};
+
+@$core.Deprecated('Use responseDescriptor instead')
 const Response_Ok$json = {
   '1': 'Ok',
   '2': [
     {'1': 'None', '3': 1, '4': 1, '5': 8, '9': 0, '10': 'None'},
     {'1': 'userid', '3': 2, '4': 1, '5': 3, '9': 0, '10': 'userid'},
-    {'1': 'challenge', '3': 3, '4': 1, '5': 12, '9': 0, '10': 'challenge'},
-    {'1': 'uploadtoken', '3': 4, '4': 1, '5': 12, '9': 0, '10': 'uploadtoken'},
+    {'1': 'authchallenge', '3': 3, '4': 1, '5': 12, '9': 0, '10': 'authchallenge'},
+    {'1': 'authtoken', '3': 6, '4': 1, '5': 12, '9': 0, '10': 'authtoken'},
+    {'1': 'uploadtoken', '3': 4, '4': 1, '5': 11, '6': '.server_to_client.Response.UploadToken', '9': 0, '10': 'uploadtoken'},
     {'1': 'userdata', '3': 5, '4': 1, '5': 11, '6': '.server_to_client.Response.UserData', '9': 0, '10': 'userdata'},
   ],
   '8': [
@@ -152,9 +164,12 @@ final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     '9wcmVrZXlfc2lnbmF0dXJlGAUgASgMSANSFXNpZ25lZFByZWtleVNpZ25hdHVyZYgBARItChBz'
     'aWduZWRfcHJla2V5X2lkGAYgASgDSARSDnNpZ25lZFByZWtleUlkiAEBQgsKCV91c2VybmFtZU'
     'IWChRfcHVibGljX2lkZW50aXR5X2tleUIQCg5fc2lnbmVkX3ByZWtleUIaChhfc2lnbmVkX3By'
-    'ZWtleV9zaWduYXR1cmVCEwoRX3NpZ25lZF9wcmVrZXlfaWQawQEKAk9rEhQKBE5vbmUYASABKA'
-    'hIAFIETm9uZRIYCgZ1c2VyaWQYAiABKANIAFIGdXNlcmlkEh4KCWNoYWxsZW5nZRgDIAEoDEgA'
-    'UgljaGFsbGVuZ2USIgoLdXBsb2FkdG9rZW4YBCABKAxIAFILdXBsb2FkdG9rZW4SQQoIdXNlcm'
-    'RhdGEYBSABKAsyIy5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlVzZXJEYXRhSABSCHVzZXJk'
-    'YXRhQgQKAk9rQgoKCFJlc3BvbnNl');
+    'ZWtleV9zaWduYXR1cmVCEwoRX3NpZ25lZF9wcmVrZXlfaWQaWQoLVXBsb2FkVG9rZW4SIQoMdX'
+    'Bsb2FkX3Rva2VuGAEgASgMUgt1cGxvYWRUb2tlbhInCg9kb3dubG9hZF90b2tlbnMYAiADKAxS'
+    'DmRvd25sb2FkVG9rZW5zGpECCgJPaxIUCgROb25lGAEgASgISABSBE5vbmUSGAoGdXNlcmlkGA'
+    'IgASgDSABSBnVzZXJpZBImCg1hdXRoY2hhbGxlbmdlGAMgASgMSABSDWF1dGhjaGFsbGVuZ2US'
+    'HgoJYXV0aHRva2VuGAYgASgMSABSCWF1dGh0b2tlbhJKCgt1cGxvYWR0b2tlbhgEIAEoCzImLn'
+    'NlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuVXBsb2FkVG9rZW5IAFILdXBsb2FkdG9rZW4SQQoI'
+    'dXNlcmRhdGEYBSABKAsyIy5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlVzZXJEYXRhSABSCH'
+    'VzZXJkYXRhQgQKAk9rQgoKCFJlc3BvbnNl');
 

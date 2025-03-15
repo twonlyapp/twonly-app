@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -52,9 +53,9 @@ class MessageSendStateIcon extends StatefulWidget {
 }
 
 class _MessageSendStateIconState extends State<MessageSendStateIcon> {
-  bool containsVideo = false;
-  bool containsText = false;
-  bool containsImage = false;
+  Message? videoMsg;
+  Message? textMsg;
+  Message? imageMsg;
 
   @override
   void initState() {
@@ -62,7 +63,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
     for (Message msg in widget.messages) {
       if (msg.kind == MessageKind.textMessage) {
-        containsText = true;
+        textMsg = msg;
       }
       if (msg.kind == MessageKind.media) {
         MessageJson message =
@@ -70,21 +71,17 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         final content = message.content;
         if (content is MediaMessageContent) {
           if (content.isVideo) {
-            containsVideo = true;
+            videoMsg = msg;
           } else {
-            containsImage = true;
+            imageMsg = msg;
           }
         }
       }
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    Widget icon = Placeholder();
-    String text = "";
-
-    Widget loaderIcon = Row(
+  Widget getLoaderIcon(color) {
+    return Row(
       children: [
         SizedBox(
           width: 10,
@@ -94,39 +91,70 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         SizedBox(width: 2),
       ],
     );
+  }
 
-    MessageSendState state = messageSendStateFromMessage(message);
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> icons = [];
+    String text = "";
 
-    switch (state) {
-      case MessageSendState.receivedOpened:
-        icon = Icon(Icons.crop_square, size: 14, color: color);
-        text = context.lang.messageSendState_Received;
-        break;
-      case MessageSendState.sendOpened:
-        icon = FaIcon(FontAwesomeIcons.paperPlane, size: 12, color: color);
-        text = context.lang.messageSendState_Opened;
-        break;
-      case MessageSendState.received:
-        icon = Icon(Icons.square_rounded, size: 14, color: color);
-        text = context.lang.messageSendState_Received;
-        break;
-      case MessageSendState.send:
-        icon = FaIcon(FontAwesomeIcons.solidPaperPlane, size: 12, color: color);
-        text = context.lang.messageSendState_Send;
-        break;
-      case MessageSendState.sending:
-      case MessageSendState.receiving:
-        icon = loaderIcon;
-        text = context.lang.messageSendState_Sending;
-        break;
+    Color twonlyColor = Theme.of(context).colorScheme.primary;
+    HashSet<MessageKind> kindsAlreadyShown = HashSet();
+
+    for (final message in widget.messages) {
+      if (icons.length == 2) break;
+      if (message.contentJson == null) continue;
+      if (kindsAlreadyShown.contains(message.kind)) continue;
+      kindsAlreadyShown.add(message.kind);
+
+      Widget icon = Placeholder();
+
+      MessageSendState state = messageSendStateFromMessage(message);
+      MessageJson msg = MessageJson.fromJson(jsonDecode(message.contentJson!));
+      if (msg.content == null) continue;
+      Color color = getMessageColorFromType(msg.content!, twonlyColor);
+
+      switch (state) {
+        case MessageSendState.receivedOpened:
+          icon = Icon(Icons.crop_square, size: 14, color: color);
+          text = context.lang.messageSendState_Received;
+          break;
+        case MessageSendState.sendOpened:
+          icon = FaIcon(FontAwesomeIcons.paperPlane, size: 12, color: color);
+          text = context.lang.messageSendState_Opened;
+          break;
+        case MessageSendState.received:
+          icon = Icon(Icons.square_rounded, size: 14, color: color);
+          text = context.lang.messageSendState_Received;
+          break;
+        case MessageSendState.send:
+          icon =
+              FaIcon(FontAwesomeIcons.solidPaperPlane, size: 12, color: color);
+          text = context.lang.messageSendState_Send;
+          break;
+        case MessageSendState.sending:
+        case MessageSendState.receiving:
+          icon = getLoaderIcon(color);
+          text = context.lang.messageSendState_Sending;
+          break;
+      }
+
+      if (message.downloadState == DownloadState.pending) {
+        text = context.lang.messageSendState_TapToLoad;
+      }
+      if (message.downloadState == DownloadState.downloaded) {
+        text = context.lang.messageSendState_Loading;
+        icon = getLoaderIcon(color);
+      }
+      icons.add(icon);
     }
 
-    if (message.downloadState == DownloadState.pending) {
-      text = context.lang.messageSendState_TapToLoad;
-    }
-    if (message.downloadState == DownloadState.downloaded) {
-      text = context.lang.messageSendState_Loading;
-      icon = loaderIcon;
+    Widget icon = icons[0];
+
+    if (icons.length == 2) {
+      icon = Stack(
+        children: icons,
+      );
     }
 
     return Row(

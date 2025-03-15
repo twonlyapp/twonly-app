@@ -34,6 +34,12 @@ const ErrorCode$json = {
     {'1': 'InvalidUpdateToken', '2': 1012},
     {'1': 'InvalidOffset', '2': 1013},
     {'1': 'InvalidGoogleFcmToken', '2': 1014},
+    {'1': 'UploadTokenIsBlocked', '2': 1015},
+    {'1': 'UploadChecksumInvalid', '2': 1016},
+    {'1': 'InvalidDownloadToken', '2': 1017},
+    {'1': 'ApiEndpointNotFound', '2': 1018},
+    {'1': 'AuthTokenNotValid', '2': 1019},
+    {'1': 'InvalidPreKeys', '2': 1020},
   ],
 };
 
@@ -46,5 +52,8 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'bGljS2V5EO8HEiAKG1Nlc3Npb25BbHJlYWR5QXV0aGVudGljYXRlZBDwBxIcChdTZXNzaW9uTm'
     '90QXV0aGVudGljYXRlZBDxBxIaChVPbmx5T25lU2Vzc2lvbkFsbG93ZWQQ8gcSFwoSVXBsb2Fk'
     'TGltaXRSZWFjaGVkEPMHEhcKEkludmFsaWRVcGRhdGVUb2tlbhD0BxISCg1JbnZhbGlkT2Zmc2'
-    'V0EPUHEhoKFUludmFsaWRHb29nbGVGY21Ub2tlbhD2Bw==');
+    'V0EPUHEhoKFUludmFsaWRHb29nbGVGY21Ub2tlbhD2BxIZChRVcGxvYWRUb2tlbklzQmxvY2tl'
+    'ZBD3BxIaChVVcGxvYWRDaGVja3N1bUludmFsaWQQ+AcSGQoUSW52YWxpZERvd25sb2FkVG9rZW'
+    '4Q+QcSGAoTQXBpRW5kcG9pbnROb3RGb3VuZBD6BxIWChFBdXRoVG9rZW5Ob3RWYWxpZBD7BxIT'
+    'Cg5JbnZhbGlkUHJlS2V5cxD8Bw==');
 

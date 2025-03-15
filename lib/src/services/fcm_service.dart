@@ -18,23 +18,27 @@ Future initFCMAfterAuthenticated() async {
 
   String? storedToken = await storage.read(key: "google_fcm");
 
-  final fcmToken = await FirebaseMessaging.instance.getToken();
-  if (fcmToken == null) {
-    Logger("init_fcm_service").shout("Error getting fcmToken");
-    return;
-  }
+  try {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken == null) {
+      Logger("init_fcm_service").shout("Error getting fcmToken");
+      return;
+    }
 
-  if (storedToken == null || fcmToken != storedToken) {
-    await apiProvider.updateFCMToken(fcmToken);
-    await storage.write(key: "google_fcm", value: fcmToken);
-  }
+    if (storedToken == null || fcmToken != storedToken) {
+      await apiProvider.updateFCMToken(fcmToken);
+      await storage.write(key: "google_fcm", value: fcmToken);
+    }
 
-  FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
-    await apiProvider.updateFCMToken(fcmToken);
-    await storage.write(key: "google_fcm", value: fcmToken);
-  }).onError((err) {
-    // Logger("init_fcm_service").shout("Error getting fcmToken");
-  });
+    FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
+      await apiProvider.updateFCMToken(fcmToken);
+      await storage.write(key: "google_fcm", value: fcmToken);
+    }).onError((err) {
+      // Logger("init_fcm_service").shout("Error getting fcmToken");
+    });
+  } catch (e) {
+    Logger("fcm_service").shout("Error loading fcmToken: $e");
+  }
 }
 
 Future initFCMService() async {

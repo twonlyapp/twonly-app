@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/src/model/json/message.dart';

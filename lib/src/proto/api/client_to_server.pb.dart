@@ -330,13 +330,13 @@ class Handshake_Register extends $pb.GeneratedMessage {
   void clearRegistrationId() => clearField(7);
 }
 
-class Handshake_GetChallenge extends $pb.GeneratedMessage {
-  factory Handshake_GetChallenge() => create();
-  Handshake_GetChallenge._() : super();
-  factory Handshake_GetChallenge.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Handshake_GetChallenge.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
+  factory Handshake_GetAuthChallenge() => create();
+  Handshake_GetAuthChallenge._() : super();
+  factory Handshake_GetAuthChallenge.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake_GetAuthChallenge.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.GetChallenge', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.GetAuthChallenge', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..hasRequiredFields = false
   ;
 
@@ -344,26 +344,26 @@ class Handshake_GetChallenge extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Handshake_GetChallenge clone() => Handshake_GetChallenge()..mergeFromMessage(this);
+  Handshake_GetAuthChallenge clone() => Handshake_GetAuthChallenge()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Handshake_GetChallenge copyWith(void Function(Handshake_GetChallenge) updates) => super.copyWith((message) => updates(message as Handshake_GetChallenge)) as Handshake_GetChallenge;
+  Handshake_GetAuthChallenge copyWith(void Function(Handshake_GetAuthChallenge) updates) => super.copyWith((message) => updates(message as Handshake_GetAuthChallenge)) as Handshake_GetAuthChallenge;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Handshake_GetChallenge create() => Handshake_GetChallenge._();
-  Handshake_GetChallenge createEmptyInstance() => create();
-  static $pb.PbList<Handshake_GetChallenge> createRepeated() => $pb.PbList<Handshake_GetChallenge>();
+  static Handshake_GetAuthChallenge create() => Handshake_GetAuthChallenge._();
+  Handshake_GetAuthChallenge createEmptyInstance() => create();
+  static $pb.PbList<Handshake_GetAuthChallenge> createRepeated() => $pb.PbList<Handshake_GetAuthChallenge>();
   @$core.pragma('dart2js:noInline')
-  static Handshake_GetChallenge getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_GetChallenge>(create);
-  static Handshake_GetChallenge? _defaultInstance;
+  static Handshake_GetAuthChallenge getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthChallenge>(create);
+  static Handshake_GetAuthChallenge? _defaultInstance;
 }
 
-class Handshake_OpenSession extends $pb.GeneratedMessage {
-  factory Handshake_OpenSession({
+class Handshake_GetAuthToken extends $pb.GeneratedMessage {
+  factory Handshake_GetAuthToken({
     $fixnum.Int64? userId,
     $core.List<$core.int>? response,
   }) {
@@ -376,11 +376,11 @@ class Handshake_OpenSession extends $pb.GeneratedMessage {
     }
     return $result;
   }
-  Handshake_OpenSession._() : super();
-  factory Handshake_OpenSession.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Handshake_OpenSession.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  Handshake_GetAuthToken._() : super();
+  factory Handshake_GetAuthToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake_GetAuthToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.OpenSession', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.GetAuthToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'response', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
@@ -390,22 +390,22 @@ class Handshake_OpenSession extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Handshake_OpenSession clone() => Handshake_OpenSession()..mergeFromMessage(this);
+  Handshake_GetAuthToken clone() => Handshake_GetAuthToken()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Handshake_OpenSession copyWith(void Function(Handshake_OpenSession) updates) => super.copyWith((message) => updates(message as Handshake_OpenSession)) as Handshake_OpenSession;
+  Handshake_GetAuthToken copyWith(void Function(Handshake_GetAuthToken) updates) => super.copyWith((message) => updates(message as Handshake_GetAuthToken)) as Handshake_GetAuthToken;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Handshake_OpenSession create() => Handshake_OpenSession._();
-  Handshake_OpenSession createEmptyInstance() => create();
-  static $pb.PbList<Handshake_OpenSession> createRepeated() => $pb.PbList<Handshake_OpenSession>();
+  static Handshake_GetAuthToken create() => Handshake_GetAuthToken._();
+  Handshake_GetAuthToken createEmptyInstance() => create();
+  static $pb.PbList<Handshake_GetAuthToken> createRepeated() => $pb.PbList<Handshake_GetAuthToken>();
   @$core.pragma('dart2js:noInline')
-  static Handshake_OpenSession getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_OpenSession>(create);
-  static Handshake_OpenSession? _defaultInstance;
+  static Handshake_GetAuthToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthToken>(create);
+  static Handshake_GetAuthToken? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
@@ -426,28 +426,97 @@ class Handshake_OpenSession extends $pb.GeneratedMessage {
   void clearResponse() => clearField(2);
 }
 
+class Handshake_Authenticate extends $pb.GeneratedMessage {
+  factory Handshake_Authenticate({
+    $fixnum.Int64? userId,
+    $core.List<$core.int>? authToken,
+  }) {
+    final $result = create();
+    if (userId != null) {
+      $result.userId = userId;
+    }
+    if (authToken != null) {
+      $result.authToken = authToken;
+    }
+    return $result;
+  }
+  Handshake_Authenticate._() : super();
+  factory Handshake_Authenticate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake_Authenticate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.Authenticate', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'authToken', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Handshake_Authenticate clone() => Handshake_Authenticate()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Handshake_Authenticate copyWith(void Function(Handshake_Authenticate) updates) => super.copyWith((message) => updates(message as Handshake_Authenticate)) as Handshake_Authenticate;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_Authenticate create() => Handshake_Authenticate._();
+  Handshake_Authenticate createEmptyInstance() => create();
+  static $pb.PbList<Handshake_Authenticate> createRepeated() => $pb.PbList<Handshake_Authenticate>();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_Authenticate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_Authenticate>(create);
+  static Handshake_Authenticate? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get authToken => $_getN(1);
+  @$pb.TagNumber(2)
+  set authToken($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasAuthToken() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAuthToken() => clearField(2);
+}
+
 enum Handshake_Handshake {
   register, 
-  getchallenge, 
-  opensession, 
+  getauthchallenge, 
+  getauthtoken, 
+  authenticate, 
   notSet
 }
 
 class Handshake extends $pb.GeneratedMessage {
   factory Handshake({
     Handshake_Register? register,
-    Handshake_GetChallenge? getchallenge,
-    Handshake_OpenSession? opensession,
+    Handshake_GetAuthChallenge? getauthchallenge,
+    Handshake_GetAuthToken? getauthtoken,
+    Handshake_Authenticate? authenticate,
   }) {
     final $result = create();
     if (register != null) {
       $result.register = register;
     }
-    if (getchallenge != null) {
-      $result.getchallenge = getchallenge;
+    if (getauthchallenge != null) {
+      $result.getauthchallenge = getauthchallenge;
     }
-    if (opensession != null) {
-      $result.opensession = opensession;
+    if (getauthtoken != null) {
+      $result.getauthtoken = getauthtoken;
+    }
+    if (authenticate != null) {
+      $result.authenticate = authenticate;
     }
     return $result;
   }
@@ -457,15 +526,17 @@ class Handshake extends $pb.GeneratedMessage {
 
   static const $core.Map<$core.int, Handshake_Handshake> _Handshake_HandshakeByTag = {
     1 : Handshake_Handshake.register,
-    2 : Handshake_Handshake.getchallenge,
-    3 : Handshake_Handshake.opensession,
+    2 : Handshake_Handshake.getauthchallenge,
+    3 : Handshake_Handshake.getauthtoken,
+    4 : Handshake_Handshake.authenticate,
     0 : Handshake_Handshake.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3])
+    ..oo(0, [1, 2, 3, 4])
     ..aOM<Handshake_Register>(1, _omitFieldNames ? '' : 'register', subBuilder: Handshake_Register.create)
-    ..aOM<Handshake_GetChallenge>(2, _omitFieldNames ? '' : 'getchallenge', subBuilder: Handshake_GetChallenge.create)
-    ..aOM<Handshake_OpenSession>(3, _omitFieldNames ? '' : 'opensession', subBuilder: Handshake_OpenSession.create)
+    ..aOM<Handshake_GetAuthChallenge>(2, _omitFieldNames ? '' : 'getauthchallenge', subBuilder: Handshake_GetAuthChallenge.create)
+    ..aOM<Handshake_GetAuthToken>(3, _omitFieldNames ? '' : 'getauthtoken', subBuilder: Handshake_GetAuthToken.create)
+    ..aOM<Handshake_Authenticate>(4, _omitFieldNames ? '' : 'authenticate', subBuilder: Handshake_Authenticate.create)
     ..hasRequiredFields = false
   ;
 
@@ -505,26 +576,37 @@ class Handshake extends $pb.GeneratedMessage {
   Handshake_Register ensureRegister() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  Handshake_GetChallenge get getchallenge => $_getN(1);
+  Handshake_GetAuthChallenge get getauthchallenge => $_getN(1);
   @$pb.TagNumber(2)
-  set getchallenge(Handshake_GetChallenge v) { setField(2, v); }
+  set getauthchallenge(Handshake_GetAuthChallenge v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasGetchallenge() => $_has(1);
+  $core.bool hasGetauthchallenge() => $_has(1);
   @$pb.TagNumber(2)
-  void clearGetchallenge() => clearField(2);
+  void clearGetauthchallenge() => clearField(2);
   @$pb.TagNumber(2)
-  Handshake_GetChallenge ensureGetchallenge() => $_ensure(1);
+  Handshake_GetAuthChallenge ensureGetauthchallenge() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  Handshake_OpenSession get opensession => $_getN(2);
+  Handshake_GetAuthToken get getauthtoken => $_getN(2);
   @$pb.TagNumber(3)
-  set opensession(Handshake_OpenSession v) { setField(3, v); }
+  set getauthtoken(Handshake_GetAuthToken v) { setField(3, v); }
   @$pb.TagNumber(3)
-  $core.bool hasOpensession() => $_has(2);
+  $core.bool hasGetauthtoken() => $_has(2);
   @$pb.TagNumber(3)
-  void clearOpensession() => clearField(3);
+  void clearGetauthtoken() => clearField(3);
   @$pb.TagNumber(3)
-  Handshake_OpenSession ensureOpensession() => $_ensure(2);
+  Handshake_GetAuthToken ensureGetauthtoken() => $_ensure(2);
+
+  @$pb.TagNumber(4)
+  Handshake_Authenticate get authenticate => $_getN(3);
+  @$pb.TagNumber(4)
+  set authenticate(Handshake_Authenticate v) { setField(4, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasAuthenticate() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAuthenticate() => clearField(4);
+  @$pb.TagNumber(4)
+  Handshake_Authenticate ensureAuthenticate() => $_ensure(3);
 }
 
 class ApplicationData_TextMessage extends $pb.GeneratedMessage {
@@ -792,12 +874,21 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
 }
 
 class ApplicationData_GetUploadToken extends $pb.GeneratedMessage {
-  factory ApplicationData_GetUploadToken() => create();
+  factory ApplicationData_GetUploadToken({
+    $core.int? recipientsCount,
+  }) {
+    final $result = create();
+    if (recipientsCount != null) {
+      $result.recipientsCount = recipientsCount;
+    }
+    return $result;
+  }
   ApplicationData_GetUploadToken._() : super();
   factory ApplicationData_GetUploadToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
   factory ApplicationData_GetUploadToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetUploadToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..a<$core.int>(1, _omitFieldNames ? '' : 'recipientsCount', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
 
@@ -821,6 +912,15 @@ class ApplicationData_GetUploadToken extends $pb.GeneratedMessage {
   @$core.pragma('dart2js:noInline')
   static ApplicationData_GetUploadToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUploadToken>(create);
   static ApplicationData_GetUploadToken? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.int get recipientsCount => $_getIZ(0);
+  @$pb.TagNumber(1)
+  set recipientsCount($core.int v) { $_setUnsignedInt32(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasRecipientsCount() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRecipientsCount() => clearField(1);
 }
 
 class ApplicationData_UploadData extends $pb.GeneratedMessage {
@@ -828,6 +928,7 @@ class ApplicationData_UploadData extends $pb.GeneratedMessage {
     $core.List<$core.int>? uploadToken,
     $core.int? offset,
     $core.List<$core.int>? data,
+    $core.List<$core.int>? checksum,
   }) {
     final $result = create();
     if (uploadToken != null) {
@@ -839,6 +940,9 @@ class ApplicationData_UploadData extends $pb.GeneratedMessage {
     if (data != null) {
       $result.data = data;
     }
+    if (checksum != null) {
+      $result.checksum = checksum;
+    }
     return $result;
   }
   ApplicationData_UploadData._() : super();
@@ -849,6 +953,7 @@ class ApplicationData_UploadData extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'checksum', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
@@ -899,16 +1004,25 @@ class ApplicationData_UploadData extends $pb.GeneratedMessage {
   $core.bool hasData() => $_has(2);
   @$pb.TagNumber(3)
   void clearData() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get checksum => $_getN(3);
+  @$pb.TagNumber(4)
+  set checksum($core.List<$core.int> v) { $_setBytes(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasChecksum() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearChecksum() => clearField(4);
 }
 
 class ApplicationData_DownloadData extends $pb.GeneratedMessage {
   factory ApplicationData_DownloadData({
-    $core.List<$core.int>? uploadToken,
+    $core.List<$core.int>? downloadToken,
     $core.int? offset,
   }) {
     final $result = create();
-    if (uploadToken != null) {
-      $result.uploadToken = uploadToken;
+    if (downloadToken != null) {
+      $result.downloadToken = downloadToken;
     }
     if (offset != null) {
       $result.offset = offset;
@@ -920,7 +1034,7 @@ class ApplicationData_DownloadData extends $pb.GeneratedMessage {
   factory ApplicationData_DownloadData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.DownloadData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
@@ -947,13 +1061,13 @@ class ApplicationData_DownloadData extends $pb.GeneratedMessage {
   static ApplicationData_DownloadData? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get uploadToken => $_getN(0);
+  $core.List<$core.int> get downloadToken => $_getN(0);
   @$pb.TagNumber(1)
-  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
+  set downloadToken($core.List<$core.int> v) { $_setBytes(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasUploadToken() => $_has(0);
+  $core.bool hasDownloadToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUploadToken() => clearField(1);
+  void clearDownloadToken() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.int get offset => $_getIZ(1);
