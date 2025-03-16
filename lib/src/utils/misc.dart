@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -234,4 +235,14 @@ Future<bool> authenticateUser(String localizedReason,
     }
   }
   return false;
+}
+
+Future<bool> isAllowedToDownload() async {
+  final List<ConnectivityResult> connectivityResult =
+      await (Connectivity().checkConnectivity());
+  if (connectivityResult.contains(ConnectivityResult.mobile)) {
+    Logger("tryDownloadMedia").info("abort download over mobile connection");
+    return false;
+  }
+  return true;
 }

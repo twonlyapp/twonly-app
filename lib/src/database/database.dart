@@ -29,21 +29,32 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   Stream<List<Message>> watchMessageNotOpened(int contactId) {
     return (select(messages)
-          ..where((t) => t.openedAt.isNull() & t.contactId.equals(contactId)))
+          ..where((t) => t.openedAt.isNull() & t.contactId.equals(contactId))
+          ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
         .watch();
   }
 
-  Stream<Message?> watchLastMessage(int contactId) {
+  Stream<List<Message>> watchLastMessage(int contactId) {
     return (select(messages)
           ..where((t) => t.contactId.equals(contactId))
           ..orderBy([(t) => OrderingTerm.desc(t.sendAt)])
           ..limit(1))
-        .watchSingleOrNull();
+        .watch();
   }
 
   Stream<List<Message>> watchAllMessagesFrom(int contactId) {
-    return (select(messages)..where((t) => t.contactId.equals(contactId)))
+    return (select(messages)
+          ..where((t) => t.contactId.equals(contactId))
+          ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
         .watch();
+  }
+
+  Future<List<Message>> getAllMessagesPendingDownloading() {
+    return (select(messages)
+          ..where((t) =>
+              t.downloadState.equals(DownloadState.downloaded.index).not() &
+              t.kind.equals(MessageKind.media.name)))
+        .get();
   }
 
   Future<List<Message>> getAllMessagesForRetransmitting() {
@@ -168,7 +179,9 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   Stream<int?> watchContactsRequested() {
     final count = contacts.requested.count(distinct: true);
-    final query = selectOnly(contacts)..where(contacts.requested.equals(true));
+    final query = selectOnly(contacts)
+      ..where(contacts.requested.equals(true) &
+          contacts.accepted.equals(true).not());
     query.addColumns([count]);
     return query.map((row) => row.read(count)).watchSingle();
   }

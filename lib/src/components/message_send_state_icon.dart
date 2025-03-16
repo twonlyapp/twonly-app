@@ -20,7 +20,11 @@ MessageSendState messageSendStateFromMessage(Message msg) {
   MessageSendState state;
 
   if (!msg.acknowledgeByServer) {
-    state = MessageSendState.sending;
+    if (msg.messageOtherId == null) {
+      state = MessageSendState.sending;
+    } else {
+      state = MessageSendState.receiving;
+    }
   } else {
     if (msg.messageOtherId == null) {
       // message send
@@ -66,15 +70,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         textMsg = msg;
       }
       if (msg.kind == MessageKind.media) {
-        MessageJson message =
-            MessageJson.fromJson(jsonDecode(msg.contentJson!));
-        final content = message.content;
-        if (content is MediaMessageContent) {
-          if (content.isVideo) {
-            videoMsg = msg;
-          } else {
-            imageMsg = msg;
-          }
+        MediaMessageContent content =
+            MediaMessageContent.fromJson(jsonDecode(msg.contentJson!));
+        if (content.isVideo) {
+          videoMsg = msg;
+        } else {
+          imageMsg = msg;
         }
       }
     }
@@ -110,9 +111,10 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       Widget icon = Placeholder();
 
       MessageSendState state = messageSendStateFromMessage(message);
-      MessageJson msg = MessageJson.fromJson(jsonDecode(message.contentJson!));
-      if (msg.content == null) continue;
-      Color color = getMessageColorFromType(msg.content!, twonlyColor);
+      MessageContent? content = MessageContent.fromJson(
+          message.kind, jsonDecode(message.contentJson!));
+      if (content == null) continue;
+      Color color = getMessageColorFromType(content, twonlyColor);
 
       switch (state) {
         case MessageSendState.receivedOpened:
@@ -139,15 +141,19 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           break;
       }
 
-      if (message.downloadState == DownloadState.pending) {
-        text = context.lang.messageSendState_TapToLoad;
-      }
-      if (message.downloadState == DownloadState.downloaded) {
-        text = context.lang.messageSendState_Loading;
-        icon = getLoaderIcon(color);
+      if (message.kind == MessageKind.media) {
+        if (message.downloadState == DownloadState.pending) {
+          text = context.lang.messageSendState_TapToLoad;
+        }
+        if (message.downloadState == DownloadState.downloaded) {
+          text = context.lang.messageSendState_Loading;
+          icon = getLoaderIcon(color);
+        }
       }
       icons.add(icon);
     }
+
+    if (icons.isEmpty) return Container();
 
     Widget icon = icons[0];
 

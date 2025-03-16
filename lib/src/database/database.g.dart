@@ -756,7 +756,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       downloadState = GeneratedColumn<int>('download_state', aliasedName, false,
               type: DriftSqlType.int,
               requiredDuringInsert: false,
-              defaultValue: Constant(DownloadState.pending.index))
+              defaultValue: Constant(DownloadState.downloaded.index))
           .withConverter<DownloadState>($MessagesTable.$converterdownloadState);
   static const VerificationMeta _acknowledgeByServerMeta =
       const VerificationMeta('acknowledgeByServer');

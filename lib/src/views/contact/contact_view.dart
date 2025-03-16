@@ -67,6 +67,8 @@ class _ContactViewState extends State<ContactView> {
                     ),
                 ],
               ),
+              if (getContactDisplayName(contact) != contact.username)
+                Center(child: Text("(${contact.username})")),
               SizedBox(height: 50),
               BetterListTile(
                 icon: FontAwesomeIcons.pencil,
@@ -127,7 +129,7 @@ class _ContactViewState extends State<ContactView> {
 Future<String?> showNicknameChangeDialog(
     BuildContext context, Contact contact) {
   final TextEditingController controller =
-      TextEditingController(text: contact.displayName);
+      TextEditingController(text: getContactDisplayName(contact));
 
   return showDialog<String>(
     context: context,

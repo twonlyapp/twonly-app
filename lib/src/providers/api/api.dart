@@ -15,6 +15,25 @@ import 'package:twonly/src/utils/misc.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
+
+Future tryDownloadAllMediaFiles() async {
+
+  if (!await isAllowedToDownload()) {
+    return;
+  }
+  List<Message> messages =
+      await twonlyDatabase.getAllMessagesPendingDownloading();
+
+  for (Message message in messages) {
+    MessageContent? content = MessageContent.fromJson(message.kind, jsonDecode(message.contentJson!));
+
+    if (content is MediaMessageContent) {
+      tryDownloadMedia(message.messageId, message.contactId, content.downloadToken);
+    }
+  }
+
+}
+
 Future tryTransmitMessages() async {
   List<Message> retransmit =
       await twonlyDatabase.getAllMessagesForRetransmitting();
@@ -36,10 +55,10 @@ Future tryTransmitMessages() async {
       );
 
       if (resp.isSuccess) {
-          await twonlyDatabase.updateMessageByMessageId(
-    msgId,
-    MessagesCompanion(acknowledgeByServer: Value(true))
-  );
+        await twonlyDatabase.updateMessageByMessageId(
+          msgId,
+          MessagesCompanion(acknowledgeByServer: Value(true))
+        );
 
         box.delete("retransmit-$msgId-textmessage");
       } else {
@@ -49,11 +68,9 @@ Future tryTransmitMessages() async {
 
     Uint8List? encryptedMedia = await box.get("retransmit-$msgId-media");
     if (encryptedMedia != null) {
-      final content = MessageJson.fromJson(jsonDecode(retransmit[i].contentJson!)).content;
-      if (content is MediaMessageContent) {
+      MediaMessageContent content = MediaMessageContent.fromJson(jsonDecode(retransmit[i].contentJson!));
         uploadMediaFile(msgId, retransmit[i].contactId, encryptedMedia,
             content.isRealTwonly, content.maxShowTime, retransmit[i].sendAt);
-      }
     }
   }
 }

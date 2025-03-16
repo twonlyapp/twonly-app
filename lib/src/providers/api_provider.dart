@@ -70,10 +70,10 @@ class ApiProvider {
   Future onConnected() async {
     await authenticate();
     globalCallbackConnectionState(true);
-    // _reconnectionDelay = 5;
 
     if (!globalIsAppInBackground) {
       tryTransmitMessages();
+      tryDownloadAllMediaFiles();
     }
   }
 

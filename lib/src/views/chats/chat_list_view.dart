@@ -36,9 +36,45 @@ class _ChatListViewState extends State<ChatListView> {
     Stream<List<Contact>> contacts = twonlyDatabase.watchContactsForChatList();
 
     return Scaffold(
-        appBar: AppBar(
-          title: GestureDetector(
-            onTap: () {
+      appBar: AppBar(
+        title: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProfileView(),
+              ),
+            );
+          },
+          child: Text("twonly"),
+        ),
+        // title:
+        actions: [
+          StreamBuilder(
+            stream: twonlyDatabase.watchContactsRequested(),
+            builder: (context, snapshot) {
+              var count = 0;
+              if (snapshot.hasData && snapshot.data != null) {
+                count = snapshot.data!;
+              }
+              return NotificationBadge(
+                count: count.toString(),
+                child: IconButton(
+                  icon: FaIcon(FontAwesomeIcons.userPlus, size: 18),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SearchUsernameView(),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+          IconButton(
+            onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -46,21 +82,24 @@ class _ChatListViewState extends State<ChatListView> {
                 ),
               );
             },
-            child: Text("twonly"),
-          ),
-          // title:
-          actions: [
-            StreamBuilder(
-              stream: twonlyDatabase.watchContactsRequested(),
-              builder: (context, snapshot) {
-                var count = 0;
-                if (snapshot.hasData && snapshot.data != null) {
-                  count = snapshot.data!;
-                }
-                return NotificationBadge(
-                  count: count.toString(),
-                  child: IconButton(
-                    icon: FaIcon(FontAwesomeIcons.userPlus, size: 18),
+            icon: FaIcon(FontAwesomeIcons.gear, size: 19),
+          )
+        ],
+      ),
+      body: StreamBuilder(
+        stream: contacts,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.data == null) {
+            return Container();
+          }
+
+          final contacts = snapshot.data!;
+          if (contacts.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: OutlinedButton.icon(
+                    icon: Icon(Icons.person_add),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -69,68 +108,32 @@ class _ChatListViewState extends State<ChatListView> {
                         ),
                       );
                     },
-                  ),
-                );
-              },
-            ),
-            IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProfileView(),
-                  ),
-                );
-              },
-              icon: FaIcon(FontAwesomeIcons.gear, size: 19),
-            )
-          ],
-        ),
-        body: StreamBuilder(
-          stream: contacts,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data == null) {
-              return Container();
-            }
-
-            final contacts = snapshot.data!;
-            if (contacts.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: OutlinedButton.icon(
-                      icon: Icon(Icons.person_add),
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => SearchUsernameView()));
-                      },
-                      label: Text(context.lang.chatListViewSearchUserNameBtn)),
-                ),
-              );
-            }
-
-            int maxTotalMediaCounter = 0;
-            if (contacts.isNotEmpty) {
-              maxTotalMediaCounter = contacts
-                  .map((x) => x.totalMediaCounter)
-                  .reduce((a, b) => a > b ? a : b);
-            }
-
-            return ListView.builder(
-              restorationId: 'chat_list_view',
-              itemCount: contacts.length,
-              itemBuilder: (BuildContext context, int index) {
-                final user = contacts[index];
-                return UserListItem(
-                  user: user,
-                  maxTotalMediaCounter: maxTotalMediaCounter,
-                );
-              },
+                    label: Text(context.lang.chatListViewSearchUserNameBtn)),
+              ),
             );
-          },
-        ));
+          }
+
+          int maxTotalMediaCounter = 0;
+          if (contacts.isNotEmpty) {
+            maxTotalMediaCounter = contacts
+                .map((x) => x.totalMediaCounter)
+                .reduce((a, b) => a > b ? a : b);
+          }
+
+          return ListView.builder(
+            restorationId: 'chat_list_view',
+            itemCount: contacts.length,
+            itemBuilder: (BuildContext context, int index) {
+              final user = contacts[index];
+              return UserListItem(
+                user: user,
+                maxTotalMediaCounter: maxTotalMediaCounter,
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }
 
@@ -156,21 +159,8 @@ class _UserListItem extends State<UserListItem> {
   @override
   void initState() {
     super.initState();
-    // initAsync();
     lastUpdateTime();
   }
-
-  // Future initAsync() async {
-  //   if (currentMessage != null) {
-  //     if (currentMessage!.downloadState != DownloadState.downloading) {
-  //       final content = widget.lastMessage!.messageContent;
-  //       if (content is MediaMessageContent) {
-  //         tryDownloadMedia(widget.lastMessage!.messageId,
-  //             widget.lastMessage!.otherUserId, content.downloadToken);
-  //       }
-  //     }
-  //   }
-  // }
 
   void lastUpdateTime() {
     // Change the color every 200 milliseconds
@@ -193,25 +183,6 @@ class _UserListItem extends State<UserListItem> {
 
   @override
   Widget build(BuildContext context) {
-    final notOpenedMessages =
-        twonlyDatabase.watchMessageNotOpened(widget.user.userId);
-    final lastMessage = twonlyDatabase.watchLastMessage(widget.user.userId);
-
-    // if (widget.lastMessage != null) {
-    //   state = widget.lastMessage!.getSendState();
-
-    //   final content = widget.lastMessage!.messageContent;
-
-    //   if (widget.lastMessage!.messageReceived &&
-    //       content is MediaMessageContent) {
-    //     token = content.downloadToken;
-    //     isDownloading = context
-    //         .watch<DownloadChangeProvider>()
-    //         .currentlyDownloading
-    //         .contains(token.toString());
-    //   }
-    // }
-
     int flameCounter = getFlameCounterFromContact(widget.user);
 
     return UserContextMenu(
@@ -219,25 +190,35 @@ class _UserListItem extends State<UserListItem> {
       child: ListTile(
         title: Text(getContactDisplayName(widget.user)),
         subtitle: StreamBuilder(
-          stream: lastMessage,
+          stream: twonlyDatabase.watchLastMessage(widget.user.userId),
           builder: (context, lastMessageSnapshot) {
             if (!lastMessageSnapshot.hasData) {
               return Container();
             }
-            if (lastMessageSnapshot.data == null) {
+            if (lastMessageSnapshot.data!.isEmpty) {
               return Text(context.lang.chatsTapToSend);
             }
-            final lastMessage = lastMessageSnapshot.data!;
+            final lastMessage = lastMessageSnapshot.data!.first;
             return StreamBuilder(
-              stream: notOpenedMessages,
+              stream: twonlyDatabase.watchMessageNotOpened(widget.user.userId),
               builder: (context, notOpenedMessagesSnapshot) {
                 if (!lastMessageSnapshot.hasData) {
                   return Container();
                 }
 
                 var lastMessages = [lastMessage];
-                if (notOpenedMessagesSnapshot.data != null) {
+                if (notOpenedMessagesSnapshot.data != null &&
+                    notOpenedMessagesSnapshot.data!.isNotEmpty) {
                   lastMessages = notOpenedMessagesSnapshot.data!;
+                  var media =
+                      lastMessages.where((x) => x.kind == MessageKind.media);
+                  if (media.isNotEmpty) {
+                    currentMessage = media.first;
+                  } else {
+                    currentMessage = lastMessages.first;
+                  }
+                } else {
+                  currentMessage = lastMessage;
                 }
 
                 return Row(

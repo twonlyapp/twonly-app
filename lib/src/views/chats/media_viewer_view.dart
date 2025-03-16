@@ -86,10 +86,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     await _noScreenshot.screenshotOff();
     if (!context.mounted || allMediaFiles.isEmpty) return;
 
-    final Message current = allMediaFiles.first;
-    final MessageJson messageJson =
-        MessageJson.fromJson(jsonDecode(current.contentJson!));
-    final MessageContent? content = messageJson.content;
+    final current = allMediaFiles.first;
+    final MediaMessageContent content =
+        MediaMessageContent.fromJson(jsonDecode(current.contentJson!));
 
     setState(() {
       // reset current image values
@@ -101,17 +100,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       isRealTwonly = false;
     });
 
-    if (content is MediaMessageContent) {
-      if (content.isRealTwonly) {
-        setState(() {
-          isRealTwonly = true;
-        });
-        if (!showTwonly) {
-          return;
-        }
+    if (content.isRealTwonly) {
+      setState(() {
+        isRealTwonly = true;
+      });
+      if (!showTwonly) {
+        return;
       }
 
       if (isRealTwonly) {
+        if (!context.mounted) return;
         bool isAuth = await authenticateUser(context.lang.mediaViewerAuthReason,
             force: false);
         if (!isAuth) {

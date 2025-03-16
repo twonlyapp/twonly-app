@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:logging/logging.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/json/user_data.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -32,6 +33,12 @@ Future<bool> deleteLocalUserData() async {
   final storage = getSecureStorage();
   var password = await storage.read(key: "sqflite_database_password");
   await dbProvider.remove();
+
+  final appDir = await getApplicationSupportDirectory();
+  if (appDir.existsSync()) {
+    appDir.deleteSync(recursive: true);
+  }
+
   await storage.write(key: "sqflite_database_password", value: password);
   await storage.deleteAll();
   return true;

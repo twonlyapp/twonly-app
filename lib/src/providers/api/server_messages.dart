@@ -185,6 +185,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             kind: Value(message.kind),
             messageOtherId: Value(message.messageId),
             contentJson: Value(content),
+            downloadState: Value(DownloadState.downloaded),
             sendAt: Value(message.timestamp),
           );
 

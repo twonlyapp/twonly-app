@@ -36,8 +36,9 @@ class ChatListEntry extends StatelessWidget {
     bool isDownloading = false;
     List<int> token = [];
 
-    final messageJson = MessageJson.fromJson(jsonDecode(message.contentJson!));
-    final content = messageJson.content;
+    MessageContent? content =
+        MessageContent.fromJson(message.kind, jsonDecode(message.contentJson!));
+
     if (message.messageOtherId != null && content is MediaMessageContent) {
       token = content.downloadToken;
       isDownloading = message.downloadState == DownloadState.downloading;
