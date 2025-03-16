@@ -19,7 +19,9 @@ class Contacts extends Table {
 
   DateTimeColumn get lastMessageSend => dateTime().nullable()();
   DateTimeColumn get lastMessageReceived => dateTime().nullable()();
-  DateTimeColumn get lastMessage => dateTime().nullable()();
+  DateTimeColumn get lastFlameCounterChange => dateTime().nullable()();
+  DateTimeColumn get lastMessageExchange =>
+      dateTime().withDefault(currentDateAndTime)();
 
   IntColumn get flameCounter => integer().withDefault(Constant(0))();
 

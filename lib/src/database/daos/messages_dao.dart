@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/json_models/message.dart';
@@ -110,6 +111,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
 
   Future<int?> insertMessage(MessagesCompanion message) async {
     try {
+      await twonlyDatabase.contactsDao
+          .newMessageExchange(message.contactId.value);
       return await into(messages).insert(message);
     } catch (e) {
       Logger("twonlyDatabase").shout("Error while inserting message: $e");

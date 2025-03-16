@@ -42,13 +42,13 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 
     Value<DateTime?> lastMessageSend = Value.absent();
     Value<DateTime?> lastMessageReceived = Value.absent();
-    Value<DateTime?> lastMessage = Value.absent();
+    Value<DateTime?> lastFlameCounterChange = Value.absent();
 
-    if (contact.lastMessage != null) {
+    if (contact.lastFlameCounterChange != null) {
       final now = DateTime.now();
       final startOfToday = DateTime(now.year, now.month, now.day);
 
-      if (contact.lastMessage!.isBefore(startOfToday)) {
+      if (contact.lastFlameCounterChange!.isBefore(startOfToday)) {
         // last flame update was yesterday. check if it can be updated.
         bool updateFlame = false;
         if (received) {
@@ -62,12 +62,12 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
         }
         if (updateFlame) {
           flameCounter += 1;
-          lastMessage = Value(timestamp);
+          lastFlameCounterChange = Value(timestamp);
         }
       }
     } else {
       // There where no message until no...
-      lastMessage = Value(timestamp);
+      lastFlameCounterChange = Value(timestamp);
     }
 
     if (received) {
@@ -79,7 +79,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     return (update(contacts)..where((t) => t.userId.equals(contactId))).write(
       ContactsCompanion(
         totalMediaCounter: Value(totalMediaCounter),
-        lastMessage: lastMessage,
+        lastFlameCounterChange: lastFlameCounterChange,
         lastMessageReceived: lastMessageReceived,
         lastMessageSend: lastMessageSend,
         flameCounter: Value(flameCounter),
@@ -100,6 +100,11 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updatedValues);
   }
 
+  Future newMessageExchange(int userId) {
+    return updateContact(
+        userId, ContactsCompanion(lastMessageExchange: Value(DateTime.now())));
+  }
+
   Stream<List<Contact>> watchNotAcceptedContacts() {
     return (select(contacts)..where((t) => t.accepted.equals(false))).watch();
     // return (select(contacts)).watch();
@@ -113,7 +118,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
   Stream<List<Contact>> watchContactsForChatList() {
     return (select(contacts)
           ..where((t) => t.accepted.equals(true) & t.blocked.equals(false))
-          ..orderBy([(t) => OrderingTerm.desc(t.lastMessage)]))
+          ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
         .watch();
   }
 

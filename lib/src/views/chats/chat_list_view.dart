@@ -212,19 +212,35 @@ class _UserListItem extends State<UserListItem> {
                 if (notOpenedMessagesSnapshot.data != null &&
                     notOpenedMessagesSnapshot.data!.isNotEmpty) {
                   // filter first for only received messages
-                  lastMessages = notOpenedMessagesSnapshot.data!
+                  var notOpenedMessages = notOpenedMessagesSnapshot.data!;
+
+                  lastMessages = notOpenedMessages
                       .where((x) => x.messageOtherId != null)
                       .toList();
-                  if (lastMessages.isEmpty) {
-                    lastMessages = notOpenedMessagesSnapshot.data!;
-                  }
 
-                  var media =
-                      lastMessages.where((x) => x.kind == MessageKind.media);
-                  if (media.isNotEmpty) {
-                    currentMessage = media.first;
+                  // For send images show only one
+                  if (lastMessages.isEmpty) {
+                    var media = notOpenedMessages
+                        .where((x) => x.kind == MessageKind.media);
+
+                    if (media.isNotEmpty) {
+                      currentMessage = media.first;
+                      lastMessages = [currentMessage!];
+                    } else {
+                      currentMessage = notOpenedMessages.first;
+                      lastMessages = [currentMessage!];
+                    }
                   } else {
-                    currentMessage = lastMessages.first;
+                    // there are multiple messages received
+
+                    var media =
+                        lastMessages.where((x) => x.kind == MessageKind.media);
+
+                    if (media.isNotEmpty) {
+                      currentMessage = media.first;
+                    } else {
+                      currentMessage = lastMessages.first;
+                    }
                   }
                 } else {
                   currentMessage = lastMessage;

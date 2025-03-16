@@ -149,7 +149,17 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
     if (icons.length == 2) {
       icon = Stack(
-        children: icons,
+        alignment: Alignment.center,
+        children: <Widget>[
+          // First icon (bottom icon)
+          icons[0],
+          Positioned(
+            top: 5.0,
+            left: 5.0,
+            child: icons[1],
+          ),
+          // Second icon (top icon, slightly offset)
+        ],
       );
     }
 

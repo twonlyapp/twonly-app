@@ -101,12 +101,20 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   late final GeneratedColumn<DateTime> lastMessageReceived =
       GeneratedColumn<DateTime>('last_message_received', aliasedName, true,
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _lastMessageMeta =
-      const VerificationMeta('lastMessage');
+  static const VerificationMeta _lastFlameCounterChangeMeta =
+      const VerificationMeta('lastFlameCounterChange');
   @override
-  late final GeneratedColumn<DateTime> lastMessage = GeneratedColumn<DateTime>(
-      'last_message', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  late final GeneratedColumn<DateTime> lastFlameCounterChange =
+      GeneratedColumn<DateTime>('last_flame_counter_change', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _lastMessageExchangeMeta =
+      const VerificationMeta('lastMessageExchange');
+  @override
+  late final GeneratedColumn<DateTime> lastMessageExchange =
+      GeneratedColumn<DateTime>('last_message_exchange', aliasedName, false,
+          type: DriftSqlType.dateTime,
+          requiredDuringInsert: false,
+          defaultValue: currentDateAndTime);
   static const VerificationMeta _flameCounterMeta =
       const VerificationMeta('flameCounter');
   @override
@@ -129,7 +137,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         totalMediaCounter,
         lastMessageSend,
         lastMessageReceived,
-        lastMessage,
+        lastFlameCounterChange,
+        lastMessageExchange,
         flameCounter
       ];
   @override
@@ -200,11 +209,17 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           lastMessageReceived.isAcceptableOrUnknown(
               data['last_message_received']!, _lastMessageReceivedMeta));
     }
-    if (data.containsKey('last_message')) {
+    if (data.containsKey('last_flame_counter_change')) {
       context.handle(
-          _lastMessageMeta,
-          lastMessage.isAcceptableOrUnknown(
-              data['last_message']!, _lastMessageMeta));
+          _lastFlameCounterChangeMeta,
+          lastFlameCounterChange.isAcceptableOrUnknown(
+              data['last_flame_counter_change']!, _lastFlameCounterChangeMeta));
+    }
+    if (data.containsKey('last_message_exchange')) {
+      context.handle(
+          _lastMessageExchangeMeta,
+          lastMessageExchange.isAcceptableOrUnknown(
+              data['last_message_exchange']!, _lastMessageExchangeMeta));
     }
     if (data.containsKey('flame_counter')) {
       context.handle(
@@ -246,8 +261,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       lastMessageReceived: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}last_message_received']),
-      lastMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_message']),
+      lastFlameCounterChange: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_flame_counter_change']),
+      lastMessageExchange: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_message_exchange'])!,
       flameCounter: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}flame_counter'])!,
     );
@@ -272,7 +291,8 @@ class Contact extends DataClass implements Insertable<Contact> {
   final int totalMediaCounter;
   final DateTime? lastMessageSend;
   final DateTime? lastMessageReceived;
-  final DateTime? lastMessage;
+  final DateTime? lastFlameCounterChange;
+  final DateTime lastMessageExchange;
   final int flameCounter;
   const Contact(
       {required this.userId,
@@ -287,7 +307,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       required this.totalMediaCounter,
       this.lastMessageSend,
       this.lastMessageReceived,
-      this.lastMessage,
+      this.lastFlameCounterChange,
+      required this.lastMessageExchange,
       required this.flameCounter});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -312,9 +333,11 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || lastMessageReceived != null) {
       map['last_message_received'] = Variable<DateTime>(lastMessageReceived);
     }
-    if (!nullToAbsent || lastMessage != null) {
-      map['last_message'] = Variable<DateTime>(lastMessage);
+    if (!nullToAbsent || lastFlameCounterChange != null) {
+      map['last_flame_counter_change'] =
+          Variable<DateTime>(lastFlameCounterChange);
     }
+    map['last_message_exchange'] = Variable<DateTime>(lastMessageExchange);
     map['flame_counter'] = Variable<int>(flameCounter);
     return map;
   }
@@ -341,9 +364,10 @@ class Contact extends DataClass implements Insertable<Contact> {
       lastMessageReceived: lastMessageReceived == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessageReceived),
-      lastMessage: lastMessage == null && nullToAbsent
+      lastFlameCounterChange: lastFlameCounterChange == null && nullToAbsent
           ? const Value.absent()
-          : Value(lastMessage),
+          : Value(lastFlameCounterChange),
+      lastMessageExchange: Value(lastMessageExchange),
       flameCounter: Value(flameCounter),
     );
   }
@@ -365,7 +389,10 @@ class Contact extends DataClass implements Insertable<Contact> {
       lastMessageSend: serializer.fromJson<DateTime?>(json['lastMessageSend']),
       lastMessageReceived:
           serializer.fromJson<DateTime?>(json['lastMessageReceived']),
-      lastMessage: serializer.fromJson<DateTime?>(json['lastMessage']),
+      lastFlameCounterChange:
+          serializer.fromJson<DateTime?>(json['lastFlameCounterChange']),
+      lastMessageExchange:
+          serializer.fromJson<DateTime>(json['lastMessageExchange']),
       flameCounter: serializer.fromJson<int>(json['flameCounter']),
     );
   }
@@ -385,7 +412,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       'totalMediaCounter': serializer.toJson<int>(totalMediaCounter),
       'lastMessageSend': serializer.toJson<DateTime?>(lastMessageSend),
       'lastMessageReceived': serializer.toJson<DateTime?>(lastMessageReceived),
-      'lastMessage': serializer.toJson<DateTime?>(lastMessage),
+      'lastFlameCounterChange':
+          serializer.toJson<DateTime?>(lastFlameCounterChange),
+      'lastMessageExchange': serializer.toJson<DateTime>(lastMessageExchange),
       'flameCounter': serializer.toJson<int>(flameCounter),
     };
   }
@@ -403,7 +432,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           int? totalMediaCounter,
           Value<DateTime?> lastMessageSend = const Value.absent(),
           Value<DateTime?> lastMessageReceived = const Value.absent(),
-          Value<DateTime?> lastMessage = const Value.absent(),
+          Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+          DateTime? lastMessageExchange,
           int? flameCounter}) =>
       Contact(
         userId: userId ?? this.userId,
@@ -422,7 +452,10 @@ class Contact extends DataClass implements Insertable<Contact> {
         lastMessageReceived: lastMessageReceived.present
             ? lastMessageReceived.value
             : this.lastMessageReceived,
-        lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
+        lastFlameCounterChange: lastFlameCounterChange.present
+            ? lastFlameCounterChange.value
+            : this.lastFlameCounterChange,
+        lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
         flameCounter: flameCounter ?? this.flameCounter,
       );
   Contact copyWithCompanion(ContactsCompanion data) {
@@ -446,8 +479,12 @@ class Contact extends DataClass implements Insertable<Contact> {
       lastMessageReceived: data.lastMessageReceived.present
           ? data.lastMessageReceived.value
           : this.lastMessageReceived,
-      lastMessage:
-          data.lastMessage.present ? data.lastMessage.value : this.lastMessage,
+      lastFlameCounterChange: data.lastFlameCounterChange.present
+          ? data.lastFlameCounterChange.value
+          : this.lastFlameCounterChange,
+      lastMessageExchange: data.lastMessageExchange.present
+          ? data.lastMessageExchange.value
+          : this.lastMessageExchange,
       flameCounter: data.flameCounter.present
           ? data.flameCounter.value
           : this.flameCounter,
@@ -469,7 +506,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
-          ..write('lastMessage: $lastMessage, ')
+          ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
+          ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('flameCounter: $flameCounter')
           ..write(')'))
         .toString();
@@ -489,7 +527,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       totalMediaCounter,
       lastMessageSend,
       lastMessageReceived,
-      lastMessage,
+      lastFlameCounterChange,
+      lastMessageExchange,
       flameCounter);
   @override
   bool operator ==(Object other) =>
@@ -507,7 +546,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.totalMediaCounter == this.totalMediaCounter &&
           other.lastMessageSend == this.lastMessageSend &&
           other.lastMessageReceived == this.lastMessageReceived &&
-          other.lastMessage == this.lastMessage &&
+          other.lastFlameCounterChange == this.lastFlameCounterChange &&
+          other.lastMessageExchange == this.lastMessageExchange &&
           other.flameCounter == this.flameCounter);
 }
 
@@ -524,7 +564,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<int> totalMediaCounter;
   final Value<DateTime?> lastMessageSend;
   final Value<DateTime?> lastMessageReceived;
-  final Value<DateTime?> lastMessage;
+  final Value<DateTime?> lastFlameCounterChange;
+  final Value<DateTime> lastMessageExchange;
   final Value<int> flameCounter;
   const ContactsCompanion({
     this.userId = const Value.absent(),
@@ -539,7 +580,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.totalMediaCounter = const Value.absent(),
     this.lastMessageSend = const Value.absent(),
     this.lastMessageReceived = const Value.absent(),
-    this.lastMessage = const Value.absent(),
+    this.lastFlameCounterChange = const Value.absent(),
+    this.lastMessageExchange = const Value.absent(),
     this.flameCounter = const Value.absent(),
   });
   ContactsCompanion.insert({
@@ -555,7 +597,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.totalMediaCounter = const Value.absent(),
     this.lastMessageSend = const Value.absent(),
     this.lastMessageReceived = const Value.absent(),
-    this.lastMessage = const Value.absent(),
+    this.lastFlameCounterChange = const Value.absent(),
+    this.lastMessageExchange = const Value.absent(),
     this.flameCounter = const Value.absent(),
   }) : username = Value(username);
   static Insertable<Contact> custom({
@@ -571,7 +614,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<int>? totalMediaCounter,
     Expression<DateTime>? lastMessageSend,
     Expression<DateTime>? lastMessageReceived,
-    Expression<DateTime>? lastMessage,
+    Expression<DateTime>? lastFlameCounterChange,
+    Expression<DateTime>? lastMessageExchange,
     Expression<int>? flameCounter,
   }) {
     return RawValuesInsertable({
@@ -588,7 +632,10 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (lastMessageSend != null) 'last_message_send': lastMessageSend,
       if (lastMessageReceived != null)
         'last_message_received': lastMessageReceived,
-      if (lastMessage != null) 'last_message': lastMessage,
+      if (lastFlameCounterChange != null)
+        'last_flame_counter_change': lastFlameCounterChange,
+      if (lastMessageExchange != null)
+        'last_message_exchange': lastMessageExchange,
       if (flameCounter != null) 'flame_counter': flameCounter,
     });
   }
@@ -606,7 +653,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<int>? totalMediaCounter,
       Value<DateTime?>? lastMessageSend,
       Value<DateTime?>? lastMessageReceived,
-      Value<DateTime?>? lastMessage,
+      Value<DateTime?>? lastFlameCounterChange,
+      Value<DateTime>? lastMessageExchange,
       Value<int>? flameCounter}) {
     return ContactsCompanion(
       userId: userId ?? this.userId,
@@ -621,7 +669,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
       lastMessageSend: lastMessageSend ?? this.lastMessageSend,
       lastMessageReceived: lastMessageReceived ?? this.lastMessageReceived,
-      lastMessage: lastMessage ?? this.lastMessage,
+      lastFlameCounterChange:
+          lastFlameCounterChange ?? this.lastFlameCounterChange,
+      lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
       flameCounter: flameCounter ?? this.flameCounter,
     );
   }
@@ -666,8 +716,13 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       map['last_message_received'] =
           Variable<DateTime>(lastMessageReceived.value);
     }
-    if (lastMessage.present) {
-      map['last_message'] = Variable<DateTime>(lastMessage.value);
+    if (lastFlameCounterChange.present) {
+      map['last_flame_counter_change'] =
+          Variable<DateTime>(lastFlameCounterChange.value);
+    }
+    if (lastMessageExchange.present) {
+      map['last_message_exchange'] =
+          Variable<DateTime>(lastMessageExchange.value);
     }
     if (flameCounter.present) {
       map['flame_counter'] = Variable<int>(flameCounter.value);
@@ -690,7 +745,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
-          ..write('lastMessage: $lastMessage, ')
+          ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
+          ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('flameCounter: $flameCounter')
           ..write(')'))
         .toString();
@@ -2400,7 +2456,8 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   Value<int> totalMediaCounter,
   Value<DateTime?> lastMessageSend,
   Value<DateTime?> lastMessageReceived,
-  Value<DateTime?> lastMessage,
+  Value<DateTime?> lastFlameCounterChange,
+  Value<DateTime> lastMessageExchange,
   Value<int> flameCounter,
 });
 typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
@@ -2416,7 +2473,8 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<int> totalMediaCounter,
   Value<DateTime?> lastMessageSend,
   Value<DateTime?> lastMessageReceived,
-  Value<DateTime?> lastMessage,
+  Value<DateTime?> lastFlameCounterChange,
+  Value<DateTime> lastMessageExchange,
   Value<int> flameCounter,
 });
 
@@ -2488,8 +2546,13 @@ class $$ContactsTableFilterComposer
       column: $table.lastMessageReceived,
       builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get lastFlameCounterChange => $composableBuilder(
+      column: $table.lastFlameCounterChange,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastMessageExchange => $composableBuilder(
+      column: $table.lastMessageExchange,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get flameCounter => $composableBuilder(
       column: $table.flameCounter, builder: (column) => ColumnFilters(column));
@@ -2564,8 +2627,13 @@ class $$ContactsTableOrderingComposer
       column: $table.lastMessageReceived,
       builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get lastFlameCounterChange => $composableBuilder(
+      column: $table.lastFlameCounterChange,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastMessageExchange => $composableBuilder(
+      column: $table.lastMessageExchange,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get flameCounter => $composableBuilder(
       column: $table.flameCounter,
@@ -2617,8 +2685,11 @@ class $$ContactsTableAnnotationComposer
   GeneratedColumn<DateTime> get lastMessageReceived => $composableBuilder(
       column: $table.lastMessageReceived, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get lastMessage => $composableBuilder(
-      column: $table.lastMessage, builder: (column) => column);
+  GeneratedColumn<DateTime> get lastFlameCounterChange => $composableBuilder(
+      column: $table.lastFlameCounterChange, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastMessageExchange => $composableBuilder(
+      column: $table.lastMessageExchange, builder: (column) => column);
 
   GeneratedColumn<int> get flameCounter => $composableBuilder(
       column: $table.flameCounter, builder: (column) => column);
@@ -2680,7 +2751,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<int> totalMediaCounter = const Value.absent(),
             Value<DateTime?> lastMessageSend = const Value.absent(),
             Value<DateTime?> lastMessageReceived = const Value.absent(),
-            Value<DateTime?> lastMessage = const Value.absent(),
+            Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+            Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<int> flameCounter = const Value.absent(),
           }) =>
               ContactsCompanion(
@@ -2696,7 +2768,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             totalMediaCounter: totalMediaCounter,
             lastMessageSend: lastMessageSend,
             lastMessageReceived: lastMessageReceived,
-            lastMessage: lastMessage,
+            lastFlameCounterChange: lastFlameCounterChange,
+            lastMessageExchange: lastMessageExchange,
             flameCounter: flameCounter,
           ),
           createCompanionCallback: ({
@@ -2712,7 +2785,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<int> totalMediaCounter = const Value.absent(),
             Value<DateTime?> lastMessageSend = const Value.absent(),
             Value<DateTime?> lastMessageReceived = const Value.absent(),
-            Value<DateTime?> lastMessage = const Value.absent(),
+            Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+            Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<int> flameCounter = const Value.absent(),
           }) =>
               ContactsCompanion.insert(
@@ -2728,7 +2802,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             totalMediaCounter: totalMediaCounter,
             lastMessageSend: lastMessageSend,
             lastMessageReceived: lastMessageReceived,
-            lastMessage: lastMessage,
+            lastFlameCounterChange: lastFlameCounterChange,
+            lastMessageExchange: lastMessageExchange,
             flameCounter: flameCounter,
           ),
           withReferenceMapper: (p0) => p0
