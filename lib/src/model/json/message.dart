@@ -72,7 +72,7 @@ class MessageJson {
       messageId: (json['messageId'] as num?)?.toInt(),
       content: MessageContent.fromJson(
           kind, json['content'] as Map<String, dynamic>),
-      timestamp: DateTime.parse(json['timestamp'] as String),
+      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp']),
     );
   }
 
@@ -80,7 +80,7 @@ class MessageJson {
         'kind': kind.name,
         'content': content?.toJson(),
         'messageId': messageId,
-        'timestamp': timestamp.toIso8601String(),
+        'timestamp': timestamp.toUtc().millisecondsSinceEpoch,
       };
 }
 
