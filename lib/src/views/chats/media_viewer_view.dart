@@ -13,6 +13,7 @@ import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/database/messages_db.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -51,13 +52,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   void initState() {
     super.initState();
 
-    asyncLoadNextMedia();
-    loadCurrentMediaFile();
+    asyncLoadNextMedia(true);
   }
 
-  Future asyncLoadNextMedia() async {
+  Future asyncLoadNextMedia(bool firstRun) async {
     Stream<List<Message>> messages =
-        twonlyDatabase.watchMessageNotOpened(widget.userId);
+        twonlyDatabase.watchMediaMessageNotOpened(widget.userId);
 
     _subscription = messages.listen((messages) {
       for (Message msg in messages) {
@@ -66,6 +66,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         }
       }
       setState(() {});
+      if (firstRun) {
+        loadCurrentMediaFile();
+        firstRun = false;
+      }
     });
   }
 
@@ -117,42 +121,38 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           return;
         }
       }
-      flutterLocalNotificationsPlugin.cancel(current.messageId);
-      if (current.downloadState == DownloadState.pending) {
-        setState(() {
-          isDownloading = true;
-        });
-        await tryDownloadMedia(
-            current.messageId, current.contactId, content.downloadToken,
-            force: true);
-      }
-      do {
-        if (isDownloading) {
-          await Future.delayed(Duration(milliseconds: 10));
-        }
-        imageBytes = await getDownloadedMedia(
-          content.downloadToken,
-          current.messageOtherId!,
-          current.contactId,
-        );
-      } while (isDownloading && imageBytes == null);
-
-      isDownloading = false;
-
-      if (imageBytes == null) {
-        nextMediaOrExit();
-        return;
-      }
-
-      if (content.maxShowTime != 999999) {
-        canBeSeenUntil = DateTime.now().add(
-          Duration(seconds: content.maxShowTime),
-        );
-        maxShowTime = content.maxShowTime;
-        startTimer();
-      }
-      setState(() {});
     }
+    flutterLocalNotificationsPlugin.cancel(current.messageId);
+    if (current.downloadState == DownloadState.pending) {
+      setState(() {
+        isDownloading = true;
+      });
+      await tryDownloadMedia(current.messageId, current.contactId, content,
+          force: true);
+    }
+    do {
+      if (isDownloading) {
+        await Future.delayed(Duration(milliseconds: 10));
+      }
+      if (content.downloadToken == null) break;
+      imageBytes = await getDownloadedMedia(current, content.downloadToken!);
+    } while (isDownloading && imageBytes == null);
+
+    isDownloading = false;
+
+    if (imageBytes == null) {
+      nextMediaOrExit();
+      return;
+    }
+
+    if (content.maxShowTime != 999999) {
+      canBeSeenUntil = DateTime.now().add(
+        Duration(seconds: content.maxShowTime),
+      );
+      maxShowTime = content.maxShowTime;
+      startTimer();
+    }
+    setState(() {});
   }
 
   startTimer() {

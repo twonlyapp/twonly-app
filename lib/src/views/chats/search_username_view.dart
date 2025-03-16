@@ -58,6 +58,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       if (added > 0) {
         if (await SignalHelper.addNewContact(res.value.userdata)) {
           encryptAndSendMessage(
+            null,
             res.value.userdata.userId.toInt(),
             MessageJson(
               kind: MessageKind.contactRequest,
@@ -207,6 +208,7 @@ class _ContactsListViewState extends State<ContactsListView> {
                       await twonlyDatabase
                           .deleteContactByUserId(contact.userId);
                       encryptAndSendMessage(
+                        null,
                         contact.userId,
                         MessageJson(
                           kind: MessageKind.rejectRequest,
@@ -223,6 +225,7 @@ class _ContactsListViewState extends State<ContactsListView> {
                     final update = ContactsCompanion(accepted: Value(true));
                     await twonlyDatabase.updateContact(contact.userId, update);
                     encryptAndSendMessage(
+                      null,
                       contact.userId,
                       MessageJson(
                         kind: MessageKind.acceptRequest,

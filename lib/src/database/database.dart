@@ -34,6 +34,16 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         .watch();
   }
 
+  Stream<List<Message>> watchMediaMessageNotOpened(int contactId) {
+    return (select(messages)
+          ..where((t) =>
+              t.openedAt.isNull() &
+              t.contactId.equals(contactId) &
+              t.kind.equals(MessageKind.media.name))
+          ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
+        .watch();
+  }
+
   Stream<List<Message>> watchLastMessage(int contactId) {
     return (select(messages)
           ..where((t) => t.contactId.equals(contactId))
@@ -51,9 +61,12 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   Future<List<Message>> getAllMessagesPendingDownloading() {
     return (select(messages)
-          ..where((t) =>
-              t.downloadState.equals(DownloadState.downloaded.index).not() &
-              t.kind.equals(MessageKind.media.name)))
+          ..where(
+            (t) =>
+                t.downloadState.equals(DownloadState.downloaded.index).not() &
+                t.messageOtherId.isNotNull() &
+                t.kind.equals(MessageKind.media.name),
+          ))
         .get();
   }
 
@@ -106,6 +119,10 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   Future deleteMessageById(int messageId) {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
+  }
+
+  SingleOrNullSelectable<Message> getMessageByMessageId(int messageId) {
+    return select(messages)..where((t) => t.messageId.equals(messageId));
   }
 
   // ------------

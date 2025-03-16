@@ -104,20 +104,38 @@ class MessageContent {
 }
 
 class MediaMessageContent extends MessageContent {
-  final List<int> downloadToken;
   final int maxShowTime;
   final bool isRealTwonly;
   final bool isVideo;
+  final List<int>? downloadToken;
+  final List<int>? encryptionKey;
+  final List<int>? encryptionMac;
+  final List<int>? encryptionNonce;
+
   MediaMessageContent({
-    required this.downloadToken,
     required this.maxShowTime,
     required this.isRealTwonly,
     required this.isVideo,
+    this.downloadToken,
+    this.encryptionKey,
+    this.encryptionMac,
+    this.encryptionNonce,
   });
 
   static MediaMessageContent fromJson(Map json) {
     return MediaMessageContent(
-      downloadToken: List<int>.from(json['downloadToken']),
+      downloadToken: json['downloadToken'] == null
+          ? null
+          : List<int>.from(json['downloadToken']),
+      encryptionKey: json['encryptionKey'] == null
+          ? null
+          : List<int>.from(json['encryptionKey']),
+      encryptionMac: json['encryptionMac'] == null
+          ? null
+          : List<int>.from(json['encryptionMac']),
+      encryptionNonce: json['encryptionNonce'] == null
+          ? null
+          : List<int>.from(json['encryptionNonce']),
       maxShowTime: json['maxShowTime'],
       isRealTwonly: json['isRealTwonly'],
       isVideo: json['isVideo'] ?? false,
@@ -128,6 +146,9 @@ class MediaMessageContent extends MessageContent {
   Map toJson() {
     return {
       'downloadToken': downloadToken,
+      'encryptionKey': encryptionKey,
+      'encryptionMac': encryptionMac,
+      'encryptionNonce': encryptionNonce,
       'isRealTwonly': isRealTwonly,
       'maxShowTime': maxShowTime,
     };

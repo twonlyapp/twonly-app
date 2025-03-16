@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +13,7 @@ import 'package:twonly/src/database/contacts_db.dart';
 import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/database/messages_db.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
@@ -151,7 +152,6 @@ class UserListItem extends StatefulWidget {
 class _UserListItem extends State<UserListItem> {
   int lastMessageInSeconds = 0;
   MessageSendState state = MessageSendState.send;
-  List<int> token = [];
   Message? currentMessage;
 
   Timer? updateTime;
@@ -209,7 +209,14 @@ class _UserListItem extends State<UserListItem> {
                 var lastMessages = [lastMessage];
                 if (notOpenedMessagesSnapshot.data != null &&
                     notOpenedMessagesSnapshot.data!.isNotEmpty) {
-                  lastMessages = notOpenedMessagesSnapshot.data!;
+                  // filter first for only received messages
+                  lastMessages = notOpenedMessagesSnapshot.data!
+                      .where((x) => x.messageOtherId != null)
+                      .toList();
+                  if (lastMessages.isEmpty) {
+                    lastMessages = notOpenedMessagesSnapshot.data!;
+                  }
+
                   var media =
                       lastMessages.where((x) => x.kind == MessageKind.media);
                   if (media.isNotEmpty) {
@@ -253,22 +260,27 @@ class _UserListItem extends State<UserListItem> {
             return;
           }
           Message msg = currentMessage!;
-          if (msg.downloadState == DownloadState.downloading) {
-            return;
-          }
-          if (msg.downloadState == DownloadState.pending) {
-            tryDownloadMedia(msg.messageId, msg.contactId, token, force: true);
-            return;
-          }
-          if (state == MessageSendState.received &&
-              msg.kind == MessageKind.media) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) {
-                return MediaViewerView(widget.user.userId);
-              }),
-            );
-            return;
+          if (msg.kind == MessageKind.media && msg.messageOtherId != null) {
+            switch (msg.downloadState) {
+              case DownloadState.pending:
+                MediaMessageContent content =
+                    MediaMessageContent.fromJson(jsonDecode(msg.contentJson!));
+                tryDownloadMedia(msg.messageId, msg.contactId, content,
+                    force: true);
+                return;
+
+              case DownloadState.downloaded:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) {
+                    return MediaViewerView(widget.user.userId);
+                  }),
+                );
+                return;
+
+              default:
+                return;
+            }
           }
           Navigator.push(
             context,

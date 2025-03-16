@@ -11,6 +11,7 @@ import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
+import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/api/server_messages.dart';
 import 'package:twonly/src/services/fcm_service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -327,8 +328,9 @@ class ApiProvider {
     return await sendRequestSync(req);
   }
 
-  Future<Result> getUploadToken() async {
-    var get = ApplicationData_GetUploadToken();
+  Future<Result> getUploadToken(int recipientsCount) async {
+    var get = ApplicationData_GetUploadToken()
+      ..recipientsCount = recipientsCount;
     var appData = ApplicationData()..getuploadtoken = get;
     var req = createClientToServerFromApplicationData(appData);
     return await sendRequestSync(req);
@@ -343,12 +345,15 @@ class ApiProvider {
     return await sendRequestSync(req);
   }
 
-  Future<Result> uploadData(
-      List<int> uploadToken, Uint8List data, int offset) async {
+  Future<Result> uploadData(List<int> uploadToken, Uint8List data, int offset,
+      List<int>? checksum) async {
     var get = ApplicationData_UploadData()
       ..uploadToken = uploadToken
       ..data = data
       ..offset = offset;
+    if (checksum != null) {
+      get.checksum = checksum;
+    }
     var appData = ApplicationData()..uploaddata = get;
     var req = createClientToServerFromApplicationData(appData);
     final result = await sendRequestSync(req);

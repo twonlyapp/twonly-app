@@ -12,7 +12,7 @@ import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/verified_shield.dart';
 import 'package:twonly/src/database/contacts_db.dart';
 import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
@@ -65,8 +65,12 @@ class _ShareImageView extends State<ShareImageView> {
 
     //_users = await DbContacts.getActiveUsers();
     // _updateUsers(_users);
-    // imageBytes = await widget.imageBytesFuture;
-    // setState(() {});
+    initAsync();
+  }
+
+  Future initAsync() async {
+    imageBytes = await widget.imageBytesFuture;
+    setState(() {});
   }
 
   @override
@@ -219,7 +223,7 @@ class _ShareImageView extends State<ShareImageView> {
                   setState(() {
                     sendingImage = true;
                   });
-                  await sendImage(
+                  sendImage(
                     _selectedUserIds.toList(),
                     imageBytes!,
                     widget.isRealTwonly,

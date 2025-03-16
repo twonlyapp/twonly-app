@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -16,6 +17,8 @@ import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
 import 'package:twonly/src/proto/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
+import 'package:twonly/src/providers/api/media.dart';
+import 'package:twonly/src/providers/hive.dart';
 import 'package:twonly/src/services/notification_service.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
@@ -53,26 +56,31 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     // download should only be done when the app is open
     return client.Response()..error = ErrorCode.InternalError;
   }
+
   Logger("server_messages")
-      .info("downloading: ${data.uploadToken} ${data.fin}");
+      .info("downloading: ${data.downloadToken} ${data.fin}");
+
   final box = await getMediaStorage();
 
-  String boxId = data.uploadToken.toString();
-  int? messageId = box.get("${data.uploadToken}_messageId");
+  String boxId = data.downloadToken.toString();
+
+  int? messageId = box.get("${data.downloadToken}_messageId");
+
+  if (messageId == null) {
+    Logger("server_messages")
+        .info("download data received, but unknown messageID");
+    // answers with ok, so the server will delete the message
+    var ok = client.Response_Ok()..none = true;
+    return client.Response()..ok = ok;
+  }
+
   if (data.fin && data.data.isEmpty) {
     // media file was deleted by the server. remove the media from device
-
-    if (messageId != null) {
-      await twonlyDatabase.deleteMessageById(messageId);
-      box.delete(boxId);
-      box.delete("${data.uploadToken}_fromUserId");
-      box.delete("${data.uploadToken}_downloaded");
-      var ok = client.Response_Ok()..none = true;
-      return client.Response()..ok = ok;
-    } else {
-      var ok = client.Response_Ok()..none = true;
-      return client.Response()..ok = ok;
-    }
+    await twonlyDatabase.deleteMessageById(messageId);
+    box.delete(boxId);
+    box.delete("${data.downloadToken}_downloaded");
+    var ok = client.Response_Ok()..none = true;
+    return client.Response()..ok = ok;
   }
 
   Uint8List? buffered = box.get(boxId);
@@ -93,33 +101,59 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     downloadedBytes = Uint8List.fromList(data.data);
   }
 
-  if (data.fin) {
-    SignalHelper.getSignalStore();
-    int? fromUserId = box.get("${data.uploadToken}_fromUserId");
-    if (fromUserId != null) {
-      Uint8List? rawBytes =
-          await SignalHelper.decryptBytes(downloadedBytes, fromUserId);
-
-      if (rawBytes != null) {
-        box.put("${data.uploadToken}_downloaded", rawBytes);
-      } else {
-        Logger("server_messages")
-            .shout("error decrypting the message: ${data.uploadToken}");
-      }
-
-      final update =
-          MessagesCompanion(downloadState: Value(DownloadState.downloaded));
-      await twonlyDatabase.updateMessageByOtherUser(
-        fromUserId,
-        messageId!,
-        update,
-      );
-
-      box.delete(boxId);
-    }
-  } else {
+  if (!data.fin) {
+    // download not finished, so waiting for more data...
     box.put(boxId, downloadedBytes);
+    var ok = client.Response_Ok()..none = true;
+    return client.Response()..ok = ok;
   }
+
+  // Uint8List? rawBytes =
+  //     await SignalHelper.decryptBytes(downloadedBytes, fromUserId);
+
+  Message? msg =
+      await twonlyDatabase.getMessageByMessageId(messageId).getSingleOrNull();
+  if (msg == null) {
+    Logger("server_messages")
+        .info("messageId not found in database. Ignoring download");
+    // answers with ok, so the server will delete the message
+    var ok = client.Response_Ok()..none = true;
+    return client.Response()..ok = ok;
+  }
+
+  MediaMessageContent content =
+      MediaMessageContent.fromJson(jsonDecode(msg.contentJson!));
+
+  final xchacha20 = Xchacha20.poly1305Aead();
+  SecretKeyData secretKeyData = SecretKeyData(content.encryptionKey!);
+
+  SecretBox secretBox = SecretBox(
+    downloadedBytes,
+    nonce: content.encryptionNonce!,
+    mac: Mac(content.encryptionMac!),
+  );
+
+  try {
+    final rawBytes =
+        await xchacha20.decrypt(secretBox, secretKey: secretKeyData);
+
+    box.put("${data.downloadToken}_downloaded", rawBytes);
+  } catch (e) {
+    Logger("server_messages").info("Decryption error: $e");
+    // deleting message as this is an invalid image
+    await twonlyDatabase.deleteMessageById(messageId);
+    // answers with ok, so the server will delete the message
+    var ok = client.Response_Ok()..none = true;
+    return client.Response()..ok = ok;
+  }
+
+  await twonlyDatabase.updateMessageByOtherUser(
+    msg.contactId,
+    messageId,
+    MessagesCompanion(downloadState: Value(DownloadState.downloaded)),
+  );
+
+  box.delete(boxId);
 
   var ok = client.Response_Ok()..none = true;
   return client.Response()..ok = ok;
@@ -185,8 +219,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             kind: Value(message.kind),
             messageOtherId: Value(message.messageId),
             contentJson: Value(content),
-            downloadState: Value(DownloadState.downloaded),
-            sendAt: Value(message.timestamp),
+            acknowledgeByServer: Value(true),
+            downloadState: Value(message.kind == MessageKind.media
+                ? DownloadState.pending
+                : DownloadState.downloaded),
+            sendAt: Value(message.timestamp.toUtc()),
           );
 
           final messageId = await twonlyDatabase.insertMessage(
@@ -198,6 +235,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           }
 
           encryptAndSendMessage(
+            message.messageId!,
             fromUserId,
             MessageJson(
               kind: MessageKind.ack,
@@ -220,8 +258,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             if (!globalIsAppInBackground) {
               final content = message.content;
               if (content is MediaMessageContent) {
-                List<int> downloadToken = content.downloadToken;
-                tryDownloadMedia(messageId, fromUserId, downloadToken);
+                tryDownloadMedia(
+                  messageId,
+                  fromUserId,
+                  content,
+                );
               }
             }
           }

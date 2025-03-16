@@ -29,7 +29,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   flutter_localizations:
     sdk: flutter
-  flutter_secure_storage: ^9.2.2
+  flutter_secure_storage: ^10.0.0-beta.4
   font_awesome_flutter: ^10.8.0
   gal: ^2.3.1
   google_fonts: ^6.2.1
@@ -50,6 +50,8 @@ dependencies:
   permission_handler: ^11.3.1
   pie_menu: ^3.2.7
   protobuf: ^2.1.0
+  cryptography_plus: ^2.7.0
+  cryptography_flutter_plus: ^2.3.2
   provider: ^6.1.2
   qr_flutter: ^4.1.0
   reorderables: ^0.6.0

@@ -72,7 +72,7 @@ final $typed_data.Uint8List newMessageDescriptor = $convert.base64Decode(
 const DownloadData$json = {
   '1': 'DownloadData',
   '2': [
-    {'1': 'upload_token', '3': 1, '4': 1, '5': 12, '10': 'uploadToken'},
+    {'1': 'download_token', '3': 1, '4': 1, '5': 12, '10': 'downloadToken'},
     {'1': 'offset', '3': 2, '4': 1, '5': 13, '10': 'offset'},
     {'1': 'data', '3': 3, '4': 1, '5': 12, '10': 'data'},
     {'1': 'fin', '3': 4, '4': 1, '5': 8, '10': 'fin'},
@@ -81,8 +81,9 @@ const DownloadData$json = {
 
 /// Descriptor for `DownloadData`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List downloadDataDescriptor = $convert.base64Decode(
-    'CgxEb3dubG9hZERhdGESIQoMdXBsb2FkX3Rva2VuGAEgASgMUgt1cGxvYWRUb2tlbhIWCgZvZm'
-    'ZzZXQYAiABKA1SBm9mZnNldBISCgRkYXRhGAMgASgMUgRkYXRhEhAKA2ZpbhgEIAEoCFIDZmlu');
+    'CgxEb3dubG9hZERhdGESJQoOZG93bmxvYWRfdG9rZW4YASABKAxSDWRvd25sb2FkVG9rZW4SFg'
+    'oGb2Zmc2V0GAIgASgNUgZvZmZzZXQSEgoEZGF0YRgDIAEoDFIEZGF0YRIQCgNmaW4YBCABKAhS'
+    'A2Zpbg==');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

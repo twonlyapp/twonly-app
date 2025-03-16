@@ -294,14 +294,14 @@ class NewMessage extends $pb.GeneratedMessage {
 
 class DownloadData extends $pb.GeneratedMessage {
   factory DownloadData({
-    $core.List<$core.int>? uploadToken,
+    $core.List<$core.int>? downloadToken,
     $core.int? offset,
     $core.List<$core.int>? data,
     $core.bool? fin,
   }) {
     final $result = create();
-    if (uploadToken != null) {
-      $result.uploadToken = uploadToken;
+    if (downloadToken != null) {
+      $result.downloadToken = downloadToken;
     }
     if (offset != null) {
       $result.offset = offset;
@@ -319,7 +319,7 @@ class DownloadData extends $pb.GeneratedMessage {
   factory DownloadData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'DownloadData', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY)
     ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
     ..aOB(4, _omitFieldNames ? '' : 'fin')
@@ -348,13 +348,13 @@ class DownloadData extends $pb.GeneratedMessage {
   static DownloadData? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.List<$core.int> get uploadToken => $_getN(0);
+  $core.List<$core.int> get downloadToken => $_getN(0);
   @$pb.TagNumber(1)
-  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
+  set downloadToken($core.List<$core.int> v) { $_setBytes(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasUploadToken() => $_has(0);
+  $core.bool hasDownloadToken() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUploadToken() => clearField(1);
+  void clearDownloadToken() => clearField(1);
 
   @$pb.TagNumber(2)
   $core.int get offset => $_getIZ(1);

@@ -14,6 +14,7 @@ import 'package:twonly/src/database/database.dart';
 import 'package:twonly/src/database/messages_db.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
@@ -31,18 +32,9 @@ class ChatListEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     bool right = message.messageOtherId == null;
-    MessageSendState state = messageSendStateFromMessage(message);
-
-    bool isDownloading = false;
-    List<int> token = [];
 
     MessageContent? content =
         MessageContent.fromJson(message.kind, jsonDecode(message.contentJson!));
-
-    if (message.messageOtherId != null && content is MediaMessageContent) {
-      token = content.downloadToken;
-      isDownloading = message.downloadState == DownloadState.downloading;
-    }
 
     Widget child = Container();
 
@@ -86,7 +78,7 @@ class ChatListEntry extends StatelessWidget {
 
       child = GestureDetector(
         onTap: () {
-          if (state == MessageSendState.received && !isDownloading) {
+          if (message.kind == MessageKind.media) {
             if (message.downloadState == DownloadState.downloaded) {
               Navigator.push(
                 context,
@@ -95,7 +87,7 @@ class ChatListEntry extends StatelessWidget {
                 }),
               );
             } else {
-              tryDownloadMedia(message.messageId, message.contactId, token,
+              tryDownloadMedia(message.messageId, message.contactId, content,
                   force: true);
             }
           }

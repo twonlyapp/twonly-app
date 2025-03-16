@@ -57,28 +57,9 @@ class MessageSendStateIcon extends StatefulWidget {
 }
 
 class _MessageSendStateIconState extends State<MessageSendStateIcon> {
-  Message? videoMsg;
-  Message? textMsg;
-  Message? imageMsg;
-
   @override
   void initState() {
     super.initState();
-
-    for (Message msg in widget.messages) {
-      if (msg.kind == MessageKind.textMessage) {
-        textMsg = msg;
-      }
-      if (msg.kind == MessageKind.media) {
-        MediaMessageContent content =
-            MediaMessageContent.fromJson(jsonDecode(msg.contentJson!));
-        if (content.isVideo) {
-          videoMsg = msg;
-        } else {
-          imageMsg = msg;
-        }
-      }
-    }
   }
 
   Widget getLoaderIcon(color) {
@@ -128,6 +109,15 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.received:
           icon = Icon(Icons.square_rounded, size: 14, color: color);
           text = context.lang.messageSendState_Received;
+          if (message.kind == MessageKind.media) {
+            if (message.downloadState == DownloadState.pending) {
+              text = context.lang.messageSendState_TapToLoad;
+            }
+            if (message.downloadState == DownloadState.downloading) {
+              text = context.lang.messageSendState_Loading;
+              icon = getLoaderIcon(color);
+            }
+          }
           break;
         case MessageSendState.send:
           icon =
@@ -135,21 +125,14 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           text = context.lang.messageSendState_Send;
           break;
         case MessageSendState.sending:
-        case MessageSendState.receiving:
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Sending;
+        case MessageSendState.receiving:
+          icon = getLoaderIcon(color);
+          text = context.lang.messageSendState_Received;
           break;
       }
 
-      if (message.kind == MessageKind.media) {
-        if (message.downloadState == DownloadState.pending) {
-          text = context.lang.messageSendState_TapToLoad;
-        }
-        if (message.downloadState == DownloadState.downloaded) {
-          text = context.lang.messageSendState_Loading;
-          icon = getLoaderIcon(color);
-        }
-      }
       icons.add(icon);
     }
 
