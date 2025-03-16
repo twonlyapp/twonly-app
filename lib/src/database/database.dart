@@ -135,17 +135,79 @@ class TwonlyDatabase extends _$TwonlyDatabase {
     }
   }
 
-  Future incTotalMediaCounter(int contactId) async {
-    return (update(contacts)..where((t) => t.userId.equals(contactId)))
-        .write(ContactsCompanion(
-      totalMediaCounter: Value(
-        (await (select(contacts)..where((t) => t.userId.equals(contactId)))
-                    .get())
-                .first
-                .totalMediaCounter +
-            1,
+  Future incFlameCounter(
+      int contactId, bool received, DateTime timestamp) async {
+    Contact contact = (await (select(contacts)
+              ..where((t) => t.userId.equals(contactId)))
+            .get())
+        .first;
+
+    int totalMediaCounter = contact.totalMediaCounter + 1;
+    int flameCounter = contact.flameCounter;
+
+    if (contact.lastMessageReceived != null &&
+        contact.lastMessageSend != null) {
+      final now = DateTime.now();
+      final startOfToday = DateTime(now.year, now.month, now.day);
+      final twoDaysAgo = startOfToday.subtract(Duration(days: 2));
+      if (contact.lastMessageSend!.isBefore(twoDaysAgo) ||
+          contact.lastMessageReceived!.isBefore(twoDaysAgo)) {
+        flameCounter = 0;
+      }
+    }
+
+    Value<DateTime?> lastMessageSend = Value.absent();
+    Value<DateTime?> lastMessageReceived = Value.absent();
+    Value<DateTime?> lastMessage = Value.absent();
+
+    if (contact.lastMessage != null) {
+      final now = DateTime.now();
+      final startOfToday = DateTime(now.year, now.month, now.day);
+
+      if (contact.lastMessage!.isBefore(startOfToday)) {
+        // last flame update was yesterday. check if it can be updated.
+        bool updateFlame = false;
+        if (received) {
+          if (contact.lastMessageSend!.isAfter(startOfToday)) {
+            // today a message was already send -> update flame
+            updateFlame = true;
+          }
+        } else if (contact.lastMessageReceived!.isAfter(startOfToday)) {
+          // today a message was already received -> update flame
+          updateFlame = true;
+        }
+        if (updateFlame) {
+          flameCounter += 1;
+          lastMessage = Value(timestamp);
+        }
+      }
+    } else {
+      // There where no message until no...
+      lastMessage = Value(timestamp);
+    }
+
+    if (received) {
+      lastMessageReceived = Value(timestamp);
+    } else {
+      lastMessageSend = Value(timestamp);
+    }
+
+    return (update(contacts)..where((t) => t.userId.equals(contactId))).write(
+      ContactsCompanion(
+        totalMediaCounter: Value(totalMediaCounter),
+        lastMessage: lastMessage,
+        lastMessageReceived: lastMessageReceived,
+        lastMessageSend: lastMessageSend,
+        flameCounter: Value(flameCounter),
       ),
-    ));
+    );
+
+    // twonlyDatabase.updateContact(
+    //   fromUserId,
+    //   ContactsCompanion(
+    //     lastMessageReceived: Value(message.timestamp),
+    //   ),
+    // );
   }
 
   SingleOrNullSelectable<Contact> getContactByUserId(int userId) {
@@ -183,7 +245,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   Stream<List<Contact>> watchContactsForChatList() {
     return (select(contacts)
           ..where((t) => t.accepted.equals(true) & t.blocked.equals(false))
-          ..orderBy([(t) => OrderingTerm.asc(t.lastMessage)]))
+          ..orderBy([(t) => OrderingTerm.desc(t.lastMessage)]))
         .watch();
   }
 

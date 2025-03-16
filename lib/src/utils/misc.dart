@@ -162,62 +162,6 @@ Future<Uint8List?> getCompressedImage(Uint8List imageBytes) async {
   return result;
 }
 
-// int getFlameCounter(List<DateTime> dates) {
-//   if (dates.isEmpty) return 0;
-
-//   int flamesCount = 0;
-//   DateTime lastFlameCount = DateTime.now();
-
-//   if (calculateTimeDifference(dates[0], lastFlameCount).inDays == 0) {
-//     flamesCount = 1;
-//     lastFlameCount = dates[0];
-//   }
-
-//   // print(dates[0]);
-//   for (int i = 1; i < dates.length; i++) {
-//     // print(
-//     //     "${dates[i]} ${dates[i].difference(dates[i - 1]).inDays} ${dates[i].difference(lastFlameCount).inDays}");
-//     if (calculateTimeDifference(dates[i], dates[i - 1]).inDays == 0) {
-//       if (lastFlameCount.difference(dates[i]).inDays == 1) {
-//         flamesCount++;
-//         lastFlameCount = dates[i];
-//       }
-//     } else {
-//       break; // Stop counting if there's a break in the sequence
-//     }
-//   }
-//   return flamesCount;
-// }
-
-// Future<int> getFlamesForOtherUser(int otherUserId) async {
-//   List<(DateTime, int?)> dates = await DbMessages.getMessageDates(otherUserId);
-//   // print("Dates ${dates.length}");
-//   if (dates.isEmpty) return 0;
-
-//   List<DateTime> received =
-//       dates.where((x) => x.$2 != null).map((x) => x.$1).toList();
-//   List<DateTime> send =
-//       dates.where((x) => x.$2 == null).map((x) => x.$1).toList();
-
-//   int a = getFlameCounter(received);
-//   int b = getFlameCounter(send);
-//   // print("Received $a and send $b");
-//   return min(a, b);
-// }
-
-Duration calculateTimeDifference(DateTime now, DateTime startTime) {
-  // Get the timezone offsets
-  Duration nowOffset = now.timeZoneOffset;
-  Duration startTimeOffset = startTime.timeZoneOffset;
-
-  // Convert both DateTime objects to UTC
-  DateTime nowInUTC = now.subtract(nowOffset);
-  DateTime startTimeInUTC = startTime.subtract(startTimeOffset);
-
-  // Calculate the difference
-  return nowInUTC.difference(startTimeInUTC);
-}
-
 Future<bool> authenticateUser(String localizedReason,
     {bool force = true}) async {
   try {

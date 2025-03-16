@@ -248,14 +248,6 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                           (messages[i - 1].messageOtherId != null &&
                               messages[i].messageOtherId != null);
                 }
-                // if (messages[i].openedAt != null) {
-                //   if (calculateTimeDifference(
-                //               DateTime.now(), messages[i].openedAt!)
-                //           .inHours >=
-                //       24) {
-                //     return Container();
-                //   }
-                // }
                 return ChatListEntry(
                   messages[i],
                   widget.userid,

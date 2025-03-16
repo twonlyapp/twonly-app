@@ -44,9 +44,9 @@ int getFlameCounterFromContact(Contact contact) {
   final now = DateTime.now();
   final startOfToday = DateTime(now.year, now.month, now.day);
   final twoDaysAgo = startOfToday.subtract(Duration(days: 2));
-  if (contact.lastMessageSend!.isBefore(twoDaysAgo) &&
-      contact.lastMessageReceived!.isBefore(twoDaysAgo)) {
-    return contact.flameCounter;
+  if (contact.lastMessageSend!.isAfter(twoDaysAgo) &&
+      contact.lastMessageReceived!.isAfter(twoDaysAgo)) {
+    return contact.flameCounter + 1;
   } else {
     return 0;
   }

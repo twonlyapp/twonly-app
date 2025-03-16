@@ -223,7 +223,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             downloadState: Value(message.kind == MessageKind.media
                 ? DownloadState.pending
                 : DownloadState.downloaded),
-            sendAt: Value(message.timestamp.toUtc()),
+            sendAt: Value(message.timestamp),
           );
 
           final messageId = await twonlyDatabase.insertMessage(
@@ -246,14 +246,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           );
 
           if (message.kind == MessageKind.media) {
-            twonlyDatabase.updateContact(
+            twonlyDatabase.incFlameCounter(
               fromUserId,
-              ContactsCompanion(
-                lastMessageReceived: Value(message.timestamp),
-              ),
+              true,
+              message.timestamp,
             );
-
-            twonlyDatabase.incTotalMediaCounter(fromUserId);
 
             if (!globalIsAppInBackground) {
               final content = message.content;

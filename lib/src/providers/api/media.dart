@@ -163,12 +163,10 @@ class ImageUploader {
 
       final downloadToken = uploadState.downloadTokens.removeLast();
 
-      twonlyDatabase.incTotalMediaCounter(targetUserId);
-      twonlyDatabase.updateContact(
+      twonlyDatabase.incFlameCounter(
         targetUserId,
-        ContactsCompanion(
-          lastMessageReceived: Value(metadata.messageSendAt),
-        ),
+        false,
+        metadata.messageSendAt,
       );
 
       // Ensures the retransmit of the message

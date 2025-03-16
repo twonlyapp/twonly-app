@@ -34,8 +34,6 @@ class ChatListView extends StatefulWidget {
 class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) {
-    Stream<List<Contact>> contacts = twonlyDatabase.watchContactsForChatList();
-
     return Scaffold(
       appBar: AppBar(
         title: GestureDetector(
@@ -88,7 +86,7 @@ class _ChatListViewState extends State<ChatListView> {
         ],
       ),
       body: StreamBuilder(
-        stream: contacts,
+        stream: twonlyDatabase.watchContactsForChatList(),
         builder: (context, snapshot) {
           if (!snapshot.hasData || snapshot.data == null) {
             return Container();
@@ -168,8 +166,10 @@ class _UserListItem extends State<UserListItem> {
       setState(() {
         if (currentMessage != null) {
           lastMessageInSeconds =
-              calculateTimeDifference(DateTime.now(), currentMessage!.sendAt)
-                  .inSeconds;
+              (DateTime.now().difference(currentMessage!.sendAt)).inSeconds;
+          if (lastMessageInSeconds < 0) {
+            lastMessageInSeconds = 0;
+          }
         }
       });
     });
@@ -260,7 +260,9 @@ class _UserListItem extends State<UserListItem> {
             return;
           }
           Message msg = currentMessage!;
-          if (msg.kind == MessageKind.media && msg.messageOtherId != null) {
+          if (msg.kind == MessageKind.media &&
+              msg.messageOtherId != null &&
+              msg.openedAt == null) {
             switch (msg.downloadState) {
               case DownloadState.pending:
                 MediaMessageContent content =
