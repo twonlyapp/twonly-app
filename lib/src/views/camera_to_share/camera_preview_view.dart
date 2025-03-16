@@ -1,9 +1,9 @@
-import 'dart:io';
-import 'dart:ui';
+import 'dart:typed_data';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/zoom_selector.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
@@ -48,12 +48,76 @@ class CameraPreviewView extends StatefulWidget {
 }
 
 class _CameraPreviewViewState extends State<CameraPreviewView> {
-  double _lastZoom = 1;
-  double _basePanY = 0;
+  double scaleFactor = 1;
   bool sharePreviewIsShown = false;
   bool isFlashOn = false;
   bool showSelfieFlash = false;
+  int cameraId = 0;
+  bool isZoomAble = false;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  late CameraController controller;
+  ScreenshotController screenshotController = ScreenshotController();
+
+  @override
+  void initState() {
+    super.initState();
+    selectCamera(0, init: true);
+  }
+
+  void selectCamera(int sCameraId, {bool init = false}) {
+    if (sCameraId > gCameras.length) return;
+    setState(() {
+      isZoomAble = false;
+    });
+    controller = CameraController(gCameras[sCameraId], ResolutionPreset.high);
+    controller.initialize().then((_) async {
+      if (!mounted) {
+        return;
+      }
+      controller.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
+
+      isZoomAble = await controller.getMinZoomLevel() !=
+          await controller.getMaxZoomLevel();
+      setState(() {});
+    }).catchError((Object e) {
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            // Handle access errors here.
+            break;
+          default:
+            // Handle other errors here.
+            break;
+        }
+      }
+    });
+    setState(() {
+      cameraId = sCameraId;
+    });
+  }
+
+  Future<void> updateScaleFactor(double newScale) async {
+    var minFactor = await controller.getMinZoomLevel();
+    var maxFactor = await controller.getMaxZoomLevel();
+    if (newScale < minFactor) {
+      newScale = minFactor;
+    }
+    if (newScale > maxFactor) {
+      newScale = maxFactor;
+    }
+
+    await controller.setZoomLevel(newScale);
+    setState(() {
+      scaleFactor = newScale;
+    });
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,237 +126,202 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(22),
-            child: CameraAwesomeBuilder.custom(
-              previewAlignment: Alignment.topLeft,
-              sensorConfig: SensorConfig.single(
-                aspectRatio: CameraAspectRatios.ratio_16_9,
-                zoom: 0.5,
-              ),
-              previewFit: CameraPreviewFit.contain,
-              progressIndicator: Container(),
-              onMediaCaptureEvent: (event) {
-                switch ((event.status, event.isPicture, event.isVideo)) {
-                  case (MediaCaptureStatus.capturing, true, false):
-                    debugPrint('Capturing picture...');
-                  case (MediaCaptureStatus.success, true, false):
-                    event.captureRequest.when(
-                      single: (single) async {
-                        final imageBytes = await single.file?.readAsBytes();
-                        if (imageBytes == null || !context.mounted) return;
-                        debugPrint("Delete ${single.path!}");
-                        File(single.path!).delete();
-                        setState(() {
-                          sharePreviewIsShown = true;
-                        });
-                        await Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            opaque: false,
-                            pageBuilder: (context, a1, a2) =>
-                                ShareImageEditorView(imageBytes: imageBytes),
-                            transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) {
-                              return child;
-                            },
-                            transitionDuration: Duration.zero,
-                            reverseTransitionDuration: Duration.zero,
-                          ),
-                        );
-                        if (context.mounted) {
-                          setState(() {
-                            sharePreviewIsShown = false;
-                          });
-                        }
-                      },
-                      multiple: (multiple) {
-                        multiple.fileBySensor.forEach((key, value) {
-                          debugPrint(
-                              'multiple image taken: $key ${value?.path}');
-                        });
-                      },
-                    );
-                  case (MediaCaptureStatus.failure, true, false):
-                    debugPrint('Failed to capture picture: ${event.exception}');
-                  case (MediaCaptureStatus.capturing, false, true):
-                    debugPrint('Capturing video...');
-                  case (MediaCaptureStatus.success, false, true):
-                    event.captureRequest.when(
-                      single: (single) {
-                        debugPrint('Video saved: ${single.file?.path}');
-                      },
-                      multiple: (multiple) {
-                        multiple.fileBySensor.forEach((key, value) {
-                          debugPrint(
-                              'multiple video taken: $key ${value?.path}');
-                        });
-                      },
-                    );
-                  case (MediaCaptureStatus.failure, false, true):
-                    debugPrint('Failed to capture video: ${event.exception}');
-                  default:
-                    debugPrint('Unknown event: $event');
-                }
-              },
-              builder: (cameraState, preview) {
-                return Stack(
-                  children: [
-                    Positioned.fill(
-                      child: GestureDetector(
-                        onPanStart: (details) async {
-                          if (cameraState.sensorConfig.sensors.first.position ==
-                              SensorPosition.front) {
-                            return;
-                          }
-                          setState(() {
-                            _basePanY = details.localPosition.dy;
-                          });
-                        },
-                        onPanUpdate: (details) async {
-                          if (cameraState.sensorConfig.sensors.first.position ==
-                              SensorPosition.front) {
-                            return;
-                          }
-                          var diff = _basePanY - details.localPosition.dy;
-                          if (diff > 200) diff = 200;
-                          if (diff < 0) diff = 0;
-                          var tmp = (diff / 200 * 50).toInt() / 50;
-                          if (tmp != _lastZoom) {
-                            cameraState.sensorConfig.setZoom(tmp);
-                            setState(() {
-                              (tmp);
-                              _lastZoom = tmp;
-                            });
-                          }
-                        },
-                        onDoubleTap: () async {
-                          bool isFront =
-                              cameraState.sensorConfig.sensors.first.position ==
-                                  SensorPosition.front;
-                          cameraState.switchCameraSensor(
-                            aspectRatio: CameraAspectRatios.ratio_16_9,
-                            flash: isFlashOn ? FlashMode.on : FlashMode.none,
-                            zoom: isFront ? 0.5 : 0,
-                          );
-                        },
-                      ),
-                    ),
-                    if (!sharePreviewIsShown)
-                      Positioned(
-                        right: 5,
-                        top: 0,
-                        child: Container(
-                          alignment: Alignment.bottomCenter,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: SafeArea(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                ActionButton(
-                                  FontAwesomeIcons.repeat,
-                                  tooltipText:
-                                      context.lang.switchFrontAndBackCamera,
-                                  onPressed: () async {
-                                    cameraState.switchCameraSensor(
-                                      aspectRatio:
-                                          CameraAspectRatios.ratio_16_9,
-                                      flash: isFlashOn
-                                          ? FlashMode.on
-                                          : FlashMode.none,
-                                    );
-                                  },
-                                ),
-                                ActionButton(
-                                  FontAwesomeIcons.boltLightning,
-                                  tooltipText: context.lang.toggleFlashLight,
-                                  color: isFlashOn
-                                      ? const Color.fromARGB(255, 255, 230, 0)
-                                      : const Color.fromARGB(
-                                          158, 255, 255, 255),
-                                  onPressed: () async {
-                                    if (isFlashOn) {
-                                      cameraState.sensorConfig
-                                          .setFlashMode(FlashMode.none);
-                                      isFlashOn = false;
-                                    } else {
-                                      cameraState.sensorConfig
-                                          .setFlashMode(FlashMode.on);
-                                      isFlashOn = true;
-                                    }
-                                    setState(() {});
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (!sharePreviewIsShown)
-                      Positioned(
-                        bottom: 30,
-                        left: 0,
-                        right: 0,
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Column(
-                            children: [
-                              ZoomSelector(state: cameraState),
-                              const SizedBox(height: 30),
-                              GestureDetector(
-                                onTap: () async {
-                                  if (cameraState.sensorConfig.flashMode ==
-                                          FlashMode.on &&
-                                      cameraState.sensorConfig.sensors.first
-                                              .position ==
-                                          SensorPosition.front) {
-                                    setState(() {
-                                      showSelfieFlash = true;
-                                    });
-                                    await Future.delayed(
-                                        Duration(milliseconds: 500));
-                                  }
-                                  cameraState.when(
-                                      onPhotoMode: (picState) =>
-                                          picState.takePhoto());
-                                  setState(() {
-                                    showSelfieFlash = false;
-                                  });
-                                },
-                                onLongPress: () async {},
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: Container(
-                                    height: 100,
-                                    width: 100,
-                                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        width: 7,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+            child: Stack(
+              children: [
+                (controller.value.isInitialized)
+                    ? Positioned.fill(
+                        child: Screenshot(
+                            controller: screenshotController,
+                            child: AspectRatio(
+                              aspectRatio: 9 / 16,
+                              child: ClipRect(
+                                child: FittedBox(
+                                  fit: BoxFit.cover,
+                                  child: SizedBox(
+                                    width: controller.value.previewSize!.height,
+                                    height: controller.value.previewSize!.width,
+                                    child: CameraPreview(controller),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            )),
+                      )
+                    : Container(),
+                Positioned.fill(
+                  child: GestureDetector(
+                    onPanStart: (details) async {
+                      // if (cameraState.sensorConfig.sensors.first.position ==
+                      //     SensorPosition.front) {
+                      //   return;
+                      // }
+                      // setState(() {
+                      //   _basePanY = details.localPosition.dy;
+                      // });
+                    },
+                    onPanUpdate: (details) async {
+                      // if (cameraState.sensorConfig.sensors.first.position ==
+                      //     SensorPosition.front) {
+                      //   return;
+                      // }
+                      // var diff = _basePanY - details.localPosition.dy;
+                      // if (diff > 200) diff = 200;
+                      // if (diff < 0) diff = 0;
+                      // var tmp = (diff / 200 * 50).toInt() / 50;
+                      // if (tmp != _lastZoom) {
+                      //   cameraState.sensorConfig.setZoom(tmp);
+                      //   setState(() {
+                      //     (tmp);
+                      //     _lastZoom = tmp;
+                      //   });
+                      // }
+                    },
+                    onDoubleTap: () async {
+                      selectCamera((cameraId + 1) % 2);
+                    },
+                  ),
+                ),
+                if (!sharePreviewIsShown)
+                  Positioned(
+                    right: 5,
+                    top: 0,
+                    child: Container(
+                      alignment: Alignment.bottomCenter,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: SafeArea(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            ActionButton(
+                              FontAwesomeIcons.repeat,
+                              tooltipText:
+                                  context.lang.switchFrontAndBackCamera,
+                              onPressed: () async {
+                                selectCamera((cameraId + 1) % 2);
+                              },
+                            ),
+                            ActionButton(
+                              FontAwesomeIcons.boltLightning,
+                              tooltipText: context.lang.toggleFlashLight,
+                              color: isFlashOn
+                                  ? const Color.fromARGB(255, 255, 230, 0)
+                                  : const Color.fromARGB(158, 255, 255, 255),
+                              onPressed: () async {
+                                if (isFlashOn) {
+                                  controller.setFlashMode(FlashMode.off);
+                                  isFlashOn = false;
+                                } else {
+                                  controller.setFlashMode(FlashMode.always);
+                                  isFlashOn = true;
+                                }
+                                setState(() {});
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                  ],
-                );
-              },
-              saveConfig: SaveConfig.photoAndVideo(
-                photoPathBuilder: (sensors) async {
-                  final Directory extDir = await getTemporaryDirectory();
-                  final testDir = await Directory(
-                    '${extDir.path}/images',
-                  ).create(recursive: true);
-                  final String filePath =
-                      '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-                  return SingleCaptureRequest(filePath, sensors.first);
-                },
-              ),
+                    ),
+                  ),
+                if (!sharePreviewIsShown)
+                  Positioned(
+                    bottom: 30,
+                    left: 0,
+                    right: 0,
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Column(
+                        children: [
+                          if (controller.value.isInitialized &&
+                              isZoomAble &&
+                              controller.description.lensDirection !=
+                                  CameraLensDirection.front)
+                            SizedBox(
+                              width: 150,
+                              child: CameraZoomButtons(
+                                key: widget.key,
+                                scaleFactor: scaleFactor,
+                                updateScaleFactor: updateScaleFactor,
+                                controller: controller,
+                              ),
+                            ),
+                          const SizedBox(height: 30),
+                          GestureDetector(
+                            onTap: () async {
+                              if (isFlashOn) {
+                                if (controller.description.lensDirection ==
+                                    CameraLensDirection.front) {
+                                  setState(() {
+                                    showSelfieFlash = true;
+                                  });
+                                } else {
+                                  controller.setFlashMode(FlashMode.torch);
+                                }
+                                await Future.delayed(
+                                    Duration(milliseconds: 1000));
+                              }
+
+                              await controller.pausePreview();
+                              if (!context.mounted) return;
+
+                              controller.setFlashMode(
+                                  isFlashOn ? FlashMode.always : FlashMode.off);
+
+                              Future<Uint8List?> imageBytes =
+                                  screenshotController.capture(pixelRatio: 1);
+
+                              setState(() {
+                                sharePreviewIsShown = true;
+                              });
+                              await Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  opaque: false,
+                                  pageBuilder: (context, a1, a2) =>
+                                      ShareImageEditorView(
+                                          imageBytes: imageBytes),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    return child;
+                                  },
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
+                              );
+                              // does not work??
+                              //await controller.resumePreview();
+                              selectCamera(0);
+                              if (context.mounted) {
+                                setState(() {
+                                  sharePreviewIsShown = false;
+                                });
+                              }
+
+                              setState(() {
+                                showSelfieFlash = false;
+                              });
+                            },
+                            onLongPress: () async {},
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Container(
+                                height: 100,
+                                width: 100,
+                                clipBehavior: Clip.antiAliasWithSaveLayer,
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    width: 7,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           if (showSelfieFlash)
@@ -304,18 +333,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 ),
               ),
             ),
-          if (sharePreviewIsShown)
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: 100.0,
-                  sigmaY: 100.0,
-                ),
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-            )
         ],
       ),
     );

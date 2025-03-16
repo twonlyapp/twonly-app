@@ -1,193 +1,107 @@
-import 'package:camerawesome/camerawesome_plugin.dart';
+import 'dart:math';
+
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
-class ZoomSelector extends StatefulWidget {
-  final CameraState state;
+class CameraZoomButtons extends StatefulWidget {
+  const CameraZoomButtons(
+      {super.key,
+      required this.controller,
+      required this.updateScaleFactor,
+      required this.scaleFactor});
 
-  const ZoomSelector({
-    super.key,
-    required this.state,
-  });
+  final CameraController controller;
+  final double scaleFactor;
+  final Function updateScaleFactor;
 
   @override
-  State<ZoomSelector> createState() => _ZoomSelectorState();
+  State<CameraZoomButtons> createState() => _CameraZoomButtonsState();
 }
 
-class _ZoomSelectorState extends State<ZoomSelector> {
-  double? minZoom;
-  double? maxZoom;
-
-  @override
-  void initState() {
-    super.initState();
-    initAsync();
+String beautifulZoomScale(double scale) {
+  var tmp = scale.toStringAsFixed(1);
+  if (tmp[0] == "0") {
+    tmp = tmp.substring(1, tmp.length);
   }
-
-  initAsync() async {
-    minZoom = await CamerawesomePlugin.getMinZoom();
-    maxZoom = await CamerawesomePlugin.getMaxZoom();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<SensorConfig>(
-      stream: widget.state.sensorConfig$,
-      builder: (context, sensorConfigSnapshot) {
-        initAsync();
-        if (sensorConfigSnapshot.data == null ||
-            minZoom == null ||
-            maxZoom == null) {
-          return const SizedBox.shrink();
-        }
-
-        return StreamBuilder<double>(
-          stream: sensorConfigSnapshot.requireData.zoom$,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return _ZoomIndicatorLayout(
-                zoom: snapshot.requireData,
-                min: minZoom!,
-                max: maxZoom!,
-                sensorConfig: widget.state.sensorConfig,
-              );
-            } else {
-              return const SizedBox.shrink();
-            }
-          },
-        );
-      },
-    );
-  }
+  return tmp;
 }
 
-class _ZoomIndicatorLayout extends StatelessWidget {
-  final double zoom;
-  final double min;
-  final double max;
-  final SensorConfig sensorConfig;
-
-  const _ZoomIndicatorLayout({
-    required this.zoom,
-    required this.min,
-    required this.max,
-    required this.sensorConfig,
-  });
-
+class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   @override
   Widget build(BuildContext context) {
-    final displayZoom = (max - min) * zoom + min;
-    if (min == 1.0) {
-      return Container();
-    }
+    var zoomButtonStyle = TextButton.styleFrom(
+        padding: EdgeInsets.zero,
+        foregroundColor: Colors.white,
+        minimumSize: Size(40, 40),
+        alignment: Alignment.center,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Show 3 dots for zooming: min, 1.0X and max zoom. The closer one shows
-        // text, the other ones a dot.
-        _ZoomIndicator(
-          normalValue: 0.0,
-          zoom: zoom,
-          selected: displayZoom < 1.0,
-          min: min,
-          max: max,
-          sensorConfig: sensorConfig,
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: _ZoomIndicator(
-            normalValue: 0.5,
-            zoom: zoom,
-            selected: !(displayZoom < 1.0 || displayZoom == max),
-            min: min,
-            max: max,
-            sensorConfig: sensorConfig,
+    final zoomTextStyle = TextStyle(fontSize: 13);
+    return Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(40.0),
+        child: Container(
+          color: const Color.fromARGB(90, 0, 0, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                style: zoomButtonStyle,
+                onPressed: () async {
+                  var level = await widget.controller.getMinZoomLevel();
+                  widget.updateScaleFactor(level);
+                },
+                child: FutureBuilder(
+                    future: widget.controller.getMinZoomLevel(),
+                    builder: (context, snap) {
+                      if (snap.hasData) {
+                        var minLevel =
+                            beautifulZoomScale(snap.data!.toDouble());
+                        var currentLevel =
+                            beautifulZoomScale(widget.scaleFactor);
+                        return Text(
+                          widget.scaleFactor < 1
+                              ? "${currentLevel}x"
+                              : "${minLevel}x",
+                          style: zoomTextStyle,
+                        );
+                      } else {
+                        return Text("");
+                      }
+                    }),
+              ),
+              TextButton(
+                  style: zoomButtonStyle,
+                  onPressed: () {
+                    widget.updateScaleFactor(1.0);
+                  },
+                  child: Text(
+                    (widget.scaleFactor >= 1 && widget.scaleFactor < 2)
+                        ? "${beautifulZoomScale(widget.scaleFactor)}x"
+                        : "1.0x",
+                    style: zoomTextStyle,
+                  )),
+              TextButton(
+                style: zoomButtonStyle,
+                onPressed: () async {
+                  var level = min(await widget.controller.getMaxZoomLevel(), 2)
+                      .toDouble();
+                  widget.updateScaleFactor(level);
+                },
+                child: FutureBuilder(
+                    future: widget.controller.getMaxZoomLevel(),
+                    builder: (context, snap) {
+                      if (snap.hasData) {
+                        var maxLevel = min((snap.data?.toInt())!, 2);
+                        return Text("${maxLevel}x", style: zoomTextStyle);
+                      } else {
+                        return Text("");
+                      }
+                    }),
+              )
+            ],
           ),
         ),
-        _ZoomIndicator(
-          normalValue: 1.0,
-          zoom: zoom,
-          selected: displayZoom == max,
-          min: min,
-          max: max,
-          sensorConfig: sensorConfig,
-        ),
-      ],
-    );
-  }
-}
-
-class _ZoomIndicator extends StatelessWidget {
-  final double zoom;
-  final double min;
-  final double max;
-  final double normalValue;
-  final SensorConfig sensorConfig;
-  final bool selected;
-
-  const _ZoomIndicator({
-    required this.zoom,
-    required this.min,
-    required this.max,
-    required this.normalValue,
-    required this.sensorConfig,
-    required this.selected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final baseTheme = AwesomeThemeProvider.of(context).theme;
-    final baseButtonTheme = baseTheme.buttonTheme;
-    final displayZoom = (max - min) * zoom + min;
-    Widget content = AnimatedSwitcher(
-      duration: const Duration(milliseconds: 100),
-      transitionBuilder: (child, anim) {
-        return ScaleTransition(scale: anim, child: child);
-      },
-      child: selected
-          ? AwesomeBouncingWidget(
-              key: ValueKey("zoomIndicator_${normalValue}_selected"),
-              onTap: () {
-                sensorConfig.setZoom(normalValue);
-              },
-              child: Container(
-                color: Colors.transparent,
-                padding: const EdgeInsets.all(0.0),
-                child: AwesomeCircleWidget(
-                  theme: baseTheme,
-                  child: Text(
-                    "${displayZoom.toStringAsFixed(1)}X",
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ),
-            )
-          : AwesomeBouncingWidget(
-              key: ValueKey("zoomIndicator_${normalValue}_unselected"),
-              onTap: () {
-                sensorConfig.setZoom(normalValue);
-              },
-              child: Container(
-                color: Colors.transparent,
-                padding: const EdgeInsets.all(16.0),
-                child: AwesomeCircleWidget(
-                  theme: baseTheme.copyWith(
-                    buttonTheme: baseButtonTheme.copyWith(
-                      backgroundColor: baseButtonTheme.foregroundColor,
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
-                  child: const SizedBox(width: 6, height: 6),
-                ),
-              ),
-            ),
-    );
-
-    // Same width for each dot to keep them in their position
-    return SizedBox(
-      width: 56,
-      child: Center(
-        child: content,
       ),
     );
   }

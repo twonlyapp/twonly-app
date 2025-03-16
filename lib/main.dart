@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
@@ -36,6 +37,8 @@ void main() async {
   await setupPushNotification();
   await initMediaStorage();
   await initFCMService();
+
+  gCameras = await availableCameras();
 
   apiProvider = ApiProvider();
   twonlyDatabase = TwonlyDatabase();

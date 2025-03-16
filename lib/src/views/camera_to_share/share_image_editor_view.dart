@@ -26,7 +26,7 @@ List<Layer> removedLayers = [];
 
 class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView({super.key, required this.imageBytes});
-  final Uint8List imageBytes;
+  final Future<Uint8List?> imageBytes;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -223,8 +223,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     return image;
   }
 
-  Future<void> loadImage(dynamic imageFile) async {
-    await currentImage.load(imageFile);
+  Future<void> loadImage(Future<Uint8List?> imageFile) async {
+    Uint8List? imageBytes = await imageFile;
+    await currentImage.load(imageBytes);
 
     layers.clear();
 

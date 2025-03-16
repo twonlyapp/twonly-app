@@ -10,9 +10,6 @@ environment:
   sdk: ^3.6.0
 
 dependencies:
-  camerawesome: ^2.1.0
-  # camerawesome: 
-  #   path: ../CamerAwesome
   collection: ^1.18.0
   connectivity_plus: ^6.1.2
   drift: ^2.25.1
@@ -54,6 +51,7 @@ dependencies:
   screenshot: ^3.0.0
   url_launcher: ^6.3.1
   web_socket_channel: ^3.0.1
+  camera: ^0.11.1
 
 dev_dependencies:
   flutter_test:
