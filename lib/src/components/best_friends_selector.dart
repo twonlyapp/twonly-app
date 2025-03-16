@@ -144,7 +144,7 @@ class UserCheckbox extends StatelessWidget {
                   StreamBuilder(
                     stream: twonlyDatabase.watchFlameCounter(user.userId),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData && snapshot.data! != 0) {
+                      if (!snapshot.hasData || snapshot.data! == 0) {
                         return Container();
                       }
                       return FlameCounterWidget(
