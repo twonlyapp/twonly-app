@@ -2,9 +2,9 @@ import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/database/messages_db.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 enum MessageSendState {

@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 
 class Contacts extends Table {
   IntColumn get userId => integer()();

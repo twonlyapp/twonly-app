@@ -5,7 +5,7 @@ import 'package:twonly/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:twonly/src/components/alert_dialog.dart';
-import 'package:twonly/src/model/json/user_data.dart';
+import 'package:twonly/src/json_models/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/signal.dart';
 
@@ -43,7 +43,7 @@ class _RegisterViewState extends State<RegisterView> {
         username: username,
         displayName: username,
       );
-      storage.write(key: "user_data", value: jsonEncode(userData));
+      storage.write(key: "userData", value: jsonEncode(userData));
     }
 
     setState(() {

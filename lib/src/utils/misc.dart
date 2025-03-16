@@ -10,26 +10,13 @@ import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart';
-import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
   TwonlyDatabase get db => Provider.of<TwonlyDatabase>(this);
-}
-
-// Function to check if a column exists
-Future<bool> columnExists(
-    Database db, String tableName, String columnName) async {
-  final result = await db.rawQuery('PRAGMA table_info($tableName)');
-  for (var row in result) {
-    if (row['name'] == columnName) {
-      return true; // Column exists
-    }
-  }
-  return false; // Column does not exist
 }
 
 Future<void> writeLogToFile(LogRecord record) async {

@@ -3,9 +3,9 @@ import 'package:drift/drift.dart';
 import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/database/messages_db.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/hive.dart';
@@ -70,7 +70,7 @@ Future<Result> encryptAndSendMessage(
 
   if (resp.isSuccess) {
     if (messageId != null) {
-      await twonlyDatabase.updateMessageByMessageId(
+      await twonlyDatabase.messagesDao.updateMessageByMessageId(
         messageId,
         MessagesCompanion(acknowledgeByServer: Value(true)),
       );
@@ -86,7 +86,7 @@ Future sendTextMessage(int target, String message) async {
 
   DateTime messageSendAt = DateTime.now();
 
-  int? messageId = await twonlyDatabase.insertMessage(
+  int? messageId = await twonlyDatabase.messagesDao.insertMessage(
     MessagesCompanion(
         contactId: Value(target),
         kind: Value(MessageKind.textMessage),

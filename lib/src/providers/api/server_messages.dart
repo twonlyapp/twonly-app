@@ -7,9 +7,9 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
-import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/database/messages_db.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
@@ -76,7 +76,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 
   if (data.fin && data.data.isEmpty) {
     // media file was deleted by the server. remove the media from device
-    await twonlyDatabase.deleteMessageById(messageId);
+    await twonlyDatabase.messagesDao.deleteMessageById(messageId);
     box.delete(boxId);
     box.delete("${data.downloadToken}_downloaded");
     var ok = client.Response_Ok()..none = true;
@@ -111,8 +111,9 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   // Uint8List? rawBytes =
   //     await SignalHelper.decryptBytes(downloadedBytes, fromUserId);
 
-  Message? msg =
-      await twonlyDatabase.getMessageByMessageId(messageId).getSingleOrNull();
+  Message? msg = await twonlyDatabase.messagesDao
+      .getMessageByMessageId(messageId)
+      .getSingleOrNull();
   if (msg == null) {
     Logger("server_messages")
         .info("messageId not found in database. Ignoring download");
@@ -141,13 +142,13 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   } catch (e) {
     Logger("server_messages").info("Decryption error: $e");
     // deleting message as this is an invalid image
-    await twonlyDatabase.deleteMessageById(messageId);
+    await twonlyDatabase.messagesDao.deleteMessageById(messageId);
     // answers with ok, so the server will delete the message
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
   }
 
-  await twonlyDatabase.updateMessageByOtherUser(
+  await twonlyDatabase.messagesDao.updateMessageByOtherUser(
     msg.contactId,
     messageId,
     MessagesCompanion(downloadState: Value(DownloadState.downloaded)),
@@ -168,7 +169,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         if (username.isSuccess) {
           Uint8List name = username.value.userdata.username;
 
-          int added = await twonlyDatabase.insertContact(ContactsCompanion(
+          int added =
+              await twonlyDatabase.contactsDao.insertContact(ContactsCompanion(
             username: Value(utf8.decode(name)),
             userId: Value(fromUserId),
             requested: Value(true),
@@ -184,23 +186,23 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         break;
       case MessageKind.opened:
         final update = MessagesCompanion(openedAt: Value(message.timestamp));
-        await twonlyDatabase.updateMessageByOtherUser(
+        await twonlyDatabase.messagesDao.updateMessageByOtherUser(
           fromUserId,
           message.messageId!,
           update,
         );
         break;
       case MessageKind.rejectRequest:
-        await twonlyDatabase.deleteContactByUserId(fromUserId);
+        await twonlyDatabase.contactsDao.deleteContactByUserId(fromUserId);
         break;
       case MessageKind.acceptRequest:
         final update = ContactsCompanion(accepted: Value(true));
-        twonlyDatabase.updateContact(fromUserId, update);
+        twonlyDatabase.contactsDao.updateContact(fromUserId, update);
         localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
         break;
       case MessageKind.ack:
         final update = MessagesCompanion(acknowledgeByUser: Value(true));
-        await twonlyDatabase.updateMessageByOtherUser(
+        await twonlyDatabase.messagesDao.updateMessageByOtherUser(
           fromUserId,
           message.messageId!,
           update,
@@ -226,7 +228,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             sendAt: Value(message.timestamp),
           );
 
-          final messageId = await twonlyDatabase.insertMessage(
+          final messageId = await twonlyDatabase.messagesDao.insertMessage(
             update,
           );
 
@@ -246,7 +248,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           );
 
           if (message.kind == MessageKind.media) {
-            twonlyDatabase.incFlameCounter(
+            twonlyDatabase.contactsDao.incFlameCounter(
               fromUserId,
               true,
               message.timestamp,

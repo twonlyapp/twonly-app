@@ -5,9 +5,9 @@ import 'package:drift/drift.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
-import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/database/messages_db.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
@@ -19,7 +19,7 @@ Future tryDownloadAllMediaFiles() async {
     return;
   }
   List<Message> messages =
-      await twonlyDatabase.getAllMessagesPendingDownloading();
+      await twonlyDatabase.messagesDao.getAllMessagesPendingDownloading();
 
   for (Message message in messages) {
     MessageContent? content =
@@ -163,7 +163,7 @@ class ImageUploader {
 
       final downloadToken = uploadState.downloadTokens.removeLast();
 
-      twonlyDatabase.incFlameCounter(
+      twonlyDatabase.contactsDao.incFlameCounter(
         targetUserId,
         false,
         metadata.messageSendAt,
@@ -215,7 +215,7 @@ Future sendImage(
 
   // at this point it is safe inform the user about the process of sending the image..
   for (final userId in metadata.userIds) {
-    int? messageId = await twonlyDatabase.insertMessage(
+    int? messageId = await twonlyDatabase.messagesDao.insertMessage(
       MessagesCompanion(
         contactId: Value(userId),
         kind: Value(MessageKind.media),
@@ -284,7 +284,7 @@ Future tryDownloadMedia(
 
   box.put("${content.downloadToken!}_messageId", messageId);
 
-  await twonlyDatabase.updateMessageByOtherUser(
+  await twonlyDatabase.messagesDao.updateMessageByOtherUser(
     fromUserId,
     messageId,
     MessagesCompanion(
@@ -307,7 +307,7 @@ Future<Uint8List?> getDownloadedMedia(
 
   // await userOpenedOtherMessage(otherUserId, messageOtherId);
   notifyContactAboutOpeningMessage(message.contactId, message.messageOtherId!);
-  twonlyDatabase.updateMessageByMessageId(
+  twonlyDatabase.messagesDao.updateMessageByMessageId(
       message.messageId, MessagesCompanion(openedAt: Value(DateTime.now())));
 
   box.delete(downloadToken.toString());

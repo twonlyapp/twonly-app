@@ -5,8 +5,8 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/components/notification_badge.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -55,8 +55,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   Future updateAsync(int userId) async {
     if (sendNextMediaToUserName != null) return;
-    Contact? contact =
-        await twonlyDatabase.getContactByUserId(userId).getSingleOrNull();
+    Contact? contact = await twonlyDatabase.contactsDao
+        .getContactByUserId(userId)
+        .getSingleOrNull();
     if (contact != null) {
       sendNextMediaToUserName = getContactDisplayName(contact);
     }

@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/model/json/message.dart' as my;
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/json_models/message.dart' as my;
 
 /// Streams are created so that app can respond to notification-related events
 /// since the plugin is initialized in the `main` function
@@ -167,8 +167,9 @@ String getPushNotificationText(String key, String userName) {
 
 Future localPushNotificationNewMessage(
     int fromUserId, my.MessageJson message, int messageId) async {
-  Contact? user =
-      await twonlyDatabase.getContactByUserId(fromUserId).getSingleOrNull();
+  Contact? user = await twonlyDatabase.contactsDao
+      .getContactByUserId(fromUserId)
+      .getSingleOrNull();
 
   if (user == null) return;
 

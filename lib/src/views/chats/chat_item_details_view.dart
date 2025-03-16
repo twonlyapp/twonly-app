@@ -9,10 +9,10 @@ import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/components/verified_shield.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/database/messages_db.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
@@ -158,8 +158,9 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   }
 
   Future initStreams() async {
-    await twonlyDatabase.removeOldMessages();
-    Stream<Contact> contact = twonlyDatabase.watchContact(widget.userid);
+    await twonlyDatabase.messagesDao.removeOldMessages();
+    Stream<Contact> contact =
+        twonlyDatabase.contactsDao.watchContact(widget.userid);
     userSub = contact.listen((contact) {
       setState(() {
         user = contact;
@@ -167,7 +168,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     });
 
     Stream<List<Message>> msgStream =
-        twonlyDatabase.watchAllMessagesFrom(widget.userid);
+        twonlyDatabase.messagesDao.watchAllMessagesFrom(widget.userid);
     messageSub = msgStream.listen((msgs) {
       if (!context.mounted) return;
       var updated = false;
@@ -181,7 +182,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         }
       }
       if (updated) {
-        twonlyDatabase.openedAllTextMessages(widget.userid);
+        twonlyDatabase.messagesDao.openedAllTextMessages(widget.userid);
       } else {
         // The stream should be get an update, so only update the UI when all are opened
         setState(() {

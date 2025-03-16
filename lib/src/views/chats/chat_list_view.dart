@@ -9,10 +9,10 @@ import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/components/notification_badge.dart';
 import 'package:twonly/src/components/user_context_menu.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/database/messages_db.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -50,7 +50,7 @@ class _ChatListViewState extends State<ChatListView> {
         // title:
         actions: [
           StreamBuilder(
-            stream: twonlyDatabase.watchContactsRequested(),
+            stream: twonlyDatabase.contactsDao.watchContactsRequested(),
             builder: (context, snapshot) {
               var count = 0;
               if (snapshot.hasData && snapshot.data != null) {
@@ -86,7 +86,7 @@ class _ChatListViewState extends State<ChatListView> {
         ],
       ),
       body: StreamBuilder(
-        stream: twonlyDatabase.watchContactsForChatList(),
+        stream: twonlyDatabase.contactsDao.watchContactsForChatList(),
         builder: (context, snapshot) {
           if (!snapshot.hasData || snapshot.data == null) {
             return Container();
@@ -190,7 +190,8 @@ class _UserListItem extends State<UserListItem> {
       child: ListTile(
         title: Text(getContactDisplayName(widget.user)),
         subtitle: StreamBuilder(
-          stream: twonlyDatabase.watchLastMessage(widget.user.userId),
+          stream:
+              twonlyDatabase.messagesDao.watchLastMessage(widget.user.userId),
           builder: (context, lastMessageSnapshot) {
             if (!lastMessageSnapshot.hasData) {
               return Container();
@@ -200,7 +201,8 @@ class _UserListItem extends State<UserListItem> {
             }
             final lastMessage = lastMessageSnapshot.data!.first;
             return StreamBuilder(
-              stream: twonlyDatabase.watchMessageNotOpened(widget.user.userId),
+              stream: twonlyDatabase.messagesDao
+                  .watchMessageNotOpened(widget.user.userId),
               builder: (context, notOpenedMessagesSnapshot) {
                 if (!lastMessageSnapshot.hasData) {
                   return Container();

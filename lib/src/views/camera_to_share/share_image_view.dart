@@ -10,8 +10,8 @@ import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/verified_shield.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -54,7 +54,7 @@ class _ShareImageView extends State<ShareImageView> {
     }
 
     Stream<List<Contact>> allContacts =
-        twonlyDatabase.watchContactsForChatList();
+        twonlyDatabase.contactsDao.watchContactsForChatList();
 
     contactSub = allContacts.listen((allContacts) {
       setState(() {

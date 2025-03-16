@@ -2,13 +2,13 @@ import 'dart:async';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:twonly/src/components/alert_dialog.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/headline.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
@@ -49,7 +49,8 @@ class _SearchUsernameView extends State<SearchUsernameView> {
         return;
       }
 
-      int added = await twonlyDatabase.insertContact(ContactsCompanion(
+      int added =
+          await twonlyDatabase.contactsDao.insertContact(ContactsCompanion(
         username: Value(searchUserName.text),
         userId: Value(res.value.userdata.userId.toInt()),
         requested: Value(false),
@@ -97,7 +98,8 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       );
     }
 
-    Stream<List<Contact>> contacts = twonlyDatabase.watchNotAcceptedContacts();
+    Stream<List<Contact>> contacts =
+        twonlyDatabase.contactsDao.watchNotAcceptedContacts();
 
     return Scaffold(
       appBar: AppBar(
@@ -195,8 +197,8 @@ class _ContactsListViewState extends State<ContactsListView> {
                         color: const Color.fromARGB(164, 244, 67, 54)),
                     onPressed: () async {
                       final update = ContactsCompanion(blocked: Value(true));
-                      await twonlyDatabase.updateContact(
-                          contact.userId, update);
+                      await twonlyDatabase.contactsDao
+                          .updateContact(contact.userId, update);
                     },
                   ),
                 ),
@@ -205,7 +207,7 @@ class _ContactsListViewState extends State<ContactsListView> {
                   child: IconButton(
                     icon: Icon(Icons.close, color: Colors.red),
                     onPressed: () async {
-                      await twonlyDatabase
+                      await twonlyDatabase.contactsDao
                           .deleteContactByUserId(contact.userId);
                       encryptAndSendMessage(
                         null,
@@ -223,7 +225,8 @@ class _ContactsListViewState extends State<ContactsListView> {
                   icon: Icon(Icons.check, color: Colors.green),
                   onPressed: () async {
                     final update = ContactsCompanion(accepted: Value(true));
-                    await twonlyDatabase.updateContact(contact.userId, update);
+                    await twonlyDatabase.contactsDao
+                        .updateContact(contact.userId, update);
                     encryptAndSendMessage(
                       null,
                       contact.userId,

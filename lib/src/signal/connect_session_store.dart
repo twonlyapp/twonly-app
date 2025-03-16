@@ -1,73 +1,81 @@
-import 'dart:typed_data';
+import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/session_store_model.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-
-// make it easier to read
-typedef DB = DbSignalSessionStore;
+import 'package:twonly/src/database/twonly_database.dart';
 
 class ConnectSessionStore extends SessionStore {
-  ConnectSessionStore();
-
   @override
   Future<bool> containsSession(SignalProtocolAddress address) async {
-    var list = (await dbProvider.db!.query(DB.tableName,
-        columns: [],
-        where: '${DB.columnDeviceId} = ? AND ${DB.columnName} = ?',
-        whereArgs: <Object?>[address.getDeviceId(), address.getName()]));
-    return list.isNotEmpty;
+    final sessions =
+        await (twonlyDatabase.select(twonlyDatabase.signalSessionStores)
+              ..where((tbl) =>
+                  tbl.deviceId.equals(address.getDeviceId()) &
+                  tbl.name.equals(address.getName())))
+            .get();
+    return sessions.isNotEmpty;
   }
 
   @override
   Future<void> deleteAllSessions(String name) async {
-    await dbProvider.db!.delete(DB.tableName,
-        where: '${DB.columnName} = ?', whereArgs: <Object?>[name]);
+    await (twonlyDatabase.delete(twonlyDatabase.signalSessionStores)
+          ..where((tbl) => tbl.name.equals(name)))
+        .go();
   }
 
   @override
   Future<void> deleteSession(SignalProtocolAddress address) async {
-    await dbProvider.db!.delete(DB.tableName,
-        where: '${DB.columnDeviceId} = ? AND ${DB.columnName} = ?',
-        whereArgs: <Object?>[address.getDeviceId(), address.getName()]);
+    await (twonlyDatabase.delete(twonlyDatabase.signalSessionStores)
+          ..where((tbl) =>
+              tbl.deviceId.equals(address.getDeviceId()) &
+              tbl.name.equals(address.getName())))
+        .go();
   }
 
   @override
   Future<List<int>> getSubDeviceSessions(String name) async {
-    var deviceIds = (await dbProvider.db!.query(DB.tableName,
-        columns: [DB.columnDeviceId],
-        where: '${DB.columnDeviceId} != 1 AND ${DB.columnName} = ?',
-        whereArgs: <Object?>[name]));
-    return deviceIds.cast();
+    final deviceIds = await (twonlyDatabase
+            .select(twonlyDatabase.signalSessionStores)
+          ..where(
+              (tbl) => tbl.deviceId.equals(1).not() & tbl.name.equals(name)))
+        .get();
+    return deviceIds.map((row) => row.deviceId).toList();
   }
 
   @override
   Future<SessionRecord> loadSession(SignalProtocolAddress address) async {
-    var dbSession = (await dbProvider.db!.query(DB.tableName,
-        columns: [DB.columnSessionRecord],
-        where: '${DB.columnDeviceId} = ? AND ${DB.columnName} = ?',
-        whereArgs: <Object?>[address.getDeviceId(), address.getName()]));
+    final dbSession =
+        await (twonlyDatabase.select(twonlyDatabase.signalSessionStores)
+              ..where((tbl) =>
+                  tbl.deviceId.equals(address.getDeviceId()) &
+                  tbl.name.equals(address.getName())))
+            .get();
 
     if (dbSession.isEmpty) {
       return SessionRecord();
     }
-    Uint8List session = dbSession.first.cast()[DB.columnSessionRecord];
+    Uint8List session = dbSession.first.sessionRecord;
     return SessionRecord.fromSerialized(session);
   }
 
   @override
   Future<void> storeSession(
       SignalProtocolAddress address, SessionRecord record) async {
+    final sessionCompanion = SignalSessionStoresCompanion(
+      deviceId: Value(address.getDeviceId()),
+      name: Value(address.getName()),
+      sessionRecord: Value(record.serialize()),
+    );
+
     if (!await containsSession(address)) {
-      await dbProvider.db!.insert(DB.tableName, {
-        DB.columnDeviceId: address.getDeviceId(),
-        DB.columnName: address.getName(),
-        DB.columnSessionRecord: record.serialize()
-      });
+      await twonlyDatabase
+          .into(twonlyDatabase.signalSessionStores)
+          .insert(sessionCompanion);
     } else {
-      await dbProvider.db!.update(
-          DB.tableName, {DB.columnSessionRecord: record.serialize()},
-          where: '${DB.columnDeviceId} = ? AND ${DB.columnName} = ?',
-          whereArgs: <Object?>[address.getDeviceId(), address.getName()]);
+      await (twonlyDatabase.update(twonlyDatabase.signalSessionStores)
+            ..where((tbl) =>
+                tbl.deviceId.equals(address.getDeviceId()) &
+                tbl.name.equals(address.getName())))
+          .write(sessionCompanion);
     }
   }
 }

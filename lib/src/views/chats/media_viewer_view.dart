@@ -9,9 +9,9 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
-import 'package:twonly/src/database/database.dart';
-import 'package:twonly/src/database/messages_db.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
@@ -57,7 +57,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   Future asyncLoadNextMedia(bool firstRun) async {
     Stream<List<Message>> messages =
-        twonlyDatabase.watchMediaMessageNotOpened(widget.userId);
+        twonlyDatabase.messagesDao.watchMediaMessageNotOpened(widget.userId);
 
     _subscription = messages.listen((messages) {
       for (Message msg in messages) {

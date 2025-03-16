@@ -1,4 +1,3 @@
-import 'package:cv/cv.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -30,8 +29,7 @@ class EmojiAnimation extends StatelessWidget {
 
     // Check if the emoji has a corresponding Lottie animation
     if (animatedIcons.containsKey(emoji)) {
-      return Lottie.asset(
-          "assets/animated_icons/${animatedIcons.getValue(emoji)}");
+      return Lottie.asset("assets/animated_icons/${animatedIcons[emoji]}");
     } else {
       return Text(
         emoji,

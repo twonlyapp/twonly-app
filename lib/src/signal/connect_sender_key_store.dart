@@ -1,31 +1,30 @@
-import 'dart:typed_data';
+import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/sender_key_store_model.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-
-typedef DB = DbSignalSenderKeyStore;
 
 class ConnectSenderKeyStore extends SenderKeyStore {
   @override
   Future<SenderKeyRecord> loadSenderKey(SenderKeyName senderKeyName) async {
-    final dbSenderKey = await dbProvider.db!.query(DB.tableName,
-        columns: [DB.columnSenderKey],
-        where: '${DB.columnSenderKeyName} = ?',
-        whereArgs: <Object?>[senderKeyName.serialize()]);
-    if (dbSenderKey.isEmpty) {
+    SignalSenderKeyStore? identity =
+        await (twonlyDatabase.select(twonlyDatabase.signalSenderKeyStores)
+              ..where((t) => t.senderKeyName.equals(senderKeyName.serialize())))
+            .getSingleOrNull();
+    if (identity == null) {
       throw InvalidKeyIdException(
           'No such sender key record! - $senderKeyName');
     }
-    Uint8List preKey = dbSenderKey.first.cast()[DB.columnSenderKey];
-    return SenderKeyRecord.fromSerialized(preKey);
+    return SenderKeyRecord.fromSerialized(identity.senderKey);
   }
 
   @override
   Future<void> storeSenderKey(
       SenderKeyName senderKeyName, SenderKeyRecord record) async {
-    await dbProvider.db!.insert(DB.tableName, {
-      DB.columnSenderKeyName: senderKeyName.serialize(),
-      DB.columnSenderKey: record.serialize()
-    });
+    await twonlyDatabase.into(twonlyDatabase.signalSenderKeyStores).insert(
+          SignalSenderKeyStoresCompanion(
+            senderKey: Value(record.serialize()),
+            senderKeyName: Value(senderKeyName.serialize()),
+          ),
+        );
   }
 }

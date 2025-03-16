@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/json_models/message.dart';
 
 enum DownloadState {
   pending,
@@ -8,6 +8,7 @@ enum DownloadState {
   downloaded,
 }
 
+@DataClassName('Message')
 class Messages extends Table {
   IntColumn get contactId => integer().references(Contacts, #userId)();
 

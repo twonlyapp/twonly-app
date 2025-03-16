@@ -1,49 +1,52 @@
-import 'dart:typed_data';
+import 'package:drift/drift.dart';
+import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/pre_key_model.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-
-typedef DB = DbSignalPreKeyStore;
+import 'package:twonly/src/database/twonly_database.dart';
 
 class ConnectPreKeyStore extends PreKeyStore {
   @override
   Future<bool> containsPreKey(int preKeyId) async {
-    final dbPreKey = await dbProvider.db!.query(DB.tableName,
-        columns: [DB.columnPreKey],
-        where: '${DB.columnPreKeyId} = ?',
-        whereArgs: <Object?>[preKeyId]);
-    return dbPreKey.isNotEmpty;
+    final preKeyRecord =
+        await (twonlyDatabase.select(twonlyDatabase.signalPreKeyStores)
+              ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
+            .get();
+    return preKeyRecord.isNotEmpty;
   }
 
   @override
   Future<PreKeyRecord> loadPreKey(int preKeyId) async {
-    final dbPreKey = await dbProvider.db!.query(DB.tableName,
-        columns: [DB.columnPreKey],
-        where: '${DB.columnPreKeyId} = ?',
-        whereArgs: <Object?>[preKeyId]);
-    if (dbPreKey.isEmpty) {
+    final preKeyRecord =
+        await (twonlyDatabase.select(twonlyDatabase.signalPreKeyStores)
+              ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
+            .get();
+    if (preKeyRecord.isEmpty) {
       throw InvalidKeyIdException('No such preKey record! - $preKeyId');
     }
-    Uint8List preKey = dbPreKey.first.cast()[DB.columnPreKey];
+    Uint8List preKey = preKeyRecord.first.preKey;
     return PreKeyRecord.fromBuffer(preKey);
   }
 
   @override
   Future<void> removePreKey(int preKeyId) async {
-    await dbProvider.db!.delete(DB.tableName,
-        where: '${DB.columnPreKeyId} = ?',
-        whereArgs: <Object?>[DB.columnPreKeyId]);
+    await (twonlyDatabase.delete(twonlyDatabase.signalPreKeyStores)
+          ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
+        .go();
   }
 
   @override
   Future<void> storePreKey(int preKeyId, PreKeyRecord record) async {
-    if (!await containsPreKey(preKeyId)) {
-      await dbProvider.db!.insert(DB.tableName,
-          {DB.columnPreKeyId: preKeyId, DB.columnPreKey: record.serialize()});
-    } else {
-      await dbProvider.db!.update(
-          DB.tableName, {DB.columnPreKey: record.serialize()},
-          where: '${DB.columnPreKeyId} = ?', whereArgs: <Object?>[preKeyId]);
+    final preKeyCompanion = SignalPreKeyStoresCompanion(
+      preKeyId: Value(preKeyId),
+      preKey: Value(record.serialize()),
+    );
+
+    try {
+      await twonlyDatabase
+          .into(twonlyDatabase.signalPreKeyStores)
+          .insert(preKeyCompanion);
+    } catch (e) {
+      Logger("pre_key_store").shout("$e");
     }
   }
 }

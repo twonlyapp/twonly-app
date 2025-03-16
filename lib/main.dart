@@ -1,12 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/src/providers/db_provider.dart';
 import 'package:twonly/src/providers/hive.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
@@ -39,13 +37,8 @@ void main() async {
   await initMediaStorage();
   await initFCMService();
 
-  dbProvider = DbProvider();
-  await dbProvider.ready;
-
   apiProvider = ApiProvider();
   twonlyDatabase = TwonlyDatabase();
-
-  FlutterForegroundTask.initCommunicationPort();
 
   runApp(
     MultiProvider(

@@ -7,8 +7,8 @@ import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/verified_shield.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_verify_view.dart';
 
@@ -24,8 +24,9 @@ class ContactView extends StatefulWidget {
 class _ContactViewState extends State<ContactView> {
   @override
   Widget build(BuildContext context) {
-    Stream<Contact?> contact =
-        twonlyDatabase.getContactByUserId(widget.userId).watchSingleOrNull();
+    Stream<Contact?> contact = twonlyDatabase.contactsDao
+        .getContactByUserId(widget.userId)
+        .watchSingleOrNull();
 
     return Scaffold(
       appBar: AppBar(
@@ -79,7 +80,8 @@ class _ContactViewState extends State<ContactView> {
 
                   if (context.mounted && nickName != null && nickName != "") {
                     final update = ContactsCompanion(nickName: Value(nickName));
-                    twonlyDatabase.updateContact(contact.userId, update);
+                    twonlyDatabase.contactsDao
+                        .updateContact(contact.userId, update);
                   }
                 },
               ),
@@ -109,8 +111,8 @@ class _ContactViewState extends State<ContactView> {
                   if (block) {
                     final update = ContactsCompanion(blocked: Value(true));
                     if (context.mounted) {
-                      await twonlyDatabase.updateContact(
-                          contact.userId, update);
+                      await twonlyDatabase.contactsDao
+                          .updateContact(contact.userId, update);
                     }
                     if (context.mounted) {
                       Navigator.popUntil(context, (route) => route.isFirst);

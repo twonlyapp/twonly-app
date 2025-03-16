@@ -2,8 +2,8 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/verified_shield.dart';
-import 'package:twonly/src/database/contacts_db.dart';
-import 'package:twonly/src/database/database.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/headline.dart';
@@ -142,7 +142,8 @@ class UserCheckbox extends StatelessWidget {
                     ],
                   ),
                   StreamBuilder(
-                    stream: twonlyDatabase.watchFlameCounter(user.userId),
+                    stream: twonlyDatabase.contactsDao
+                        .watchFlameCounter(user.userId),
                     builder: (context, snapshot) {
                       if (!snapshot.hasData || snapshot.data! == 0) {
                         return Container();
