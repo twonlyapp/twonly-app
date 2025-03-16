@@ -54,9 +54,23 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   Stream<List<Message>> watchAllMessagesFrom(int contactId) {
     return (select(messages)
-          ..where((t) => t.contactId.equals(contactId))
+          ..where((t) =>
+              t.contactId.equals(contactId) &
+              t.contentJson.isNotNull() &
+              (t.openedAt.isNull() |
+                  t.openedAt.isBiggerThanValue(
+                      DateTime.now().subtract(Duration(days: 1)))))
           ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
         .watch();
+  }
+
+  Future removeOldMessages() {
+    return (update(messages)
+          ..where((t) =>
+              t.openedAt.isSmallerThanValue(
+                  DateTime.now().subtract(Duration(days: 1))) &
+              t.kind.equals(MessageKind.textMessage.name)))
+        .write(MessagesCompanion(contentJson: Value(null)));
   }
 
   Future<List<Message>> getAllMessagesPendingDownloading() {
@@ -201,27 +215,11 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         flameCounter: Value(flameCounter),
       ),
     );
-
-    // twonlyDatabase.updateContact(
-    //   fromUserId,
-    //   ContactsCompanion(
-    //     lastMessageReceived: Value(message.timestamp),
-    //   ),
-    // );
   }
 
   SingleOrNullSelectable<Contact> getContactByUserId(int userId) {
     return select(contacts)..where((t) => t.userId.equals(userId));
   }
-
-  // Stream<int> getMaxTotalMediaCounter() {
-  //   return customSelect(
-  //     'SELECT MAX(totalMediaCounter) AS maxTotal FROM contacts',
-  //     readsFrom: {contacts},
-  //   ).watchSingle().asyncMap((result) {
-  //     return result.read<int>('maxTotal');
-  //   });
-  // }
 
   Future deleteContactByUserId(int userId) {
     return (delete(contacts)..where((t) => t.userId.equals(userId))).go();

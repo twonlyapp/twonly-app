@@ -158,6 +158,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   }
 
   Future initStreams() async {
+    await twonlyDatabase.removeOldMessages();
     Stream<Contact> contact = twonlyDatabase.watchContact(widget.userid);
     userSub = contact.listen((contact) {
       setState(() {

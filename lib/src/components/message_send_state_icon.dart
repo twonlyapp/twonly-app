@@ -85,17 +85,24 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
     for (final message in widget.messages) {
       if (icons.length == 2) break;
-      if (message.contentJson == null) continue;
+
+      MessageSendState state = messageSendStateFromMessage(message);
+      late Color color;
+
+      if (message.contentJson == null) {
+        color =
+            getMessageColorFromType(TextMessageContent(text: ""), twonlyColor);
+      } else {
+        MessageContent? content = MessageContent.fromJson(
+            message.kind, jsonDecode(message.contentJson!));
+        if (content == null) continue;
+        color = getMessageColorFromType(content, twonlyColor);
+      }
+
       if (kindsAlreadyShown.contains(message.kind)) continue;
       kindsAlreadyShown.add(message.kind);
 
       Widget icon = Placeholder();
-
-      MessageSendState state = messageSendStateFromMessage(message);
-      MessageContent? content = MessageContent.fromJson(
-          message.kind, jsonDecode(message.contentJson!));
-      if (content == null) continue;
-      Color color = getMessageColorFromType(content, twonlyColor);
 
       switch (state) {
         case MessageSendState.receivedOpened:
