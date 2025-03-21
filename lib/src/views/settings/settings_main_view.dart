@@ -7,6 +7,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/account_view.dart';
 import 'package:twonly/src/views/settings/appearance_view.dart';
+import 'package:twonly/src/views/settings/avatar_creator.dart';
 import 'package:twonly/src/views/settings/help_view.dart';
 import 'package:twonly/src/views/settings/privacy_view.dart';
 
@@ -45,9 +46,17 @@ class _ProfileViewState extends State<ProfileView> {
                   padding: const EdgeInsets.all(30),
                   child: Row(
                     children: [
-                      InitialsAvatar(
-                        userData!.username,
-                        fontSize: 30,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (context) {
+                            return AvatarCreator();
+                          }));
+                        },
+                        child: InitialsAvatar(
+                          userData!.username,
+                          fontSize: 30,
+                        ),
                       ),
                       SizedBox(width: 20),
                       Expanded(
