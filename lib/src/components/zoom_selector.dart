@@ -30,13 +30,15 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   @override
   Widget build(BuildContext context) {
     var zoomButtonStyle = TextButton.styleFrom(
-        padding: EdgeInsets.zero,
-        foregroundColor: Colors.white,
-        minimumSize: Size(40, 40),
-        alignment: Alignment.center,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap);
+      padding: EdgeInsets.zero,
+      foregroundColor: Colors.white,
+      minimumSize: Size(40, 40),
+      alignment: Alignment.center,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
 
     final zoomTextStyle = TextStyle(fontSize: 13);
+    final isMiddleFocused = widget.scaleFactor >= 1 && widget.scaleFactor < 2;
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(40.0),
@@ -46,43 +48,54 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextButton(
-                style: zoomButtonStyle,
+                style: zoomButtonStyle.copyWith(
+                  foregroundColor: WidgetStateProperty.all(
+                    (widget.scaleFactor < 1) ? Colors.yellow : Colors.white,
+                  ),
+                ),
                 onPressed: () async {
                   var level = await widget.controller.getMinZoomLevel();
                   widget.updateScaleFactor(level);
                 },
                 child: FutureBuilder(
-                    future: widget.controller.getMinZoomLevel(),
-                    builder: (context, snap) {
-                      if (snap.hasData) {
-                        var minLevel =
-                            beautifulZoomScale(snap.data!.toDouble());
-                        var currentLevel =
-                            beautifulZoomScale(widget.scaleFactor);
-                        return Text(
-                          widget.scaleFactor < 1
-                              ? "${currentLevel}x"
-                              : "${minLevel}x",
-                          style: zoomTextStyle,
-                        );
-                      } else {
-                        return Text("");
-                      }
-                    }),
+                  future: widget.controller.getMinZoomLevel(),
+                  builder: (context, snap) {
+                    if (snap.hasData) {
+                      var minLevel = beautifulZoomScale(snap.data!.toDouble());
+                      var currentLevel = beautifulZoomScale(widget.scaleFactor);
+                      return Text(
+                        widget.scaleFactor < 1
+                            ? "${currentLevel}x"
+                            : "${minLevel}x",
+                        style: zoomTextStyle,
+                      );
+                    } else {
+                      return Text("");
+                    }
+                  },
+                ),
               ),
               TextButton(
-                  style: zoomButtonStyle,
+                  style: zoomButtonStyle.copyWith(
+                    foregroundColor: WidgetStateProperty.all(
+                      isMiddleFocused ? Colors.yellow : Colors.white,
+                    ),
+                  ),
                   onPressed: () {
                     widget.updateScaleFactor(1.0);
                   },
                   child: Text(
-                    (widget.scaleFactor >= 1 && widget.scaleFactor < 2)
+                    (isMiddleFocused)
                         ? "${beautifulZoomScale(widget.scaleFactor)}x"
                         : "1.0x",
                     style: zoomTextStyle,
                   )),
               TextButton(
-                style: zoomButtonStyle,
+                style: zoomButtonStyle.copyWith(
+                  foregroundColor: WidgetStateProperty.all(
+                    (widget.scaleFactor >= 2) ? Colors.yellow : Colors.white,
+                  ),
+                ),
                 onPressed: () async {
                   var level = min(await widget.controller.getMaxZoomLevel(), 2)
                       .toDouble();
@@ -92,8 +105,13 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                     future: widget.controller.getMaxZoomLevel(),
                     builder: (context, snap) {
                       if (snap.hasData) {
-                        var maxLevel = min((snap.data?.toInt())!, 2);
-                        return Text("${maxLevel}x", style: zoomTextStyle);
+                        var maxLevel = max(
+                          min((snap.data?.toInt())!, 2),
+                          widget.scaleFactor,
+                        );
+                        return Text(
+                            "${beautifulZoomScale(maxLevel.toDouble())}x",
+                            style: zoomTextStyle);
                       } else {
                         return Text("");
                       }

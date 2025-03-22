@@ -53,37 +53,26 @@ class _ProfileViewState extends State<ProfileView> {
       body: ListView(
         physics: BouncingScrollPhysics(),
         children: <Widget>[
-          SizedBox(
-            height: 25,
-          ),
+          SizedBox(height: 25),
           AvatarMakerAvatar(
             backgroundColor: Colors.transparent,
             radius: 80,
           ),
-          SizedBox(
-            height: 10,
-          ),
-          Row(
-            children: [
-              Spacer(flex: 2),
-              Expanded(
-                flex: 3,
-                child: SizedBox(
-                  height: 35,
-                  child: ElevatedButton.icon(
-                    icon: Icon(Icons.edit),
-                    label: Text(context.lang.settingsProfileCustomizeAvatar),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ModifyAvatar(),
-                      ),
-                    ),
+          SizedBox(height: 10),
+          Center(
+            child: SizedBox(
+              height: 35,
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.edit),
+                label: Text(context.lang.settingsProfileCustomizeAvatar),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ModifyAvatar(),
                   ),
                 ),
               ),
-              Spacer(flex: 2),
-            ],
+            ),
           ),
           SizedBox(height: 20),
           const Divider(),
@@ -94,7 +83,6 @@ class _ProfileViewState extends State<ProfileView> {
             onTap: () async {
               final displayName =
                   await showDisplayNameChangeDialog(context, user!.displayName);
-
               if (context.mounted && displayName != null && displayName != "") {
                 updateUserDisplayname(displayName);
               }

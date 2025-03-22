@@ -54,6 +54,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   bool showSelfieFlash = false;
   int cameraId = 0;
   bool isZoomAble = false;
+  double basePanY = 0;
+  double baseScaleFactor = 0;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   late CameraController controller;
@@ -105,6 +107,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> updateScaleFactor(double newScale) async {
+    if (scaleFactor == newScale) return;
     var minFactor = await controller.getMinZoomLevel();
     var maxFactor = await controller.getMaxZoomLevel();
     if (newScale < minFactor) {
@@ -128,6 +131,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     super.dispose();
   }
 
+  bool get isFront =>
+      controller.description.lensDirection == CameraLensDirection.front;
+
   @override
   Widget build(BuildContext context) {
     if (cameraId >= gCameras.length) {
@@ -145,49 +151,45 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 (controller.value.isInitialized)
                     ? Positioned.fill(
                         child: Screenshot(
-                            controller: screenshotController,
-                            child: AspectRatio(
-                              aspectRatio: 9 / 16,
-                              child: ClipRect(
-                                child: FittedBox(
-                                  fit: BoxFit.cover,
-                                  child: SizedBox(
-                                    width: controller.value.previewSize!.height,
-                                    height: controller.value.previewSize!.width,
-                                    child: CameraPreview(controller),
-                                  ),
+                          controller: screenshotController,
+                          child: AspectRatio(
+                            aspectRatio: 9 / 16,
+                            child: ClipRect(
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: controller.value.previewSize!.height,
+                                  height: controller.value.previewSize!.width,
+                                  child: CameraPreview(controller),
                                 ),
                               ),
-                            )),
+                            ),
+                          ),
+                        ),
                       )
                     : Container(),
                 Positioned.fill(
                   child: GestureDetector(
                     onPanStart: (details) async {
-                      // if (cameraState.sensorConfig.sensors.first.position ==
-                      //     SensorPosition.front) {
-                      //   return;
-                      // }
-                      // setState(() {
-                      //   _basePanY = details.localPosition.dy;
-                      // });
+                      if (isFront) {
+                        return;
+                      }
+                      setState(() {
+                        basePanY = details.localPosition.dy;
+                        baseScaleFactor = scaleFactor;
+                      });
                     },
                     onPanUpdate: (details) async {
-                      // if (cameraState.sensorConfig.sensors.first.position ==
-                      //     SensorPosition.front) {
-                      //   return;
-                      // }
-                      // var diff = _basePanY - details.localPosition.dy;
-                      // if (diff > 200) diff = 200;
-                      // if (diff < 0) diff = 0;
-                      // var tmp = (diff / 200 * 50).toInt() / 50;
-                      // if (tmp != _lastZoom) {
-                      //   cameraState.sensorConfig.setZoom(tmp);
-                      //   setState(() {
-                      //     (tmp);
-                      //     _lastZoom = tmp;
-                      //   });
-                      // }
+                      if (isFront) {
+                        return;
+                      }
+                      var diff = basePanY - details.localPosition.dy;
+                      if (diff > 200) diff = 200;
+                      if (diff < -200) diff = -200;
+                      var tmp = (diff / 200 * (7 * 2)).toInt() / 2;
+                      tmp = baseScaleFactor + tmp;
+                      if (tmp < 1) tmp = 1;
+                      updateScaleFactor(tmp);
                     },
                     onDoubleTap: () async {
                       selectCamera((cameraId + 1) % 2);
@@ -246,10 +248,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                         children: [
                           if (controller.value.isInitialized &&
                               isZoomAble &&
-                              controller.description.lensDirection !=
-                                  CameraLensDirection.front)
+                              !isFront)
                             SizedBox(
-                              width: 150,
+                              width: 120,
                               child: CameraZoomButtons(
                                 key: widget.key,
                                 scaleFactor: scaleFactor,
@@ -261,8 +262,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           GestureDetector(
                             onTap: () async {
                               if (isFlashOn) {
-                                if (controller.description.lensDirection ==
-                                    CameraLensDirection.front) {
+                                if (isFront) {
                                   setState(() {
                                     showSelfieFlash = true;
                                   });
