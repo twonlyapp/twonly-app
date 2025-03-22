@@ -823,6 +823,38 @@ class ApplicationData_GetUserById extends $pb.GeneratedMessage {
   void clearUserId() => clearField(1);
 }
 
+class ApplicationData_GetLocation extends $pb.GeneratedMessage {
+  factory ApplicationData_GetLocation() => create();
+  ApplicationData_GetLocation._() : super();
+  factory ApplicationData_GetLocation.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetLocation.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetLocation', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetLocation clone() => ApplicationData_GetLocation()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetLocation copyWith(void Function(ApplicationData_GetLocation) updates) => super.copyWith((message) => updates(message as ApplicationData_GetLocation)) as ApplicationData_GetLocation;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetLocation create() => ApplicationData_GetLocation._();
+  ApplicationData_GetLocation createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_GetLocation> createRepeated() => $pb.PbList<ApplicationData_GetLocation>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetLocation getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetLocation>(create);
+  static ApplicationData_GetLocation? _defaultInstance;
+}
+
 class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
   factory ApplicationData_GetPrekeysByUserId({
     $fixnum.Int64? userId,
@@ -1088,6 +1120,7 @@ enum ApplicationData_ApplicationData {
   getuserbyid, 
   downloaddata, 
   updategooglefcmtoken, 
+  getlocation, 
   notSet
 }
 
@@ -1101,6 +1134,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_GetUserById? getuserbyid,
     ApplicationData_DownloadData? downloaddata,
     ApplicationData_UpdateGoogleFcmToken? updategooglefcmtoken,
+    ApplicationData_GetLocation? getlocation,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -1127,6 +1161,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (updategooglefcmtoken != null) {
       $result.updategooglefcmtoken = updategooglefcmtoken;
     }
+    if (getlocation != null) {
+      $result.getlocation = getlocation;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -1142,10 +1179,11 @@ class ApplicationData extends $pb.GeneratedMessage {
     6 : ApplicationData_ApplicationData.getuserbyid,
     7 : ApplicationData_ApplicationData.downloaddata,
     8 : ApplicationData_ApplicationData.updategooglefcmtoken,
+    9 : ApplicationData_ApplicationData.getlocation,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
@@ -1154,6 +1192,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getuserbyid', subBuilder: ApplicationData_GetUserById.create)
     ..aOM<ApplicationData_DownloadData>(7, _omitFieldNames ? '' : 'downloaddata', subBuilder: ApplicationData_DownloadData.create)
     ..aOM<ApplicationData_UpdateGoogleFcmToken>(8, _omitFieldNames ? '' : 'updategooglefcmtoken', subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
+    ..aOM<ApplicationData_GetLocation>(9, _omitFieldNames ? '' : 'getlocation', subBuilder: ApplicationData_GetLocation.create)
     ..hasRequiredFields = false
   ;
 
@@ -1268,6 +1307,17 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearUpdategooglefcmtoken() => clearField(8);
   @$pb.TagNumber(8)
   ApplicationData_UpdateGoogleFcmToken ensureUpdategooglefcmtoken() => $_ensure(7);
+
+  @$pb.TagNumber(9)
+  ApplicationData_GetLocation get getlocation => $_getN(8);
+  @$pb.TagNumber(9)
+  set getlocation(ApplicationData_GetLocation v) { setField(9, v); }
+  @$pb.TagNumber(9)
+  $core.bool hasGetlocation() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearGetlocation() => clearField(9);
+  @$pb.TagNumber(9)
+  ApplicationData_GetLocation ensureGetlocation() => $_ensure(8);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

@@ -384,6 +384,84 @@ class DownloadData extends $pb.GeneratedMessage {
   void clearFin() => clearField(4);
 }
 
+class Response_Location extends $pb.GeneratedMessage {
+  factory Response_Location({
+    $core.String? county,
+    $core.String? region,
+    $core.String? city,
+  }) {
+    final $result = create();
+    if (county != null) {
+      $result.county = county;
+    }
+    if (region != null) {
+      $result.region = region;
+    }
+    if (city != null) {
+      $result.city = city;
+    }
+    return $result;
+  }
+  Response_Location._() : super();
+  factory Response_Location.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_Location.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Location', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'county')
+    ..aOS(2, _omitFieldNames ? '' : 'region')
+    ..aOS(3, _omitFieldNames ? '' : 'city')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response_Location clone() => Response_Location()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_Location copyWith(void Function(Response_Location) updates) => super.copyWith((message) => updates(message as Response_Location)) as Response_Location;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_Location create() => Response_Location._();
+  Response_Location createEmptyInstance() => create();
+  static $pb.PbList<Response_Location> createRepeated() => $pb.PbList<Response_Location>();
+  @$core.pragma('dart2js:noInline')
+  static Response_Location getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_Location>(create);
+  static Response_Location? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get county => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set county($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasCounty() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearCounty() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get region => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set region($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasRegion() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRegion() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get city => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set city($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasCity() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearCity() => clearField(3);
+}
+
 class Response_PreKey extends $pb.GeneratedMessage {
   factory Response_PreKey({
     $fixnum.Int64? id,
@@ -641,6 +719,7 @@ enum Response_Ok_Ok {
   uploadtoken, 
   userdata, 
   authtoken, 
+  location, 
   notSet
 }
 
@@ -652,6 +731,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_UploadToken? uploadtoken,
     Response_UserData? userdata,
     $core.List<$core.int>? authtoken,
+    Response_Location? location,
   }) {
     final $result = create();
     if (none != null) {
@@ -672,6 +752,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (authtoken != null) {
       $result.authtoken = authtoken;
     }
+    if (location != null) {
+      $result.location = location;
+    }
     return $result;
   }
   Response_Ok._() : super();
@@ -685,16 +768,18 @@ class Response_Ok extends $pb.GeneratedMessage {
     4 : Response_Ok_Ok.uploadtoken,
     5 : Response_Ok_Ok.userdata,
     6 : Response_Ok_Ok.authtoken,
+    7 : Response_Ok_Ok.location,
     0 : Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Ok', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'authchallenge', $pb.PbFieldType.OY)
     ..aOM<Response_UploadToken>(4, _omitFieldNames ? '' : 'uploadtoken', subBuilder: Response_UploadToken.create)
     ..aOM<Response_UserData>(5, _omitFieldNames ? '' : 'userdata', subBuilder: Response_UserData.create)
     ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'authtoken', $pb.PbFieldType.OY)
+    ..aOM<Response_Location>(7, _omitFieldNames ? '' : 'location', subBuilder: Response_Location.create)
     ..hasRequiredFields = false
   ;
 
@@ -779,6 +864,17 @@ class Response_Ok extends $pb.GeneratedMessage {
   $core.bool hasAuthtoken() => $_has(5);
   @$pb.TagNumber(6)
   void clearAuthtoken() => clearField(6);
+
+  @$pb.TagNumber(7)
+  Response_Location get location => $_getN(6);
+  @$pb.TagNumber(7)
+  set location(Response_Location v) { setField(7, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasLocation() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearLocation() => clearField(7);
+  @$pb.TagNumber(7)
+  Response_Location ensureLocation() => $_ensure(6);
 }
 
 enum Response_Response {
