@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 enum MessageKind {
   textMessage,
+  storedMediaFile,
   media,
   contactRequest,
   profileChange,
@@ -20,7 +21,7 @@ Map<String, Color> messageKindColors = {
 Color getMessageColorFromType(MessageContent content, Color primary) {
   Color color;
 
-  if (content is TextMessageContent) {
+  if (content is TextMessageContent || content is StoredMediaFileContent) {
     color = messageKindColors["text"]!;
   } else {
     if (content is MediaMessageContent) {
@@ -96,6 +97,8 @@ class MessageContent {
         return TextMessageContent.fromJson(json);
       case MessageKind.profileChange:
         return ProfileContent.fromJson(json);
+      case MessageKind.storedMediaFile:
+        return StoredMediaFileContent.fromJson(json);
       default:
         return null;
     }
@@ -169,6 +172,20 @@ class TextMessageContent extends MessageContent {
   @override
   Map toJson() {
     return {'text': text};
+  }
+}
+
+class StoredMediaFileContent extends MessageContent {
+  int messageId;
+  StoredMediaFileContent({required this.messageId});
+
+  static StoredMediaFileContent fromJson(Map json) {
+    return StoredMediaFileContent(messageId: json['messageId']);
+  }
+
+  @override
+  Map toJson() {
+    return {'messageId': messageId};
   }
 }
 

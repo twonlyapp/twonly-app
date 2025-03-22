@@ -149,6 +149,7 @@ String getPushNotificationText(String key, String userName) {
       "newImage": "%userName% hat dir ein Bild gesendet.",
       "contactRequest": "%userName% möchte sich mir dir vernetzen.",
       "acceptRequest": "%userName% ist jetzt mit dir vernetzt.",
+      "storedMediaFile": "%userName% hat dein Bild gespeichert."
     };
   } else {
     pushNotificationText = {
@@ -158,6 +159,7 @@ String getPushNotificationText(String key, String userName) {
       "newImage": "%userName% has sent you an image.",
       "contactRequest": "%userName% wants to connect with you.",
       "acceptRequest": "%userName% is now connected with you.",
+      "storedMediaFile": "%userName% has stored your image."
     };
   }
 
@@ -197,6 +199,11 @@ Future localPushNotificationNewMessage(
 
   if (message.kind == my.MessageKind.acceptRequest) {
     msg = getPushNotificationText("acceptRequest", getContactDisplayName(user));
+  }
+
+  if (message.kind == my.MessageKind.storedMediaFile) {
+    msg =
+        getPushNotificationText("storedMediaFile", getContactDisplayName(user));
   }
 
   if (msg == "") {

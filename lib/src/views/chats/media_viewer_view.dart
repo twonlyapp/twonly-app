@@ -45,6 +45,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   bool isRealTwonly = false;
   bool isDownloading = false;
 
+  bool imageSaved = false;
+  bool imageSaving = false;
+
   List<Message> allMediaFiles = [];
   late StreamSubscription<List<Message>> _subscription;
 
@@ -95,10 +98,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         MediaMessageContent.fromJson(jsonDecode(current.contentJson!));
 
     setState(() {
-      // reset current image values
       imageBytes = null;
       canBeSeenUntil = null;
       maxShowTime = 999999;
+      imageSaving = false;
+      imageSaved = false;
       progress = 0;
       isDownloading = false;
       isRealTwonly = false;
@@ -281,7 +285,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             ),
             AnimatedPositioned(
               duration: Duration(milliseconds: 200), // Animation duration
-              bottom: showShortReactions ? 130 : 90,
+              bottom: showShortReactions ? 100 : 90,
               left: showShortReactions ? 0 : 150,
               right: showShortReactions ? 0 : 150,
               curve: Curves.linearToEaseOut,
@@ -341,32 +345,65 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             ),
             if (imageBytes != null)
               Positioned(
-                bottom: 30,
+                bottom: 0,
                 left: 0,
                 right: 0,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton.outlined(
-                      icon: FaIcon(FontAwesomeIcons.camera),
-                      onPressed: () async {
-                        context
-                            .read<SendNextMediaTo>()
-                            .updateSendNextMediaTo(widget.userId.toInt());
-                        globalUpdateOfHomeViewPageIndex(0);
-                        Navigator.popUntil(context, (route) => route.isFirst);
-                      },
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                    if (maxShowTime == 999999)
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          iconColor: imageSaved
+                              ? Theme.of(context).colorScheme.outline
+                              : Theme.of(context).colorScheme.primary,
+                          foregroundColor: imageSaved
+                              ? Theme.of(context).colorScheme.outline
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        onPressed: () async {
+                          setState(() {
+                            imageSaving = true;
+                          });
+                          encryptAndSendMessage(
+                            null,
+                            widget.userId,
+                            MessageJson(
+                              kind: MessageKind.storedMediaFile,
+                              messageId: allMediaFiles.first.messageId,
+                              content: StoredMediaFileContent(
+                                messageId: allMediaFiles.first.messageId,
+                              ),
+                              timestamp: DateTime.now(),
+                            ),
+                          );
+                          final res = await saveImageToGallery(imageBytes!);
+                          if (res == null) {
+                            setState(() {
+                              imageSaving = false;
+                              imageSaved = true;
+                            });
+                          }
+                        },
+                        child: Row(
+                          children: [
+                            imageSaving
+                                ? SizedBox(
+                                    width: 10,
+                                    height: 10,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 1))
+                                : imageSaved
+                                    ? Icon(Icons.check)
+                                    : FaIcon(FontAwesomeIcons.floppyDisk),
+                          ],
                         ),
                       ),
-                    ),
                     SizedBox(width: 10),
                     IconButton(
                       icon: SizedBox(
-                        width: 40,
-                        height: 40,
+                        width: 30,
+                        height: 30,
                         child: GridView.count(
                           crossAxisCount: 2,
                           children: List.generate(
@@ -391,14 +428,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           showShortReactions = !showShortReactions;
                           selectedShortReaction = -1;
                         });
-                        // context.read<SendNextMediaTo>().updateSendNextMediaTo(
-                        //     widget.otherUser.userId.toInt());
-                        // globalUpdateOfHomeViewPageIndex(0);
-                        // Navigator.popUntil(context, (route) => route.isFirst);
                       },
                       style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                         ),
                       ),
                     ),
@@ -416,7 +449,23 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                       },
                       style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    IconButton.outlined(
+                      icon: FaIcon(FontAwesomeIcons.camera),
+                      onPressed: () async {
+                        context
+                            .read<SendNextMediaTo>()
+                            .updateSendNextMediaTo(widget.userId.toInt());
+                        globalUpdateOfHomeViewPageIndex(0);
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                         ),
                       ),
                     ),

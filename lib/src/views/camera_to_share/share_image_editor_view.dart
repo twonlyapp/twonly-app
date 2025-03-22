@@ -10,6 +10,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
@@ -35,7 +36,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _imageSaved = false;
   bool _imageSaving = false;
   bool _isRealTwonly = false;
-  int _maxShowTime = 18;
+  int maxShowTime = 999999;
   String? sendNextMediaToUserName;
 
   ImageItem currentImage = ImageItem();
@@ -44,7 +45,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   @override
   void initState() {
     super.initState();
+    initAsync();
     loadImage(widget.imageBytes);
+  }
+
+  void initAsync() async {
+    final user = await getUser();
+    if (user == null) return;
+    if (user.defaultShowTime != null) {
+      setState(() {
+        maxShowTime = user.defaultShowTime!;
+      });
+    }
   }
 
   @override
@@ -114,24 +126,25 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
       const SizedBox(height: 8),
       NotificationBadge(
-        count: _maxShowTime == 999999 ? "∞" : _maxShowTime.toString(),
+        count: maxShowTime == 999999 ? "∞" : maxShowTime.toString(),
         // count: "",
         child: ActionButton(
           FontAwesomeIcons.stopwatch,
           tooltipText: context.lang.protectAsARealTwonly,
-          // disable: _isRealTwonly,
           onPressed: () async {
-            if (_maxShowTime == 999999) {
-              _maxShowTime = 4;
-            } else if (_maxShowTime >= 22) {
-              _maxShowTime = 999999;
+            if (maxShowTime == 999999) {
+              maxShowTime = 4;
+            } else if (maxShowTime >= 22) {
+              maxShowTime = 999999;
             } else {
-              _maxShowTime = _maxShowTime + 4;
+              maxShowTime = maxShowTime + 8;
             }
             setState(() {});
-
-            // _maxShowTime =
-            // _isRealTwonly = !_isRealTwonly;
+            var user = await getUser();
+            if (user != null) {
+              user.defaultShowTime = maxShowTime;
+              updateUser(user);
+            }
           },
         ),
       ),
@@ -145,7 +158,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         onPressed: () async {
           _isRealTwonly = !_isRealTwonly;
           if (_isRealTwonly) {
-            _maxShowTime = 12;
+            maxShowTime = 12;
           }
           setState(() {});
         },
@@ -369,7 +382,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                           builder: (context) => ShareImageView(
                             imageBytesFuture: imageBytes,
                             isRealTwonly: _isRealTwonly,
-                            maxShowTime: _maxShowTime,
+                            maxShowTime: maxShowTime,
                           ),
                         ),
                       );
@@ -387,7 +400,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         [sendNextMediaToUserId],
                         imageBytes!,
                         _isRealTwonly,
-                        _maxShowTime,
+                        maxShowTime,
                       );
                       Navigator.popUntil(context, (route) => route.isFirst);
                       globalUpdateOfHomeViewPageIndex(1);
@@ -402,7 +415,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         builder: (context) => ShareImageView(
                           imageBytesFuture: imageBytes,
                           isRealTwonly: _isRealTwonly,
-                          maxShowTime: _maxShowTime,
+                          maxShowTime: maxShowTime,
                         ),
                       ),
                     );

@@ -76,13 +76,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .get();
   }
 
-  Future openedAllTextMessages(int contactId) {
+  Future openedAllNonMediaMessages(int contactId) {
     final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
     return (update(messages)
           ..where((t) =>
               t.contactId.equals(contactId) &
               t.openedAt.isNull() &
-              t.kind.equals(MessageKind.textMessage.name)))
+              t.kind.equals(MessageKind.media.name).not()))
         .write(updates);
   }
 

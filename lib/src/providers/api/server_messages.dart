@@ -221,11 +221,19 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         break;
       default:
         if (message.kind != MessageKind.textMessage &&
-            message.kind != MessageKind.media) {
+            message.kind != MessageKind.media &&
+            message.kind != MessageKind.storedMediaFile) {
           Logger("handleServerMessages")
               .shout("Got unknown MessageKind $message");
         } else {
           String content = jsonEncode(message.content!.toJson());
+
+          bool acknowledgeByUser = false;
+          DateTime? openedAt;
+          if (message.kind == MessageKind.storedMediaFile) {
+            acknowledgeByUser = true;
+            openedAt = DateTime.now();
+          }
 
           final update = MessagesCompanion(
             contactId: Value(fromUserId),
@@ -233,6 +241,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             messageOtherId: Value(message.messageId),
             contentJson: Value(content),
             acknowledgeByServer: Value(true),
+            acknowledgeByUser: Value(acknowledgeByUser),
+            openedAt: Value(openedAt),
             downloadState: Value(message.kind == MessageKind.media
                 ? DownloadState.pending
                 : DownloadState.downloaded),

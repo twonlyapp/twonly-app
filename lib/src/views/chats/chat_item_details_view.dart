@@ -74,7 +74,9 @@ class ChatListEntry extends StatelessWidget {
       }
     } else if (content is MediaMessageContent && !content.isVideo) {
       Color color = getMessageColorFromType(
-          content, Theme.of(context).colorScheme.primary);
+        content,
+        Theme.of(context).colorScheme.primary,
+      );
 
       child = GestureDetector(
         onTap: () {
@@ -109,6 +111,26 @@ class ChatListEntry extends StatelessWidget {
               mainAxisAlignment:
                   right ? MainAxisAlignment.center : MainAxisAlignment.center,
             ),
+          ),
+        ),
+      );
+    } else if (message.kind == MessageKind.storedMediaFile) {
+      child = Container(
+        padding: EdgeInsets.all(5),
+        width: 150,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: messageKindColors["text"]!,
+            width: 1.0,
+          ),
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: MessageSendStateIcon(
+            [message],
+            mainAxisAlignment:
+                right ? MainAxisAlignment.center : MainAxisAlignment.center,
           ),
         ),
       );
@@ -181,9 +203,8 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
           notifyContactAboutOpeningMessage(widget.userid, msg.messageOtherId!);
         }
       }
-      if (updated) {
-        twonlyDatabase.messagesDao.openedAllTextMessages(widget.userid);
-      } else {
+      twonlyDatabase.messagesDao.openedAllNonMediaMessages(widget.userid);
+      if (!updated) {
         // The stream should be get an update, so only update the UI when all are opened
         setState(() {
           messages = msgs;

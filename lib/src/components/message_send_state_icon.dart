@@ -85,6 +85,8 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
     for (final message in widget.messages) {
       if (icons.length == 2) break;
+      if (kindsAlreadyShown.contains(message.kind)) continue;
+      kindsAlreadyShown.add(message.kind);
 
       MessageSendState state = messageSendStateFromMessage(message);
       late Color color;
@@ -94,13 +96,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             getMessageColorFromType(TextMessageContent(text: ""), twonlyColor);
       } else {
         MessageContent? content = MessageContent.fromJson(
-            message.kind, jsonDecode(message.contentJson!));
+          message.kind,
+          jsonDecode(message.contentJson!),
+        );
         if (content == null) continue;
         color = getMessageColorFromType(content, twonlyColor);
       }
-
-      if (kindsAlreadyShown.contains(message.kind)) continue;
-      kindsAlreadyShown.add(message.kind);
 
       Widget icon = Placeholder();
 
@@ -138,6 +139,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Received;
           break;
+      }
+
+      if (message.kind == MessageKind.storedMediaFile) {
+        icon = FaIcon(FontAwesomeIcons.floppyDisk, size: 12, color: color);
+        text = "Stored in gallery";
       }
 
       icons.add(icon);

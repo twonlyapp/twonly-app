@@ -15,6 +15,7 @@ class UserData {
   String? avatarSvg;
   String? avatarJson;
   int? avatarCounter;
+  int? defaultShowTime;
 
   final int userId;
 
