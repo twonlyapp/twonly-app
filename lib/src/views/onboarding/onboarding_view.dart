@@ -61,8 +61,10 @@ class OnboardingView extends StatelessWidget {
             image: Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 100),
-                child: Lottie.asset('assets/animations/takephoto.json',
-                    repeat: false),
+                child: Lottie.asset(
+                  'assets/animations/takephoto.json',
+                  repeat: false,
+                ),
               ),
             ),
           ),
@@ -83,11 +85,8 @@ class OnboardingView extends StatelessWidget {
             title: context.lang.onboardingNotProductTitle,
             body: context.lang.onboardingNotProductBody,
             image: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 100),
-                child: Image.asset(
-                  'assets/images/onboarding/ricky_the_greedy_racoon.png',
-                ),
+              child: Lottie.asset(
+                'assets/animations/forsale.json',
               ),
             ),
           ),
@@ -140,7 +139,7 @@ class OnboardingView extends StatelessWidget {
           ),
         ],
         showNextButton: true,
-        done: Text("Our plans"),
+        done: Text(""),
         next: Text(context.lang.next),
         // done: RegisterView(callbackOnSuccess: callbackOnSuccess),
         onDone: () {
@@ -148,7 +147,7 @@ class OnboardingView extends StatelessWidget {
           // On button pressed
         },
         dotsDecorator: DotsDecorator(
-          size: const Size.square(10.0),
+          size: const Size.square(8.0),
           activeSize: const Size(20.0, 10.0),
           activeColor: Theme.of(context).colorScheme.primary,
           color: Theme.of(context).colorScheme.secondary,
