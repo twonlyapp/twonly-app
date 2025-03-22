@@ -1,7 +1,9 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/send_next_media_to.dart';
+import 'package:twonly/src/services/notification_service.dart';
 import 'camera_to_share/camera_preview_view.dart';
 import 'chats/chat_list_view.dart';
 import 'package:flutter/material.dart';
@@ -34,10 +36,28 @@ class HomeViewState extends State<HomeView> {
         activePageIdx = index;
       });
     };
+
+    selectNotificationStream.stream
+        .listen((NotificationResponse? response) async {
+      globalUpdateOfHomeViewPageIndex(1);
+    });
+    initAsync();
+  }
+
+  Future initAsync() async {
+    var notificationAppLaunchDetails =
+        await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+
+    if (notificationAppLaunchDetails != null) {
+      if (notificationAppLaunchDetails.didNotificationLaunchApp) {
+        globalUpdateOfHomeViewPageIndex(1);
+      }
+    }
   }
 
   @override
   void dispose() {
+    selectNotificationStream.close();
     // disable globalCallbacks to the flutter tree
     globalUpdateOfHomeViewPageIndex = (a) {};
     super.dispose();

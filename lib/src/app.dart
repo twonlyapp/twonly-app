@@ -152,10 +152,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   const InputDecorationTheme(border: OutlineInputBorder())),
           darkTheme: ThemeData.dark().copyWith(
             colorScheme: ColorScheme.fromSeed(
-                brightness: Brightness.dark, // <-- the only line added
-                seedColor: const Color(0xFF57CC99)),
-            inputDecorationTheme:
-                const InputDecorationTheme(border: OutlineInputBorder()),
+              brightness: Brightness.dark, // <-- the only line added
+              seedColor: const Color(0xFF57CC99),
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              border: OutlineInputBorder(),
+            ),
           ),
           themeMode: context.watch<SettingsChangeProvider>().themeMode,
           initialRoute: '/',
@@ -184,9 +186,8 @@ class MyAppMainWidget extends StatefulWidget {
 }
 
 class _MyAppMainWidgetState extends State<MyAppMainWidget> {
-  Future<bool> _isUserCreated =
-      isUserCreated(); // Assume this is a function that checks if the user is created
-  bool _showOnboarding = true; // Initial state for onboarding
+  Future<bool> _isUserCreated = isUserCreated();
+  bool _showOnboarding = true;
 
   @override
   Widget build(BuildContext context) {

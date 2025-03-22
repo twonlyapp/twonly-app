@@ -36,7 +36,7 @@ void main() async {
 
   await setupPushNotification();
   await initMediaStorage();
-  await initFCMService();
+  initFCMService();
 
   gCameras = await availableCameras();
 
