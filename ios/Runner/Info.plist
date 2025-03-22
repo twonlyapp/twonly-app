@@ -45,10 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
 	<key>NSCameraUsageDescription</key>
 	<string>To create photos that can be shared.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>To create videos that can be securely shared.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Store photos in the gallery.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>To protect others twonlies!</string>
 </dict>

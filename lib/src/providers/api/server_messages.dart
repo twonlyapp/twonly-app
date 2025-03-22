@@ -199,6 +199,14 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         final update = ContactsCompanion(accepted: Value(true));
         twonlyDatabase.contactsDao.updateContact(fromUserId, update);
         localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
+        notifyContactsAboutAvatarChange();
+        break;
+      case MessageKind.avatarChange:
+        var content = message.content;
+        if (content is AvatarContent) {
+          final update = ContactsCompanion(avatarSvg: Value(content.svg));
+          twonlyDatabase.contactsDao.updateContact(fromUserId, update);
+        }
         break;
       case MessageKind.ack:
         final update = MessagesCompanion(acknowledgeByUser: Value(true));

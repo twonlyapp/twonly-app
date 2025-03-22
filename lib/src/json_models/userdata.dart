@@ -1,14 +1,20 @@
 import 'package:json_annotation/json_annotation.dart';
-part 'user_data.g.dart';
+part 'userdata.g.dart';
 
 @JsonSerializable()
 class UserData {
-  const UserData(
-      {required this.userId,
-      required this.username,
-      required this.displayName});
-  final String username;
-  final String displayName;
+  UserData({
+    required this.userId,
+    required this.username,
+    required this.displayName,
+  });
+
+  String username;
+  String displayName;
+
+  String? avatarSvg;
+  String? avatarJson;
+  int? avatarCounter;
 
   final int userId;
 

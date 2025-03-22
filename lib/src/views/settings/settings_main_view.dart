@@ -47,14 +47,15 @@ class _ProfileViewState extends State<ProfileView> {
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          Navigator.push(context,
+                        onTap: () async {
+                          await Navigator.push(context,
                               MaterialPageRoute(builder: (context) {
                             return AvatarCreator();
                           }));
+                          initAsync();
                         },
-                        child: InitialsAvatar(
-                          userData!.username,
+                        child: ContactAvatar(
+                          userData: userData!,
                           fontSize: 30,
                         ),
                       ),

@@ -184,7 +184,7 @@ class _ContactsListViewState extends State<ContactsListView> {
         final displayName = getContactDisplayName(contact);
         return ListTile(
           title: Text(displayName),
-          leading: InitialsAvatar(displayName),
+          leading: ContactAvatar(contact: contact),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

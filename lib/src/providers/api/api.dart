@@ -6,11 +6,13 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/json_models/message.dart';
+import 'package:twonly/src/json_models/userdata.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/hive.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
+import 'package:twonly/src/utils/storage.dart';
 
 Future tryTransmitMessages() async {
   // List<Message> retransmit =
@@ -121,4 +123,28 @@ Future notifyContactAboutOpeningMessage(
       timestamp: DateTime.now(),
     ),
   );
+}
+
+Future notifyContactsAboutAvatarChange() async {
+  List<Contact> contacts =
+      await twonlyDatabase.contactsDao.getAllNotBlockedContacts();
+
+  UserData? user = await getUser();
+  if (user == null) return;
+  if (user.avatarCounter == null) return;
+  if (user.avatarSvg == null) return;
+
+  for (Contact contact in contacts) {
+    if (contact.myAvatarCounter < user.avatarCounter!) {
+      encryptAndSendMessage(
+        null,
+        contact.userId,
+        MessageJson(
+          kind: MessageKind.avatarChange,
+          content: AvatarContent(svg: user.avatarSvg!),
+          timestamp: DateTime.now(),
+        ),
+      );
+    }
+  }
 }

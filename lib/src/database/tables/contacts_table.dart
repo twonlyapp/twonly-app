@@ -7,6 +7,9 @@ class Contacts extends Table {
   TextColumn get username => text().unique()();
   TextColumn get displayName => text().nullable()();
   TextColumn get nickName => text().nullable()();
+  TextColumn get avatarSvg => text().nullable()();
+
+  IntColumn get myAvatarCounter => integer().withDefault(Constant(0))();
 
   BoolColumn get accepted => boolean().withDefault(Constant(false))();
   BoolColumn get requested => boolean().withDefault(Constant(false))();

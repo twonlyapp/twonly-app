@@ -115,8 +115,8 @@ class UserCheckbox extends StatelessWidget {
           ),
           child: Row(
             children: [
-              InitialsAvatar(
-                displayName,
+              ContactAvatar(
+                contact: user,
                 fontSize: 12,
               ),
               SizedBox(width: 8),

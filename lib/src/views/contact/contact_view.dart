@@ -44,10 +44,7 @@ class _ContactViewState extends State<ContactView> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(10),
-                child: InitialsAvatar(
-                  getContactDisplayName(contact),
-                  fontSize: 30,
-                ),
+                child: ContactAvatar(contact: contact, fontSize: 30),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

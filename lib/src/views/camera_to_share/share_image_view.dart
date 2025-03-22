@@ -303,8 +303,8 @@ class UserList extends StatelessWidget {
                 ),
             ],
           ),
-          leading: InitialsAvatar(
-            getContactDisplayName(user),
+          leading: ContactAvatar(
+            contact: user,
             fontSize: 15,
           ),
           trailing: Checkbox(

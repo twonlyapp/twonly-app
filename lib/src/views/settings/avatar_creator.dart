@@ -2,6 +2,9 @@ import 'dart:math';
 
 import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/json_models/userdata.dart';
+import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/utils/storage.dart';
 
 class AvatarCreator extends StatefulWidget {
   const AvatarCreator({super.key});
@@ -28,7 +31,7 @@ class _AvatarCreatorState extends State<AvatarCreator> {
             height: 25,
           ),
           AvatarMakerAvatar(
-            backgroundColor: Colors.grey[200],
+            backgroundColor: Colors.transparent,
             radius: 100,
           ),
           SizedBox(
@@ -39,13 +42,17 @@ class _AvatarCreatorState extends State<AvatarCreator> {
               Spacer(flex: 2),
               Expanded(
                 flex: 3,
-                child: Container(
+                child: SizedBox(
                   height: 35,
                   child: ElevatedButton.icon(
                     icon: Icon(Icons.edit),
                     label: Text("Customize"),
-                    onPressed: () => Navigator.push(context,
-                        new MaterialPageRoute(builder: (context) => NewPage())),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NewPage(),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -64,6 +71,21 @@ class _AvatarCreatorState extends State<AvatarCreator> {
 class NewPage extends StatelessWidget {
   const NewPage({super.key});
 
+  Future updateUserAvatar(String json, String svg) async {
+    UserData? user = await getUser();
+    if (user == null) return null;
+
+    user.avatarJson = json;
+    user.avatarSvg = svg;
+    if (user.avatarCounter == null) {
+      user.avatarCounter = 1;
+    } else {
+      user.avatarCounter = user.avatarCounter! + 1;
+    }
+    await updateUser(user);
+    await notifyContactsAboutAvatarChange();
+  }
+
   @override
   Widget build(BuildContext context) {
     var _width = MediaQuery.of(context).size.width;
@@ -75,9 +97,9 @@ class NewPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 30),
+                padding: const EdgeInsets.symmetric(vertical: 00),
                 child: AvatarMakerAvatar(
-                  radius: 100,
+                  radius: 130,
                   backgroundColor: Colors.transparent,
                 ),
               ),
@@ -85,12 +107,18 @@ class NewPage extends StatelessWidget {
                 width: min(600, _width * 0.85),
                 child: Row(
                   children: [
-                    Text(
-                      "Customize:",
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
                     Spacer(),
-                    AvatarMakerSaveWidget(),
+                    AvatarMakerSaveWidget(
+                      onTap: () async {
+                        final json =
+                            await AvatarMakerController.getJsonOptions();
+                        final svg = await AvatarMakerController.getAvatarSVG();
+                        await updateUserAvatar(json, svg);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
+                    ),
                     AvatarMakerRandomWidget(),
                     AvatarMakerResetWidget(),
                   ],
@@ -106,12 +134,20 @@ class NewPage extends StatelessWidget {
                     boxDecoration: BoxDecoration(
                       boxShadow: [BoxShadow()],
                     ),
-                    // primaryBgColor:
-                    //     Theme.of(context).colorScheme.surfaceContainerLowest,
-                    // secondaryBgColor:
-                    //     const Color.fromARGB(255, 203, 203, 203),
-                    // labelTextStyle: TextStyle(
-                    //     color: Theme.of(context).colorScheme.tertiary),
+                    unselectedTileDecoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 83, 83, 83),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    selectedTileDecoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 117, 117, 117),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    selectedIconColor: Colors.white,
+                    unselectedIconColor: Colors.grey,
+                    primaryBgColor: Colors.transparent,
+                    secondaryBgColor: Colors.transparent,
+                    labelTextStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary),
                   ),
                 ),
               ),

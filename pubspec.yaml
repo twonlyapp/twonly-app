@@ -53,6 +53,7 @@ dependencies:
   web_socket_channel: ^3.0.1
   camera: ^0.11.1
   avatar_maker: ^0.2.0
+  flutter_svg: ^2.0.17
   # avatar_maker
   # avatar_maker: 
   #   path: ./dependencies/avatar_maker/

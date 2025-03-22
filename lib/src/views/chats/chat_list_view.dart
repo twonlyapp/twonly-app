@@ -268,7 +268,7 @@ class _UserListItem extends State<UserListItem> {
             );
           },
         ),
-        leading: InitialsAvatar(getContactDisplayName(widget.user)),
+        leading: ContactAvatar(contact: widget.user),
         onTap: () {
           if (currentMessage == null) {
             context

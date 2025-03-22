@@ -33,6 +33,20 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   late final GeneratedColumn<String> nickName = GeneratedColumn<String>(
       'nick_name', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _avatarSvgMeta =
+      const VerificationMeta('avatarSvg');
+  @override
+  late final GeneratedColumn<String> avatarSvg = GeneratedColumn<String>(
+      'avatar_svg', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _myAvatarCounterMeta =
+      const VerificationMeta('myAvatarCounter');
+  @override
+  late final GeneratedColumn<int> myAvatarCounter = GeneratedColumn<int>(
+      'my_avatar_counter', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: Constant(0));
   static const VerificationMeta _acceptedMeta =
       const VerificationMeta('accepted');
   @override
@@ -129,6 +143,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         username,
         displayName,
         nickName,
+        avatarSvg,
+        myAvatarCounter,
         accepted,
         requested,
         blocked,
@@ -170,6 +186,16 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     if (data.containsKey('nick_name')) {
       context.handle(_nickNameMeta,
           nickName.isAcceptableOrUnknown(data['nick_name']!, _nickNameMeta));
+    }
+    if (data.containsKey('avatar_svg')) {
+      context.handle(_avatarSvgMeta,
+          avatarSvg.isAcceptableOrUnknown(data['avatar_svg']!, _avatarSvgMeta));
+    }
+    if (data.containsKey('my_avatar_counter')) {
+      context.handle(
+          _myAvatarCounterMeta,
+          myAvatarCounter.isAcceptableOrUnknown(
+              data['my_avatar_counter']!, _myAvatarCounterMeta));
     }
     if (data.containsKey('accepted')) {
       context.handle(_acceptedMeta,
@@ -244,6 +270,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.string, data['${effectivePrefix}display_name']),
       nickName: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}nick_name']),
+      avatarSvg: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}avatar_svg']),
+      myAvatarCounter: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}my_avatar_counter'])!,
       accepted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}accepted'])!,
       requested: attachedDatabase.typeMapping
@@ -283,6 +313,8 @@ class Contact extends DataClass implements Insertable<Contact> {
   final String username;
   final String? displayName;
   final String? nickName;
+  final String? avatarSvg;
+  final int myAvatarCounter;
   final bool accepted;
   final bool requested;
   final bool blocked;
@@ -299,6 +331,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       required this.username,
       this.displayName,
       this.nickName,
+      this.avatarSvg,
+      required this.myAvatarCounter,
       required this.accepted,
       required this.requested,
       required this.blocked,
@@ -321,6 +355,10 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || nickName != null) {
       map['nick_name'] = Variable<String>(nickName);
     }
+    if (!nullToAbsent || avatarSvg != null) {
+      map['avatar_svg'] = Variable<String>(avatarSvg);
+    }
+    map['my_avatar_counter'] = Variable<int>(myAvatarCounter);
     map['accepted'] = Variable<bool>(accepted);
     map['requested'] = Variable<bool>(requested);
     map['blocked'] = Variable<bool>(blocked);
@@ -352,6 +390,10 @@ class Contact extends DataClass implements Insertable<Contact> {
       nickName: nickName == null && nullToAbsent
           ? const Value.absent()
           : Value(nickName),
+      avatarSvg: avatarSvg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarSvg),
+      myAvatarCounter: Value(myAvatarCounter),
       accepted: Value(accepted),
       requested: Value(requested),
       blocked: Value(blocked),
@@ -380,6 +422,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       username: serializer.fromJson<String>(json['username']),
       displayName: serializer.fromJson<String?>(json['displayName']),
       nickName: serializer.fromJson<String?>(json['nickName']),
+      avatarSvg: serializer.fromJson<String?>(json['avatarSvg']),
+      myAvatarCounter: serializer.fromJson<int>(json['myAvatarCounter']),
       accepted: serializer.fromJson<bool>(json['accepted']),
       requested: serializer.fromJson<bool>(json['requested']),
       blocked: serializer.fromJson<bool>(json['blocked']),
@@ -404,6 +448,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       'username': serializer.toJson<String>(username),
       'displayName': serializer.toJson<String?>(displayName),
       'nickName': serializer.toJson<String?>(nickName),
+      'avatarSvg': serializer.toJson<String?>(avatarSvg),
+      'myAvatarCounter': serializer.toJson<int>(myAvatarCounter),
       'accepted': serializer.toJson<bool>(accepted),
       'requested': serializer.toJson<bool>(requested),
       'blocked': serializer.toJson<bool>(blocked),
@@ -424,6 +470,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           String? username,
           Value<String?> displayName = const Value.absent(),
           Value<String?> nickName = const Value.absent(),
+          Value<String?> avatarSvg = const Value.absent(),
+          int? myAvatarCounter,
           bool? accepted,
           bool? requested,
           bool? blocked,
@@ -440,6 +488,8 @@ class Contact extends DataClass implements Insertable<Contact> {
         username: username ?? this.username,
         displayName: displayName.present ? displayName.value : this.displayName,
         nickName: nickName.present ? nickName.value : this.nickName,
+        avatarSvg: avatarSvg.present ? avatarSvg.value : this.avatarSvg,
+        myAvatarCounter: myAvatarCounter ?? this.myAvatarCounter,
         accepted: accepted ?? this.accepted,
         requested: requested ?? this.requested,
         blocked: blocked ?? this.blocked,
@@ -465,6 +515,10 @@ class Contact extends DataClass implements Insertable<Contact> {
       displayName:
           data.displayName.present ? data.displayName.value : this.displayName,
       nickName: data.nickName.present ? data.nickName.value : this.nickName,
+      avatarSvg: data.avatarSvg.present ? data.avatarSvg.value : this.avatarSvg,
+      myAvatarCounter: data.myAvatarCounter.present
+          ? data.myAvatarCounter.value
+          : this.myAvatarCounter,
       accepted: data.accepted.present ? data.accepted.value : this.accepted,
       requested: data.requested.present ? data.requested.value : this.requested,
       blocked: data.blocked.present ? data.blocked.value : this.blocked,
@@ -498,6 +552,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('username: $username, ')
           ..write('displayName: $displayName, ')
           ..write('nickName: $nickName, ')
+          ..write('avatarSvg: $avatarSvg, ')
+          ..write('myAvatarCounter: $myAvatarCounter, ')
           ..write('accepted: $accepted, ')
           ..write('requested: $requested, ')
           ..write('blocked: $blocked, ')
@@ -519,6 +575,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       username,
       displayName,
       nickName,
+      avatarSvg,
+      myAvatarCounter,
       accepted,
       requested,
       blocked,
@@ -538,6 +596,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.username == this.username &&
           other.displayName == this.displayName &&
           other.nickName == this.nickName &&
+          other.avatarSvg == this.avatarSvg &&
+          other.myAvatarCounter == this.myAvatarCounter &&
           other.accepted == this.accepted &&
           other.requested == this.requested &&
           other.blocked == this.blocked &&
@@ -556,6 +616,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<String> username;
   final Value<String?> displayName;
   final Value<String?> nickName;
+  final Value<String?> avatarSvg;
+  final Value<int> myAvatarCounter;
   final Value<bool> accepted;
   final Value<bool> requested;
   final Value<bool> blocked;
@@ -572,6 +634,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.username = const Value.absent(),
     this.displayName = const Value.absent(),
     this.nickName = const Value.absent(),
+    this.avatarSvg = const Value.absent(),
+    this.myAvatarCounter = const Value.absent(),
     this.accepted = const Value.absent(),
     this.requested = const Value.absent(),
     this.blocked = const Value.absent(),
@@ -589,6 +653,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     required String username,
     this.displayName = const Value.absent(),
     this.nickName = const Value.absent(),
+    this.avatarSvg = const Value.absent(),
+    this.myAvatarCounter = const Value.absent(),
     this.accepted = const Value.absent(),
     this.requested = const Value.absent(),
     this.blocked = const Value.absent(),
@@ -606,6 +672,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<String>? username,
     Expression<String>? displayName,
     Expression<String>? nickName,
+    Expression<String>? avatarSvg,
+    Expression<int>? myAvatarCounter,
     Expression<bool>? accepted,
     Expression<bool>? requested,
     Expression<bool>? blocked,
@@ -623,6 +691,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (username != null) 'username': username,
       if (displayName != null) 'display_name': displayName,
       if (nickName != null) 'nick_name': nickName,
+      if (avatarSvg != null) 'avatar_svg': avatarSvg,
+      if (myAvatarCounter != null) 'my_avatar_counter': myAvatarCounter,
       if (accepted != null) 'accepted': accepted,
       if (requested != null) 'requested': requested,
       if (blocked != null) 'blocked': blocked,
@@ -645,6 +715,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<String>? username,
       Value<String?>? displayName,
       Value<String?>? nickName,
+      Value<String?>? avatarSvg,
+      Value<int>? myAvatarCounter,
       Value<bool>? accepted,
       Value<bool>? requested,
       Value<bool>? blocked,
@@ -661,6 +733,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       username: username ?? this.username,
       displayName: displayName ?? this.displayName,
       nickName: nickName ?? this.nickName,
+      avatarSvg: avatarSvg ?? this.avatarSvg,
+      myAvatarCounter: myAvatarCounter ?? this.myAvatarCounter,
       accepted: accepted ?? this.accepted,
       requested: requested ?? this.requested,
       blocked: blocked ?? this.blocked,
@@ -690,6 +764,12 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     }
     if (nickName.present) {
       map['nick_name'] = Variable<String>(nickName.value);
+    }
+    if (avatarSvg.present) {
+      map['avatar_svg'] = Variable<String>(avatarSvg.value);
+    }
+    if (myAvatarCounter.present) {
+      map['my_avatar_counter'] = Variable<int>(myAvatarCounter.value);
     }
     if (accepted.present) {
       map['accepted'] = Variable<bool>(accepted.value);
@@ -737,6 +817,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('username: $username, ')
           ..write('displayName: $displayName, ')
           ..write('nickName: $nickName, ')
+          ..write('avatarSvg: $avatarSvg, ')
+          ..write('myAvatarCounter: $myAvatarCounter, ')
           ..write('accepted: $accepted, ')
           ..write('requested: $requested, ')
           ..write('blocked: $blocked, ')
@@ -805,8 +887,6 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("acknowledge_by_user" IN (0, 1))'),
       defaultValue: Constant(false));
-  static const VerificationMeta _downloadStateMeta =
-      const VerificationMeta('downloadState');
   @override
   late final GeneratedColumnWithTypeConverter<DownloadState, int>
       downloadState = GeneratedColumn<int>('download_state', aliasedName, false,
@@ -824,7 +904,6 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("acknowledge_by_server" IN (0, 1))'),
       defaultValue: Constant(false));
-  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
   @override
   late final GeneratedColumnWithTypeConverter<MessageKind, String> kind =
       GeneratedColumn<String>('kind', aliasedName, false,
@@ -918,14 +997,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           acknowledgeByUser.isAcceptableOrUnknown(
               data['acknowledge_by_user']!, _acknowledgeByUserMeta));
     }
-    context.handle(_downloadStateMeta, const VerificationResult.success());
     if (data.containsKey('acknowledge_by_server')) {
       context.handle(
           _acknowledgeByServerMeta,
           acknowledgeByServer.isAcceptableOrUnknown(
               data['acknowledge_by_server']!, _acknowledgeByServerMeta));
     }
-    context.handle(_kindMeta, const VerificationResult.success());
     if (data.containsKey('content_json')) {
       context.handle(
           _contentJsonMeta,
@@ -2448,6 +2525,8 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   required String username,
   Value<String?> displayName,
   Value<String?> nickName,
+  Value<String?> avatarSvg,
+  Value<int> myAvatarCounter,
   Value<bool> accepted,
   Value<bool> requested,
   Value<bool> blocked,
@@ -2465,6 +2544,8 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<String> username,
   Value<String?> displayName,
   Value<String?> nickName,
+  Value<String?> avatarSvg,
+  Value<int> myAvatarCounter,
   Value<bool> accepted,
   Value<bool> requested,
   Value<bool> blocked,
@@ -2518,6 +2599,13 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<String> get nickName => $composableBuilder(
       column: $table.nickName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get avatarSvg => $composableBuilder(
+      column: $table.avatarSvg, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get myAvatarCounter => $composableBuilder(
+      column: $table.myAvatarCounter,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get accepted => $composableBuilder(
       column: $table.accepted, builder: (column) => ColumnFilters(column));
@@ -2600,6 +2688,13 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<String> get nickName => $composableBuilder(
       column: $table.nickName, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get avatarSvg => $composableBuilder(
+      column: $table.avatarSvg, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get myAvatarCounter => $composableBuilder(
+      column: $table.myAvatarCounter,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get accepted => $composableBuilder(
       column: $table.accepted, builder: (column) => ColumnOrderings(column));
 
@@ -2660,6 +2755,12 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<String> get nickName =>
       $composableBuilder(column: $table.nickName, builder: (column) => column);
+
+  GeneratedColumn<String> get avatarSvg =>
+      $composableBuilder(column: $table.avatarSvg, builder: (column) => column);
+
+  GeneratedColumn<int> get myAvatarCounter => $composableBuilder(
+      column: $table.myAvatarCounter, builder: (column) => column);
 
   GeneratedColumn<bool> get accepted =>
       $composableBuilder(column: $table.accepted, builder: (column) => column);
@@ -2743,6 +2844,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<String> username = const Value.absent(),
             Value<String?> displayName = const Value.absent(),
             Value<String?> nickName = const Value.absent(),
+            Value<String?> avatarSvg = const Value.absent(),
+            Value<int> myAvatarCounter = const Value.absent(),
             Value<bool> accepted = const Value.absent(),
             Value<bool> requested = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
@@ -2760,6 +2863,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             username: username,
             displayName: displayName,
             nickName: nickName,
+            avatarSvg: avatarSvg,
+            myAvatarCounter: myAvatarCounter,
             accepted: accepted,
             requested: requested,
             blocked: blocked,
@@ -2777,6 +2882,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             required String username,
             Value<String?> displayName = const Value.absent(),
             Value<String?> nickName = const Value.absent(),
+            Value<String?> avatarSvg = const Value.absent(),
+            Value<int> myAvatarCounter = const Value.absent(),
             Value<bool> accepted = const Value.absent(),
             Value<bool> requested = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
@@ -2794,6 +2901,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             username: username,
             displayName: displayName,
             nickName: nickName,
+            avatarSvg: avatarSvg,
+            myAvatarCounter: myAvatarCounter,
             accepted: accepted,
             requested: requested,
             blocked: blocked,

@@ -124,10 +124,7 @@ class UserList extends StatelessWidget {
           title: Row(children: [
             Text(getContactDisplayName(user)),
           ]),
-          leading: InitialsAvatar(
-            getContactDisplayName(user),
-            fontSize: 15,
-          ),
+          leading: ContactAvatar(contact: user, fontSize: 15),
           trailing: Checkbox(
             value: user.blocked,
             onChanged: (bool? value) {

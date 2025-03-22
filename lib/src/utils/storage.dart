@@ -28,6 +28,11 @@ Future<UserData?> getUser() async {
   }
 }
 
+Future updateUser(UserData userData) async {
+  final storage = getSecureStorage();
+  storage.write(key: "userData", value: jsonEncode(userData));
+}
+
 Future<bool> deleteLocalUserData() async {
   final appDir = await getApplicationSupportDirectory();
   if (appDir.existsSync()) {

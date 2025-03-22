@@ -66,7 +66,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   void selectCamera(int sCameraId, {bool init = false}) {
-    if (sCameraId > gCameras.length) return;
+    if (sCameraId >= gCameras.length) return;
+    if (init) {
+      for (; sCameraId < gCameras.length; sCameraId++) {
+        if (gCameras[sCameraId].lensDirection == CameraLensDirection.back) {
+          break;
+        }
+      }
+    }
     setState(() {
       isZoomAble = false;
     });
@@ -115,12 +122,19 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   void dispose() {
-    controller.dispose();
+    if (cameraId < gCameras.length) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (cameraId >= gCameras.length) {
+      return Center(
+        child: Text("No camera found."),
+      );
+    }
     return MediaViewSizing(
       Stack(
         children: [

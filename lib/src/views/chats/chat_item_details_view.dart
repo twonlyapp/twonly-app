@@ -214,8 +214,8 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
               ? Container()
               : Row(
                   children: [
-                    InitialsAvatar(
-                      getContactDisplayName(user!),
+                    ContactAvatar(
+                      contact: user!,
                       fontSize: 19,
                     ),
                     SizedBox(width: 10),

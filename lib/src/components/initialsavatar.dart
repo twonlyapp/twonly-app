@@ -1,13 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/json_models/userdata.dart';
 
-class InitialsAvatar extends StatelessWidget {
-  final String displayName;
+class ContactAvatar extends StatelessWidget {
+  final Contact? contact;
+  final UserData? userData;
   final double? fontSize;
 
-  const InitialsAvatar(this.displayName, {super.key, this.fontSize = 20});
+  const ContactAvatar(
+      {super.key, this.contact, this.userData, this.fontSize = 20});
 
   @override
   Widget build(BuildContext context) {
+    String displayName = "";
+    String? avatarSvg;
+
+    if (contact != null) {
+      displayName = getContactDisplayName(contact!);
+      avatarSvg = contact!.avatarSvg;
+    } else if (userData != null) {
+      displayName = userData!.displayName;
+      avatarSvg = userData!.avatarSvg;
+    } else {
+      return Container();
+    }
+
+    double proSize = (fontSize == null) ? 40 : (fontSize! * 2);
+
+    if (avatarSvg != null) {
+      return Container(
+        constraints: BoxConstraints(
+          minHeight: 2 * (fontSize ?? 20),
+          minWidth: 2 * (fontSize ?? 20),
+          maxWidth: 2 * (fontSize ?? 20),
+          maxHeight: 2 * (fontSize ?? 20),
+        ),
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12.0),
+            child: SizedBox(
+              height: proSize,
+              width: proSize,
+              child: Center(
+                // child: Container(
+                //   color: Colors.green,
+                // ),
+                child: SvgPicture.string(
+                  avatarSvg,
+                  errorBuilder: (context, error, stackTrace) {
+                    print("Error: $error");
+                    return Container();
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     // Extract initials from the displayName
     List<String> nameParts = displayName.split(' ');
     String initials = nameParts.map((part) => part[0]).join().toUpperCase();
@@ -35,8 +88,6 @@ class InitialsAvatar extends StatelessWidget {
 
     bool isPro = initials[0] == "T";
 
-    double proSize = (fontSize == null) ? 40 : (fontSize! * 2);
-
     return isPro
         ? //or 15.0
         Container(
@@ -60,7 +111,10 @@ class InitialsAvatar extends StatelessWidget {
             ),
           )
         : CircleAvatar(
-            backgroundColor: avatarColor, radius: fontSize, child: child);
+            backgroundColor: avatarColor,
+            radius: fontSize,
+            child: child,
+          );
   }
 
   Color _getTextColor(Color color) {
