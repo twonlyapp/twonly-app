@@ -7,18 +7,18 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/account_view.dart';
 import 'package:twonly/src/views/settings/appearance_view.dart';
-import 'package:twonly/src/views/settings/avatar_creator.dart';
+import 'package:twonly/src/views/settings/profile_view.dart';
 import 'package:twonly/src/views/settings/help_view.dart';
 import 'package:twonly/src/views/settings/privacy_view.dart';
 
-class ProfileView extends StatefulWidget {
-  const ProfileView({super.key});
+class SettingsMainView extends StatefulWidget {
+  const SettingsMainView({super.key});
 
   @override
-  State<ProfileView> createState() => _ProfileViewState();
+  State<SettingsMainView> createState() => _SettingsMainViewState();
 }
 
-class _ProfileViewState extends State<ProfileView> {
+class _SettingsMainViewState extends State<SettingsMainView> {
   UserData? userData;
 
   @override
@@ -46,37 +46,41 @@ class _ProfileViewState extends State<ProfileView> {
                   padding: const EdgeInsets.all(30),
                   child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () async {
-                          await Navigator.push(context,
-                              MaterialPageRoute(builder: (context) {
-                            return AvatarCreator();
-                          }));
-                          initAsync();
-                        },
-                        child: ContactAvatar(
-                          userData: userData!,
-                          fontSize: 30,
-                        ),
-                      ),
-                      SizedBox(width: 20),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              userData!.displayName,
-                              style: TextStyle(fontSize: 20),
-                              textAlign: TextAlign.left,
-                            ),
-                            Text(
-                              userData!.username,
-                              style: TextStyle(
-                                fontSize: 14,
+                        child: GestureDetector(
+                          onTap: () async {
+                            await Navigator.push(context,
+                                MaterialPageRoute(builder: (context) {
+                              return ProfileView();
+                            }));
+                            initAsync();
+                          },
+                          child: Row(
+                            children: [
+                              ContactAvatar(
+                                userData: userData!,
+                                fontSize: 30,
                               ),
-                              textAlign: TextAlign.left,
-                            ),
-                          ],
+                              Container(width: 20, color: Colors.transparent),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    userData!.displayName,
+                                    style: TextStyle(fontSize: 20),
+                                    textAlign: TextAlign.left,
+                                  ),
+                                  Text(
+                                    userData!.username,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.left,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       Align(

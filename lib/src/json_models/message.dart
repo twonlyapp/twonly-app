@@ -4,7 +4,7 @@ enum MessageKind {
   textMessage,
   media,
   contactRequest,
-  avatarChange,
+  profileChange,
   rejectRequest,
   acceptRequest,
   opened,
@@ -94,8 +94,8 @@ class MessageContent {
         return MediaMessageContent.fromJson(json);
       case MessageKind.textMessage:
         return TextMessageContent.fromJson(json);
-      case MessageKind.avatarChange:
-        return AvatarContent.fromJson(json);
+      case MessageKind.profileChange:
+        return ProfileContent.fromJson(json);
       default:
         return null;
     }
@@ -172,16 +172,20 @@ class TextMessageContent extends MessageContent {
   }
 }
 
-class AvatarContent extends MessageContent {
-  String svg;
-  AvatarContent({required this.svg});
+class ProfileContent extends MessageContent {
+  String avatarSvg;
+  String displayName;
+  ProfileContent({required this.avatarSvg, required this.displayName});
 
-  static AvatarContent fromJson(Map json) {
-    return AvatarContent(svg: json['svg']);
+  static ProfileContent fromJson(Map json) {
+    return ProfileContent(
+      avatarSvg: json['avatarSvg'],
+      displayName: json['displayName'],
+    );
   }
 
   @override
   Map toJson() {
-    return {'svg': svg};
+    return {'avatarSvg': avatarSvg, 'displayName': displayName};
   }
 }

@@ -125,7 +125,7 @@ Future notifyContactAboutOpeningMessage(
   );
 }
 
-Future notifyContactsAboutAvatarChange() async {
+Future notifyContactsAboutProfileChange() async {
   List<Contact> contacts =
       await twonlyDatabase.contactsDao.getAllNotBlockedContacts();
 
@@ -140,8 +140,11 @@ Future notifyContactsAboutAvatarChange() async {
         null,
         contact.userId,
         MessageJson(
-          kind: MessageKind.avatarChange,
-          content: AvatarContent(svg: user.avatarSvg!),
+          kind: MessageKind.profileChange,
+          content: ProfileContent(
+            avatarSvg: user.avatarSvg!,
+            displayName: user.displayName,
+          ),
           timestamp: DateTime.now(),
         ),
       );

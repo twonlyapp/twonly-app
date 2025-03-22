@@ -41,7 +41,7 @@ class _ChatListViewState extends State<ChatListView> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ProfileView(),
+                builder: (context) => SettingsMainView(),
               ),
             );
           },
@@ -77,7 +77,7 @@ class _ChatListViewState extends State<ChatListView> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProfileView(),
+                  builder: (context) => SettingsMainView(),
                 ),
               );
             },

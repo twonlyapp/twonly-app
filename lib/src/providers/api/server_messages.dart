@@ -199,12 +199,15 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         final update = ContactsCompanion(accepted: Value(true));
         twonlyDatabase.contactsDao.updateContact(fromUserId, update);
         localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
-        notifyContactsAboutAvatarChange();
+        notifyContactsAboutProfileChange();
         break;
-      case MessageKind.avatarChange:
+      case MessageKind.profileChange:
         var content = message.content;
-        if (content is AvatarContent) {
-          final update = ContactsCompanion(avatarSvg: Value(content.svg));
+        if (content is ProfileContent) {
+          final update = ContactsCompanion(
+            avatarSvg: Value(content.avatarSvg),
+            displayName: Value(content.displayName),
+          );
           twonlyDatabase.contactsDao.updateContact(fromUserId, update);
         }
         break;

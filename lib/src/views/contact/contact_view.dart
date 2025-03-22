@@ -134,21 +134,22 @@ Future<String?> showNicknameChangeDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text('Change nickname'),
+        title: Text(context.lang.contactNickname),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: InputDecoration(hintText: "New nickname"),
+          decoration:
+              InputDecoration(hintText: context.lang.contactNicknameNew),
         ),
         actions: <Widget>[
           TextButton(
-            child: Text('Cancel'),
+            child: Text(context.lang.cancel),
             onPressed: () {
               Navigator.of(context).pop(); // Close the dialog
             },
           ),
           TextButton(
-            child: Text('Submit'),
+            child: Text(context.lang.ok),
             onPressed: () {
               Navigator.of(context)
                   .pop(controller.text); // Return the input text

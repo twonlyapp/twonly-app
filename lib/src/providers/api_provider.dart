@@ -75,7 +75,7 @@ class ApiProvider {
     if (!globalIsAppInBackground) {
       tryTransmitMessages();
       tryDownloadAllMediaFiles();
-      notifyContactsAboutAvatarChange();
+      notifyContactsAboutProfileChange();
     }
   }
 
