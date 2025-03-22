@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
@@ -56,6 +57,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   bool isZoomAble = false;
   double basePanY = 0;
   double baseScaleFactor = 0;
+  bool cameraLoaded = false;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   late CameraController controller;
@@ -65,6 +67,26 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   void initState() {
     super.initState();
     selectCamera(0, init: true);
+
+    FlutterVolumeController.addListener(
+      (volume) {
+        if (!cameraLoaded) {
+          // there is a bug, this is called at the start
+          return;
+        }
+        if (sharePreviewIsShown) return;
+        if (controller.value.isInitialized) takePicture();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    FlutterVolumeController.removeListener();
+    if (cameraId < gCameras.length) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   void selectCamera(int sCameraId, {bool init = false}) {
@@ -88,7 +110,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
       isZoomAble = await controller.getMinZoomLevel() !=
           await controller.getMaxZoomLevel();
-      setState(() {});
+      setState(() {
+        cameraLoaded = true;
+      });
     }).catchError((Object e) {
       if (e is CameraException) {
         switch (e.code) {
@@ -123,12 +147,53 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     });
   }
 
-  @override
-  void dispose() {
-    if (cameraId < gCameras.length) {
-      controller.dispose();
+  Future takePicture() async {
+    if (isFlashOn) {
+      if (isFront) {
+        setState(() {
+          showSelfieFlash = true;
+        });
+      } else {
+        controller.setFlashMode(FlashMode.torch);
+      }
+      await Future.delayed(Duration(milliseconds: 1000));
     }
-    super.dispose();
+
+    await controller.pausePreview();
+    if (!context.mounted) return;
+
+    controller.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
+
+    Future<Uint8List?> imageBytes = screenshotController.capture(pixelRatio: 1);
+
+    setState(() {
+      sharePreviewIsShown = true;
+    });
+    await Navigator.push(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, a1, a2) =>
+            ShareImageEditorView(imageBytes: imageBytes),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return child;
+        },
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+    // does not work??
+    //await controller.resumePreview();
+    selectCamera(0);
+    if (context.mounted) {
+      setState(() {
+        sharePreviewIsShown = false;
+      });
+    }
+
+    setState(() {
+      showSelfieFlash = false;
+    });
   }
 
   bool get isFront =>
@@ -261,57 +326,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           const SizedBox(height: 30),
                           GestureDetector(
                             onTap: () async {
-                              if (isFlashOn) {
-                                if (isFront) {
-                                  setState(() {
-                                    showSelfieFlash = true;
-                                  });
-                                } else {
-                                  controller.setFlashMode(FlashMode.torch);
-                                }
-                                await Future.delayed(
-                                    Duration(milliseconds: 1000));
-                              }
-
-                              await controller.pausePreview();
-                              if (!context.mounted) return;
-
-                              controller.setFlashMode(
-                                  isFlashOn ? FlashMode.always : FlashMode.off);
-
-                              Future<Uint8List?> imageBytes =
-                                  screenshotController.capture(pixelRatio: 1);
-
-                              setState(() {
-                                sharePreviewIsShown = true;
-                              });
-                              await Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  opaque: false,
-                                  pageBuilder: (context, a1, a2) =>
-                                      ShareImageEditorView(
-                                          imageBytes: imageBytes),
-                                  transitionsBuilder: (context, animation,
-                                      secondaryAnimation, child) {
-                                    return child;
-                                  },
-                                  transitionDuration: Duration.zero,
-                                  reverseTransitionDuration: Duration.zero,
-                                ),
-                              );
-                              // does not work??
-                              //await controller.resumePreview();
-                              selectCamera(0);
-                              if (context.mounted) {
-                                setState(() {
-                                  sharePreviewIsShown = false;
-                                });
-                              }
-
-                              setState(() {
-                                showSelfieFlash = false;
-                              });
+                              takePicture();
                             },
                             onLongPress: () async {},
                             child: Align(
