@@ -56,7 +56,8 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
             // today a message was already send -> update flame
             updateFlame = true;
           }
-        } else if (contact.lastMessageReceived!.isAfter(startOfToday)) {
+        } else if (contact.lastMessageReceived != null &&
+            contact.lastMessageReceived!.isAfter(startOfToday)) {
           // today a message was already received -> update flame
           updateFlame = true;
         }

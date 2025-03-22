@@ -89,4 +89,7 @@ flutter:
     - assets/images/onboarding/ricky_the_greedy_racoon.png
     - assets/animated_icons/
     - assets/animations/
+    - assets/filters/
+    - assets/filters/location/
+    - assets/filters/random/
 

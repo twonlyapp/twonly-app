@@ -246,6 +246,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       image: currentImage,
     ));
 
+    layers.add(FilterLayerData());
+
     setState(() {});
   }
 

@@ -32,6 +32,8 @@ class BackgroundLayerData extends Layer {
   });
 }
 
+class FilterLayerData extends Layer {}
+
 /// Attributes used by [EmojiLayer]
 class EmojiLayerData extends Layer {
   String text;

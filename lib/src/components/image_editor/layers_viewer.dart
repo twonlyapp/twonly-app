@@ -3,6 +3,7 @@ import 'package:twonly/src/components/image_editor/data/layer.dart';
 import 'package:twonly/src/components/image_editor/layers/background_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/draw_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/emoji_layer.dart';
+import 'package:twonly/src/components/image_editor/layers/filter_layer.dart';
 import 'package:twonly/src/components/image_editor/layers/text_layer.dart';
 
 /// View stacked layers (unbounded height, width)
@@ -25,6 +26,11 @@ class LayersViewer extends StatelessWidget {
           return BackgroundLayer(
             layerData: layerItem,
             onUpdate: onUpdate,
+          );
+        }),
+        ...layers.whereType<FilterLayerData>().map((layerItem) {
+          return FilterLayer(
+            layerData: layerItem,
           );
         }),
         ...layers
