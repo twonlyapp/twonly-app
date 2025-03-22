@@ -193,7 +193,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             return;
           }
           layers = layers.where((x) => !x.isDeleted).toList();
-          if (layers.length <= 1) return; // do not remove image layer
+          if (layers.length <= 2)
+            return; // do not remove image layer and filter layer
           undoLayers.add(layers.removeLast());
           setState(() {});
         },
