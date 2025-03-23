@@ -68,6 +68,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
             ),
           );
         }
+        notifyContactsAboutProfileChange();
       }
     } else {
       showAlertDialog(context, context.lang.searchUsernameNotFound,

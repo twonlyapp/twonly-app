@@ -86,7 +86,6 @@ flutter:
   assets:
     # Add assets from the images directory to the application.
     - assets/images/
-    - assets/images/onboarding/ricky_the_greedy_racoon.png
     - assets/animated_icons/
     - assets/animations/
     - assets/filters/

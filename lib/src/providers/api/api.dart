@@ -136,6 +136,8 @@ Future notifyContactsAboutProfileChange() async {
 
   for (Contact contact in contacts) {
     if (contact.myAvatarCounter < user.avatarCounter!) {
+      twonlyDatabase.contactsDao.updateContact(contact.userId,
+          ContactsCompanion(myAvatarCounter: Value(user.avatarCounter!)));
       encryptAndSendMessage(
         null,
         contact.userId,

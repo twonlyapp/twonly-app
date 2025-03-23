@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/settings/credits_view.dart';
 import 'package:twonly/src/views/settings/diagnostics_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -45,6 +46,14 @@ class HelpView extends StatelessWidget {
               },
             ),
             ListTile(
+              title: Text(context.lang.settingsHelpCredits),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return CreditsView();
+                }));
+              },
+            ),
+            ListTile(
               title: Text(context.lang.settingsHelpDiagnostics),
               onTap: () async {
                 await Navigator.push(context,
@@ -57,7 +66,6 @@ class HelpView extends StatelessWidget {
               title: Text(context.lang.settingsHelpLegal),
               onTap: () {
                 launchUrl(Uri.parse("https://twonly.eu/legal"));
-                // showLicensePage(context: context);
               },
               trailing:
                   FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),

@@ -197,7 +197,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         break;
       case MessageKind.acceptRequest:
         final update = ContactsCompanion(accepted: Value(true));
-        twonlyDatabase.contactsDao.updateContact(fromUserId, update);
+        await twonlyDatabase.contactsDao.updateContact(fromUserId, update);
         localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
         notifyContactsAboutProfileChange();
         break;
