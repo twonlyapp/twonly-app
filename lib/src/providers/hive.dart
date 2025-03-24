@@ -25,6 +25,8 @@ Future<Box> getMediaStorage() async {
   var encryptionKey =
       base64Url.decode((await storage.read(key: 'hive_encryption_key'))!);
 
-  return await Hive.openBox('media_storage',
-      encryptionCipher: HiveAesCipher(encryptionKey));
+  return await Hive.openBox(
+    'media_storage',
+    encryptionCipher: HiveAesCipher(encryptionKey),
+  );
 }

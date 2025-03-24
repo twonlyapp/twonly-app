@@ -15,42 +15,32 @@ import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 import 'package:twonly/src/utils/storage.dart';
 
 Future tryTransmitMessages() async {
-  // List<Message> retransmit =
-  //     await twonlyDatabase.getAllMessagesForRetransmitting();
+  List<Message> retransmit =
+      await twonlyDatabase.messagesDao.getAllMessagesForRetransmitting();
 
-  // if (retransmit.isEmpty) return;
+  if (retransmit.isEmpty) return;
 
-  // Logger("api.dart").info("try sending messages: ${retransmit.length}");
+  Logger("api.dart").info("try sending messages: ${retransmit.length}");
 
-  // Box box = await getMediaStorage();
-  // for (int i = 0; i < retransmit.length; i++) {
-  //   int msgId = retransmit[i].messageId;
+  Box box = await getMediaStorage();
+  for (int i = 0; i < retransmit.length; i++) {
+    int msgId = retransmit[i].messageId;
 
-  //   Uint8List? bytes = box.get("retransmit-$msgId-textmessage");
-  //   if (bytes != null) {
-  //     Result resp = await apiProvider.sendTextMessage(
-  //       retransmit[i].contactId,
-  //       bytes,
-  //     );
-
-  //     if (resp.isSuccess) {
-  //       await twonlyDatabase.updateMessageByMessageId(
-  //           msgId, MessagesCompanion(acknowledgeByServer: Value(true)));
-
-  //       box.delete("retransmit-$msgId-textmessage");
-  //     } else {
-  //       // in case of error do nothing. As the message is not removed the app will try again when relaunched
-  //     }
-  //   }
-
-  //   Uint8List? encryptedMedia = await box.get("retransmit-$msgId-media");
-  //   if (encryptedMedia != null) {
-  //     MediaMessageContent content =
-  //         MediaMessageContent.fromJson(jsonDecode(retransmit[i].contentJson!));
-  //     uploadMediaFile(msgId, retransmit[i].contactId, encryptedMedia,
-  //         content.isRealTwonly, content.maxShowTime, retransmit[i].sendAt);
-  //   }
-  // }
+    Uint8List? bytes = box.get("retransmit-$msgId-textmessage");
+    if (bytes != null) {
+      Result resp = await apiProvider.sendTextMessage(
+        retransmit[i].contactId,
+        bytes,
+      );
+      if (resp.isSuccess) {
+        await twonlyDatabase.messagesDao.updateMessageByMessageId(
+            msgId, MessagesCompanion(acknowledgeByServer: Value(true)));
+        box.delete("retransmit-$msgId-textmessage");
+      } else {
+        // in case of error do nothing. As the message is not removed the app will try again when relaunched
+      }
+    }
+  }
 }
 
 // this functions ensures that the message is received by the server and in case of errors will try again later

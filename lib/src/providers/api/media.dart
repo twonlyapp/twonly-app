@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
+import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
@@ -37,11 +38,40 @@ Future tryDownloadAllMediaFiles() async {
 
 class Metadata {
   late List<int> userIds;
-  late HashMap<int, int> messageIds;
-  late Uint8List imageBytes;
+  late Map<int, int> messageIds;
   late bool isRealTwonly;
   late int maxShowTime;
   late DateTime messageSendAt;
+
+  Metadata();
+
+  Map<String, dynamic> toJson() {
+    // Convert Map<int, int> to Map<String, int> for JSON encoding
+    Map<String, int> stringKeyMessageIds =
+        messageIds.map((key, value) => MapEntry(key.toString(), value));
+
+    return {
+      'userIds': userIds,
+      'messageIds': stringKeyMessageIds,
+      'isRealTwonly': isRealTwonly,
+      'maxShowTime': maxShowTime,
+      'messageSendAt': messageSendAt.toIso8601String(),
+    };
+  }
+
+  factory Metadata.fromJson(Map<String, dynamic> json) {
+    Metadata state = Metadata();
+    state.userIds = List<int>.from(json['userIds']);
+
+    // Convert Map<String, dynamic> to Map<int, int>
+    state.messageIds = (json['messageIds'] as Map<String, dynamic>)
+        .map((key, value) => MapEntry(int.parse(key), value as int));
+
+    state.isRealTwonly = json['isRealTwonly'];
+    state.maxShowTime = json['maxShowTime'];
+    state.messageSendAt = DateTime.parse(json['messageSendAt']);
+    return state;
+  }
 }
 
 class PrepareState {
@@ -50,11 +80,75 @@ class PrepareState {
   late List<int> encryptionMac;
   late List<int> encryptedBytes;
   late List<int> encryptionNonce;
+
+  PrepareState();
+
+  Map<String, dynamic> toJson() {
+    return {
+      'sha2Hash': sha2Hash,
+      'encryptionKey': encryptionKey,
+      'encryptionMac': encryptionMac,
+      'encryptedBytes': encryptedBytes,
+      'encryptionNonce': encryptionNonce,
+    };
+  }
+
+  factory PrepareState.fromJson(Map<String, dynamic> json) {
+    PrepareState state = PrepareState();
+    state.sha2Hash = List<int>.from(json['sha2Hash']);
+    state.encryptionKey = List<int>.from(json['encryptionKey']);
+    state.encryptionMac = List<int>.from(json['encryptionMac']);
+    state.encryptedBytes = List<int>.from(json['encryptedBytes']);
+    state.encryptionNonce = List<int>.from(json['encryptionNonce']);
+    return state;
+  }
 }
 
 class UploadState {
   late List<int> uploadToken;
   late List<List<int>> downloadTokens;
+
+  UploadState();
+
+  Map<String, dynamic> toJson() {
+    return {
+      'uploadToken': uploadToken,
+      'downloadTokens': downloadTokens,
+    };
+  }
+
+  factory UploadState.fromJson(Map<String, dynamic> json) {
+    UploadState state = UploadState();
+    state.uploadToken = List<int>.from(json['uploadToken']);
+    state.downloadTokens = List<List<int>>.from(
+      json['downloadTokens'].map((token) => List<int>.from(token)),
+    );
+    return state;
+  }
+}
+
+class States {
+  late Metadata metadata;
+  late PrepareState prepareState;
+
+  States({
+    required this.metadata,
+    required this.prepareState,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'metadata': metadata.toJson(),
+      'prepareState': prepareState.toJson(),
+    };
+  }
+
+  factory States.fromJson(Map<String, dynamic> json) {
+    return States(
+      metadata: Metadata.fromJson(json['metadata']),
+      prepareState: PrepareState.fromJson(json['prepareState']),
+    );
+  }
 }
 
 class ImageUploader {
@@ -208,10 +302,11 @@ Future sendImage(
   metadata.userIds = userIds;
   metadata.isRealTwonly = isRealTwonly;
   metadata.maxShowTime = maxShowTime;
-  metadata.messageIds = HashMap();
+  metadata.messageIds = {};
   metadata.messageSendAt = DateTime.now();
 
-  // store prepareState and metadata...
+  String stateId = prepareState.sha2Hash.toString();
+  States states = States(metadata: metadata, prepareState: prepareState);
 
   // at this point it is safe inform the user about the process of sending the image..
   for (final userId in metadata.userIds) {
@@ -240,13 +335,66 @@ Future sendImage(
     }
   }
 
+  {
+    Box storage = await getMediaStorage();
+
+    String? mediaFilesJson = storage.get("mediaUploads");
+    Map<String, dynamic> allMediaFiles = {};
+
+    if (mediaFilesJson != null) {
+      // allMediaFiles = jsonDecode(mediaFilesJson);
+    }
+
+    allMediaFiles[stateId] = jsonEncode(states.toJson());
+    storage.put("mediaUploads", jsonEncode(allMediaFiles));
+  }
+
+  uploadMediaState(stateId, prepareState, metadata);
+}
+
+Future retransmitMediaFiles() async {
+  Box storage = await getMediaStorage();
+  String? mediaFilesJson = storage.get("mediaUploads");
+
+  if (mediaFilesJson == null) {
+    return;
+  }
+
+  Map<String, dynamic> allMediaFiles = jsonDecode(mediaFilesJson);
+
+  for (final entry in allMediaFiles.entries) {
+    try {
+      String stateId = entry.key;
+      States states = States.fromJson(jsonDecode(entry.value));
+      // upload one by one
+      await uploadMediaState(stateId, states.prepareState, states.metadata);
+    } catch (e) {
+      Logger("media.dart").shout(e);
+    }
+  }
+}
+
+// if the upload failes this function is called again from the retransmitMediaFiles function which is
+// called when the WebSocket is reconnected again.
+Future uploadMediaState(
+    String stateId, PrepareState prepareState, Metadata metadata) async {
   final uploadState =
       await ImageUploader.uploadState(prepareState, metadata.userIds.length);
   if (uploadState == null) {
     return;
   }
 
-  // delete prepareState and store uploadState...
+  {
+    Box storage = await getMediaStorage();
+
+    String? mediaFilesJson = storage.get("mediaUploads");
+
+    if (mediaFilesJson != null) {
+      Map<String, dynamic> allMediaFiles = jsonDecode(mediaFilesJson);
+      allMediaFiles.remove(stateId);
+      storage.put("mediaUploads", jsonEncode(allMediaFiles));
+    }
+  }
 
   final notifyState =
       await ImageUploader.notifyState(prepareState, uploadState, metadata);

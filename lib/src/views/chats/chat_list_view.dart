@@ -119,16 +119,22 @@ class _ChatListViewState extends State<ChatListView> {
                 .reduce((a, b) => a > b ? a : b);
           }
 
-          return ListView.builder(
-            restorationId: 'chat_list_view',
-            itemCount: contacts.length,
-            itemBuilder: (BuildContext context, int index) {
-              final user = contacts[index];
-              return UserListItem(
-                user: user,
-                maxTotalMediaCounter: maxTotalMediaCounter,
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              await apiProvider.connect();
+              await Future.delayed(Duration(seconds: 1));
             },
+            child: ListView.builder(
+              restorationId: 'chat_list_view',
+              itemCount: contacts.length,
+              itemBuilder: (BuildContext context, int index) {
+                final user = contacts[index];
+                return UserListItem(
+                  user: user,
+                  maxTotalMediaCounter: maxTotalMediaCounter,
+                );
+              },
+            ),
           );
         },
       ),
