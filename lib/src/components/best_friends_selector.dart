@@ -134,8 +134,8 @@ class UserCheckbox extends StatelessWidget {
                               size: 12,
                             )),
                       Text(
-                        displayName.length > 10
-                            ? '${displayName.substring(0, 10)}...'
+                        displayName.length > 8
+                            ? '${displayName.substring(0, 8)}...'
                             : displayName,
                         overflow: TextOverflow.ellipsis,
                       ),
