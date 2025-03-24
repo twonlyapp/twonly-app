@@ -129,11 +129,11 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     }));
                   },
                 ),
-                BetterListTile(
-                  icon: FontAwesomeIcons.bell,
-                  text: context.lang.settingsNotification,
-                  onTap: () async {},
-                ),
+                // BetterListTile(
+                //   icon: FontAwesomeIcons.bell,
+                //   text: context.lang.settingsNotification,
+                //   onTap: () async {},
+                // ),
                 const Divider(),
                 BetterListTile(
                   icon: FontAwesomeIcons.circleQuestion,

@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA4d5ORP11WpuVgmoYtWmOcMzZYWLPVtBk',
-    appId: '1:650346093942:android:706cb87c3131dabe81ae57',
+    appId: '1:650346093942:android:040816fb819b1bfb81ae57',
     messagingSenderId: '650346093942',
     projectId: 'twonly-ff605',
     storageBucket: 'twonly-ff605.firebasestorage.app',
@@ -59,10 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDr7MEoz2XvrYxU0kYvZVVjej53q0gANnE',
-    appId: '1:650346093942:ios:e80075ff3de823c581ae57',
+    appId: '1:650346093942:ios:ee67080974eadb6681ae57',
     messagingSenderId: '650346093942',
     projectId: 'twonly-ff605',
     storageBucket: 'twonly-ff605.firebasestorage.app',
-    iosBundleId: 'com.example.connect',
+    iosBundleId: 'eu.twonly',
   );
+
 }

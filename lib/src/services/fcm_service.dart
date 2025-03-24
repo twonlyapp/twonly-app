@@ -6,7 +6,7 @@ import 'package:twonly/src/app.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
-
+import 'dart:io' show Platform;
 import '../../firebase_options.dart';
 
 // see more here: https://firebase.google.com/docs/cloud-messaging/flutter/receive?hl=de
@@ -52,10 +52,14 @@ Future initFCMService() async {
   await FirebaseMessaging.instance.requestPermission(provisional: true);
 
   // For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
-  // final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-  // if (apnsToken != null) {
+  if (Platform.isIOS) {
+    final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+    if (apnsToken == null) {
+      return;
+    }
+  }
+
   // APNS token is available, make FCM plugin API requests...
-  // }
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 

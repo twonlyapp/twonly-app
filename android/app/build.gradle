@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.connect"
+    namespace = "eu.twonly"
     // compileSdk = flutter.compileSdkVersion
     compileSdk 35
     //ndkVersion = flutter.ndkVersion

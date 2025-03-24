@@ -1,4 +1,4 @@
-package com.example.connect
+package eu.twonly
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
