@@ -32,7 +32,7 @@
 	<string>To protect others twonlies!</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>To create videos that can be securely shared.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
+	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Store photos in the gallery.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
