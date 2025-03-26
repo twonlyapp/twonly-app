@@ -46,7 +46,7 @@
   "mediaViewerAuthReason": "Please authenticate to see this twonly!",
   "messageSendState_Received": "Received",
   "messageSendState_Opened": "Opened",
-  "messageSendState_Send": "Send",
+  "messageSendState_Send": "Sent",
   "messageSendState_Sending": "Sending",
   "messageSendState_TapToLoad": "Tap to load",
   "messageSendState_Loading": "Downloading",
