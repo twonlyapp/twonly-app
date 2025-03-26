@@ -15,13 +15,13 @@ import 'package:twonly/src/utils/misc.dart';
 import 'src/app.dart';
 
 void main() async {
-  final settingsController = SettingsChangeProvider();
+  WidgetsFlutterBinding.ensureInitialized();
+  await initFCMService();
 
+  final settingsController = SettingsChangeProvider();
   // Load the user's preferred theme while the splash screen is displayed.
   // This prevents a sudden theme change when the app is first displayed.
   await settingsController.loadSettings();
-
-  WidgetsFlutterBinding.ensureInitialized();
 
   Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
   Logger.root.onRecord.listen((record) {
@@ -32,11 +32,10 @@ void main() async {
     }
   });
 
-  await deleteLogFile();
+  // await deleteLogFile();
 
   await setupPushNotification();
   await initMediaStorage();
-  initFCMService();
 
   gCameras = await availableCameras();
 

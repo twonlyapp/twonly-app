@@ -46,10 +46,21 @@ Future initFCMService() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   // You may set the permission requests to "provisional" which allows the user to choose what type
   // of notifications they would like to receive once the user receives a notification.
   // final notificationSettings =
-  await FirebaseMessaging.instance.requestPermission(provisional: true);
+  // await FirebaseMessaging.instance.requestPermission(provisional: true);
+  await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
 
   // For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
   if (Platform.isIOS) {
@@ -60,8 +71,6 @@ Future initFCMService() async {
   }
 
   // APNS token is available, make FCM plugin API requests...
-
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     print('Got a message whilst in the foreground!');
