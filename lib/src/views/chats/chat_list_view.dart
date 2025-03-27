@@ -32,6 +32,14 @@ class ChatListView extends StatefulWidget {
 }
 
 class _ChatListViewState extends State<ChatListView> {
+  late Stream<List<Contact>> contactListStream;
+
+  @override
+  void initState() {
+    super.initState();
+    contactListStream = twonlyDatabase.contactsDao.watchContactsForChatList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,7 +94,7 @@ class _ChatListViewState extends State<ChatListView> {
         ],
       ),
       body: StreamBuilder(
-        stream: twonlyDatabase.contactsDao.watchContactsForChatList(),
+        stream: contactListStream,
         builder: (context, snapshot) {
           if (!snapshot.hasData || snapshot.data == null) {
             return Container();
@@ -157,12 +165,18 @@ class _UserListItem extends State<UserListItem> {
   int lastMessageInSeconds = 0;
   MessageSendState state = MessageSendState.send;
   Message? currentMessage;
+  late Stream<List<Message>> lastMessageStream;
+  late Stream<List<Message>> notOpenedMessageStream;
 
   Timer? updateTime;
 
   @override
   void initState() {
     super.initState();
+    lastMessageStream =
+        twonlyDatabase.messagesDao.watchLastMessage(widget.user.userId);
+    notOpenedMessageStream =
+        twonlyDatabase.messagesDao.watchMessageNotOpened(widget.user.userId);
     lastUpdateTime();
   }
 
@@ -196,8 +210,7 @@ class _UserListItem extends State<UserListItem> {
       child: ListTile(
         title: Text(getContactDisplayName(widget.user)),
         subtitle: StreamBuilder(
-          stream:
-              twonlyDatabase.messagesDao.watchLastMessage(widget.user.userId),
+          stream: lastMessageStream,
           builder: (context, lastMessageSnapshot) {
             if (!lastMessageSnapshot.hasData) {
               return Container();
@@ -207,8 +220,7 @@ class _UserListItem extends State<UserListItem> {
             }
             final lastMessage = lastMessageSnapshot.data!.first;
             return StreamBuilder(
-              stream: twonlyDatabase.messagesDao
-                  .watchMessageNotOpened(widget.user.userId),
+              stream: notOpenedMessageStream,
               builder: (context, notOpenedMessagesSnapshot) {
                 if (!lastMessageSnapshot.hasData) {
                   return Container();
