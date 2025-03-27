@@ -185,7 +185,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ActionButton(
         FontAwesomeIcons.rotateLeft,
         tooltipText: context.lang.undo,
-        disable: layers.length <= 1 && removedLayers.isEmpty,
+        disable: layers.length <= 2 && removedLayers.isEmpty,
         onPressed: () {
           if (removedLayers.isNotEmpty) {
             layers.add(removedLayers.removeLast());
@@ -193,8 +193,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             return;
           }
           layers = layers.where((x) => !x.isDeleted).toList();
-          if (layers.length <= 2)
-            return; // do not remove image layer and filter layer
+          if (layers.length <= 2) {
+            // do not remove image layer and filter layer
+            return;
+          }
           undoLayers.add(layers.removeLast());
           setState(() {});
         },
