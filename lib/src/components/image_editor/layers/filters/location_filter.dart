@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/image_editor/layers/filter_layer.dart';
+import 'package:twonly/src/components/image_editor/layers/filters/datetime_filter.dart';
 import 'package:twonly/src/components/image_editor/layers/filters/image_filter.dart';
 import 'package:twonly/src/proto/api/server_to_client.pb.dart';
 
@@ -66,22 +67,24 @@ class _LocationFilterState extends State<LocationFilter> {
     }
 
     if (location != null) {
-      return FilterSceleton(
-        child: Positioned(
-          bottom: 50,
-          left: 40,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              FilterText(location!.city),
-              FilterText(location!.region),
-              FilterText(location!.county),
-            ],
+      if (location!.county != "-") {
+        return FilterSceleton(
+          child: Positioned(
+            bottom: 50,
+            left: 40,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                FilterText(location!.city),
+                FilterText(location!.region),
+                FilterText(location!.county),
+              ],
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
 
-    return Container();
+    return DateTimeFilter(color: Colors.black);
   }
 }

@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:twonly/src/components/image_editor/layers/filter_layer.dart';
 
 class DateTimeFilter extends StatelessWidget {
-  const DateTimeFilter({super.key});
+  const DateTimeFilter({super.key, this.color = Colors.white});
+
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -16,8 +18,8 @@ class DateTimeFilter extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FilterText(currentTime),
-            FilterText(currentDate),
+            FilterText(currentTime, color: color),
+            FilterText(currentDate, color: color),
           ],
         ),
       ),
