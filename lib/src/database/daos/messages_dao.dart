@@ -26,6 +26,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
           ..where((t) =>
               t.openedAt.isNull() &
               t.contactId.equals(contactId) &
+              t.messageOtherId.isNotNull() &
               t.kind.equals(MessageKind.media.name))
           ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
         .watch();
