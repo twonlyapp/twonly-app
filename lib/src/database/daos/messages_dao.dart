@@ -82,6 +82,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     return (update(messages)
           ..where((t) =>
               t.contactId.equals(contactId) &
+              t.messageOtherId.isNotNull() &
               t.openedAt.isNull() &
               t.kind.equals(MessageKind.media.name).not()))
         .write(updates);
