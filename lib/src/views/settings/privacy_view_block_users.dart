@@ -29,20 +29,6 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
     setState(() {});
   }
 
-  // Future _filterUsers(String query) async {
-  //   lastQuery = query;
-  //   if (query.isEmpty) {
-  //     filteredUsers = allUsers;
-  //     setState(() {});
-  //     return;
-  //   }
-  //   filteredUsers = allUsers
-  //       .where((user) =>
-  //           user.displayName.toLowerCase().contains(query.toLowerCase()))
-  //       .toList();
-  //   setState(() {});
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,7 +90,7 @@ class UserList extends StatelessWidget {
 
   Future block(BuildContext context, int userId, bool? value) async {
     if (value != null) {
-      final update = ContactsCompanion(blocked: Value(!value));
+      final update = ContactsCompanion(blocked: Value(value));
       await twonlyDatabase.contactsDao.updateContact(userId, update);
     }
   }
