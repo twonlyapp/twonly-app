@@ -105,9 +105,15 @@ class _RegisterViewState extends State<RegisterView> {
                 const SizedBox(height: 15),
                 TextField(
                   controller: usernameController,
+                  onChanged: (value) {
+                    usernameController.text = value.toLowerCase();
+                    usernameController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: usernameController.text.length),
+                    );
+                  },
                   inputFormatters: [
                     LengthLimitingTextInputFormatter(12),
-                    FilteringTextInputFormatter.allow(RegExp(r'[a-z0-9]')),
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-z0-9A-Z]')),
                   ],
                   style: TextStyle(fontSize: 17),
                   decoration: getInputDecoration(

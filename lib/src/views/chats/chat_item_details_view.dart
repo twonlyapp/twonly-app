@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/animate_icon.dart';
+import 'package:twonly/src/components/better_text.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
 import 'package:twonly/src/components/verified_shield.dart';
@@ -62,14 +63,7 @@ class ChatListEntry extends StatelessWidget {
                     83, 68, 137, 255), // Set the background color
             borderRadius: BorderRadius.circular(12.0), // Set border radius
           ),
-          child: SelectableText(
-            content.text,
-            style: TextStyle(
-              color: Colors.white, // Set text color for contrast
-              fontSize: 17,
-            ),
-            textAlign: TextAlign.left, // Center the text
-          ),
+          child: BetterText(text: content.text),
         );
       }
     } else if (content is MediaMessageContent && !content.isVideo) {

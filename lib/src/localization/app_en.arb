@@ -19,7 +19,7 @@
   "onboardingTryForFree": "Try for free",
   "registerUsernameSlogan": "Please select a username so others can find you!",
   "registerUsernameDecoration": "Username",
-  "registerUsernameLimits": "Username must be 4 to 12 characters long, consisting only of letters (a-z) and numbers (0-9).",
+  "registerUsernameLimits": "Username must be 3 to 12 characters long, consisting only of letters (a-z) and numbers (0-9).",
   "registerSubmitButton": "Register now!",
   "newMessageTitle": "New message",
   "chatsTapToSend": "Click to send your first image",

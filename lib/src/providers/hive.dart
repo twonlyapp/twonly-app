@@ -19,9 +19,14 @@ Future initMediaStorage() async {
 }
 
 Future<Box> getMediaStorage() async {
-  await initMediaStorage();
-
   final storage = getSecureStorage();
+
+  var containsEncryptionKey =
+      await storage.containsKey(key: 'hive_encryption_key');
+  if (!containsEncryptionKey) {
+    await initMediaStorage();
+  }
+
   var encryptionKey =
       base64Url.decode((await storage.read(key: 'hive_encryption_key'))!);
 
