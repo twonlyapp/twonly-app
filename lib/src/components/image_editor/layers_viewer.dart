@@ -28,6 +28,11 @@ class LayersViewer extends StatelessWidget {
             onUpdate: onUpdate,
           );
         }),
+        ...layers.whereType<FilterLayerData>().map((layerItem) {
+          return FilterLayer(
+            layerData: layerItem,
+          );
+        }),
         ...layers
             .where((layerItem) =>
                 layerItem is EmojiLayerData || layerItem is DrawLayerData)
@@ -44,11 +49,6 @@ class LayersViewer extends StatelessWidget {
             );
           }
           return Container();
-        }),
-        ...layers.whereType<FilterLayerData>().map((layerItem) {
-          return FilterLayer(
-            layerData: layerItem,
-          );
         }),
         ...layers.whereType<TextLayerData>().map((layerItem) {
           return TextLayer(
