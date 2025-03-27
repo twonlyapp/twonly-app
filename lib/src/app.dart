@@ -99,6 +99,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       if (wasPaused) {
         globalIsAppInBackground = false;
+        twonlyDatabase.markUpdated();
         apiProvider.connect();
         // _stopService();
       }

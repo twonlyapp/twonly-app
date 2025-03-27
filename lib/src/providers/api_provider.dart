@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
@@ -77,6 +78,7 @@ class ApiProvider {
       retransmitMediaFiles();
       tryDownloadAllMediaFiles();
       notifyContactsAboutProfileChange();
+      twonlyDatabase.markUpdated();
     }
   }
 

@@ -39,4 +39,9 @@ class TwonlyDatabase extends _$TwonlyDatabase {
       ),
     );
   }
+
+  void markUpdated() {
+    notifyUpdates({TableUpdate.onTable(messages, kind: UpdateKind.update)});
+    notifyUpdates({TableUpdate.onTable(contacts, kind: UpdateKind.update)});
+  }
 }
