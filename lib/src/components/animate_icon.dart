@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -39,7 +37,7 @@ class EmojiAnimation extends StatelessWidget {
     // List of emojis and their corresponding Lottie file names
 
     // Check if the emoji has a corresponding Lottie animation
-    if (animatedIcons.containsKey(emoji) && Platform.isAndroid) {
+    if (animatedIcons.containsKey(emoji)) {
       return Lottie.asset("assets/animated_icons/${animatedIcons[emoji]}");
     } else if (isEmoji(emoji)) {
       return Text(

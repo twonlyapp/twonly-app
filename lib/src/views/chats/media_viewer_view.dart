@@ -345,7 +345,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             ),
             if (imageBytes != null)
               Positioned(
-                bottom: 0,
+                bottom: 30,
                 left: 0,
                 right: 0,
                 child: Row(
