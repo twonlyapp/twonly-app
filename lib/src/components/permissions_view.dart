@@ -15,7 +15,8 @@ Future<bool> checkPermissions() async {
     return false;
   }
   if (!await Permission.microphone.isGranted) {
-    return false;
+    // microphone is only needed when
+    return true;
   }
   return true;
 }
@@ -25,17 +26,17 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
     // You can request multiple permissions at once.
     Map<Permission, PermissionStatus> statuses = await [
       Permission.camera,
-      Permission.microphone,
+      // Permission.microphone,
       Permission.notification
     ].request();
 
-    if (statuses[Permission.microphone]!.isPermanentlyDenied) {
-      openAppSettings();
-      // setState(() {});
-    } else {
-      // if (statuses[Permission.microphone]!.isDenied) {
-      // }
-    }
+    // if (statuses[Permission.microphone]!.isPermanentlyDenied) {
+    //   openAppSettings();
+    //   // setState(() {});
+    // } else {
+    //   // if (statuses[Permission.microphone]!.isDenied) {
+    //   // }
+    // }
 
     if (statuses[Permission.camera]!.isPermanentlyDenied) {
       openAppSettings();

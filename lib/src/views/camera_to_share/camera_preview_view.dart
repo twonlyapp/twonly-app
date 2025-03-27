@@ -101,7 +101,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     setState(() {
       isZoomAble = false;
     });
-    controller = CameraController(gCameras[sCameraId], ResolutionPreset.high);
+    controller = CameraController(gCameras[sCameraId], ResolutionPreset.high,
+        enableAudio: false);
     controller.initialize().then((_) async {
       if (!mounted) {
         return;
