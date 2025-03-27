@@ -226,7 +226,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                 child: SizedBox(
                                   width: controller.value.previewSize!.height,
                                   height: controller.value.previewSize!.width,
-                                  child: CameraPreview(controller),
+                                  child: Transform(
+                                    alignment: Alignment.center,
+                                    transform:
+                                        Matrix4.rotationY(isFront ? 3.14 : 0),
+                                    child: CameraPreview(controller),
+                                  ),
                                 ),
                               ),
                             ),
