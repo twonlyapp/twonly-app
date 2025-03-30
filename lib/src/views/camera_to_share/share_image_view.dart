@@ -162,6 +162,13 @@ class _ShareImageView extends State<ShareImageView> {
           padding: EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
           child: Column(
             children: [
+              if (showRealTwonlyWarning)
+                Text(
+                  context.lang.shareImageAllTwonlyWarning,
+                  style: TextStyle(color: Colors.orange, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+              if (showRealTwonlyWarning) const SizedBox(height: 10),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10),
                 child: TextField(
@@ -170,12 +177,6 @@ class _ShareImageView extends State<ShareImageView> {
                       context, context.lang.searchUsernameInput),
                 ),
               ),
-              if (showRealTwonlyWarning) const SizedBox(height: 10),
-              if (showRealTwonlyWarning)
-                Text(
-                  context.lang.shareImageAllTwonlyWarning,
-                  style: TextStyle(color: Colors.orange),
-                ),
               const SizedBox(height: 10),
               BestFriendsSelector(
                 users: _bestFriends,

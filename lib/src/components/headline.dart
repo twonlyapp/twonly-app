@@ -12,7 +12,7 @@ class HeadLineComponent extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
       child: Text(
         text,
-        style: TextStyle(fontSize: 18),
+        style: TextStyle(fontSize: 17),
       ),
     );
   }

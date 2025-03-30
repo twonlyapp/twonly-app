@@ -33,7 +33,35 @@ class BestFriendsSelector extends StatelessWidget {
 
     return Column(
       children: [
-        HeadLineComponent(context.lang.shareImageBestFriends),
+        Row(
+          children: [
+            Expanded(
+              child: HeadLineComponent(context.lang.shareImageBestFriends),
+            ),
+            if (!isRealTwonly)
+              GestureDetector(
+                onTap: () {
+                  for (final user in users) {
+                    updateStatus(user.userId, true);
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.outline.withAlpha(50),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 10.9,
+                        color: Color.fromRGBO(0, 0, 0, 0.1),
+                      ),
+                    ],
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Text("Alle auswählen", style: TextStyle(fontSize: 10)),
+                ),
+              ),
+          ],
+        ),
         Column(
           spacing: 8,
           children: List.generate(
