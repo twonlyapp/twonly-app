@@ -90,7 +90,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           if (layers.any((x) => x.isEditing)) return;
           undoLayers.clear();
           removedLayers.clear();
-          layers.add(TextLayerData());
+          layers.add(TextLayerData(
+            textLayersBefore: layers.whereType<TextLayerData>().length,
+          ));
           setState(() {});
         },
       ),
@@ -278,7 +280,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               }
               undoLayers.clear();
               removedLayers.clear();
-              layers.add(TextLayerData());
+              layers.add(TextLayerData(
+                textLayersBefore: layers.whereType<TextLayerData>().length,
+              ));
               setState(() {});
             },
             child: MediaViewSizing(

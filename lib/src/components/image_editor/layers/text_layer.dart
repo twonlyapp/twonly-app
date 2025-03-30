@@ -33,8 +33,11 @@ class _TextViewState extends State<TextLayer> {
       // Set the initial offset to the center of the screen
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          widget.layerData.offset =
-              Offset(0, MediaQuery.of(context).size.height / 2 - 30);
+          widget.layerData.offset = Offset(
+              0,
+              MediaQuery.of(context).size.height / 2 -
+                  150 +
+                  (widget.layerData.textLayersBefore * 40));
         });
       });
     }

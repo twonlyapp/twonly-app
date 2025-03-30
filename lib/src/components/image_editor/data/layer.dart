@@ -53,8 +53,10 @@ class EmojiLayerData extends Layer {
 /// Attributes used by [TextLayer]
 class TextLayerData extends Layer {
   String text;
+  int textLayersBefore;
   TextLayerData({
     this.text = "",
+    required this.textLayersBefore,
     super.offset,
     super.opacity,
     super.rotation,
