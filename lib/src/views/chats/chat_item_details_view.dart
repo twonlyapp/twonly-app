@@ -75,7 +75,8 @@ class ChatListEntry extends StatelessWidget {
       child = GestureDetector(
         onTap: () {
           if (message.kind == MessageKind.media) {
-            if (message.downloadState == DownloadState.downloaded) {
+            if (message.downloadState == DownloadState.downloaded &&
+                message.openedAt == null) {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) {
