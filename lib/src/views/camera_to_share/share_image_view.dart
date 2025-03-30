@@ -157,45 +157,47 @@ class _ShareImageView extends State<ShareImageView> {
       appBar: AppBar(
         title: Text(context.lang.shareImageTitle),
       ),
-      body: Padding(
-        padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: TextField(
-                onChanged: _filterUsers,
-                decoration: getInputDecoration(
-                    context, context.lang.searchUsernameInput),
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: TextField(
+                  onChanged: _filterUsers,
+                  decoration: getInputDecoration(
+                      context, context.lang.searchUsernameInput),
+                ),
               ),
-            ),
-            if (showRealTwonlyWarning) const SizedBox(height: 10),
-            if (showRealTwonlyWarning)
-              Text(
-                context.lang.shareImageAllTwonlyWarning,
-                style: TextStyle(color: Colors.orange),
-              ),
-            const SizedBox(height: 10),
-            BestFriendsSelector(
-              users: _bestFriends,
-              selectedUserIds: _selectedUserIds,
-              maxTotalMediaCounter: maxTotalMediaCounter,
-              isRealTwonly: widget.isRealTwonly,
-              updateStatus: updateStatus,
-            ),
-            const SizedBox(height: 10),
-            if (_otherUsers.isNotEmpty)
-              HeadLineComponent(context.lang.shareImageAllUsers),
-            Expanded(
-              child: UserList(
-                List.from(_otherUsers),
-                maxTotalMediaCounter,
+              if (showRealTwonlyWarning) const SizedBox(height: 10),
+              if (showRealTwonlyWarning)
+                Text(
+                  context.lang.shareImageAllTwonlyWarning,
+                  style: TextStyle(color: Colors.orange),
+                ),
+              const SizedBox(height: 10),
+              BestFriendsSelector(
+                users: _bestFriends,
                 selectedUserIds: _selectedUserIds,
+                maxTotalMediaCounter: maxTotalMediaCounter,
                 isRealTwonly: widget.isRealTwonly,
                 updateStatus: updateStatus,
               ),
-            )
-          ],
+              const SizedBox(height: 10),
+              if (_otherUsers.isNotEmpty)
+                HeadLineComponent(context.lang.shareImageAllUsers),
+              Expanded(
+                child: UserList(
+                  List.from(_otherUsers),
+                  maxTotalMediaCounter,
+                  selectedUserIds: _selectedUserIds,
+                  isRealTwonly: widget.isRealTwonly,
+                  updateStatus: updateStatus,
+                ),
+              )
+            ],
+          ),
         ),
       ),
       floatingActionButton: SizedBox(
@@ -274,8 +276,8 @@ class UserList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Step 1: Sort the users alphabetically
-    users.sort(
-        (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)));
+    users
+        .sort((a, b) => a.lastMessageExchange.compareTo(b.lastMessageExchange));
 
     return ListView.builder(
       restorationId: 'new_message_users_list',
@@ -309,6 +311,15 @@ class UserList extends StatelessWidget {
           ),
           trailing: Checkbox(
             value: selectedUserIds.contains(user.userId),
+            side: WidgetStateBorderSide.resolveWith(
+              (Set states) {
+                if (states.contains(WidgetState.selected)) {
+                  return BorderSide(width: 0);
+                }
+                return BorderSide(
+                    width: 1, color: Theme.of(context).colorScheme.outline);
+              },
+            ),
             onChanged: (bool? value) {
               if (value == null) return;
               updateStatus(user.userId, value);

@@ -251,92 +251,96 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                 ),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: messages.length, // Number of items in the list
-              reverse: true,
-              itemBuilder: (context, i) {
-                bool lastMessageFromSameUser = false;
-                if (i > 0) {
-                  lastMessageFromSameUser =
-                      (messages[i - 1].messageOtherId == null &&
-                              messages[i].messageOtherId == null) ||
-                          (messages[i - 1].messageOtherId != null &&
-                              messages[i].messageOtherId != null);
-                }
-                return ChatListEntry(
-                  messages[i],
-                  widget.userid,
-                  lastMessageFromSameUser,
-                );
-              },
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: messages.length, // Number of items in the list
+                reverse: true,
+                itemBuilder: (context, i) {
+                  bool lastMessageFromSameUser = false;
+                  if (i > 0) {
+                    lastMessageFromSameUser =
+                        (messages[i - 1].messageOtherId == null &&
+                                messages[i].messageOtherId == null) ||
+                            (messages[i - 1].messageOtherId != null &&
+                                messages[i].messageOtherId != null);
+                  }
+                  return ChatListEntry(
+                    messages[i],
+                    widget.userid,
+                    lastMessageFromSameUser,
+                  );
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding:
-                const EdgeInsets.only(bottom: 30, left: 20, right: 20, top: 10),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: newMessageController,
-                    onChanged: (value) {
-                      currentInputText = value;
-                      setState(() {});
-                    },
-                    onSubmitted: (_) {
-                      _sendMessage();
-                    },
-                    decoration: InputDecoration(
-                      hintText: context.lang.chatListDetailInput,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                            20), // Set the border radius here
-                        borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2.0), // Customize border color and width
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                            20.0), // Same radius for focused border
-                        borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                            20.0), // Same radius for enabled border
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+            Padding(
+              padding: const EdgeInsets.only(
+                  bottom: 30, left: 20, right: 20, top: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: newMessageController,
+                      onChanged: (value) {
+                        currentInputText = value;
+                        setState(() {});
+                      },
+                      onSubmitted: (_) {
+                        _sendMessage();
+                      },
+                      decoration: InputDecoration(
+                        hintText: context.lang.chatListDetailInput,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                              20), // Set the border radius here
+                          borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2.0), // Customize border color and width
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                              20.0), // Same radius for focused border
+                          borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2.0),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                              20.0), // Same radius for enabled border
+                          borderSide:
+                              BorderSide(color: Colors.grey, width: 2.0),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(width: 8),
-                (currentInputText != "")
-                    ? IconButton(
-                        icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-                        onPressed: () {
-                          _sendMessage();
-                        },
-                      )
-                    : IconButton(
-                        icon: FaIcon(FontAwesomeIcons.camera),
-                        onPressed: () {
-                          context
-                              .read<SendNextMediaTo>()
-                              .updateSendNextMediaTo(widget.userid);
-                          globalUpdateOfHomeViewPageIndex(0);
-                          Navigator.popUntil(context, (route) => route.isFirst);
-                        },
-                      )
-              ],
+                  SizedBox(width: 8),
+                  (currentInputText != "")
+                      ? IconButton(
+                          icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                          onPressed: () {
+                            _sendMessage();
+                          },
+                        )
+                      : IconButton(
+                          icon: FaIcon(FontAwesomeIcons.camera),
+                          onPressed: () {
+                            context
+                                .read<SendNextMediaTo>()
+                                .updateSendNextMediaTo(widget.userid);
+                            globalUpdateOfHomeViewPageIndex(0);
+                            Navigator.popUntil(
+                                context, (route) => route.isFirst);
+                          },
+                        )
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

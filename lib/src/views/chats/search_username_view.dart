@@ -106,49 +106,51 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       appBar: AppBar(
         title: Text(context.lang.searchUsernameTitle),
       ),
-      body: Padding(
-        padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: TextField(
-                onSubmitted: (_) {
-                  _addNewUser(context);
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: TextField(
+                  onSubmitted: (_) {
+                    _addNewUser(context);
+                  },
+                  controller: searchUserName,
+                  decoration:
+                      getInputDecoration(context.lang.searchUsernameInput),
+                ),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                icon: Icon(Icons.qr_code),
+                onPressed: () {
+                  showAlertDialog(context, "Coming soon",
+                      "This feature is not yet implemented!");
                 },
-                controller: searchUserName,
-                decoration:
-                    getInputDecoration(context.lang.searchUsernameInput),
+                label: Text(context.lang.searchUsernameQrCodeBtn),
               ),
-            ),
-            const SizedBox(height: 20),
-            OutlinedButton.icon(
-              icon: Icon(Icons.qr_code),
-              onPressed: () {
-                showAlertDialog(context, "Coming soon",
-                    "This feature is not yet implemented!");
-              },
-              label: Text(context.lang.searchUsernameQrCodeBtn),
-            ),
-            SizedBox(height: 30),
-            if (hasRequestedUsers)
-              HeadLineComponent(
-                context.lang.searchUsernameNewFollowerTitle,
-              ),
-            StreamBuilder(
-              stream: contacts,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData ||
-                    snapshot.data == null ||
-                    snapshot.data!.isEmpty) {
-                  hasRequestedUsers = false;
-                  return Container();
-                }
-                hasRequestedUsers = true;
-                return Expanded(child: ContactsListView(snapshot.data!));
-              },
-            )
-          ],
+              SizedBox(height: 30),
+              if (hasRequestedUsers)
+                HeadLineComponent(
+                  context.lang.searchUsernameNewFollowerTitle,
+                ),
+              StreamBuilder(
+                stream: contacts,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData ||
+                      snapshot.data == null ||
+                      snapshot.data!.isEmpty) {
+                    hasRequestedUsers = false;
+                    return Container();
+                  }
+                  hasRequestedUsers = true;
+                  return Expanded(child: ContactsListView(snapshot.data!));
+                },
+              )
+            ],
+          ),
         ),
       ),
       floatingActionButton: Padding(

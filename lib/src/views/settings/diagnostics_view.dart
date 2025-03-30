@@ -9,67 +9,69 @@ class DiagnosticsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _loadLogFile(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else {
-          final logText = snapshot.data ?? '';
+    return SafeArea(
+      child: FutureBuilder<String>(
+        future: _loadLogFile(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            final logText = snapshot.data ?? '';
 
-          return Scaffold(
-            appBar: AppBar(title: const Text('Diagnostics')),
-            body: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
+            return Scaffold(
+              appBar: AppBar(title: const Text('Diagnostics')),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(logText),
+                    ),
+                  ),
+                  Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text(logText),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: logText));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Log copied to clipboard!')),
-                          );
-                        },
-                        child: const Text('Copy All Text'),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          if (await deleteLogFile()) {
-                            if (!context.mounted) return;
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: logText));
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text('Log file deleted!')),
+                                  content: Text('Log copied to clipboard!')),
                             );
-                          } else {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Log file does not exist.')),
-                            );
-                          }
-                        },
-                        child: const Text('Delete Log File'),
-                      ),
-                    ],
+                          },
+                          child: const Text('Copy All Text'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            if (await deleteLogFile()) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Log file deleted!')),
+                              );
+                            } else {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Log file does not exist.')),
+                              );
+                            }
+                          },
+                          child: const Text('Delete Log File'),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }
-      },
+                ],
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 

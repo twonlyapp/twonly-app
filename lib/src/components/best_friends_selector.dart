@@ -107,10 +107,13 @@ class UserCheckbox extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
           decoration: BoxDecoration(
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
-              width: 1.0,
-            ),
+            color: Theme.of(context).colorScheme.outline.withAlpha(50),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 10.9,
+                color: Color.fromRGBO(0, 0, 0, 0.1),
+              ),
+            ],
             borderRadius: BorderRadius.circular(8.0),
           ),
           child: Row(
@@ -157,6 +160,15 @@ class UserCheckbox extends StatelessWidget {
               Expanded(child: Container()),
               Checkbox(
                 value: isChecked,
+                side: WidgetStateBorderSide.resolveWith(
+                  (Set states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return BorderSide(width: 0);
+                    }
+                    return BorderSide(
+                        width: 1, color: Theme.of(context).colorScheme.outline);
+                  },
+                ),
                 onChanged: (bool? value) {
                   onChanged(user.userId, value ?? false);
                 },
