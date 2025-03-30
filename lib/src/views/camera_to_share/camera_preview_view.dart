@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -228,8 +229,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                   height: controller.value.previewSize!.width,
                                   child: Transform(
                                     alignment: Alignment.center,
-                                    transform:
-                                        Matrix4.rotationY(isFront ? 3.14 : 0),
+                                    transform: Matrix4.rotationY(
+                                        (isFront && Platform.isAndroid)
+                                            ? 3.14
+                                            : 0),
                                     child: CameraPreview(controller),
                                   ),
                                 ),
