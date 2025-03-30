@@ -131,7 +131,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   Stream<int?> watchContactsBlocked() {
-    final count = contacts.blocked.count(distinct: true);
+    final count = contacts.userId.count();
     final query = selectOnly(contacts)..where(contacts.blocked.equals(true));
     query.addColumns([count]);
     return query.map((row) => row.read(count)).watchSingle();
