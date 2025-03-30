@@ -148,7 +148,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     final query = select(messages)
       ..where((t) => t.messageOtherId.equals(messageOtherId));
     final entry = await query.getSingleOrNull();
-    return entry == null;
+    return entry != null;
   }
 
   SingleOrNullSelectable<Message> getMessageByMessageId(int messageId) {
