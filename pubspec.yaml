@@ -4,7 +4,7 @@ description: "Send pictures to friends in real time and be sure you are the only
 # Prevent accidental publishing to pub.dev.
 publish_to: 'none'
 
-version: 0.0.11+11
+version: 0.0.12+12
 
 environment:
   sdk: ^3.6.0
