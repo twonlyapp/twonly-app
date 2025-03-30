@@ -225,7 +225,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             message.kind != MessageKind.storedMediaFile) {
           Logger("handleServerMessages")
               .shout("Got unknown MessageKind $message");
-        } else if (message.content != null) {
+        } else if (message.content != null && message.messageId != null) {
           String content = jsonEncode(message.content!.toJson());
 
           bool acknowledgeByUser = false;
@@ -239,6 +239,13 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           final textContent = message.content!;
           if (textContent is TextMessageContent) {
             responseToMessageId = textContent.responseToMessageId;
+          }
+
+          // when a message is received doubled ignore it...
+          if ((await twonlyDatabase.messagesDao
+              .containsOtherMessageId(message.messageId!))) {
+            var ok = client.Response_Ok()..none = true;
+            return client.Response()..ok = ok;
           }
 
           final update = MessagesCompanion(
