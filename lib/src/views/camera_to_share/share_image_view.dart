@@ -277,7 +277,7 @@ class UserList extends StatelessWidget {
   Widget build(BuildContext context) {
     // Step 1: Sort the users alphabetically
     users
-        .sort((a, b) => a.lastMessageExchange.compareTo(b.lastMessageExchange));
+        .sort((a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange));
 
     return ListView.builder(
       restorationId: 'new_message_users_list',
