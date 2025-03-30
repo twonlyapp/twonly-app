@@ -15,7 +15,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
 
   Stream<List<Message>> watchMessageNotOpened(int contactId) {
     return (select(messages)
-          ..where((t) => t.openedAt.isNull() & t.contactId.equals(contactId))
+          ..where((t) =>
+              t.openedAt.isNull() &
+              t.contactId.equals(contactId) &
+              t.errorWhileSending.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
         .watch();
   }
@@ -55,8 +58,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
   Future removeOldMessages() {
     return (update(messages)
           ..where((t) =>
-              t.openedAt.isSmallerThanValue(
-                  DateTime.now().subtract(Duration(days: 1))) &
+              (t.openedAt.isSmallerThanValue(
+                    DateTime.now().subtract(Duration(days: 1)),
+                  ) |
+                  (t.sendAt.isSmallerThanValue(
+                          DateTime.now().subtract(Duration(days: 1))) &
+                      t.errorWhileSending.equals(true))) &
               t.kind.equals(MessageKind.textMessage.name)))
         .write(MessagesCompanion(contentJson: Value(null)));
   }

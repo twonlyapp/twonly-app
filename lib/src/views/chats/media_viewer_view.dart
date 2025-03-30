@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
@@ -91,7 +91,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   Future loadCurrentMediaFile({bool showTwonly = false}) async {
     await _noScreenshot.screenshotOff();
-    if (!context.mounted || allMediaFiles.isEmpty) return;
+    if (!context.mounted || allMediaFiles.isEmpty) return nextMediaOrExit();
 
     final current = allMediaFiles.first;
     final MediaMessageContent content =
@@ -137,14 +137,24 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     do {
       if (isDownloading) {
         await Future.delayed(Duration(milliseconds: 10));
+        if (!apiProvider.isConnected) break;
       }
       if (content.downloadToken == null) break;
       imageBytes = await getDownloadedMedia(current, content.downloadToken!);
     } while (isDownloading && imageBytes == null);
 
     isDownloading = false;
-
     if (imageBytes == null) {
+      if (current.downloadState == DownloadState.downloaded) {
+        // When the message should be downloaded but imageBytes are null then a error happened
+        await twonlyDatabase.messagesDao.updateMessageByMessageId(
+          current.messageId,
+          MessagesCompanion(
+            errorWhileSending: Value(true),
+          ),
+        );
+      }
+
       nextMediaOrExit();
       return;
     }

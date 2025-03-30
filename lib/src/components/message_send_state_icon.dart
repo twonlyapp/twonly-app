@@ -149,7 +149,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       if (message.errorWhileSending) {
         icon =
             FaIcon(FontAwesomeIcons.circleExclamation, size: 12, color: color);
-        text = "Error while sending";
+        text = "Unknown error.";
       }
 
       icons.add(icon);
