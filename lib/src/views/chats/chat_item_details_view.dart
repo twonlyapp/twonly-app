@@ -24,11 +24,46 @@ import 'package:twonly/src/views/contact/contact_view.dart';
 import 'package:twonly/src/views/home_view.dart';
 
 class ChatListEntry extends StatelessWidget {
-  const ChatListEntry(this.message, this.userId, this.lastMessageFromSameUser,
+  const ChatListEntry(
+      this.message, this.userId, this.lastMessageFromSameUser, this.reactions,
       {super.key});
   final Message message;
   final int userId;
   final bool lastMessageFromSameUser;
+  final List<Message> reactions;
+
+  Widget getReactionRow() {
+    List<Widget> children = [];
+    for (final reaction in reactions) {
+      if (children.isNotEmpty) break;
+      MessageContent? content = MessageContent.fromJson(
+          reaction.kind, jsonDecode(reaction.contentJson!));
+      if (content is TextMessageContent) {
+        late Widget child;
+        if (EmojiAnimation.animatedIcons.containsKey(content.text)) {
+          child = SizedBox(
+            height: 18,
+            child: EmojiAnimation(emoji: content.text),
+          );
+        } else {
+          child = Text(content.text, style: TextStyle(fontSize: 14));
+        }
+        children.add(Padding(
+          padding: EdgeInsets.only(left: 3),
+          child: child,
+        ));
+      }
+    }
+
+    if (children.isEmpty) return Container();
+
+    return Row(
+      mainAxisAlignment: message.messageOtherId == null
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.end,
+      children: children,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,14 +89,12 @@ class ChatListEntry extends StatelessWidget {
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.8,
           ),
-          padding: EdgeInsets.symmetric(
-              vertical: 4, horizontal: 10), // Add some padding around the text
+          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
           decoration: BoxDecoration(
             color: right
                 ? const Color.fromARGB(107, 124, 77, 255)
-                : const Color.fromARGB(
-                    83, 68, 137, 255), // Set the background color
-            borderRadius: BorderRadius.circular(12.0), // Set border radius
+                : const Color.fromARGB(83, 68, 137, 255),
+            borderRadius: BorderRadius.circular(12.0),
           ),
           child: BetterText(text: content.text),
         );
@@ -94,17 +127,16 @@ class ChatListEntry extends StatelessWidget {
           width: 150,
           decoration: BoxDecoration(
             border: Border.all(
-              color: color, // Set the background color
-              width: 1.0, // Set the border width here
+              color: color,
+              width: 1.0,
             ),
-            borderRadius: BorderRadius.circular(12.0), // Set border radius
+            borderRadius: BorderRadius.circular(12.0),
           ),
           child: Align(
             alignment: Alignment.centerRight,
             child: MessageSendStateIcon(
               [message],
-              mainAxisAlignment:
-                  right ? MainAxisAlignment.center : MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
             ),
           ),
         ),
@@ -134,10 +166,17 @@ class ChatListEntry extends StatelessWidget {
     return Align(
       alignment: right ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
-          padding: lastMessageFromSameUser
-              ? EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10)
-              : EdgeInsets.only(top: 5, bottom: 20, right: 10, left: 10),
-          child: child),
+        padding: lastMessageFromSameUser
+            ? EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10)
+            : EdgeInsets.only(top: 5, bottom: 20, right: 10, left: 10),
+        child: Stack(
+          alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+          children: [
+            child,
+            Positioned(bottom: 5, left: 5, right: 5, child: getReactionRow()),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -160,6 +199,8 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   late StreamSubscription<Contact> userSub;
   late StreamSubscription<List<Message>> messageSub;
   List<Message> messages = [];
+  Map<int, List<Message>> reactionsToMyMessages = {};
+  Map<int, List<Message>> reactionsToOtherMessages = {};
 
   @override
   void initState() {
@@ -189,6 +230,10 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     messageSub = msgStream.listen((msgs) {
       if (!context.mounted) return;
       var updated = false;
+      List<Message> displayedMessages = [];
+      // should be cleared
+      Map<int, List<Message>> tmpReactionsToMyMessages = {};
+      Map<int, List<Message>> tmpTeactionsToOtherMessages = {};
       for (Message msg in msgs) {
         if (msg.kind == MessageKind.textMessage &&
             msg.messageOtherId != null &&
@@ -197,12 +242,32 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
           flutterLocalNotificationsPlugin.cancel(msg.messageId);
           notifyContactAboutOpeningMessage(widget.userid, msg.messageOtherId!);
         }
+
+        if (msg.responseToMessageId != null) {
+          if (!tmpReactionsToMyMessages.containsKey(msg.responseToMessageId!)) {
+            tmpReactionsToMyMessages[msg.responseToMessageId!] = [msg];
+          } else {
+            tmpReactionsToMyMessages[msg.responseToMessageId!]!.add(msg);
+          }
+        } else if (msg.responseToOtherMessageId != null) {
+          if (!tmpTeactionsToOtherMessages
+              .containsKey(msg.responseToOtherMessageId!)) {
+            tmpTeactionsToOtherMessages[msg.responseToOtherMessageId!] = [msg];
+          } else {
+            tmpTeactionsToOtherMessages[msg.responseToOtherMessageId!]!
+                .add(msg);
+          }
+        } else {
+          displayedMessages.add(msg);
+        }
       }
       twonlyDatabase.messagesDao.openedAllNonMediaMessages(widget.userid);
       if (!updated) {
         // The stream should be get an update, so only update the UI when all are opened
         setState(() {
-          messages = msgs;
+          reactionsToMyMessages = tmpReactionsToMyMessages;
+          reactionsToOtherMessages = tmpTeactionsToOtherMessages;
+          messages = displayedMessages;
         });
       }
     });
@@ -210,7 +275,12 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
 
   Future _sendMessage() async {
     if (newMessageController.text == "" || user == null) return;
-    await sendTextMessage(user!.userId, newMessageController.text);
+    await sendTextMessage(
+      user!.userId,
+      TextMessageContent(
+        text: newMessageController.text,
+      ),
+    );
     newMessageController.clear();
     currentInputText = "";
     setState(() {});
@@ -256,7 +326,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
           children: [
             Expanded(
               child: ListView.builder(
-                itemCount: messages.length, // Number of items in the list
+                itemCount: messages.length,
                 reverse: true,
                 itemBuilder: (context, i) {
                   bool lastMessageFromSameUser = false;
@@ -267,10 +337,21 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                             (messages[i - 1].messageOtherId != null &&
                                 messages[i].messageOtherId != null);
                   }
+                  Message msg = messages[i];
+                  List<Message> reactions = [];
+                  if (reactionsToMyMessages.containsKey(msg.messageId)) {
+                    reactions = reactionsToMyMessages[msg.messageId]!;
+                  }
+                  if (msg.messageOtherId != null &&
+                      reactionsToOtherMessages
+                          .containsKey(msg.messageOtherId!)) {
+                    reactions = reactionsToOtherMessages[msg.messageOtherId!]!;
+                  }
                   return ChatListEntry(
-                    messages[i],
+                    msg,
                     widget.userid,
                     lastMessageFromSameUser,
+                    reactions,
                   );
                 },
               ),
@@ -295,22 +376,19 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                         contentPadding:
                             EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                              20), // Set the border radius here
+                          borderRadius: BorderRadius.circular(20),
                           borderSide: BorderSide(
                               color: Theme.of(context).colorScheme.primary,
-                              width: 2.0), // Customize border color and width
+                              width: 2.0),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                              20.0), // Same radius for focused border
+                          borderRadius: BorderRadius.circular(20.0),
                           borderSide: BorderSide(
                               color: Theme.of(context).colorScheme.primary,
                               width: 2.0),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                              20.0), // Same radius for enabled border
+                          borderRadius: BorderRadius.circular(20.0),
                           borderSide:
                               BorderSide(color: Colors.grey, width: 2.0),
                         ),

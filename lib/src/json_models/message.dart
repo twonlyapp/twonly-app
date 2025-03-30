@@ -152,15 +152,23 @@ class MediaMessageContent extends MessageContent {
 
 class TextMessageContent extends MessageContent {
   String text;
-  TextMessageContent({required this.text});
+  int? responseToMessageId;
+  TextMessageContent({required this.text, this.responseToMessageId});
 
   static TextMessageContent fromJson(Map json) {
-    return TextMessageContent(text: json['text']);
+    return TextMessageContent(
+        text: json['text'],
+        responseToMessageId: json.containsKey('responseToMessageId')
+            ? json['responseToMessageId']
+            : null);
   }
 
   @override
   Map toJson() {
-    return {'text': text};
+    return {
+      'text': text,
+      'responseToMessageId': responseToMessageId,
+    };
   }
 }
 

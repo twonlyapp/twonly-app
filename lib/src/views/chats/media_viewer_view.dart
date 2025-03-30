@@ -316,7 +316,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         curve: Curves.linearToEaseOut,
                         child: GestureDetector(
                           onTap: () {
-                            sendTextMessage(widget.userId, emoji);
+                            sendTextMessage(
+                              widget.userId,
+                              TextMessageContent(
+                                text: emoji,
+                                responseToMessageId:
+                                    allMediaFiles.first.messageOtherId,
+                              ),
+                            );
                             setState(() {
                               selectedShortReaction = index;
                             });
