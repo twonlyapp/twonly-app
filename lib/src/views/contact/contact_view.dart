@@ -7,10 +7,10 @@ import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/verified_shield.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/tables/contacts_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_verify_view.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});

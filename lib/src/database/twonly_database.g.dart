@@ -904,6 +904,16 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("acknowledge_by_server" IN (0, 1))'),
       defaultValue: Constant(false));
+  static const VerificationMeta _errorWhileSendingMeta =
+      const VerificationMeta('errorWhileSending');
+  @override
+  late final GeneratedColumn<bool> errorWhileSending = GeneratedColumn<bool>(
+      'error_while_sending', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("error_while_sending" IN (0, 1))'),
+      defaultValue: Constant(false));
   @override
   late final GeneratedColumnWithTypeConverter<MessageKind, String> kind =
       GeneratedColumn<String>('kind', aliasedName, false,
@@ -946,6 +956,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         acknowledgeByUser,
         downloadState,
         acknowledgeByServer,
+        errorWhileSending,
         kind,
         contentJson,
         openedAt,
@@ -1003,6 +1014,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           acknowledgeByServer.isAcceptableOrUnknown(
               data['acknowledge_by_server']!, _acknowledgeByServerMeta));
     }
+    if (data.containsKey('error_while_sending')) {
+      context.handle(
+          _errorWhileSendingMeta,
+          errorWhileSending.isAcceptableOrUnknown(
+              data['error_while_sending']!, _errorWhileSendingMeta));
+    }
     if (data.containsKey('content_json')) {
       context.handle(
           _contentJsonMeta,
@@ -1048,6 +1065,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
               DriftSqlType.int, data['${effectivePrefix}download_state'])!),
       acknowledgeByServer: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}acknowledge_by_server'])!,
+      errorWhileSending: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}error_while_sending'])!,
       kind: $MessagesTable.$converterkind.fromSql(attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}kind'])!),
       contentJson: attachedDatabase.typeMapping
@@ -1081,6 +1100,7 @@ class Message extends DataClass implements Insertable<Message> {
   final bool acknowledgeByUser;
   final DownloadState downloadState;
   final bool acknowledgeByServer;
+  final bool errorWhileSending;
   final MessageKind kind;
   final String? contentJson;
   final DateTime? openedAt;
@@ -1095,6 +1115,7 @@ class Message extends DataClass implements Insertable<Message> {
       required this.acknowledgeByUser,
       required this.downloadState,
       required this.acknowledgeByServer,
+      required this.errorWhileSending,
       required this.kind,
       this.contentJson,
       this.openedAt,
@@ -1121,6 +1142,7 @@ class Message extends DataClass implements Insertable<Message> {
           $MessagesTable.$converterdownloadState.toSql(downloadState));
     }
     map['acknowledge_by_server'] = Variable<bool>(acknowledgeByServer);
+    map['error_while_sending'] = Variable<bool>(errorWhileSending);
     {
       map['kind'] = Variable<String>($MessagesTable.$converterkind.toSql(kind));
     }
@@ -1151,6 +1173,7 @@ class Message extends DataClass implements Insertable<Message> {
       acknowledgeByUser: Value(acknowledgeByUser),
       downloadState: Value(downloadState),
       acknowledgeByServer: Value(acknowledgeByServer),
+      errorWhileSending: Value(errorWhileSending),
       kind: Value(kind),
       contentJson: contentJson == null && nullToAbsent
           ? const Value.absent()
@@ -1179,6 +1202,7 @@ class Message extends DataClass implements Insertable<Message> {
           .fromJson(serializer.fromJson<int>(json['downloadState'])),
       acknowledgeByServer:
           serializer.fromJson<bool>(json['acknowledgeByServer']),
+      errorWhileSending: serializer.fromJson<bool>(json['errorWhileSending']),
       kind: $MessagesTable.$converterkind
           .fromJson(serializer.fromJson<String>(json['kind'])),
       contentJson: serializer.fromJson<String?>(json['contentJson']),
@@ -1201,6 +1225,7 @@ class Message extends DataClass implements Insertable<Message> {
       'downloadState': serializer.toJson<int>(
           $MessagesTable.$converterdownloadState.toJson(downloadState)),
       'acknowledgeByServer': serializer.toJson<bool>(acknowledgeByServer),
+      'errorWhileSending': serializer.toJson<bool>(errorWhileSending),
       'kind':
           serializer.toJson<String>($MessagesTable.$converterkind.toJson(kind)),
       'contentJson': serializer.toJson<String?>(contentJson),
@@ -1219,6 +1244,7 @@ class Message extends DataClass implements Insertable<Message> {
           bool? acknowledgeByUser,
           DownloadState? downloadState,
           bool? acknowledgeByServer,
+          bool? errorWhileSending,
           MessageKind? kind,
           Value<String?> contentJson = const Value.absent(),
           Value<DateTime?> openedAt = const Value.absent(),
@@ -1238,6 +1264,7 @@ class Message extends DataClass implements Insertable<Message> {
         acknowledgeByUser: acknowledgeByUser ?? this.acknowledgeByUser,
         downloadState: downloadState ?? this.downloadState,
         acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
+        errorWhileSending: errorWhileSending ?? this.errorWhileSending,
         kind: kind ?? this.kind,
         contentJson: contentJson.present ? contentJson.value : this.contentJson,
         openedAt: openedAt.present ? openedAt.value : this.openedAt,
@@ -1266,6 +1293,9 @@ class Message extends DataClass implements Insertable<Message> {
       acknowledgeByServer: data.acknowledgeByServer.present
           ? data.acknowledgeByServer.value
           : this.acknowledgeByServer,
+      errorWhileSending: data.errorWhileSending.present
+          ? data.errorWhileSending.value
+          : this.errorWhileSending,
       kind: data.kind.present ? data.kind.value : this.kind,
       contentJson:
           data.contentJson.present ? data.contentJson.value : this.contentJson,
@@ -1286,6 +1316,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('acknowledgeByUser: $acknowledgeByUser, ')
           ..write('downloadState: $downloadState, ')
           ..write('acknowledgeByServer: $acknowledgeByServer, ')
+          ..write('errorWhileSending: $errorWhileSending, ')
           ..write('kind: $kind, ')
           ..write('contentJson: $contentJson, ')
           ..write('openedAt: $openedAt, ')
@@ -1305,6 +1336,7 @@ class Message extends DataClass implements Insertable<Message> {
       acknowledgeByUser,
       downloadState,
       acknowledgeByServer,
+      errorWhileSending,
       kind,
       contentJson,
       openedAt,
@@ -1322,6 +1354,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.acknowledgeByUser == this.acknowledgeByUser &&
           other.downloadState == this.downloadState &&
           other.acknowledgeByServer == this.acknowledgeByServer &&
+          other.errorWhileSending == this.errorWhileSending &&
           other.kind == this.kind &&
           other.contentJson == this.contentJson &&
           other.openedAt == this.openedAt &&
@@ -1338,6 +1371,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<bool> acknowledgeByUser;
   final Value<DownloadState> downloadState;
   final Value<bool> acknowledgeByServer;
+  final Value<bool> errorWhileSending;
   final Value<MessageKind> kind;
   final Value<String?> contentJson;
   final Value<DateTime?> openedAt;
@@ -1352,6 +1386,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.acknowledgeByUser = const Value.absent(),
     this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
+    this.errorWhileSending = const Value.absent(),
     this.kind = const Value.absent(),
     this.contentJson = const Value.absent(),
     this.openedAt = const Value.absent(),
@@ -1367,6 +1402,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.acknowledgeByUser = const Value.absent(),
     this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
+    this.errorWhileSending = const Value.absent(),
     required MessageKind kind,
     this.contentJson = const Value.absent(),
     this.openedAt = const Value.absent(),
@@ -1383,6 +1419,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<bool>? acknowledgeByUser,
     Expression<int>? downloadState,
     Expression<bool>? acknowledgeByServer,
+    Expression<bool>? errorWhileSending,
     Expression<String>? kind,
     Expression<String>? contentJson,
     Expression<DateTime>? openedAt,
@@ -1401,6 +1438,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (downloadState != null) 'download_state': downloadState,
       if (acknowledgeByServer != null)
         'acknowledge_by_server': acknowledgeByServer,
+      if (errorWhileSending != null) 'error_while_sending': errorWhileSending,
       if (kind != null) 'kind': kind,
       if (contentJson != null) 'content_json': contentJson,
       if (openedAt != null) 'opened_at': openedAt,
@@ -1418,6 +1456,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<bool>? acknowledgeByUser,
       Value<DownloadState>? downloadState,
       Value<bool>? acknowledgeByServer,
+      Value<bool>? errorWhileSending,
       Value<MessageKind>? kind,
       Value<String?>? contentJson,
       Value<DateTime?>? openedAt,
@@ -1433,6 +1472,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       acknowledgeByUser: acknowledgeByUser ?? this.acknowledgeByUser,
       downloadState: downloadState ?? this.downloadState,
       acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
+      errorWhileSending: errorWhileSending ?? this.errorWhileSending,
       kind: kind ?? this.kind,
       contentJson: contentJson ?? this.contentJson,
       openedAt: openedAt ?? this.openedAt,
@@ -1470,6 +1510,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (acknowledgeByServer.present) {
       map['acknowledge_by_server'] = Variable<bool>(acknowledgeByServer.value);
     }
+    if (errorWhileSending.present) {
+      map['error_while_sending'] = Variable<bool>(errorWhileSending.value);
+    }
     if (kind.present) {
       map['kind'] =
           Variable<String>($MessagesTable.$converterkind.toSql(kind.value));
@@ -1500,6 +1543,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('acknowledgeByUser: $acknowledgeByUser, ')
           ..write('downloadState: $downloadState, ')
           ..write('acknowledgeByServer: $acknowledgeByServer, ')
+          ..write('errorWhileSending: $errorWhileSending, ')
           ..write('kind: $kind, ')
           ..write('contentJson: $contentJson, ')
           ..write('openedAt: $openedAt, ')
@@ -2966,6 +3010,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<bool> acknowledgeByUser,
   Value<DownloadState> downloadState,
   Value<bool> acknowledgeByServer,
+  Value<bool> errorWhileSending,
   required MessageKind kind,
   Value<String?> contentJson,
   Value<DateTime?> openedAt,
@@ -2981,6 +3026,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<bool> acknowledgeByUser,
   Value<DownloadState> downloadState,
   Value<bool> acknowledgeByServer,
+  Value<bool> errorWhileSending,
   Value<MessageKind> kind,
   Value<String?> contentJson,
   Value<DateTime?> openedAt,
@@ -3043,6 +3089,10 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<bool> get acknowledgeByServer => $composableBuilder(
       column: $table.acknowledgeByServer,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get errorWhileSending => $composableBuilder(
+      column: $table.errorWhileSending,
       builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<MessageKind, MessageKind, String> get kind =>
@@ -3119,6 +3169,10 @@ class $$MessagesTableOrderingComposer
       column: $table.acknowledgeByServer,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get errorWhileSending => $composableBuilder(
+      column: $table.errorWhileSending,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get kind => $composableBuilder(
       column: $table.kind, builder: (column) => ColumnOrderings(column));
 
@@ -3185,6 +3239,9 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<bool> get acknowledgeByServer => $composableBuilder(
       column: $table.acknowledgeByServer, builder: (column) => column);
+
+  GeneratedColumn<bool> get errorWhileSending => $composableBuilder(
+      column: $table.errorWhileSending, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<MessageKind, String> get kind =>
       $composableBuilder(column: $table.kind, builder: (column) => column);
@@ -3253,6 +3310,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<bool> acknowledgeByUser = const Value.absent(),
             Value<DownloadState> downloadState = const Value.absent(),
             Value<bool> acknowledgeByServer = const Value.absent(),
+            Value<bool> errorWhileSending = const Value.absent(),
             Value<MessageKind> kind = const Value.absent(),
             Value<String?> contentJson = const Value.absent(),
             Value<DateTime?> openedAt = const Value.absent(),
@@ -3268,6 +3326,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             acknowledgeByUser: acknowledgeByUser,
             downloadState: downloadState,
             acknowledgeByServer: acknowledgeByServer,
+            errorWhileSending: errorWhileSending,
             kind: kind,
             contentJson: contentJson,
             openedAt: openedAt,
@@ -3283,6 +3342,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<bool> acknowledgeByUser = const Value.absent(),
             Value<DownloadState> downloadState = const Value.absent(),
             Value<bool> acknowledgeByServer = const Value.absent(),
+            Value<bool> errorWhileSending = const Value.absent(),
             required MessageKind kind,
             Value<String?> contentJson = const Value.absent(),
             Value<DateTime?> openedAt = const Value.absent(),
@@ -3298,6 +3358,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             acknowledgeByUser: acknowledgeByUser,
             downloadState: downloadState,
             acknowledgeByServer: acknowledgeByServer,
+            errorWhileSending: errorWhileSending,
             kind: kind,
             contentJson: contentJson,
             openedAt: openedAt,

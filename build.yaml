@@ -1,0 +1,13 @@
+targets:
+  $default:
+    sources:
+      - lib/**
+      - "tool/**"
+      - pubspec.yaml
+      - lib/$lib$
+      - $package$
+    builders:
+      drift_dev:
+        options:
+          databases:
+            twonly_database: lib/src/database/twonly_database.dart

@@ -4,7 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/json_models/message.dart' as my;
 
@@ -151,16 +152,16 @@ Future localPushNotificationNewMessage(
     }
   }
 
-  if (message.kind == my.MessageKind.contactRequest) {
+  if (message.kind == MessageKind.contactRequest) {
     msg =
         getPushNotificationText("contactRequest", getContactDisplayName(user));
   }
 
-  if (message.kind == my.MessageKind.acceptRequest) {
+  if (message.kind == MessageKind.acceptRequest) {
     msg = getPushNotificationText("acceptRequest", getContactDisplayName(user));
   }
 
-  if (message.kind == my.MessageKind.storedMediaFile) {
+  if (message.kind == MessageKind.storedMediaFile) {
     msg =
         getPushNotificationText("storedMediaFile", getContactDisplayName(user));
   }
@@ -191,5 +192,28 @@ Future localPushNotificationNewMessage(
     msg,
     notificationDetails,
     payload: message.kind.index.toString(),
+  );
+}
+
+Future customLocalPushNotification(String title, String msg) async {
+  const AndroidNotificationDetails androidNotificationDetails =
+      AndroidNotificationDetails(
+    '1',
+    'Error',
+    channelDescription: 'Error messages.',
+    importance: Importance.max,
+    priority: Priority.max,
+  );
+
+  const DarwinNotificationDetails darwinNotificationDetails =
+      DarwinNotificationDetails();
+  const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidNotificationDetails, iOS: darwinNotificationDetails);
+
+  await flutterLocalNotificationsPlugin.show(
+    897898,
+    title,
+    msg,
+    notificationDetails,
   );
 }

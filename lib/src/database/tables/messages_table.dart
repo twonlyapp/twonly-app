@@ -1,6 +1,17 @@
 import 'package:drift/drift.dart';
 import 'package:twonly/src/database/tables/contacts_table.dart';
-import 'package:twonly/src/json_models/message.dart';
+
+enum MessageKind {
+  textMessage,
+  storedMediaFile,
+  media,
+  contactRequest,
+  profileChange,
+  rejectRequest,
+  acceptRequest,
+  opened,
+  ack
+}
 
 enum DownloadState {
   pending,
@@ -24,6 +35,8 @@ class Messages extends Table {
 
   BoolColumn get acknowledgeByServer =>
       boolean().withDefault(Constant(false))();
+
+  BoolColumn get errorWhileSending => boolean().withDefault(Constant(false))();
 
   TextColumn get kind => textEnum<MessageKind>()();
   TextColumn get contentJson => text().nullable()();

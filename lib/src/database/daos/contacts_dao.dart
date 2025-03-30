@@ -164,3 +164,28 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     });
   }
 }
+
+String getContactDisplayName(Contact user) {
+  if (user.nickName != null) {
+    return user.nickName!;
+  }
+  if (user.displayName != null) {
+    return user.displayName!;
+  }
+  return user.username;
+}
+
+int getFlameCounterFromContact(Contact contact) {
+  if (contact.lastMessageSend == null || contact.lastMessageReceived == null) {
+    return 0;
+  }
+  final now = DateTime.now();
+  final startOfToday = DateTime(now.year, now.month, now.day);
+  final twoDaysAgo = startOfToday.subtract(Duration(days: 2));
+  if (contact.lastMessageSend!.isAfter(twoDaysAgo) &&
+      contact.lastMessageReceived!.isAfter(twoDaysAgo)) {
+    return contact.flameCounter + 1;
+  } else {
+    return 0;
+  }
+}

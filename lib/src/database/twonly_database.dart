@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:drift_flutter/drift_flutter.dart'
+    show driftDatabase, DriftNativeOptions;
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/daos/messages_dao.dart';
@@ -9,7 +10,7 @@ import 'package:twonly/src/database/tables/signal_identity_key_store_table.dart'
 import 'package:twonly/src/database/tables/signal_pre_key_store_table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store_table.dart';
 import 'package:twonly/src/database/tables/signal_session_store_table.dart';
-import 'package:twonly/src/json_models/message.dart';
+import 'package:twonly/src/database/twonly_database.steps.dart';
 
 part 'twonly_database.g.dart';
 
@@ -26,10 +27,15 @@ part 'twonly_database.g.dart';
   ContactsDao
 ])
 class TwonlyDatabase extends _$TwonlyDatabase {
-  TwonlyDatabase() : super(_openConnection());
+  TwonlyDatabase([QueryExecutor? e])
+      : super(
+          e ?? _openConnection(),
+        );
+
+  TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -37,6 +43,15 @@ class TwonlyDatabase extends _$TwonlyDatabase {
       native: const DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
       ),
+    );
+  }
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onUpgrade: stepByStep(from1To2: (m, schema) async {
+        m.addColumn(schema.messages, schema.messages.errorWhileSending);
+      }),
     );
   }
 

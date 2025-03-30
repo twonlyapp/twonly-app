@@ -6,7 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/format_long_string.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/signal.dart';

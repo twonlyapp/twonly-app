@@ -1,16 +1,5 @@
 import 'package:flutter/material.dart';
-
-enum MessageKind {
-  textMessage,
-  storedMediaFile,
-  media,
-  contactRequest,
-  profileChange,
-  rejectRequest,
-  acceptRequest,
-  opened,
-  ack
-}
+import 'package:twonly/src/database/tables/messages_table.dart';
 
 Map<String, Color> messageKindColors = {
   "video": Colors.deepPurple,

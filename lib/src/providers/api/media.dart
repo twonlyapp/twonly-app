@@ -341,7 +341,7 @@ Future sendImage(
     Map<String, dynamic> allMediaFiles = {};
 
     if (mediaFilesJson != null) {
-      // allMediaFiles = jsonDecode(mediaFilesJson);
+      allMediaFiles = jsonDecode(mediaFilesJson);
     }
 
     allMediaFiles[stateId] = jsonEncode(states.toJson());
@@ -361,26 +361,42 @@ Future retransmitMediaFiles() async {
 
   Map<String, dynamic> allMediaFiles = jsonDecode(mediaFilesJson);
 
+  bool allSuccess = true;
+
   for (final entry in allMediaFiles.entries) {
     try {
       String stateId = entry.key;
       States states = States.fromJson(jsonDecode(entry.value));
       // upload one by one
-      await uploadMediaState(stateId, states.prepareState, states.metadata);
+      allSuccess = allSuccess &
+          await uploadMediaState(stateId, states.prepareState, states.metadata);
     } catch (e) {
       Logger("media.dart").shout(e);
     }
   }
+
+  if (allSuccess) {
+    // when all retransmittions where sucessfull tag the errors
+    final pendings = await twonlyDatabase.messagesDao
+        .getAllMessagesPendingUploadOlderThanAMinute();
+    for (final pending in pendings) {
+      twonlyDatabase.messagesDao.updateMessageByMessageId(
+        pending.messageId,
+        MessagesCompanion(errorWhileSending: Value(true)),
+      );
+    }
+  }
+  // return allSuccess;
 }
 
 // if the upload failes this function is called again from the retransmitMediaFiles function which is
 // called when the WebSocket is reconnected again.
-Future uploadMediaState(
+Future<bool> uploadMediaState(
     String stateId, PrepareState prepareState, Metadata metadata) async {
   final uploadState =
       await ImageUploader.uploadState(prepareState, metadata.userIds.length);
   if (uploadState == null) {
-    return;
+    return false;
   }
 
   {
@@ -395,11 +411,8 @@ Future uploadMediaState(
     }
   }
 
-  final notifyState =
-      await ImageUploader.notifyState(prepareState, uploadState, metadata);
-  if (notifyState == null) {
-    return;
-  }
+  await ImageUploader.notifyState(prepareState, uploadState, metadata);
+  return true;
 }
 
 Future tryDownloadMedia(

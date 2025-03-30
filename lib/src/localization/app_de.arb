@@ -49,6 +49,7 @@
     "messageSendState_Sending": "Wird gesendet",
     "messageSendState_TapToLoad": "Tippe zum Laden",
     "messageSendState_Loading": "Herunterladen",
+    "messageStoredInGalery": "In Gallerie gespeichert",
     "imageEditorDrawOk": "Zeichnung machen",
     "settingsTitle": "Einstellungen",
     "settingsProfile": "Profil",

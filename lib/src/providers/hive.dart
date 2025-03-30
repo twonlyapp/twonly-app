@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:hive/hive.dart';
+import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Future initMediaStorage() async {
@@ -19,14 +21,21 @@ Future initMediaStorage() async {
 }
 
 Future<Box> getMediaStorage() async {
-  final storage = getSecureStorage();
-  await initMediaStorage();
+  try {
+    await initMediaStorage();
+    final storage = getSecureStorage();
 
-  var encryptionKey =
-      base64Url.decode((await storage.read(key: 'hive_encryption_key'))!);
+    var encryptionKey =
+        base64Url.decode((await storage.read(key: 'hive_encryption_key'))!);
 
-  return await Hive.openBox(
-    'media_storage',
-    encryptionCipher: HiveAesCipher(encryptionKey),
-  );
+    return await Hive.openBox(
+      'media_storage',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+  } catch (e) {
+    await customLocalPushNotification("Secure Storage Error",
+        "Settings > Apps > twonly > Storage and Cache > Press clear on both");
+    Logger("hive.dart").shout(e);
+    throw Exception(e);
+  }
 }

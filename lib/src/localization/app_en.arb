@@ -50,6 +50,7 @@
   "messageSendState_Sending": "Sending",
   "messageSendState_TapToLoad": "Tap to load",
   "messageSendState_Loading": "Downloading",
+  "messageStoredInGalery": "Stored in gallery",
   "imageEditorDrawOk": "Take drawing",
   "settingsTitle": "Settings",
   "settingsProfile": "Profile",

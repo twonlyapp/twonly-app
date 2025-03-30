@@ -143,7 +143,13 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
       if (message.kind == MessageKind.storedMediaFile) {
         icon = FaIcon(FontAwesomeIcons.floppyDisk, size: 12, color: color);
-        text = "Stored in gallery";
+        text = context.lang.messageStoredInGalery;
+      }
+
+      if (message.errorWhileSending) {
+        icon =
+            FaIcon(FontAwesomeIcons.circleExclamation, size: 12, color: color);
+        text = "Error while sending";
       }
 
       icons.add(icon);

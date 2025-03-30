@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
@@ -15,32 +16,75 @@ import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 import 'package:twonly/src/utils/storage.dart';
 
 Future tryTransmitMessages() async {
-  List<Message> retransmit =
-      await twonlyDatabase.messagesDao.getAllMessagesForRetransmitting();
+  Map<String, dynamic> retransmit = await getAllMessagesForRetransmitting();
 
   if (retransmit.isEmpty) return;
 
   Logger("api.dart").info("try sending messages: ${retransmit.length}");
 
-  Box box = await getMediaStorage();
-  for (int i = 0; i < retransmit.length; i++) {
-    int msgId = retransmit[i].messageId;
+  Map<String, dynamic> failed = {};
 
-    Uint8List? bytes = box.get("retransmit-$msgId-textmessage");
-    if (bytes != null) {
-      Result resp = await apiProvider.sendTextMessage(
-        retransmit[i].contactId,
-        bytes,
-      );
-      if (resp.isSuccess) {
+  for (String key in retransmit.keys) {
+    RetransmitMessage msg =
+        RetransmitMessage.fromJson(jsonDecode(retransmit[key]));
+
+    Result resp = await apiProvider.sendTextMessage(
+      msg.userId,
+      msg.bytes,
+    );
+    if (resp.isSuccess) {
+      if (msg.messageId != null) {
         await twonlyDatabase.messagesDao.updateMessageByMessageId(
-            msgId, MessagesCompanion(acknowledgeByServer: Value(true)));
-        box.delete("retransmit-$msgId-textmessage");
-      } else {
-        // in case of error do nothing. As the message is not removed the app will try again when relaunched
+          msg.messageId!,
+          MessagesCompanion(
+            acknowledgeByServer: Value(true),
+          ),
+        );
       }
+      failed[key] = retransmit[key];
+    } else {
+      // in case of error do nothing. As the message is not removed the app will try again when relaunched
     }
   }
+  Box box = await getMediaStorage();
+  box.put("messages-to-retransmit", jsonEncode(failed));
+}
+
+class RetransmitMessage {
+  int? messageId;
+  int userId;
+  Uint8List bytes;
+  RetransmitMessage(
+      {this.messageId, required this.userId, required this.bytes});
+
+  // From JSON constructor
+  factory RetransmitMessage.fromJson(Map<String, dynamic> json) {
+    return RetransmitMessage(
+      messageId: json['messageId'],
+      userId: json['userId'],
+      bytes: base64Decode(json['bytes']),
+    );
+  }
+
+  // To JSON method
+  Map<String, dynamic> toJson() {
+    return {
+      'messageId': messageId,
+      'userId': userId,
+      'bytes': base64Encode(bytes),
+    };
+  }
+}
+
+Future<Map<String, dynamic>> getAllMessagesForRetransmitting() async {
+  Box box = await getMediaStorage();
+  String? retransmitJson = box.get("messages-to-retransmit");
+  Map<String, dynamic> retransmit = {};
+
+  if (retransmitJson != null) {
+    retransmit = jsonDecode(retransmitJson);
+  }
+  return retransmit;
 }
 
 // this functions ensures that the message is received by the server and in case of errors will try again later
@@ -53,9 +97,19 @@ Future<Result> encryptAndSendMessage(
     return Result.error(ErrorCode.InternalError);
   }
 
+  String stateId = (messageId ?? (60001 + Random().nextInt(100000))).toString();
   Box box = await getMediaStorage();
-  if (messageId != null) {
-    box.put("retransmit-$messageId-textmessage", bytes);
+
+  {
+    var retransmit = await getAllMessagesForRetransmitting();
+
+    retransmit[stateId] = jsonEncode(RetransmitMessage(
+      messageId: messageId,
+      userId: userId,
+      bytes: bytes,
+    ).toJson());
+
+    box.put("messages-to-retransmit", jsonEncode(retransmit));
   }
 
   Result resp = await apiProvider.sendTextMessage(userId, bytes);
@@ -66,6 +120,13 @@ Future<Result> encryptAndSendMessage(
         messageId,
         MessagesCompanion(acknowledgeByServer: Value(true)),
       );
+
+      {
+        var retransmit = await getAllMessagesForRetransmitting();
+        retransmit.remove(stateId);
+        box.put("messages-to-retransmit", jsonEncode(retransmit));
+      }
+
       box.delete("retransmit-$messageId-textmessage");
     }
   }

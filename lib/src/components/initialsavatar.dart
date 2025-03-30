@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/json_models/userdata.dart';
 
@@ -44,9 +44,6 @@ class ContactAvatar extends StatelessWidget {
               height: proSize,
               width: proSize,
               child: Center(
-                // child: Container(
-                //   color: Colors.green,
-                // ),
                 child: SvgPicture.string(
                   avatarSvg,
                   errorBuilder: (context, error, stackTrace) {

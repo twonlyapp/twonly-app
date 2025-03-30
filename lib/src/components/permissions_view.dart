@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionHandlerView extends StatefulWidget {
@@ -23,12 +24,14 @@ Future<bool> checkPermissions() async {
 
 class PermissionHandlerViewState extends State<PermissionHandlerView> {
   Future<Map<Permission, PermissionStatus>> permissionServices() async {
-    // You can request multiple permissions at once.
+    // try {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.camera,
       // Permission.microphone,
       Permission.notification
     ].request();
+    // } catch (e) {}
+    // You can request multiple permissions at once.
 
     // if (statuses[Permission.microphone]!.isPermanentlyDenied) {
     //   openAppSettings();
@@ -70,9 +73,13 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
                   label: Text("Request permissions"),
                   icon: const Icon(Icons.perm_camera_mic),
                   onPressed: () async {
-                    permissionServices();
-                    if (await checkPermissions()) {
-                      widget.onSuccess();
+                    try {
+                      permissionServices();
+                      if (await checkPermissions()) {
+                        widget.onSuccess();
+                      }
+                    } catch (e) {
+                      Logger("permissions_view").shout(e);
                     }
                   },
                 ),

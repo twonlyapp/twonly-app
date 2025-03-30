@@ -1,13 +1,12 @@
 import 'package:drift/drift.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/contacts_table.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/json_models/message.dart';
 
 part 'messages_dao.g.dart';
 
-@DriftAccessor(tables: [Messages])
+@DriftAccessor(tables: [Messages, Contacts])
 class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     with _$MessagesDaoMixin {
   // this constructor is required so that the main database can create an instance
@@ -26,6 +25,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
           ..where((t) =>
               t.openedAt.isNull() &
               t.contactId.equals(contactId) &
+              t.errorWhileSending.equals(false) &
               t.messageOtherId.isNotNull() &
               t.kind.equals(MessageKind.media.name))
           ..orderBy([(t) => OrderingTerm.asc(t.sendAt)]))
@@ -72,8 +72,17 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .get();
   }
 
-  Future<List<Message>> getAllMessagesForRetransmitting() {
-    return (select(messages)..where((t) => t.acknowledgeByServer.equals(false)))
+  Future<List<Message>> getAllMessagesPendingUploadOlderThanAMinute() {
+    return (select(messages)
+          ..where(
+            (t) =>
+                t.acknowledgeByServer.equals(false) &
+                t.messageOtherId.isNull() &
+                t.errorWhileSending.equals(false) &
+                t.sendAt.isSmallerThanValue(
+                    DateTime.now().subtract(Duration(minutes: 5))) &
+                t.kind.equals(MessageKind.media.name),
+          ))
         .get();
   }
 
@@ -113,8 +122,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
 
   Future<int?> insertMessage(MessagesCompanion message) async {
     try {
-      await twonlyDatabase.contactsDao
-          .newMessageExchange(message.contactId.value);
+      await (update(contacts)
+            ..where((c) => c.userId.equals(message.contactId.value)))
+          .write(ContactsCompanion(lastMessageExchange: Value(DateTime.now())));
+
       return await into(messages).insert(message);
     } catch (e) {
       Logger("twonlyDatabase").shout("Error while inserting message: $e");
