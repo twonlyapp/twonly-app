@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
@@ -121,6 +120,7 @@ class _ChatListViewState extends State<ChatListView> {
 
           return RefreshIndicator(
             onRefresh: () async {
+              await apiProvider.close(() {});
               await apiProvider.connect();
               await Future.delayed(Duration(seconds: 1));
             },
@@ -130,6 +130,7 @@ class _ChatListViewState extends State<ChatListView> {
               itemBuilder: (BuildContext context, int index) {
                 final user = contacts[index];
                 return UserListItem(
+                  key: ValueKey(user.userId),
                   user: user,
                   maxTotalMediaCounter: maxTotalMediaCounter,
                 );
@@ -158,12 +159,78 @@ class _UserListItem extends State<UserListItem> {
   MessageSendState state = MessageSendState.send;
   Message? currentMessage;
 
+  List<Message> messagesNotOpened = [];
+  late StreamSubscription<List<Message>> messagesNotOpenedStream;
+
+  List<Message> lastMessages = [];
+  late StreamSubscription<List<Message>> lastMessageStream;
+
   Timer? updateTime;
 
   @override
   void initState() {
     super.initState();
+    initStreams();
     lastUpdateTime();
+  }
+
+  void initStreams() {
+    lastMessageStream = twonlyDatabase.messagesDao
+        .watchLastMessage(widget.user.userId)
+        .listen((update) {
+      updateState(update, messagesNotOpened);
+    });
+
+    messagesNotOpenedStream = twonlyDatabase.messagesDao
+        .watchMessageNotOpened(widget.user.userId)
+        .listen((update) {
+      updateState(lastMessages, update);
+    });
+  }
+
+  void updateState(
+    List<Message> newLastMessages,
+    List<Message> newMessagesNotOpened,
+  ) {
+    if (newLastMessages.isEmpty) {
+      // there are no messages at all
+      currentMessage = null;
+    } else if (newMessagesNotOpened.isEmpty) {
+      // there are no not opened messages show just the last message in the table
+      currentMessage = newLastMessages.first;
+    } else {
+      // filter first for received messages
+      final receivedMessages =
+          newMessagesNotOpened.where((x) => x.messageOtherId != null).toList();
+
+      if (receivedMessages.isNotEmpty) {
+        // There are received messages
+        final mediaMessages =
+            receivedMessages.where((x) => x.kind == MessageKind.media);
+
+        if (mediaMessages.isNotEmpty) {
+          currentMessage = mediaMessages.first;
+        } else {
+          currentMessage = receivedMessages.first;
+        }
+      } else {
+        // The not opened message was send
+        final mediaMessages =
+            newMessagesNotOpened.where((x) => x.kind == MessageKind.media);
+
+        if (mediaMessages.isNotEmpty) {
+          currentMessage = mediaMessages.first;
+        } else {
+          currentMessage = newMessagesNotOpened.first;
+        }
+      }
+    }
+
+    lastMessages = newLastMessages;
+    messagesNotOpened = newMessagesNotOpened;
+    setState(() {
+      // sets lastMessages, messagesNotOpened and currentMessage
+    });
   }
 
   void lastUpdateTime() {
@@ -185,6 +252,8 @@ class _UserListItem extends State<UserListItem> {
   void dispose() {
     updateTime?.cancel();
     super.dispose();
+    messagesNotOpenedStream.cancel();
+    lastMessageStream.cancel();
   }
 
   @override
@@ -195,85 +264,26 @@ class _UserListItem extends State<UserListItem> {
       contact: widget.user,
       child: ListTile(
         title: Text(getContactDisplayName(widget.user)),
-        subtitle: StreamBuilder(
-          stream:
-              twonlyDatabase.messagesDao.watchLastMessage(widget.user.userId),
-          builder: (context, lastMessageSnapshot) {
-            if (!lastMessageSnapshot.hasData) {
-              return Container();
-            }
-            if (lastMessageSnapshot.data!.isEmpty) {
-              return Text(context.lang.chatsTapToSend);
-            }
-            final lastMessage = lastMessageSnapshot.data!.first;
-            return StreamBuilder(
-              stream: twonlyDatabase.messagesDao
-                  .watchMessageNotOpened(widget.user.userId),
-              builder: (context, notOpenedMessagesSnapshot) {
-                if (!lastMessageSnapshot.hasData) {
-                  return Container();
-                }
-
-                var lastMessages = [lastMessage];
-                if (notOpenedMessagesSnapshot.data != null &&
-                    notOpenedMessagesSnapshot.data!.isNotEmpty) {
-                  // filter first for only received messages
-                  var notOpenedMessages = notOpenedMessagesSnapshot.data!;
-
-                  lastMessages = notOpenedMessages
-                      .where((x) => x.messageOtherId != null)
-                      .toList();
-
-                  // For send images show only one
-                  if (lastMessages.isEmpty) {
-                    var media = notOpenedMessages
-                        .where((x) => x.kind == MessageKind.media);
-
-                    if (media.isNotEmpty) {
-                      currentMessage = media.first;
-                      lastMessages = [currentMessage!];
-                    } else {
-                      currentMessage = notOpenedMessages.first;
-                      lastMessages = [currentMessage!];
-                    }
-                  } else {
-                    // there are multiple messages received
-
-                    var media =
-                        lastMessages.where((x) => x.kind == MessageKind.media);
-
-                    if (media.isNotEmpty) {
-                      currentMessage = media.first;
-                    } else {
-                      currentMessage = lastMessages.first;
-                    }
-                  }
-                } else {
-                  currentMessage = lastMessage;
-                }
-
-                return Row(
-                  children: [
-                    MessageSendStateIcon(lastMessages),
-                    Text("•"),
-                    const SizedBox(width: 5),
-                    Text(
-                      formatDuration(lastMessageInSeconds),
-                      style: TextStyle(fontSize: 12),
+        subtitle: (currentMessage == null)
+            ? Text(context.lang.chatsTapToSend)
+            : Row(
+                children: [
+                  MessageSendStateIcon(lastMessages),
+                  Text("•"),
+                  const SizedBox(width: 5),
+                  Text(
+                    formatDuration(lastMessageInSeconds),
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  if (flameCounter > 0)
+                    FlameCounterWidget(
+                      widget.user,
+                      flameCounter,
+                      widget.maxTotalMediaCounter,
+                      prefix: true,
                     ),
-                    if (flameCounter > 0)
-                      FlameCounterWidget(
-                        widget.user,
-                        flameCounter,
-                        widget.maxTotalMediaCounter,
-                        prefix: true,
-                      ),
-                  ],
-                );
-              },
-            );
-          },
-        ),
+                ],
+              ),
         leading: ContactAvatar(contact: widget.user),
         onTap: () {
           if (currentMessage == null) {

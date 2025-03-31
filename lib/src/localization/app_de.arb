@@ -83,6 +83,8 @@
     "contactNickname": "Spitzname",
     "contactNicknameNew": "Neuer Spitzname",
     "contactBlock": "Blockieren",
+    "deleteAllContactMessages": "Alle Nachrichten löschen",
+    "deleteAllContactMessagesBody": "Dadurch werden alle Nachrichten in deinem Chat mit {username} gelöscht. Dies löscht NICHT die auf dem Gerät von {username} gespeicherten Nachrichten!",
     "contactBlockTitle": "Blockiere {username}",
     "contactBlockBody": "Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und sein Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.",
     "undo": "Rückgängig",

@@ -144,6 +144,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }
 
+  Future deleteMessagesByContactId(int contactId) {
+    return (delete(messages)..where((t) => t.contactId.equals(contactId))).go();
+  }
+
   Future<bool> containsOtherMessageId(
       int fromUserId, int messageOtherId) async {
     final query = select(messages)

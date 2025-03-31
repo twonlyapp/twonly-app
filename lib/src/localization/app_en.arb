@@ -121,6 +121,8 @@
   "contactVerifyNumberLongDesc": "To verify the end-to-end encryption with {username}, compare the numbers with their device. The person can also scan your code with their device.",
   "contactNickname": "Nickname",
   "contactNicknameNew": "New nickname",
+  "deleteAllContactMessages": "Delete all messages",
+  "deleteAllContactMessagesBody": "This will remove all messages in your chat with {username}. This will NOT delete the messages stored at {username}s device!",
   "contactBlock": "Block",
   "contactBlockTitle": "Block {username}",
   "contactBlockBody": "A blocked user will no longer be able to send you messages and their profile will be hidden from view. To unblock a user, simply navigate to Settings > Privacy > Blocked Users.",

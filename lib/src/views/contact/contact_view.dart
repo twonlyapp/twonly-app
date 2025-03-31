@@ -95,6 +95,24 @@ class _ContactViewState extends State<ContactView> {
                 },
               ),
               BetterListTile(
+                icon: FontAwesomeIcons.trashCan,
+                text: context.lang.deleteAllContactMessages,
+                onTap: () async {
+                  bool block = await showAlertDialog(
+                    context,
+                    context.lang.deleteAllContactMessages,
+                    context.lang.deleteAllContactMessagesBody(
+                        getContactDisplayName(contact)),
+                  );
+                  if (block) {
+                    if (context.mounted) {
+                      await twonlyDatabase.messagesDao
+                          .deleteMessagesByContactId(contact.userId);
+                    }
+                  }
+                },
+              ),
+              BetterListTile(
                 icon: FontAwesomeIcons.ban,
                 color: Colors.red,
                 text: context.lang.contactBlock,
