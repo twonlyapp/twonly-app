@@ -304,9 +304,6 @@ Future sendImage(
   metadata.messageIds = {};
   metadata.messageSendAt = DateTime.now();
 
-  String stateId = prepareState.sha2Hash.toString();
-  States states = States(metadata: metadata, prepareState: prepareState);
-
   // at this point it is safe inform the user about the process of sending the image..
   for (final userId in metadata.userIds) {
     int? messageId = await twonlyDatabase.messagesDao.insertMessage(
@@ -334,32 +331,33 @@ Future sendImage(
     }
   }
 
+  String stateId = prepareState.sha2Hash.toString();
+
   {
-    Box storage = await getMediaStorage();
-
-    String? mediaFilesJson = storage.get("mediaUploads");
-    Map<String, dynamic> allMediaFiles = {};
-
-    if (mediaFilesJson != null) {
-      allMediaFiles = jsonDecode(mediaFilesJson);
-    }
-
-    allMediaFiles[stateId] = jsonEncode(states.toJson());
-    storage.put("mediaUploads", jsonEncode(allMediaFiles));
+    Map<String, dynamic> allMediaFiles = await getStoredMediaUploads();
+    allMediaFiles[stateId] = jsonEncode(
+      States(metadata: metadata, prepareState: prepareState).toJson(),
+    );
+    (await getMediaStorage()).put("mediaUploads", jsonEncode(allMediaFiles));
   }
 
   uploadMediaState(stateId, prepareState, metadata);
 }
 
-Future retransmitMediaFiles() async {
+Future<Map<String, dynamic>> getStoredMediaUploads() async {
   Box storage = await getMediaStorage();
   String? mediaFilesJson = storage.get("mediaUploads");
+  Map<String, dynamic> allMediaFiles = {};
 
-  if (mediaFilesJson == null) {
-    return;
+  if (mediaFilesJson != null) {
+    allMediaFiles = jsonDecode(mediaFilesJson);
   }
+  return allMediaFiles;
+}
 
-  Map<String, dynamic> allMediaFiles = jsonDecode(mediaFilesJson);
+Future retransmitMediaFiles() async {
+  Map<String, dynamic> allMediaFiles = await getStoredMediaUploads();
+  if (allMediaFiles.isEmpty) return;
 
   bool allSuccess = true;
 
@@ -400,14 +398,10 @@ Future<bool> uploadMediaState(
   }
 
   {
-    Box storage = await getMediaStorage();
-
-    String? mediaFilesJson = storage.get("mediaUploads");
-
-    if (mediaFilesJson != null) {
-      Map<String, dynamic> allMediaFiles = jsonDecode(mediaFilesJson);
+    Map<String, dynamic> allMediaFiles = await getStoredMediaUploads();
+    if (allMediaFiles.isNotEmpty) {
       allMediaFiles.remove(stateId);
-      storage.put("mediaUploads", jsonEncode(allMediaFiles));
+      (await getMediaStorage()).put("mediaUploads", jsonEncode(allMediaFiles));
     }
   }
 

@@ -41,9 +41,8 @@ Future tryTransmitMessages() async {
           ),
         );
       }
-      failed[key] = retransmit[key];
     } else {
-      // in case of error do nothing. As the message is not removed the app will try again when relaunched
+      failed[key] = retransmit[key];
     }
   }
   Box box = await getMediaStorage();
