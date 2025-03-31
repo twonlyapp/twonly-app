@@ -144,11 +144,14 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }
 
-  Future<bool> containsOtherMessageId(int messageOtherId) async {
+  Future<bool> containsOtherMessageId(
+      int fromUserId, int messageOtherId) async {
     final query = select(messages)
-      ..where((t) => t.messageOtherId.equals(messageOtherId));
-    final entry = await query.getSingleOrNull();
-    return entry != null;
+      ..where((t) =>
+          t.messageOtherId.equals(messageOtherId) &
+          t.contactId.equals(fromUserId));
+    final entry = await query.get();
+    return entry.isNotEmpty;
   }
 
   SingleOrNullSelectable<Message> getMessageByMessageId(int messageId) {

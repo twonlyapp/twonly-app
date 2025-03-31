@@ -55,6 +55,7 @@ dependencies:
   avatar_maker: ^0.2.0
   flutter_svg: ^2.0.17
   flutter_volume_controller: ^1.3.3
+  fixnum: ^1.1.1
   # avatar_maker
   # avatar_maker: 
   #   path: ./dependencies/avatar_maker/

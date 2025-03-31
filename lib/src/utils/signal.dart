@@ -279,9 +279,6 @@ Future<MessageJson?> getDecryptedText(int source, Uint8List msg) async {
     if (msgs == null) return null;
     Uint8List body = msgs[0];
     int type = bytesToInt(msgs[1]);
-
-    //  gzip.decode(body);
-
     Uint8List plaintext;
     if (type == CiphertextMessage.prekeyType) {
       PreKeySignalMessage pre = PreKeySignalMessage(body);

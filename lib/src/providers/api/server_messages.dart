@@ -162,147 +162,145 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 
 Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
   MessageJson? message = await SignalHelper.getDecryptedText(fromUserId, body);
-  if (message != null) {
-    switch (message.kind) {
-      case MessageKind.contactRequest:
-        Result username = await apiProvider.getUsername(fromUserId);
-        if (username.isSuccess) {
-          Uint8List name = username.value.userdata.username;
+  if (message == null) {
+    Logger("server_messages")
+        .info("Got invalid cypher text from $fromUserId. Deleting it.");
+    // Message is not valid, so server can delete it
+    var ok = client.Response_Ok()..none = true;
+    return client.Response()..ok = ok;
+  }
 
-          int added =
-              await twonlyDatabase.contactsDao.insertContact(ContactsCompanion(
-            username: Value(utf8.decode(name)),
-            userId: Value(fromUserId),
-            requested: Value(true),
-          ));
-          if (added > 0) {
-            localPushNotificationNewMessage(
-              fromUserId.toInt(),
-              message,
-              999999,
-            );
-          }
+  switch (message.kind) {
+    case MessageKind.contactRequest:
+      return handleContactRequest(fromUserId, message);
+
+    case MessageKind.opened:
+      final update = MessagesCompanion(openedAt: Value(message.timestamp));
+      await twonlyDatabase.messagesDao.updateMessageByOtherUser(
+        fromUserId,
+        message.messageId!,
+        update,
+      );
+      break;
+
+    case MessageKind.rejectRequest:
+      await twonlyDatabase.contactsDao.deleteContactByUserId(fromUserId);
+      break;
+
+    case MessageKind.acceptRequest:
+      final update = ContactsCompanion(accepted: Value(true));
+      await twonlyDatabase.contactsDao.updateContact(fromUserId, update);
+      localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
+      notifyContactsAboutProfileChange();
+      break;
+
+    case MessageKind.profileChange:
+      var content = message.content;
+      if (content is ProfileContent) {
+        final update = ContactsCompanion(
+          avatarSvg: Value(content.avatarSvg),
+          displayName: Value(content.displayName),
+        );
+        twonlyDatabase.contactsDao.updateContact(fromUserId, update);
+      }
+      break;
+
+    case MessageKind.ack:
+      final update = MessagesCompanion(acknowledgeByUser: Value(true));
+      await twonlyDatabase.messagesDao.updateMessageByOtherUser(
+        fromUserId,
+        message.messageId!,
+        update,
+      );
+      break;
+
+    default:
+      if (message.kind != MessageKind.textMessage &&
+          message.kind != MessageKind.media &&
+          message.kind != MessageKind.storedMediaFile) {
+        Logger("handleServerMessages")
+            .shout("Got unknown MessageKind $message");
+      } else if (message.content == null || message.messageId == null) {
+        Logger("handleServerMessages")
+            .shout("Content or messageid not defined $message");
+      } else {
+        // when a message is received doubled ignore it...
+        if ((await twonlyDatabase.messagesDao
+            .containsOtherMessageId(fromUserId, message.messageId!))) {
+          var ok = client.Response_Ok()..none = true;
+          return client.Response()..ok = ok;
         }
-        break;
-      case MessageKind.opened:
-        final update = MessagesCompanion(openedAt: Value(message.timestamp));
-        await twonlyDatabase.messagesDao.updateMessageByOtherUser(
-          fromUserId,
-          message.messageId!,
+
+        String content = jsonEncode(message.content!.toJson());
+
+        bool acknowledgeByUser = false;
+        DateTime? openedAt;
+
+        if (message.kind == MessageKind.storedMediaFile) {
+          acknowledgeByUser = true;
+          openedAt = DateTime.now();
+        }
+
+        int? responseToMessageId;
+        final textContent = message.content!;
+        if (textContent is TextMessageContent) {
+          responseToMessageId = textContent.responseToMessageId;
+        }
+
+        final update = MessagesCompanion(
+          contactId: Value(fromUserId),
+          kind: Value(message.kind),
+          messageOtherId: Value(message.messageId),
+          contentJson: Value(content),
+          acknowledgeByServer: Value(true),
+          acknowledgeByUser: Value(acknowledgeByUser),
+          responseToMessageId: Value(responseToMessageId),
+          openedAt: Value(openedAt),
+          downloadState: Value(message.kind == MessageKind.media
+              ? DownloadState.pending
+              : DownloadState.downloaded),
+          sendAt: Value(message.timestamp),
+        );
+
+        final messageId = await twonlyDatabase.messagesDao.insertMessage(
           update,
         );
-        break;
-      case MessageKind.rejectRequest:
-        await twonlyDatabase.contactsDao.deleteContactByUserId(fromUserId);
-        break;
-      case MessageKind.acceptRequest:
-        final update = ContactsCompanion(accepted: Value(true));
-        await twonlyDatabase.contactsDao.updateContact(fromUserId, update);
-        localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
-        notifyContactsAboutProfileChange();
-        break;
-      case MessageKind.profileChange:
-        var content = message.content;
-        if (content is ProfileContent) {
-          final update = ContactsCompanion(
-            avatarSvg: Value(content.avatarSvg),
-            displayName: Value(content.displayName),
-          );
-          twonlyDatabase.contactsDao.updateContact(fromUserId, update);
+
+        if (messageId == null) {
+          return client.Response()..error = ErrorCode.InternalError;
         }
-        break;
-      case MessageKind.ack:
-        final update = MessagesCompanion(acknowledgeByUser: Value(true));
-        await twonlyDatabase.messagesDao.updateMessageByOtherUser(
-          fromUserId,
+
+        encryptAndSendMessage(
           message.messageId!,
-          update,
+          fromUserId,
+          MessageJson(
+            kind: MessageKind.ack,
+            messageId: message.messageId!,
+            content: MessageContent(),
+            timestamp: DateTime.now(),
+          ),
         );
-        break;
-      default:
-        if (message.kind != MessageKind.textMessage &&
-            message.kind != MessageKind.media &&
-            message.kind != MessageKind.storedMediaFile) {
-          Logger("handleServerMessages")
-              .shout("Got unknown MessageKind $message");
-        } else if (message.content != null && message.messageId != null) {
-          String content = jsonEncode(message.content!.toJson());
 
-          bool acknowledgeByUser = false;
-          DateTime? openedAt;
-          if (message.kind == MessageKind.storedMediaFile) {
-            acknowledgeByUser = true;
-            openedAt = DateTime.now();
-          }
-
-          int? responseToMessageId;
-          final textContent = message.content!;
-          if (textContent is TextMessageContent) {
-            responseToMessageId = textContent.responseToMessageId;
-          }
-
-          // when a message is received doubled ignore it...
-          if ((await twonlyDatabase.messagesDao
-              .containsOtherMessageId(message.messageId!))) {
-            var ok = client.Response_Ok()..none = true;
-            return client.Response()..ok = ok;
-          }
-
-          final update = MessagesCompanion(
-            contactId: Value(fromUserId),
-            kind: Value(message.kind),
-            messageOtherId: Value(message.messageId),
-            contentJson: Value(content),
-            acknowledgeByServer: Value(true),
-            acknowledgeByUser: Value(acknowledgeByUser),
-            responseToMessageId: Value(responseToMessageId),
-            openedAt: Value(openedAt),
-            downloadState: Value(message.kind == MessageKind.media
-                ? DownloadState.pending
-                : DownloadState.downloaded),
-            sendAt: Value(message.timestamp),
-          );
-
-          final messageId = await twonlyDatabase.messagesDao.insertMessage(
-            update,
-          );
-
-          if (messageId == null) {
-            return client.Response()..error = ErrorCode.InternalError;
-          }
-
-          encryptAndSendMessage(
-            message.messageId!,
+        if (message.kind == MessageKind.media) {
+          twonlyDatabase.contactsDao.incFlameCounter(
             fromUserId,
-            MessageJson(
-              kind: MessageKind.ack,
-              messageId: message.messageId!,
-              content: MessageContent(),
-              timestamp: DateTime.now(),
-            ),
+            true,
+            message.timestamp,
           );
 
-          if (message.kind == MessageKind.media) {
-            twonlyDatabase.contactsDao.incFlameCounter(
-              fromUserId,
-              true,
-              message.timestamp,
-            );
-
-            if (!globalIsAppInBackground) {
-              final content = message.content;
-              if (content is MediaMessageContent) {
-                tryDownloadMedia(
-                  messageId,
-                  fromUserId,
-                  content,
-                );
-              }
+          if (!globalIsAppInBackground) {
+            final content = message.content;
+            if (content is MediaMessageContent) {
+              tryDownloadMedia(
+                messageId,
+                fromUserId,
+                content,
+              );
             }
           }
-          localPushNotificationNewMessage(fromUserId, message, messageId);
         }
-    }
+        localPushNotificationNewMessage(fromUserId, message, messageId);
+      }
   }
   var ok = client.Response_Ok()..none = true;
   return client.Response()..ok = ok;
@@ -319,5 +317,33 @@ Future<client.Response> handleRequestNewPreKey() async {
   }
   var prekeys = client.Response_Prekeys(prekeys: prekeysList);
   var ok = client.Response_Ok()..prekeys = prekeys;
+  return client.Response()..ok = ok;
+}
+
+Future<client.Response> handleContactRequest(
+    int fromUserId, MessageJson message) async {
+  // request the username by the server so an attacker can not
+  // forge the displayed username in the contact request
+  Result username = await apiProvider.getUsername(fromUserId);
+  if (username.isSuccess) {
+    Uint8List name = username.value.userdata.username;
+
+    int added = await twonlyDatabase.contactsDao.insertContact(
+      ContactsCompanion(
+        username: Value(utf8.decode(name)),
+        userId: Value(fromUserId),
+        requested: Value(true),
+      ),
+    );
+
+    if (added > 0) {
+      localPushNotificationNewMessage(
+        fromUserId,
+        message,
+        999999,
+      );
+    }
+  }
+  var ok = client.Response_Ok()..none = true;
   return client.Response()..ok = ok;
 }
