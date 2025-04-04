@@ -10,7 +10,9 @@ enum MessageKind {
   rejectRequest,
   acceptRequest,
   opened,
-  ack
+  ack,
+  pushKey,
+  pushKeyAck,
 }
 
 enum DownloadState {

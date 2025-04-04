@@ -72,3 +72,7 @@ post_install do |installer|
     end
   end
 end
+
+target 'NotificationService' do
+  # pod 'Firebase/Messaging'
+end

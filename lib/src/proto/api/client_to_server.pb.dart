@@ -205,6 +205,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     $core.List<$core.int>? signedPrekeySignature,
     $fixnum.Int64? signedPrekeyId,
     $fixnum.Int64? registrationId,
+    $core.bool? isIos,
   }) {
     final $result = create();
     if (username != null) {
@@ -228,6 +229,9 @@ class Handshake_Register extends $pb.GeneratedMessage {
     if (registrationId != null) {
       $result.registrationId = registrationId;
     }
+    if (isIos != null) {
+      $result.isIos = isIos;
+    }
     return $result;
   }
   Handshake_Register._() : super();
@@ -242,6 +246,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
     ..aInt64(6, _omitFieldNames ? '' : 'signedPrekeyId')
     ..aInt64(7, _omitFieldNames ? '' : 'registrationId')
+    ..aOB(8, _omitFieldNames ? '' : 'isIos')
     ..hasRequiredFields = false
   ;
 
@@ -328,6 +333,15 @@ class Handshake_Register extends $pb.GeneratedMessage {
   $core.bool hasRegistrationId() => $_has(6);
   @$pb.TagNumber(7)
   void clearRegistrationId() => clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get isIos => $_getBF(7);
+  @$pb.TagNumber(8)
+  set isIos($core.bool v) { $_setBool(7, v); }
+  @$pb.TagNumber(8)
+  $core.bool hasIsIos() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearIsIos() => clearField(8);
 }
 
 class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
@@ -430,6 +444,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   factory Handshake_Authenticate({
     $fixnum.Int64? userId,
     $core.List<$core.int>? authToken,
+    $core.String? appVersion,
   }) {
     final $result = create();
     if (userId != null) {
@@ -437,6 +452,9 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     }
     if (authToken != null) {
       $result.authToken = authToken;
+    }
+    if (appVersion != null) {
+      $result.appVersion = appVersion;
     }
     return $result;
   }
@@ -447,6 +465,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.Authenticate', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'authToken', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'appVersion')
     ..hasRequiredFields = false
   ;
 
@@ -488,6 +507,15 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   $core.bool hasAuthToken() => $_has(1);
   @$pb.TagNumber(2)
   void clearAuthToken() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get appVersion => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set appVersion($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasAppVersion() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAppVersion() => clearField(3);
 }
 
 enum Handshake_Handshake {
@@ -613,6 +641,7 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   factory ApplicationData_TextMessage({
     $fixnum.Int64? userId,
     $core.List<$core.int>? body,
+    $core.List<$core.int>? pushData,
   }) {
     final $result = create();
     if (userId != null) {
@@ -620,6 +649,9 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
     }
     if (body != null) {
       $result.body = body;
+    }
+    if (pushData != null) {
+      $result.pushData = pushData;
     }
     return $result;
   }
@@ -630,6 +662,7 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.TextMessage', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'pushData', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
@@ -671,6 +704,15 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   $core.bool hasBody() => $_has(1);
   @$pb.TagNumber(3)
   void clearBody() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get pushData => $_getN(2);
+  @$pb.TagNumber(4)
+  set pushData($core.List<$core.int> v) { $_setBytes(2, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasPushData() => $_has(2);
+  @$pb.TagNumber(4)
+  void clearPushData() => clearField(4);
 }
 
 class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
