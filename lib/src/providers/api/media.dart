@@ -12,6 +12,7 @@ import 'package:twonly/src/proto/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/hive.dart';
+import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Future tryDownloadAllMediaFiles() async {
@@ -280,6 +281,7 @@ class ImageUploader {
           ),
           timestamp: metadata.messageSendAt,
         ),
+        pushKind: PushKind.image,
       );
     }
   }

@@ -3,8 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/providers/api_provider.dart';
+import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'dart:io' show Platform;
 import '../../firebase_options.dart';
@@ -70,38 +69,38 @@ Future initFCMService() async {
     }
   }
 
-  // APNS token is available, make FCM plugin API requests...
-
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print('Got a message whilst in the foreground!');
+    if (!Platform.isAndroid) {
+      Logger("firebase-notification").shout("Got message in Dart while on iOS");
+    }
+
+    Logger("firebase-notification")
+        .finer('Got a message while in the foreground!');
+
     print('Message data: ${message.data}');
 
     if (message.notification != null) {
       print('Message also contained a notification: ${message.notification}');
+      String title = message.notification!.title ?? "";
+      String body = message.notification!.body ?? "";
+      customLocalPushNotification(title, body);
+    }
+    if (message.data["push_data"] != null) {
+      handlePushData(message.data["push_data"]);
     }
   });
 }
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Wenn Tasks länger als 30 Sekunden ausgeführt werden, wird der Prozess möglicherweise automatisch vom Gerät beendet.
-  // -> offer backend via http?
-
   Logger("firebase-background")
       .shout('Handling a background message: ${message.messageId}');
 
-  twonlyDatabase = TwonlyDatabase();
-
-  apiProvider = ApiProvider();
-  await apiProvider.connect();
-
-  final stopwatch = Stopwatch()..start();
-  while (true) {
-    if (stopwatch.elapsed >= Duration(seconds: 20)) {
-      Logger("firebase-background").shout('Exiting background handler');
-      break;
-    }
-    await Future.delayed(Duration(milliseconds: 10));
+  if (!Platform.isAndroid) {
+    Logger("firebase-notification").shout("Got message in Dart while on iOS");
   }
-  await apiProvider.close(() {});
+
+  Logger("firebase-notification")
+      .finer('Got a message while in the background!');
+  print('Message data: ${message.data}');
 }

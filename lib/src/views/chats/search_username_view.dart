@@ -5,6 +5,7 @@ import 'package:twonly/src/components/alert_dialog.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/headline.dart';
@@ -67,6 +68,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
               timestamp: DateTime.now(),
               content: MessageContent(),
             ),
+            pushKind: PushKind.contactRequest,
           );
         }
       }
@@ -238,6 +240,7 @@ class _ContactsListViewState extends State<ContactsListView> {
                         timestamp: DateTime.now(),
                         content: MessageContent(),
                       ),
+                      pushKind: PushKind.acceptRequest,
                     );
                     notifyContactsAboutProfileChange();
                   },

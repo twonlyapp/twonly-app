@@ -11,8 +11,7 @@ enum MessageKind {
   acceptRequest,
   opened,
   ack,
-  pushKey,
-  pushKeyAck,
+  pushKey
 }
 
 enum DownloadState {

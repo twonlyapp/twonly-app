@@ -323,6 +323,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                                 responseToMessageId:
                                     allMediaFiles.first.messageOtherId,
                               ),
+                              PushKind.reaction,
                             );
                             setState(() {
                               selectedShortReaction = index;
@@ -393,6 +394,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                               ),
                               timestamp: DateTime.now(),
                             ),
+                            pushKind: PushKind.storedMediaFile,
                           );
                           final res = await saveImageToGallery(imageBytes!);
                           if (res == null) {

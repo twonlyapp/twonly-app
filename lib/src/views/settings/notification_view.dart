@@ -1,0 +1,64 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/components/alert_dialog.dart';
+import 'package:twonly/src/services/fcm_service.dart';
+import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
+
+class NotificationView extends StatelessWidget {
+  const NotificationView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(context.lang.settingsNotification),
+      ),
+      body: ListView(
+        children: [
+          ListTile(
+            title: Text(context.lang.settingsNotifyTroubleshooting),
+            subtitle: Text(context.lang.settingsNotifyTroubleshootingDesc),
+            onTap: () async {
+              await initFCMAfterAuthenticated();
+              final storage = getSecureStorage();
+              String? storedToken = await storage.read(key: "google_fcm");
+              //await setupNotificationWithUsers(force: true);
+              if (!context.mounted) return;
+
+              if (storedToken == null) {
+                final platform = Platform.isAndroid ? "Google's" : "Apple's";
+                showAlertDialog(context, "Problem detected",
+                    "twonly is not able to register your app to $platform push server infrastrukture. For Android that can happen when you do not have the Google Play Services installed. If you theses installed and want to help us to fix the issue please send us your debug log in Settings > Help > Debug log.");
+              } else {
+                final run = await showAlertDialog(
+                    context,
+                    context.lang.settingsNotifyTroubleshootingNoProblem,
+                    context.lang.settingsNotifyTroubleshootingNoProblemDesc);
+
+                if (run) {
+                  final user = await getUser();
+                  if (user != null) {
+                    final pushData = await getPushData(
+                      user.userId,
+                      PushKind.testNotification,
+                    );
+                    await apiProvider.sendTextMessage(
+                      user.userId,
+                      Uint8List(0),
+                      pushData,
+                    );
+                  }
+                }
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}

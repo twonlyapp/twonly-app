@@ -7,6 +7,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/account_view.dart';
 import 'package:twonly/src/views/settings/appearance_view.dart';
+import 'package:twonly/src/views/settings/notification_view.dart';
 import 'package:twonly/src/views/settings/profile_view.dart';
 import 'package:twonly/src/views/settings/help_view.dart';
 import 'package:twonly/src/views/settings/privacy_view.dart';
@@ -129,11 +130,16 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     }));
                   },
                 ),
-                // BetterListTile(
-                //   icon: FontAwesomeIcons.bell,
-                //   text: context.lang.settingsNotification,
-                //   onTap: () async {},
-                // ),
+                BetterListTile(
+                  icon: FontAwesomeIcons.bell,
+                  text: context.lang.settingsNotification,
+                  onTap: () async {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return NotificationView();
+                    }));
+                  },
+                ),
                 const Divider(),
                 BetterListTile(
                   icon: FontAwesomeIcons.circleQuestion,

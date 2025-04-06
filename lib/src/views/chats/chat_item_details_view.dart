@@ -280,6 +280,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       TextMessageContent(
         text: newMessageController.text,
       ),
+      PushKind.text,
     );
     newMessageController.clear();
     currentInputText = "";

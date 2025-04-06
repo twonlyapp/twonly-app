@@ -385,10 +385,15 @@ class ApiProvider {
     return await sendRequestSync(req);
   }
 
-  Future<Result> sendTextMessage(int target, Uint8List msg) async {
+  Future<Result> sendTextMessage(
+      int target, Uint8List msg, List<int>? pushData) async {
     var testMessage = ApplicationData_TextMessage()
       ..userId = Int64(target)
       ..body = msg;
+
+    if (pushData != null) {
+      testMessage.pushData = pushData;
+    }
 
     var appData = ApplicationData()..textmessage = testMessage;
     var req = createClientToServerFromApplicationData(appData);

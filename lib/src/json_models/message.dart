@@ -88,6 +88,8 @@ class MessageContent {
         return ProfileContent.fromJson(json);
       case MessageKind.storedMediaFile:
         return StoredMediaFileContent.fromJson(json);
+      case MessageKind.pushKey:
+        return PushKeyContent.fromJson(json);
       default:
         return null;
     }
@@ -201,5 +203,26 @@ class ProfileContent extends MessageContent {
   @override
   Map toJson() {
     return {'avatarSvg': avatarSvg, 'displayName': displayName};
+  }
+}
+
+class PushKeyContent extends MessageContent {
+  int keyId;
+  List<int> key;
+  PushKeyContent({required this.keyId, required this.key});
+
+  static PushKeyContent fromJson(Map json) {
+    return PushKeyContent(
+      keyId: json['keyId'],
+      key: List<int>.from(json['key']),
+    );
+  }
+
+  @override
+  Map toJson() {
+    return {
+      'keyId': keyId,
+      'key': key,
+    };
   }
 }

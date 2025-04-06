@@ -190,7 +190,6 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
     case MessageKind.acceptRequest:
       final update = ContactsCompanion(accepted: Value(true));
       await twonlyDatabase.contactsDao.updateContact(fromUserId, update);
-      localPushNotificationNewMessage(fromUserId.toInt(), message, 8888888);
       notifyContactsAboutProfileChange();
       break;
 
@@ -213,6 +212,14 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         update,
       );
       break;
+
+    case MessageKind.pushKey:
+      if (message.content != null) {
+        final pushKey = message.content!;
+        if (pushKey is PushKeyContent) {
+          await handleNewPushKey(fromUserId, pushKey);
+        }
+      }
 
     default:
       if (message.kind != MessageKind.textMessage &&
@@ -299,7 +306,6 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             }
           }
         }
-        localPushNotificationNewMessage(fromUserId, message, messageId);
       }
   }
   var ok = client.Response_Ok()..none = true;
@@ -328,21 +334,13 @@ Future<client.Response> handleContactRequest(
   if (username.isSuccess) {
     Uint8List name = username.value.userdata.username;
 
-    int added = await twonlyDatabase.contactsDao.insertContact(
+    await twonlyDatabase.contactsDao.insertContact(
       ContactsCompanion(
         username: Value(utf8.decode(name)),
         userId: Value(fromUserId),
         requested: Value(true),
       ),
     );
-
-    if (added > 0) {
-      localPushNotificationNewMessage(
-        fromUserId,
-        message,
-        999999,
-      );
-    }
   }
   var ok = client.Response_Ok()..none = true;
   return client.Response()..ok = ok;
