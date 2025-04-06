@@ -126,7 +126,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         }
       }
     }
-    flutterLocalNotificationsPlugin.cancel(current.messageId);
+    flutterLocalNotificationsPlugin.cancel(current.contactId);
     if (current.downloadState == DownloadState.pending) {
       setState(() {
         isDownloading = true;

@@ -165,6 +165,8 @@ class _UserListItem extends State<UserListItem> {
   List<Message> lastMessages = [];
   late StreamSubscription<List<Message>> lastMessageStream;
 
+  List<Message> previewMessages = [];
+
   Timer? updateTime;
 
   @override
@@ -195,9 +197,11 @@ class _UserListItem extends State<UserListItem> {
     if (newLastMessages.isEmpty) {
       // there are no messages at all
       currentMessage = null;
+      previewMessages = [];
     } else if (newMessagesNotOpened.isEmpty) {
       // there are no not opened messages show just the last message in the table
       currentMessage = newLastMessages.first;
+      previewMessages = newLastMessages;
     } else {
       // filter first for received messages
       final receivedMessages =
@@ -213,6 +217,7 @@ class _UserListItem extends State<UserListItem> {
         } else {
           currentMessage = receivedMessages.first;
         }
+        previewMessages = receivedMessages;
       } else {
         // The not opened message was send
         final mediaMessages =
@@ -223,6 +228,7 @@ class _UserListItem extends State<UserListItem> {
         } else {
           currentMessage = newMessagesNotOpened.first;
         }
+        previewMessages = [currentMessage!];
       }
     }
 
@@ -268,7 +274,7 @@ class _UserListItem extends State<UserListItem> {
             ? Text(context.lang.chatsTapToSend)
             : Row(
                 children: [
-                  MessageSendStateIcon(lastMessages),
+                  MessageSendStateIcon(previewMessages),
                   Text("•"),
                   const SizedBox(width: 5),
                   Text(

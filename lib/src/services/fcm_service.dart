@@ -84,8 +84,7 @@ Future initFCMService() async {
       String title = message.notification!.title ?? "";
       String body = message.notification!.body ?? "";
       customLocalPushNotification(title, body);
-    }
-    if (message.data["push_data"] != null) {
+    } else if (message.data["push_data"] != null) {
       handlePushData(message.data["push_data"]);
     }
   });

@@ -229,6 +229,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         twonlyDatabase.messagesDao.watchAllMessagesFrom(widget.userid);
     messageSub = msgStream.listen((msgs) {
       if (!context.mounted) return;
+      flutterLocalNotificationsPlugin.cancel(widget.userid);
       var updated = false;
       List<Message> displayedMessages = [];
       // should be cleared
@@ -239,7 +240,6 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
             msg.messageOtherId != null &&
             msg.openedAt == null) {
           updated = true;
-          flutterLocalNotificationsPlugin.cancel(msg.messageId);
           notifyContactAboutOpeningMessage(widget.userid, msg.messageOtherId!);
         }
 

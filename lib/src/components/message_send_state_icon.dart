@@ -152,7 +152,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         text = "Unknown error.";
       }
 
-      icons.add(icon);
+      if (message.kind == MessageKind.media) {
+        icons.insert(0, icon);
+      } else {
+        icons.add(icon);
+      }
     }
 
     if (icons.isEmpty) return Container();
