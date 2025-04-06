@@ -125,7 +125,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 
   Future<List<Contact>> getAllNotBlockedContacts() {
     return (select(contacts)
-          ..where((t) => t.accepted.equals(true) & t.blocked.equals(false))
+          ..where((t) => t.blocked.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
         .get();
   }

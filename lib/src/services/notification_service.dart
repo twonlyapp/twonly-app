@@ -313,6 +313,9 @@ Future handlePushData(String pushDataJson) async {
             "Test notification", "This is a test notification.");
       } else if (fromUserId != null) {
         showLocalPushNotification(fromUserId, pushKind);
+      } else {
+        showLocalPushNotificationWithoutUserId(pushKind);
+        setupNotificationWithUsers();
       }
     }
   } catch (e) {
@@ -336,7 +339,6 @@ Future<Map<int, PushUser>> getPushKeys(String storageKey) async {
       pushKeys[int.parse(key)] = PushUser.fromJson(value);
     });
   }
-  print("read: $storageKey: $pushKeys");
   return pushKeys;
 }
 
@@ -348,7 +350,6 @@ Future setPushKeys(String storageKey, Map<int, PushUser> pushKeys) async {
   });
 
   String jsonString = jsonEncode(jsonToSend);
-  print("write: $storageKey: $pushKeys");
   await storage.write(
     key: storageKey,
     value: jsonString,
@@ -357,44 +358,8 @@ Future setPushKeys(String storageKey, Map<int, PushUser> pushKeys) async {
   );
 }
 
-/// Streams are created so that app can respond to notification-related events
-/// since the plugin is initialized in the `main` function
 final StreamController<NotificationResponse> selectNotificationStream =
     StreamController<NotificationResponse>.broadcast();
-
-const MethodChannel platform = MethodChannel('twonly.eu/notifications');
-
-const String portName = 'notification_send_port';
-
-class ReceivedNotification {
-  ReceivedNotification({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.payload,
-    this.data,
-  });
-
-  final int id;
-  final String? title;
-  final String? body;
-  final String? payload;
-  final Map<String, dynamic>? data;
-}
-
-String? selectedNotificationPayload;
-
-/// A notification action which triggers a url launch event
-const String urlLaunchActionId = 'id_1';
-
-/// A notification action which triggers a App navigation event
-const String navigationActionId = 'id_3';
-
-/// Defines a iOS/MacOS notification category for text input actions.
-const String darwinNotificationCategoryText = 'textCategory';
-
-/// Defines a iOS/MacOS notification category for plain actions.
-const String darwinNotificationCategoryPlain = 'plainCategory';
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
@@ -442,36 +407,6 @@ Future<void> setupPushNotification() async {
     onDidReceiveNotificationResponse: selectNotificationStream.add,
     onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
   );
-}
-
-Future<String?> getAvatarIcon(Contact user) async {
-  if (user.avatarSvg == null) return null;
-
-  final PictureInfo pictureInfo =
-      await vg.loadPicture(SvgStringLoader(user.avatarSvg!), null);
-
-  final ui.Image image = await pictureInfo.picture.toImage(300, 300);
-
-  final ByteData? byteData =
-      await image.toByteData(format: ui.ImageByteFormat.png);
-  final Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-  // Get the directory to save the image
-  final directory = await getApplicationDocumentsDirectory();
-  final avatarsDirectory = Directory('${directory.path}/avatars');
-
-  // Create the avatars directory if it does not exist
-  if (!await avatarsDirectory.exists()) {
-    await avatarsDirectory.create(recursive: true);
-  }
-
-  final filePath = '${avatarsDirectory.path}/${user.userId}.png';
-  final file = File(filePath);
-  await file.writeAsBytes(pngBytes);
-
-  pictureInfo.picture.dispose();
-
-  return filePath;
 }
 
 Future showLocalPushNotification(
@@ -522,6 +457,39 @@ Future showLocalPushNotification(
   );
 }
 
+Future showLocalPushNotificationWithoutUserId(
+  PushKind pushKind,
+) async {
+  String? title;
+  String? body;
+
+  body = getPushNotificationTextWithoutUserId(pushKind);
+  if (body == "") {
+    Logger("localPushNotificationNewMessage")
+        .shout("No push notification type defined!");
+  }
+
+  AndroidNotificationDetails androidNotificationDetails =
+      AndroidNotificationDetails('0', 'Messages',
+          channelDescription: 'Messages from other users.',
+          importance: Importance.max,
+          priority: Priority.max,
+          ticker: 'You got a new message.');
+
+  const DarwinNotificationDetails darwinNotificationDetails =
+      DarwinNotificationDetails();
+  NotificationDetails notificationDetails = NotificationDetails(
+      android: androidNotificationDetails, iOS: darwinNotificationDetails);
+
+  await flutterLocalNotificationsPlugin.show(
+    2,
+    title,
+    body,
+    notificationDetails,
+    payload: pushKind.name,
+  );
+}
+
 Future customLocalPushNotification(String title, String msg) async {
   const AndroidNotificationDetails androidNotificationDetails =
       AndroidNotificationDetails(
@@ -543,6 +511,37 @@ Future customLocalPushNotification(String title, String msg) async {
     msg,
     notificationDetails,
   );
+}
+
+String getPushNotificationTextWithoutUserId(PushKind pushKind) {
+  Map<String, String> pushNotificationText;
+
+  String systemLanguage = Platform.localeName;
+
+  if (systemLanguage.contains("de")) {
+    pushNotificationText = {
+      PushKind.text.name: "Du hast eine Nachricht erhalten.",
+      PushKind.twonly.name: "Du hast ein twonly erhalten.",
+      PushKind.video.name: "Du hast ein Video erhalten.",
+      PushKind.image.name: "Du hast ein Bild erhalten.",
+      PushKind.contactRequest.name: "Du hast eine Kontaktanfrage erhalten.",
+      PushKind.acceptRequest.name: "Deine Kontaktanfrage wurde angenommen.",
+      PushKind.storedMediaFile.name: "Dein Bild wurde gespeichert.",
+      PushKind.reaction.name: "Du hast eine Reaktion auf dein Bild erhalten."
+    };
+  } else {
+    pushNotificationText = {
+      PushKind.text.name: "You got a message.",
+      PushKind.twonly.name: "You got a twonly.",
+      PushKind.video.name: "You got a video.",
+      PushKind.image.name: "You got an image.",
+      PushKind.contactRequest.name: "You got a contact request.",
+      PushKind.acceptRequest.name: "Your contact request has been accepted.",
+      PushKind.storedMediaFile.name: "Your image has been saved.",
+      PushKind.reaction.name: "You got a reaction to your image."
+    };
+  }
+  return pushNotificationText[pushKind.name] ?? "";
 }
 
 String getPushNotificationText(PushKind pushKind) {
@@ -574,4 +573,34 @@ String getPushNotificationText(PushKind pushKind) {
     };
   }
   return pushNotificationText[pushKind.name] ?? "";
+}
+
+Future<String?> getAvatarIcon(Contact user) async {
+  if (user.avatarSvg == null) return null;
+
+  final PictureInfo pictureInfo =
+      await vg.loadPicture(SvgStringLoader(user.avatarSvg!), null);
+
+  final ui.Image image = await pictureInfo.picture.toImage(300, 300);
+
+  final ByteData? byteData =
+      await image.toByteData(format: ui.ImageByteFormat.png);
+  final Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+  // Get the directory to save the image
+  final directory = await getApplicationDocumentsDirectory();
+  final avatarsDirectory = Directory('${directory.path}/avatars');
+
+  // Create the avatars directory if it does not exist
+  if (!await avatarsDirectory.exists()) {
+    await avatarsDirectory.create(recursive: true);
+  }
+
+  final filePath = '${avatarsDirectory.path}/${user.userId}.png';
+  final file = File(filePath);
+  await file.writeAsBytes(pngBytes);
+
+  pictureInfo.picture.dispose();
+
+  return filePath;
 }

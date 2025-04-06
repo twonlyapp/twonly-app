@@ -51,15 +51,18 @@ class _SearchUsernameView extends State<SearchUsernameView> {
         return;
       }
 
-      int added =
-          await twonlyDatabase.contactsDao.insertContact(ContactsCompanion(
-        username: Value(searchUserName.text),
-        userId: Value(res.value.userdata.userId.toInt()),
-        requested: Value(false),
-      ));
+      int added = await twonlyDatabase.contactsDao.insertContact(
+        ContactsCompanion(
+          username: Value(searchUserName.text),
+          userId: Value(res.value.userdata.userId.toInt()),
+          requested: Value(false),
+        ),
+      );
 
       if (added > 0) {
         if (await SignalHelper.addNewContact(res.value.userdata)) {
+          // before notifying the other party, add
+          await setupNotificationWithUsers();
           encryptAndSendMessage(
             null,
             res.value.userdata.userId.toInt(),

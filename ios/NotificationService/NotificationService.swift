@@ -20,7 +20,7 @@ class NotificationService: UNNotificationServiceExtension {
         
         if let bestAttemptContent = bestAttemptContent {
                         
-            guard let _userInfo = bestAttemptContent.userInfo as? [String: Any],
+            guard let _ = bestAttemptContent.userInfo as? [String: Any],
                   let push_data = bestAttemptContent.userInfo["push_data"] as? String else {
                 return contentHandler(bestAttemptContent);
             }
@@ -109,6 +109,8 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
             return ("Test Notification", "This is a test notification.")
         } else if displayName != nil {
             return (displayName!, getPushNotificationText(pushKind: pushKind))
+        } else {
+            return ("", getPushNotificationTextWithoutUserId(pushKind: pushKind))
         }
         
     } else {
@@ -326,6 +328,40 @@ func getPushNotificationText(pushKind: PushKind) -> String {
             .acceptRequest: "is now connected with you.",
             .storedMediaFile: "has stored your image.",
             .reaction: "has reacted to your image."
+        ]
+    }
+
+    // Return the corresponding message or an empty string if not found
+    return pushNotificationText[pushKind] ?? ""
+}
+
+func getPushNotificationTextWithoutUserId(pushKind: PushKind) -> String {
+    let systemLanguage = Locale.current.languageCode ?? "en" // Get the current system language
+
+    var pushNotificationText: [PushKind: String] = [:]
+
+    // Define the messages based on the system language
+    if systemLanguage.contains("de") { // German
+        pushNotificationText = [
+            .text: "Du hast eine Nachricht erhalten.",
+            .twonly: "Du hast ein twonly erhalten.",
+            .video: "Du hast ein Video erhalten.",
+            .image: "Du hast ein Bild erhalten.",
+            .contactRequest: "Du hast eine Kontaktanfrage erhalten.",
+            .acceptRequest: "Deine Kontaktanfrage wurde angenommen.",
+            .storedMediaFile: "Dein Bild wurde gespeichert.",
+            .reaction: "Du hast eine Reaktion auf dein Bild erhalten."
+        ]
+    } else { // Default to English
+        pushNotificationText = [
+            .text: "You got a message.",
+            .twonly: "You got a twonly.",
+            .video: "You got a video.",
+            .image: "You got an image.",
+            .contactRequest: "You got a contact request.",
+            .acceptRequest: "Your contact request has been accepted.",
+            .storedMediaFile: "Your image has been saved.",
+            .reaction: "You got a reaction to your image."
         ]
     }
 

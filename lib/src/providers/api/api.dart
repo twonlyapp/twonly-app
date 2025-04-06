@@ -70,7 +70,9 @@ class RetransmitMessage {
       messageId: json['messageId'],
       userId: json['userId'],
       bytes: base64Decode(json['bytes']),
-      pushData: json['pushData'],
+      pushData: json['pushData'] == null
+          ? null
+          : List<int>.from(json['pushData'].map((item) => item as int)),
     );
   }
 
