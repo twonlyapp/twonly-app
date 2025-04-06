@@ -181,6 +181,16 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         message.messageId!,
         update,
       );
+      final openedMessage = await twonlyDatabase.messagesDao
+          .getMessageByMessageId(message.messageId!)
+          .getSingleOrNull();
+      if (openedMessage != null &&
+          openedMessage.kind == MessageKind.textMessage) {
+        await twonlyDatabase.messagesDao.openedAllNonMediaMessagesFromOtherUser(
+          fromUserId,
+        );
+      }
+
       break;
 
     case MessageKind.rejectRequest:

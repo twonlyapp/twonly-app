@@ -104,6 +104,16 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updates);
   }
 
+  Future openedAllNonMediaMessagesFromOtherUser(int contactId) {
+    final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
+    return (update(messages)
+          ..where((t) =>
+              t.contactId.equals(contactId) &
+              t.openedAt.isNull() &
+              t.kind.equals(MessageKind.media.name).not()))
+        .write(updates);
+  }
+
   Future updateMessageByOtherUser(
       int userId, int messageId, MessagesCompanion updatedValues) {
     return (update(messages)
@@ -160,5 +170,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
 
   SingleOrNullSelectable<Message> getMessageByMessageId(int messageId) {
     return select(messages)..where((t) => t.messageId.equals(messageId));
+  }
+
+  SingleOrNullSelectable<Message> getMessageByOtherMessageId(
+      int fromUserId, int messageId) {
+    return select(messages)
+      ..where((t) =>
+          t.messageOtherId.equals(messageId) & t.contactId.equals(fromUserId));
   }
 }

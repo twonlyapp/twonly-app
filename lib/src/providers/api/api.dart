@@ -181,8 +181,6 @@ Future sendTextMessage(
 
 Future notifyContactAboutOpeningMessage(
     int fromUserId, int messageOtherId) async {
-  //await DbMessages.userOpenedOtherMessage(fromUserId, messageOtherId);
-
   encryptAndSendMessage(
     null,
     fromUserId,
