@@ -27,7 +27,7 @@ class NotificationView extends StatelessWidget {
               await initFCMAfterAuthenticated();
               final storage = getSecureStorage();
               String? storedToken = await storage.read(key: "google_fcm");
-              //await setupNotificationWithUsers(force: true);
+              await setupNotificationWithUsers(force: true);
               if (!context.mounted) return;
 
               if (storedToken == null) {
