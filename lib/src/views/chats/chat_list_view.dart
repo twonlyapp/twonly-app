@@ -200,7 +200,7 @@ class _UserListItem extends State<UserListItem> {
       previewMessages = [];
     } else if (newMessagesNotOpened.isEmpty) {
       // there are no not opened messages show just the last message in the table
-      currentMessage = newLastMessages.first;
+      currentMessage = newLastMessages.last;
       previewMessages = newLastMessages;
     } else {
       // filter first for received messages
@@ -208,27 +208,11 @@ class _UserListItem extends State<UserListItem> {
           newMessagesNotOpened.where((x) => x.messageOtherId != null).toList();
 
       if (receivedMessages.isNotEmpty) {
-        // There are received messages
-        final mediaMessages =
-            receivedMessages.where((x) => x.kind == MessageKind.media);
-
-        if (mediaMessages.isNotEmpty) {
-          currentMessage = mediaMessages.first;
-        } else {
-          currentMessage = receivedMessages.first;
-        }
         previewMessages = receivedMessages;
+        currentMessage = receivedMessages.first;
       } else {
-        // The not opened message was send
-        final mediaMessages =
-            newMessagesNotOpened.where((x) => x.kind == MessageKind.media);
-
-        if (mediaMessages.isNotEmpty) {
-          currentMessage = mediaMessages.first;
-        } else {
-          currentMessage = newMessagesNotOpened.first;
-        }
-        previewMessages = [currentMessage!];
+        previewMessages = newMessagesNotOpened;
+        currentMessage = newMessagesNotOpened.first;
       }
     }
 
@@ -299,18 +283,20 @@ class _UserListItem extends State<UserListItem> {
             globalUpdateOfHomeViewPageIndex(0);
             return;
           }
-          Message msg = currentMessage!;
-          if (msg.kind == MessageKind.media &&
-              msg.messageOtherId != null &&
-              msg.openedAt == null) {
-            switch (msg.downloadState) {
+          List<Message> msgs = previewMessages
+              .where((x) => x.kind == MessageKind.media)
+              .toList();
+          if (msgs.isNotEmpty &&
+              msgs.first.kind == MessageKind.media &&
+              msgs.first.messageOtherId != null &&
+              msgs.first.openedAt == null) {
+            switch (msgs.first.downloadState) {
               case DownloadState.pending:
-                MediaMessageContent content =
-                    MediaMessageContent.fromJson(jsonDecode(msg.contentJson!));
-                tryDownloadMedia(msg.messageId, msg.contactId, content,
+                MediaMessageContent content = MediaMessageContent.fromJson(
+                    jsonDecode(msgs.first.contentJson!));
+                tryDownloadMedia(
+                    msgs.first.messageId, msgs.first.contactId, content,
                     force: true);
-                return;
-
               case DownloadState.downloaded:
                 Navigator.push(
                   context,
@@ -318,11 +304,9 @@ class _UserListItem extends State<UserListItem> {
                     return MediaViewerView(widget.user.userId);
                   }),
                 );
-                return;
-
               default:
-                return;
             }
+            return;
           }
           Navigator.push(
             context,

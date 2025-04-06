@@ -23,7 +23,12 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   flutter_localizations:
     sdk: flutter
-  flutter_secure_storage: ^10.0.0-beta.4
+  # flutter_secure_storage: ^10.0.0-beta.4
+  flutter_secure_storage:
+    path: ../flutter_secure_storage/flutter_secure_storage
+    # git:
+    #   url: https://github.com/juliansteenbakker/flutter_secure_storage/tree/develop/flutter_secure_storage_darwin
+    #   ref: develop # 10.0.0-beta.4 does not work because of https://github.com/juliansteenbakker/flutter_secure_storage/issues/8660
   font_awesome_flutter: ^10.8.0
   gal: ^2.3.1
   hand_signature: ^3.0.3

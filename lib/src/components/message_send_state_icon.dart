@@ -169,9 +169,13 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         children: <Widget>[
           // First icon (bottom icon)
           icons[0],
-          Positioned(
-            top: 5.0,
-            left: 5.0,
+
+          Transform(
+            transform: Matrix4.identity()
+              ..scale(0.7) // Scale to half
+              ..translate(3.0, 5.0),
+            // Move down by 10 pixels (adjust as needed)
+            alignment: Alignment.center,
             child: icons[1],
           ),
           // Second icon (top icon, slightly offset)

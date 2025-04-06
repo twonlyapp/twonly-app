@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
@@ -321,7 +322,13 @@ Future handlePushData(String pushDataJson) async {
 
 Future<Map<int, PushUser>> getPushKeys(String storageKey) async {
   var storage = getSecureStorage();
-  String? pushKeysJson = await storage.read(key: storageKey);
+  String? pushKeysJson = await storage.read(
+    key: storageKey,
+    iOptions: IOSOptions(
+      groupId: "CN332ZUGRP.eu.twonly.shared",
+      synchronizable: false,
+    ),
+  );
   Map<int, PushUser> pushKeys = <int, PushUser>{};
   if (pushKeysJson != null) {
     Map<String, dynamic> jsonMap = jsonDecode(pushKeysJson);
@@ -342,7 +349,12 @@ Future setPushKeys(String storageKey, Map<int, PushUser> pushKeys) async {
 
   String jsonString = jsonEncode(jsonToSend);
   print("write: $storageKey: $pushKeys");
-  await storage.write(key: storageKey, value: jsonString);
+  await storage.write(
+    key: storageKey,
+    value: jsonString,
+    iOptions: IOSOptions(
+        groupId: "CN332ZUGRP.eu.twonly.shared", synchronizable: false),
+  );
 }
 
 /// Streams are created so that app can respond to notification-related events
