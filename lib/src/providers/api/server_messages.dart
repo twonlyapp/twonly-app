@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
+import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -23,42 +24,36 @@ import 'package:twonly/src/services/notification_service.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
-bool isBlocked = false;
+final lockHandleServerMessage = Mutex();
 
 Future handleServerMessage(server.ServerToClient msg) async {
-  client.Response? response;
-  int maxCounter = 0; // only block for 2 seconds
-  while (isBlocked && maxCounter < 200) {
-    await Future.delayed(Duration(milliseconds: 10));
-    maxCounter += 1;
-  }
-  isBlocked = true;
+  return lockHandleServerMessage.protect(() async {
+    client.Response? response;
 
-  try {
-    if (msg.v0.hasRequestNewPreKeys()) {
-      response = await handleRequestNewPreKey();
-    } else if (msg.v0.hasNewMessage()) {
-      Uint8List body = Uint8List.fromList(msg.v0.newMessage.body);
-      int fromUserId = msg.v0.newMessage.fromUserId.toInt();
-      response = await handleNewMessage(fromUserId, body);
-    } else if (msg.v0.hasDownloaddata()) {
-      response = await handleDownloadData(msg.v0.downloaddata);
-    } else {
-      Logger("handleServerMessage")
-          .shout("Got a new message from the server: $msg");
+    try {
+      if (msg.v0.hasRequestNewPreKeys()) {
+        response = await handleRequestNewPreKey();
+      } else if (msg.v0.hasNewMessage()) {
+        Uint8List body = Uint8List.fromList(msg.v0.newMessage.body);
+        int fromUserId = msg.v0.newMessage.fromUserId.toInt();
+        response = await handleNewMessage(fromUserId, body);
+      } else if (msg.v0.hasDownloaddata()) {
+        response = await handleDownloadData(msg.v0.downloaddata);
+      } else {
+        Logger("handleServerMessage")
+            .shout("Got a new message from the server: $msg");
+        response = client.Response()..error = ErrorCode.InternalError;
+      }
+    } catch (e) {
       response = client.Response()..error = ErrorCode.InternalError;
     }
-  } catch (e) {
-    response = client.Response()..error = ErrorCode.InternalError;
-  }
 
-  isBlocked = false;
+    var v0 = client.V0()
+      ..seq = msg.v0.seq
+      ..response = response;
 
-  var v0 = client.V0()
-    ..seq = msg.v0.seq
-    ..response = response;
-
-  apiProvider.sendResponse(ClientToServer()..v0 = v0);
+    apiProvider.sendResponse(ClientToServer()..v0 = v0);
+  });
 }
 
 Future<client.Response> handleDownloadData(DownloadData data) async {
@@ -300,7 +295,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           return client.Response()..error = ErrorCode.InternalError;
         }
 
-        encryptAndSendMessage(
+        await encryptAndSendMessage(
           message.messageId!,
           fromUserId,
           MessageJson(

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
+import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -16,40 +17,44 @@ import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 import 'package:twonly/src/utils/storage.dart';
 
+final lockSendingMessages = Mutex();
+
 Future tryTransmitMessages() async {
-  Map<String, dynamic> retransmit = await getAllMessagesForRetransmitting();
+  lockSendingMessages.protect(() async {
+    Map<String, dynamic> retransmit = await getAllMessagesForRetransmitting();
 
-  if (retransmit.isEmpty) return;
+    if (retransmit.isEmpty) return;
 
-  Logger("api.dart").info("try sending messages: ${retransmit.length}");
+    Logger("api.dart").info("try sending messages: ${retransmit.length}");
 
-  Map<String, dynamic> failed = {};
+    Map<String, dynamic> failed = {};
 
-  for (String key in retransmit.keys) {
-    RetransmitMessage msg =
-        RetransmitMessage.fromJson(jsonDecode(retransmit[key]));
+    for (String key in retransmit.keys) {
+      RetransmitMessage msg =
+          RetransmitMessage.fromJson(jsonDecode(retransmit[key]));
 
-    Result resp = await apiProvider.sendTextMessage(
-      msg.userId,
-      msg.bytes,
-      msg.pushData,
-    );
+      Result resp = await apiProvider.sendTextMessage(
+        msg.userId,
+        msg.bytes,
+        msg.pushData,
+      );
 
-    if (resp.isSuccess) {
-      if (msg.messageId != null) {
-        await twonlyDatabase.messagesDao.updateMessageByMessageId(
-          msg.messageId!,
-          MessagesCompanion(
-            acknowledgeByServer: Value(true),
-          ),
-        );
+      if (resp.isSuccess) {
+        if (msg.messageId != null) {
+          await twonlyDatabase.messagesDao.updateMessageByMessageId(
+            msg.messageId!,
+            MessagesCompanion(
+              acknowledgeByServer: Value(true),
+            ),
+          );
+        }
+      } else {
+        failed[key] = retransmit[key];
       }
-    } else {
-      failed[key] = retransmit[key];
     }
-  }
-  Box box = await getMediaStorage();
-  box.put("messages-to-retransmit", jsonEncode(failed));
+    Box box = await getMediaStorage();
+    box.put("messages-to-retransmit", jsonEncode(failed));
+  });
 }
 
 class RetransmitMessage {
@@ -102,54 +107,57 @@ Future<Map<String, dynamic>> getAllMessagesForRetransmitting() async {
 Future<Result> encryptAndSendMessage(
     int? messageId, int userId, MessageJson msg,
     {PushKind? pushKind}) async {
-  Uint8List? bytes = await SignalHelper.encryptMessage(msg, userId);
+  return await lockSendingMessages.protect<Result>(() async {
+    Uint8List? bytes = await SignalHelper.encryptMessage(msg, userId);
 
-  if (bytes == null) {
-    Logger("api.dart").shout("Error encryption message!");
-    return Result.error(ErrorCode.InternalError);
-  }
-
-  String stateId = (messageId ?? (60001 + Random().nextInt(100000))).toString();
-  Box box = await getMediaStorage();
-
-  List<int>? pushData;
-  if (pushKind != null) {
-    pushData = await getPushData(userId, pushKind);
-  }
-
-  {
-    var retransmit = await getAllMessagesForRetransmitting();
-
-    retransmit[stateId] = jsonEncode(RetransmitMessage(
-      messageId: messageId,
-      userId: userId,
-      bytes: bytes,
-      pushData: pushData,
-    ).toJson());
-
-    box.put("messages-to-retransmit", jsonEncode(retransmit));
-  }
-
-  Result resp = await apiProvider.sendTextMessage(userId, bytes, pushData);
-
-  if (resp.isSuccess) {
-    if (messageId != null) {
-      await twonlyDatabase.messagesDao.updateMessageByMessageId(
-        messageId,
-        MessagesCompanion(acknowledgeByServer: Value(true)),
-      );
-
-      {
-        var retransmit = await getAllMessagesForRetransmitting();
-        retransmit.remove(stateId);
-        box.put("messages-to-retransmit", jsonEncode(retransmit));
-      }
-
-      box.delete("retransmit-$messageId-textmessage");
+    if (bytes == null) {
+      Logger("api.dart").shout("Error encryption message!");
+      return Result.error(ErrorCode.InternalError);
     }
-  }
 
-  return resp;
+    String stateId =
+        (messageId ?? (60001 + Random().nextInt(100000))).toString();
+    Box box = await getMediaStorage();
+
+    List<int>? pushData;
+    if (pushKind != null) {
+      pushData = await getPushData(userId, pushKind);
+    }
+
+    {
+      var retransmit = await getAllMessagesForRetransmitting();
+
+      retransmit[stateId] = jsonEncode(RetransmitMessage(
+        messageId: messageId,
+        userId: userId,
+        bytes: bytes,
+        pushData: pushData,
+      ).toJson());
+
+      box.put("messages-to-retransmit", jsonEncode(retransmit));
+    }
+
+    Result resp = await apiProvider.sendTextMessage(userId, bytes, pushData);
+
+    if (resp.isSuccess) {
+      if (messageId != null) {
+        await twonlyDatabase.messagesDao.updateMessageByMessageId(
+          messageId,
+          MessagesCompanion(acknowledgeByServer: Value(true)),
+        );
+
+        {
+          var retransmit = await getAllMessagesForRetransmitting();
+          retransmit.remove(stateId);
+          box.put("messages-to-retransmit", jsonEncode(retransmit));
+        }
+
+        box.delete("retransmit-$messageId-textmessage");
+      }
+    }
+
+    return resp;
+  });
 }
 
 Future sendTextMessage(
