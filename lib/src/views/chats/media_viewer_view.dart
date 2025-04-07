@@ -64,7 +64,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     _subscription = messages.listen((messages) {
       for (Message msg in messages) {
-        if (!allMediaFiles.any((m) => m.messageId == msg.messageId)) {
+        // if (!allMediaFiles.any((m) => m.messageId == msg.messageId)) {
+        //   allMediaFiles.add(msg);
+        // }
+        // Find the index of the existing message with the same messageId
+        int index =
+            allMediaFiles.indexWhere((m) => m.messageId == msg.messageId);
+
+        if (index >= 1) {
+          // to not modify the first message
+          // If the message exists, replace it
+          allMediaFiles[index] = msg;
+        } else {
+          // If the message does not exist, add it
           allMediaFiles.add(msg);
         }
       }

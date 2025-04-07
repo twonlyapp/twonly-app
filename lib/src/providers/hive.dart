@@ -16,7 +16,7 @@ Future initMediaStorage() async {
       value: base64UrlEncode(key),
     );
   }
-  final dir = await getApplicationDocumentsDirectory();
+  final dir = await getApplicationSupportDirectory();
   Hive.init(dir.path);
 }
 

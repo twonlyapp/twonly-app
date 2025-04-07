@@ -235,12 +235,14 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       // should be cleared
       Map<int, List<Message>> tmpReactionsToMyMessages = {};
       Map<int, List<Message>> tmpTeactionsToOtherMessages = {};
+
+      List<int> openedMessageOtherIds = [];
       for (Message msg in msgs) {
         if (msg.kind == MessageKind.textMessage &&
             msg.messageOtherId != null &&
             msg.openedAt == null) {
           updated = true;
-          notifyContactAboutOpeningMessage(widget.userid, msg.messageOtherId!);
+          openedMessageOtherIds.add(msg.messageOtherId!);
         }
 
         if (msg.responseToMessageId != null) {
@@ -261,7 +263,11 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
           displayedMessages.add(msg);
         }
       }
+      if (openedMessageOtherIds.isNotEmpty) {
+        notifyContactAboutOpeningMessage(widget.userid, openedMessageOtherIds);
+      }
       twonlyDatabase.messagesDao.openedAllNonMediaMessages(widget.userid);
+      // should be fixed with that
       if (!updated) {
         // The stream should be get an update, so only update the UI when all are opened
         setState(() {

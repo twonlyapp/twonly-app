@@ -97,7 +97,7 @@ Future setupNotificationWithUsers({bool force = false}) async {
           key: List<int>.generate(32, (index) => random.nextInt(256)),
           createdAt: DateTime.now(),
         );
-        sendNewPushKey(contact.userId, pushKey);
+        await sendNewPushKey(contact.userId, pushKey);
         pushKeys[contact.userId]!.keys.add(pushKey);
         pushKeys[contact.userId]!.displayName = getContactDisplayName(contact);
         wasChanged = true;
@@ -109,7 +109,7 @@ Future setupNotificationWithUsers({bool force = false}) async {
         key: List<int>.generate(32, (index) => random.nextInt(256)),
         createdAt: DateTime.now(),
       );
-      sendNewPushKey(contact.userId, pushKey);
+      await sendNewPushKey(contact.userId, pushKey);
       final pushUser = PushUser(
         displayName: getContactDisplayName(contact),
         keys: [pushKey],
@@ -588,7 +588,7 @@ Future<String?> getAvatarIcon(Contact user) async {
   final Uint8List pngBytes = byteData!.buffer.asUint8List();
 
   // Get the directory to save the image
-  final directory = await getApplicationDocumentsDirectory();
+  final directory = await getApplicationCacheDirectory();
   final avatarsDirectory = Directory('${directory.path}/avatars');
 
   // Create the avatars directory if it does not exist

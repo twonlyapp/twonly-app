@@ -23,8 +23,16 @@ import 'package:twonly/src/services/notification_service.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
+bool isBlocked = false;
+
 Future handleServerMessage(server.ServerToClient msg) async {
   client.Response? response;
+  int maxCounter = 0; // only block for 2 seconds
+  while (isBlocked && maxCounter < 200) {
+    await Future.delayed(Duration(milliseconds: 10));
+    maxCounter += 1;
+  }
+  isBlocked = true;
 
   try {
     if (msg.v0.hasRequestNewPreKeys()) {
@@ -38,11 +46,13 @@ Future handleServerMessage(server.ServerToClient msg) async {
     } else {
       Logger("handleServerMessage")
           .shout("Got a new message from the server: $msg");
-      return;
+      response = client.Response()..error = ErrorCode.InternalError;
     }
   } catch (e) {
     response = client.Response()..error = ErrorCode.InternalError;
   }
+
+  isBlocked = false;
 
   var v0 = client.V0()
     ..seq = msg.v0.seq
@@ -68,17 +78,19 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 
   if (messageId == null) {
     Logger("server_messages")
-        .info("download data received, but unknown messageID");
+        .shout("download data received, but unknown messageID");
     // answers with ok, so the server will delete the message
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
   }
 
   if (data.fin && data.data.isEmpty) {
+    Logger("server_messages")
+        .shout("Got an image message, but was already deleted by the server!");
     // media file was deleted by the server. remove the media from device
     await twonlyDatabase.messagesDao.deleteMessageById(messageId);
-    box.delete(boxId);
-    box.delete("${data.downloadToken}_downloaded");
+    await box.delete(boxId);
+    await box.delete("${data.downloadToken}_downloaded");
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
   }
@@ -103,7 +115,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 
   if (!data.fin) {
     // download not finished, so waiting for more data...
-    box.put(boxId, downloadedBytes);
+    await box.put(boxId, downloadedBytes);
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
   }
@@ -138,7 +150,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     final rawBytes =
         await xchacha20.decrypt(secretBox, secretKey: secretKeyData);
 
-    box.put("${data.downloadToken}_downloaded", rawBytes);
+    await box.put("${data.downloadToken}_downloaded", rawBytes);
   } catch (e) {
     Logger("server_messages").info("Decryption error: $e");
     // deleting message as this is an invalid image
@@ -148,13 +160,14 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     return client.Response()..ok = ok;
   }
 
+  Logger("server_messages").info("Downloaded: $messageId");
   await twonlyDatabase.messagesDao.updateMessageByOtherUser(
     msg.contactId,
     messageId,
     MessagesCompanion(downloadState: Value(DownloadState.downloaded)),
   );
 
-  box.delete(boxId);
+  await box.delete(boxId);
 
   var ok = client.Response_Ok()..none = true;
   return client.Response()..ok = ok;
@@ -201,7 +214,6 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       final update = ContactsCompanion(accepted: Value(true));
       await twonlyDatabase.contactsDao.updateContact(fromUserId, update);
       notifyContactsAboutProfileChange();
-      setupNotificationWithUsers();
       break;
 
     case MessageKind.profileChange:
@@ -344,7 +356,6 @@ Future<client.Response> handleContactRequest(
   Result username = await apiProvider.getUsername(fromUserId);
   if (username.isSuccess) {
     Uint8List name = username.value.userdata.username;
-
     await twonlyDatabase.contactsDao.insertContact(
       ContactsCompanion(
         username: Value(utf8.decode(name)),
@@ -353,6 +364,7 @@ Future<client.Response> handleContactRequest(
       ),
     );
   }
+  await setupNotificationWithUsers();
   var ok = client.Response_Ok()..none = true;
   return client.Response()..ok = ok;
 }

@@ -182,17 +182,19 @@ Future sendTextMessage(
 }
 
 Future notifyContactAboutOpeningMessage(
-    int fromUserId, int messageOtherId) async {
-  encryptAndSendMessage(
-    null,
-    fromUserId,
-    MessageJson(
-      kind: MessageKind.opened,
-      messageId: messageOtherId,
-      content: MessageContent(),
-      timestamp: DateTime.now(),
-    ),
-  );
+    int fromUserId, List<int> messageOtherIds) async {
+  for (final messageOtherId in messageOtherIds) {
+    await encryptAndSendMessage(
+      null,
+      fromUserId,
+      MessageJson(
+        kind: MessageKind.opened,
+        messageId: messageOtherId,
+        content: MessageContent(),
+        timestamp: DateTime.now(),
+      ),
+    );
+  }
 }
 
 Future notifyContactsAboutProfileChange() async {

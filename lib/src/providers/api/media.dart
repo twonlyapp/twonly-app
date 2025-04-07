@@ -462,7 +462,8 @@ Future<Uint8List?> getDownloadedMedia(
   if (media == null) return null;
 
   // await userOpenedOtherMessage(otherUserId, messageOtherId);
-  notifyContactAboutOpeningMessage(message.contactId, message.messageOtherId!);
+  notifyContactAboutOpeningMessage(
+      message.contactId, [message.messageOtherId!]);
   twonlyDatabase.messagesDao.updateMessageByMessageId(
       message.messageId, MessagesCompanion(openedAt: Value(DateTime.now())));
 

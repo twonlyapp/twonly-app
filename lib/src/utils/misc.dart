@@ -20,7 +20,7 @@ extension ShortCutsExtension on BuildContext {
 }
 
 Future<void> writeLogToFile(LogRecord record) async {
-  final directory = await getApplicationDocumentsDirectory();
+  final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
 
   // Prepare the log message
@@ -32,7 +32,7 @@ Future<void> writeLogToFile(LogRecord record) async {
 }
 
 Future<bool> deleteLogFile() async {
-  final directory = await getApplicationDocumentsDirectory();
+  final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
 
   if (await logFile.exists()) {

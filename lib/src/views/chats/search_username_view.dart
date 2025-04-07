@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:twonly/src/components/alert_dialog.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -122,6 +123,16 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                   onSubmitted: (_) {
                     _addNewUser(context);
                   },
+                  onChanged: (value) {
+                    searchUserName.text = value.toLowerCase();
+                    searchUserName.selection = TextSelection.fromPosition(
+                      TextPosition(offset: searchUserName.text.length),
+                    );
+                  },
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(12),
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-z0-9A-Z]')),
+                  ],
                   controller: searchUserName,
                   decoration:
                       getInputDecoration(context.lang.searchUsernameInput),

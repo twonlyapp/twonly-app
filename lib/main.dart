@@ -41,7 +41,6 @@ void main() async {
 
   apiProvider = ApiProvider();
   twonlyDatabase = TwonlyDatabase();
-  setupNotificationWithUsers();
 
   runApp(
     MultiProvider(

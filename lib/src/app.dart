@@ -2,6 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/connection_state.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
+import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding/onboarding_view.dart';
 import 'package:twonly/src/views/home_view.dart';
@@ -44,6 +45,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       setState(() {
         _isConnected = isConnected;
       });
+      setupNotificationWithUsers();
     };
 
     // WidgetsBinding.instance.addPostFrameCallback((_) {

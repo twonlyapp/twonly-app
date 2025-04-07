@@ -76,7 +76,7 @@ class DiagnosticsView extends StatelessWidget {
   }
 
   Future<String> _loadLogFile() async {
-    final directory = await getApplicationDocumentsDirectory();
+    final directory = await getApplicationSupportDirectory();
     final logFile = File('${directory.path}/app.log');
 
     if (await logFile.exists()) {
