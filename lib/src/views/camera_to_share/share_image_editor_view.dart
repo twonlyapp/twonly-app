@@ -38,6 +38,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _isRealTwonly = false;
   int maxShowTime = 999999;
   String? sendNextMediaToUserName;
+  double tabDownPostion = 0;
 
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
@@ -274,6 +275,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         fit: StackFit.expand,
         children: [
           GestureDetector(
+            onTapDown: (details) {
+              if (details.globalPosition.dy > 60) {
+                tabDownPostion = details.globalPosition.dy - 60;
+              } else {
+                tabDownPostion = details.globalPosition.dy;
+              }
+            },
             onTap: () {
               if (layers.any((x) => x.isEditing)) {
                 return;
@@ -281,6 +289,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               undoLayers.clear();
               removedLayers.clear();
               layers.add(TextLayerData(
+                offset: Offset(0, tabDownPostion),
                 textLayersBefore: layers.whereType<TextLayerData>().length,
               ));
               setState(() {});
