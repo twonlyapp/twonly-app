@@ -20,12 +20,13 @@ class DrawLayer extends StatefulWidget {
 }
 
 class _DrawLayerState extends State<DrawLayer> {
-  Color pickerColor = Colors.white, currentColor = Colors.white;
+  Color currentColor = Colors.red;
 
   var screenshotController = ScreenshotController();
 
   List<CubicPath> undoList = [];
   bool skipNextEvent = false;
+  bool showMagnifyingGlass = false;
 
   @override
   void initState() {
@@ -45,7 +46,7 @@ class _DrawLayerState extends State<DrawLayer> {
     super.initState();
   }
 
-  double _sliderValue = 0.0;
+  double _sliderValue = 0.125;
 
   final colors = [
     Colors.white,
@@ -189,6 +190,16 @@ class _DrawLayerState extends State<DrawLayer> {
                       activeColor: Colors.transparent,
                       inactiveColor: Colors.transparent,
                       onChanged: _onSliderChanged,
+                      onChangeStart: (value) => {
+                        setState(() {
+                          showMagnifyingGlass = true;
+                        })
+                      },
+                      onChangeEnd: (value) => {
+                        setState(() {
+                          showMagnifyingGlass = false;
+                        })
+                      },
                       min: 0.0,
                       max: 1.0,
                       divisions: 100,
@@ -198,12 +209,42 @@ class _DrawLayerState extends State<DrawLayer> {
               ],
             ),
           ),
+        if (showMagnifyingGlass)
+          Positioned(
+            right: 80,
+            top: 50 + (185 * _sliderValue),
+            child: MagnifyingGlass(color: currentColor),
+          ),
         if (!widget.layerData.isEditing)
           Positioned.fill(
               child: Container(
             color: Colors.transparent,
           ))
       ],
+    );
+  }
+}
+
+class MagnifyingGlass extends StatelessWidget {
+  final Color color;
+
+  const MagnifyingGlass({super.key, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 50,
+      height: 50,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white,
+            width: 2,
+          ),
+        ),
+      ),
     );
   }
 }
