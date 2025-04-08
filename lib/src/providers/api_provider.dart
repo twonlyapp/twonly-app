@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
 import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
@@ -219,6 +221,7 @@ class ApiProvider {
     if (apiAuthToken != null) {
       final authenticate = Handshake_Authenticate()
         ..userId = Int64(userId)
+        ..appVersion = (await PackageInfo.fromPlatform()).version
         ..authToken = base64Decode(apiAuthToken);
 
       final handshake = Handshake()..authenticate = authenticate;
@@ -313,7 +316,8 @@ class ApiProvider {
       ..registrationId = Int64(signalIdentity.registrationId)
       ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
       ..signedPrekeySignature = signedPreKey.signature
-      ..signedPrekeyId = Int64(signedPreKey.id);
+      ..signedPrekeyId = Int64(signedPreKey.id)
+      ..isIos = Platform.isIOS;
 
     if (inviteCode != null && inviteCode != "") {
       register.inviteCode = inviteCode;
