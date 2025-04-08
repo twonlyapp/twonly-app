@@ -31,8 +31,6 @@ void main() async {
     }
   });
 
-  // await deleteLogFile();
-
   await setupPushNotification();
   await initMediaStorage();
 

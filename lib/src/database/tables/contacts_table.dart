@@ -14,6 +14,10 @@ class Contacts extends Table {
   BoolColumn get requested => boolean().withDefault(Constant(false))();
   BoolColumn get blocked => boolean().withDefault(Constant(false))();
   BoolColumn get verified => boolean().withDefault(Constant(false))();
+  BoolColumn get archived => boolean().withDefault(Constant(false))();
+
+  IntColumn get deleteMessagesAfterXMinutes =>
+      integer().withDefault(Constant(60 * 24))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 

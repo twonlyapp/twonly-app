@@ -87,6 +87,25 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("verified" IN (0, 1))'),
       defaultValue: Constant(false));
+  static const VerificationMeta _archivedMeta =
+      const VerificationMeta('archived');
+  @override
+  late final GeneratedColumn<bool> archived = GeneratedColumn<bool>(
+      'archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
+      defaultValue: Constant(false));
+  static const VerificationMeta _deleteMessagesAfterXMinutesMeta =
+      const VerificationMeta('deleteMessagesAfterXMinutes');
+  @override
+  late final GeneratedColumn<int> deleteMessagesAfterXMinutes =
+      GeneratedColumn<int>(
+          'delete_messages_after_x_minutes', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: Constant(60 * 24));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -149,6 +168,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         requested,
         blocked,
         verified,
+        archived,
+        deleteMessagesAfterXMinutes,
         createdAt,
         totalMediaCounter,
         lastMessageSend,
@@ -212,6 +233,17 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     if (data.containsKey('verified')) {
       context.handle(_verifiedMeta,
           verified.isAcceptableOrUnknown(data['verified']!, _verifiedMeta));
+    }
+    if (data.containsKey('archived')) {
+      context.handle(_archivedMeta,
+          archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
+    }
+    if (data.containsKey('delete_messages_after_x_minutes')) {
+      context.handle(
+          _deleteMessagesAfterXMinutesMeta,
+          deleteMessagesAfterXMinutes.isAcceptableOrUnknown(
+              data['delete_messages_after_x_minutes']!,
+              _deleteMessagesAfterXMinutesMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -282,6 +314,11 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.bool, data['${effectivePrefix}blocked'])!,
       verified: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}verified'])!,
+      archived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
+      deleteMessagesAfterXMinutes: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}delete_messages_after_x_minutes'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       totalMediaCounter: attachedDatabase.typeMapping.read(
@@ -319,6 +356,8 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool requested;
   final bool blocked;
   final bool verified;
+  final bool archived;
+  final int deleteMessagesAfterXMinutes;
   final DateTime createdAt;
   final int totalMediaCounter;
   final DateTime? lastMessageSend;
@@ -337,6 +376,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       required this.requested,
       required this.blocked,
       required this.verified,
+      required this.archived,
+      required this.deleteMessagesAfterXMinutes,
       required this.createdAt,
       required this.totalMediaCounter,
       this.lastMessageSend,
@@ -363,6 +404,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['requested'] = Variable<bool>(requested);
     map['blocked'] = Variable<bool>(blocked);
     map['verified'] = Variable<bool>(verified);
+    map['archived'] = Variable<bool>(archived);
+    map['delete_messages_after_x_minutes'] =
+        Variable<int>(deleteMessagesAfterXMinutes);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['total_media_counter'] = Variable<int>(totalMediaCounter);
     if (!nullToAbsent || lastMessageSend != null) {
@@ -398,6 +442,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       requested: Value(requested),
       blocked: Value(blocked),
       verified: Value(verified),
+      archived: Value(archived),
+      deleteMessagesAfterXMinutes: Value(deleteMessagesAfterXMinutes),
       createdAt: Value(createdAt),
       totalMediaCounter: Value(totalMediaCounter),
       lastMessageSend: lastMessageSend == null && nullToAbsent
@@ -428,6 +474,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       requested: serializer.fromJson<bool>(json['requested']),
       blocked: serializer.fromJson<bool>(json['blocked']),
       verified: serializer.fromJson<bool>(json['verified']),
+      archived: serializer.fromJson<bool>(json['archived']),
+      deleteMessagesAfterXMinutes:
+          serializer.fromJson<int>(json['deleteMessagesAfterXMinutes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       totalMediaCounter: serializer.fromJson<int>(json['totalMediaCounter']),
       lastMessageSend: serializer.fromJson<DateTime?>(json['lastMessageSend']),
@@ -454,6 +503,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       'requested': serializer.toJson<bool>(requested),
       'blocked': serializer.toJson<bool>(blocked),
       'verified': serializer.toJson<bool>(verified),
+      'archived': serializer.toJson<bool>(archived),
+      'deleteMessagesAfterXMinutes':
+          serializer.toJson<int>(deleteMessagesAfterXMinutes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'totalMediaCounter': serializer.toJson<int>(totalMediaCounter),
       'lastMessageSend': serializer.toJson<DateTime?>(lastMessageSend),
@@ -476,6 +528,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           bool? requested,
           bool? blocked,
           bool? verified,
+          bool? archived,
+          int? deleteMessagesAfterXMinutes,
           DateTime? createdAt,
           int? totalMediaCounter,
           Value<DateTime?> lastMessageSend = const Value.absent(),
@@ -494,6 +548,9 @@ class Contact extends DataClass implements Insertable<Contact> {
         requested: requested ?? this.requested,
         blocked: blocked ?? this.blocked,
         verified: verified ?? this.verified,
+        archived: archived ?? this.archived,
+        deleteMessagesAfterXMinutes:
+            deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
         createdAt: createdAt ?? this.createdAt,
         totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
         lastMessageSend: lastMessageSend.present
@@ -523,6 +580,10 @@ class Contact extends DataClass implements Insertable<Contact> {
       requested: data.requested.present ? data.requested.value : this.requested,
       blocked: data.blocked.present ? data.blocked.value : this.blocked,
       verified: data.verified.present ? data.verified.value : this.verified,
+      archived: data.archived.present ? data.archived.value : this.archived,
+      deleteMessagesAfterXMinutes: data.deleteMessagesAfterXMinutes.present
+          ? data.deleteMessagesAfterXMinutes.value
+          : this.deleteMessagesAfterXMinutes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       totalMediaCounter: data.totalMediaCounter.present
           ? data.totalMediaCounter.value
@@ -558,6 +619,8 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('requested: $requested, ')
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
+          ..write('archived: $archived, ')
+          ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
           ..write('createdAt: $createdAt, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('lastMessageSend: $lastMessageSend, ')
@@ -581,6 +644,8 @@ class Contact extends DataClass implements Insertable<Contact> {
       requested,
       blocked,
       verified,
+      archived,
+      deleteMessagesAfterXMinutes,
       createdAt,
       totalMediaCounter,
       lastMessageSend,
@@ -602,6 +667,9 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.requested == this.requested &&
           other.blocked == this.blocked &&
           other.verified == this.verified &&
+          other.archived == this.archived &&
+          other.deleteMessagesAfterXMinutes ==
+              this.deleteMessagesAfterXMinutes &&
           other.createdAt == this.createdAt &&
           other.totalMediaCounter == this.totalMediaCounter &&
           other.lastMessageSend == this.lastMessageSend &&
@@ -622,6 +690,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> requested;
   final Value<bool> blocked;
   final Value<bool> verified;
+  final Value<bool> archived;
+  final Value<int> deleteMessagesAfterXMinutes;
   final Value<DateTime> createdAt;
   final Value<int> totalMediaCounter;
   final Value<DateTime?> lastMessageSend;
@@ -640,6 +710,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.requested = const Value.absent(),
     this.blocked = const Value.absent(),
     this.verified = const Value.absent(),
+    this.archived = const Value.absent(),
+    this.deleteMessagesAfterXMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
     this.lastMessageSend = const Value.absent(),
@@ -659,6 +731,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.requested = const Value.absent(),
     this.blocked = const Value.absent(),
     this.verified = const Value.absent(),
+    this.archived = const Value.absent(),
+    this.deleteMessagesAfterXMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
     this.lastMessageSend = const Value.absent(),
@@ -678,6 +752,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? requested,
     Expression<bool>? blocked,
     Expression<bool>? verified,
+    Expression<bool>? archived,
+    Expression<int>? deleteMessagesAfterXMinutes,
     Expression<DateTime>? createdAt,
     Expression<int>? totalMediaCounter,
     Expression<DateTime>? lastMessageSend,
@@ -697,6 +773,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (requested != null) 'requested': requested,
       if (blocked != null) 'blocked': blocked,
       if (verified != null) 'verified': verified,
+      if (archived != null) 'archived': archived,
+      if (deleteMessagesAfterXMinutes != null)
+        'delete_messages_after_x_minutes': deleteMessagesAfterXMinutes,
       if (createdAt != null) 'created_at': createdAt,
       if (totalMediaCounter != null) 'total_media_counter': totalMediaCounter,
       if (lastMessageSend != null) 'last_message_send': lastMessageSend,
@@ -721,6 +800,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<bool>? requested,
       Value<bool>? blocked,
       Value<bool>? verified,
+      Value<bool>? archived,
+      Value<int>? deleteMessagesAfterXMinutes,
       Value<DateTime>? createdAt,
       Value<int>? totalMediaCounter,
       Value<DateTime?>? lastMessageSend,
@@ -739,6 +820,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       requested: requested ?? this.requested,
       blocked: blocked ?? this.blocked,
       verified: verified ?? this.verified,
+      archived: archived ?? this.archived,
+      deleteMessagesAfterXMinutes:
+          deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
       createdAt: createdAt ?? this.createdAt,
       totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
       lastMessageSend: lastMessageSend ?? this.lastMessageSend,
@@ -783,6 +867,13 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (verified.present) {
       map['verified'] = Variable<bool>(verified.value);
     }
+    if (archived.present) {
+      map['archived'] = Variable<bool>(archived.value);
+    }
+    if (deleteMessagesAfterXMinutes.present) {
+      map['delete_messages_after_x_minutes'] =
+          Variable<int>(deleteMessagesAfterXMinutes.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -823,6 +914,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('requested: $requested, ')
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
+          ..write('archived: $archived, ')
+          ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
           ..write('createdAt: $createdAt, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('lastMessageSend: $lastMessageSend, ')
@@ -2575,6 +2668,8 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   Value<bool> requested,
   Value<bool> blocked,
   Value<bool> verified,
+  Value<bool> archived,
+  Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
   Value<int> totalMediaCounter,
   Value<DateTime?> lastMessageSend,
@@ -2594,6 +2689,8 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<bool> requested,
   Value<bool> blocked,
   Value<bool> verified,
+  Value<bool> archived,
+  Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
   Value<int> totalMediaCounter,
   Value<DateTime?> lastMessageSend,
@@ -2662,6 +2759,13 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get verified => $composableBuilder(
       column: $table.verified, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get archived => $composableBuilder(
+      column: $table.archived, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get deleteMessagesAfterXMinutes => $composableBuilder(
+      column: $table.deleteMessagesAfterXMinutes,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -2751,6 +2855,13 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<bool> get verified => $composableBuilder(
       column: $table.verified, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get archived => $composableBuilder(
+      column: $table.archived, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get deleteMessagesAfterXMinutes => $composableBuilder(
+      column: $table.deleteMessagesAfterXMinutes,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -2817,6 +2928,12 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get verified =>
       $composableBuilder(column: $table.verified, builder: (column) => column);
+
+  GeneratedColumn<bool> get archived =>
+      $composableBuilder(column: $table.archived, builder: (column) => column);
+
+  GeneratedColumn<int> get deleteMessagesAfterXMinutes => $composableBuilder(
+      column: $table.deleteMessagesAfterXMinutes, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2894,6 +3011,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> requested = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
+            Value<bool> archived = const Value.absent(),
+            Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
             Value<DateTime?> lastMessageSend = const Value.absent(),
@@ -2913,6 +3032,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             requested: requested,
             blocked: blocked,
             verified: verified,
+            archived: archived,
+            deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
             totalMediaCounter: totalMediaCounter,
             lastMessageSend: lastMessageSend,
@@ -2932,6 +3053,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> requested = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
+            Value<bool> archived = const Value.absent(),
+            Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
             Value<DateTime?> lastMessageSend = const Value.absent(),
@@ -2951,6 +3074,8 @@ class $$ContactsTableTableManager extends RootTableManager<
             requested: requested,
             blocked: blocked,
             verified: verified,
+            archived: archived,
+            deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
             totalMediaCounter: totalMediaCounter,
             lastMessageSend: lastMessageSend,

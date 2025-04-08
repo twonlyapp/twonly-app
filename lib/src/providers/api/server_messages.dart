@@ -327,6 +327,13 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             }
           }
         }
+        // dearchive contact when receiving a new message
+        await twonlyDatabase.contactsDao.updateContact(
+          fromUserId,
+          ContactsCompanion(
+            archived: Value(false),
+          ),
+        );
       }
   }
   var ok = client.Response_Ok()..none = true;

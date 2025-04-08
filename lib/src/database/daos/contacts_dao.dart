@@ -9,7 +9,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     with _$ContactsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
-  ContactsDao(TwonlyDatabase db) : super(db);
+  ContactsDao(super.db);
 
   Future<int> insertContact(ContactsCompanion contact) async {
     try {
@@ -117,9 +117,21 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
         .watchSingle();
   }
 
-  Stream<List<Contact>> watchContactsForChatList() {
+  Stream<List<Contact>> watchContactsForShareView() {
     return (select(contacts)
           ..where((t) => t.accepted.equals(true) & t.blocked.equals(false))
+          ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
+        .watch();
+  }
+
+  Stream<List<Contact>> watchContactsForChatList() {
+    return (select(contacts)
+          ..where(
+            (t) =>
+                t.accepted.equals(true) &
+                t.blocked.equals(false) &
+                t.archived.equals(false),
+          )
           ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
         .watch();
   }

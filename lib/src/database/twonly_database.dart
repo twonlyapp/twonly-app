@@ -35,7 +35,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -49,9 +49,16 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
-      onUpgrade: stepByStep(from1To2: (m, schema) async {
-        m.addColumn(schema.messages, schema.messages.errorWhileSending);
-      }),
+      onUpgrade: stepByStep(
+        from1To2: (m, schema) async {
+          m.addColumn(schema.messages, schema.messages.errorWhileSending);
+        },
+        from2To3: (m, schema) async {
+          m.addColumn(schema.contacts, schema.contacts.archived);
+          m.addColumn(
+              schema.contacts, schema.contacts.deleteMessagesAfterXMinutes);
+        },
+      ),
     );
   }
 

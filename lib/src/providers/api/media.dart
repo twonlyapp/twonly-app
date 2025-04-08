@@ -324,6 +324,12 @@ Future sendImage(
           ),
         ),
       ),
+    ); // dearchive contact when sending a new message
+    twonlyDatabase.contactsDao.updateContact(
+      userId,
+      ContactsCompanion(
+        archived: Value(false),
+      ),
     );
     if (messageId != null) {
       metadata.messageIds[userId] = messageId;

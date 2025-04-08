@@ -52,17 +52,15 @@ class _ShareImageView extends State<ShareImageView> {
     }
 
     Stream<List<Contact>> allContacts =
-        twonlyDatabase.contactsDao.watchContactsForChatList();
+        twonlyDatabase.contactsDao.watchContactsForShareView();
 
     contactSub = allContacts.listen((allContacts) {
       setState(() {
         contacts = allContacts;
       });
-      updateUsers(allContacts);
+      updateUsers(allContacts.where((x) => !x.archived).toList());
     });
 
-    //_users = await DbContacts.getActiveUsers();
-    // _updateUsers(_users);
     initAsync();
   }
 
@@ -102,7 +100,9 @@ class _ShareImageView extends State<ShareImageView> {
     List<Contact> otherUsers = [];
 
     for (var contact in users) {
-      if ((getFlameCounterFromContact(contact)) > 0 && bestFriends.length < 6) {
+      if (!contact.archived &&
+          (getFlameCounterFromContact(contact)) > 0 &&
+          bestFriends.length < 6) {
         bestFriends.add(contact);
       } else {
         otherUsers.add(contact);
@@ -117,7 +117,7 @@ class _ShareImageView extends State<ShareImageView> {
 
   Future _filterUsers(String query) async {
     if (query.isEmpty) {
-      updateUsers(contacts);
+      updateUsers(contacts.where((x) => !x.archived).toList());
       return;
     }
     List<Contact> usersFiltered = contacts
@@ -172,7 +172,9 @@ class _ShareImageView extends State<ShareImageView> {
                 child: TextField(
                   onChanged: _filterUsers,
                   decoration: getInputDecoration(
-                      context, context.lang.searchUsernameInput),
+                    context,
+                    context.lang.shareImageSearchAllContacts,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),

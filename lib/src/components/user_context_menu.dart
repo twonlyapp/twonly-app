@@ -1,6 +1,8 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
@@ -25,6 +27,17 @@ class _UserContextMenuState extends State<UserContextMenu> {
     return PieMenu(
       onPressed: () => (),
       actions: [
+        PieAction(
+          tooltip: Text(context.lang.contextMenuArchiveUser),
+          onSelect: () async {
+            final update = ContactsCompanion(archived: Value(true));
+            if (context.mounted) {
+              await twonlyDatabase.contactsDao
+                  .updateContact(widget.contact.userId, update);
+            }
+          },
+          child: FaIcon(FontAwesomeIcons.boxArchive),
+        ),
         PieAction(
           tooltip: Text(context.lang.contextMenuVerifyUser),
           onSelect: () {
