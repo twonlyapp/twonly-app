@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -201,4 +202,15 @@ PieTheme getPieCanvasTheme(BuildContext context) {
       fontWeight: FontWeight.w600,
     ),
   );
+}
+
+void setupLogger() {
+  Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
+  Logger.root.onRecord.listen((record) async {
+    await writeLogToFile(record);
+    if (kDebugMode) {
+      print(
+          '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
+    }
+  });
 }

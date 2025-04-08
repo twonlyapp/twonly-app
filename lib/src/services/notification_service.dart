@@ -309,13 +309,13 @@ Future handlePushData(String pushDataJson) async {
 
     if (pushKind != null) {
       if (pushKind == PushKind.testNotification) {
-        customLocalPushNotification(
+        await customLocalPushNotification(
             "Test notification", "This is a test notification.");
       } else if (fromUserId != null) {
-        showLocalPushNotification(fromUserId, pushKind);
+        await showLocalPushNotification(fromUserId, pushKind);
       } else {
-        showLocalPushNotificationWithoutUserId(pushKind);
-        setupNotificationWithUsers();
+        await showLocalPushNotificationWithoutUserId(pushKind);
+        await setupNotificationWithUsers();
       }
     }
   } catch (e) {

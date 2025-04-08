@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'dart:io' show Platform;
@@ -70,36 +71,34 @@ Future initFCMService() async {
   }
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    if (!Platform.isAndroid) {
-      Logger("firebase-notification").shout("Got message in Dart while on iOS");
-    }
-
     Logger("firebase-notification")
         .finer('Got a message while in the foreground!');
-
-    print('Message data: ${message.data}');
-
-    if (message.notification != null) {
-      print('Message also contained a notification: ${message.notification}');
-      String title = message.notification!.title ?? "";
-      String body = message.notification!.body ?? "";
-      customLocalPushNotification(title, body);
-    } else if (message.data["push_data"] != null) {
-      handlePushData(message.data["push_data"]);
-    }
+    handleRemoteMessage(message);
   });
 }
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  setupLogger();
   Logger("firebase-background")
       .shout('Handling a background message: ${message.messageId}');
+  twonlyDatabase = TwonlyDatabase();
+  await handleRemoteMessage(message);
 
+  // make sure every thing run...
+  await Future.delayed(Duration(milliseconds: 2000));
+}
+
+Future handleRemoteMessage(RemoteMessage message) async {
   if (!Platform.isAndroid) {
     Logger("firebase-notification").shout("Got message in Dart while on iOS");
   }
 
-  Logger("firebase-notification")
-      .finer('Got a message while in the background!');
-  print('Message data: ${message.data}');
+  if (message.notification != null) {
+    String title = message.notification!.title ?? "";
+    String body = message.notification!.body ?? "";
+    await customLocalPushNotification(title, body);
+  } else if (message.data["push_data"] != null) {
+    await handlePushData(message.data["push_data"]);
+  }
 }
