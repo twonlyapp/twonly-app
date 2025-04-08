@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/app.dart';
@@ -25,6 +26,8 @@ import 'package:web_socket_channel/io.dart';
 // ignore: implementation_imports
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+
+final lockConnecting = Mutex();
 
 /// The ApiProvider is responsible for communicating with the server.
 /// It handles errors and does automatically tries to reconnect on
@@ -95,29 +98,31 @@ class ApiProvider {
   }
 
   Future<bool> connect() async {
-    if (_channel != null) {
-      return true;
-    }
-    // ensure that the connect function is not called again by the timer.
-    if (reconnectionTimer != null) {
-      reconnectionTimer!.cancel();
-    }
+    return lockConnecting.protect<bool>(() async {
+      if (_channel != null) {
+        return true;
+      }
+      // ensure that the connect function is not called again by the timer.
+      if (reconnectionTimer != null) {
+        reconnectionTimer!.cancel();
+      }
 
-    isAuthenticated = false;
+      isAuthenticated = false;
 
-    log.fine("Trying to connect to the backend $apiUrl!");
-    if (await _connectTo(apiUrl)) {
-      await onConnected();
-      return true;
-    }
-    if (backupApiUrl != null) {
-      log.fine("Trying to connect to the backup backend $backupApiUrl!");
-      if (await _connectTo(backupApiUrl!)) {
+      log.fine("Trying to connect to the backend $apiUrl!");
+      if (await _connectTo(apiUrl)) {
         await onConnected();
         return true;
       }
-    }
-    return false;
+      if (backupApiUrl != null) {
+        log.fine("Trying to connect to the backup backend $backupApiUrl!");
+        if (await _connectTo(backupApiUrl!)) {
+          await onConnected();
+          return true;
+        }
+      }
+      return false;
+    });
   }
 
   bool get isConnected => _channel != null && _channel!.closeCode != null;
