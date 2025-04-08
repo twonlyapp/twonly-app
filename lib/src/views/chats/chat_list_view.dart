@@ -21,10 +21,8 @@ import 'package:twonly/src/views/settings/settings_main_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
 import 'package:flutter/material.dart';
 
-/// Displays a list of SampleItems.
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
-
   @override
   State<ChatListView> createState() => _ChatListViewState();
 }
@@ -90,7 +88,7 @@ class _ChatListViewState extends State<ChatListView> {
             return Container();
           }
 
-          final contacts = snapshot.data!;
+          var contacts = snapshot.data!;
           if (contacts.isEmpty) {
             return Center(
               child: Padding(
@@ -123,17 +121,14 @@ class _ChatListViewState extends State<ChatListView> {
               await apiProvider.connect();
               await Future.delayed(Duration(seconds: 1));
             },
-            child: ListView.builder(
+            child: ListView(
               restorationId: 'chat_list_view',
-              itemCount: contacts.length,
-              itemBuilder: (BuildContext context, int index) {
-                final user = contacts[index];
+              children: contacts.map((user) {
                 return UserListItem(
-                  key: ValueKey(user.userId),
                   user: user,
                   maxTotalMediaCounter: maxTotalMediaCounter,
                 );
-              },
+              }).toList(),
             ),
           );
         },
@@ -146,8 +141,11 @@ class UserListItem extends StatefulWidget {
   final Contact user;
   final int maxTotalMediaCounter;
 
-  const UserListItem(
-      {super.key, required this.user, required this.maxTotalMediaCounter});
+  const UserListItem({
+    super.key,
+    required this.user,
+    required this.maxTotalMediaCounter,
+  });
 
   @override
   State<UserListItem> createState() => _UserListItem();
