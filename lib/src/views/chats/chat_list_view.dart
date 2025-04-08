@@ -111,14 +111,17 @@ class _ChatListViewState extends State<ChatListView> {
               await apiProvider.connect();
               await Future.delayed(Duration(seconds: 1));
             },
-            child: ListView(
+            child: ListView.builder(
               restorationId: 'chat_list_view',
-              children: contacts.map((user) {
+              itemCount: contacts.length,
+              itemBuilder: (BuildContext context, int index) {
+                final user = contacts[index];
                 return UserListItem(
+                  key: ValueKey(user.userId),
                   user: user,
                   maxTotalMediaCounter: maxTotalMediaCounter,
                 );
-              }).toList(),
+              },
             ),
           );
         },
