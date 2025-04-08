@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -254,7 +255,11 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         twonlyDatabase.messagesDao.watchAllMessagesFrom(widget.userid);
     messageSub = msgStream.listen((msgs) {
       if (!context.mounted) return;
-      flutterLocalNotificationsPlugin.cancel(widget.userid);
+      if (Platform.isAndroid) {
+        flutterLocalNotificationsPlugin.cancel(widget.userid);
+      } else {
+        flutterLocalNotificationsPlugin.cancelAll();
+      }
       var updated = false;
       List<Message> displayedMessages = [];
       // should be cleared

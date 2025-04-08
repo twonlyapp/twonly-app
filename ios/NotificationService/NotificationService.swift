@@ -30,6 +30,7 @@ class NotificationService: UNNotificationServiceExtension {
             if data != nil {
                 bestAttemptContent.title = data!.title;
                 bestAttemptContent.body = data!.body;
+                bestAttemptContent.threadIdentifier = String(format: "%d", data!.notificationId)
             } else {
                 bestAttemptContent.title = "\(bestAttemptContent.title) [failed to decrypt]"
             }
@@ -65,7 +66,7 @@ import CryptoKit
 import Foundation
 import Security
 
-func getPushNotificationData(pushDataJson: String) -> (title: String, body: String)? {
+func getPushNotificationData(pushDataJson: String) -> (title: String, body: String, notificationId: Int)? {
     // Decode the pushDataJson
     guard let pushData = decodePushData(pushDataJson) else {
         NSLog("Failed to decode push data")
@@ -74,6 +75,7 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
 
     var pushKind: PushKind?
     var displayName: String?
+    var fromUserId: Int?
 
     // Check the keyId
     if pushData.keyId == 0 {
@@ -88,6 +90,7 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
                         pushKind = tryDecryptMessage(key: key.key, pushData: pushData)
                         if pushKind != nil {
                             displayName = userKeys.displayName
+                            fromUserId = userId
                             break
                         }
                     }
@@ -106,11 +109,11 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
         let bestAttemptContent = UNMutableNotificationContent()
         
         if pushKind == .testNotification {
-            return ("Test Notification", "This is a test notification.")
-        } else if displayName != nil {
-            return (displayName!, getPushNotificationText(pushKind: pushKind))
+            return ("Test Notification", "This is a test notification.", 0)
+        } else if displayName != nil && fromUserId != nil {
+            return (displayName!, getPushNotificationText(pushKind: pushKind), fromUserId!)
         } else {
-            return ("", getPushNotificationTextWithoutUserId(pushKind: pushKind))
+            return ("", getPushNotificationTextWithoutUserId(pushKind: pushKind), 1)
         }
         
     } else {
