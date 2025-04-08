@@ -244,6 +244,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<void> loadImage(Future<Uint8List?> imageFile) async {
     Uint8List? imageBytes = await imageFile;
     await currentImage.load(imageBytes);
+    if (!context.mounted) return;
 
     layers.clear();
 
