@@ -476,7 +476,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) {
-                            return ChatItemDetailsView(widget.contact.userId);
+                            return ChatItemDetailsView(widget.contact);
                           }),
                         );
                       },

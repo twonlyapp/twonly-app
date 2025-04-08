@@ -108,7 +108,9 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   Stream<List<Contact>> watchNotAcceptedContacts() {
-    return (select(contacts)..where((t) => t.accepted.equals(false))).watch();
+    return (select(contacts)
+          ..where((t) => t.accepted.equals(false) & t.archived.equals(false)))
+        .watch();
     // return (select(contacts)).watch();
   }
 

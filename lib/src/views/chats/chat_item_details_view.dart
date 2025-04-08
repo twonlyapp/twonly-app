@@ -209,9 +209,9 @@ class ChatListEntry extends StatelessWidget {
 
 /// Displays detailed information about a SampleItem.
 class ChatItemDetailsView extends StatefulWidget {
-  const ChatItemDetailsView(this.userid, {super.key});
+  const ChatItemDetailsView(this.contact, {super.key});
 
-  final int userid;
+  final Contact contact;
 
   @override
   State<ChatItemDetailsView> createState() => _ChatItemDetailsViewState();
@@ -220,7 +220,7 @@ class ChatItemDetailsView extends StatefulWidget {
 class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
-  Contact? user;
+  late Contact user;
   String currentInputText = "";
   late StreamSubscription<Contact> userSub;
   late StreamSubscription<List<Message>> messageSub;
@@ -231,6 +231,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   @override
   void initState() {
     super.initState();
+    user = widget.contact;
     initStreams();
   }
 
@@ -244,7 +245,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   Future initStreams() async {
     await twonlyDatabase.messagesDao.removeOldMessages();
     Stream<Contact> contact =
-        twonlyDatabase.contactsDao.watchContact(widget.userid);
+        twonlyDatabase.contactsDao.watchContact(widget.contact.userId);
     userSub = contact.listen((contact) {
       setState(() {
         user = contact;
@@ -252,15 +253,14 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     });
 
     Stream<List<Message>> msgStream =
-        twonlyDatabase.messagesDao.watchAllMessagesFrom(widget.userid);
+        twonlyDatabase.messagesDao.watchAllMessagesFrom(widget.contact.userId);
     messageSub = msgStream.listen((msgs) {
       if (!context.mounted) return;
       if (Platform.isAndroid) {
-        flutterLocalNotificationsPlugin.cancel(widget.userid);
+        flutterLocalNotificationsPlugin.cancel(widget.contact.userId);
       } else {
         flutterLocalNotificationsPlugin.cancelAll();
       }
-      var updated = false;
       List<Message> displayedMessages = [];
       // should be cleared
       Map<int, List<Message>> tmpReactionsToMyMessages = {};
@@ -271,7 +271,6 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         if (msg.kind == MessageKind.textMessage &&
             msg.messageOtherId != null &&
             msg.openedAt == null) {
-          updated = true;
           openedMessageOtherIds.add(msg.messageOtherId!);
         }
 
@@ -294,25 +293,27 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         }
       }
       if (openedMessageOtherIds.isNotEmpty) {
-        notifyContactAboutOpeningMessage(widget.userid, openedMessageOtherIds);
+        notifyContactAboutOpeningMessage(
+            widget.contact.userId, openedMessageOtherIds);
       }
-      twonlyDatabase.messagesDao.openedAllNonMediaMessages(widget.userid);
+      twonlyDatabase.messagesDao
+          .openedAllNonMediaMessages(widget.contact.userId);
       // should be fixed with that
-      if (!updated) {
-        // The stream should be get an update, so only update the UI when all are opened
-        setState(() {
-          reactionsToMyMessages = tmpReactionsToMyMessages;
-          reactionsToOtherMessages = tmpTeactionsToOtherMessages;
-          messages = displayedMessages;
-        });
-      }
+      // if (!updated) {
+      //   // The stream should be get an update, so only update the UI when all are opened
+      setState(() {
+        reactionsToMyMessages = tmpReactionsToMyMessages;
+        reactionsToOtherMessages = tmpTeactionsToOtherMessages;
+        messages = displayedMessages;
+      });
+      // }
     });
   }
 
   Future _sendMessage() async {
-    if (newMessageController.text == "" || user == null) return;
+    if (newMessageController.text == "") return;
     await sendTextMessage(
-      user!.userId,
+      user.userId,
       TextMessageContent(
         text: newMessageController.text,
       ),
@@ -330,71 +331,67 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
         title: GestureDetector(
           onTap: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return ContactView(widget.userid);
+              return ContactView(widget.contact.userId);
             }));
           },
-          child: (user == null)
-              ? Container()
-              : Row(
-                  children: [
-                    ContactAvatar(
-                      contact: user!,
-                      fontSize: 19,
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Container(
-                        color: Colors.transparent,
-                        child: Row(
-                          children: [
-                            Text(getContactDisplayName(user!)),
-                            SizedBox(width: 10),
-                            VerifiedShield(user!),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+          child: Row(
+            children: [
+              ContactAvatar(
+                contact: user,
+                fontSize: 19,
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Container(
+                  color: Colors.transparent,
+                  child: Row(
+                    children: [
+                      Text(getContactDisplayName(user)),
+                      SizedBox(width: 10),
+                      VerifiedShield(user),
+                    ],
+                  ),
                 ),
+              ),
+            ],
+          ),
         ),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            if (user != null)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: messages.length,
-                  reverse: true,
-                  itemBuilder: (context, i) {
-                    bool lastMessageFromSameUser = false;
-                    if (i > 0) {
-                      lastMessageFromSameUser =
-                          (messages[i - 1].messageOtherId == null &&
-                                  messages[i].messageOtherId == null) ||
-                              (messages[i - 1].messageOtherId != null &&
-                                  messages[i].messageOtherId != null);
-                    }
-                    Message msg = messages[i];
-                    List<Message> reactions = [];
-                    if (reactionsToMyMessages.containsKey(msg.messageId)) {
-                      reactions = reactionsToMyMessages[msg.messageId]!;
-                    }
-                    if (msg.messageOtherId != null &&
-                        reactionsToOtherMessages
-                            .containsKey(msg.messageOtherId!)) {
-                      reactions =
-                          reactionsToOtherMessages[msg.messageOtherId!]!;
-                    }
-                    return ChatListEntry(
-                      msg,
-                      user!,
-                      lastMessageFromSameUser,
-                      reactions,
-                    );
-                  },
-                ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: messages.length,
+                reverse: true,
+                itemBuilder: (context, i) {
+                  bool lastMessageFromSameUser = false;
+                  if (i > 0) {
+                    lastMessageFromSameUser =
+                        (messages[i - 1].messageOtherId == null &&
+                                messages[i].messageOtherId == null) ||
+                            (messages[i - 1].messageOtherId != null &&
+                                messages[i].messageOtherId != null);
+                  }
+                  Message msg = messages[i];
+                  List<Message> reactions = [];
+                  if (reactionsToMyMessages.containsKey(msg.messageId)) {
+                    reactions = reactionsToMyMessages[msg.messageId]!;
+                  }
+                  if (msg.messageOtherId != null &&
+                      reactionsToOtherMessages
+                          .containsKey(msg.messageOtherId!)) {
+                    reactions = reactionsToOtherMessages[msg.messageOtherId!]!;
+                  }
+                  return ChatListEntry(
+                    msg,
+                    user,
+                    lastMessageFromSameUser,
+                    reactions,
+                  );
+                },
               ),
+            ),
             Padding(
               padding: const EdgeInsets.only(
                   bottom: 30, left: 20, right: 20, top: 10),

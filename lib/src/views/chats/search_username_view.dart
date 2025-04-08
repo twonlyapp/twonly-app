@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/components/alert_dialog.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -28,6 +29,30 @@ class _SearchUsernameView extends State<SearchUsernameView> {
   final TextEditingController searchUserName = TextEditingController();
   bool _isLoading = false;
   bool hasRequestedUsers = false;
+
+  List<Contact> contacts = [];
+  late StreamSubscription<List<Contact>> contactsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    initStreams();
+  }
+
+  @override
+  void dispose() {
+    contactsStream.cancel();
+    super.dispose();
+  }
+
+  void initStreams() {
+    contactsStream =
+        twonlyDatabase.contactsDao.watchNotAcceptedContacts().listen((update) {
+      setState(() {
+        contacts = update;
+      });
+    });
+  }
 
   Future _addNewUser(BuildContext context) async {
     final user = await getUser();
@@ -105,9 +130,6 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       );
     }
 
-    Stream<List<Contact>> contacts =
-        twonlyDatabase.contactsDao.watchNotAcceptedContacts();
-
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.searchUsernameTitle),
@@ -148,22 +170,12 @@ class _SearchUsernameView extends State<SearchUsernameView> {
                 label: Text(context.lang.searchUsernameQrCodeBtn),
               ),
               SizedBox(height: 30),
-              if (hasRequestedUsers)
+              if (contacts.isNotEmpty)
                 HeadLineComponent(
                   context.lang.searchUsernameNewFollowerTitle,
                 ),
-              StreamBuilder(
-                stream: contacts,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData ||
-                      snapshot.data == null ||
-                      snapshot.data!.isEmpty) {
-                    hasRequestedUsers = false;
-                    return Container();
-                  }
-                  hasRequestedUsers = true;
-                  return Expanded(child: ContactsListView(snapshot.data!));
-                },
+              Expanded(
+                child: ContactsListView(contacts),
               )
             ],
           ),
@@ -194,6 +206,78 @@ class ContactsListView extends StatefulWidget {
 }
 
 class _ContactsListViewState extends State<ContactsListView> {
+  List<Widget> sendRequestActions(Contact contact) {
+    return [
+      Tooltip(
+        message: context.lang.searchUserNameArchiveUserTooltip,
+        child: IconButton(
+          icon: FaIcon(FontAwesomeIcons.boxArchive, size: 15),
+          onPressed: () async {
+            final update = ContactsCompanion(archived: Value(true));
+            await twonlyDatabase.contactsDao
+                .updateContact(contact.userId, update);
+          },
+        ),
+      ),
+      Text(context.lang.searchUserNamePending),
+    ];
+  }
+
+  List<Widget> requestedActions(Contact contact) {
+    return [
+      Tooltip(
+        message: context.lang.searchUserNameBlockUserTooltip,
+        child: IconButton(
+          icon: Icon(Icons.person_off_rounded,
+              color: const Color.fromARGB(164, 244, 67, 54)),
+          onPressed: () async {
+            final update = ContactsCompanion(blocked: Value(true));
+            await twonlyDatabase.contactsDao
+                .updateContact(contact.userId, update);
+          },
+        ),
+      ),
+      Tooltip(
+        message: context.lang.searchUserNameRejectUserTooltip,
+        child: IconButton(
+          icon: Icon(Icons.close, color: Colors.red),
+          onPressed: () async {
+            await twonlyDatabase.contactsDao
+                .deleteContactByUserId(contact.userId);
+            encryptAndSendMessage(
+              null,
+              contact.userId,
+              MessageJson(
+                kind: MessageKind.rejectRequest,
+                timestamp: DateTime.now(),
+                content: MessageContent(),
+              ),
+            );
+          },
+        ),
+      ),
+      IconButton(
+        icon: Icon(Icons.check, color: Colors.green),
+        onPressed: () async {
+          final update = ContactsCompanion(accepted: Value(true));
+          await twonlyDatabase.contactsDao
+              .updateContact(contact.userId, update);
+          await encryptAndSendMessage(
+            null,
+            contact.userId,
+            MessageJson(
+              kind: MessageKind.acceptRequest,
+              timestamp: DateTime.now(),
+              content: MessageContent(),
+            ),
+            pushKind: PushKind.acceptRequest,
+          );
+          notifyContactsAboutProfileChange();
+        },
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -206,61 +290,9 @@ class _ContactsListViewState extends State<ContactsListView> {
           leading: ContactAvatar(contact: contact),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!contact.requested) Text('Pending'),
-              if (contact.requested) ...[
-                Tooltip(
-                  message: "Block the user without informing.",
-                  child: IconButton(
-                    icon: Icon(Icons.person_off_rounded,
-                        color: const Color.fromARGB(164, 244, 67, 54)),
-                    onPressed: () async {
-                      final update = ContactsCompanion(blocked: Value(true));
-                      await twonlyDatabase.contactsDao
-                          .updateContact(contact.userId, update);
-                    },
-                  ),
-                ),
-                Tooltip(
-                  message: "Reject the request and let the requester know.",
-                  child: IconButton(
-                    icon: Icon(Icons.close, color: Colors.red),
-                    onPressed: () async {
-                      await twonlyDatabase.contactsDao
-                          .deleteContactByUserId(contact.userId);
-                      encryptAndSendMessage(
-                        null,
-                        contact.userId,
-                        MessageJson(
-                          kind: MessageKind.rejectRequest,
-                          timestamp: DateTime.now(),
-                          content: MessageContent(),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.check, color: Colors.green),
-                  onPressed: () async {
-                    final update = ContactsCompanion(accepted: Value(true));
-                    await twonlyDatabase.contactsDao
-                        .updateContact(contact.userId, update);
-                    encryptAndSendMessage(
-                      null,
-                      contact.userId,
-                      MessageJson(
-                        kind: MessageKind.acceptRequest,
-                        timestamp: DateTime.now(),
-                        content: MessageContent(),
-                      ),
-                      pushKind: PushKind.acceptRequest,
-                    );
-                    notifyContactsAboutProfileChange();
-                  },
-                ),
-              ],
-            ],
+            children: contact.requested
+                ? requestedActions(contact)
+                : sendRequestActions(contact),
           ),
         );
       },

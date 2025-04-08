@@ -173,6 +173,14 @@ class _UserListItem extends State<UserListItem> {
     lastUpdateTime();
   }
 
+  @override
+  void dispose() {
+    updateTime?.cancel();
+    messagesNotOpenedStream.cancel();
+    lastMessageStream.cancel();
+    super.dispose();
+  }
+
   void initStreams() {
     lastMessageStream = twonlyDatabase.messagesDao
         .watchLastMessage(widget.user.userId)
@@ -233,14 +241,6 @@ class _UserListItem extends State<UserListItem> {
         }
       });
     });
-  }
-
-  @override
-  void dispose() {
-    updateTime?.cancel();
-    super.dispose();
-    messagesNotOpenedStream.cancel();
-    lastMessageStream.cancel();
   }
 
   @override
@@ -306,7 +306,7 @@ class _UserListItem extends State<UserListItem> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
-              return ChatItemDetailsView(widget.user.userId);
+              return ChatItemDetailsView(widget.user);
             }),
           );
         },
