@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/contact/contact_verify_view.dart';
 import 'package:twonly/src/views/home_view.dart';
@@ -53,9 +52,7 @@ class _UserContextMenuState extends State<UserContextMenu> {
         PieAction(
           tooltip: Text(context.lang.contextMenuSendImage),
           onSelect: () {
-            context
-                .read<SendNextMediaTo>()
-                .updateSendNextMediaTo(widget.contact.userId.toInt());
+            globalSendNextMediaToUser = widget.contact;
             globalUpdateOfHomeViewPageIndex(0);
           },
           child: const FaIcon(FontAwesomeIcons.camera),

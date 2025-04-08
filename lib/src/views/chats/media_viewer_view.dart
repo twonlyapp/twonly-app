@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
@@ -14,17 +13,17 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media.dart';
-import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/home_view.dart';
 
 final _noScreenshot = NoScreenshot.instance;
 
 class MediaViewerView extends StatefulWidget {
-  final int userId;
-  const MediaViewerView(this.userId, {super.key});
+  final Contact contact;
+  const MediaViewerView(this.contact, {super.key});
 
   @override
   State<MediaViewerView> createState() => _MediaViewerViewState();
@@ -59,8 +58,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future asyncLoadNextMedia(bool firstRun) async {
-    Stream<List<Message>> messages =
-        twonlyDatabase.messagesDao.watchMediaMessageNotOpened(widget.userId);
+    Stream<List<Message>> messages = twonlyDatabase.messagesDao
+        .watchMediaMessageNotOpened(widget.contact.userId);
 
     _subscription = messages.listen((messages) {
       for (Message msg in messages) {
@@ -329,7 +328,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         child: GestureDetector(
                           onTap: () {
                             sendTextMessage(
-                              widget.userId,
+                              widget.contact.userId,
                               TextMessageContent(
                                 text: emoji,
                                 responseToMessageId:
@@ -400,7 +399,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           });
                           encryptAndSendMessage(
                             null,
-                            widget.userId,
+                            widget.contact.userId,
                             MessageJson(
                               kind: MessageKind.storedMediaFile,
                               messageId: allMediaFiles.first.messageId,
@@ -477,7 +476,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) {
-                            return ChatItemDetailsView(widget.userId);
+                            return ChatItemDetailsView(widget.contact.userId);
                           }),
                         );
                       },
@@ -491,9 +490,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     IconButton.outlined(
                       icon: FaIcon(FontAwesomeIcons.camera),
                       onPressed: () async {
-                        context
-                            .read<SendNextMediaTo>()
-                            .updateSendNextMediaTo(widget.userId.toInt());
+                        globalSendNextMediaToUser = widget.contact;
                         globalUpdateOfHomeViewPageIndex(0);
                         Navigator.popUntil(context, (route) => route.isFirst);
                       },

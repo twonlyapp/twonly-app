@@ -3,7 +3,6 @@ import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/animate_icon.dart';
 import 'package:twonly/src/components/better_text.dart';
@@ -16,8 +15,8 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media.dart';
-import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_view.dart';
@@ -25,10 +24,10 @@ import 'package:twonly/src/views/home_view.dart';
 
 class ChatListEntry extends StatelessWidget {
   const ChatListEntry(
-      this.message, this.userId, this.lastMessageFromSameUser, this.reactions,
+      this.message, this.contact, this.lastMessageFromSameUser, this.reactions,
       {super.key});
   final Message message;
-  final int userId;
+  final Contact contact;
   final bool lastMessageFromSameUser;
   final List<Message> reactions;
 
@@ -71,10 +70,13 @@ class ChatListEntry extends StatelessWidget {
         } else {
           child = Text(content.text, style: TextStyle(fontSize: 14));
         }
-        children.add(Padding(
-          padding: EdgeInsets.only(left: 3),
-          child: child,
-        ));
+        children.insert(
+          0,
+          Padding(
+            padding: EdgeInsets.only(left: 3),
+            child: child,
+          ),
+        );
       }
     }
 
@@ -136,7 +138,7 @@ class ChatListEntry extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) {
-                  return MediaViewerView(userId);
+                  return MediaViewerView(contact);
                 }),
               );
             } else {
@@ -354,38 +356,40 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: messages.length,
-                reverse: true,
-                itemBuilder: (context, i) {
-                  bool lastMessageFromSameUser = false;
-                  if (i > 0) {
-                    lastMessageFromSameUser =
-                        (messages[i - 1].messageOtherId == null &&
-                                messages[i].messageOtherId == null) ||
-                            (messages[i - 1].messageOtherId != null &&
-                                messages[i].messageOtherId != null);
-                  }
-                  Message msg = messages[i];
-                  List<Message> reactions = [];
-                  if (reactionsToMyMessages.containsKey(msg.messageId)) {
-                    reactions = reactionsToMyMessages[msg.messageId]!;
-                  }
-                  if (msg.messageOtherId != null &&
-                      reactionsToOtherMessages
-                          .containsKey(msg.messageOtherId!)) {
-                    reactions = reactionsToOtherMessages[msg.messageOtherId!]!;
-                  }
-                  return ChatListEntry(
-                    msg,
-                    widget.userid,
-                    lastMessageFromSameUser,
-                    reactions,
-                  );
-                },
+            if (user != null)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: messages.length,
+                  reverse: true,
+                  itemBuilder: (context, i) {
+                    bool lastMessageFromSameUser = false;
+                    if (i > 0) {
+                      lastMessageFromSameUser =
+                          (messages[i - 1].messageOtherId == null &&
+                                  messages[i].messageOtherId == null) ||
+                              (messages[i - 1].messageOtherId != null &&
+                                  messages[i].messageOtherId != null);
+                    }
+                    Message msg = messages[i];
+                    List<Message> reactions = [];
+                    if (reactionsToMyMessages.containsKey(msg.messageId)) {
+                      reactions = reactionsToMyMessages[msg.messageId]!;
+                    }
+                    if (msg.messageOtherId != null &&
+                        reactionsToOtherMessages
+                            .containsKey(msg.messageOtherId!)) {
+                      reactions =
+                          reactionsToOtherMessages[msg.messageOtherId!]!;
+                    }
+                    return ChatListEntry(
+                      msg,
+                      user!,
+                      lastMessageFromSameUser,
+                      reactions,
+                    );
+                  },
+                ),
               ),
-            ),
             Padding(
               padding: const EdgeInsets.only(
                   bottom: 30, left: 20, right: 20, top: 10),
@@ -436,9 +440,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                       : IconButton(
                           icon: FaIcon(FontAwesomeIcons.camera),
                           onPressed: () {
-                            context
-                                .read<SendNextMediaTo>()
-                                .updateSendNextMediaTo(widget.userid);
+                            globalSendNextMediaToUser = user;
                             globalUpdateOfHomeViewPageIndex(0);
                             Navigator.popUntil(
                                 context, (route) => route.isFirst);

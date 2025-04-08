@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
@@ -13,8 +12,8 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/media.dart';
-import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/views/home_view.dart';
@@ -277,9 +276,7 @@ class _UserListItem extends State<UserListItem> {
         leading: ContactAvatar(contact: widget.user),
         onTap: () {
           if (currentMessage == null) {
-            context
-                .read<SendNextMediaTo>()
-                .updateSendNextMediaTo(widget.user.userId.toInt());
+            globalSendNextMediaToUser = widget.user;
             globalUpdateOfHomeViewPageIndex(0);
             return;
           }
@@ -301,7 +298,7 @@ class _UserListItem extends State<UserListItem> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) {
-                    return MediaViewerView(widget.user.userId);
+                    return MediaViewerView(widget.user);
                   }),
                 );
               default:

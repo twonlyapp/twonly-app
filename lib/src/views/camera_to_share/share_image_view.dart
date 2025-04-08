@@ -3,7 +3,6 @@ import 'dart:collection';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/best_friends_selector.dart';
 import 'package:twonly/src/components/flame.dart';
@@ -13,9 +12,10 @@ import 'package:twonly/src/components/verified_shield.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/providers/api/media.dart';
-import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
+
+Contact? globalSendNextMediaToUser;
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView(
@@ -47,10 +47,8 @@ class _ShareImageView extends State<ShareImageView> {
   void initState() {
     super.initState();
 
-    int? sendNextMediaToUserId =
-        context.read<SendNextMediaTo>().sendNextMediaToUserId;
-    if (sendNextMediaToUserId != null) {
-      _selectedUserIds.add(sendNextMediaToUserId);
+    if (globalSendNextMediaToUser != null) {
+      _selectedUserIds.add(globalSendNextMediaToUser!.userId);
     }
 
     Stream<List<Contact>> allContacts =

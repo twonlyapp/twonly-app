@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
@@ -8,7 +7,6 @@ import 'package:twonly/src/components/notification_badge.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/providers/api/media.dart';
-import 'package:twonly/src/providers/send_next_media_to.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
@@ -39,6 +37,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   int maxShowTime = 999999;
   String? sendNextMediaToUserName;
   double tabDownPostion = 0;
+  bool sendingImage = false;
 
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
@@ -261,11 +260,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
-    int? sendNextMediaToUserId =
-        context.watch<SendNextMediaTo>().sendNextMediaToUserId;
-
-    if (sendNextMediaToUserId != null) {
-      updateAsync(sendNextMediaToUserId);
+    if (globalSendNextMediaToUser != null) {
+      sendNextMediaToUserName =
+          getContactDisplayName(globalSendNextMediaToUser!);
     }
 
     return Scaffold(
@@ -410,9 +407,22 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 if (sendNextMediaToUserName != null) SizedBox(width: 10),
                 if (sendNextMediaToUserName == null) SizedBox(width: 20),
                 FilledButton.icon(
-                  icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                  icon: sendingImage
+                      ? SizedBox(
+                          height: 12,
+                          width: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.inversePrimary,
+                          ),
+                        )
+                      : FaIcon(FontAwesomeIcons.solidPaperPlane),
                   onPressed: () async {
-                    if (sendNextMediaToUserId != null) {
+                    if (sendingImage) return;
+                    setState(() {
+                      sendingImage = true;
+                    });
+                    if (globalSendNextMediaToUser != null) {
                       Uint8List? imageBytes = await getMergedImage();
                       if (!context.mounted) return;
                       if (imageBytes == null) {
@@ -420,15 +430,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         return;
                       }
                       sendImage(
-                        [sendNextMediaToUserId],
+                        [globalSendNextMediaToUser!.userId],
                         imageBytes,
                         _isRealTwonly,
                         maxShowTime,
                       );
                       Navigator.popUntil(context, (route) => route.isFirst);
                       globalUpdateOfHomeViewPageIndex(1);
-
-                      // send hier...
                       return;
                     }
                     Future<Uint8List?> imageBytes = getMergedImage();
