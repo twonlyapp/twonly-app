@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'camera_to_share/camera_preview_view.dart';
 import 'chats/chat_list_view.dart';
@@ -65,27 +66,7 @@ class HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return PieCanvas(
-      theme: PieTheme(
-        brightness: Theme.of(context).brightness,
-        rightClickShowsMenu: true,
-        radius: 70,
-        buttonTheme: PieButtonTheme(
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
-          iconColor: Theme.of(context).colorScheme.surfaceBright,
-        ),
-        buttonThemeHovered: PieButtonTheme(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          iconColor: Theme.of(context).colorScheme.surfaceBright,
-        ),
-        tooltipPadding: EdgeInsets.all(20),
-        overlayColor: const Color.fromARGB(41, 0, 0, 0),
-
-        // spacing: 0,
-        tooltipTextStyle: TextStyle(
-          fontSize: 32,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      theme: getPieCanvasTheme(context),
       child: Scaffold(
         body: PageView(
           controller: homeViewPageController,

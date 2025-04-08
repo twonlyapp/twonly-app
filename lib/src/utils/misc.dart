@@ -9,6 +9,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:pie_menu/pie_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/proto/api/error.pb.dart';
@@ -176,4 +177,28 @@ Future<bool> isAllowedToDownload() async {
     return false;
   }
   return true;
+}
+
+PieTheme getPieCanvasTheme(BuildContext context) {
+  return PieTheme(
+    brightness: Theme.of(context).brightness,
+    rightClickShowsMenu: true,
+    radius: 70,
+    buttonTheme: PieButtonTheme(
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
+      iconColor: Theme.of(context).colorScheme.surfaceBright,
+    ),
+    buttonThemeHovered: PieButtonTheme(
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).colorScheme.surfaceBright,
+    ),
+    tooltipPadding: EdgeInsets.all(20),
+    overlayColor: const Color.fromARGB(41, 0, 0, 0),
+
+    // spacing: 0,
+    tooltipTextStyle: TextStyle(
+      fontSize: 32,
+      fontWeight: FontWeight.w600,
+    ),
+  );
 }

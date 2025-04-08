@@ -1,0 +1,183 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:pie_menu/pie_menu.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/components/flame.dart';
+import 'package:twonly/src/components/headline.dart';
+import 'package:twonly/src/components/initialsavatar.dart';
+import 'package:twonly/src/components/user_context_menu.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/chats/chat_item_details_view.dart';
+import 'package:twonly/src/views/chats/search_username_view.dart';
+
+class StartNewChat extends StatefulWidget {
+  const StartNewChat({super.key});
+  @override
+  State<StartNewChat> createState() => _StartNewChat();
+}
+
+class _StartNewChat extends State<StartNewChat> {
+  List<Contact> contacts = [];
+  List<Contact> allContacts = [];
+  final TextEditingController searchUserName = TextEditingController();
+  late StreamSubscription<List<Contact>> contactSub;
+  int maxTotalMediaCounter = 1000;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Stream<List<Contact>> stream =
+        twonlyDatabase.contactsDao.watchContactsForShareView();
+
+    contactSub = stream.listen((update) {
+      setState(() {
+        allContacts = update;
+      });
+      filterUsers();
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    contactSub.cancel();
+  }
+
+  Future filterUsers() async {
+    if (searchUserName.value.text.isEmpty) {
+      setState(() {
+        contacts = allContacts;
+      });
+      return;
+    }
+    List<Contact> usersFiltered = allContacts
+        .where((user) => getContactDisplayName(user)
+            .toLowerCase()
+            .contains(searchUserName.value.text.toLowerCase()))
+        .toList();
+    setState(() {
+      contacts = usersFiltered;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(context.lang.startNewChatTitle),
+      ),
+      body: SafeArea(
+        child: PieCanvas(
+          theme: getPieCanvasTheme(context),
+          child: Padding(
+            padding: EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: TextField(
+                    onChanged: (_) {
+                      filterUsers();
+                    },
+                    decoration: getInputDecoration(
+                      context,
+                      context.lang.shareImageSearchAllContacts,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: UserList(
+                    contacts,
+                    maxTotalMediaCounter,
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class UserList extends StatelessWidget {
+  const UserList(
+    this.users,
+    this.maxTotalMediaCounter, {
+    super.key,
+  });
+  final List<Contact> users;
+  final int maxTotalMediaCounter;
+
+  @override
+  Widget build(BuildContext context) {
+    // Step 1: Sort the users alphabetically
+    users
+        .sort((a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange));
+
+    return ListView.builder(
+      restorationId: 'new_message_users_list',
+      itemCount: users.length + 2,
+      itemBuilder: (BuildContext context, int i) {
+        if (i == 0) {
+          return ListTile(
+            title: Text(context.lang.startNewChatNewContact),
+            leading: CircleAvatar(
+              child: FaIcon(
+                FontAwesomeIcons.userPlus,
+                size: 15,
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SearchUsernameView(),
+                ),
+              );
+            },
+          );
+        }
+        if (i == 1) {
+          return HeadLineComponent(context.lang.startNewChatYourContacts);
+        }
+        Contact user = users[i - 2];
+        int flameCounter = getFlameCounterFromContact(user);
+        return UserContextMenu(
+          contact: user,
+          child: ListTile(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.start, // Center horizontally
+              crossAxisAlignment:
+                  CrossAxisAlignment.center, // Center vertically
+              children: [
+                Text(getContactDisplayName(user)),
+                if (flameCounter >= 1)
+                  FlameCounterWidget(
+                    user,
+                    flameCounter,
+                    maxTotalMediaCounter,
+                    prefix: true,
+                  ),
+              ],
+            ),
+            leading: ContactAvatar(contact: user),
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) {
+                  return ChatItemDetailsView(user);
+                }),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}

@@ -184,12 +184,13 @@ class _SearchUsernameView extends State<SearchUsernameView> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30.0),
         child: FloatingActionButton(
+          foregroundColor: Colors.white,
           onPressed: () {
             if (!_isLoading) _addNewUser(context);
           },
           child: (_isLoading)
               ? const Center(child: CircularProgressIndicator())
-              : Icon(Icons.arrow_right_rounded),
+              : FaIcon(FontAwesomeIcons.magnifyingGlassPlus),
         ),
       ),
     );

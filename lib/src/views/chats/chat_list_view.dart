@@ -16,6 +16,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
+import 'package:twonly/src/views/chats/start_new_chat.dart';
 import 'package:twonly/src/views/home_view.dart';
 import 'package:twonly/src/views/settings/settings_main_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
@@ -32,18 +33,7 @@ class _ChatListViewState extends State<ChatListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SettingsMainView(),
-              ),
-            );
-          },
-          child: Text("twonly"),
-        ),
-        // title:
+        title: Text("twonly"),
         actions: [
           StreamBuilder(
             stream: twonlyDatabase.contactsDao.watchContactsRequested(),
@@ -132,6 +122,21 @@ class _ChatListViewState extends State<ChatListView> {
             ),
           );
         },
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 30.0),
+        child: FloatingActionButton(
+          foregroundColor: Colors.white,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) {
+                return StartNewChat();
+              }),
+            );
+          },
+          child: FaIcon(FontAwesomeIcons.penToSquare),
+        ),
       ),
     );
   }

@@ -27,17 +27,30 @@ class _UserContextMenuState extends State<UserContextMenu> {
     return PieMenu(
       onPressed: () => (),
       actions: [
-        PieAction(
-          tooltip: Text(context.lang.contextMenuArchiveUser),
-          onSelect: () async {
-            final update = ContactsCompanion(archived: Value(true));
-            if (context.mounted) {
-              await twonlyDatabase.contactsDao
-                  .updateContact(widget.contact.userId, update);
-            }
-          },
-          child: FaIcon(FontAwesomeIcons.boxArchive),
-        ),
+        if (!widget.contact.archived)
+          PieAction(
+            tooltip: Text(context.lang.contextMenuArchiveUser),
+            onSelect: () async {
+              final update = ContactsCompanion(archived: Value(true));
+              if (context.mounted) {
+                await twonlyDatabase.contactsDao
+                    .updateContact(widget.contact.userId, update);
+              }
+            },
+            child: FaIcon(FontAwesomeIcons.boxArchive),
+          ),
+        if (widget.contact.archived)
+          PieAction(
+            tooltip: Text(context.lang.contextMenuUndoArchiveUser),
+            onSelect: () async {
+              final update = ContactsCompanion(archived: Value(false));
+              if (context.mounted) {
+                await twonlyDatabase.contactsDao
+                    .updateContact(widget.contact.userId, update);
+              }
+            },
+            child: FaIcon(FontAwesomeIcons.boxOpen),
+          ),
         PieAction(
           tooltip: Text(context.lang.contextMenuVerifyUser),
           onSelect: () {
