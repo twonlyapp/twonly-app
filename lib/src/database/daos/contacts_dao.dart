@@ -52,7 +52,8 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
         // last flame update was yesterday. check if it can be updated.
         bool updateFlame = false;
         if (received) {
-          if (contact.lastMessageSend!.isAfter(startOfToday)) {
+          if (contact.lastMessageSend != null &&
+              contact.lastMessageSend!.isAfter(startOfToday)) {
             // today a message was already send -> update flame
             updateFlame = true;
           }
