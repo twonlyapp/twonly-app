@@ -392,6 +392,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                               : Theme.of(context).colorScheme.primary,
                         ),
                         onPressed: () async {
+                          if (allMediaFiles.first.messageOtherId == null) {
+                            return; // should not be possible
+                          }
                           setState(() {
                             imageSaving = true;
                           });
@@ -402,7 +405,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                               kind: MessageKind.storedMediaFile,
                               messageId: allMediaFiles.first.messageId,
                               content: StoredMediaFileContent(
-                                messageId: allMediaFiles.first.messageId,
+                                messageId: allMediaFiles.first.messageOtherId!,
                               ),
                               timestamp: DateTime.now(),
                             ),

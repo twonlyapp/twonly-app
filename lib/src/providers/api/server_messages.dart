@@ -256,8 +256,6 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           return client.Response()..ok = ok;
         }
 
-        String content = jsonEncode(message.content!.toJson());
-
         bool acknowledgeByUser = false;
         DateTime? openedAt;
 
@@ -267,16 +265,21 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         }
 
         int? responseToMessageId;
-        final textContent = message.content!;
-        if (textContent is TextMessageContent) {
-          responseToMessageId = textContent.responseToMessageId;
+
+        final content = message.content!;
+        if (content is TextMessageContent) {
+          responseToMessageId = content.responseToMessageId;
+        }
+        if (content is StoredMediaFileContent) {
+          responseToMessageId = content.messageId;
         }
 
+        String contentJson = jsonEncode(content.toJson());
         final update = MessagesCompanion(
           contactId: Value(fromUserId),
           kind: Value(message.kind),
           messageOtherId: Value(message.messageId),
-          contentJson: Value(content),
+          contentJson: Value(contentJson),
           acknowledgeByServer: Value(true),
           acknowledgeByUser: Value(acknowledgeByUser),
           responseToMessageId: Value(responseToMessageId),

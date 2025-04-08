@@ -414,9 +414,14 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   onPressed: () async {
                     if (sendNextMediaToUserId != null) {
                       Uint8List? imageBytes = await getMergedImage();
+                      if (!context.mounted) return;
+                      if (imageBytes == null) {
+                        Navigator.pop(context);
+                        return;
+                      }
                       sendImage(
                         [sendNextMediaToUserId],
-                        imageBytes!,
+                        imageBytes,
                         _isRealTwonly,
                         maxShowTime,
                       );

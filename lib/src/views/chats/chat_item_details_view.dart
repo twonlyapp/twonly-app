@@ -34,11 +34,34 @@ class ChatListEntry extends StatelessWidget {
 
   Widget getReactionRow() {
     List<Widget> children = [];
+    bool hasOneTextReaction = false;
     for (final reaction in reactions) {
-      if (children.isNotEmpty) break;
       MessageContent? content = MessageContent.fromJson(
           reaction.kind, jsonDecode(reaction.contentJson!));
+
+      if (content is StoredMediaFileContent) {
+        children.add(
+          Expanded(
+            child: Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: EdgeInsets.only(right: 3),
+                child: FaIcon(
+                  FontAwesomeIcons.floppyDisk,
+                  size: 12,
+                  color: Colors.blue,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // only show one reaction
+      if (hasOneTextReaction) continue;
+
       if (content is TextMessageContent) {
+        hasOneTextReaction = true;
         late Widget child;
         if (EmojiAnimation.animatedIcons.containsKey(content.text)) {
           child = SizedBox(
