@@ -419,10 +419,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       : FaIcon(FontAwesomeIcons.solidPaperPlane),
                   onPressed: () async {
                     if (sendingImage) return;
-                    setState(() {
-                      sendingImage = true;
-                    });
                     if (globalSendNextMediaToUser != null) {
+                      setState(() {
+                        sendingImage = true;
+                      });
                       Uint8List? imageBytes = await getMergedImage();
                       if (!context.mounted) return;
                       if (imageBytes == null) {
