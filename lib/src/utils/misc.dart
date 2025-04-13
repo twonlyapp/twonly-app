@@ -19,6 +19,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
   TwonlyDatabase get db => Provider.of<TwonlyDatabase>(this);
+  ColorScheme get color => Theme.of(this).colorScheme;
 }
 
 Future<void> writeLogToFile(LogRecord record) async {

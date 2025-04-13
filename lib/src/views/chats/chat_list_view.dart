@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/components/connection_state.dart';
 import 'package:twonly/src/components/flame.dart';
 import 'package:twonly/src/components/initialsavatar.dart';
 import 'package:twonly/src/components/message_send_state_icon.dart';
@@ -12,6 +14,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/media.dart';
+import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
@@ -31,6 +34,7 @@ class ChatListView extends StatefulWidget {
 class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) {
+    bool isConnected = context.watch<ConnectionChangeProvider>().isConnected;
     return Scaffold(
       appBar: AppBar(
         title: Text("twonly"),
@@ -71,60 +75,73 @@ class _ChatListViewState extends State<ChatListView> {
           )
         ],
       ),
-      body: StreamBuilder(
-        stream: twonlyDatabase.contactsDao.watchContactsForChatList(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data == null) {
-            return Container();
-          }
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: isConnected ? Container() : ConnectionInfo(),
+          ),
+          Positioned.fill(
+            child: StreamBuilder(
+              stream: twonlyDatabase.contactsDao.watchContactsForChatList(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data == null) {
+                  return Container();
+                }
 
-          var contacts = snapshot.data!;
-          if (contacts.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: OutlinedButton.icon(
-                    icon: Icon(Icons.person_add),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SearchUsernameView(),
-                        ),
+                var contacts = snapshot.data!;
+                if (contacts.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: OutlinedButton.icon(
+                          icon: Icon(Icons.person_add),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchUsernameView(),
+                              ),
+                            );
+                          },
+                          label:
+                              Text(context.lang.chatListViewSearchUserNameBtn)),
+                    ),
+                  );
+                }
+
+                int maxTotalMediaCounter = 0;
+                if (contacts.isNotEmpty) {
+                  maxTotalMediaCounter = contacts
+                      .map((x) => x.totalMediaCounter)
+                      .reduce((a, b) => a > b ? a : b);
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await apiProvider.close(() {});
+                    await apiProvider.connect();
+                    await Future.delayed(Duration(seconds: 1));
+                  },
+                  child: ListView.builder(
+                    restorationId: 'chat_list_view',
+                    itemCount: contacts.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final user = contacts[index];
+                      return UserListItem(
+                        key: ValueKey(user.userId),
+                        user: user,
+                        maxTotalMediaCounter: maxTotalMediaCounter,
                       );
                     },
-                    label: Text(context.lang.chatListViewSearchUserNameBtn)),
-              ),
-            );
-          }
-
-          int maxTotalMediaCounter = 0;
-          if (contacts.isNotEmpty) {
-            maxTotalMediaCounter = contacts
-                .map((x) => x.totalMediaCounter)
-                .reduce((a, b) => a > b ? a : b);
-          }
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              await apiProvider.close(() {});
-              await apiProvider.connect();
-              await Future.delayed(Duration(seconds: 1));
-            },
-            child: ListView.builder(
-              restorationId: 'chat_list_view',
-              itemCount: contacts.length,
-              itemBuilder: (BuildContext context, int index) {
-                final user = contacts[index];
-                return UserListItem(
-                  key: ValueKey(user.userId),
-                  user: user,
-                  maxTotalMediaCounter: maxTotalMediaCounter,
+                  ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30.0),

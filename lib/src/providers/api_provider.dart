@@ -141,13 +141,13 @@ class ApiProvider {
     isAuthenticated = false;
   }
 
-  void _onData(dynamic msgBuffer) {
+  void _onData(dynamic msgBuffer) async {
     try {
       final msg = server.ServerToClient.fromBuffer(msgBuffer);
       if (msg.v0.hasResponse()) {
         messagesV0[msg.v0.seq] = msg;
       } else {
-        handleServerMessage(msg);
+        await handleServerMessage(msg);
       }
     } catch (e) {
       log.shout("Error parsing the servers message: $e");

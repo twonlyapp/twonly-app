@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class ConnectionInfo extends StatefulWidget {
   const ConnectionInfo({super.key});
@@ -9,69 +8,87 @@ class ConnectionInfo extends StatefulWidget {
   State<ConnectionInfo> createState() => _ConnectionInfoWidgetState();
 }
 
-class _ConnectionInfoWidgetState extends State<ConnectionInfo> {
-  int redColorOpacity = 100; // Initial opacity value
-  bool redColorGoUp = true; // Direction of the opacity change
-  double screenWidth = 0; // To hold the screen width
+class _ConnectionInfoWidgetState extends State<ConnectionInfo>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _positionAnim;
+  late Animation<double> _widthAnim;
 
-  Timer? _colorAnimationTimer;
+  bool showAnimation = false;
+
+  final double minBarWidth = 40;
+  final double maxBarWidth = 150;
 
   @override
   void initState() {
     super.initState();
-    _startColorAnimation();
-  }
 
-  void _startColorAnimation() {
-    // Change the color every 200 milliseconds
-    _colorAnimationTimer = Timer.periodic(Duration(milliseconds: 200), (timer) {
-      setState(() {
-        if (redColorOpacity <= 100) {
-          redColorGoUp = true;
-        }
-        if (redColorOpacity >= 150) {
-          redColorGoUp = false;
-        }
-        if (redColorGoUp) {
-          redColorOpacity += 10;
-        } else {
-          redColorOpacity -= 10;
-        }
-      });
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    );
+
+    _positionAnim = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _widthAnim = TweenSequence([
+      TweenSequenceItem(
+          tween: Tween<double>(begin: minBarWidth, end: maxBarWidth),
+          weight: 50),
+      TweenSequenceItem(
+          tween: Tween<double>(begin: maxBarWidth, end: minBarWidth),
+          weight: 50),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    // Delay start by 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        _controller.repeat(reverse: true);
+        setState(() {
+          showAnimation = true;
+        });
+      }
     });
   }
 
   @override
   void dispose() {
-    _colorAnimationTimer?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    screenWidth = MediaQuery.of(context).size.width; // Get the screen width
+    if (!showAnimation) return Container();
+    double screenWidth = MediaQuery.of(context).size.width;
 
-    return Stack(
-      children: [
-        Positioned(
-          top: 3, // Position it at the top
-          left: (screenWidth * 0.5) / 2, // Center it horizontally
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: 100),
-            width: screenWidth * 0.5, // 50% of the screen width
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.red[600]!
-                    .withAlpha(redColorOpacity), // Use the animated opacity
-                width: 2.0, // Red border width
+    return SizedBox(
+      width: screenWidth,
+      height: 1,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          double barWidth = _widthAnim.value;
+          double left = _positionAnim.value * (screenWidth - barWidth);
+          return Stack(
+            children: [
+              Positioned(
+                left: left,
+                top: 0,
+                bottom: 0,
+                child: Container(
+                  width: barWidth,
+                  decoration: BoxDecoration(
+                    color: context.color.primary,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
               ),
-              borderRadius: BorderRadius.all(
-                Radius.circular(10.0),
-              ), // Rounded corners
-            ),
-          ),
-        ),
-      ],
+            ],
+          );
+        },
+      ),
     );
   }
 }

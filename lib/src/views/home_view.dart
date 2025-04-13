@@ -11,7 +11,10 @@ import 'package:flutter/material.dart';
 Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key, required this.initialPage});
+  const HomeView({
+    super.key,
+    required this.initialPage,
+  });
   final int initialPage;
 
   @override

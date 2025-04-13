@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
@@ -34,6 +35,8 @@ class _StartNewChat extends State<StartNewChat> {
         twonlyDatabase.contactsDao.watchContactsForShareView();
 
     contactSub = stream.listen((update) {
+      update.sort((a, b) =>
+          getContactDisplayName(a).compareTo(getContactDisplayName(b)));
       setState(() {
         allContacts = update;
       });
@@ -83,6 +86,7 @@ class _StartNewChat extends State<StartNewChat> {
                     onChanged: (_) {
                       filterUsers();
                     },
+                    controller: searchUserName,
                     decoration: getInputDecoration(
                       context,
                       context.lang.shareImageSearchAllContacts,
@@ -116,21 +120,18 @@ class UserList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Step 1: Sort the users alphabetically
-    users
-        .sort((a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange));
-
     return ListView.builder(
       restorationId: 'new_message_users_list',
       itemCount: users.length + 2,
       itemBuilder: (BuildContext context, int i) {
         if (i == 0) {
           return ListTile(
+            key: Key("add_new_contact"),
             title: Text(context.lang.startNewChatNewContact),
             leading: CircleAvatar(
               child: FaIcon(
                 FontAwesomeIcons.userPlus,
-                size: 15,
+                size: 13,
               ),
             ),
             onTap: () {
@@ -144,17 +145,17 @@ class UserList extends StatelessWidget {
           );
         }
         if (i == 1) {
-          return HeadLineComponent(context.lang.startNewChatYourContacts);
+          return Divider();
         }
         Contact user = users[i - 2];
         int flameCounter = getFlameCounterFromContact(user);
         return UserContextMenu(
+          key: Key(user.userId.toString()),
           contact: user,
           child: ListTile(
             title: Row(
-              mainAxisAlignment: MainAxisAlignment.start, // Center horizontally
-              crossAxisAlignment:
-                  CrossAxisAlignment.center, // Center vertically
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(getContactDisplayName(user)),
                 if (flameCounter >= 1)
@@ -164,9 +165,25 @@ class UserList extends StatelessWidget {
                     maxTotalMediaCounter,
                     prefix: true,
                   ),
+                Spacer(),
+                IconButton(
+                    icon: FaIcon(FontAwesomeIcons.boxOpen,
+                        size: 13,
+                        color: user.archived ? null : Colors.transparent),
+                    onPressed: user.archived
+                        ? () async {
+                            final update =
+                                ContactsCompanion(archived: Value(false));
+                            await twonlyDatabase.contactsDao
+                                .updateContact(user.userId, update);
+                          }
+                        : null)
               ],
             ),
-            leading: ContactAvatar(contact: user),
+            leading: ContactAvatar(
+              contact: user,
+              fontSize: 13,
+            ),
             onTap: () {
               Navigator.pushReplacement(
                 context,

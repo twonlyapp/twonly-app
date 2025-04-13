@@ -1,6 +1,6 @@
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/components/connection_state.dart';
+import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -31,7 +31,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  bool _isConnected = false;
   bool wasPaused = false;
 
   @override
@@ -41,59 +40,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     // register global callbacks to the widget tree
-    globalCallbackConnectionState = (isConnected) {
-      setState(() {
-        _isConnected = isConnected;
-      });
+    globalCallbackConnectionState = (update) {
+      context.read<ConnectionChangeProvider>().updateConnectionState(update);
       setupNotificationWithUsers();
     };
 
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   _requestPermissions();
-    //   _initService();
-    // });
     initAsync();
   }
 
   Future initAsync() async {
-    // make sure the front end service will be killed
-    // FlutterForegroundTask.sendDataToTask("");
-    // await FlutterForegroundTask.stopService();
-    // connect async to the backend api
     apiProvider.connect();
   }
-
-  // Future<void> _requestPermissions() async {
-  //   // Android 13+, you need to allow notification permission to display foreground service notification.
-  //   //
-  //   // iOS: If you need notification, ask for permission.
-  //   final NotificationPermission notificationPermission =
-  //       await FlutterForegroundTask.checkNotificationPermission();
-  //   if (notificationPermission != NotificationPermission.granted) {
-  //     await FlutterForegroundTask.requestNotificationPermission();
-  //   }
-
-  //   if (Platform.isAndroid) {
-  //     // Android 12+, there are restrictions on starting a foreground service.
-  //     //
-  //     // To restart the service on device reboot or unexpected problem, you need to allow below permission.
-  //     if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
-  //       // This function requires `android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` permission.
-  //       await FlutterForegroundTask.requestIgnoreBatteryOptimization();
-  //     }
-
-  //     // Use this utility only if you provide services that require long-term survival,
-  //     // such as exact alarm service, healthcare service, or Bluetooth communication.
-  //     //
-  //     // This utility requires the "android.permission.SCHEDULE_EXACT_ALARM" permission.
-  //     // Using this permission may make app distribution difficult due to Google policy.
-  //     // if (!await FlutterForegroundTask.canScheduleExactAlarms) {
-  //     // When you call this function, will be gone to the settings page.
-  //     // So you need to explain to the user why set it.
-  //     // await FlutterForegroundTask.openAlarmsAndRemindersSettings();
-  //     // }
-  //   }
-  // }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -108,11 +65,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;
       globalIsAppInBackground = true;
-
-      // apiProvider.close(() {
-      // use this only when uploading an image
-      // _startService();
-      // });
     }
   }
 
@@ -165,11 +117,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           themeMode: context.watch<SettingsChangeProvider>().themeMode,
           initialRoute: '/',
           routes: {
-            "/": (context) =>
-                MyAppMainWidget(isConnected: _isConnected, initialPage: 0),
-            "/chats": (context) =>
-                MyAppMainWidget(isConnected: _isConnected, initialPage: 1)
-            // home: MyAppMainWidget(isConnected: _isConnected, initialPage: 0),
+            "/": (context) => MyAppMainWidget(initialPage: 0),
+            "/chats": (context) => MyAppMainWidget(initialPage: 1)
+            // home: MyAppMainWidget(isConnected: isConnected, initialPage: 0),
           },
         );
       },
@@ -178,10 +128,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 }
 
 class MyAppMainWidget extends StatefulWidget {
-  const MyAppMainWidget(
-      {super.key, required this.isConnected, required this.initialPage});
+  const MyAppMainWidget({super.key, required this.initialPage});
 
-  final bool isConnected;
   final int initialPage;
 
   @override
@@ -201,7 +149,9 @@ class _MyAppMainWidgetState extends State<MyAppMainWidget> {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               if (snapshot.data!) {
-                return HomeView(initialPage: widget.initialPage);
+                return HomeView(
+                  initialPage: widget.initialPage,
+                );
               }
 
               if (_showOnboarding) {
@@ -226,7 +176,6 @@ class _MyAppMainWidgetState extends State<MyAppMainWidget> {
             }
           },
         ),
-        if (!widget.isConnected) ConnectionInfo()
       ],
     );
   }

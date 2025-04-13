@@ -238,8 +238,6 @@ class ImageUploader {
       );
 
       if (wasSend.isError) {
-        // await box.put("retransmit-$messageId-offset", 0);
-        // await box.delete("retransmit-$messageId-uploadtoken");
         Logger("api.dart").shout("error while uploading media");
         return null;
       }
