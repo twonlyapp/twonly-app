@@ -16,6 +16,7 @@ class UserData {
   String? avatarJson;
   int? avatarCounter;
   int? defaultShowTime;
+  bool? useHighQuality;
 
   final int userId;
 

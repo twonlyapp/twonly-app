@@ -125,6 +125,7 @@
     "addDrawing": "Zeichnung",
     "addEmoji": "Emoji",
     "toggleFlashLight": "Taschenlampe umschalten",
+    "toggleHighQuality": "Bessere Auflösung umschalten",
     "searchUsernameNotFoundLong": "\"{username}\" ist kein twonly-Benutzer. Bitte überprüfe den Benutzernamen und versuche es erneut.",
     "errorUnknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.",
     "errorBadRequest": "Die Anfrage konnte vom Server aufgrund einer fehlerhaften Syntax nicht verstanden werden. Bitte überprüfe deine Eingabe und versuche es erneut.",

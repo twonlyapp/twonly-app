@@ -248,6 +248,8 @@
   "@addEmoji": {},
   "toggleFlashLight": "Toggle the flash light",
   "@toggleFlashLight": {},
+  "toggleHighQuality": "Toggle better resolution",
+  "@toggleHighQuality": {},
   "searchUsernameNotFoundLong": "\"{username}\" is not a twonly user. Please check the username and try again.",
   "@searchUsernameNotFoundLong": {
     "placeholders": {

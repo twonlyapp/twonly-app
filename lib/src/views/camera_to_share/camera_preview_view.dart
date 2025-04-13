@@ -13,6 +13,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/components/image_editor/action_button.dart';
 import 'package:twonly/src/components/media_view_sizing.dart';
 import 'package:twonly/src/components/permissions_view.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera_to_share/share_image_editor_view.dart';
 
 class CameraPreviewView extends StatefulWidget {
@@ -33,6 +34,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   double basePanY = 0;
   double baseScaleFactor = 0;
   bool cameraLoaded = false;
+  bool useHighQuality = false;
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   late CameraController controller;
@@ -53,6 +55,17 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         if (controller.value.isInitialized) takePicture();
       },
     );
+    initAsync();
+  }
+
+  void initAsync() async {
+    final user = await getUser();
+    if (user == null) return;
+    if (user.useHighQuality != null) {
+      setState(() {
+        useHighQuality = user.useHighQuality!;
+      });
+    }
   }
 
   @override
@@ -123,28 +136,70 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     });
   }
 
-  Future takePicture() async {
-    if (isFlashOn) {
-      if (isFront) {
-        setState(() {
-          showSelfieFlash = true;
-        });
-      } else {
-        controller.setFlashMode(FlashMode.torch);
-      }
-      await Future.delayed(Duration(milliseconds: 1000));
+  Future<Uint8List?> loadAndDeletePictureFromFile(XFile picture) async {
+    try {
+      // Load the image into bytes
+      final Uint8List imageBytes = await picture.readAsBytes();
+      // Remove the image file
+      await File(picture.path).delete();
+      return imageBytes;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading picture: $e'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return null;
     }
+  }
 
-    await controller.pausePreview();
-    if (!context.mounted) return;
-
-    controller.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
-
-    Future<Uint8List?> imageBytes = screenshotController.capture(pixelRatio: 1);
+  Future takePicture() async {
+    if (sharePreviewIsShown) return;
+    late Future<Uint8List?> imageBytes;
 
     setState(() {
       sharePreviewIsShown = true;
     });
+
+    if (useHighQuality) {
+      if (Platform.isIOS) {
+        await controller.pausePreview();
+        if (!context.mounted) return;
+      }
+      try {
+        // Take the picture
+        final XFile picture = await controller.takePicture();
+        imageBytes = loadAndDeletePictureFromFile(picture);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error taking picture: $e'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+    } else {
+      if (isFlashOn) {
+        if (isFront) {
+          setState(() {
+            showSelfieFlash = true;
+          });
+        } else {
+          controller.setFlashMode(FlashMode.torch);
+        }
+        await Future.delayed(Duration(milliseconds: 1000));
+      }
+
+      await controller.pausePreview();
+      if (!context.mounted) return;
+
+      controller.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
+
+      imageBytes = screenshotController.capture(pixelRatio: 1);
+    }
+
     bool? shoudReturn = await Navigator.push(
       context,
       PageRouteBuilder(
@@ -163,8 +218,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return Navigator.pop(context);
     }
     // does not work??
-    //await controller.resumePreview();
-    selectCamera(0);
+    if (Platform.isIOS) {
+      await controller.resumePreview();
+    } else {
+      selectCamera(0);
+    }
     if (context.mounted) {
       setState(() {
         sharePreviewIsShown = false;
@@ -264,6 +322,22 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                   isFlashOn = true;
                                 }
                                 setState(() {});
+                              },
+                            ),
+                            ActionButton(
+                              Icons.hd_rounded,
+                              tooltipText: context.lang.toggleHighQuality,
+                              color: useHighQuality
+                                  ? Colors.white
+                                  : const Color.fromARGB(158, 255, 255, 255),
+                              onPressed: () async {
+                                useHighQuality = !useHighQuality;
+                                setState(() {});
+                                var user = await getUser();
+                                if (user != null) {
+                                  user.useHighQuality = useHighQuality;
+                                  updateUser(user);
+                                }
                               },
                             ),
                           ],
