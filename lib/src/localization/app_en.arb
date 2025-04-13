@@ -46,6 +46,8 @@
   "@newMessageTitle": {},
   "chatsTapToSend": "Click to send your first image",
   "@chatsTapToSend": {},
+  "cameraPreviewSendTo": "Send to",
+  "@cameraPreviewSendTo": {},
   "shareImageTitle": "Share with",
   "@shareImageTitle": {},
   "shareImageBestFriends": "Best friends",

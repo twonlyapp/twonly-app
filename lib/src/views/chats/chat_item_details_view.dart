@@ -17,11 +17,10 @@ import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/services/notification_service.dart';
-import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
+import 'package:twonly/src/views/camera_to_share/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_view.dart';
-import 'package:twonly/src/views/home_view.dart';
 
 class ChatListEntry extends StatelessWidget {
   const ChatListEntry(
@@ -442,10 +441,11 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                       : IconButton(
                           icon: FaIcon(FontAwesomeIcons.camera),
                           onPressed: () {
-                            globalSendNextMediaToUser = user;
-                            globalUpdateOfHomeViewPageIndex(0);
-                            Navigator.popUntil(
-                                context, (route) => route.isFirst);
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (context) {
+                                return CameraSendToView(widget.contact);
+                              },
+                            ));
                           },
                         )
                 ],

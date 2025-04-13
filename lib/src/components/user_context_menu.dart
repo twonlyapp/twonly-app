@@ -5,10 +5,9 @@ import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
+import 'package:twonly/src/views/camera_to_share/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/contact/contact_verify_view.dart';
-import 'package:twonly/src/views/home_view.dart';
 
 class UserContextMenu extends StatefulWidget {
   final Widget child;
@@ -51,19 +50,18 @@ class _UserContextMenuState extends State<UserContextMenu> {
             },
             child: FaIcon(FontAwesomeIcons.boxOpen),
           ),
-        PieAction(
-          tooltip: Text(context.lang.contextMenuVerifyUser),
-          onSelect: () {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (context) {
-                return ContactVerifyView(widget.contact);
-              },
-            ));
-          },
-          child: widget.contact.verified
-              ? FaIcon(FontAwesomeIcons.shieldHeart)
-              : const Icon(Icons.gpp_maybe_rounded),
-        ),
+        if (!widget.contact.verified)
+          PieAction(
+            tooltip: Text(context.lang.contextMenuVerifyUser),
+            onSelect: () {
+              Navigator.push(context, MaterialPageRoute(
+                builder: (context) {
+                  return ContactVerifyView(widget.contact);
+                },
+              ));
+            },
+            child: const Icon(Icons.gpp_maybe_rounded),
+          ),
         PieAction(
           tooltip: Text(context.lang.contextMenuOpenChat),
           onSelect: () {
@@ -78,8 +76,11 @@ class _UserContextMenuState extends State<UserContextMenu> {
         PieAction(
           tooltip: Text(context.lang.contextMenuSendImage),
           onSelect: () {
-            globalSendNextMediaToUser = widget.contact;
-            globalUpdateOfHomeViewPageIndex(0);
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) {
+                return CameraSendToView(widget.contact);
+              },
+            ));
           },
           child: const FaIcon(FontAwesomeIcons.camera),
         ),

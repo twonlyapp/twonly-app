@@ -15,17 +15,17 @@ import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/home_view.dart';
 
-Contact? globalSendNextMediaToUser;
-
 class ShareImageView extends StatefulWidget {
   const ShareImageView(
       {super.key,
       required this.imageBytesFuture,
       required this.isRealTwonly,
-      required this.maxShowTime});
+      required this.maxShowTime,
+      this.preselectedUser});
   final Future<Uint8List?> imageBytesFuture;
   final bool isRealTwonly;
   final int maxShowTime;
+  final Contact? preselectedUser;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -47,8 +47,8 @@ class _ShareImageView extends State<ShareImageView> {
   void initState() {
     super.initState();
 
-    if (globalSendNextMediaToUser != null) {
-      _selectedUserIds.add(globalSendNextMediaToUser!.userId);
+    if (widget.preselectedUser != null) {
+      _selectedUserIds.add(widget.preselectedUser!.userId);
     }
 
     Stream<List<Contact>> allContacts =
@@ -233,8 +233,12 @@ class _ShareImageView extends State<ShareImageView> {
                     widget.maxShowTime,
                   );
                   if (context.mounted) {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                    globalUpdateOfHomeViewPageIndex(1);
+                    if (widget.preselectedUser != null) {
+                      Navigator.pop(context, true);
+                    } else {
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                      globalUpdateOfHomeViewPageIndex(1);
+                    }
                   }
                 },
                 style: ButtonStyle(

@@ -17,15 +17,16 @@ import 'package:twonly/src/components/image_editor/data/layer.dart';
 import 'package:twonly/src/components/image_editor/layers_viewer.dart';
 import 'package:twonly/src/components/image_editor/modules/all_emojis.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:twonly/src/views/home_view.dart';
 
 List<Layer> layers = [];
 List<Layer> undoLayers = [];
 List<Layer> removedLayers = [];
 
 class ShareImageEditorView extends StatefulWidget {
-  const ShareImageEditorView({super.key, required this.imageBytes});
+  const ShareImageEditorView(
+      {super.key, required this.imageBytes, this.sendTo});
   final Future<Uint8List?> imageBytes;
+  final Contact? sendTo;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -187,7 +188,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ActionButton(
         FontAwesomeIcons.rotateLeft,
         tooltipText: context.lang.undo,
-        disable: layers.length <= 2 && removedLayers.isEmpty,
+        disable: layers.where((x) => x.isDeleted).length <= 2 &&
+            removedLayers.isEmpty,
         onPressed: () {
           if (removedLayers.isNotEmpty) {
             layers.add(removedLayers.removeLast());
@@ -261,9 +263,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
-    if (globalSendNextMediaToUser != null) {
-      sendNextMediaToUserName =
-          getContactDisplayName(globalSendNextMediaToUser!);
+    if (widget.sendTo != null) {
+      sendNextMediaToUserName = getContactDisplayName(widget.sendTo!);
     }
 
     return Scaffold(
@@ -309,8 +310,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             ),
           ),
           Positioned(
-            top: 5,
-            left: 0,
+            top: 10,
+            left: 5,
             right: 0,
             child: SafeArea(
               child: Row(
@@ -392,16 +393,20 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     ),
                     onPressed: () async {
                       Future<Uint8List?> imageBytes = getMergedImage();
-                      Navigator.push(
+                      bool? wasSend = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ShareImageView(
                             imageBytesFuture: imageBytes,
                             isRealTwonly: _isRealTwonly,
                             maxShowTime: maxShowTime,
+                            preselectedUser: widget.sendTo,
                           ),
                         ),
                       );
+                      if (wasSend != null && wasSend && context.mounted) {
+                        Navigator.pop(context, true);
+                      }
                     },
                     child: FaIcon(FontAwesomeIcons.userPlus),
                   ),
@@ -420,7 +425,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       : FaIcon(FontAwesomeIcons.solidPaperPlane),
                   onPressed: () async {
                     if (sendingImage) return;
-                    if (globalSendNextMediaToUser != null) {
+                    if (widget.sendTo != null) {
                       setState(() {
                         sendingImage = true;
                       });
@@ -431,26 +436,29 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         return;
                       }
                       sendImage(
-                        [globalSendNextMediaToUser!.userId],
+                        [widget.sendTo!.userId],
                         imageBytes,
                         _isRealTwonly,
                         maxShowTime,
                       );
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      globalUpdateOfHomeViewPageIndex(1);
+                      Navigator.pop(context, true);
                       return;
                     }
                     Future<Uint8List?> imageBytes = getMergedImage();
-                    Navigator.push(
+                    bool? wasSend = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ShareImageView(
                           imageBytesFuture: imageBytes,
                           isRealTwonly: _isRealTwonly,
                           maxShowTime: maxShowTime,
+                          preselectedUser: widget.sendTo,
                         ),
                       ),
                     );
+                    if (wasSend != null && wasSend && context.mounted) {
+                      Navigator.pop(context, true);
+                    }
                   },
                   style: ButtonStyle(
                     padding: WidgetStateProperty.all<EdgeInsets>(

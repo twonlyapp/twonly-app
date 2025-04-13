@@ -3,7 +3,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
 import 'camera_to_share/camera_preview_view.dart';
 import 'chats/chat_list_view.dart';
 import 'package:flutter/material.dart';
@@ -31,9 +30,6 @@ class HomeViewState extends State<HomeView> {
     activePageIdx = widget.initialPage;
     homeViewPageController = PageController(initialPage: widget.initialPage);
     globalUpdateOfHomeViewPageIndex = (index) {
-      if (index == 1) {
-        globalSendNextMediaToUser = null;
-      }
       homeViewPageController.jumpToPage(index);
       setState(() {
         activePageIdx = index;
@@ -61,8 +57,6 @@ class HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     selectNotificationStream.close();
-    // disable globalCallbacks to the flutter tree
-    globalUpdateOfHomeViewPageIndex = (a) {};
     super.dispose();
   }
 
@@ -74,9 +68,6 @@ class HomeViewState extends State<HomeView> {
         body: PageView(
           controller: homeViewPageController,
           onPageChanged: (index) {
-            if (index == 1) {
-              globalSendNextMediaToUser = null;
-            }
             activePageIdx = index;
             setState(() {});
           },
@@ -103,9 +94,6 @@ class HomeViewState extends State<HomeView> {
           ],
           onTap: (int index) {
             activePageIdx = index;
-            if (index == 1) {
-              globalSendNextMediaToUser = null;
-            }
             setState(() {
               homeViewPageController.animateToPage(
                 index,

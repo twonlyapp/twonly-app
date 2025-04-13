@@ -16,11 +16,10 @@ import 'package:twonly/src/json_models/message.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
+import 'package:twonly/src/views/camera_to_share/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/views/chats/start_new_chat.dart';
-import 'package:twonly/src/views/home_view.dart';
 import 'package:twonly/src/views/settings/settings_main_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
 import 'package:flutter/material.dart';
@@ -297,10 +296,24 @@ class _UserListItem extends State<UserListItem> {
                 ],
               ),
         leading: ContactAvatar(contact: widget.user),
+        trailing: IconButton(
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) {
+                return CameraSendToView(widget.user);
+              },
+            ));
+          },
+          icon: FaIcon(FontAwesomeIcons.camera,
+              color: context.color.outline.withAlpha(150)),
+        ),
         onTap: () {
           if (currentMessage == null) {
-            globalSendNextMediaToUser = widget.user;
-            globalUpdateOfHomeViewPageIndex(0);
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) {
+                return CameraSendToView(widget.user);
+              },
+            ));
             return;
           }
           List<Message> msgs = previewMessages

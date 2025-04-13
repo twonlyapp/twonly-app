@@ -15,9 +15,8 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera_to_share/share_image_view.dart';
+import 'package:twonly/src/views/camera_to_share/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
-import 'package:twonly/src/views/home_view.dart';
 
 final _noScreenshot = NoScreenshot.instance;
 
@@ -490,9 +489,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     IconButton.outlined(
                       icon: FaIcon(FontAwesomeIcons.camera),
                       onPressed: () async {
-                        globalSendNextMediaToUser = widget.contact;
-                        globalUpdateOfHomeViewPageIndex(0);
-                        Navigator.popUntil(context, (route) => route.isFirst);
+                        await Navigator.push(context, MaterialPageRoute(
+                          builder: (context) {
+                            return CameraSendToView(widget.contact);
+                          },
+                        ));
                       },
                       style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(
