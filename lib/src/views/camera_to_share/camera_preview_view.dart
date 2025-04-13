@@ -162,7 +162,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       sharePreviewIsShown = true;
     });
 
-    if (useHighQuality) {
+    if (useHighQuality && !isFront) {
       if (Platform.isIOS) {
         await controller.pausePreview();
         if (!context.mounted) return;
@@ -221,7 +221,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (Platform.isIOS) {
       await controller.resumePreview();
     } else {
-      selectCamera(0);
+      selectCamera(cameraId);
     }
     if (context.mounted) {
       setState(() {
@@ -324,22 +324,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                 setState(() {});
                               },
                             ),
-                            ActionButton(
-                              Icons.hd_rounded,
-                              tooltipText: context.lang.toggleHighQuality,
-                              color: useHighQuality
-                                  ? Colors.white
-                                  : const Color.fromARGB(158, 255, 255, 255),
-                              onPressed: () async {
-                                useHighQuality = !useHighQuality;
-                                setState(() {});
-                                var user = await getUser();
-                                if (user != null) {
-                                  user.useHighQuality = useHighQuality;
-                                  updateUser(user);
-                                }
-                              },
-                            ),
+                            if (!isFront)
+                              ActionButton(
+                                Icons.hd_rounded,
+                                tooltipText: context.lang.toggleHighQuality,
+                                color: useHighQuality
+                                    ? Colors.white
+                                    : const Color.fromARGB(158, 255, 255, 255),
+                                onPressed: () async {
+                                  useHighQuality = !useHighQuality;
+                                  setState(() {});
+                                  var user = await getUser();
+                                  if (user != null) {
+                                    user.useHighQuality = useHighQuality;
+                                    updateUser(user);
+                                  }
+                                },
+                              ),
                           ],
                         ),
                       ),
