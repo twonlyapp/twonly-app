@@ -22,6 +22,27 @@ import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_view.dart';
 
+InputDecoration inputTextMessageDeco(BuildContext context) {
+  return InputDecoration(
+    hintText: context.lang.chatListDetailInput,
+    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20),
+      borderSide:
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20.0),
+      borderSide:
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20.0),
+      borderSide: BorderSide(color: Colors.grey, width: 2.0),
+    ),
+  );
+}
+
 class ChatListEntry extends StatelessWidget {
   const ChatListEntry(
       this.message, this.contact, this.lastMessageFromSameUser, this.reactions,
@@ -61,6 +82,7 @@ class ChatListEntry extends StatelessWidget {
 
       if (content is TextMessageContent) {
         hasOneTextReaction = true;
+        if (!isEmoji(content.text)) continue;
         late Widget child;
         if (EmojiAnimation.animatedIcons.containsKey(content.text)) {
           child = SizedBox(
@@ -86,6 +108,72 @@ class ChatListEntry extends StatelessWidget {
       mainAxisAlignment: message.messageOtherId == null
           ? MainAxisAlignment.start
           : MainAxisAlignment.end,
+      children: children,
+    );
+  }
+
+  Widget getTextResponseColumns(BuildContext context, bool right) {
+    List<Widget> children = [];
+    for (final reaction in reactions) {
+      MessageContent? content = MessageContent.fromJson(
+          reaction.kind, jsonDecode(reaction.contentJson!));
+
+      if (content is TextMessageContent) {
+        if (content.text.length <= 1) continue;
+        if (isEmoji(content.text)) continue;
+        var entries = [
+          FaIcon(
+            FontAwesomeIcons.reply,
+            size: 10,
+          ),
+          SizedBox(width: 5),
+          Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.5,
+              ),
+              child: Text(
+                content.text,
+                style: TextStyle(fontSize: 14),
+                textAlign: right ? TextAlign.left : TextAlign.right,
+              )),
+        ];
+        if (!right) {
+          entries = entries.reversed.toList();
+        }
+
+        children.insert(
+          0,
+          Container(
+            padding: EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.8,
+              ),
+              padding: EdgeInsets.symmetric(vertical: 1, horizontal: 10),
+              decoration: BoxDecoration(
+                color: right
+                    ? const Color.fromARGB(107, 124, 77, 255)
+                    : const Color.fromARGB(83, 68, 137, 255),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: entries,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    if (children.isEmpty) return Container();
+
+    return Column(
+      // mainAxisAlignment: message.messageOtherId == null
+      //     ? MainAxisAlignment.start
+      //     : MainAxisAlignment.end,
+      crossAxisAlignment:
+          right ? CrossAxisAlignment.start : CrossAxisAlignment.end,
       children: children,
     );
   }
@@ -194,11 +282,21 @@ class ChatListEntry extends StatelessWidget {
         padding: lastMessageFromSameUser
             ? EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10)
             : EdgeInsets.only(top: 5, bottom: 20, right: 10, left: 10),
-        child: Stack(
-          alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+        child: Column(
+          mainAxisAlignment:
+              right ? MainAxisAlignment.end : MainAxisAlignment.start,
+          crossAxisAlignment:
+              right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            child,
-            Positioned(bottom: 5, left: 5, right: 5, child: getReactionRow()),
+            Stack(
+              alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+              children: [
+                child,
+                Positioned(
+                    bottom: 5, left: 5, right: 5, child: getReactionRow()),
+              ],
+            ),
+            getTextResponseColumns(context, !right)
           ],
         ),
       ),
@@ -406,28 +504,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                       onSubmitted: (_) {
                         _sendMessage();
                       },
-                      decoration: InputDecoration(
-                        hintText: context.lang.chatListDetailInput,
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 2.0),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                          borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 2.0),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                          borderSide:
-                              BorderSide(color: Colors.grey, width: 2.0),
-                        ),
-                      ),
+                      decoration: inputTextMessageDeco(context),
                     ),
                   ),
                   SizedBox(width: 8),

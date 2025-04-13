@@ -294,7 +294,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               setState(() {});
             },
             child: MediaViewSizing(
-              SizedBox(
+              child: SizedBox(
                 height: currentImage.height / pixelRatio,
                 width: currentImage.width / pixelRatio,
                 child: Screenshot(

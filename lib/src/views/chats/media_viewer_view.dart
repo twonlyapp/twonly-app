@@ -33,7 +33,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Timer? progressTimer;
 
   bool showShortReactions = false;
-  int selectedShortReaction = -1;
 
   // current image related
   Uint8List? imageBytes;
@@ -42,12 +41,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   double progress = 0;
   bool isRealTwonly = false;
   bool isDownloading = false;
+  bool showSendTextMessageInput = false;
 
   bool imageSaved = false;
   bool imageSaving = false;
 
   List<Message> allMediaFiles = [];
   late StreamSubscription<List<Message>> _subscription;
+  TextEditingController textMessageController = TextEditingController();
 
   @override
   void initState() {
@@ -116,6 +117,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       progress = 0;
       isDownloading = false;
       isRealTwonly = false;
+      showSendTextMessageInput = false;
     });
 
     if (content.isRealTwonly) {
@@ -206,6 +208,134 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _subscription.cancel();
   }
 
+  Future onPressedSaveToGallery() async {
+    if (allMediaFiles.first.messageOtherId == null) {
+      return; // should not be possible
+    }
+    setState(() {
+      imageSaving = true;
+    });
+    encryptAndSendMessage(
+      null,
+      widget.contact.userId,
+      MessageJson(
+        kind: MessageKind.storedMediaFile,
+        messageId: allMediaFiles.first.messageId,
+        content: StoredMediaFileContent(
+          messageId: allMediaFiles.first.messageOtherId!,
+        ),
+        timestamp: DateTime.now(),
+      ),
+      pushKind: PushKind.storedMediaFile,
+    );
+    final res = await saveImageToGallery(imageBytes!);
+    if (res == null) {
+      setState(() {
+        imageSaving = false;
+        imageSaved = true;
+      });
+    }
+  }
+
+  Widget bottomNavigation() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (maxShowTime == 999999)
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              iconColor: imageSaved
+                  ? Theme.of(context).colorScheme.outline
+                  : Theme.of(context).colorScheme.primary,
+              foregroundColor: imageSaved
+                  ? Theme.of(context).colorScheme.outline
+                  : Theme.of(context).colorScheme.primary,
+            ),
+            onPressed: onPressedSaveToGallery,
+            child: Row(
+              children: [
+                imageSaving
+                    ? SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(strokeWidth: 1))
+                    : imageSaved
+                        ? Icon(Icons.check)
+                        : FaIcon(FontAwesomeIcons.floppyDisk),
+              ],
+            ),
+          ),
+        SizedBox(width: 10),
+        IconButton(
+          icon: SizedBox(
+            width: 30,
+            height: 30,
+            child: GridView.count(
+              crossAxisCount: 2,
+              children: List.generate(
+                4,
+                (index) {
+                  return SizedBox(
+                    width: 8,
+                    height: 8,
+                    child: Center(
+                      child: EmojiAnimation(
+                        emoji:
+                            EmojiAnimation.animatedIcons.keys.toList()[index],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          onPressed: () async {
+            setState(() {
+              showShortReactions = !showShortReactions;
+            });
+          },
+          style: ButtonStyle(
+            padding: WidgetStateProperty.all<EdgeInsets>(
+              EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            ),
+          ),
+        ),
+        SizedBox(width: 10),
+        IconButton.outlined(
+          icon: FaIcon(FontAwesomeIcons.message),
+          onPressed: () async {
+            setState(() {
+              showSendTextMessageInput = true;
+              showShortReactions = true;
+            });
+          },
+          style: ButtonStyle(
+            padding: WidgetStateProperty.all<EdgeInsets>(
+              EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            ),
+          ),
+        ),
+        SizedBox(width: 10),
+        IconButton.outlined(
+          icon: FaIcon(FontAwesomeIcons.camera),
+          onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(
+              builder: (context) {
+                return CameraSendToView(widget.contact);
+              },
+            ));
+          },
+          style: ButtonStyle(
+            padding: WidgetStateProperty.all<EdgeInsets>(
+              EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,10 +346,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if (imageBytes != null && (canBeSeenUntil == null || progress >= 0))
               GestureDetector(
                 onTap: () {
+                  if (showSendTextMessageInput) {
+                    setState(() {
+                      showShortReactions = false;
+                      showSendTextMessageInput = false;
+                    });
+                    return;
+                  }
                   nextMediaOrExit();
                 },
                 child: MediaViewSizing(
-                  Image.memory(
+                  bottomNavigation: bottomNavigation(),
+                  requiredHeight: 50,
+                  child: Image.memory(
                     imageBytes!,
                     fit: BoxFit.contain,
                     frameBuilder:
@@ -233,7 +372,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                                 height: 60,
                                 width: 60,
                                 child:
-                                    CircularProgressIndicator(strokeWidth: 6),
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                       );
                     }),
@@ -303,208 +442,169 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 ],
               ),
             ),
-            AnimatedPositioned(
-              duration: Duration(milliseconds: 200), // Animation duration
-              bottom: showShortReactions ? 100 : 90,
-              left: showShortReactions ? 0 : 150,
-              right: showShortReactions ? 0 : 150,
-              curve: Curves.linearToEaseOut,
-              child: AnimatedOpacity(
-                opacity: showShortReactions ? 1.0 : 0.0, // Fade in/out
-                duration: Duration(milliseconds: 150),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: List.generate(
-                    6,
-                    (index) {
-                      final emoji =
-                          EmojiAnimation.animatedIcons.keys.toList()[index];
-                      return AnimatedSize(
-                        duration:
-                            Duration(milliseconds: 200), // Animation duration
-                        curve: Curves.linearToEaseOut,
-                        child: GestureDetector(
-                          onTap: () {
+            if (showSendTextMessageInput)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  color: context.color.surface,
+                  padding: const EdgeInsets.only(
+                      bottom: 10, left: 20, right: 20, top: 10),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: FaIcon(FontAwesomeIcons.xmark),
+                        onPressed: () {
+                          setState(() {
+                            showShortReactions = false;
+                            showSendTextMessageInput = false;
+                          });
+                        },
+                      ),
+                      Expanded(
+                        child: Container(
+                          child: TextField(
+                            autofocus: true,
+                            controller: textMessageController,
+                            onEditingComplete: () {
+                              setState(() {
+                                showSendTextMessageInput = false;
+                                showShortReactions = false;
+                              });
+                            },
+                            decoration: inputTextMessageDeco(context),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                        onPressed: () {
+                          if (textMessageController.text.isNotEmpty) {
                             sendTextMessage(
                               widget.contact.userId,
                               TextMessageContent(
-                                text: emoji,
+                                text: textMessageController.text,
                                 responseToMessageId:
                                     allMediaFiles.first.messageOtherId,
                               ),
                               PushKind.reaction,
                             );
-                            setState(() {
-                              selectedShortReaction = index;
-                            });
-                            Future.delayed(Duration(milliseconds: 300), () {
-                              setState(() {
-                                showShortReactions = false;
-                              });
-                            });
-                          },
-                          child: (selectedShortReaction == index)
-                              ? EmojiAnimationFlying(
-                                  emoji: emoji,
-                                  duration: Duration(milliseconds: 300),
-                                  startPosition: 0.0,
-                                  size: (showShortReactions) ? 40 : 10)
-                              : AnimatedOpacity(
-                                  opacity: (selectedShortReaction == -1)
-                                      ? 1
-                                      : 0, // Fade in/out
-                                  duration: Duration(milliseconds: 150),
-                                  child: SizedBox(
-                                    width: showShortReactions ? 40 : 10,
-                                    child: Center(
-                                      child: EmojiAnimation(
-                                        emoji: emoji,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                        ),
-                      );
-                    },
+                            textMessageController.clear();
+                          }
+                          setState(() {
+                            showSendTextMessageInput = false;
+                            showShortReactions = false;
+                          });
+                        },
+                      )
+                    ],
                   ),
                 ),
               ),
-            ),
-            if (imageBytes != null)
-              Positioned(
-                bottom: 30,
-                left: 0,
-                right: 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (maxShowTime == 999999)
-                      OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          iconColor: imageSaved
-                              ? Theme.of(context).colorScheme.outline
-                              : Theme.of(context).colorScheme.primary,
-                          foregroundColor: imageSaved
-                              ? Theme.of(context).colorScheme.outline
-                              : Theme.of(context).colorScheme.primary,
-                        ),
-                        onPressed: () async {
-                          if (allMediaFiles.first.messageOtherId == null) {
-                            return; // should not be possible
-                          }
-                          setState(() {
-                            imageSaving = true;
-                          });
-                          encryptAndSendMessage(
-                            null,
-                            widget.contact.userId,
-                            MessageJson(
-                              kind: MessageKind.storedMediaFile,
-                              messageId: allMediaFiles.first.messageId,
-                              content: StoredMediaFileContent(
-                                messageId: allMediaFiles.first.messageOtherId!,
-                              ),
-                              timestamp: DateTime.now(),
-                            ),
-                            pushKind: PushKind.storedMediaFile,
-                          );
-                          final res = await saveImageToGallery(imageBytes!);
-                          if (res == null) {
-                            setState(() {
-                              imageSaving = false;
-                              imageSaved = true;
-                            });
-                          }
-                        },
-                        child: Row(
-                          children: [
-                            imageSaving
-                                ? SizedBox(
-                                    width: 10,
-                                    height: 10,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 1))
-                                : imageSaved
-                                    ? Icon(Icons.check)
-                                    : FaIcon(FontAwesomeIcons.floppyDisk),
-                          ],
-                        ),
-                      ),
-                    SizedBox(width: 10),
-                    IconButton(
-                      icon: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: GridView.count(
-                          crossAxisCount: 2,
-                          children: List.generate(
-                            4,
-                            (index) {
-                              return SizedBox(
-                                width: 8,
-                                height: 8,
-                                child: Center(
-                                  child: EmojiAnimation(
-                                    emoji: EmojiAnimation.animatedIcons.keys
-                                        .toList()[index],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      onPressed: () async {
-                        setState(() {
-                          showShortReactions = !showShortReactions;
-                          selectedShortReaction = -1;
-                        });
-                      },
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    IconButton.outlined(
-                      icon: FaIcon(FontAwesomeIcons.message),
-                      onPressed: () async {
-                        Navigator.popUntil(context, (route) => route.isFirst);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) {
-                            return ChatItemDetailsView(widget.contact);
-                          }),
-                        );
-                      },
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    IconButton.outlined(
-                      icon: FaIcon(FontAwesomeIcons.camera),
-                      onPressed: () async {
-                        await Navigator.push(context, MaterialPageRoute(
-                          builder: (context) {
-                            return CameraSendToView(widget.contact);
-                          },
-                        ));
-                      },
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            if (allMediaFiles.isNotEmpty)
+              ReactionButtons(
+                show: showShortReactions,
+                userId: widget.contact.userId,
+                responseToMessageId: allMediaFiles.first.messageOtherId!,
+                hide: () {
+                  setState(() {
+                    showShortReactions = false;
+                    showSendTextMessageInput = false;
+                  });
+                },
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class ReactionButtons extends StatefulWidget {
+  const ReactionButtons(
+      {super.key,
+      required this.show,
+      required this.userId,
+      required this.responseToMessageId,
+      required this.hide});
+
+  final bool show;
+  final int userId;
+  final int responseToMessageId;
+  final Function() hide;
+
+  @override
+  State<ReactionButtons> createState() => _ReactionButtonsState();
+}
+
+class _ReactionButtonsState extends State<ReactionButtons> {
+  int selectedShortReaction = -1;
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPositioned(
+      duration: Duration(milliseconds: 200), // Animation duration
+      bottom: widget.show ? 100 : 90,
+      left: widget.show ? 0 : 150,
+      right: widget.show ? 0 : 150,
+      curve: Curves.linearToEaseOut,
+      child: AnimatedOpacity(
+        opacity: widget.show ? 1.0 : 0.0, // Fade in/out
+        duration: Duration(milliseconds: 150),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: List.generate(
+            6,
+            (index) {
+              final emoji = EmojiAnimation.animatedIcons.keys.toList()[index];
+              return AnimatedSize(
+                duration: Duration(milliseconds: 200), // Animation duration
+                curve: Curves.linearToEaseOut,
+                child: GestureDetector(
+                  onTap: () {
+                    sendTextMessage(
+                      widget.userId,
+                      TextMessageContent(
+                        text: emoji,
+                        responseToMessageId: widget.responseToMessageId,
+                      ),
+                      PushKind.reaction,
+                    );
+                    setState(() {
+                      selectedShortReaction = index;
+                    });
+                    Future.delayed(Duration(milliseconds: 300), () {
+                      setState(() {
+                        widget.hide();
+                        selectedShortReaction = -1;
+                      });
+                    });
+                  },
+                  child: (selectedShortReaction == index)
+                      ? EmojiAnimationFlying(
+                          emoji: emoji,
+                          duration: Duration(milliseconds: 300),
+                          startPosition: 0.0,
+                          size: (widget.show) ? 40 : 10)
+                      : AnimatedOpacity(
+                          opacity: (selectedShortReaction == -1)
+                              ? 1
+                              : 0, // Fade in/out
+                          duration: Duration(milliseconds: 150),
+                          child: SizedBox(
+                            width: widget.show ? 40 : 10,
+                            child: Center(
+                              child: EmojiAnimation(
+                                emoji: emoji,
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

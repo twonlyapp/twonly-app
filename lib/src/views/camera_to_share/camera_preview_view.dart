@@ -200,7 +200,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       );
     }
     return MediaViewSizing(
-      Stack(
+      child: Stack(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(22),
