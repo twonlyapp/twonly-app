@@ -330,6 +330,7 @@ Future<Map<int, PushUser>> getPushKeys(String storageKey) async {
     iOptions: IOSOptions(
       groupId: "CN332ZUGRP.eu.twonly.shared",
       synchronizable: false,
+      accessibility: KeychainAccessibility.first_unlock,
     ),
   );
   Map<int, PushUser> pushKeys = <int, PushUser>{};
@@ -354,7 +355,10 @@ Future setPushKeys(String storageKey, Map<int, PushUser> pushKeys) async {
     key: storageKey,
     value: jsonString,
     iOptions: IOSOptions(
-        groupId: "CN332ZUGRP.eu.twonly.shared", synchronizable: false),
+      groupId: "CN332ZUGRP.eu.twonly.shared",
+      synchronizable: false,
+      accessibility: KeychainAccessibility.first_unlock,
+    ),
   );
 }
 
