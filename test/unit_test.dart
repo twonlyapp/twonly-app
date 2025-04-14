@@ -1,15 +1,13 @@
-// This is an example unit test.
-//
-// A unit test tests a single function, method, or class. To learn more about
-// writing unit tests, visit
-// https://flutter.dev/to/unit-testing
-
 import 'package:flutter_test/flutter_test.dart';
+import 'package:twonly/src/components/animate_icon.dart';
 
 void main() {
-  group('Plus Operator', () {
-    test('should add two numbers together', () {
-      expect(1 + 1, 2);
+  group('isEmoji', () {
+    test('test isEmoji function', () {
+      expect(isEmoji("Hallo"), false);
+      expect(isEmoji("😂"), true);
+      expect(isEmoji("😂😂"), false);
+      expect(isEmoji("Hallo 😂"), false);
     });
   });
 }
