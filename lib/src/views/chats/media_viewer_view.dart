@@ -357,7 +357,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 },
                 child: MediaViewSizing(
                   bottomNavigation: bottomNavigation(),
-                  requiredHeight: 50,
+                  requiredHeight: 80,
                   child: Image.memory(
                     imageBytes!,
                     fit: BoxFit.contain,
