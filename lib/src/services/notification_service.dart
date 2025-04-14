@@ -350,6 +350,8 @@ Future setPushKeys(String storageKey, Map<int, PushUser> pushKeys) async {
     jsonToSend[key.toString()] = value.toJson();
   });
 
+  await storage.delete(key: storageKey);
+
   String jsonString = jsonEncode(jsonToSend);
   await storage.write(
     key: storageKey,

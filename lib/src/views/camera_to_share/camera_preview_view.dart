@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/components/zoom_selector.dart';
@@ -27,6 +28,7 @@ class CameraPreviewView extends StatefulWidget {
 class _CameraPreviewViewState extends State<CameraPreviewView> {
   double scaleFactor = 1;
   bool sharePreviewIsShown = false;
+  bool galleryLoadedImageIsShown = false;
   bool isFlashOn = false;
   bool showSelfieFlash = false;
   int cameraId = 0;
@@ -200,23 +202,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       imageBytes = screenshotController.capture(pixelRatio: 1);
     }
 
-    bool? shoudReturn = await Navigator.push(
-      context,
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (context, a1, a2) =>
-            ShareImageEditorView(imageBytes: imageBytes, sendTo: widget.sendTo),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return child;
-        },
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    );
-    if (shoudReturn != null && shoudReturn) {
-      if (!context.mounted) return;
-      return Navigator.pop(context);
+    if (await pushImageEditor(imageBytes)) {
+      return;
     }
+
     // does not work??
     if (Platform.isIOS) {
       await controller.resumePreview();
@@ -232,6 +221,28 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     setState(() {
       showSelfieFlash = false;
     });
+  }
+
+  Future<bool> pushImageEditor(Future<Uint8List?> imageBytes) async {
+    bool? shoudReturn = await Navigator.push(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, a1, a2) =>
+            ShareImageEditorView(imageBytes: imageBytes, sendTo: widget.sendTo),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return child;
+        },
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+    if (shoudReturn != null && shoudReturn) {
+      if (!context.mounted) return false;
+      Navigator.pop(context);
+      return true;
+    }
+    return false;
   }
 
   bool get isFront =>
@@ -264,11 +275,21 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
             borderRadius: BorderRadius.circular(22),
             child: Stack(
               children: [
-                CameraPreviewWidget(
-                  controller: controller,
-                  screenshotController: screenshotController,
-                  isFront: isFront,
-                ),
+                if (!galleryLoadedImageIsShown)
+                  CameraPreviewWidget(
+                    controller: controller,
+                    screenshotController: screenshotController,
+                    isFront: isFront,
+                  ),
+                if (galleryLoadedImageIsShown)
+                  Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 1, color: context.color.primary),
+                    ),
+                  ),
                 Positioned.fill(
                   child: GestureDetector(
                     onPanStart: (details) async {
@@ -368,27 +389,73 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               ),
                             ),
                           const SizedBox(height: 30),
-                          GestureDetector(
-                            onTap: () async {
-                              takePicture();
-                            },
-                            onLongPress: () async {},
-                            child: Align(
-                              alignment: Alignment.center,
-                              child: Container(
-                                height: 100,
-                                width: 100,
-                                clipBehavior: Clip.antiAliasWithSaveLayer,
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    width: 7,
-                                    color: Colors.white,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: () async {
+                                  setState(() {
+                                    galleryLoadedImageIsShown = true;
+                                    sharePreviewIsShown = true;
+                                  });
+                                  final picker = ImagePicker();
+                                  final pickedFile = await picker.pickImage(
+                                      source: ImageSource.gallery);
+
+                                  if (pickedFile != null) {
+                                    File imageFile = File(pickedFile.path);
+                                    if (await pushImageEditor(
+                                        imageFile.readAsBytes())) {
+                                      return;
+                                    }
+                                  } else {
+                                    print('No image selected.');
+                                  }
+                                  setState(() {
+                                    galleryLoadedImageIsShown = false;
+                                    sharePreviewIsShown = false;
+                                  });
+                                },
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Container(
+                                    height: 50,
+                                    width: 80,
+                                    padding: const EdgeInsets.all(2),
+                                    child: Center(
+                                      child: FaIcon(
+                                        FontAwesomeIcons.photoFilm,
+                                        size: 25,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                              GestureDetector(
+                                onTap: () async {
+                                  takePicture();
+                                },
+                                onLongPress: () async {},
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Container(
+                                    height: 100,
+                                    width: 100,
+                                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        width: 7,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 80)
+                            ],
                           ),
                         ],
                       ),

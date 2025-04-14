@@ -28,6 +28,7 @@ String beautifulZoomScale(double scale) {
 
 class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   bool showWideAngleZoom = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -37,7 +38,14 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
 
   Future initAsync() async {
     showWideAngleZoom = (await widget.controller.getMinZoomLevel()) < 1;
+    if (_isDisposed) return;
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true; // Set the flag to true when disposing
+    super.dispose();
   }
 
   @override

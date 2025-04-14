@@ -33,7 +33,7 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>To create videos that can be securely shared.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Store photos in the gallery.</string>
+	<string>Store photos in the gallery or send from the gallery.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
