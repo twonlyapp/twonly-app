@@ -180,7 +180,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         FontAwesomeIcons.xmark,
         tooltipText: context.lang.close,
         onPressed: () async {
-          Navigator.pop(context);
+          Navigator.pop(context, false);
         },
       ),
       Expanded(child: Container()),
@@ -432,7 +432,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       Uint8List? imageBytes = await getMergedImage();
                       if (!context.mounted) return;
                       if (imageBytes == null) {
-                        Navigator.pop(context);
+                        Navigator.pop(context, false);
                         return;
                       }
                       sendImage(

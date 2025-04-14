@@ -207,20 +207,17 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
 
     // does not work??
-    if (Platform.isIOS) {
-      await controller.resumePreview();
-    } else {
-      selectCamera(cameraId);
-    }
+    // if (Platform.isIOS) {
+    //   await controller.resumePreview();
+    // } else {
+    selectCamera(cameraId);
+    // }
     if (context.mounted) {
       setState(() {
         sharePreviewIsShown = false;
+        showSelfieFlash = false;
       });
     }
-
-    setState(() {
-      showSelfieFlash = false;
-    });
   }
 
   Future<bool> pushImageEditor(Future<Uint8List?> imageBytes) async {
@@ -237,8 +234,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         reverseTransitionDuration: Duration.zero,
       ),
     );
+    if (!context.mounted) return true;
     if (shoudReturn != null && shoudReturn) {
-      if (!context.mounted) return false;
+      if (!context.mounted) return true;
       Navigator.pop(context);
       return true;
     }

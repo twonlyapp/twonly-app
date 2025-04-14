@@ -7,6 +7,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/account_view.dart';
 import 'package:twonly/src/views/settings/appearance_view.dart';
+import 'package:twonly/src/views/settings/chat_settings_view.dart';
 import 'package:twonly/src/views/settings/notification_view.dart';
 import 'package:twonly/src/views/settings/profile_view.dart';
 import 'package:twonly/src/views/settings/help_view.dart';
@@ -117,6 +118,16 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
                       return AppearanceView();
+                    }));
+                  },
+                ),
+                BetterListTile(
+                  icon: FontAwesomeIcons.comment,
+                  text: context.lang.settingsChats,
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return ChatSettingsView();
                     }));
                   },
                 ),

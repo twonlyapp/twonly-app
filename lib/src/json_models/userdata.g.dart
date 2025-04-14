@@ -15,7 +15,10 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..avatarJson = json['avatarJson'] as String?
       ..avatarCounter = (json['avatarCounter'] as num?)?.toInt()
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
-      ..useHighQuality = json['useHighQuality'] as bool?;
+      ..useHighQuality = json['useHighQuality'] as bool?
+      ..preSelectedEmojies = (json['preSelectedEmojies'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList();
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'username': instance.username,
@@ -25,5 +28,6 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'avatarCounter': instance.avatarCounter,
       'defaultShowTime': instance.defaultShowTime,
       'useHighQuality': instance.useHighQuality,
+      'preSelectedEmojies': instance.preSelectedEmojies,
       'userId': instance.userId,
     };

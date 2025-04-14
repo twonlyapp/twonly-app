@@ -17,6 +17,7 @@ class UserData {
   int? avatarCounter;
   int? defaultShowTime;
   bool? useHighQuality;
+  List<String>? preSelectedEmojies;
 
   final int userId;
 

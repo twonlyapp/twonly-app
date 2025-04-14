@@ -15,6 +15,7 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera_to_share/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 
@@ -540,6 +541,24 @@ class ReactionButtons extends StatefulWidget {
 
 class _ReactionButtonsState extends State<ReactionButtons> {
   int selectedShortReaction = -1;
+
+  List<String> selectedEmojis =
+      EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
+
+  @override
+  void initState() {
+    super.initState();
+    initAsync();
+  }
+
+  Future initAsync() async {
+    var user = await getUser();
+    if (user != null && user.preSelectedEmojies != null) {
+      selectedEmojis = user.preSelectedEmojies!;
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedPositioned(
@@ -557,7 +576,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
           children: List.generate(
             6,
             (index) {
-              final emoji = EmojiAnimation.animatedIcons.keys.toList()[index];
+              final emoji = selectedEmojis[index];
               return AnimatedSize(
                 duration: Duration(milliseconds: 200), // Animation duration
                 curve: Curves.linearToEaseOut,
