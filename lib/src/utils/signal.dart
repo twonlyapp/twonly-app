@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/src/json_models/message.dart';
-import 'package:twonly/src/json_models/signal_identity.dart';
-import 'package:twonly/src/json_models/userdata.dart';
-import 'package:twonly/src/proto/api/server_to_client.pb.dart';
-import 'package:twonly/src/signal/connect_signal_protocol_store.dart';
+import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/model/json/signal_identity.dart';
+import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
+import 'package:twonly/src/providers/signal/connect_signal_protocol_store.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -88,7 +89,7 @@ Future<ConnectSignalProtocolStore?> getSignalStore() async {
 
 Future<SignalIdentity?> getSignalIdentity() async {
   try {
-    final storage = getSecureStorage();
+    final storage = FlutterSecureStorage();
     final signalIdentityJson = await storage.read(key: "signal_identity");
     if (signalIdentityJson == null) {
       return null;
@@ -120,7 +121,7 @@ Future<List<PreKeyRecord>> getPreKeys() async {
 }
 
 Future createIfNotExistsSignalIdentity() async {
-  final storage = getSecureStorage();
+  final storage = FlutterSecureStorage();
 
   final signalIdentity = await storage.read(key: "signal_identity");
   if (signalIdentity != null) {
@@ -172,81 +173,6 @@ Future<Fingerprint?> generateSessionFingerPrint(int target) async {
   }
 }
 
-Uint8List intToBytes(int value) {
-  final byteData = ByteData(4);
-  byteData.setInt32(0, value, Endian.big);
-  return byteData.buffer.asUint8List();
-}
-
-int bytesToInt(Uint8List bytes) {
-  final byteData = ByteData.sublistView(bytes);
-  return byteData.getInt32(0, Endian.big);
-}
-
-List<Uint8List>? removeLastFourBytes(Uint8List original) {
-  if (original.length < 4) {
-    return null;
-  }
-  final newList = Uint8List(original.length - 4);
-  newList.setAll(0, original.sublist(0, original.length - 4));
-
-  final lastFourBytes = original.sublist(original.length - 4);
-  return [newList, lastFourBytes];
-}
-
-Future<Uint8List?> encryptBytes(Uint8List bytes, int target) async {
-  try {
-    ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
-
-    SessionCipher session = SessionCipher.fromStore(
-        signalStore, SignalProtocolAddress(target.toString(), defaultDeviceId));
-
-    final ciphertext =
-        await session.encrypt(Uint8List.fromList(gzip.encode(bytes)));
-
-    var b = BytesBuilder();
-    b.add(ciphertext.serialize());
-    b.add(intToBytes(ciphertext.getType()));
-
-    return b.takeBytes();
-  } catch (e) {
-    Logger("utils/signal").shout(e.toString());
-    return null;
-  }
-}
-
-Future<Uint8List?> decryptBytes(Uint8List bytes, int target) async {
-  try {
-    ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
-
-    SessionCipher session = SessionCipher.fromStore(
-        signalStore, SignalProtocolAddress(target.toString(), defaultDeviceId));
-
-    List<Uint8List>? msgs = removeLastFourBytes(bytes);
-    if (msgs == null) return null;
-    Uint8List body = msgs[0];
-    int type = bytesToInt(msgs[1]);
-
-    Uint8List plaintext;
-    Logger("utils/signal").info("got signal type: $type!");
-    if (type == CiphertextMessage.prekeyType) {
-      PreKeySignalMessage pre = PreKeySignalMessage(body);
-      plaintext = await session.decrypt(pre);
-    } else if (type == CiphertextMessage.whisperType) {
-      SignalMessage signalMsg = SignalMessage.fromSerialized(body);
-      plaintext = await session.decryptFromSignal(signalMsg);
-    } else {
-      Logger("utils/signal").shout("signal type is not known: $type!");
-      return null;
-    }
-    List<int>? plainBytes = gzip.decode(Uint8List.fromList(plaintext));
-    return Uint8List.fromList(plainBytes);
-  } catch (e) {
-    Logger("utils/signal").shout(e.toString());
-    return null;
-  }
-}
-
 Future<Uint8List?> encryptMessage(MessageJson msg, int target) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
@@ -275,7 +201,7 @@ Future<MessageJson?> getDecryptedText(int source, Uint8List msg) async {
     SessionCipher session = SessionCipher.fromStore(
         signalStore, SignalProtocolAddress(source.toString(), defaultDeviceId));
 
-    List<Uint8List>? msgs = removeLastFourBytes(msg);
+    List<Uint8List>? msgs = removeLastXBytes(msg, 4);
     if (msgs == null) return null;
     Uint8List body = msgs[0];
     int type = bytesToInt(msgs[1]);

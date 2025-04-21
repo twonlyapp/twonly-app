@@ -6,17 +6,17 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/components/animate_icon.dart';
-import 'package:twonly/src/components/media_view_sizing.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
+import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/json_models/message.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/camera_to_share/camera_send_to_view.dart';
+import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 
 final _noScreenshot = NoScreenshot.instance;
@@ -131,6 +131,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
       if (isRealTwonly) {
         if (!context.mounted) return;
+        // ignore: use_build_context_synchronously
         bool isAuth = await authenticateUser(context.lang.mediaViewerAuthReason,
             force: false);
         if (!isAuth) {
@@ -464,18 +465,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         },
                       ),
                       Expanded(
-                        child: Container(
-                          child: TextField(
-                            autofocus: true,
-                            controller: textMessageController,
-                            onEditingComplete: () {
-                              setState(() {
-                                showSendTextMessageInput = false;
-                                showShortReactions = false;
-                              });
-                            },
-                            decoration: inputTextMessageDeco(context),
-                          ),
+                        child: TextField(
+                          autofocus: true,
+                          controller: textMessageController,
+                          onEditingComplete: () {
+                            setState(() {
+                              showSendTextMessageInput = false;
+                              showShortReactions = false;
+                            });
+                          },
+                          decoration: inputTextMessageDeco(context),
                         ),
                       ),
                       IconButton(
@@ -628,7 +627,7 @@ class EmojiReactionWidget extends StatefulWidget {
   });
 
   @override
-  _EmojiReactionWidgetState createState() => _EmojiReactionWidgetState();
+  State<EmojiReactionWidget> createState() => _EmojiReactionWidgetState();
 }
 
 class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {

@@ -1,7 +1,7 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/components/better_list_title.dart';
-import 'package:twonly/src/components/initialsavatar.dart';
-import 'package:twonly/src/json_models/userdata.dart';
+import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/components/initialsavatar.dart';
+import 'package:twonly/src/model/json/userdata.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';

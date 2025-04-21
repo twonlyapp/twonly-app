@@ -1,8 +1,8 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:twonly/src/json_models/userdata.dart';
-import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/model/json/userdata.dart';
 
 Future<bool> isUserCreated() async {
   UserData? user = await getUser();
@@ -13,7 +13,7 @@ Future<bool> isUserCreated() async {
 }
 
 Future<UserData?> getUser() async {
-  final storage = getSecureStorage();
+  final storage = FlutterSecureStorage();
   String? userJson = await storage.read(key: "userData");
   if (userJson == null) {
     return null;
@@ -29,7 +29,7 @@ Future<UserData?> getUser() async {
 }
 
 Future updateUser(UserData userData) async {
-  final storage = getSecureStorage();
+  final storage = FlutterSecureStorage();
   storage.write(key: "userData", value: jsonEncode(userData));
 }
 
@@ -38,7 +38,7 @@ Future<bool> deleteLocalUserData() async {
   if (appDir.existsSync()) {
     appDir.deleteSync(recursive: true);
   }
-  final storage = getSecureStorage();
+  final storage = FlutterSecureStorage();
   await storage.deleteAll();
   return true;
 }

@@ -4,7 +4,7 @@
 
 SRC_DIR="../twonly-server/twonly/src/"
 
-DST_DIR="$(pwd)/lib/src/proto/"
+DST_DIR="$(pwd)/lib/src/model/protobuf/"
 
 mkdir $DST_DIR
 

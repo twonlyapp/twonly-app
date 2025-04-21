@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/components/animate_icon.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 

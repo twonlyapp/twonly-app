@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/components/alert_dialog.dart';
-import 'package:twonly/src/components/better_list_title.dart';
-import 'package:twonly/src/components/flame.dart';
-import 'package:twonly/src/components/initialsavatar.dart';
-import 'package:twonly/src/components/verified_shield.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/components/flame.dart';
+import 'package:twonly/src/views/components/initialsavatar.dart';
+import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';

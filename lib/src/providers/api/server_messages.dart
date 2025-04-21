@@ -7,15 +7,17 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/app.dart';
+import 'package:twonly/app.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/json_models/message.dart';
-import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
-import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
-import 'package:twonly/src/proto/api/error.pb.dart';
-import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
-import 'package:twonly/src/proto/api/server_to_client.pbserver.dart';
+import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
+    as client;
+import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
+import 'package:twonly/src/model/protobuf/api/error.pb.dart';
+import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
+    as server;
+import 'package:twonly/src/model/protobuf/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/media.dart';
@@ -114,9 +116,6 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
   }
-
-  // Uint8List? rawBytes =
-  //     await SignalHelper.decryptBytes(downloadedBytes, fromUserId);
 
   Message? msg = await twonlyDatabase.messagesDao
       .getMessageByMessageId(messageId)

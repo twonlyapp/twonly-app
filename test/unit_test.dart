@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/components/animate_icon.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 
 void main() {
   group('isEmoji', () {

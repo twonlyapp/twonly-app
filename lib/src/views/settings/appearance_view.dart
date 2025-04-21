@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:twonly/src/components/radio_button.dart';
+import 'package:twonly/src/views/components/radio_button.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 

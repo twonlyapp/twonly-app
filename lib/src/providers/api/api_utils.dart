@@ -1,8 +1,10 @@
 import 'package:fixnum/fixnum.dart';
-import 'package:twonly/src/proto/api/client_to_server.pb.dart' as client;
-import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
-import 'package:twonly/src/proto/api/error.pb.dart';
-import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
+import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
+    as client;
+import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
+import 'package:twonly/src/model/protobuf/api/error.pb.dart';
+import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
+    as server;
 
 class Result<T, E> {
   final T? value;

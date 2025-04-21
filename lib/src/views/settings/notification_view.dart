@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/components/alert_dialog.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/services/fcm_service.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -25,7 +26,7 @@ class NotificationView extends StatelessWidget {
             subtitle: Text(context.lang.settingsNotifyTroubleshootingDesc),
             onTap: () async {
               await initFCMAfterAuthenticated();
-              final storage = getSecureStorage();
+              final storage = FlutterSecureStorage();
               String? storedToken = await storage.read(key: "google_fcm");
               await setupNotificationWithUsers(force: true);
               if (!context.mounted) return;

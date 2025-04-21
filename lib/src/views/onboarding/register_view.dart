@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:twonly/src/components/alert_dialog.dart';
-import 'package:twonly/src/json_models/userdata.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/signal.dart';
 
@@ -30,7 +31,7 @@ class _RegisterViewState extends State<RegisterView> {
       _isTryingToRegister = true;
     });
 
-    final storage = getSecureStorage();
+    final storage = FlutterSecureStorage();
 
     await createIfNotExistsSignalIdentity();
 
@@ -57,6 +58,7 @@ class _RegisterViewState extends State<RegisterView> {
     }
 
     if (context.mounted) {
+      // ignore: use_build_context_synchronously
       showAlertDialog(context, "Oh no!", errorCodeToText(context, res.error));
     }
   }

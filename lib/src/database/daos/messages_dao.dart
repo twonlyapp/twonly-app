@@ -11,7 +11,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     with _$MessagesDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
-  MessagesDao(TwonlyDatabase db) : super(db);
+  MessagesDao(super.db);
 
   Stream<List<Message>> watchMessageNotOpened(int contactId) {
     return (select(messages)

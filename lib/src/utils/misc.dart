@@ -9,12 +9,10 @@ import 'package:gal/gal.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/proto/api/error.pb.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:twonly/src/model/protobuf/api/error.pb.dart';
+import 'package:twonly/src/localization/generated/app_localizations.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
@@ -43,15 +41,6 @@ Future<bool> deleteLogFile() async {
     return true;
   }
   return false;
-}
-
-// Just a helper function to get the secure storage
-FlutterSecureStorage getSecureStorage() {
-  // ignore: no_leading_underscores_for_local_identifiers
-  AndroidOptions _getAndroidOptions() => const AndroidOptions(
-        encryptedSharedPreferences: true,
-      );
-  return FlutterSecureStorage(aOptions: _getAndroidOptions());
 }
 
 Future<String?> saveImageToGallery(Uint8List imageBytes) async {
@@ -181,30 +170,6 @@ Future<bool> isAllowedToDownload() async {
   return true;
 }
 
-PieTheme getPieCanvasTheme(BuildContext context) {
-  return PieTheme(
-    brightness: Theme.of(context).brightness,
-    rightClickShowsMenu: true,
-    radius: 70,
-    buttonTheme: PieButtonTheme(
-      backgroundColor: Theme.of(context).colorScheme.tertiary,
-      iconColor: Theme.of(context).colorScheme.surfaceBright,
-    ),
-    buttonThemeHovered: PieButtonTheme(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      iconColor: Theme.of(context).colorScheme.surfaceBright,
-    ),
-    tooltipPadding: EdgeInsets.all(20),
-    overlayColor: const Color.fromARGB(41, 0, 0, 0),
-
-    // spacing: 0,
-    tooltipTextStyle: TextStyle(
-      fontSize: 32,
-      fontWeight: FontWeight.w600,
-    ),
-  );
-}
-
 void setupLogger() {
   Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
   Logger.root.onRecord.listen((record) async {
@@ -214,4 +179,26 @@ void setupLogger() {
           '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
     }
   });
+}
+
+Uint8List intToBytes(int value) {
+  final byteData = ByteData(4);
+  byteData.setInt32(0, value, Endian.big);
+  return byteData.buffer.asUint8List();
+}
+
+int bytesToInt(Uint8List bytes) {
+  final byteData = ByteData.sublistView(bytes);
+  return byteData.getInt32(0, Endian.big);
+}
+
+List<Uint8List>? removeLastXBytes(Uint8List original, int count) {
+  if (original.length < count) {
+    return null;
+  }
+  final newList = Uint8List(original.length - count);
+  newList.setAll(0, original.sublist(0, original.length - count));
+
+  final lastXBytes = original.sublist(original.length - count);
+  return [newList, lastXBytes];
 }

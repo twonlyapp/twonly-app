@@ -1,12 +1,12 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/services/notification_service.dart';
-import 'package:twonly/src/utils/misc.dart';
 
 Future initMediaStorage() async {
-  final storage = getSecureStorage();
+  final storage = FlutterSecureStorage();
   var containsEncryptionKey =
       await storage.containsKey(key: 'hive_encryption_key');
   if (!containsEncryptionKey) {
@@ -23,7 +23,7 @@ Future initMediaStorage() async {
 Future<Box> getMediaStorage() async {
   try {
     await initMediaStorage();
-    final storage = getSecureStorage();
+    final storage = FlutterSecureStorage();
 
     var encryptionKey =
         base64Url.decode((await storage.read(key: 'hive_encryption_key'))!);

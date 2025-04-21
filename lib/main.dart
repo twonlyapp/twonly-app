@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -10,7 +11,7 @@ import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/services/fcm_service.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'src/app.dart';
+import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,13 +33,15 @@ void main() async {
   twonlyDatabase = TwonlyDatabase();
   await twonlyDatabase.messagesDao.appRestarted();
 
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => settingsController),
         ChangeNotifierProvider(create: (_) => ConnectionChangeProvider()),
       ],
-      child: MyApp(),
+      child: App(),
     ),
   );
 }

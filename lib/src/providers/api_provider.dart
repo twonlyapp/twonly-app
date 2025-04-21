@@ -5,14 +5,16 @@ import 'dart:io';
 import 'dart:math';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/app.dart';
-import 'package:twonly/src/proto/api/client_to_server.pbserver.dart';
-import 'package:twonly/src/proto/api/error.pb.dart';
-import 'package:twonly/src/proto/api/server_to_client.pb.dart' as server;
+import 'package:twonly/app.dart';
+import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
+import 'package:twonly/src/model/protobuf/api/error.pb.dart';
+import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
+    as server;
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/media.dart';
@@ -220,7 +222,7 @@ class ApiProvider {
   }
 
   Future<bool> tryAuthenticateWithToken(int userId) async {
-    final storage = getSecureStorage();
+    final storage = FlutterSecureStorage();
     String? apiAuthToken = await storage.read(key: "api_auth_token");
 
     if (apiAuthToken != null) {
@@ -296,7 +298,7 @@ class ApiProvider {
     Uint8List apiAuthToken = result2.value.authtoken;
     String apiAuthTokenB64 = base64Encode(apiAuthToken);
 
-    final storage = getSecureStorage();
+    final storage = FlutterSecureStorage();
     await storage.write(key: "api_auth_token", value: apiAuthTokenB64);
 
     await tryAuthenticateWithToken(userData.userId);

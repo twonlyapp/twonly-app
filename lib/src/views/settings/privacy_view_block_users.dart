@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/components/initialsavatar.dart';
+import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';

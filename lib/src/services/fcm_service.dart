@@ -1,8 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/app.dart';
+import 'package:twonly/app.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -14,7 +15,7 @@ import '../../firebase_options.dart';
 Future initFCMAfterAuthenticated() async {
   if (globalIsAppInBackground) return;
 
-  final storage = getSecureStorage();
+  final storage = FlutterSecureStorage();
 
   String? storedToken = await storage.read(key: "google_fcm");
 

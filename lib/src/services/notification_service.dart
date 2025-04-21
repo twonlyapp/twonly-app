@@ -14,9 +14,8 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/json_models/message.dart' as my;
+import 'package:twonly/src/model/json/message.dart' as my;
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/utils/misc.dart';
 
 class PushUser {
   String displayName;
@@ -324,7 +323,7 @@ Future handlePushData(String pushDataJson) async {
 }
 
 Future<Map<int, PushUser>> getPushKeys(String storageKey) async {
-  var storage = getSecureStorage();
+  var storage = FlutterSecureStorage();
   String? pushKeysJson = await storage.read(
     key: storageKey,
     iOptions: IOSOptions(
@@ -344,7 +343,7 @@ Future<Map<int, PushUser>> getPushKeys(String storageKey) async {
 }
 
 Future setPushKeys(String storageKey, Map<int, PushUser> pushKeys) async {
-  var storage = getSecureStorage();
+  var storage = FlutterSecureStorage();
   Map<String, dynamic> jsonToSend = {};
   pushKeys.forEach((key, value) {
     jsonToSend[key.toString()] = value.toJson();
