@@ -136,7 +136,7 @@
   "@settingsChats": {},
   "settingsPreSelectedReactions": "Preselected reaction emojis",
   "@settingsPreSelectedReactions": {},
-  "settingsPreSelectedReactionsError": "A maximum of 6 reactions can be selected.",
+  "settingsPreSelectedReactionsError": "A maximum of 12 reactions can be selected.",
   "@settingsPreSelectedReactionsError": {},
   "settingsProfile": "Profile",
   "@settingsProfile": {},

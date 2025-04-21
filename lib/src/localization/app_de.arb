@@ -81,7 +81,7 @@
     "settingsTitle": "Einstellungen",
     "settingsChats": "Chats",
     "settingsPreSelectedReactions": "Vorgewählte Reaktions-Emojis",
-    "settingsPreSelectedReactionsError": "Es können maximal 6 Reaktionen ausgewählt werden.",
+    "settingsPreSelectedReactionsError": "Es können maximal 12 Reaktionen ausgewählt werden.",
     "settingsProfile": "Profil",
     "settingsProfileCustomizeAvatar": "Avatar anpassen",
     "settingsProfileEditDisplayName": "Anzeigename",

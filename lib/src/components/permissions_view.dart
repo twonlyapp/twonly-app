@@ -42,7 +42,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
     // }
 
     if (statuses[Permission.camera]!.isPermanentlyDenied) {
-      openAppSettings();
+      await openAppSettings();
       // setState(() {});
     } else {
       // if (statuses[Permission.camera]!.isDenied) {
@@ -74,7 +74,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
                   icon: const Icon(Icons.perm_camera_mic),
                   onPressed: () async {
                     try {
-                      permissionServices();
+                      await permissionServices();
                       if (await checkPermissions()) {
                         widget.onSuccess();
                       }

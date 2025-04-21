@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/chat_reactions_view.dart';
+import 'package:twonly/src/views/settings/chat/chat_reactions_view.dart';
 
 class ChatSettingsView extends StatefulWidget {
   const ChatSettingsView({super.key});

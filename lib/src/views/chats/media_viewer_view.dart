@@ -561,6 +561,10 @@ class _ReactionButtonsState extends State<ReactionButtons> {
 
   @override
   Widget build(BuildContext context) {
+    final firstRowEmojis = selectedEmojis.take(6).toList();
+    final secondRowEmojis =
+        selectedEmojis.length > 6 ? selectedEmojis.skip(6).toList() : [];
+
     return AnimatedPositioned(
       duration: Duration(milliseconds: 200), // Animation duration
       bottom: widget.show ? 100 : 90,
@@ -570,61 +574,111 @@ class _ReactionButtonsState extends State<ReactionButtons> {
       child: AnimatedOpacity(
         opacity: widget.show ? 1.0 : 0.0, // Fade in/out
         duration: Duration(milliseconds: 150),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: List.generate(
-            6,
-            (index) {
-              final emoji = selectedEmojis[index];
-              return AnimatedSize(
-                duration: Duration(milliseconds: 200), // Animation duration
-                curve: Curves.linearToEaseOut,
-                child: GestureDetector(
-                  onTap: () {
-                    sendTextMessage(
-                      widget.userId,
-                      TextMessageContent(
-                        text: emoji,
-                        responseToMessageId: widget.responseToMessageId,
-                      ),
-                      PushKind.reaction,
-                    );
-                    setState(() {
-                      selectedShortReaction = index;
-                    });
-                    Future.delayed(Duration(milliseconds: 300), () {
-                      setState(() {
-                        widget.hide();
-                        selectedShortReaction = -1;
-                      });
-                    });
-                  },
-                  child: (selectedShortReaction == index)
-                      ? EmojiAnimationFlying(
+        child: Column(
+          children: [
+            if (secondRowEmojis.isNotEmpty)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: secondRowEmojis
+                    .map((emoji) => EmojiReactionWidget(
+                          userId: widget.userId,
+                          responseToMessageId: widget.responseToMessageId,
+                          hide: widget.hide,
+                          show: widget.show,
                           emoji: emoji,
-                          duration: Duration(milliseconds: 300),
-                          startPosition: 0.0,
-                          size: (widget.show) ? 40 : 10)
-                      : AnimatedOpacity(
-                          opacity: (selectedShortReaction == -1)
-                              ? 1
-                              : 0, // Fade in/out
-                          duration: Duration(milliseconds: 150),
-                          child: SizedBox(
-                            width: widget.show ? 40 : 10,
-                            child: Center(
-                              child: EmojiAnimation(
-                                emoji: emoji,
-                              ),
-                            ),
-                          ),
-                        ),
-                ),
-              );
-            },
-          ),
+                        ))
+                    .toList(),
+              ),
+            if (secondRowEmojis.isNotEmpty) SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: firstRowEmojis
+                  .map((emoji) => EmojiReactionWidget(
+                        userId: widget.userId,
+                        responseToMessageId: widget.responseToMessageId,
+                        hide: widget.hide,
+                        show: widget.show,
+                        emoji: emoji,
+                      ))
+                  .toList(),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class EmojiReactionWidget extends StatefulWidget {
+  final int userId;
+  final int responseToMessageId;
+  final Function hide;
+  final bool show;
+  final String emoji;
+
+  const EmojiReactionWidget({
+    super.key,
+    required this.userId,
+    required this.responseToMessageId,
+    required this.hide,
+    required this.show,
+    required this.emoji,
+  });
+
+  @override
+  _EmojiReactionWidgetState createState() => _EmojiReactionWidgetState();
+}
+
+class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
+  int selectedShortReaction = -1;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSize(
+      duration: Duration(milliseconds: 200),
+      curve: Curves.linearToEaseOut,
+      child: GestureDetector(
+        onTap: () {
+          sendTextMessage(
+            widget.userId,
+            TextMessageContent(
+              text: widget.emoji,
+              responseToMessageId: widget.responseToMessageId,
+            ),
+            PushKind.reaction,
+          );
+          setState(() {
+            selectedShortReaction = 0; // Assuming index is 0 for this example
+          });
+          Future.delayed(Duration(milliseconds: 300), () {
+            setState(() {
+              widget.hide();
+              selectedShortReaction = -1;
+            });
+          });
+        },
+        child: (selectedShortReaction ==
+                0) // Assuming index is 0 for this example
+            ? EmojiAnimationFlying(
+                emoji: widget.emoji,
+                duration: Duration(milliseconds: 300),
+                startPosition: 0.0,
+                size: (widget.show) ? 40 : 10,
+              )
+            : AnimatedOpacity(
+                opacity: (selectedShortReaction == -1) ? 1 : 0, // Fade in/out
+                duration: Duration(milliseconds: 150),
+                child: SizedBox(
+                  width: widget.show ? 40 : 10,
+                  child: Center(
+                    child: EmojiAnimation(
+                      emoji: widget.emoji,
+                    ),
+                  ),
+                ),
+              ),
       ),
     );
   }

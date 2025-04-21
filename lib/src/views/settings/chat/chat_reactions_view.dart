@@ -34,7 +34,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
     if (selectedEmojis.contains(emoji)) {
       selectedEmojis.remove(emoji);
     } else {
-      if (selectedEmojis.length < 6) {
+      if (selectedEmojis.length < 12) {
         selectedEmojis.add(emoji);
         var user = await getUser();
         if (user != null) {
