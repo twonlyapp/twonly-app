@@ -327,11 +327,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               },
                             ),
                             ActionButton(
-                              FontAwesomeIcons.boltLightning,
+                              isFlashOn
+                                  ? Icons.flash_on_rounded
+                                  : Icons.flash_off_rounded,
                               tooltipText: context.lang.toggleFlashLight,
                               color: isFlashOn
-                                  ? const Color.fromARGB(255, 255, 230, 0)
-                                  : const Color.fromARGB(158, 255, 255, 255),
+                                  ? Colors.white
+                                  : Color.fromARGB(158, 255, 255, 255),
                               onPressed: () async {
                                 if (isFlashOn) {
                                   controller.setFlashMode(FlashMode.off);
