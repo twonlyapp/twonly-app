@@ -1,11 +1,13 @@
 import 'dart:math';
 import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/json_models/userdata.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
+import "package:get/get.dart";
 import 'package:twonly/src/utils/storage.dart';
 
 class ModifyAvatar extends StatelessWidget {
@@ -79,7 +81,6 @@ class ModifyAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsProfileCustomizeAvatar),
@@ -97,12 +98,15 @@ class ModifyAvatar extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: min(600, width * 0.85),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Spacer(),
-                    AvatarMakerSaveWidget(
-                      onTap: () async {
+                    IconButton(
+                      icon: FaIcon(FontAwesomeIcons.floppyDisk),
+                      onPressed: () async {
+                        final avatarmakerController =
+                            Get.find<AvatarMakerController>();
+                        await avatarmakerController.saveAvatarSVG();
                         final json =
                             await AvatarMakerController.getJsonOptions();
                         final svg = await AvatarMakerController.getAvatarSVG();
@@ -112,8 +116,22 @@ class ModifyAvatar extends StatelessWidget {
                         }
                       },
                     ),
-                    AvatarMakerRandomWidget(),
-                    AvatarMakerResetWidget(),
+                    IconButton(
+                      icon: FaIcon(FontAwesomeIcons.shuffle),
+                      onPressed: () {
+                        final avatarmakerController =
+                            Get.find<AvatarMakerController>();
+                        avatarmakerController.randomizedSelectedOptions();
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(FontAwesomeIcons.rotateLeft),
+                      onPressed: () {
+                        final avatarMakerController =
+                            Get.find<AvatarMakerController>();
+                        avatarMakerController.restoreState();
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -121,7 +139,8 @@ class ModifyAvatar extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8.0, vertical: 30),
                 child: AvatarMakerCustomizer(
-                  scaffoldWidth: min(600, width * 0.85),
+                  scaffoldWidth:
+                      min(600, MediaQuery.of(context).size.width * 0.85),
                   autosave: false,
                   theme: getAvatarMakerTheme(context),
                 ),
