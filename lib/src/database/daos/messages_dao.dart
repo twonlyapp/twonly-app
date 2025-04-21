@@ -104,6 +104,20 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updates);
   }
 
+  Future appRestarted() {
+    // All media files in the downloading state are reseteded to the pending state
+    // When the app is used in mobile network, they will not be downloaded at the start
+    // if they are not yet downloaded...
+    final updates =
+        MessagesCompanion(downloadState: Value(DownloadState.pending));
+    return (update(messages)
+          ..where((t) =>
+              t.messageOtherId.isNotNull() &
+              t.downloadState.equals(DownloadState.downloading.index) &
+              t.kind.equals(MessageKind.media.name)))
+        .write(updates);
+  }
+
   Future openedAllNonMediaMessagesFromOtherUser(int contactId) {
     final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
     return (update(messages)

@@ -27,7 +27,7 @@ Future tryDownloadAllMediaFiles() async {
         MessageContent.fromJson(message.kind, jsonDecode(message.contentJson!));
 
     if (content is MediaMessageContent) {
-      tryDownloadMedia(
+      await tryDownloadMedia(
         message.messageId,
         message.contactId,
         content,

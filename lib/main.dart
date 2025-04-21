@@ -30,6 +30,7 @@ void main() async {
 
   apiProvider = ApiProvider();
   twonlyDatabase = TwonlyDatabase();
+  await twonlyDatabase.messagesDao.appRestarted();
 
   runApp(
     MultiProvider(
