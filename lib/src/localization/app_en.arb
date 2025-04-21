@@ -256,6 +256,10 @@
   "@toggleFlashLight": {},
   "toggleHighQuality": "Toggle better resolution",
   "@toggleHighQuality": {},
+  "userFound": "User found",
+  "@userFound": {},
+  "userFoundBody": "Do you want to create a follow request?",
+  "@userFoundBody": {},
   "searchUsernameNotFoundLong": "\"{username}\" is not a twonly user. Please check the username and try again.",
   "@searchUsernameNotFoundLong": {
     "placeholders": {

@@ -72,8 +72,11 @@ class _SearchUsernameView extends State<SearchUsernameView> {
 
     if (res.isSuccess) {
       final addUser = await showAlertDialog(
-          context, "User found", "Do you want to create a follow request?");
+          context, context.lang.userFound, context.lang.userFoundBody);
       if (!addUser || !context.mounted) {
+        setState(() {
+          _isLoading = false;
+        });
         return;
       }
 
