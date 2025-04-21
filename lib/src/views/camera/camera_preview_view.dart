@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:logging/logging.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/views/camera/components/zoom_selector.dart';
@@ -37,6 +39,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   double baseScaleFactor = 0;
   bool cameraLoaded = false;
   bool useHighQuality = false;
+  bool isVideoRecording = false;
+  bool hasAudioPermission = true;
+  final GlobalKey keyTriggerButton = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   late CameraController controller;
@@ -64,10 +69,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     final user = await getUser();
     if (user == null) return;
     if (user.useHighQuality != null) {
-      setState(() {
-        useHighQuality = user.useHighQuality!;
-      });
+      useHighQuality = user.useHighQuality!;
     }
+    hasAudioPermission = await Permission.microphone.isGranted;
+    setState(() {});
   }
 
   @override
@@ -77,6 +82,18 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future requestMicrophonePermission() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.microphone,
+    ].request();
+    if (statuses[Permission.microphone]!.isPermanentlyDenied) {
+      openAppSettings();
+    } else {
+      hasAudioPermission = await Permission.microphone.isGranted;
+      setState(() {});
+    }
   }
 
   void selectCamera(int sCameraId, {bool init = false}) {
@@ -181,18 +198,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         final XFile picture = await controller.takePicture();
         imageBytes = loadAndDeletePictureFromFile(picture);
       } catch (e) {
-        try {
-          if (context.mounted) {
-            // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error taking picture: $e'),
-                duration: Duration(seconds: 3),
-              ),
-            );
-          }
-          // ignore: empty_catches
-        } catch (e) {}
+        _showCameraException(e);
         return;
       }
     } else {
@@ -215,31 +221,22 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       imageBytes = screenshotController.capture(pixelRatio: 1);
     }
 
-    if (await pushImageEditor(imageBytes)) {
+    if (await pushMediaEditor(imageBytes, null)) {
       return;
-    }
-
-    // does not work??
-    // if (Platform.isIOS) {
-    //   await controller.resumePreview();
-    // } else {
-    selectCamera(cameraId);
-    // }
-    if (context.mounted) {
-      setState(() {
-        sharePreviewIsShown = false;
-        showSelfieFlash = false;
-      });
     }
   }
 
-  Future<bool> pushImageEditor(Future<Uint8List?> imageBytes) async {
+  Future<bool> pushMediaEditor(
+      Future<Uint8List?>? imageBytes, XFile? videFilePath) async {
     bool? shoudReturn = await Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
-        pageBuilder: (context, a1, a2) =>
-            ShareImageEditorView(imageBytes: imageBytes, sendTo: widget.sendTo),
+        pageBuilder: (context, a1, a2) => ShareImageEditorView(
+          videFilePath: videFilePath,
+          imageBytes: imageBytes,
+          sendTo: widget.sendTo,
+        ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;
         },
@@ -254,6 +251,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       Navigator.pop(context);
       return true;
     }
+    selectCamera(cameraId);
+    if (context.mounted) {
+      setState(() {
+        sharePreviewIsShown = false;
+        showSelfieFlash = false;
+      });
+    }
     return false;
   }
 
@@ -261,16 +265,91 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       controller.description.lensDirection == CameraLensDirection.front;
 
   Future onPanUpdate(details) async {
+    print(details);
     if (isFront) {
       return;
     }
     var diff = basePanY - details.localPosition.dy;
-    if (diff > 200) diff = 200;
-    if (diff < -200) diff = -200;
-    var tmp = (diff / 200 * (7 * 2)).toInt() / 2;
+
+    var baseDiff = Platform.isAndroid ? 200.0 : 300.0;
+
+    if (diff > baseDiff) diff = baseDiff;
+    if (diff < -baseDiff) diff = -baseDiff;
+    var tmp = (diff / baseDiff * (14 * 2)).toInt() / 4;
     tmp = baseScaleFactor + tmp;
     if (tmp < 1) tmp = 1;
     updateScaleFactor(tmp);
+  }
+
+  Future pickImageFromGallery() async {
+    setState(() {
+      galleryLoadedImageIsShown = true;
+      sharePreviewIsShown = true;
+    });
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      if (await pushMediaEditor(imageFile.readAsBytes(), null)) {
+        return;
+      }
+    }
+    setState(() {
+      galleryLoadedImageIsShown = false;
+      sharePreviewIsShown = false;
+    });
+  }
+
+  Future startVideoRecording() async {
+    if (controller.value.isRecordingVideo) return;
+
+    try {
+      await controller.startVideoRecording();
+      setState(() {
+        isVideoRecording = true;
+      });
+    } on CameraException catch (e) {
+      _showCameraException(e);
+      return;
+    }
+  }
+
+  Future stopVideoRecording() async {
+    if (!controller.value.isRecordingVideo) {
+      return null;
+    }
+
+    try {
+      setState(() {
+        isVideoRecording = false;
+        sharePreviewIsShown = true;
+      });
+      XFile? videoPath = await controller.stopVideoRecording();
+      await controller.pausePreview();
+      if (await pushMediaEditor(null, videoPath)) {
+        return;
+      }
+    } on CameraException catch (e) {
+      _showCameraException(e);
+      return null;
+    }
+  }
+
+  void _showCameraException(dynamic e) {
+    Logger("ui.camera").shout("$e");
+    try {
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   @override
@@ -281,224 +360,239 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       );
     }
     return MediaViewSizing(
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: Stack(
-              children: [
-                if (!galleryLoadedImageIsShown)
-                  CameraPreviewWidget(
-                    controller: controller,
-                    screenshotController: screenshotController,
-                    isFront: isFront,
-                  ),
-                if (galleryLoadedImageIsShown)
-                  Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 1, color: context.color.primary),
+      child: GestureDetector(
+        onPanStart: (details) async {
+          if (isFront) {
+            return;
+          }
+          setState(() {
+            basePanY = details.localPosition.dy;
+            baseScaleFactor = scaleFactor;
+          });
+        },
+        onDoubleTap: () async {
+          selectCamera((cameraId + 1) % 2);
+        },
+        onLongPressMoveUpdate: onPanUpdate,
+        onLongPressStart: (details) {
+          setState(() {
+            basePanY = details.localPosition.dy;
+            baseScaleFactor = scaleFactor;
+          });
+          print("onLongPressDown");
+          // Get the position of the pointer
+          RenderBox renderBox =
+              keyTriggerButton.currentContext?.findRenderObject() as RenderBox;
+          Offset localPosition =
+              renderBox.globalToLocal(details.globalPosition);
+
+          final containerRect =
+              Rect.fromLTWH(0, 0, renderBox.size.width, renderBox.size.height);
+
+          if (containerRect.contains(localPosition)) {
+            startVideoRecording();
+          }
+        },
+        onLongPressEnd: (a) {
+          stopVideoRecording();
+        },
+        onPanUpdate: onPanUpdate,
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: Stack(
+                children: [
+                  if (!galleryLoadedImageIsShown)
+                    CameraPreviewWidget(
+                      controller: controller,
+                      screenshotController: screenshotController,
+                      isFront: isFront,
                     ),
-                  ),
-                Positioned.fill(
-                  child: GestureDetector(
-                    onPanStart: (details) async {
-                      if (isFront) {
-                        return;
-                      }
-                      setState(() {
-                        basePanY = details.localPosition.dy;
-                        baseScaleFactor = scaleFactor;
-                      });
-                    },
-                    onPanUpdate: onPanUpdate,
-                    onDoubleTap: () async {
-                      selectCamera((cameraId + 1) % 2);
-                    },
-                  ),
-                ),
-                if (!sharePreviewIsShown && widget.sendTo != null)
-                  SendToWidget(sendTo: getContactDisplayName(widget.sendTo!)),
-                if (!sharePreviewIsShown)
-                  Positioned(
-                    right: 5,
-                    top: 0,
-                    child: Container(
-                      alignment: Alignment.bottomCenter,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: SafeArea(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            ActionButton(
-                              FontAwesomeIcons.repeat,
-                              tooltipText:
-                                  context.lang.switchFrontAndBackCamera,
-                              onPressed: () async {
-                                selectCamera((cameraId + 1) % 2);
-                              },
-                            ),
-                            ActionButton(
-                              isFlashOn
-                                  ? Icons.flash_on_rounded
-                                  : Icons.flash_off_rounded,
-                              tooltipText: context.lang.toggleFlashLight,
-                              color: isFlashOn
-                                  ? Colors.white
-                                  : Color.fromARGB(158, 255, 255, 255),
-                              onPressed: () async {
-                                if (isFlashOn) {
-                                  controller.setFlashMode(FlashMode.off);
-                                  isFlashOn = false;
-                                } else {
-                                  controller.setFlashMode(FlashMode.always);
-                                  isFlashOn = true;
-                                }
-                                setState(() {});
-                              },
-                            ),
-                            if (!isFront)
+                  if (galleryLoadedImageIsShown)
+                    Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 1, color: context.color.primary),
+                      ),
+                    ),
+                  // Positioned.fill(
+                  //   child: GestureDetector(),
+                  // ),
+                  if (!sharePreviewIsShown && widget.sendTo != null)
+                    SendToWidget(sendTo: getContactDisplayName(widget.sendTo!)),
+                  if (!sharePreviewIsShown && !isVideoRecording)
+                    Positioned(
+                      right: 5,
+                      top: 0,
+                      child: Container(
+                        alignment: Alignment.bottomCenter,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: SafeArea(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
                               ActionButton(
-                                Icons.hd_rounded,
-                                tooltipText: context.lang.toggleHighQuality,
-                                color: useHighQuality
-                                    ? Colors.white
-                                    : const Color.fromARGB(158, 255, 255, 255),
+                                Icons.repeat_rounded,
+                                tooltipText:
+                                    context.lang.switchFrontAndBackCamera,
                                 onPressed: () async {
-                                  useHighQuality = !useHighQuality;
-                                  setState(() {});
-                                  var user = await getUser();
-                                  if (user != null) {
-                                    user.useHighQuality = useHighQuality;
-                                    updateUser(user);
-                                  }
+                                  selectCamera((cameraId + 1) % 2);
                                 },
                               ),
+                              ActionButton(
+                                isFlashOn
+                                    ? Icons.flash_on_rounded
+                                    : Icons.flash_off_rounded,
+                                tooltipText: context.lang.toggleFlashLight,
+                                color: isFlashOn
+                                    ? Colors.white
+                                    : Colors.white.withAlpha(160),
+                                onPressed: () async {
+                                  if (isFlashOn) {
+                                    controller.setFlashMode(FlashMode.off);
+                                    isFlashOn = false;
+                                  } else {
+                                    controller.setFlashMode(FlashMode.always);
+                                    isFlashOn = true;
+                                  }
+                                  setState(() {});
+                                },
+                              ),
+                              if (!isFront)
+                                ActionButton(
+                                  Icons.hd_rounded,
+                                  tooltipText: context.lang.toggleHighQuality,
+                                  color: useHighQuality
+                                      ? Colors.white
+                                      : Colors.white.withAlpha(160),
+                                  onPressed: () async {
+                                    useHighQuality = !useHighQuality;
+                                    setState(() {});
+                                    var user = await getUser();
+                                    if (user != null) {
+                                      user.useHighQuality = useHighQuality;
+                                      updateUser(user);
+                                    }
+                                  },
+                                ),
+                              if (!hasAudioPermission)
+                                ActionButton(
+                                  Icons.mic_off_rounded,
+                                  color: Colors.white.withAlpha(160),
+                                  tooltipText:
+                                      "Allow microphone access for video recording.",
+                                  onPressed: requestMicrophonePermission,
+                                )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (!sharePreviewIsShown)
+                    Positioned(
+                      bottom: 30,
+                      left: 0,
+                      right: 0,
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Column(
+                          children: [
+                            if (controller.value.isInitialized &&
+                                isZoomAble &&
+                                !isFront &&
+                                !isVideoRecording)
+                              SizedBox(
+                                width: 120,
+                                child: CameraZoomButtons(
+                                  key: widget.key,
+                                  scaleFactor: scaleFactor,
+                                  updateScaleFactor: updateScaleFactor,
+                                  controller: controller,
+                                ),
+                              ),
+                            const SizedBox(height: 30),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                if (!isVideoRecording)
+                                  GestureDetector(
+                                    onTap: pickImageFromGallery,
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: Container(
+                                        height: 50,
+                                        width: 80,
+                                        padding: const EdgeInsets.all(2),
+                                        child: Center(
+                                          child: FaIcon(
+                                            FontAwesomeIcons.photoFilm,
+                                            color: Colors.white,
+                                            size: 25,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                GestureDetector(
+                                  onTap: takePicture,
+                                  // onLongPress: startVideoRecording,
+                                  key: keyTriggerButton,
+                                  child: Align(
+                                    alignment: Alignment.center,
+                                    child: Container(
+                                      height: 100,
+                                      width: 100,
+                                      clipBehavior: Clip.antiAliasWithSaveLayer,
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          width: 7,
+                                          color: isVideoRecording
+                                              ? Colors.red
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (!isVideoRecording) SizedBox(width: 80)
+                              ],
+                            ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                if (!sharePreviewIsShown)
-                  Positioned(
-                    bottom: 30,
-                    left: 0,
-                    right: 0,
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Column(
-                        children: [
-                          if (controller.value.isInitialized &&
-                              isZoomAble &&
-                              !isFront)
-                            SizedBox(
-                              width: 120,
-                              child: CameraZoomButtons(
-                                key: widget.key,
-                                scaleFactor: scaleFactor,
-                                updateScaleFactor: updateScaleFactor,
-                                controller: controller,
-                              ),
-                            ),
-                          const SizedBox(height: 30),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              GestureDetector(
-                                onTap: () async {
-                                  setState(() {
-                                    galleryLoadedImageIsShown = true;
-                                    sharePreviewIsShown = true;
-                                  });
-                                  final picker = ImagePicker();
-                                  final pickedFile = await picker.pickImage(
-                                      source: ImageSource.gallery);
-
-                                  if (pickedFile != null) {
-                                    File imageFile = File(pickedFile.path);
-                                    if (await pushImageEditor(
-                                        imageFile.readAsBytes())) {
-                                      return;
-                                    }
-                                  }
-                                  setState(() {
-                                    galleryLoadedImageIsShown = false;
-                                    sharePreviewIsShown = false;
-                                  });
-                                },
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: Container(
-                                    height: 50,
-                                    width: 80,
-                                    padding: const EdgeInsets.all(2),
-                                    child: Center(
-                                      child: FaIcon(
-                                        FontAwesomeIcons.photoFilm,
-                                        color: Colors.white,
-                                        size: 25,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () async {
-                                  takePicture();
-                                },
-                                onLongPress: () async {},
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: Container(
-                                    height: 100,
-                                    width: 100,
-                                    clipBehavior: Clip.antiAliasWithSaveLayer,
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        width: 7,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 80)
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (!sharePreviewIsShown && widget.sendTo != null)
-            Positioned(
-              left: 5,
-              top: 10,
-              child: ActionButton(
-                FontAwesomeIcons.xmark,
-                tooltipText: context.lang.close,
-                onPressed: () async {
-                  Navigator.pop(context);
-                },
+                ],
               ),
             ),
-          if (showSelfieFlash)
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
-                child: Container(
-                  color: Colors.white,
+            if (!sharePreviewIsShown && widget.sendTo != null)
+              Positioned(
+                left: 5,
+                top: 10,
+                child: ActionButton(
+                  FontAwesomeIcons.xmark,
+                  tooltipText: context.lang.close,
+                  onPressed: () async {
+                    Navigator.pop(context);
+                  },
                 ),
               ),
-            ),
-        ],
+            if (showSelfieFlash)
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Container(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

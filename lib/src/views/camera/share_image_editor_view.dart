@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/views/camera/components/save_to_gallery.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
@@ -17,6 +21,7 @@ import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/layers_viewer.dart';
 import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:video_player/video_player.dart';
 
 List<Layer> layers = [];
 List<Layer> undoLayers = [];
@@ -24,8 +29,9 @@ List<Layer> removedLayers = [];
 
 class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView(
-      {super.key, required this.imageBytes, this.sendTo});
-  final Future<Uint8List?> imageBytes;
+      {super.key, this.imageBytes, this.sendTo, this.videFilePath});
+  final Future<Uint8List?>? imageBytes;
+  final XFile? videFilePath;
   final Contact? sendTo;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
@@ -33,13 +39,13 @@ class ShareImageEditorView extends StatefulWidget {
 
 class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool imageLoadedReady = false;
-  bool _imageSaved = false;
-  bool _imageSaving = false;
   bool _isRealTwonly = false;
   int maxShowTime = 999999;
   String? sendNextMediaToUserName;
   double tabDownPostion = 0;
   bool sendingImage = false;
+  double widthRatio = 1, heightRatio = 1, pixelRatio = 1;
+  VideoPlayerController? videoController;
 
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
@@ -48,7 +54,25 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   void initState() {
     super.initState();
     initAsync();
-    loadImage(widget.imageBytes);
+    if (widget.imageBytes != null) {
+      loadImage(widget.imageBytes!);
+    } else if (widget.videFilePath != null) {
+      videoController =
+          VideoPlayerController.file(File(widget.videFilePath!.path));
+      videoController?.addListener(() {
+        setState(() {});
+      });
+      videoController?.setLooping(true);
+      videoController?.initialize().then((_) {
+        videoController!.play();
+
+        setState(() {});
+      }).catchError((Object error) {
+        print(error);
+      });
+      videoController?.play();
+      print(widget.videFilePath!.path);
+    }
   }
 
   void initAsync() async {
@@ -64,6 +88,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   @override
   void dispose() {
     layers.clear();
+    videoController?.dispose();
     super.dispose();
   }
 
@@ -221,7 +246,23 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     ];
   }
 
-  double widthRatio = 1, heightRatio = 1, pixelRatio = 1;
+  Future pushShareImageView() async {
+    Future<Uint8List?> imageBytes = getMergedImage();
+    bool? wasSend = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShareImageView(
+          imageBytesFuture: imageBytes,
+          isRealTwonly: _isRealTwonly,
+          maxShowTime: maxShowTime,
+          preselectedUser: widget.sendTo,
+        ),
+      ),
+    );
+    if (wasSend != null && wasSend && context.mounted) {
+      Navigator.pop(context, true);
+    }
+  }
 
   Future<Uint8List?> getMergedImage() async {
     Uint8List? image;
@@ -263,6 +304,26 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     });
   }
 
+  Future sendImageToSinglePerson() async {
+    setState(() {
+      sendingImage = true;
+    });
+    Uint8List? imageBytes = await getMergedImage();
+    if (!context.mounted) return;
+    if (imageBytes == null) {
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context, false);
+      return;
+    }
+    sendImage(
+      [widget.sendTo!.userId],
+      imageBytes,
+      _isRealTwonly,
+      maxShowTime,
+    );
+    Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
@@ -301,14 +362,20 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               child: SizedBox(
                 height: currentImage.height / pixelRatio,
                 width: currentImage.width / pixelRatio,
-                child: Screenshot(
-                  controller: screenshotController,
-                  child: LayersViewer(
-                    layers: layers.where((x) => !x.isDeleted).toList(),
-                    onUpdate: () {
-                      setState(() {});
-                    },
-                  ),
+                child: Stack(
+                  children: [
+                    if (videoController != null)
+                      Positioned.fill(child: VideoPlayer(videoController!)),
+                    Screenshot(
+                      controller: screenshotController,
+                      child: LayersViewer(
+                        layers: layers.where((x) => !x.isDeleted).toList(),
+                        onUpdate: () {
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -347,46 +414,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    iconColor: _imageSaved
-                        ? Theme.of(context).colorScheme.outline
-                        : Theme.of(context).colorScheme.primary,
-                    foregroundColor: _imageSaved
-                        ? Theme.of(context).colorScheme.outline
-                        : Theme.of(context).colorScheme.primary,
-                  ),
-                  onPressed: () async {
-                    setState(() {
-                      _imageSaving = true;
-                    });
-                    Uint8List? imageBytes = await getMergedImage();
-                    if (imageBytes == null || !context.mounted) return;
-                    final res = await saveImageToGallery(imageBytes);
-                    if (res == null) {
-                      setState(() {
-                        _imageSaving = false;
-                        _imageSaved = true;
-                      });
-                    }
-                  },
-                  child: Row(
-                    children: [
-                      _imageSaving
-                          ? SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(strokeWidth: 1))
-                          : _imageSaved
-                              ? Icon(Icons.check)
-                              : FaIcon(FontAwesomeIcons.floppyDisk),
-                      if (sendNextMediaToUserName == null) SizedBox(width: 10),
-                      if (sendNextMediaToUserName == null)
-                        Text(_imageSaved
-                            ? context.lang.shareImagedEditorSavedImage
-                            : context.lang.shareImagedEditorSaveImage)
-                    ],
-                  ),
+                SaveToGalleryButton(
+                  getMergedImage: getMergedImage,
+                  sendNextMediaToUserName: sendNextMediaToUserName,
                 ),
                 if (sendNextMediaToUserName != null) SizedBox(width: 10),
                 if (sendNextMediaToUserName != null)
@@ -395,27 +425,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       iconColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.primary,
                     ),
-                    onPressed: () async {
-                      Future<Uint8List?> imageBytes = getMergedImage();
-                      bool? wasSend = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ShareImageView(
-                            imageBytesFuture: imageBytes,
-                            isRealTwonly: _isRealTwonly,
-                            maxShowTime: maxShowTime,
-                            preselectedUser: widget.sendTo,
-                          ),
-                        ),
-                      );
-                      if (wasSend != null && wasSend && context.mounted) {
-                        Navigator.pop(context, true);
-                      }
-                    },
+                    onPressed: pushShareImageView,
                     child: FaIcon(FontAwesomeIcons.userPlus),
                   ),
-                if (sendNextMediaToUserName != null) SizedBox(width: 10),
-                if (sendNextMediaToUserName == null) SizedBox(width: 20),
+                SizedBox(width: sendNextMediaToUserName == null ? 20 : 10),
                 FilledButton.icon(
                   icon: sendingImage
                       ? SizedBox(
@@ -429,40 +442,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       : FaIcon(FontAwesomeIcons.solidPaperPlane),
                   onPressed: () async {
                     if (sendingImage) return;
-                    if (widget.sendTo != null) {
-                      setState(() {
-                        sendingImage = true;
-                      });
-                      Uint8List? imageBytes = await getMergedImage();
-                      if (!context.mounted) return;
-                      if (imageBytes == null) {
-                        Navigator.pop(context, false);
-                        return;
-                      }
-                      sendImage(
-                        [widget.sendTo!.userId],
-                        imageBytes,
-                        _isRealTwonly,
-                        maxShowTime,
-                      );
-                      Navigator.pop(context, true);
-                      return;
-                    }
-                    Future<Uint8List?> imageBytes = getMergedImage();
-                    bool? wasSend = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ShareImageView(
-                          imageBytesFuture: imageBytes,
-                          isRealTwonly: _isRealTwonly,
-                          maxShowTime: maxShowTime,
-                          preselectedUser: widget.sendTo,
-                        ),
-                      ),
-                    );
-                    if (wasSend != null && wasSend && context.mounted) {
-                      Navigator.pop(context, true);
-                    }
+                    if (widget.sendTo == null) return pushShareImageView();
+                    sendImageToSinglePerson();
                   },
                   style: ButtonStyle(
                     padding: WidgetStateProperty.all<EdgeInsets>(
