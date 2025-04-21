@@ -426,6 +426,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                     child: Center(
                                       child: FaIcon(
                                         FontAwesomeIcons.photoFilm,
+                                        color: Colors.white,
                                         size: 25,
                                       ),
                                     ),
