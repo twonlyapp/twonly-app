@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/views/camera/components/save_to_gallery.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
@@ -59,16 +60,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     } else if (widget.videFilePath != null) {
       videoController =
           VideoPlayerController.file(File(widget.videFilePath!.path));
-      videoController?.addListener(() {
-        setState(() {});
-      });
       videoController?.setLooping(true);
       videoController?.initialize().then((_) {
         videoController!.play();
-
         setState(() {});
       }).catchError((Object error) {
-        print(error);
+        Logger("ui.share_image_editor").shout(error);
       });
       videoController?.play();
       print(widget.videFilePath!.path);
@@ -260,6 +257,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
     );
     if (wasSend != null && wasSend && context.mounted) {
+      // ignore: use_build_context_synchronously
       Navigator.pop(context, true);
     }
   }
@@ -321,7 +319,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       _isRealTwonly,
       maxShowTime,
     );
-    Navigator.pop(context, true);
+    if (context.mounted) {
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context, true);
+    }
   }
 
   @override
