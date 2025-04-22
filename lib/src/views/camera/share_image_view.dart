@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:typed_data';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -21,11 +22,15 @@ class ShareImageView extends StatefulWidget {
       required this.imageBytesFuture,
       required this.isRealTwonly,
       required this.maxShowTime,
-      this.preselectedUser});
+      this.preselectedUser,
+      this.videoFilePath,
+      this.enableVideoAudio});
   final Future<Uint8List?> imageBytesFuture;
   final bool isRealTwonly;
   final int maxShowTime;
+  final XFile? videoFilePath;
   final Contact? preselectedUser;
+  final bool? enableVideoAudio;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -226,12 +231,13 @@ class _ShareImageView extends State<ShareImageView> {
                   setState(() {
                     sendingImage = true;
                   });
-                  sendImage(
-                    _selectedUserIds.toList(),
-                    imageBytes!,
-                    widget.isRealTwonly,
-                    widget.maxShowTime,
-                  );
+                  sendMediaFile(
+                      _selectedUserIds.toList(),
+                      imageBytes!,
+                      widget.isRealTwonly,
+                      widget.maxShowTime,
+                      widget.videoFilePath,
+                      widget.enableVideoAudio);
                   if (context.mounted) {
                     if (widget.preselectedUser != null) {
                       Navigator.pop(context, true);

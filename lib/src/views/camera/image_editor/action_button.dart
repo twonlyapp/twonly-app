@@ -22,7 +22,7 @@ class ActionButton extends StatelessWidget {
       child: IconButton(
         icon: FaIcon(
           icon,
-          size: 30,
+          size: (icon is FontAwesomeIcons) ? 25 : 30,
           color: disable
               ? const Color.fromARGB(154, 255, 255, 255)
               : color ?? Colors.white,

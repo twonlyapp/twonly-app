@@ -30,17 +30,17 @@ List<Layer> removedLayers = [];
 
 class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView(
-      {super.key, this.imageBytes, this.sendTo, this.videFilePath});
+      {super.key, this.imageBytes, this.sendTo, this.videoFilePath});
   final Future<Uint8List?>? imageBytes;
-  final XFile? videFilePath;
+  final XFile? videoFilePath;
   final Contact? sendTo;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
 
 class _ShareImageEditorView extends State<ShareImageEditorView> {
-  bool imageLoadedReady = false;
   bool _isRealTwonly = false;
+  bool videoWithAudio = true;
   int maxShowTime = 999999;
   String? sendNextMediaToUserName;
   double tabDownPostion = 0;
@@ -57,9 +57,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     initAsync();
     if (widget.imageBytes != null) {
       loadImage(widget.imageBytes!);
-    } else if (widget.videFilePath != null) {
+    } else if (widget.videoFilePath != null) {
       videoController =
-          VideoPlayerController.file(File(widget.videFilePath!.path));
+          VideoPlayerController.file(File(widget.videoFilePath!.path));
       videoController?.setLooping(true);
       videoController?.initialize().then((_) {
         videoController!.play();
@@ -68,7 +68,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         Logger("ui.share_image_editor").shout(error);
       });
       videoController?.play();
-      print(widget.videFilePath!.path);
+      print(widget.videoFilePath!.path);
     }
   }
 
@@ -107,7 +107,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
     return <Widget>[
       ActionButton(
-        FontAwesomeIcons.font,
+        Icons.text_fields_rounded,
         tooltipText: context.lang.addTextItem,
         onPressed: () async {
           layers = layers.where((x) => !x.isDeleted).toList();
@@ -122,7 +122,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
       const SizedBox(height: 8),
       ActionButton(
-        FontAwesomeIcons.pencil,
+        Icons.draw_rounded,
         tooltipText: context.lang.addDrawing,
         onPressed: () async {
           undoLayers.clear();
@@ -133,7 +133,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
       const SizedBox(height: 8),
       ActionButton(
-        FontAwesomeIcons.faceGrinWide,
+        Icons.add_reaction_outlined,
         tooltipText: context.lang.addEmoji,
         onPressed: () async {
           EmojiLayerData? layer = await showModalBottomSheet(
@@ -153,9 +153,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       const SizedBox(height: 8),
       NotificationBadge(
         count: maxShowTime == 999999 ? "∞" : maxShowTime.toString(),
-        // count: "",
         child: ActionButton(
-          FontAwesomeIcons.stopwatch,
+          Icons.timer_outlined,
           tooltipText: context.lang.protectAsARealTwonly,
           onPressed: () async {
             if (maxShowTime == 999999) {
@@ -174,6 +173,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           },
         ),
       ),
+      if (widget.videoFilePath != null) const SizedBox(height: 8),
+      if (widget.videoFilePath != null)
+        ActionButton(
+          (videoWithAudio) ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+          tooltipText: context.lang.protectAsARealTwonly,
+          color: Colors.white,
+          onPressed: () async {
+            setState(() {
+              videoWithAudio = !videoWithAudio;
+            });
+          },
+        ),
       const SizedBox(height: 8),
       ActionButton(
         FontAwesomeIcons.shieldHeart,
@@ -296,10 +307,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     ));
 
     layers.add(FilterLayerData());
-
-    setState(() {
-      imageLoadedReady = true;
-    });
   }
 
   Future sendImageToSinglePerson() async {
@@ -313,12 +320,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       Navigator.pop(context, false);
       return;
     }
-    sendImage(
-      [widget.sendTo!.userId],
-      imageBytes,
-      _isRealTwonly,
-      maxShowTime,
-    );
+    sendMediaFile([widget.sendTo!.userId], imageBytes, _isRealTwonly,
+        maxShowTime, widget.videoFilePath, videoWithAudio);
     if (context.mounted) {
       // ignore: use_build_context_synchronously
       Navigator.pop(context, true);
@@ -334,7 +337,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
 
     return Scaffold(
-      backgroundColor: imageLoadedReady ? null : Colors.white.withAlpha(0),
+      backgroundColor: Colors.white.withAlpha(0),
       resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,

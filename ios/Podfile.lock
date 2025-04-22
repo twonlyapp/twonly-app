@@ -73,8 +73,6 @@ PODS:
   - flutter_secure_storage_darwin (10.0.0):
     - Flutter
     - FlutterMacOS
-  - flutter_volume_controller (0.0.1):
-    - Flutter
   - gal (1.0.0):
     - Flutter
     - FlutterMacOS
@@ -216,6 +214,8 @@ PODS:
     - sqlite3/rtree
   - url_launcher_ios (0.0.1):
     - Flutter
+  - video_compress (0.3.0):
+    - Flutter
   - video_player_avfoundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -235,7 +235,6 @@ DEPENDENCIES:
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
-  - flutter_volume_controller (from `.symlinks/plugins/flutter_volume_controller/ios`)
   - gal (from `.symlinks/plugins/gal/darwin`)
   - GoogleUtilities
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
@@ -250,6 +249,7 @@ DEPENDENCIES:
   - sqlite3
   - sqlite3_flutter_libs (from `.symlinks/plugins/sqlite3_flutter_libs/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - video_compress (from `.symlinks/plugins/video_compress/ios`)
   - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
 
 SPEC REPOS:
@@ -293,8 +293,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_secure_storage_darwin:
     :path: ".symlinks/plugins/flutter_secure_storage_darwin/darwin"
-  flutter_volume_controller:
-    :path: ".symlinks/plugins/flutter_volume_controller/ios"
   gal:
     :path: ".symlinks/plugins/gal/darwin"
   image_picker_ios:
@@ -319,6 +317,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sqlite3_flutter_libs/darwin"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
+  video_compress:
+    :path: ".symlinks/plugins/video_compress/ios"
   video_player_avfoundation:
     :path: ".symlinks/plugins/video_player_avfoundation/darwin"
 
@@ -339,7 +339,6 @@ SPEC CHECKSUMS:
   flutter_keyboard_visibility: 4625131e43015dbbe759d9b20daaf77e0e3f6619
   flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
   flutter_secure_storage_darwin: ce237a8775b39723566dc72571190a3769d70468
-  flutter_volume_controller: c2be490cb0487e8b88d0d9fc2b7e1c139a4ebccb
   gal: baecd024ebfd13c441269ca7404792a7152fde89
   GoogleAppMeasurement: 36684bfb3ee034e2b42b4321eb19da3a1b81e65d
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
@@ -363,8 +362,9 @@ SPEC CHECKSUMS:
   sqlite3: fc1400008a9b3525f5914ed715a5d1af0b8f4983
   sqlite3_flutter_libs: f6acaa2172e6bb3e2e70c771661905080e8ebcf2
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  video_compress: f2133a07762889d67f0711ac831faa26f956980e
   video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
 
-PODFILE CHECKSUM: 4d78ee29daee4dd5268f87f2e6b41e472cc27728
+PODFILE CHECKSUM: 4fb7efca82567164b90218acb0591fb9166bfb73
 
 COCOAPODS: 1.16.2

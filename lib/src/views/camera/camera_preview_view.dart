@@ -222,13 +222,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<bool> pushMediaEditor(
-      Future<Uint8List?>? imageBytes, XFile? videFilePath) async {
+      Future<Uint8List?>? imageBytes, XFile? videoFilePath) async {
     bool? shoudReturn = await Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
         pageBuilder: (context, a1, a2) => ShareImageEditorView(
-          videFilePath: videFilePath,
+          videoFilePath: videoFilePath,
           imageBytes: imageBytes,
           sendTo: widget.sendTo,
         ),

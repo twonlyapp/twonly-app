@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:camera/camera.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:hive/hive.dart';
@@ -14,6 +15,7 @@ import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/hive.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:video_compress/video_compress.dart';
 
 Future tryDownloadAllMediaFiles() async {
   if (!await isAllowedToDownload()) {
@@ -151,21 +153,8 @@ class States {
   }
 }
 
-class ImageUploader {
-  static Future<PrepareState?> prepareState(Uint8List imageBytes) async {
-    Uint8List? imageBytesCompressed = await getCompressedImage(imageBytes);
-    if (imageBytesCompressed == null) {
-      // non recoverable state
-      Logger("media.dart").shout("Error compressing image!");
-      return null;
-    }
-
-    if (imageBytesCompressed.length >= 10000000) {
-      // non recoverable state
-      Logger("media.dart").shout("Image to big aborting!");
-      return null;
-    }
-
+class Uploader {
+  static Future<PrepareState?> prepareState(Uint8List rawBytes) async {
     var state = PrepareState();
 
     try {
@@ -177,7 +166,7 @@ class ImageUploader {
       state.encryptionNonce = xchacha20.newNonce();
 
       final secretBox = await xchacha20.encrypt(
-        imageBytesCompressed,
+        rawBytes,
         secretKey: secretKey,
         nonce: state.encryptionNonce,
       );
@@ -285,13 +274,46 @@ class ImageUploader {
   }
 }
 
-Future sendImage(
+Future sendMediaFile(
   List<int> userIds,
   Uint8List imageBytes,
   bool isRealTwonly,
   int maxShowTime,
+  XFile? videoFilePath,
+  bool? enableVideoAudio,
 ) async {
-  final prepareState = await ImageUploader.prepareState(imageBytes);
+  // First: Compress the image.
+  Uint8List? imageBytesCompressed = await getCompressedImage(imageBytes);
+  if (imageBytesCompressed == null) {
+    // non recoverable state
+    Logger("media.dart").shout("Error compressing image!");
+    return null;
+  }
+
+  if (imageBytesCompressed.length >= 2000000) {
+    // non recoverable state
+    Logger("media.dart").shout("Image to big aborting!");
+    return null;
+  }
+
+  if (videoFilePath != null) {
+    print(videoFilePath.path);
+    // Second: If existand compress video
+    MediaInfo? mediaInfo = await VideoCompress.compressVideo(
+      videoFilePath.path,
+      quality: VideoQuality.MediumQuality,
+      includeAudio: enableVideoAudio,
+      deleteOrigin: false,
+    );
+
+    if (mediaInfo == null) {
+      Logger("send.media.file").shout("Error while compressing the video!");
+      return;
+    }
+    print(mediaInfo.file);
+  }
+
+  final prepareState = await Uploader.prepareState(imageBytes);
   if (prepareState == null) {
     // non recoverable state
     return;
@@ -398,7 +420,7 @@ Future retransmitMediaFiles() async {
 Future<bool> uploadMediaState(
     String stateId, PrepareState prepareState, Metadata metadata) async {
   final uploadState =
-      await ImageUploader.uploadState(prepareState, metadata.userIds.length);
+      await Uploader.uploadState(prepareState, metadata.userIds.length);
   if (uploadState == null) {
     return false;
   }
@@ -411,7 +433,7 @@ Future<bool> uploadMediaState(
     }
   }
 
-  await ImageUploader.notifyState(prepareState, uploadState, metadata);
+  await Uploader.notifyState(prepareState, uploadState, metadata);
   return true;
 }
 
