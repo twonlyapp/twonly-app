@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logging/logging.dart';
@@ -55,19 +54,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   void initState() {
     super.initState();
     selectCamera(0, init: true);
-
-    FlutterVolumeController.addListener(
-      (volume) {
-        if (!cameraLoaded) {
-          // there is a bug, this is called at the start
-          return;
-        }
-        if (sharePreviewIsShown) return;
-        if (controller != null && controller!.value.isInitialized) {
-          takePicture();
-        }
-      },
-    );
     initAsync();
   }
 
@@ -83,7 +69,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   void dispose() {
-    FlutterVolumeController.removeListener();
     if (cameraId < gCameras.length) {
       controller?.dispose();
     }
