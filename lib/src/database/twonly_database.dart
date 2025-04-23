@@ -3,8 +3,12 @@ import 'package:drift_flutter/drift_flutter.dart'
     show driftDatabase, DriftNativeOptions;
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/daos/media_downloads_dao.dart';
+import 'package:twonly/src/database/daos/media_uploads_dao.dart';
 import 'package:twonly/src/database/daos/messages_dao.dart';
 import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/tables/media_download_table.dart';
+import 'package:twonly/src/database/tables/media_uploads_table.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/tables/signal_identity_key_store_table.dart';
 import 'package:twonly/src/database/tables/signal_pre_key_store_table.dart';
@@ -18,13 +22,17 @@ part 'twonly_database.g.dart';
 @DriftDatabase(tables: [
   Contacts,
   Messages,
+  MediaUploads,
+  MediaDownloads,
   SignalIdentityKeyStores,
   SignalPreKeyStores,
   SignalSenderKeyStores,
   SignalSessionStores
 ], daos: [
   MessagesDao,
-  ContactsDao
+  ContactsDao,
+  MediaUploadsDao,
+  MediaDownloadsDao,
 ])
 class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase([QueryExecutor? e])
@@ -35,7 +43,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -57,6 +65,9 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           m.addColumn(schema.contacts, schema.contacts.archived);
           m.addColumn(
               schema.contacts, schema.contacts.deleteMessagesAfterXMinutes);
+        },
+        from3To4: (m, schema) async {
+          m.createTable(mediaUploads);
         },
       ),
     );

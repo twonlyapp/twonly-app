@@ -160,7 +160,7 @@ Future<bool> authenticateUser(String localizedReason,
   return false;
 }
 
-Future<bool> isAllowedToDownload() async {
+Future<bool> isAllowedToDownload(bool isVideo) async {
   final List<ConnectivityResult> connectivityResult =
       await (Connectivity().checkConnectivity());
   if (connectivityResult.contains(ConnectivityResult.mobile)) {

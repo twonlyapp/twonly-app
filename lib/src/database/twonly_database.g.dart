@@ -958,6 +958,18 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   late final GeneratedColumn<int> messageOtherId = GeneratedColumn<int>(
       'message_other_id', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _mediaUploadIdMeta =
+      const VerificationMeta('mediaUploadId');
+  @override
+  late final GeneratedColumn<int> mediaUploadId = GeneratedColumn<int>(
+      'media_upload_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _mediaDownloadIdMeta =
+      const VerificationMeta('mediaDownloadId');
+  @override
+  late final GeneratedColumn<int> mediaDownloadId = GeneratedColumn<int>(
+      'media_download_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _responseToMessageIdMeta =
       const VerificationMeta('responseToMessageId');
   @override
@@ -1044,6 +1056,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         contactId,
         messageId,
         messageOtherId,
+        mediaUploadId,
+        mediaDownloadId,
         responseToMessageId,
         responseToOtherMessageId,
         acknowledgeByUser,
@@ -1081,6 +1095,18 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           _messageOtherIdMeta,
           messageOtherId.isAcceptableOrUnknown(
               data['message_other_id']!, _messageOtherIdMeta));
+    }
+    if (data.containsKey('media_upload_id')) {
+      context.handle(
+          _mediaUploadIdMeta,
+          mediaUploadId.isAcceptableOrUnknown(
+              data['media_upload_id']!, _mediaUploadIdMeta));
+    }
+    if (data.containsKey('media_download_id')) {
+      context.handle(
+          _mediaDownloadIdMeta,
+          mediaDownloadId.isAcceptableOrUnknown(
+              data['media_download_id']!, _mediaDownloadIdMeta));
     }
     if (data.containsKey('response_to_message_id')) {
       context.handle(
@@ -1146,6 +1172,10 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           .read(DriftSqlType.int, data['${effectivePrefix}message_id'])!,
       messageOtherId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}message_other_id']),
+      mediaUploadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}media_upload_id']),
+      mediaDownloadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}media_download_id']),
       responseToMessageId: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}response_to_message_id']),
       responseToOtherMessageId: attachedDatabase.typeMapping.read(
@@ -1188,6 +1218,8 @@ class Message extends DataClass implements Insertable<Message> {
   final int contactId;
   final int messageId;
   final int? messageOtherId;
+  final int? mediaUploadId;
+  final int? mediaDownloadId;
   final int? responseToMessageId;
   final int? responseToOtherMessageId;
   final bool acknowledgeByUser;
@@ -1203,6 +1235,8 @@ class Message extends DataClass implements Insertable<Message> {
       {required this.contactId,
       required this.messageId,
       this.messageOtherId,
+      this.mediaUploadId,
+      this.mediaDownloadId,
       this.responseToMessageId,
       this.responseToOtherMessageId,
       required this.acknowledgeByUser,
@@ -1221,6 +1255,12 @@ class Message extends DataClass implements Insertable<Message> {
     map['message_id'] = Variable<int>(messageId);
     if (!nullToAbsent || messageOtherId != null) {
       map['message_other_id'] = Variable<int>(messageOtherId);
+    }
+    if (!nullToAbsent || mediaUploadId != null) {
+      map['media_upload_id'] = Variable<int>(mediaUploadId);
+    }
+    if (!nullToAbsent || mediaDownloadId != null) {
+      map['media_download_id'] = Variable<int>(mediaDownloadId);
     }
     if (!nullToAbsent || responseToMessageId != null) {
       map['response_to_message_id'] = Variable<int>(responseToMessageId);
@@ -1257,6 +1297,12 @@ class Message extends DataClass implements Insertable<Message> {
       messageOtherId: messageOtherId == null && nullToAbsent
           ? const Value.absent()
           : Value(messageOtherId),
+      mediaUploadId: mediaUploadId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mediaUploadId),
+      mediaDownloadId: mediaDownloadId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mediaDownloadId),
       responseToMessageId: responseToMessageId == null && nullToAbsent
           ? const Value.absent()
           : Value(responseToMessageId),
@@ -1286,6 +1332,8 @@ class Message extends DataClass implements Insertable<Message> {
       contactId: serializer.fromJson<int>(json['contactId']),
       messageId: serializer.fromJson<int>(json['messageId']),
       messageOtherId: serializer.fromJson<int?>(json['messageOtherId']),
+      mediaUploadId: serializer.fromJson<int?>(json['mediaUploadId']),
+      mediaDownloadId: serializer.fromJson<int?>(json['mediaDownloadId']),
       responseToMessageId:
           serializer.fromJson<int?>(json['responseToMessageId']),
       responseToOtherMessageId:
@@ -1311,6 +1359,8 @@ class Message extends DataClass implements Insertable<Message> {
       'contactId': serializer.toJson<int>(contactId),
       'messageId': serializer.toJson<int>(messageId),
       'messageOtherId': serializer.toJson<int?>(messageOtherId),
+      'mediaUploadId': serializer.toJson<int?>(mediaUploadId),
+      'mediaDownloadId': serializer.toJson<int?>(mediaDownloadId),
       'responseToMessageId': serializer.toJson<int?>(responseToMessageId),
       'responseToOtherMessageId':
           serializer.toJson<int?>(responseToOtherMessageId),
@@ -1332,6 +1382,8 @@ class Message extends DataClass implements Insertable<Message> {
           {int? contactId,
           int? messageId,
           Value<int?> messageOtherId = const Value.absent(),
+          Value<int?> mediaUploadId = const Value.absent(),
+          Value<int?> mediaDownloadId = const Value.absent(),
           Value<int?> responseToMessageId = const Value.absent(),
           Value<int?> responseToOtherMessageId = const Value.absent(),
           bool? acknowledgeByUser,
@@ -1348,6 +1400,11 @@ class Message extends DataClass implements Insertable<Message> {
         messageId: messageId ?? this.messageId,
         messageOtherId:
             messageOtherId.present ? messageOtherId.value : this.messageOtherId,
+        mediaUploadId:
+            mediaUploadId.present ? mediaUploadId.value : this.mediaUploadId,
+        mediaDownloadId: mediaDownloadId.present
+            ? mediaDownloadId.value
+            : this.mediaDownloadId,
         responseToMessageId: responseToMessageId.present
             ? responseToMessageId.value
             : this.responseToMessageId,
@@ -1371,6 +1428,12 @@ class Message extends DataClass implements Insertable<Message> {
       messageOtherId: data.messageOtherId.present
           ? data.messageOtherId.value
           : this.messageOtherId,
+      mediaUploadId: data.mediaUploadId.present
+          ? data.mediaUploadId.value
+          : this.mediaUploadId,
+      mediaDownloadId: data.mediaDownloadId.present
+          ? data.mediaDownloadId.value
+          : this.mediaDownloadId,
       responseToMessageId: data.responseToMessageId.present
           ? data.responseToMessageId.value
           : this.responseToMessageId,
@@ -1404,6 +1467,8 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('contactId: $contactId, ')
           ..write('messageId: $messageId, ')
           ..write('messageOtherId: $messageOtherId, ')
+          ..write('mediaUploadId: $mediaUploadId, ')
+          ..write('mediaDownloadId: $mediaDownloadId, ')
           ..write('responseToMessageId: $responseToMessageId, ')
           ..write('responseToOtherMessageId: $responseToOtherMessageId, ')
           ..write('acknowledgeByUser: $acknowledgeByUser, ')
@@ -1424,6 +1489,8 @@ class Message extends DataClass implements Insertable<Message> {
       contactId,
       messageId,
       messageOtherId,
+      mediaUploadId,
+      mediaDownloadId,
       responseToMessageId,
       responseToOtherMessageId,
       acknowledgeByUser,
@@ -1442,6 +1509,8 @@ class Message extends DataClass implements Insertable<Message> {
           other.contactId == this.contactId &&
           other.messageId == this.messageId &&
           other.messageOtherId == this.messageOtherId &&
+          other.mediaUploadId == this.mediaUploadId &&
+          other.mediaDownloadId == this.mediaDownloadId &&
           other.responseToMessageId == this.responseToMessageId &&
           other.responseToOtherMessageId == this.responseToOtherMessageId &&
           other.acknowledgeByUser == this.acknowledgeByUser &&
@@ -1459,6 +1528,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<int> contactId;
   final Value<int> messageId;
   final Value<int?> messageOtherId;
+  final Value<int?> mediaUploadId;
+  final Value<int?> mediaDownloadId;
   final Value<int?> responseToMessageId;
   final Value<int?> responseToOtherMessageId;
   final Value<bool> acknowledgeByUser;
@@ -1474,6 +1545,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.contactId = const Value.absent(),
     this.messageId = const Value.absent(),
     this.messageOtherId = const Value.absent(),
+    this.mediaUploadId = const Value.absent(),
+    this.mediaDownloadId = const Value.absent(),
     this.responseToMessageId = const Value.absent(),
     this.responseToOtherMessageId = const Value.absent(),
     this.acknowledgeByUser = const Value.absent(),
@@ -1490,6 +1563,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     required int contactId,
     this.messageId = const Value.absent(),
     this.messageOtherId = const Value.absent(),
+    this.mediaUploadId = const Value.absent(),
+    this.mediaDownloadId = const Value.absent(),
     this.responseToMessageId = const Value.absent(),
     this.responseToOtherMessageId = const Value.absent(),
     this.acknowledgeByUser = const Value.absent(),
@@ -1507,6 +1582,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<int>? contactId,
     Expression<int>? messageId,
     Expression<int>? messageOtherId,
+    Expression<int>? mediaUploadId,
+    Expression<int>? mediaDownloadId,
     Expression<int>? responseToMessageId,
     Expression<int>? responseToOtherMessageId,
     Expression<bool>? acknowledgeByUser,
@@ -1523,6 +1600,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (contactId != null) 'contact_id': contactId,
       if (messageId != null) 'message_id': messageId,
       if (messageOtherId != null) 'message_other_id': messageOtherId,
+      if (mediaUploadId != null) 'media_upload_id': mediaUploadId,
+      if (mediaDownloadId != null) 'media_download_id': mediaDownloadId,
       if (responseToMessageId != null)
         'response_to_message_id': responseToMessageId,
       if (responseToOtherMessageId != null)
@@ -1544,6 +1623,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       {Value<int>? contactId,
       Value<int>? messageId,
       Value<int?>? messageOtherId,
+      Value<int?>? mediaUploadId,
+      Value<int?>? mediaDownloadId,
       Value<int?>? responseToMessageId,
       Value<int?>? responseToOtherMessageId,
       Value<bool>? acknowledgeByUser,
@@ -1559,6 +1640,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       contactId: contactId ?? this.contactId,
       messageId: messageId ?? this.messageId,
       messageOtherId: messageOtherId ?? this.messageOtherId,
+      mediaUploadId: mediaUploadId ?? this.mediaUploadId,
+      mediaDownloadId: mediaDownloadId ?? this.mediaDownloadId,
       responseToMessageId: responseToMessageId ?? this.responseToMessageId,
       responseToOtherMessageId:
           responseToOtherMessageId ?? this.responseToOtherMessageId,
@@ -1585,6 +1668,12 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     }
     if (messageOtherId.present) {
       map['message_other_id'] = Variable<int>(messageOtherId.value);
+    }
+    if (mediaUploadId.present) {
+      map['media_upload_id'] = Variable<int>(mediaUploadId.value);
+    }
+    if (mediaDownloadId.present) {
+      map['media_download_id'] = Variable<int>(mediaDownloadId.value);
     }
     if (responseToMessageId.present) {
       map['response_to_message_id'] = Variable<int>(responseToMessageId.value);
@@ -1631,6 +1720,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('contactId: $contactId, ')
           ..write('messageId: $messageId, ')
           ..write('messageOtherId: $messageOtherId, ')
+          ..write('mediaUploadId: $mediaUploadId, ')
+          ..write('mediaDownloadId: $mediaDownloadId, ')
           ..write('responseToMessageId: $responseToMessageId, ')
           ..write('responseToOtherMessageId: $responseToOtherMessageId, ')
           ..write('acknowledgeByUser: $acknowledgeByUser, ')
@@ -1642,6 +1733,640 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('openedAt: $openedAt, ')
           ..write('sendAt: $sendAt, ')
           ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MediaUploadsTable extends MediaUploads
+    with TableInfo<$MediaUploadsTable, MediaUpload> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MediaUploadsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _mediaUploadIdMeta =
+      const VerificationMeta('mediaUploadId');
+  @override
+  late final GeneratedColumn<int> mediaUploadId = GeneratedColumn<int>(
+      'media_upload_id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  @override
+  late final GeneratedColumnWithTypeConverter<UploadState, String> state =
+      GeneratedColumn<String>('state', aliasedName, false,
+              type: DriftSqlType.string,
+              requiredDuringInsert: false,
+              defaultValue: Constant(UploadState.pending.name))
+          .withConverter<UploadState>($MediaUploadsTable.$converterstate);
+  @override
+  late final GeneratedColumnWithTypeConverter<MediaUploadMetadata, String>
+      metadata = GeneratedColumn<String>('metadata', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<MediaUploadMetadata>(
+              $MediaUploadsTable.$convertermetadata);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<int>?, String> messageIds =
+      GeneratedColumn<String>('message_ids', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<List<int>?>($MediaUploadsTable.$convertermessageIdsn);
+  @override
+  late final GeneratedColumnWithTypeConverter<MediaEncryptionData?, String>
+      encryptionData = GeneratedColumn<String>(
+              'encryption_data', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<MediaEncryptionData?>(
+              $MediaUploadsTable.$converterencryptionDatan);
+  @override
+  late final GeneratedColumnWithTypeConverter<MediaUploadTokens?, String>
+      uploadTokens = GeneratedColumn<String>('upload_tokens', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<MediaUploadTokens?>(
+              $MediaUploadsTable.$converteruploadTokensn);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<int>, String>
+      alreadyNotified = GeneratedColumn<String>(
+              'already_notified', aliasedName, false,
+              type: DriftSqlType.string,
+              requiredDuringInsert: false,
+              defaultValue: Constant("[]"))
+          .withConverter<List<int>>(
+              $MediaUploadsTable.$converteralreadyNotified);
+  @override
+  List<GeneratedColumn> get $columns => [
+        mediaUploadId,
+        state,
+        metadata,
+        messageIds,
+        encryptionData,
+        uploadTokens,
+        alreadyNotified
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'media_uploads';
+  @override
+  VerificationContext validateIntegrity(Insertable<MediaUpload> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('media_upload_id')) {
+      context.handle(
+          _mediaUploadIdMeta,
+          mediaUploadId.isAcceptableOrUnknown(
+              data['media_upload_id']!, _mediaUploadIdMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {mediaUploadId};
+  @override
+  MediaUpload map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MediaUpload(
+      mediaUploadId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}media_upload_id'])!,
+      state: $MediaUploadsTable.$converterstate.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}state'])!),
+      metadata: $MediaUploadsTable.$convertermetadata.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata'])!),
+      messageIds: $MediaUploadsTable.$convertermessageIdsn.fromSql(
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.string, data['${effectivePrefix}message_ids'])),
+      encryptionData: $MediaUploadsTable.$converterencryptionDatan.fromSql(
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.string, data['${effectivePrefix}encryption_data'])),
+      uploadTokens: $MediaUploadsTable.$converteruploadTokensn.fromSql(
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.string, data['${effectivePrefix}upload_tokens'])),
+      alreadyNotified: $MediaUploadsTable.$converteralreadyNotified.fromSql(
+          attachedDatabase.typeMapping.read(DriftSqlType.string,
+              data['${effectivePrefix}already_notified'])!),
+    );
+  }
+
+  @override
+  $MediaUploadsTable createAlias(String alias) {
+    return $MediaUploadsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<UploadState, String, String> $converterstate =
+      const EnumNameConverter<UploadState>(UploadState.values);
+  static JsonTypeConverter2<MediaUploadMetadata, String, Map<String, Object?>>
+      $convertermetadata = MediaUploadMetadataConverter();
+  static TypeConverter<List<int>, String> $convertermessageIds =
+      IntListTypeConverter();
+  static TypeConverter<List<int>?, String?> $convertermessageIdsn =
+      NullAwareTypeConverter.wrap($convertermessageIds);
+  static JsonTypeConverter2<MediaEncryptionData, String, Map<String, Object?>>
+      $converterencryptionData = MediaEncryptionDataConverter();
+  static JsonTypeConverter2<MediaEncryptionData?, String?,
+          Map<String, Object?>?> $converterencryptionDatan =
+      JsonTypeConverter2.asNullable($converterencryptionData);
+  static JsonTypeConverter2<MediaUploadTokens, String, Map<String, Object?>>
+      $converteruploadTokens = MediaUploadTokensConverter();
+  static JsonTypeConverter2<MediaUploadTokens?, String?, Map<String, Object?>?>
+      $converteruploadTokensn =
+      JsonTypeConverter2.asNullable($converteruploadTokens);
+  static TypeConverter<List<int>, String> $converteralreadyNotified =
+      IntListTypeConverter();
+}
+
+class MediaUpload extends DataClass implements Insertable<MediaUpload> {
+  final int mediaUploadId;
+  final UploadState state;
+  final MediaUploadMetadata metadata;
+
+  /// exists in UploadState.addedToMessagesDb
+  final List<int>? messageIds;
+
+  /// exsists in UploadState.isEncrypted
+  final MediaEncryptionData? encryptionData;
+
+  /// exsists in UploadState.hasUploadToken
+  final MediaUploadTokens? uploadTokens;
+
+  /// exists in UploadState.addedToMessagesDb
+  final List<int> alreadyNotified;
+  const MediaUpload(
+      {required this.mediaUploadId,
+      required this.state,
+      required this.metadata,
+      this.messageIds,
+      this.encryptionData,
+      this.uploadTokens,
+      required this.alreadyNotified});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['media_upload_id'] = Variable<int>(mediaUploadId);
+    {
+      map['state'] =
+          Variable<String>($MediaUploadsTable.$converterstate.toSql(state));
+    }
+    {
+      map['metadata'] = Variable<String>(
+          $MediaUploadsTable.$convertermetadata.toSql(metadata));
+    }
+    if (!nullToAbsent || messageIds != null) {
+      map['message_ids'] = Variable<String>(
+          $MediaUploadsTable.$convertermessageIdsn.toSql(messageIds));
+    }
+    if (!nullToAbsent || encryptionData != null) {
+      map['encryption_data'] = Variable<String>(
+          $MediaUploadsTable.$converterencryptionDatan.toSql(encryptionData));
+    }
+    if (!nullToAbsent || uploadTokens != null) {
+      map['upload_tokens'] = Variable<String>(
+          $MediaUploadsTable.$converteruploadTokensn.toSql(uploadTokens));
+    }
+    {
+      map['already_notified'] = Variable<String>(
+          $MediaUploadsTable.$converteralreadyNotified.toSql(alreadyNotified));
+    }
+    return map;
+  }
+
+  MediaUploadsCompanion toCompanion(bool nullToAbsent) {
+    return MediaUploadsCompanion(
+      mediaUploadId: Value(mediaUploadId),
+      state: Value(state),
+      metadata: Value(metadata),
+      messageIds: messageIds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(messageIds),
+      encryptionData: encryptionData == null && nullToAbsent
+          ? const Value.absent()
+          : Value(encryptionData),
+      uploadTokens: uploadTokens == null && nullToAbsent
+          ? const Value.absent()
+          : Value(uploadTokens),
+      alreadyNotified: Value(alreadyNotified),
+    );
+  }
+
+  factory MediaUpload.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MediaUpload(
+      mediaUploadId: serializer.fromJson<int>(json['mediaUploadId']),
+      state: $MediaUploadsTable.$converterstate
+          .fromJson(serializer.fromJson<String>(json['state'])),
+      metadata: $MediaUploadsTable.$convertermetadata.fromJson(
+          serializer.fromJson<Map<String, Object?>>(json['metadata'])),
+      messageIds: serializer.fromJson<List<int>?>(json['messageIds']),
+      encryptionData: $MediaUploadsTable.$converterencryptionDatan.fromJson(
+          serializer.fromJson<Map<String, Object?>?>(json['encryptionData'])),
+      uploadTokens: $MediaUploadsTable.$converteruploadTokensn.fromJson(
+          serializer.fromJson<Map<String, Object?>?>(json['uploadTokens'])),
+      alreadyNotified: serializer.fromJson<List<int>>(json['alreadyNotified']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'mediaUploadId': serializer.toJson<int>(mediaUploadId),
+      'state': serializer
+          .toJson<String>($MediaUploadsTable.$converterstate.toJson(state)),
+      'metadata': serializer.toJson<Map<String, Object?>>(
+          $MediaUploadsTable.$convertermetadata.toJson(metadata)),
+      'messageIds': serializer.toJson<List<int>?>(messageIds),
+      'encryptionData': serializer.toJson<Map<String, Object?>?>(
+          $MediaUploadsTable.$converterencryptionDatan.toJson(encryptionData)),
+      'uploadTokens': serializer.toJson<Map<String, Object?>?>(
+          $MediaUploadsTable.$converteruploadTokensn.toJson(uploadTokens)),
+      'alreadyNotified': serializer.toJson<List<int>>(alreadyNotified),
+    };
+  }
+
+  MediaUpload copyWith(
+          {int? mediaUploadId,
+          UploadState? state,
+          MediaUploadMetadata? metadata,
+          Value<List<int>?> messageIds = const Value.absent(),
+          Value<MediaEncryptionData?> encryptionData = const Value.absent(),
+          Value<MediaUploadTokens?> uploadTokens = const Value.absent(),
+          List<int>? alreadyNotified}) =>
+      MediaUpload(
+        mediaUploadId: mediaUploadId ?? this.mediaUploadId,
+        state: state ?? this.state,
+        metadata: metadata ?? this.metadata,
+        messageIds: messageIds.present ? messageIds.value : this.messageIds,
+        encryptionData:
+            encryptionData.present ? encryptionData.value : this.encryptionData,
+        uploadTokens:
+            uploadTokens.present ? uploadTokens.value : this.uploadTokens,
+        alreadyNotified: alreadyNotified ?? this.alreadyNotified,
+      );
+  MediaUpload copyWithCompanion(MediaUploadsCompanion data) {
+    return MediaUpload(
+      mediaUploadId: data.mediaUploadId.present
+          ? data.mediaUploadId.value
+          : this.mediaUploadId,
+      state: data.state.present ? data.state.value : this.state,
+      metadata: data.metadata.present ? data.metadata.value : this.metadata,
+      messageIds:
+          data.messageIds.present ? data.messageIds.value : this.messageIds,
+      encryptionData: data.encryptionData.present
+          ? data.encryptionData.value
+          : this.encryptionData,
+      uploadTokens: data.uploadTokens.present
+          ? data.uploadTokens.value
+          : this.uploadTokens,
+      alreadyNotified: data.alreadyNotified.present
+          ? data.alreadyNotified.value
+          : this.alreadyNotified,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaUpload(')
+          ..write('mediaUploadId: $mediaUploadId, ')
+          ..write('state: $state, ')
+          ..write('metadata: $metadata, ')
+          ..write('messageIds: $messageIds, ')
+          ..write('encryptionData: $encryptionData, ')
+          ..write('uploadTokens: $uploadTokens, ')
+          ..write('alreadyNotified: $alreadyNotified')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(mediaUploadId, state, metadata, messageIds,
+      encryptionData, uploadTokens, alreadyNotified);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MediaUpload &&
+          other.mediaUploadId == this.mediaUploadId &&
+          other.state == this.state &&
+          other.metadata == this.metadata &&
+          other.messageIds == this.messageIds &&
+          other.encryptionData == this.encryptionData &&
+          other.uploadTokens == this.uploadTokens &&
+          other.alreadyNotified == this.alreadyNotified);
+}
+
+class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
+  final Value<int> mediaUploadId;
+  final Value<UploadState> state;
+  final Value<MediaUploadMetadata> metadata;
+  final Value<List<int>?> messageIds;
+  final Value<MediaEncryptionData?> encryptionData;
+  final Value<MediaUploadTokens?> uploadTokens;
+  final Value<List<int>> alreadyNotified;
+  const MediaUploadsCompanion({
+    this.mediaUploadId = const Value.absent(),
+    this.state = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.messageIds = const Value.absent(),
+    this.encryptionData = const Value.absent(),
+    this.uploadTokens = const Value.absent(),
+    this.alreadyNotified = const Value.absent(),
+  });
+  MediaUploadsCompanion.insert({
+    this.mediaUploadId = const Value.absent(),
+    this.state = const Value.absent(),
+    required MediaUploadMetadata metadata,
+    this.messageIds = const Value.absent(),
+    this.encryptionData = const Value.absent(),
+    this.uploadTokens = const Value.absent(),
+    this.alreadyNotified = const Value.absent(),
+  }) : metadata = Value(metadata);
+  static Insertable<MediaUpload> custom({
+    Expression<int>? mediaUploadId,
+    Expression<String>? state,
+    Expression<String>? metadata,
+    Expression<String>? messageIds,
+    Expression<String>? encryptionData,
+    Expression<String>? uploadTokens,
+    Expression<String>? alreadyNotified,
+  }) {
+    return RawValuesInsertable({
+      if (mediaUploadId != null) 'media_upload_id': mediaUploadId,
+      if (state != null) 'state': state,
+      if (metadata != null) 'metadata': metadata,
+      if (messageIds != null) 'message_ids': messageIds,
+      if (encryptionData != null) 'encryption_data': encryptionData,
+      if (uploadTokens != null) 'upload_tokens': uploadTokens,
+      if (alreadyNotified != null) 'already_notified': alreadyNotified,
+    });
+  }
+
+  MediaUploadsCompanion copyWith(
+      {Value<int>? mediaUploadId,
+      Value<UploadState>? state,
+      Value<MediaUploadMetadata>? metadata,
+      Value<List<int>?>? messageIds,
+      Value<MediaEncryptionData?>? encryptionData,
+      Value<MediaUploadTokens?>? uploadTokens,
+      Value<List<int>>? alreadyNotified}) {
+    return MediaUploadsCompanion(
+      mediaUploadId: mediaUploadId ?? this.mediaUploadId,
+      state: state ?? this.state,
+      metadata: metadata ?? this.metadata,
+      messageIds: messageIds ?? this.messageIds,
+      encryptionData: encryptionData ?? this.encryptionData,
+      uploadTokens: uploadTokens ?? this.uploadTokens,
+      alreadyNotified: alreadyNotified ?? this.alreadyNotified,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (mediaUploadId.present) {
+      map['media_upload_id'] = Variable<int>(mediaUploadId.value);
+    }
+    if (state.present) {
+      map['state'] = Variable<String>(
+          $MediaUploadsTable.$converterstate.toSql(state.value));
+    }
+    if (metadata.present) {
+      map['metadata'] = Variable<String>(
+          $MediaUploadsTable.$convertermetadata.toSql(metadata.value));
+    }
+    if (messageIds.present) {
+      map['message_ids'] = Variable<String>(
+          $MediaUploadsTable.$convertermessageIdsn.toSql(messageIds.value));
+    }
+    if (encryptionData.present) {
+      map['encryption_data'] = Variable<String>($MediaUploadsTable
+          .$converterencryptionDatan
+          .toSql(encryptionData.value));
+    }
+    if (uploadTokens.present) {
+      map['upload_tokens'] = Variable<String>(
+          $MediaUploadsTable.$converteruploadTokensn.toSql(uploadTokens.value));
+    }
+    if (alreadyNotified.present) {
+      map['already_notified'] = Variable<String>($MediaUploadsTable
+          .$converteralreadyNotified
+          .toSql(alreadyNotified.value));
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaUploadsCompanion(')
+          ..write('mediaUploadId: $mediaUploadId, ')
+          ..write('state: $state, ')
+          ..write('metadata: $metadata, ')
+          ..write('messageIds: $messageIds, ')
+          ..write('encryptionData: $encryptionData, ')
+          ..write('uploadTokens: $uploadTokens, ')
+          ..write('alreadyNotified: $alreadyNotified')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MediaDownloadsTable extends MediaDownloads
+    with TableInfo<$MediaDownloadsTable, MediaDownload> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MediaDownloadsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _messageIdMeta =
+      const VerificationMeta('messageId');
+  @override
+  late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
+      'message_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<int>, String> downloadToken =
+      GeneratedColumn<String>('download_token', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<List<int>>(
+              $MediaDownloadsTable.$converterdownloadToken);
+  @override
+  List<GeneratedColumn> get $columns => [messageId, downloadToken];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'media_downloads';
+  @override
+  VerificationContext validateIntegrity(Insertable<MediaDownload> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('message_id')) {
+      context.handle(_messageIdMeta,
+          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+    } else if (isInserting) {
+      context.missing(_messageIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => const {};
+  @override
+  MediaDownload map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MediaDownload(
+      messageId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}message_id'])!,
+      downloadToken: $MediaDownloadsTable.$converterdownloadToken.fromSql(
+          attachedDatabase.typeMapping.read(
+              DriftSqlType.string, data['${effectivePrefix}download_token'])!),
+    );
+  }
+
+  @override
+  $MediaDownloadsTable createAlias(String alias) {
+    return $MediaDownloadsTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<List<int>, String> $converterdownloadToken =
+      IntListTypeConverter();
+}
+
+class MediaDownload extends DataClass implements Insertable<MediaDownload> {
+  final int messageId;
+  final List<int> downloadToken;
+  const MediaDownload({required this.messageId, required this.downloadToken});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['message_id'] = Variable<int>(messageId);
+    {
+      map['download_token'] = Variable<String>(
+          $MediaDownloadsTable.$converterdownloadToken.toSql(downloadToken));
+    }
+    return map;
+  }
+
+  MediaDownloadsCompanion toCompanion(bool nullToAbsent) {
+    return MediaDownloadsCompanion(
+      messageId: Value(messageId),
+      downloadToken: Value(downloadToken),
+    );
+  }
+
+  factory MediaDownload.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MediaDownload(
+      messageId: serializer.fromJson<int>(json['messageId']),
+      downloadToken: serializer.fromJson<List<int>>(json['downloadToken']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'messageId': serializer.toJson<int>(messageId),
+      'downloadToken': serializer.toJson<List<int>>(downloadToken),
+    };
+  }
+
+  MediaDownload copyWith({int? messageId, List<int>? downloadToken}) =>
+      MediaDownload(
+        messageId: messageId ?? this.messageId,
+        downloadToken: downloadToken ?? this.downloadToken,
+      );
+  MediaDownload copyWithCompanion(MediaDownloadsCompanion data) {
+    return MediaDownload(
+      messageId: data.messageId.present ? data.messageId.value : this.messageId,
+      downloadToken: data.downloadToken.present
+          ? data.downloadToken.value
+          : this.downloadToken,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaDownload(')
+          ..write('messageId: $messageId, ')
+          ..write('downloadToken: $downloadToken')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(messageId, downloadToken);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MediaDownload &&
+          other.messageId == this.messageId &&
+          other.downloadToken == this.downloadToken);
+}
+
+class MediaDownloadsCompanion extends UpdateCompanion<MediaDownload> {
+  final Value<int> messageId;
+  final Value<List<int>> downloadToken;
+  final Value<int> rowid;
+  const MediaDownloadsCompanion({
+    this.messageId = const Value.absent(),
+    this.downloadToken = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MediaDownloadsCompanion.insert({
+    required int messageId,
+    required List<int> downloadToken,
+    this.rowid = const Value.absent(),
+  })  : messageId = Value(messageId),
+        downloadToken = Value(downloadToken);
+  static Insertable<MediaDownload> custom({
+    Expression<int>? messageId,
+    Expression<String>? downloadToken,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (messageId != null) 'message_id': messageId,
+      if (downloadToken != null) 'download_token': downloadToken,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MediaDownloadsCompanion copyWith(
+      {Value<int>? messageId,
+      Value<List<int>>? downloadToken,
+      Value<int>? rowid}) {
+    return MediaDownloadsCompanion(
+      messageId: messageId ?? this.messageId,
+      downloadToken: downloadToken ?? this.downloadToken,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (messageId.present) {
+      map['message_id'] = Variable<int>(messageId.value);
+    }
+    if (downloadToken.present) {
+      map['download_token'] = Variable<String>($MediaDownloadsTable
+          .$converterdownloadToken
+          .toSql(downloadToken.value));
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MediaDownloadsCompanion(')
+          ..write('messageId: $messageId, ')
+          ..write('downloadToken: $downloadToken, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2633,6 +3358,8 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
   $TwonlyDatabaseManager get managers => $TwonlyDatabaseManager(this);
   late final $ContactsTable contacts = $ContactsTable(this);
   late final $MessagesTable messages = $MessagesTable(this);
+  late final $MediaUploadsTable mediaUploads = $MediaUploadsTable(this);
+  late final $MediaDownloadsTable mediaDownloads = $MediaDownloadsTable(this);
   late final $SignalIdentityKeyStoresTable signalIdentityKeyStores =
       $SignalIdentityKeyStoresTable(this);
   late final $SignalPreKeyStoresTable signalPreKeyStores =
@@ -2643,6 +3370,10 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
       $SignalSessionStoresTable(this);
   late final MessagesDao messagesDao = MessagesDao(this as TwonlyDatabase);
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDatabase);
+  late final MediaUploadsDao mediaUploadsDao =
+      MediaUploadsDao(this as TwonlyDatabase);
+  late final MediaDownloadsDao mediaDownloadsDao =
+      MediaDownloadsDao(this as TwonlyDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2650,6 +3381,8 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         contacts,
         messages,
+        mediaUploads,
+        mediaDownloads,
         signalIdentityKeyStores,
         signalPreKeyStores,
         signalSenderKeyStores,
@@ -3130,6 +3863,8 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   required int contactId,
   Value<int> messageId,
   Value<int?> messageOtherId,
+  Value<int?> mediaUploadId,
+  Value<int?> mediaDownloadId,
   Value<int?> responseToMessageId,
   Value<int?> responseToOtherMessageId,
   Value<bool> acknowledgeByUser,
@@ -3146,6 +3881,8 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<int> contactId,
   Value<int> messageId,
   Value<int?> messageOtherId,
+  Value<int?> mediaUploadId,
+  Value<int?> mediaDownloadId,
   Value<int?> responseToMessageId,
   Value<int?> responseToOtherMessageId,
   Value<bool> acknowledgeByUser,
@@ -3193,6 +3930,13 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<int> get messageOtherId => $composableBuilder(
       column: $table.messageOtherId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get mediaUploadId => $composableBuilder(
+      column: $table.mediaUploadId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get mediaDownloadId => $composableBuilder(
+      column: $table.mediaDownloadId,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get responseToMessageId => $composableBuilder(
@@ -3274,6 +4018,14 @@ class $$MessagesTableOrderingComposer
       column: $table.messageOtherId,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get mediaUploadId => $composableBuilder(
+      column: $table.mediaUploadId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get mediaDownloadId => $composableBuilder(
+      column: $table.mediaDownloadId,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get responseToMessageId => $composableBuilder(
       column: $table.responseToMessageId,
       builder: (column) => ColumnOrderings(column));
@@ -3348,6 +4100,12 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<int> get messageOtherId => $composableBuilder(
       column: $table.messageOtherId, builder: (column) => column);
+
+  GeneratedColumn<int> get mediaUploadId => $composableBuilder(
+      column: $table.mediaUploadId, builder: (column) => column);
+
+  GeneratedColumn<int> get mediaDownloadId => $composableBuilder(
+      column: $table.mediaDownloadId, builder: (column) => column);
 
   GeneratedColumn<int> get responseToMessageId => $composableBuilder(
       column: $table.responseToMessageId, builder: (column) => column);
@@ -3430,6 +4188,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<int> contactId = const Value.absent(),
             Value<int> messageId = const Value.absent(),
             Value<int?> messageOtherId = const Value.absent(),
+            Value<int?> mediaUploadId = const Value.absent(),
+            Value<int?> mediaDownloadId = const Value.absent(),
             Value<int?> responseToMessageId = const Value.absent(),
             Value<int?> responseToOtherMessageId = const Value.absent(),
             Value<bool> acknowledgeByUser = const Value.absent(),
@@ -3446,6 +4206,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             contactId: contactId,
             messageId: messageId,
             messageOtherId: messageOtherId,
+            mediaUploadId: mediaUploadId,
+            mediaDownloadId: mediaDownloadId,
             responseToMessageId: responseToMessageId,
             responseToOtherMessageId: responseToOtherMessageId,
             acknowledgeByUser: acknowledgeByUser,
@@ -3462,6 +4224,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             required int contactId,
             Value<int> messageId = const Value.absent(),
             Value<int?> messageOtherId = const Value.absent(),
+            Value<int?> mediaUploadId = const Value.absent(),
+            Value<int?> mediaDownloadId = const Value.absent(),
             Value<int?> responseToMessageId = const Value.absent(),
             Value<int?> responseToOtherMessageId = const Value.absent(),
             Value<bool> acknowledgeByUser = const Value.absent(),
@@ -3478,6 +4242,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             contactId: contactId,
             messageId: messageId,
             messageOtherId: messageOtherId,
+            mediaUploadId: mediaUploadId,
+            mediaDownloadId: mediaDownloadId,
             responseToMessageId: responseToMessageId,
             responseToOtherMessageId: responseToOtherMessageId,
             acknowledgeByUser: acknowledgeByUser,
@@ -3544,6 +4310,358 @@ typedef $$MessagesTableProcessedTableManager = ProcessedTableManager<
     (Message, $$MessagesTableReferences),
     Message,
     PrefetchHooks Function({bool contactId})>;
+typedef $$MediaUploadsTableCreateCompanionBuilder = MediaUploadsCompanion
+    Function({
+  Value<int> mediaUploadId,
+  Value<UploadState> state,
+  required MediaUploadMetadata metadata,
+  Value<List<int>?> messageIds,
+  Value<MediaEncryptionData?> encryptionData,
+  Value<MediaUploadTokens?> uploadTokens,
+  Value<List<int>> alreadyNotified,
+});
+typedef $$MediaUploadsTableUpdateCompanionBuilder = MediaUploadsCompanion
+    Function({
+  Value<int> mediaUploadId,
+  Value<UploadState> state,
+  Value<MediaUploadMetadata> metadata,
+  Value<List<int>?> messageIds,
+  Value<MediaEncryptionData?> encryptionData,
+  Value<MediaUploadTokens?> uploadTokens,
+  Value<List<int>> alreadyNotified,
+});
+
+class $$MediaUploadsTableFilterComposer
+    extends Composer<_$TwonlyDatabase, $MediaUploadsTable> {
+  $$MediaUploadsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get mediaUploadId => $composableBuilder(
+      column: $table.mediaUploadId, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<UploadState, UploadState, String> get state =>
+      $composableBuilder(
+          column: $table.state,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<MediaUploadMetadata, MediaUploadMetadata,
+          String>
+      get metadata => $composableBuilder(
+          column: $table.metadata,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<List<int>?, List<int>, String>
+      get messageIds => $composableBuilder(
+          column: $table.messageIds,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<MediaEncryptionData?, MediaEncryptionData,
+          String>
+      get encryptionData => $composableBuilder(
+          column: $table.encryptionData,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<MediaUploadTokens?, MediaUploadTokens, String>
+      get uploadTokens => $composableBuilder(
+          column: $table.uploadTokens,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnWithTypeConverterFilters<List<int>, List<int>, String>
+      get alreadyNotified => $composableBuilder(
+          column: $table.alreadyNotified,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+}
+
+class $$MediaUploadsTableOrderingComposer
+    extends Composer<_$TwonlyDatabase, $MediaUploadsTable> {
+  $$MediaUploadsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get mediaUploadId => $composableBuilder(
+      column: $table.mediaUploadId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get state => $composableBuilder(
+      column: $table.state, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metadata => $composableBuilder(
+      column: $table.metadata, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get messageIds => $composableBuilder(
+      column: $table.messageIds, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get encryptionData => $composableBuilder(
+      column: $table.encryptionData,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get uploadTokens => $composableBuilder(
+      column: $table.uploadTokens,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get alreadyNotified => $composableBuilder(
+      column: $table.alreadyNotified,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$MediaUploadsTableAnnotationComposer
+    extends Composer<_$TwonlyDatabase, $MediaUploadsTable> {
+  $$MediaUploadsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get mediaUploadId => $composableBuilder(
+      column: $table.mediaUploadId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<UploadState, String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<MediaUploadMetadata, String> get metadata =>
+      $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<int>?, String> get messageIds =>
+      $composableBuilder(
+          column: $table.messageIds, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<MediaEncryptionData?, String>
+      get encryptionData => $composableBuilder(
+          column: $table.encryptionData, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<MediaUploadTokens?, String>
+      get uploadTokens => $composableBuilder(
+          column: $table.uploadTokens, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<int>, String> get alreadyNotified =>
+      $composableBuilder(
+          column: $table.alreadyNotified, builder: (column) => column);
+}
+
+class $$MediaUploadsTableTableManager extends RootTableManager<
+    _$TwonlyDatabase,
+    $MediaUploadsTable,
+    MediaUpload,
+    $$MediaUploadsTableFilterComposer,
+    $$MediaUploadsTableOrderingComposer,
+    $$MediaUploadsTableAnnotationComposer,
+    $$MediaUploadsTableCreateCompanionBuilder,
+    $$MediaUploadsTableUpdateCompanionBuilder,
+    (
+      MediaUpload,
+      BaseReferences<_$TwonlyDatabase, $MediaUploadsTable, MediaUpload>
+    ),
+    MediaUpload,
+    PrefetchHooks Function()> {
+  $$MediaUploadsTableTableManager(_$TwonlyDatabase db, $MediaUploadsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MediaUploadsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MediaUploadsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MediaUploadsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> mediaUploadId = const Value.absent(),
+            Value<UploadState> state = const Value.absent(),
+            Value<MediaUploadMetadata> metadata = const Value.absent(),
+            Value<List<int>?> messageIds = const Value.absent(),
+            Value<MediaEncryptionData?> encryptionData = const Value.absent(),
+            Value<MediaUploadTokens?> uploadTokens = const Value.absent(),
+            Value<List<int>> alreadyNotified = const Value.absent(),
+          }) =>
+              MediaUploadsCompanion(
+            mediaUploadId: mediaUploadId,
+            state: state,
+            metadata: metadata,
+            messageIds: messageIds,
+            encryptionData: encryptionData,
+            uploadTokens: uploadTokens,
+            alreadyNotified: alreadyNotified,
+          ),
+          createCompanionCallback: ({
+            Value<int> mediaUploadId = const Value.absent(),
+            Value<UploadState> state = const Value.absent(),
+            required MediaUploadMetadata metadata,
+            Value<List<int>?> messageIds = const Value.absent(),
+            Value<MediaEncryptionData?> encryptionData = const Value.absent(),
+            Value<MediaUploadTokens?> uploadTokens = const Value.absent(),
+            Value<List<int>> alreadyNotified = const Value.absent(),
+          }) =>
+              MediaUploadsCompanion.insert(
+            mediaUploadId: mediaUploadId,
+            state: state,
+            metadata: metadata,
+            messageIds: messageIds,
+            encryptionData: encryptionData,
+            uploadTokens: uploadTokens,
+            alreadyNotified: alreadyNotified,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$MediaUploadsTableProcessedTableManager = ProcessedTableManager<
+    _$TwonlyDatabase,
+    $MediaUploadsTable,
+    MediaUpload,
+    $$MediaUploadsTableFilterComposer,
+    $$MediaUploadsTableOrderingComposer,
+    $$MediaUploadsTableAnnotationComposer,
+    $$MediaUploadsTableCreateCompanionBuilder,
+    $$MediaUploadsTableUpdateCompanionBuilder,
+    (
+      MediaUpload,
+      BaseReferences<_$TwonlyDatabase, $MediaUploadsTable, MediaUpload>
+    ),
+    MediaUpload,
+    PrefetchHooks Function()>;
+typedef $$MediaDownloadsTableCreateCompanionBuilder = MediaDownloadsCompanion
+    Function({
+  required int messageId,
+  required List<int> downloadToken,
+  Value<int> rowid,
+});
+typedef $$MediaDownloadsTableUpdateCompanionBuilder = MediaDownloadsCompanion
+    Function({
+  Value<int> messageId,
+  Value<List<int>> downloadToken,
+  Value<int> rowid,
+});
+
+class $$MediaDownloadsTableFilterComposer
+    extends Composer<_$TwonlyDatabase, $MediaDownloadsTable> {
+  $$MediaDownloadsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get messageId => $composableBuilder(
+      column: $table.messageId, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<List<int>, List<int>, String>
+      get downloadToken => $composableBuilder(
+          column: $table.downloadToken,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+}
+
+class $$MediaDownloadsTableOrderingComposer
+    extends Composer<_$TwonlyDatabase, $MediaDownloadsTable> {
+  $$MediaDownloadsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get messageId => $composableBuilder(
+      column: $table.messageId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get downloadToken => $composableBuilder(
+      column: $table.downloadToken,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$MediaDownloadsTableAnnotationComposer
+    extends Composer<_$TwonlyDatabase, $MediaDownloadsTable> {
+  $$MediaDownloadsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get messageId =>
+      $composableBuilder(column: $table.messageId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<int>, String> get downloadToken =>
+      $composableBuilder(
+          column: $table.downloadToken, builder: (column) => column);
+}
+
+class $$MediaDownloadsTableTableManager extends RootTableManager<
+    _$TwonlyDatabase,
+    $MediaDownloadsTable,
+    MediaDownload,
+    $$MediaDownloadsTableFilterComposer,
+    $$MediaDownloadsTableOrderingComposer,
+    $$MediaDownloadsTableAnnotationComposer,
+    $$MediaDownloadsTableCreateCompanionBuilder,
+    $$MediaDownloadsTableUpdateCompanionBuilder,
+    (
+      MediaDownload,
+      BaseReferences<_$TwonlyDatabase, $MediaDownloadsTable, MediaDownload>
+    ),
+    MediaDownload,
+    PrefetchHooks Function()> {
+  $$MediaDownloadsTableTableManager(
+      _$TwonlyDatabase db, $MediaDownloadsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MediaDownloadsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MediaDownloadsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MediaDownloadsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> messageId = const Value.absent(),
+            Value<List<int>> downloadToken = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              MediaDownloadsCompanion(
+            messageId: messageId,
+            downloadToken: downloadToken,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int messageId,
+            required List<int> downloadToken,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              MediaDownloadsCompanion.insert(
+            messageId: messageId,
+            downloadToken: downloadToken,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$MediaDownloadsTableProcessedTableManager = ProcessedTableManager<
+    _$TwonlyDatabase,
+    $MediaDownloadsTable,
+    MediaDownload,
+    $$MediaDownloadsTableFilterComposer,
+    $$MediaDownloadsTableOrderingComposer,
+    $$MediaDownloadsTableAnnotationComposer,
+    $$MediaDownloadsTableCreateCompanionBuilder,
+    $$MediaDownloadsTableUpdateCompanionBuilder,
+    (
+      MediaDownload,
+      BaseReferences<_$TwonlyDatabase, $MediaDownloadsTable, MediaDownload>
+    ),
+    MediaDownload,
+    PrefetchHooks Function()>;
 typedef $$SignalIdentityKeyStoresTableCreateCompanionBuilder
     = SignalIdentityKeyStoresCompanion Function({
   required int deviceId,
@@ -4158,6 +5276,10 @@ class $TwonlyDatabaseManager {
       $$ContactsTableTableManager(_db, _db.contacts);
   $$MessagesTableTableManager get messages =>
       $$MessagesTableTableManager(_db, _db.messages);
+  $$MediaUploadsTableTableManager get mediaUploads =>
+      $$MediaUploadsTableTableManager(_db, _db.mediaUploads);
+  $$MediaDownloadsTableTableManager get mediaDownloads =>
+      $$MediaDownloadsTableTableManager(_db, _db.mediaDownloads);
   $$SignalIdentityKeyStoresTableTableManager get signalIdentityKeyStores =>
       $$SignalIdentityKeyStoresTableTableManager(
           _db, _db.signalIdentityKeyStores);

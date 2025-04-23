@@ -17,7 +17,8 @@ import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
-import 'package:twonly/src/providers/api/media.dart';
+import 'package:twonly/src/providers/api/media_received.dart';
+import 'package:twonly/src/providers/api/media_send.dart';
 import 'package:twonly/src/providers/api/server_messages.dart';
 import 'package:twonly/src/services/fcm_service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -82,11 +83,18 @@ class ApiProvider {
 
     if (!globalIsAppInBackground) {
       tryTransmitMessages();
-      retransmitMediaFiles();
+      retryMediaUpload();
       tryDownloadAllMediaFiles();
       notifyContactsAboutProfileChange();
       twonlyDatabase.markUpdated();
     }
+  }
+
+  Future onClosed() async {
+    _channel = null;
+    isAuthenticated = false;
+    globalCallbackConnectionState(false);
+    await twonlyDatabase.messagesDao.resetPendingDownloadState();
   }
 
   Future close(Function callback) async {
@@ -131,16 +139,12 @@ class ApiProvider {
 
   void _onDone() {
     log.info("WebSocket Closed");
-    globalCallbackConnectionState(false);
-    _channel = null;
-    isAuthenticated = false;
+    onClosed();
   }
 
   void _onError(dynamic e) {
     log.info("WebSocket Error: $e");
-    globalCallbackConnectionState(false);
-    _channel = null;
-    isAuthenticated = false;
+    onClosed();
   }
 
   void _onData(dynamic msgBuffer) async {

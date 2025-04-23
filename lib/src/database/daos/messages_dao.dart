@@ -104,7 +104,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updates);
   }
 
-  Future appRestarted() {
+  Future resetPendingDownloadState() {
     // All media files in the downloading state are reseteded to the pending state
     // When the app is used in mobile network, they will not be downloaded at the start
     // if they are not yet downloaded...

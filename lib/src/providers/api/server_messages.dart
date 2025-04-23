@@ -1,13 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
-import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/app.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
@@ -17,11 +14,9 @@ import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
     as server;
-import 'package:twonly/src/model/protobuf/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
-import 'package:twonly/src/providers/api/media.dart';
-import 'package:twonly/src/providers/hive.dart';
+import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/services/notification_service.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
@@ -56,115 +51,6 @@ Future handleServerMessage(server.ServerToClient msg) async {
 
     apiProvider.sendResponse(ClientToServer()..v0 = v0);
   });
-}
-
-Future<client.Response> handleDownloadData(DownloadData data) async {
-  if (globalIsAppInBackground) {
-    // download should only be done when the app is open
-    return client.Response()..error = ErrorCode.InternalError;
-  }
-
-  Logger("server_messages")
-      .info("downloading: ${data.downloadToken} ${data.fin}");
-
-  final box = await getMediaStorage();
-
-  String boxId = data.downloadToken.toString();
-
-  int? messageId = box.get("${data.downloadToken}_messageId");
-
-  if (messageId == null) {
-    Logger("server_messages")
-        .shout("download data received, but unknown messageID");
-    // answers with ok, so the server will delete the message
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
-  }
-
-  if (data.fin && data.data.isEmpty) {
-    Logger("server_messages")
-        .shout("Got an image message, but was already deleted by the server!");
-    // media file was deleted by the server. remove the media from device
-    await twonlyDatabase.messagesDao.deleteMessageById(messageId);
-    await box.delete(boxId);
-    await box.delete("${data.downloadToken}_downloaded");
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
-  }
-
-  Uint8List? buffered = box.get(boxId);
-  Uint8List downloadedBytes;
-  if (buffered != null) {
-    if (data.offset != buffered.length) {
-      Logger("server_messages")
-          .info("server send wrong offset: ${data.offset} ${buffered.length}");
-      // Logger("handleDownloadData").error(object)
-      return client.Response()..error = ErrorCode.InvalidOffset;
-    }
-    var b = BytesBuilder();
-    b.add(buffered);
-    b.add(data.data);
-
-    downloadedBytes = b.takeBytes();
-  } else {
-    downloadedBytes = Uint8List.fromList(data.data);
-  }
-
-  if (!data.fin) {
-    // download not finished, so waiting for more data...
-    await box.put(boxId, downloadedBytes);
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
-  }
-
-  Message? msg = await twonlyDatabase.messagesDao
-      .getMessageByMessageId(messageId)
-      .getSingleOrNull();
-  if (msg == null) {
-    Logger("server_messages")
-        .info("messageId not found in database. Ignoring download");
-    // answers with ok, so the server will delete the message
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
-  }
-
-  MediaMessageContent content =
-      MediaMessageContent.fromJson(jsonDecode(msg.contentJson!));
-
-  final xchacha20 = Xchacha20.poly1305Aead();
-  SecretKeyData secretKeyData = SecretKeyData(content.encryptionKey!);
-
-  SecretBox secretBox = SecretBox(
-    downloadedBytes,
-    nonce: content.encryptionNonce!,
-    mac: Mac(content.encryptionMac!),
-  );
-
-  try {
-    final rawBytes =
-        await xchacha20.decrypt(secretBox, secretKey: secretKeyData);
-
-    await box.put("${data.downloadToken}_downloaded", rawBytes);
-  } catch (e) {
-    Logger("server_messages").info("Decryption error: $e");
-    // deleting message as this is an invalid image
-    await twonlyDatabase.messagesDao.deleteMessageById(messageId);
-    // answers with ok, so the server will delete the message
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
-  }
-
-  Logger("server_messages").info("Downloaded: $messageId");
-  await twonlyDatabase.messagesDao.updateMessageByOtherUser(
-    msg.contactId,
-    messageId,
-    MessagesCompanion(downloadState: Value(DownloadState.downloaded)),
-  );
-
-  await box.delete(boxId);
-
-  var ok = client.Response_Ok()..none = true;
-  return client.Response()..ok = ok;
 }
 
 Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
@@ -315,15 +201,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             message.timestamp,
           );
 
-          if (!globalIsAppInBackground) {
-            final content = message.content;
-            if (content is MediaMessageContent) {
-              tryDownloadMedia(
-                messageId,
-                fromUserId,
-                content,
-              );
-            }
+          final msg = await twonlyDatabase.messagesDao
+              .getMessageByMessageId(messageId)
+              .getSingleOrNull();
+          if (msg != null) {
+            startDownloadMedia(msg, false);
           }
         }
         // dearchive contact when receiving a new message

@@ -27,6 +27,9 @@ class Messages extends Table {
   IntColumn get messageId => integer().autoIncrement()();
   IntColumn get messageOtherId => integer().nullable()();
 
+  IntColumn get mediaUploadId => integer().nullable()();
+  IntColumn get mediaDownloadId => integer().nullable()();
+
   IntColumn get responseToMessageId => integer().nullable()();
   IntColumn get responseToOtherMessageId => integer().nullable()();
 

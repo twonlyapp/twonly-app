@@ -151,6 +151,16 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     }));
                   },
                 ),
+                BetterListTile(
+                  icon: FontAwesomeIcons.chartPie,
+                  text: context.lang.settingsStorageData,
+                  onTap: () async {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return NotificationView();
+                    }));
+                  },
+                ),
                 const Divider(),
                 BetterListTile(
                   icon: FontAwesomeIcons.circleQuestion,

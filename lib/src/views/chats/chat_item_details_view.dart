@@ -15,7 +15,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/api/media.dart';
+import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
@@ -229,9 +229,8 @@ class ChatListEntry extends StatelessWidget {
                   return MediaViewerView(contact);
                 }),
               );
-            } else {
-              tryDownloadMedia(message.messageId, message.contactId, content,
-                  force: true);
+            } else if (message.downloadState == DownloadState.pending) {
+              startDownloadMedia(message, true);
             }
           }
         },

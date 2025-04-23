@@ -140,6 +140,8 @@
   "@settingsPreSelectedReactionsError": {},
   "settingsProfile": "Profile",
   "@settingsProfile": {},
+  "settingsStorageData": "Data and storage",
+  "@settingsStorageData": {},
   "settingsProfileCustomizeAvatar": "Customize your avatar",
   "@settingsProfileCustomizeAvatar": {},
   "settingsProfileEditDisplayName": "Displayname",

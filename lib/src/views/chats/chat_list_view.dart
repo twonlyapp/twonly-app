@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/views/components/connection_state.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
@@ -12,8 +12,6 @@ import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/providers/api/media.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
@@ -325,11 +323,7 @@ class _UserListItem extends State<UserListItem> {
               msgs.first.openedAt == null) {
             switch (msgs.first.downloadState) {
               case DownloadState.pending:
-                MediaMessageContent content = MediaMessageContent.fromJson(
-                    jsonDecode(msgs.first.contentJson!));
-                tryDownloadMedia(
-                    msgs.first.messageId, msgs.first.contactId, content,
-                    force: true);
+                startDownloadMedia(msgs.first, true);
               case DownloadState.downloaded:
                 Navigator.push(
                   context,

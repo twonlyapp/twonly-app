@@ -31,7 +31,7 @@ void main() async {
 
   apiProvider = ApiProvider();
   twonlyDatabase = TwonlyDatabase();
-  await twonlyDatabase.messagesDao.appRestarted();
+  await twonlyDatabase.messagesDao.resetPendingDownloadState();
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 

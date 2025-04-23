@@ -80,6 +80,7 @@
     "imageEditorDrawOk": "Zeichnung machen",
     "settingsTitle": "Einstellungen",
     "settingsChats": "Chats",
+    "settingsStorageData": "Daten und Speicher",
     "settingsPreSelectedReactions": "Vorgewählte Reaktions-Emojis",
     "settingsPreSelectedReactionsError": "Es können maximal 12 Reaktionen ausgewählt werden.",
     "settingsProfile": "Profil",

@@ -12,7 +12,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/api/media.dart';
+import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -145,17 +145,29 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       setState(() {
         isDownloading = true;
       });
-      await tryDownloadMedia(current.messageId, current.contactId, content,
-          force: true);
+      await startDownloadMedia(current, true);
     }
-    do {
-      if (isDownloading) {
-        await Future.delayed(Duration(milliseconds: 10));
-        if (!apiProvider.isConnected) break;
-      }
-      if (content.downloadToken == null) break;
-      imageBytes = await getDownloadedMedia(current, content.downloadToken!);
-    } while (isDownloading && imageBytes == null);
+
+
+    load downloaded status from database
+
+      notifyContactAboutOpeningMessage(
+      message.contactId, [message.messageOtherId!]);
+  twonlyDatabase.messagesDao.updateMessageByMessageId(
+      message.messageId, MessagesCompanion(openedAt: Value(DateTime.now())));
+    // do {
+    //   if (isDownloading) {
+    //     await Future.delayed(Duration(milliseconds: 10));
+    //     if (!apiProvider.isConnected) break;
+    //   }
+    //   if (content.downloadToken == null) break;
+    //   imageBytes = await getDownloadedMedia(current, content.downloadToken!);
+    // } while (isDownloading && imageBytes == null);
+
+    if twonly deleteMediaFile()
+
+
+
 
     isDownloading = false;
     if (imageBytes == null) {
