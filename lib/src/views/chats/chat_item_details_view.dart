@@ -212,7 +212,7 @@ class ChatListEntry extends StatelessWidget {
           child: BetterText(text: content.text),
         );
       }
-    } else if (content is MediaMessageContent && !content.isVideo) {
+    } else if (content is MediaMessageContent) {
       Color color = getMessageColorFromType(
         content,
         Theme.of(context).colorScheme.primary,

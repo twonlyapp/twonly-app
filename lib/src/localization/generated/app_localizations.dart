@@ -503,6 +503,12 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get settingsProfile;
 
+  /// No description provided for @settingsStorageData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data and storage'**
+  String get settingsStorageData;
+
   /// No description provided for @settingsProfileCustomizeAvatar.
   ///
   /// In en, this message translates to:

@@ -43,7 +43,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -57,19 +57,19 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
-      onUpgrade: stepByStep(
-        from1To2: (m, schema) async {
-          m.addColumn(schema.messages, schema.messages.errorWhileSending);
-        },
-        from2To3: (m, schema) async {
-          m.addColumn(schema.contacts, schema.contacts.archived);
-          m.addColumn(
-              schema.contacts, schema.contacts.deleteMessagesAfterXMinutes);
-        },
-        from3To4: (m, schema) async {
-          m.createTable(mediaUploads);
-        },
-      ),
+      onUpgrade: stepByStep(from1To2: (m, schema) async {
+        m.addColumn(schema.messages, schema.messages.errorWhileSending);
+      }, from2To3: (m, schema) async {
+        m.addColumn(schema.contacts, schema.contacts.archived);
+        m.addColumn(
+            schema.contacts, schema.contacts.deleteMessagesAfterXMinutes);
+      }, from3To4: (m, schema) async {
+        m.createTable(mediaUploads);
+      }, from4To5: (m, schema) async {
+        m.createTable(mediaDownloads);
+        m.addColumn(schema.messages, schema.messages.mediaDownloadId);
+        m.addColumn(schema.messages, schema.messages.mediaUploadId);
+      }),
     );
   }
 

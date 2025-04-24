@@ -65,6 +65,7 @@ class MediaUploadMetadata {
     MediaUploadMetadata state = MediaUploadMetadata();
     state.contactIds = List<int>.from(json['contactIds']);
     state.isRealTwonly = json['isRealTwonly'];
+    state.videoWithAudio = json['videoWithAudio'];
     state.isVideo = json['isVideo'];
     state.maxShowTime = json['maxShowTime'];
     state.maxShowTime = json['maxShowTime'];

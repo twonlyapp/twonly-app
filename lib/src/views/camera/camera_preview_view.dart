@@ -240,7 +240,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       ),
     );
     if (!context.mounted) return true;
-    if (shoudReturn != null && shoudReturn) {
+    if (shoudReturn == null) return true;
+    if (shoudReturn) {
       if (!context.mounted) return true;
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
@@ -438,7 +439,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   // Positioned.fill(
                   //   child: GestureDetector(),
                   // ),
-                  if (!sharePreviewIsShown && widget.sendTo != null)
+                  if (!sharePreviewIsShown &&
+                      widget.sendTo != null &&
+                      !isVideoRecording)
                     SendToWidget(sendTo: getContactDisplayName(widget.sendTo!)),
                   if (!sharePreviewIsShown && !isVideoRecording)
                     Positioned(

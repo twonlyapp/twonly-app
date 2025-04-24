@@ -148,6 +148,7 @@ class MediaMessageContent extends MessageContent {
       'encryptionNonce': encryptionNonce,
       'isRealTwonly': isRealTwonly,
       'maxShowTime': maxShowTime,
+      'isVideo': isVideo,
     };
   }
 }

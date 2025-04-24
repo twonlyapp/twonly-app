@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -15,7 +15,6 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/share_image_view.dart';
-import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:twonly/src/views/camera/image_editor/data/image_item.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
@@ -44,7 +43,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   int maxShowTime = 999999;
   String? sendNextMediaToUserName;
   double tabDownPostion = 0;
-  bool sendingImage = false;
+  bool sendingOrLoadingImage = true;
+  bool isDisposed = false;
   double widthRatio = 1, heightRatio = 1, pixelRatio = 1;
   VideoPlayerController? videoController;
 
@@ -58,6 +58,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (widget.imageBytes != null) {
       loadImage(widget.imageBytes!);
     } else if (widget.videoFilePath != null) {
+      setState(() {
+        sendingOrLoadingImage = false;
+      });
       videoController =
           VideoPlayerController.file(File(widget.videoFilePath!.path));
       videoController?.setLooping(true);
@@ -67,8 +70,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       }).catchError((Object error) {
         Logger("ui.share_image_editor").shout(error);
       });
-      videoController?.play();
-      print(widget.videoFilePath!.path);
     }
   }
 
@@ -84,6 +85,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   @override
   void dispose() {
+    isDisposed = true;
     layers.clear();
     videoController?.dispose();
     super.dispose();
@@ -152,11 +154,25 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
       const SizedBox(height: 8),
       NotificationBadge(
-        count: maxShowTime == 999999 ? "∞" : maxShowTime.toString(),
+        count: (widget.videoFilePath != null)
+            ? "0"
+            : maxShowTime == 999999
+                ? "∞"
+                : maxShowTime.toString(),
         child: ActionButton(
-          Icons.timer_outlined,
+          (widget.videoFilePath != null)
+              ? maxShowTime == 1
+                  ? Icons.repeat_rounded
+                  : Icons.repeat_one_rounded
+              : Icons.timer_outlined,
           tooltipText: context.lang.protectAsARealTwonly,
           onPressed: () async {
+            if (widget.videoFilePath != null) {
+              setState(() {
+                maxShowTime = (maxShowTime + 1) % 2;
+              });
+              return;
+            }
             if (maxShowTime == 999999) {
               maxShowTime = 4;
             } else if (maxShowTime >= 22) {
@@ -276,7 +292,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<Uint8List?> getMergedImage() async {
     Uint8List? image;
 
-    if (layers.length > 1) {
+    if (layers.length > 1 || widget.videoFilePath != null) {
       for (var x in layers) {
         x.showCustomButtons = false;
       }
@@ -297,6 +313,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<void> loadImage(Future<Uint8List?> imageFile) async {
     Uint8List? imageBytes = await imageFile;
     await currentImage.load(imageBytes);
+    if (isDisposed) return;
 
     if (!context.mounted) return;
 
@@ -307,21 +324,31 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     ));
 
     layers.add(FilterLayerData());
+    setState(() {
+      sendingOrLoadingImage = false;
+    });
   }
 
   Future sendImageToSinglePerson() async {
+    if (sendingOrLoadingImage) return;
     setState(() {
-      sendingImage = true;
+      sendingOrLoadingImage = true;
     });
     Uint8List? imageBytes = await getMergedImage();
     if (!context.mounted) return;
     if (imageBytes == null) {
       // ignore: use_build_context_synchronously
-      Navigator.pop(context, false);
+      Navigator.pop(context, true);
       return;
     }
-    sendMediaFile([widget.sendTo!.userId], imageBytes, _isRealTwonly,
-        maxShowTime, widget.videoFilePath, videoWithAudio);
+    sendMediaFile(
+      [widget.sendTo!.userId],
+      imageBytes,
+      _isRealTwonly,
+      maxShowTime,
+      widget.videoFilePath,
+      videoWithAudio,
+    );
     if (context.mounted) {
       // ignore: use_build_context_synchronously
       Navigator.pop(context, true);
@@ -434,7 +461,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   ),
                 SizedBox(width: sendNextMediaToUserName == null ? 20 : 10),
                 FilledButton.icon(
-                  icon: sendingImage
+                  icon: sendingOrLoadingImage
                       ? SizedBox(
                           height: 12,
                           width: 12,
@@ -445,7 +472,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         )
                       : FaIcon(FontAwesomeIcons.solidPaperPlane),
                   onPressed: () async {
-                    if (sendingImage) return;
+                    if (sendingOrLoadingImage) return;
                     if (widget.sendTo == null) return pushShareImageView();
                     sendImageToSinglePerson();
                   },

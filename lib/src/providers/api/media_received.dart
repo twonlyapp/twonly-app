@@ -6,7 +6,6 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/media_send.dart';
-import 'package:twonly/src/providers/hive.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'dart:typed_data';
 import 'package:cryptography_plus/cryptography_plus.dart';
@@ -17,7 +16,11 @@ import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pbserver.dart';
 
+Map<int, DateTime> downloadStartedForMediaReceived = {};
+
 Future tryDownloadAllMediaFiles() async {
+  // this is called when websocket is newly connected, so allow all downloads to be restarted.
+  downloadStartedForMediaReceived = {};
   List<Message> messages =
       await twonlyDatabase.messagesDao.getAllMessagesPendingDownloading();
 
@@ -28,6 +31,14 @@ Future tryDownloadAllMediaFiles() async {
 
 Future startDownloadMedia(Message message, bool force) async {
   if (message.contentJson == null) return;
+  if (downloadStartedForMediaReceived[message.messageId] != null) {
+    DateTime started = downloadStartedForMediaReceived[message.messageId]!;
+    Duration elapsed = DateTime.now().difference(started);
+    if (elapsed <= Duration(seconds: 60)) {
+      Logger("media_received.dart").shout("Download already started...");
+      return;
+    }
+  }
 
   final content =
       MessageContent.fromJson(message.kind, jsonDecode(message.contentJson!));
@@ -69,6 +80,8 @@ Future startDownloadMedia(Message message, bool force) async {
     if (bytes != null && bytes.isNotEmpty) {
       offset = bytes.length;
     }
+
+    downloadStartedForMediaReceived[message.messageId] = DateTime.now();
     apiProvider.triggerDownload(content.downloadToken!, offset);
   }
 }
@@ -81,10 +94,6 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 
   Logger("server_messages")
       .info("downloading: ${data.downloadToken} ${data.fin}");
-
-  final box = await getMediaStorage();
-
-  String boxId = data.downloadToken.toString();
 
   final media = await twonlyDatabase.mediaDownloadsDao
       .getMediaDownloadByDownloadToken(data.downloadToken)
@@ -128,9 +137,10 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     downloadedBytes = Uint8List.fromList(data.data);
   }
 
+  await writeMediaFile(media.messageId, "encrypted", downloadedBytes);
+
   if (!data.fin) {
     // download not finished, so waiting for more data...
-    await box.put(boxId, downloadedBytes);
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
   }
@@ -140,6 +150,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
       .getSingleOrNull();
 
   if (msg == null) {
+    await deleteMediaFile(media.messageId, "encrypted");
     Logger("media_received.dart")
         .info("messageId not found in database. Ignoring download");
     // answers with ok, so the server will delete the message

@@ -215,6 +215,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsProfile => 'Profile';
 
   @override
+  String get settingsStorageData => 'Data and storage';
+
+  @override
   String get settingsProfileCustomizeAvatar => 'Customize your avatar';
 
   @override

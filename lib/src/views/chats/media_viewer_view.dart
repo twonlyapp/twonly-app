@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:logging/logging.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
@@ -18,6 +20,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
+import 'package:video_player/video_player.dart';
 
 final _noScreenshot = NoScreenshot.instance;
 
@@ -37,6 +40,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   // current image related
   Uint8List? imageBytes;
+  VideoPlayerController? videoController;
+
   DateTime? canBeSeenUntil;
   int maxShowTime = 999999;
   double progress = 0;
@@ -46,6 +51,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   bool imageSaved = false;
   bool imageSaving = false;
+
+  StreamSubscription<Message?>? downloadStateListener;
 
   List<Message> allMediaFiles = [];
   late StreamSubscription<List<Message>> _subscription;
@@ -97,7 +104,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
     } else {
       allMediaFiles.removeAt(0);
-      loadCurrentMediaFile();
+      await loadCurrentMediaFile();
     }
   }
 
@@ -105,11 +112,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     await _noScreenshot.screenshotOff();
     if (!context.mounted || allMediaFiles.isEmpty) return nextMediaOrExit();
 
-    final current = allMediaFiles.first;
-    final MediaMessageContent content =
-        MediaMessageContent.fromJson(jsonDecode(current.contentJson!));
-
     setState(() {
+      videoController = null;
       imageBytes = null;
       canBeSeenUntil = null;
       maxShowTime = 999999;
@@ -121,78 +125,107 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       showSendTextMessageInput = false;
     });
 
+    flutterLocalNotificationsPlugin.cancel(allMediaFiles.first.contactId);
+    if (allMediaFiles.first.downloadState != DownloadState.downloaded) {
+      setState(() {
+        isDownloading = true;
+      });
+      await startDownloadMedia(allMediaFiles.first, true);
+
+      final stream = twonlyDatabase.messagesDao
+          .getMessageByMessageId(allMediaFiles.first.messageId)
+          .watchSingleOrNull();
+      downloadStateListener?.cancel();
+      downloadStateListener = stream.listen((updated) async {
+        if (updated != null) {
+          if (updated.downloadState == DownloadState.downloaded) {
+            downloadStateListener?.cancel();
+            await handleNextDownloadedMedia(updated, showTwonly);
+          }
+        }
+      });
+    } else {
+      await handleNextDownloadedMedia(allMediaFiles.first, showTwonly);
+    }
+  }
+
+  Future handleNextDownloadedMedia(Message current, bool showTwonly) async {
+    final MediaMessageContent content =
+        MediaMessageContent.fromJson(jsonDecode(current.contentJson!));
+
     if (content.isRealTwonly) {
       setState(() {
         isRealTwonly = true;
       });
-      if (!showTwonly) {
+      if (!showTwonly) return;
+
+      bool isAuth = await authenticateUser(
+        context.lang.mediaViewerAuthReason,
+        force: false,
+      );
+      if (!isAuth) {
+        nextMediaOrExit();
         return;
       }
+    }
 
-      if (isRealTwonly) {
-        if (!context.mounted) return;
-        // ignore: use_build_context_synchronously
-        bool isAuth = await authenticateUser(context.lang.mediaViewerAuthReason,
-            force: false);
-        if (!isAuth) {
-          nextMediaOrExit();
-          return;
+    notifyContactAboutOpeningMessage(
+      current.contactId,
+      [current.messageOtherId!],
+    );
+
+    await twonlyDatabase.messagesDao.updateMessageByMessageId(
+      current.messageId,
+      MessagesCompanion(openedAt: Value(DateTime.now())),
+    );
+
+    if (content.isVideo) {
+      final vidoePath = await getVideoPath(current.messageId);
+      if (vidoePath != null) {
+        videoController = VideoPlayerController.file(File(vidoePath.path));
+        videoController?.setLooping(content.maxShowTime == 1);
+        if (content.maxShowTime == 0) {
+          videoController?.addListener(() {
+            if (videoController?.value.position ==
+                videoController?.value.duration) {
+              nextMediaOrExit();
+            }
+          });
         }
+        videoController?.initialize().then((_) {
+          videoController!.play();
+          setState(() {});
+        }).catchError((Object error) {
+          Logger("media_viewer_view.dart").shout(error);
+        });
       }
     }
-    flutterLocalNotificationsPlugin.cancel(current.contactId);
-    if (current.downloadState == DownloadState.pending) {
-      setState(() {
-        isDownloading = true;
-      });
-      await startDownloadMedia(current, true);
-    }
+    imageBytes = await getImageBytes(current.messageId);
 
-
-    load downloaded status from database
-
-      notifyContactAboutOpeningMessage(
-      message.contactId, [message.messageOtherId!]);
-  twonlyDatabase.messagesDao.updateMessageByMessageId(
-      message.messageId, MessagesCompanion(openedAt: Value(DateTime.now())));
-    // do {
-    //   if (isDownloading) {
-    //     await Future.delayed(Duration(milliseconds: 10));
-    //     if (!apiProvider.isConnected) break;
-    //   }
-    //   if (content.downloadToken == null) break;
-    //   imageBytes = await getDownloadedMedia(current, content.downloadToken!);
-    // } while (isDownloading && imageBytes == null);
-
-    if twonly deleteMediaFile()
-
-
-
-
-    isDownloading = false;
-    if (imageBytes == null) {
-      if (current.downloadState == DownloadState.downloaded) {
-        // When the message should be downloaded but imageBytes are null then a error happened
-        await twonlyDatabase.messagesDao.updateMessageByMessageId(
-          current.messageId,
-          MessagesCompanion(
-            errorWhileSending: Value(true),
-          ),
-        );
-      }
-
-      nextMediaOrExit();
-      return;
-    }
-
-    if (content.maxShowTime != 999999) {
-      canBeSeenUntil = DateTime.now().add(
-        Duration(seconds: content.maxShowTime),
+    if ((imageBytes == null && !content.isVideo) ||
+        (content.isVideo && videoController == null)) {
+      // When the message should be downloaded but imageBytes are null then a error happened
+      await twonlyDatabase.messagesDao.updateMessageByMessageId(
+        current.messageId,
+        MessagesCompanion(
+          errorWhileSending: Value(true),
+        ),
       );
-      maxShowTime = content.maxShowTime;
-      startTimer();
+      return nextMediaOrExit();
     }
-    setState(() {});
+
+    if (!content.isVideo) {
+      if (content.maxShowTime != 999999) {
+        canBeSeenUntil = DateTime.now().add(
+          Duration(seconds: content.maxShowTime),
+        );
+        maxShowTime = content.maxShowTime;
+        startTimer();
+      }
+    }
+    setState(() {
+      isDownloading = false;
+    });
   }
 
   startTimer() {
@@ -215,11 +248,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   @override
   void dispose() {
-    super.dispose();
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
     _noScreenshot.screenshotOn();
     _subscription.cancel();
+    downloadStateListener?.cancel();
+    videoController?.dispose();
+    super.dispose();
   }
 
   Future onPressedSaveToGallery() async {
@@ -357,7 +392,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (imageBytes != null && (canBeSeenUntil == null || progress >= 0))
+            if ((imageBytes != null || videoController != null) &&
+                (canBeSeenUntil == null || progress >= 0))
               GestureDetector(
                 onTap: () {
                   if (showSendTextMessageInput) {
@@ -372,24 +408,34 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 child: MediaViewSizing(
                   bottomNavigation: bottomNavigation(),
                   requiredHeight: 80,
-                  child: Image.memory(
-                    imageBytes!,
-                    fit: BoxFit.contain,
-                    frameBuilder:
-                        ((context, child, frame, wasSynchronouslyLoaded) {
-                      if (wasSynchronouslyLoaded) return child;
-                      return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        child: frame != null
-                            ? child
-                            : SizedBox(
-                                height: 60,
-                                width: 60,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                      );
-                    }),
+                  child: Stack(
+                    children: [
+                      if (videoController != null)
+                        Positioned.fill(child: VideoPlayer(videoController!)),
+                      if (imageBytes != null)
+                        Positioned.fill(
+                          child: Image.memory(
+                            imageBytes!,
+                            fit: BoxFit.contain,
+                            frameBuilder: ((context, child, frame,
+                                wasSynchronouslyLoaded) {
+                              if (wasSynchronouslyLoaded) return child;
+                              return AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                child: frame != null
+                                    ? child
+                                    : SizedBox(
+                                        height: 60,
+                                        width: 60,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                              );
+                            }),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -439,12 +485,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ),
                 ),
               ),
-            Positioned(
-              right: 20,
-              top: 27,
-              child: Row(
-                children: [
-                  if (canBeSeenUntil != null)
+            if (canBeSeenUntil != null)
+              Positioned(
+                right: 20,
+                top: 27,
+                child: Row(
+                  children: [
                     SizedBox(
                       width: 20,
                       height: 20,
@@ -453,9 +499,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         strokeWidth: 2.0,
                       ),
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
             if (showSendTextMessageInput)
               Positioned(
                 bottom: 0,
