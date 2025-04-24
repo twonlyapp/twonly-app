@@ -2,10 +2,8 @@ import 'dart:math';
 import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/settings_change_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import "package:get/get.dart";
 import 'package:twonly/src/utils/storage.dart';
@@ -29,14 +27,7 @@ class ModifyAvatar extends StatelessWidget {
   }
 
   AvatarMakerThemeData getAvatarMakerTheme(BuildContext context) {
-    ThemeMode? selectedTheme =
-        context.watch<SettingsChangeProvider>().themeMode;
-
-    bool isDarkMode =
-        MediaQuery.of(context).platformBrightness == Brightness.dark;
-
-    if (selectedTheme == ThemeMode.dark ||
-        (selectedTheme == ThemeMode.system && isDarkMode)) {
+    if (isDarkMode(context)) {
       return AvatarMakerThemeData(
         boxDecoration: BoxDecoration(
           boxShadow: [BoxShadow()],

@@ -80,7 +80,6 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     List<Widget> icons = [];
     String text = "";
 
-    Color twonlyColor = Theme.of(context).colorScheme.primary;
     HashSet<MessageKind> kindsAlreadyShown = HashSet();
 
     for (final message in widget.messages) {
@@ -92,15 +91,14 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       late Color color;
 
       if (message.contentJson == null) {
-        color =
-            getMessageColorFromType(TextMessageContent(text: ""), twonlyColor);
+        color = getMessageColorFromType(TextMessageContent(text: ""), context);
       } else {
         MessageContent? content = MessageContent.fromJson(
           message.kind,
           jsonDecode(message.contentJson!),
         );
         if (content == null) continue;
-        color = getMessageColorFromType(content, twonlyColor);
+        color = getMessageColorFromType(content, context);
       }
 
       Widget icon = Placeholder();

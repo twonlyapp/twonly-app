@@ -215,7 +215,7 @@ class ChatListEntry extends StatelessWidget {
     } else if (content is MediaMessageContent) {
       Color color = getMessageColorFromType(
         content,
-        Theme.of(context).colorScheme.primary,
+        context,
       );
 
       child = GestureDetector(
@@ -259,7 +259,8 @@ class ChatListEntry extends StatelessWidget {
         width: 150,
         decoration: BoxDecoration(
           border: Border.all(
-            color: messageKindColors["text"]!,
+            color:
+                getMessageColorFromType(TextMessageContent(text: ""), context),
             width: 1.0,
           ),
           borderRadius: BorderRadius.circular(12.0),

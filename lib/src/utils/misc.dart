@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/providers/settings_change_provider.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
@@ -201,4 +202,14 @@ List<Uint8List>? removeLastXBytes(Uint8List original, int count) {
 
   final lastXBytes = original.sublist(original.length - count);
   return [newList, lastXBytes];
+}
+
+bool isDarkMode(BuildContext context) {
+  ThemeMode? selectedTheme = context.read<SettingsChangeProvider>().themeMode;
+
+  bool isDarkMode =
+      MediaQuery.of(context).platformBrightness == Brightness.dark;
+
+  return selectedTheme == ThemeMode.dark ||
+      (selectedTheme == ThemeMode.system && isDarkMode);
 }

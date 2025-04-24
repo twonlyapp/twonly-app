@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/utils/misc.dart';
 
-Map<String, Color> messageKindColors = {
-  "video": Colors.deepPurple,
-  "text": Colors.lightBlue,
-  "image": Color.fromARGB(255, 214, 47, 47),
-};
-
-Color getMessageColorFromType(MessageContent content, Color primary) {
+Color getMessageColorFromType(MessageContent content, BuildContext context) {
   Color color;
 
   if (content is TextMessageContent || content is StoredMediaFileContent) {
-    color = messageKindColors["text"]!;
+    color = isDarkMode(context) ? Colors.white : Colors.black;
   } else {
     if (content is MediaMessageContent) {
       if (content.isRealTwonly) {
-        color = primary;
+        color = context.color.primary;
       } else {
         if (content.isVideo) {
-          color = messageKindColors["video"]!;
+          color = const Color.fromARGB(255, 240, 243, 33);
         } else {
-          color = messageKindColors["image"]!;
+          color = Colors.deepOrange;
         }
       }
     } else {
