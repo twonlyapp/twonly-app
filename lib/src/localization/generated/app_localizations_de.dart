@@ -304,6 +304,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHelpSupport => 'Support-Center';
 
   @override
+  String get settingsHelpContactUs => 'Kontaktiere uns';
+
+  @override
   String get settingsHelpVersion => 'Version';
 
   @override

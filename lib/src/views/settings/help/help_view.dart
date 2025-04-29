@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/credits_view.dart';
-import 'package:twonly/src/views/settings/diagnostics_view.dart';
+import 'package:twonly/src/views/settings/help/contact_us_view.dart';
+import 'package:twonly/src/views/settings/help/credits_view.dart';
+import 'package:twonly/src/views/settings/help/diagnostics_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpView extends StatelessWidget {
@@ -23,6 +24,14 @@ class HelpView extends StatelessWidget {
               },
               trailing:
                   FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            ),
+            ListTile(
+              title: Text(context.lang.settingsHelpContactUs),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return ContactUsView();
+                }));
+              },
             ),
             Divider(),
             FutureBuilder(

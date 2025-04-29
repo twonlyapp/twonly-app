@@ -677,6 +677,12 @@ abstract class AppLocalizations {
   /// **'Support Center'**
   String get settingsHelpSupport;
 
+  /// No description provided for @settingsHelpContactUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact us'**
+  String get settingsHelpContactUs;
+
   /// No description provided for @settingsHelpVersion.
   ///
   /// In en, this message translates to:

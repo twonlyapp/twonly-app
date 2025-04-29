@@ -119,7 +119,7 @@ class ChatListEntry extends StatelessWidget {
   Widget getReactionRow() {
     List<Widget> children = [];
     bool hasOneTextReaction = false;
-    bool hasOneStored = false;
+    // bool hasOneStored = false;
     bool hasOneReopened = false;
     for (final reaction in reactions) {
       MessageContent? content = MessageContent.fromJson(

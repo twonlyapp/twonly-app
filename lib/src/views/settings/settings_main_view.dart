@@ -11,7 +11,7 @@ import 'package:twonly/src/views/settings/chat/chat_settings_view.dart';
 import 'package:twonly/src/views/settings/data_and_storage_view.dart';
 import 'package:twonly/src/views/settings/notification_view.dart';
 import 'package:twonly/src/views/settings/profile/profile_view.dart';
-import 'package:twonly/src/views/settings/help_view.dart';
+import 'package:twonly/src/views/settings/help/help_view.dart';
 import 'package:twonly/src/views/settings/privacy_view.dart';
 
 class SettingsMainView extends StatefulWidget {
