@@ -1,60 +1,58 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:twonly/src/views/components/better_list_title.dart';
-import 'package:twonly/src/views/components/better_text.dart';
-import 'package:twonly/src/views/components/radio_button.dart';
-import 'package:twonly/src/providers/settings_change_provider.dart';
+import 'package:twonly/src/providers/api/media_received.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-class DataAndStorageView extends StatelessWidget {
+class DataAndStorageView extends StatefulWidget {
   const DataAndStorageView({super.key});
 
-  void _showSelectThemeMode(BuildContext context) async {
-    ThemeMode? selectedValue = context.read<SettingsChangeProvider>().themeMode;
+  @override
+  State<DataAndStorageView> createState() => _DataAndStorageViewState();
+}
 
+class _DataAndStorageViewState extends State<DataAndStorageView> {
+  Map<String, List<String>> autoDownloadOptions = defaultAutoDownloadOptions;
+  bool storeMediaFilesInGallery = true;
+
+  @override
+  void initState() {
+    super.initState();
+    initAsync();
+  }
+
+  Future initAsync() async {
+    final user = await getUser();
+    if (user == null) return;
+    setState(() {
+      autoDownloadOptions =
+          user.autoDownloadOptions ?? defaultAutoDownloadOptions;
+      storeMediaFilesInGallery = user.storeMediaFilesInGallery ?? true;
+    });
+  }
+
+  void showAutoDownloadOptions(
+      BuildContext context, ConnectivityResult connectionMode) async {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(context.lang.settingsAppearanceTheme),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioButton<ThemeMode>(
-                value: ThemeMode.system,
-                groupValue: selectedValue,
-                label: 'System default',
-                onChanged: (ThemeMode? value) {
-                  selectedValue = value;
-                  Navigator.of(context).pop();
-                },
-              ),
-              RadioButton<ThemeMode>(
-                value: ThemeMode.light,
-                groupValue: selectedValue,
-                label: 'Light',
-                onChanged: (ThemeMode? value) {
-                  selectedValue = value;
-                  Navigator.of(context).pop();
-                },
-              ),
-              RadioButton<ThemeMode>(
-                value: ThemeMode.dark,
-                groupValue: selectedValue,
-                label: 'Dark',
-                onChanged: (ThemeMode? value) {
-                  selectedValue = value;
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          ),
+        return AutoDownloadOptionsDialog(
+          autoDownloadOptions: autoDownloadOptions,
+          connectionMode: connectionMode,
+          onUpdate: () async {
+            await initAsync();
+          },
         );
       },
     );
-    if (selectedValue != null && context.mounted) {
-      context.read<SettingsChangeProvider>().updateThemeMode(selectedValue);
-    }
+  }
+
+  void toggleStoreInGallery() async {
+    final user = await getUser();
+    if (user == null) return;
+    user.storeMediaFilesInGallery = !storeMediaFilesInGallery;
+    await updateUser(user);
+    initAsync();
   }
 
   @override
@@ -65,30 +63,127 @@ class DataAndStorageView extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          BetterText(text: "Media auto-download"),
           ListTile(
-            title: Text("When using mobile data"),
-            subtitle: Text("Images", style: TextStyle(color: Colors.grey)),
+            title: Text(context.lang.settingsStorageDataStoreInGTitle),
+            subtitle: Text(context.lang.settingsStorageDataStoreInGSubtitle),
+            onTap: toggleStoreInGallery,
+            trailing: Checkbox(
+              value: storeMediaFilesInGallery,
+              onChanged: (a) => toggleStoreInGallery(),
+            ),
+          ),
+          Divider(),
+          ListTile(
+            title: Text(
+              context.lang.settingsStorageDataMediaAutoDownload,
+              style: TextStyle(fontSize: 13),
+            ),
+          ),
+          ListTile(
+            title: Text(context.lang.settingsStorageDataAutoDownMobile),
+            subtitle: Text(
+              autoDownloadOptions[ConnectivityResult.mobile.name]!.join(", "),
+              style: TextStyle(color: Colors.grey),
+            ),
             onTap: () {
-              _showSelectThemeMode(context);
+              showAutoDownloadOptions(context, ConnectivityResult.mobile);
             },
           ),
           ListTile(
-            title: Text("When using Wi-Fi"),
-            subtitle: Text("Images", style: TextStyle(color: Colors.grey)),
+            title: Text(context.lang.settingsStorageDataAutoDownWifi),
+            subtitle: Text(
+              autoDownloadOptions[ConnectivityResult.wifi.name]!.join(", "),
+              style: TextStyle(color: Colors.grey),
+            ),
             onTap: () {
-              _showSelectThemeMode(context);
-            },
-          ),
-          ListTile(
-            title: Text("When using roaming"),
-            subtitle: Text("Images", style: TextStyle(color: Colors.grey)),
-            onTap: () {
-              _showSelectThemeMode(context);
+              showAutoDownloadOptions(context, ConnectivityResult.wifi);
             },
           ),
         ],
       ),
     );
+  }
+}
+
+class AutoDownloadOptionsDialog extends StatefulWidget {
+  final Map<String, List<String>> autoDownloadOptions;
+  final ConnectivityResult connectionMode;
+  final Function() onUpdate;
+
+  const AutoDownloadOptionsDialog({
+    super.key,
+    required this.autoDownloadOptions,
+    required this.connectionMode,
+    required this.onUpdate,
+  });
+
+  @override
+  State<AutoDownloadOptionsDialog> createState() =>
+      _AutoDownloadOptionsDialogState();
+}
+
+class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
+  late Map<String, List<String>> autoDownloadOptions;
+
+  @override
+  void initState() {
+    super.initState();
+    autoDownloadOptions = widget.autoDownloadOptions;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(context.lang.settingsStorageDataMediaAutoDownload),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CheckboxListTile(
+            title: Text('Image'),
+            value: autoDownloadOptions[widget.connectionMode.name]!
+                .contains(DownloadMediaTypes.image.name),
+            onChanged: (bool? value) async {
+              await _updateAutoDownloadSetting(DownloadMediaTypes.image, value);
+            },
+          ),
+          CheckboxListTile(
+            title: Text('Video'),
+            value: autoDownloadOptions[widget.connectionMode.name]!
+                .contains(DownloadMediaTypes.video.name),
+            onChanged: (bool? value) async {
+              await _updateAutoDownloadSetting(DownloadMediaTypes.video, value);
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(context.lang.close),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _updateAutoDownloadSetting(
+      DownloadMediaTypes type, bool? value) async {
+    if (value == null) return;
+
+    // Update the autoDownloadOptions based on the checkbox state
+    autoDownloadOptions[widget.connectionMode.name]!
+        .removeWhere((element) => element == type.name);
+    if (value) {
+      autoDownloadOptions[widget.connectionMode.name]!.add(type.name);
+    }
+
+    // Call the onUpdate callback to notify the parent widget
+    final user = await getUser();
+    if (user == null) return;
+    user.autoDownloadOptions = autoDownloadOptions;
+    await updateUser(user);
+    widget.onUpdate();
+    setState(() {});
   }
 }

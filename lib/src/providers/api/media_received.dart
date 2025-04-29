@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,7 +9,6 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/media_send.dart';
-import 'package:twonly/src/utils/misc.dart';
 import 'dart:typed_data';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:logging/logging.dart';
@@ -17,6 +17,7 @@ import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
     as client;
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pbserver.dart';
+import 'package:twonly/src/utils/storage.dart';
 
 Map<int, DateTime> downloadStartedForMediaReceived = {};
 
@@ -29,6 +30,51 @@ Future tryDownloadAllMediaFiles() async {
   for (Message message in messages) {
     await startDownloadMedia(message, false);
   }
+}
+
+enum DownloadMediaTypes {
+  video,
+  image,
+}
+
+Map<String, List<String>> defaultAutoDownloadOptions = {
+  ConnectivityResult.mobile.name: [],
+  ConnectivityResult.wifi.name: [
+    DownloadMediaTypes.video.name,
+    DownloadMediaTypes.image.name
+  ]
+};
+
+Future<bool> isAllowedToDownload(bool isVideo) async {
+  final List<ConnectivityResult> connectivityResult =
+      await (Connectivity().checkConnectivity());
+
+  final user = await getUser();
+  final options = user!.autoDownloadOptions ?? defaultAutoDownloadOptions;
+
+  if (connectivityResult.contains(ConnectivityResult.mobile)) {
+    if (isVideo) {
+      if (options[ConnectivityResult.mobile.name]!
+          .contains(DownloadMediaTypes.video.name)) {
+        return true;
+      }
+    } else if (options[ConnectivityResult.mobile.name]!
+        .contains(DownloadMediaTypes.image.name)) {
+      return true;
+    }
+  }
+  if (connectivityResult.contains(ConnectivityResult.wifi)) {
+    if (isVideo) {
+      if (options[ConnectivityResult.wifi.name]!
+          .contains(DownloadMediaTypes.video.name)) {
+        return true;
+      }
+    } else if (options[ConnectivityResult.wifi.name]!
+        .contains(DownloadMediaTypes.image.name)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 Future startDownloadMedia(Message message, bool force) async {

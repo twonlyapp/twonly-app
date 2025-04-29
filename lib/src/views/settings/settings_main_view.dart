@@ -8,6 +8,7 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/account_view.dart';
 import 'package:twonly/src/views/settings/appearance_view.dart';
 import 'package:twonly/src/views/settings/chat/chat_settings_view.dart';
+import 'package:twonly/src/views/settings/data_and_storage_view.dart';
 import 'package:twonly/src/views/settings/notification_view.dart';
 import 'package:twonly/src/views/settings/profile/profile_view.dart';
 import 'package:twonly/src/views/settings/help_view.dart';
@@ -153,11 +154,12 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.chartPie,
+                  iconSize: 15,
                   text: context.lang.settingsStorageData,
                   onTap: () async {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                      return NotificationView();
+                      return DataAndStorageView();
                     }));
                   },
                 ),

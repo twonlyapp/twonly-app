@@ -227,6 +227,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStorageData => 'Data and storage';
 
   @override
+  String get settingsStorageDataStoreInGTitle => 'Store in Gallery';
+
+  @override
+  String get settingsStorageDataStoreInGSubtitle => 'Store saved images additional in the systems gallery.';
+
+  @override
+  String get settingsStorageDataMediaAutoDownload => 'Media auto-download';
+
+  @override
+  String get settingsStorageDataAutoDownMobile => 'When using mobile data';
+
+  @override
+  String get settingsStorageDataAutoDownWifi => 'When using WI-FI';
+
+  @override
   String get settingsProfileCustomizeAvatar => 'Customize your avatar';
 
   @override

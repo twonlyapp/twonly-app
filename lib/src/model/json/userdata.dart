@@ -22,6 +22,8 @@ class UserData {
   bool? useHighQuality;
   List<String>? preSelectedEmojies;
   ThemeMode? themeMode;
+  Map<String, List<String>>? autoDownloadOptions;
+  bool? storeMediaFilesInGallery;
 
   final int userId;
 

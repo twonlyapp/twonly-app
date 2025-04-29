@@ -7,15 +7,16 @@ class BetterListTile extends StatelessWidget {
   final Widget? subtitle;
   final Color? color;
   final VoidCallback onTap;
+  final double iconSize;
 
-  const BetterListTile({
-    super.key,
-    required this.icon,
-    required this.text,
-    this.color,
-    this.subtitle,
-    required this.onTap,
-  });
+  const BetterListTile(
+      {super.key,
+      required this.icon,
+      required this.text,
+      this.color,
+      this.subtitle,
+      required this.onTap,
+      this.iconSize = 20});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,7 @@ class BetterListTile extends StatelessWidget {
         ),
         child: FaIcon(
           icon,
-          size: 20,
+          size: iconSize,
           color: color,
         ),
       ),

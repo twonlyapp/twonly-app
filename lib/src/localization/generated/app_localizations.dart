@@ -527,6 +527,36 @@ abstract class AppLocalizations {
   /// **'Data and storage'**
   String get settingsStorageData;
 
+  /// No description provided for @settingsStorageDataStoreInGTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store in Gallery'**
+  String get settingsStorageDataStoreInGTitle;
+
+  /// No description provided for @settingsStorageDataStoreInGSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store saved images additional in the systems gallery.'**
+  String get settingsStorageDataStoreInGSubtitle;
+
+  /// No description provided for @settingsStorageDataMediaAutoDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Media auto-download'**
+  String get settingsStorageDataMediaAutoDownload;
+
+  /// No description provided for @settingsStorageDataAutoDownMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'When using mobile data'**
+  String get settingsStorageDataAutoDownMobile;
+
+  /// No description provided for @settingsStorageDataAutoDownWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'When using WI-FI'**
+  String get settingsStorageDataAutoDownWifi;
+
   /// No description provided for @settingsProfileCustomizeAvatar.
   ///
   /// In en, this message translates to:

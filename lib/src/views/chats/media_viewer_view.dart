@@ -298,12 +298,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     setState(() {
       imageSaved = true;
     });
-    final res = await saveImageToGallery(imageBytes!);
-    if (res == null) {
-      setState(() {
-        imageSaving = false;
-      });
+    final user = await getUser();
+    if (user != null && (user.storeMediaFilesInGallery ?? true)) {
+      await saveImageToGallery(imageBytes!);
     }
+    setState(() {
+      imageSaving = false;
+    });
   }
 
   Widget bottomNavigation() {

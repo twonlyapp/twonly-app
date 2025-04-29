@@ -19,7 +19,13 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..preSelectedEmojies = (json['preSelectedEmojies'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList()
-      ..themeMode = $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']);
+      ..themeMode = $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode'])
+      ..autoDownloadOptions =
+          (json['autoDownloadOptions'] as Map<String, dynamic>?)?.map(
+        (k, e) =>
+            MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
+      )
+      ..storeMediaFilesInGallery = json['storeMediaFilesInGallery'] as bool?;
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'username': instance.username,
@@ -31,6 +37,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'useHighQuality': instance.useHighQuality,
       'preSelectedEmojies': instance.preSelectedEmojies,
       'themeMode': _$ThemeModeEnumMap[instance.themeMode],
+      'autoDownloadOptions': instance.autoDownloadOptions,
+      'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
       'userId': instance.userId,
     };
 

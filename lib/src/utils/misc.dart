@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -159,16 +158,6 @@ Future<bool> authenticateUser(String localizedReason,
     }
   }
   return false;
-}
-
-Future<bool> isAllowedToDownload(bool isVideo) async {
-  final List<ConnectivityResult> connectivityResult =
-      await (Connectivity().checkConnectivity());
-  if (connectivityResult.contains(ConnectivityResult.mobile)) {
-    Logger("tryDownloadMedia").info("abort download over mobile connection");
-    return false;
-  }
-  return true;
 }
 
 void setupLogger() {

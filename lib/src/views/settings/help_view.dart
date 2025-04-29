@@ -25,7 +25,6 @@ class HelpView extends StatelessWidget {
                   FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
             ),
             Divider(),
-
             FutureBuilder(
               future: PackageInfo.fromPlatform(),
               builder: (context, snap) {
@@ -76,8 +75,6 @@ class HelpView extends StatelessWidget {
                 style: TextStyle(color: Colors.grey, fontSize: 13),
               ),
             ),
-
-            //
           ],
         ));
   }
