@@ -21,12 +21,14 @@ class ShareImageView extends StatefulWidget {
       {super.key,
       required this.imageBytesFuture,
       required this.isRealTwonly,
+      required this.mirrorVideo,
       required this.maxShowTime,
       this.preselectedUser,
       required this.videoFilePath,
       this.enableVideoAudio});
   final Future<Uint8List?> imageBytesFuture;
   final bool isRealTwonly;
+  final bool mirrorVideo;
   final int maxShowTime;
   final XFile? videoFilePath;
   final Contact? preselectedUser;
@@ -232,12 +234,14 @@ class _ShareImageView extends State<ShareImageView> {
                     sendingImage = true;
                   });
                   sendMediaFile(
-                      _selectedUserIds.toList(),
-                      imageBytes!,
-                      widget.isRealTwonly,
-                      widget.maxShowTime,
-                      widget.videoFilePath,
-                      widget.enableVideoAudio);
+                    _selectedUserIds.toList(),
+                    imageBytes!,
+                    widget.isRealTwonly,
+                    widget.maxShowTime,
+                    widget.videoFilePath,
+                    widget.enableVideoAudio,
+                    widget.mirrorVideo,
+                  );
                   if (context.mounted) {
                     if (widget.preselectedUser != null) {
                       Navigator.pop(context, true);

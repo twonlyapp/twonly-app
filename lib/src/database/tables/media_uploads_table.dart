@@ -47,6 +47,7 @@ class MediaUploadMetadata {
   late DateTime messageSendAt;
   late bool isVideo;
   late bool videoWithAudio;
+  late bool mirrorVideo;
 
   MediaUploadMetadata();
 
@@ -54,6 +55,7 @@ class MediaUploadMetadata {
     return {
       'contactIds': contactIds,
       'isRealTwonly': isRealTwonly,
+      'mirrorVideo': mirrorVideo,
       'maxShowTime': maxShowTime,
       'isVideo': isVideo,
       'videoWithAudio': videoWithAudio,
@@ -67,6 +69,7 @@ class MediaUploadMetadata {
     state.isRealTwonly = json['isRealTwonly'];
     state.videoWithAudio = json['videoWithAudio'];
     state.isVideo = json['isVideo'];
+    state.mirrorVideo = json['mirrorVideo'];
     state.maxShowTime = json['maxShowTime'];
     state.maxShowTime = json['maxShowTime'];
     state.messageSendAt = DateTime.parse(json['messageSendAt']);

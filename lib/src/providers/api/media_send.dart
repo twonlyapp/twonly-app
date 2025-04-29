@@ -20,13 +20,13 @@ import 'package:twonly/src/services/notification_service.dart';
 import 'package:video_compress/video_compress.dart';
 
 Future sendMediaFile(
-  List<int> userIds,
-  Uint8List imageBytes,
-  bool isRealTwonly,
-  int maxShowTime,
-  XFile? videoFilePath,
-  bool? enableVideoAudio,
-) async {
+    List<int> userIds,
+    Uint8List imageBytes,
+    bool isRealTwonly,
+    int maxShowTime,
+    XFile? videoFilePath,
+    bool? enableVideoAudio,
+    bool mirrorVideo) async {
   MediaUploadMetadata metadata = MediaUploadMetadata();
   metadata.contactIds = userIds;
   metadata.isRealTwonly = isRealTwonly;
@@ -34,6 +34,7 @@ Future sendMediaFile(
   metadata.isVideo = videoFilePath != null;
   metadata.videoWithAudio = enableVideoAudio != null && enableVideoAudio;
   metadata.maxShowTime = maxShowTime;
+  metadata.mirrorVideo = mirrorVideo;
 
   int? mediaUploadId = await twonlyDatabase.mediaUploadsDao.insertMediaUpload(
     MediaUploadsCompanion(
@@ -62,62 +63,62 @@ Future retryMediaUpload() async {
 final lockingHandleMediaFile = Mutex();
 
 Future handleSingleMediaFile(int mediaUploadId) async {
-  // await lockingHandleMediaFile.protect(() async {
-  MediaUpload? media = await twonlyDatabase.mediaUploadsDao
-      .getMediaUploadById(mediaUploadId)
-      .getSingleOrNull();
-  if (media == null) return;
+  await lockingHandleMediaFile.protect(() async {
+    MediaUpload? media = await twonlyDatabase.mediaUploadsDao
+        .getMediaUploadById(mediaUploadId)
+        .getSingleOrNull();
+    if (media == null) return;
 
-  try {
-    switch (media.state) {
-      case UploadState.pending:
-        await handleAddToMessageDb(media);
-        break;
-      case UploadState.addedToMessagesDb:
-        await handleCompressionState(media);
-        break;
-      case UploadState.isCompressed:
-        await handleEncryptionState(media);
-        break;
-      case UploadState.isEncrypted:
-        if (!await handleGetUploadToken(media)) {
-          return; // recoverable error. try again when connected again to the server...
-        }
-        break;
-      case UploadState.hasUploadToken:
-        if (!await handleUpload(media)) {
-          return; // recoverable error. try again when connected again to the server...
-        }
-        break;
-      case UploadState.isUploaded:
-        if (!await handleNotifyReceiver(media)) {
-          return; // recoverable error. try again when connected again to the server...
-        }
-        break;
-      case UploadState.receiverNotified:
-        return;
-    }
-
-    // this will be called until there is an recoverable error OR
-    // the upload is ready
-    await handleSingleMediaFile(mediaUploadId);
-  } catch (e) {
-    // if the messageIds are already there notify the user about this error...
-    if (media.messageIds != null) {
-      for (int messageId in media.messageIds!) {
-        await twonlyDatabase.messagesDao.updateMessageByMessageId(
-          messageId,
-          MessagesCompanion(
-            errorWhileSending: Value(true),
-          ),
-        );
+    try {
+      switch (media.state) {
+        case UploadState.pending:
+          await handleAddToMessageDb(media);
+          break;
+        case UploadState.addedToMessagesDb:
+          await handleCompressionState(media);
+          break;
+        case UploadState.isCompressed:
+          await handleEncryptionState(media);
+          break;
+        case UploadState.isEncrypted:
+          if (!await handleGetUploadToken(media)) {
+            return; // recoverable error. try again when connected again to the server...
+          }
+          break;
+        case UploadState.hasUploadToken:
+          if (!await handleUpload(media)) {
+            return; // recoverable error. try again when connected again to the server...
+          }
+          break;
+        case UploadState.isUploaded:
+          if (!await handleNotifyReceiver(media)) {
+            return; // recoverable error. try again when connected again to the server...
+          }
+          break;
+        case UploadState.receiverNotified:
+          return;
       }
+    } catch (e) {
+      // if the messageIds are already there notify the user about this error...
+      if (media.messageIds != null) {
+        for (int messageId in media.messageIds!) {
+          await twonlyDatabase.messagesDao.updateMessageByMessageId(
+            messageId,
+            MessagesCompanion(
+              errorWhileSending: Value(true),
+            ),
+          );
+        }
+      }
+      await twonlyDatabase.mediaUploadsDao.deleteMediaUpload(mediaUploadId);
+      Logger("media_send.dart")
+          .shout("Non recoverable error while sending media file: $e");
+      return;
     }
-    await twonlyDatabase.mediaUploadsDao.deleteMediaUpload(mediaUploadId);
-    Logger("media_send.dart")
-        .shout("Non recoverable error while sending media file: $e");
-  }
-  // });
+  });
+  // this will be called until there is an recoverable error OR
+  // the upload is ready
+  await handleSingleMediaFile(mediaUploadId);
 }
 
 Future handleAddToMessageDb(MediaUpload media) async {
@@ -137,6 +138,7 @@ Future handleAddToMessageDb(MediaUpload media) async {
               maxShowTime: media.metadata.maxShowTime,
               isRealTwonly: media.metadata.isRealTwonly,
               isVideo: media.metadata.isVideo,
+              mirrorVideo: media.metadata.mirrorVideo,
             ).toJson(),
           ),
         ),
@@ -357,7 +359,11 @@ Future<bool> handleUpload(MediaUpload media) async {
     ),
   );
 
-  await deleteMediaFile(media, "encrypted");
+  try {
+    await deleteMediaFile(media, "encrypted");
+  } catch (e) {
+    Logger("media_send.dart").shout("$e");
+  }
 
   return true;
 }
@@ -395,6 +401,7 @@ Future<bool> handleNotifyReceiver(MediaUpload media) async {
           maxShowTime: media.metadata.maxShowTime,
           isRealTwonly: media.metadata.isRealTwonly,
           isVideo: media.metadata.isVideo,
+          mirrorVideo: media.metadata.mirrorVideo,
           encryptionKey: media.encryptionData!.encryptionKey,
           encryptionMac: media.encryptionData!.encryptionMac,
           encryptionNonce: media.encryptionData!.encryptionNonce,

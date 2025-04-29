@@ -30,11 +30,17 @@ List<Layer> removedLayers = [];
 const gMediaShowInfinite = 999999;
 
 class ShareImageEditorView extends StatefulWidget {
-  const ShareImageEditorView(
-      {super.key, this.imageBytes, this.sendTo, this.videoFilePath});
+  const ShareImageEditorView({
+    super.key,
+    this.imageBytes,
+    this.sendTo,
+    this.videoFilePath,
+    required this.mirrorVideo,
+  });
   final Future<Uint8List?>? imageBytes;
   final XFile? videoFilePath;
   final Contact? sendTo;
+  final bool mirrorVideo;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -289,6 +295,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           maxShowTime: maxShowTime,
           preselectedUser: widget.sendTo,
           videoFilePath: widget.videoFilePath,
+          mirrorVideo: widget.mirrorVideo,
         ),
       ),
     );
@@ -357,6 +364,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       maxShowTime,
       widget.videoFilePath,
       videoWithAudio,
+      widget.mirrorVideo,
     );
     if (context.mounted) {
       // ignore: use_build_context_synchronously
@@ -405,7 +413,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 child: Stack(
                   children: [
                     if (videoController != null)
-                      Positioned.fill(child: VideoPlayer(videoController!)),
+                      Positioned.fill(
+                        child: Transform.flip(
+                          flipX: widget.mirrorVideo,
+                          child: VideoPlayer(videoController!),
+                        ),
+                      ),
                     Screenshot(
                       controller: screenshotController,
                       child: LayersViewer(

@@ -47,6 +47,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   int maxShowTime = 999999;
   double progress = 0;
   bool isRealTwonly = false;
+  bool mirrorVideo = false;
   bool isDownloading = false;
   bool showSendTextMessageInput = false;
 
@@ -120,6 +121,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       maxShowTime = 999999;
       imageSaving = false;
       imageSaved = false;
+      mirrorVideo = false;
       progress = 0;
       isDownloading = false;
       isRealTwonly = false;
@@ -226,6 +228,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     setState(() {
       maxShowTime = content.maxShowTime;
       isDownloading = false;
+      mirrorVideo = content.mirrorVideo;
     });
   }
 
@@ -412,7 +415,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   child: Stack(
                     children: [
                       if (videoController != null)
-                        Positioned.fill(child: VideoPlayer(videoController!)),
+                        Positioned.fill(
+                          child: Transform.flip(
+                            flipX: mirrorVideo,
+                            child: VideoPlayer(videoController!),
+                          ),
+                        ),
                       if (imageBytes != null)
                         Positioned.fill(
                           child: Image.memory(

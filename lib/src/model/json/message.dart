@@ -99,6 +99,7 @@ class MediaMessageContent extends MessageContent {
   final int maxShowTime;
   final bool isRealTwonly;
   final bool isVideo;
+  final bool mirrorVideo;
   final List<int>? downloadToken;
   final List<int>? encryptionKey;
   final List<int>? encryptionMac;
@@ -108,6 +109,7 @@ class MediaMessageContent extends MessageContent {
     required this.maxShowTime,
     required this.isRealTwonly,
     required this.isVideo,
+    required this.mirrorVideo,
     this.downloadToken,
     this.encryptionKey,
     this.encryptionMac,
@@ -131,6 +133,7 @@ class MediaMessageContent extends MessageContent {
       maxShowTime: json['maxShowTime'],
       isRealTwonly: json['isRealTwonly'],
       isVideo: json['isVideo'] ?? false,
+      mirrorVideo: json['mirrorVideo'] ?? false,
     );
   }
 
@@ -144,6 +147,7 @@ class MediaMessageContent extends MessageContent {
       'isRealTwonly': isRealTwonly,
       'maxShowTime': maxShowTime,
       'isVideo': isVideo,
+      'mirrorVideo': mirrorVideo,
     };
   }
 }

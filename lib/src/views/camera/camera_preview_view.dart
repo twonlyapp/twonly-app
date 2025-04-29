@@ -232,6 +232,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           videoFilePath: videoFilePath,
           imageBytes: imageBytes,
           sendTo: widget.sendTo,
+          mirrorVideo: isFront && Platform.isAndroid,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;
