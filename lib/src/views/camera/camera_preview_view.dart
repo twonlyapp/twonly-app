@@ -41,6 +41,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   bool useHighQuality = false;
   bool isVideoRecording = false;
   bool hasAudioPermission = true;
+  bool videoWithAudio = true;
   DateTime? videoRecordingStarted;
   Timer? videoRecordingTimer;
   DateTime currentTime = DateTime.now();
@@ -105,7 +106,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     controller = CameraController(
       gCameras[sCameraId],
       ResolutionPreset.high,
-      enableAudio: await Permission.microphone.isGranted,
+      enableAudio: await Permission.microphone.isGranted && videoWithAudio,
     );
     controller?.initialize().then((_) async {
       if (!mounted) {
@@ -508,7 +509,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                   tooltipText:
                                       "Allow microphone access for video recording.",
                                   onPressed: requestMicrophonePermission,
-                                )
+                                ),
+                              if (hasAudioPermission)
+                                ActionButton(
+                                  (videoWithAudio)
+                                      ? Icons.volume_up_rounded
+                                      : Icons.volume_off_rounded,
+                                  tooltipText: "Record video with audio.",
+                                  color: (videoWithAudio)
+                                      ? Colors.white
+                                      : Colors.white.withAlpha(160),
+                                  onPressed: () async {
+                                    setState(() {
+                                      videoWithAudio = !videoWithAudio;
+                                    });
+                                    selectCamera(cameraId);
+                                  },
+                                ),
                             ],
                           ),
                         ),

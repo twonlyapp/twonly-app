@@ -196,18 +196,19 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           },
         ),
       ),
-      if (widget.videoFilePath != null) const SizedBox(height: 8),
-      if (widget.videoFilePath != null)
-        ActionButton(
-          (videoWithAudio) ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-          tooltipText: context.lang.protectAsARealTwonly,
-          color: Colors.white,
-          onPressed: () async {
-            setState(() {
-              videoWithAudio = !videoWithAudio;
-            });
-          },
-        ),
+      // https://github.com/jonataslaw/VideoCompress/issues/184
+      // if (widget.videoFilePath != null) const SizedBox(height: 8),
+      // if (widget.videoFilePath != null)
+      //   ActionButton(
+      //     (videoWithAudio) ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+      //     tooltipText: context.lang.protectAsARealTwonly,
+      //     color: Colors.white,
+      //     onPressed: () async {
+      //       setState(() {
+      //         videoWithAudio = !videoWithAudio;
+      //       });
+      //     },
+      //   ),
       const SizedBox(height: 8),
       ActionButton(
         FontAwesomeIcons.shieldHeart,
@@ -287,6 +288,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           isRealTwonly: _isRealTwonly,
           maxShowTime: maxShowTime,
           preselectedUser: widget.sendTo,
+          videoFilePath: widget.videoFilePath,
         ),
       ),
     );

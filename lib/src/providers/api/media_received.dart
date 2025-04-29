@@ -181,7 +181,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
       await writeMediaFile(media.messageId, "mp4", splited[1]);
     }
 
-    await writeMediaFile(media.messageId, "image", imageBytes);
+    await writeMediaFile(media.messageId, "png", imageBytes);
   } catch (e) {
     Logger("media_received.dart").info("Decryption error: $e");
     await twonlyDatabase.messagesDao.updateMessageByMessageId(
@@ -207,7 +207,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
 }
 
 Future<Uint8List?> getImageBytes(int mediaId) async {
-  return await readMediaFile(mediaId, "image");
+  return await readMediaFile(mediaId, "png");
 }
 
 Future<File?> getVideoPath(int mediaId) async {

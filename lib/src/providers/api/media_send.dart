@@ -17,6 +17,7 @@ import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:video_compress/video_compress.dart';
 
 Future sendMediaFile(
   List<int> userIds,
@@ -43,9 +44,9 @@ Future sendMediaFile(
   if (mediaUploadId != null) {
     if (videoFilePath != null) {
       String basePath = await getMediaFilePath(mediaUploadId, "send");
-      await File(videoFilePath.path).rename("$basePath.video");
+      await File(videoFilePath.path).rename("$basePath.mp4");
     }
-    await writeMediaFile(mediaUploadId, "image", imageBytes);
+    await writeMediaFile(mediaUploadId, "png", imageBytes);
     await handleSingleMediaFile(mediaUploadId);
   }
 }
@@ -165,7 +166,7 @@ Future handleAddToMessageDb(MediaUpload media) async {
 }
 
 Future handleCompressionState(MediaUpload media) async {
-  Uint8List imageBytes = await readMediaFile(media, "image");
+  Uint8List imageBytes = await readMediaFile(media, "png");
 
   try {
     Uint8List imageBytesCompressed =
@@ -184,54 +185,56 @@ Future handleCompressionState(MediaUpload media) async {
       );
     }
     await writeMediaFile(
-        media.mediaUploadId, "image.compressed", imageBytesCompressed);
+        media.mediaUploadId, "compressed.png", imageBytesCompressed);
   } catch (e) {
     Logger("media_send.dart").shout("$e");
     // as a fall back use the original image
-    await writeMediaFile(media.mediaUploadId, "image.compressed", imageBytes);
+    await writeMediaFile(media.mediaUploadId, "compressed.png", imageBytes);
   }
 
   if (media.metadata.isVideo) {
     String basePath = await getMediaFilePath(media.mediaUploadId, "send");
-    File videoOriginalFile = File("$basePath.video");
-    File videoCompressedFile = File("$basePath.video.compressed");
+    File videoOriginalFile = File("$basePath.mp4");
+    File videoCompressedFile = File("$basePath.compressed.mp4");
 
-    // MediaInfo? mediaInfo;
+    MediaInfo? mediaInfo;
 
     try {
-      // mediaInfo = await VideoCompress.compressVideo(
-      //   videoOriginalFile.path,
-      //   quality: VideoQuality.Res1280x720Quality,
-      //   deleteOrigin: false,
-      //   includeAudio: media.metadata.videoWithAudio,
-      // );
+      mediaInfo = await VideoCompress.compressVideo(
+        videoOriginalFile.path,
+        quality: VideoQuality.Res1280x720Quality,
+        deleteOrigin: false,
+        includeAudio:
+            true, // https://github.com/jonataslaw/VideoCompress/issues/184
+      );
 
-      // if (mediaInfo!.filesize! >= 20 * 1000 * 1000) {
-      //   // if the media file is over 20MB compress it with low quality
-      //   mediaInfo = await VideoCompress.compressVideo(
-      //     videoOriginalFile.path,
-      //     quality: VideoQuality.Res960x540Quality,
-      //     deleteOrigin: false,
-      //     includeAudio: media.metadata.videoWithAudio,
-      //   );
-      // }
+      if (mediaInfo!.filesize! >= 20 * 1000 * 1000) {
+        // if the media file is over 20MB compress it with low quality
+        mediaInfo = await VideoCompress.compressVideo(
+          videoOriginalFile.path,
+          quality: VideoQuality.Res960x540Quality,
+          deleteOrigin: false,
+          includeAudio: media.metadata.videoWithAudio,
+        );
+      }
     } catch (e) {
       Logger("media_send.dart").shout("Video compression: $e");
     }
 
-    // if (mediaInfo == null) {
-    // as a fall back use the non compressed version
-    await videoOriginalFile.copy(videoCompressedFile.path);
-    await videoOriginalFile.delete();
-    // } else {
-    //   Logger("media_send.dart").shout("Error compressing video.");
-    //   mediaInfo!.file!.rename(videoCompressedFile.path);
-    // }
+    if (mediaInfo == null) {
+      Logger("media_send.dart").shout("Error compressing video.");
+      // as a fall back use the non compressed version
+      await videoOriginalFile.copy(videoCompressedFile.path);
+      await videoOriginalFile.delete();
+    } else {
+      await mediaInfo.file!.copy(videoCompressedFile.path);
+      await mediaInfo.file!.delete();
+    }
   }
 
   // delete non compressed media files
-  await deleteMediaFile(media, "image");
-  await deleteMediaFile(media, "video");
+  await deleteMediaFile(media, "png");
+  await deleteMediaFile(media, "mp4");
 
   await twonlyDatabase.mediaUploadsDao.updateMediaUpload(
     media.mediaUploadId,
@@ -246,10 +249,10 @@ Future handleCompressionState(MediaUpload media) async {
 Future handleEncryptionState(MediaUpload media) async {
   var state = MediaEncryptionData();
 
-  Uint8List dataToEncrypt = await readMediaFile(media, "image.compressed");
+  Uint8List dataToEncrypt = await readMediaFile(media, "compressed.png");
 
   if (media.metadata.isVideo) {
-    Uint8List compressedVideo = await readMediaFile(media, "video.compressed");
+    Uint8List compressedVideo = await readMediaFile(media, "compressed.mp4");
     dataToEncrypt = combineUint8Lists(dataToEncrypt, compressedVideo);
   }
 

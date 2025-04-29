@@ -23,7 +23,7 @@ class ShareImageView extends StatefulWidget {
       required this.isRealTwonly,
       required this.maxShowTime,
       this.preselectedUser,
-      this.videoFilePath,
+      required this.videoFilePath,
       this.enableVideoAudio});
   final Future<Uint8List?> imageBytesFuture;
   final bool isRealTwonly;
