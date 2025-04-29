@@ -6,7 +6,7 @@ Color getMessageColorFromType(MessageContent content, BuildContext context) {
   Color color;
 
   if (content is TextMessageContent || content is StoredMediaFileContent) {
-    color = isDarkMode(context) ? Colors.white : Colors.black;
+    color = Colors.blueAccent;
   } else {
     if (content is MediaMessageContent) {
       if (content.isRealTwonly) {
@@ -15,7 +15,7 @@ Color getMessageColorFromType(MessageContent content, BuildContext context) {
         if (content.isVideo) {
           color = const Color.fromARGB(255, 240, 243, 33);
         } else {
-          color = Colors.deepOrange;
+          color = Colors.redAccent;
         }
       }
     } else {

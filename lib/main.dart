@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/providers/api/media_received.dart';
+import 'package:twonly/src/providers/api/media_send.dart';
 import 'package:twonly/src/providers/api_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
@@ -32,6 +34,8 @@ void main() async {
   apiProvider = ApiProvider();
   twonlyDatabase = TwonlyDatabase();
   await twonlyDatabase.messagesDao.resetPendingDownloadState();
+  await purgeReceivedMediaFiles();
+  await purgeSendMediaFiles();
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 

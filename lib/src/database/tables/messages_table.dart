@@ -34,6 +34,8 @@ class Messages extends Table {
   IntColumn get responseToOtherMessageId => integer().nullable()();
 
   BoolColumn get acknowledgeByUser => boolean().withDefault(Constant(false))();
+  BoolColumn get mediaStored => boolean().withDefault(Constant(false))();
+
   IntColumn get downloadState => intEnum<DownloadState>()
       .withDefault(Constant(DownloadState.downloaded.index))();
 

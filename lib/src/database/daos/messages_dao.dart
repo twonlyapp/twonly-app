@@ -49,6 +49,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
               t.contactId.equals(contactId) &
               t.contentJson.isNotNull() &
               (t.openedAt.isNull() |
+                  t.mediaStored.equals(true) |
                   t.openedAt.isBiggerThanValue(
                       DateTime.now().subtract(Duration(days: 1)))))
           ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))

@@ -992,6 +992,16 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("acknowledge_by_user" IN (0, 1))'),
       defaultValue: Constant(false));
+  static const VerificationMeta _mediaStoredMeta =
+      const VerificationMeta('mediaStored');
+  @override
+  late final GeneratedColumn<bool> mediaStored = GeneratedColumn<bool>(
+      'media_stored', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("media_stored" IN (0, 1))'),
+      defaultValue: Constant(false));
   @override
   late final GeneratedColumnWithTypeConverter<DownloadState, int>
       downloadState = GeneratedColumn<int>('download_state', aliasedName, false,
@@ -1061,6 +1071,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         responseToMessageId,
         responseToOtherMessageId,
         acknowledgeByUser,
+        mediaStored,
         downloadState,
         acknowledgeByServer,
         errorWhileSending,
@@ -1127,6 +1138,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           acknowledgeByUser.isAcceptableOrUnknown(
               data['acknowledge_by_user']!, _acknowledgeByUserMeta));
     }
+    if (data.containsKey('media_stored')) {
+      context.handle(
+          _mediaStoredMeta,
+          mediaStored.isAcceptableOrUnknown(
+              data['media_stored']!, _mediaStoredMeta));
+    }
     if (data.containsKey('acknowledge_by_server')) {
       context.handle(
           _acknowledgeByServerMeta,
@@ -1183,6 +1200,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           data['${effectivePrefix}response_to_other_message_id']),
       acknowledgeByUser: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}acknowledge_by_user'])!,
+      mediaStored: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}media_stored'])!,
       downloadState: $MessagesTable.$converterdownloadState.fromSql(
           attachedDatabase.typeMapping.read(
               DriftSqlType.int, data['${effectivePrefix}download_state'])!),
@@ -1223,6 +1242,7 @@ class Message extends DataClass implements Insertable<Message> {
   final int? responseToMessageId;
   final int? responseToOtherMessageId;
   final bool acknowledgeByUser;
+  final bool mediaStored;
   final DownloadState downloadState;
   final bool acknowledgeByServer;
   final bool errorWhileSending;
@@ -1240,6 +1260,7 @@ class Message extends DataClass implements Insertable<Message> {
       this.responseToMessageId,
       this.responseToOtherMessageId,
       required this.acknowledgeByUser,
+      required this.mediaStored,
       required this.downloadState,
       required this.acknowledgeByServer,
       required this.errorWhileSending,
@@ -1270,6 +1291,7 @@ class Message extends DataClass implements Insertable<Message> {
           Variable<int>(responseToOtherMessageId);
     }
     map['acknowledge_by_user'] = Variable<bool>(acknowledgeByUser);
+    map['media_stored'] = Variable<bool>(mediaStored);
     {
       map['download_state'] = Variable<int>(
           $MessagesTable.$converterdownloadState.toSql(downloadState));
@@ -1310,6 +1332,7 @@ class Message extends DataClass implements Insertable<Message> {
           ? const Value.absent()
           : Value(responseToOtherMessageId),
       acknowledgeByUser: Value(acknowledgeByUser),
+      mediaStored: Value(mediaStored),
       downloadState: Value(downloadState),
       acknowledgeByServer: Value(acknowledgeByServer),
       errorWhileSending: Value(errorWhileSending),
@@ -1339,6 +1362,7 @@ class Message extends DataClass implements Insertable<Message> {
       responseToOtherMessageId:
           serializer.fromJson<int?>(json['responseToOtherMessageId']),
       acknowledgeByUser: serializer.fromJson<bool>(json['acknowledgeByUser']),
+      mediaStored: serializer.fromJson<bool>(json['mediaStored']),
       downloadState: $MessagesTable.$converterdownloadState
           .fromJson(serializer.fromJson<int>(json['downloadState'])),
       acknowledgeByServer:
@@ -1365,6 +1389,7 @@ class Message extends DataClass implements Insertable<Message> {
       'responseToOtherMessageId':
           serializer.toJson<int?>(responseToOtherMessageId),
       'acknowledgeByUser': serializer.toJson<bool>(acknowledgeByUser),
+      'mediaStored': serializer.toJson<bool>(mediaStored),
       'downloadState': serializer.toJson<int>(
           $MessagesTable.$converterdownloadState.toJson(downloadState)),
       'acknowledgeByServer': serializer.toJson<bool>(acknowledgeByServer),
@@ -1387,6 +1412,7 @@ class Message extends DataClass implements Insertable<Message> {
           Value<int?> responseToMessageId = const Value.absent(),
           Value<int?> responseToOtherMessageId = const Value.absent(),
           bool? acknowledgeByUser,
+          bool? mediaStored,
           DownloadState? downloadState,
           bool? acknowledgeByServer,
           bool? errorWhileSending,
@@ -1412,6 +1438,7 @@ class Message extends DataClass implements Insertable<Message> {
             ? responseToOtherMessageId.value
             : this.responseToOtherMessageId,
         acknowledgeByUser: acknowledgeByUser ?? this.acknowledgeByUser,
+        mediaStored: mediaStored ?? this.mediaStored,
         downloadState: downloadState ?? this.downloadState,
         acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
         errorWhileSending: errorWhileSending ?? this.errorWhileSending,
@@ -1443,6 +1470,8 @@ class Message extends DataClass implements Insertable<Message> {
       acknowledgeByUser: data.acknowledgeByUser.present
           ? data.acknowledgeByUser.value
           : this.acknowledgeByUser,
+      mediaStored:
+          data.mediaStored.present ? data.mediaStored.value : this.mediaStored,
       downloadState: data.downloadState.present
           ? data.downloadState.value
           : this.downloadState,
@@ -1472,6 +1501,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('responseToMessageId: $responseToMessageId, ')
           ..write('responseToOtherMessageId: $responseToOtherMessageId, ')
           ..write('acknowledgeByUser: $acknowledgeByUser, ')
+          ..write('mediaStored: $mediaStored, ')
           ..write('downloadState: $downloadState, ')
           ..write('acknowledgeByServer: $acknowledgeByServer, ')
           ..write('errorWhileSending: $errorWhileSending, ')
@@ -1494,6 +1524,7 @@ class Message extends DataClass implements Insertable<Message> {
       responseToMessageId,
       responseToOtherMessageId,
       acknowledgeByUser,
+      mediaStored,
       downloadState,
       acknowledgeByServer,
       errorWhileSending,
@@ -1514,6 +1545,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.responseToMessageId == this.responseToMessageId &&
           other.responseToOtherMessageId == this.responseToOtherMessageId &&
           other.acknowledgeByUser == this.acknowledgeByUser &&
+          other.mediaStored == this.mediaStored &&
           other.downloadState == this.downloadState &&
           other.acknowledgeByServer == this.acknowledgeByServer &&
           other.errorWhileSending == this.errorWhileSending &&
@@ -1533,6 +1565,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<int?> responseToMessageId;
   final Value<int?> responseToOtherMessageId;
   final Value<bool> acknowledgeByUser;
+  final Value<bool> mediaStored;
   final Value<DownloadState> downloadState;
   final Value<bool> acknowledgeByServer;
   final Value<bool> errorWhileSending;
@@ -1550,6 +1583,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.responseToMessageId = const Value.absent(),
     this.responseToOtherMessageId = const Value.absent(),
     this.acknowledgeByUser = const Value.absent(),
+    this.mediaStored = const Value.absent(),
     this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
     this.errorWhileSending = const Value.absent(),
@@ -1568,6 +1602,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.responseToMessageId = const Value.absent(),
     this.responseToOtherMessageId = const Value.absent(),
     this.acknowledgeByUser = const Value.absent(),
+    this.mediaStored = const Value.absent(),
     this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
     this.errorWhileSending = const Value.absent(),
@@ -1587,6 +1622,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<int>? responseToMessageId,
     Expression<int>? responseToOtherMessageId,
     Expression<bool>? acknowledgeByUser,
+    Expression<bool>? mediaStored,
     Expression<int>? downloadState,
     Expression<bool>? acknowledgeByServer,
     Expression<bool>? errorWhileSending,
@@ -1607,6 +1643,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (responseToOtherMessageId != null)
         'response_to_other_message_id': responseToOtherMessageId,
       if (acknowledgeByUser != null) 'acknowledge_by_user': acknowledgeByUser,
+      if (mediaStored != null) 'media_stored': mediaStored,
       if (downloadState != null) 'download_state': downloadState,
       if (acknowledgeByServer != null)
         'acknowledge_by_server': acknowledgeByServer,
@@ -1628,6 +1665,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<int?>? responseToMessageId,
       Value<int?>? responseToOtherMessageId,
       Value<bool>? acknowledgeByUser,
+      Value<bool>? mediaStored,
       Value<DownloadState>? downloadState,
       Value<bool>? acknowledgeByServer,
       Value<bool>? errorWhileSending,
@@ -1646,6 +1684,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       responseToOtherMessageId:
           responseToOtherMessageId ?? this.responseToOtherMessageId,
       acknowledgeByUser: acknowledgeByUser ?? this.acknowledgeByUser,
+      mediaStored: mediaStored ?? this.mediaStored,
       downloadState: downloadState ?? this.downloadState,
       acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
       errorWhileSending: errorWhileSending ?? this.errorWhileSending,
@@ -1684,6 +1723,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     }
     if (acknowledgeByUser.present) {
       map['acknowledge_by_user'] = Variable<bool>(acknowledgeByUser.value);
+    }
+    if (mediaStored.present) {
+      map['media_stored'] = Variable<bool>(mediaStored.value);
     }
     if (downloadState.present) {
       map['download_state'] = Variable<int>(
@@ -1725,6 +1767,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('responseToMessageId: $responseToMessageId, ')
           ..write('responseToOtherMessageId: $responseToOtherMessageId, ')
           ..write('acknowledgeByUser: $acknowledgeByUser, ')
+          ..write('mediaStored: $mediaStored, ')
           ..write('downloadState: $downloadState, ')
           ..write('acknowledgeByServer: $acknowledgeByServer, ')
           ..write('errorWhileSending: $errorWhileSending, ')
@@ -3868,6 +3911,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<int?> responseToMessageId,
   Value<int?> responseToOtherMessageId,
   Value<bool> acknowledgeByUser,
+  Value<bool> mediaStored,
   Value<DownloadState> downloadState,
   Value<bool> acknowledgeByServer,
   Value<bool> errorWhileSending,
@@ -3886,6 +3930,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<int?> responseToMessageId,
   Value<int?> responseToOtherMessageId,
   Value<bool> acknowledgeByUser,
+  Value<bool> mediaStored,
   Value<DownloadState> downloadState,
   Value<bool> acknowledgeByServer,
   Value<bool> errorWhileSending,
@@ -3950,6 +3995,9 @@ class $$MessagesTableFilterComposer
   ColumnFilters<bool> get acknowledgeByUser => $composableBuilder(
       column: $table.acknowledgeByUser,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get mediaStored => $composableBuilder(
+      column: $table.mediaStored, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<DownloadState, DownloadState, int>
       get downloadState => $composableBuilder(
@@ -4038,6 +4086,9 @@ class $$MessagesTableOrderingComposer
       column: $table.acknowledgeByUser,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get mediaStored => $composableBuilder(
+      column: $table.mediaStored, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get downloadState => $composableBuilder(
       column: $table.downloadState,
       builder: (column) => ColumnOrderings(column));
@@ -4116,6 +4167,9 @@ class $$MessagesTableAnnotationComposer
   GeneratedColumn<bool> get acknowledgeByUser => $composableBuilder(
       column: $table.acknowledgeByUser, builder: (column) => column);
 
+  GeneratedColumn<bool> get mediaStored => $composableBuilder(
+      column: $table.mediaStored, builder: (column) => column);
+
   GeneratedColumnWithTypeConverter<DownloadState, int> get downloadState =>
       $composableBuilder(
           column: $table.downloadState, builder: (column) => column);
@@ -4193,6 +4247,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<int?> responseToMessageId = const Value.absent(),
             Value<int?> responseToOtherMessageId = const Value.absent(),
             Value<bool> acknowledgeByUser = const Value.absent(),
+            Value<bool> mediaStored = const Value.absent(),
             Value<DownloadState> downloadState = const Value.absent(),
             Value<bool> acknowledgeByServer = const Value.absent(),
             Value<bool> errorWhileSending = const Value.absent(),
@@ -4211,6 +4266,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             responseToMessageId: responseToMessageId,
             responseToOtherMessageId: responseToOtherMessageId,
             acknowledgeByUser: acknowledgeByUser,
+            mediaStored: mediaStored,
             downloadState: downloadState,
             acknowledgeByServer: acknowledgeByServer,
             errorWhileSending: errorWhileSending,
@@ -4229,6 +4285,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<int?> responseToMessageId = const Value.absent(),
             Value<int?> responseToOtherMessageId = const Value.absent(),
             Value<bool> acknowledgeByUser = const Value.absent(),
+            Value<bool> mediaStored = const Value.absent(),
             Value<DownloadState> downloadState = const Value.absent(),
             Value<bool> acknowledgeByServer = const Value.absent(),
             Value<bool> errorWhileSending = const Value.absent(),
@@ -4247,6 +4304,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             responseToMessageId: responseToMessageId,
             responseToOtherMessageId: responseToOtherMessageId,
             acknowledgeByUser: acknowledgeByUser,
+            mediaStored: mediaStored,
             downloadState: downloadState,
             acknowledgeByServer: acknowledgeByServer,
             errorWhileSending: errorWhileSending,

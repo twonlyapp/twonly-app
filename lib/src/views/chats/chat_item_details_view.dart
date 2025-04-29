@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/providers/api/media_send.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/better_text.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
@@ -43,6 +44,65 @@ InputDecoration inputTextMessageDeco(BuildContext context) {
   );
 }
 
+class InChatMediaViewer extends StatefulWidget {
+  const InChatMediaViewer({super.key, required this.message});
+
+  final Message message;
+
+  @override
+  State<InChatMediaViewer> createState() => _InChatMediaViewerState();
+}
+
+class _InChatMediaViewerState extends State<InChatMediaViewer> {
+  File? image;
+  File? video;
+
+  @override
+  void initState() {
+    super.initState();
+    initAsync();
+  }
+
+  Future initAsync() async {
+    if (!widget.message.mediaStored) return;
+    bool isSend = widget.message.messageOtherId == null;
+    final basePath = await getMediaFilePath(
+      isSend ? widget.message.mediaUploadId! : widget.message.messageId,
+      isSend ? "send" : "received",
+    );
+    final imagePath = File("$basePath.png");
+    if (imagePath.existsSync()) {
+      setState(() {
+        image = imagePath;
+      });
+    } else {
+      print("Not found: $imagePath");
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        if (image != null) Image.file(image!),
+        if (image == null && video == null)
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: MessageSendStateIcon(
+              [widget.message],
+              mainAxisAlignment: MainAxisAlignment.center,
+            ),
+          )
+      ],
+    );
+  }
+}
+
 class ChatListEntry extends StatelessWidget {
   const ChatListEntry(
       this.message, this.contact, this.lastMessageFromSameUser, this.reactions,
@@ -59,7 +119,7 @@ class ChatListEntry extends StatelessWidget {
       MessageContent? content = MessageContent.fromJson(
           reaction.kind, jsonDecode(reaction.contentJson!));
 
-      if (content is StoredMediaFileContent) {
+      if (content is StoredMediaFileContent || message.mediaStored) {
         children.add(
           Expanded(
             child: Align(
@@ -235,7 +295,6 @@ class ChatListEntry extends StatelessWidget {
           }
         },
         child: Container(
-          padding: EdgeInsets.all(10),
           width: 150,
           decoration: BoxDecoration(
             border: Border.all(
@@ -246,9 +305,9 @@ class ChatListEntry extends StatelessWidget {
           ),
           child: Align(
             alignment: Alignment.centerRight,
-            child: MessageSendStateIcon(
-              [message],
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: InChatMediaViewer(message: message),
             ),
           ),
         ),
@@ -293,7 +352,11 @@ class ChatListEntry extends StatelessWidget {
               children: [
                 child,
                 Positioned(
-                    bottom: 5, left: 5, right: 5, child: getReactionRow()),
+                  bottom: 5,
+                  left: 5,
+                  right: 5,
+                  child: getReactionRow(),
+                ),
               ],
             ),
             getTextResponseColumns(context, !right)
@@ -352,7 +415,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
     Stream<List<Message>> msgStream =
         twonlyDatabase.messagesDao.watchAllMessagesFrom(widget.contact.userId);
     messageSub = msgStream.listen((msgs) {
-      if (!context.mounted) return;
+      // if (!context.mounted) return;
       if (Platform.isAndroid) {
         flutterLocalNotificationsPlugin.cancel(widget.contact.userId);
       } else {
@@ -481,6 +544,7 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                     reactions = reactionsToOtherMessages[msg.messageOtherId!]!;
                   }
                   return ChatListEntry(
+                    key: Key(msg.messageId.toString()),
                     msg,
                     user,
                     lastMessageFromSameUser,

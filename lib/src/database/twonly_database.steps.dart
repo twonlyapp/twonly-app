@@ -1026,11 +1026,228 @@ i1.GeneratedColumn<int> _column_50(String aliasedName) =>
 i1.GeneratedColumn<String> _column_51(String aliasedName) =>
     i1.GeneratedColumn<String>('download_token', aliasedName, false,
         type: i1.DriftSqlType.string);
+
+final class Schema6 extends i0.VersionedSchema {
+  Schema6({required super.database}) : super(version: 6);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    contacts,
+    messages,
+    mediaUploads,
+    mediaDownloads,
+    signalIdentityKeyStores,
+    signalPreKeyStores,
+    signalSenderKeyStores,
+    signalSessionStores,
+  ];
+  late final Shape6 contacts = Shape6(
+      source: i0.VersionedTable(
+        entityName: 'contacts',
+        withoutRowId: false,
+        isStrict: false,
+        tableConstraints: [
+          'PRIMARY KEY(user_id)',
+        ],
+        columns: [
+          _column_0,
+          _column_1,
+          _column_2,
+          _column_3,
+          _column_4,
+          _column_5,
+          _column_6,
+          _column_7,
+          _column_8,
+          _column_9,
+          _column_39,
+          _column_40,
+          _column_10,
+          _column_11,
+          _column_12,
+          _column_13,
+          _column_14,
+          _column_15,
+          _column_16,
+        ],
+        attachedDatabase: database,
+      ),
+      alias: null);
+  late final Shape10 messages = Shape10(
+      source: i0.VersionedTable(
+        entityName: 'messages',
+        withoutRowId: false,
+        isStrict: false,
+        tableConstraints: [],
+        columns: [
+          _column_17,
+          _column_18,
+          _column_19,
+          _column_48,
+          _column_49,
+          _column_20,
+          _column_21,
+          _column_22,
+          _column_52,
+          _column_23,
+          _column_24,
+          _column_25,
+          _column_26,
+          _column_27,
+          _column_28,
+          _column_29,
+          _column_30,
+        ],
+        attachedDatabase: database,
+      ),
+      alias: null);
+  late final Shape7 mediaUploads = Shape7(
+      source: i0.VersionedTable(
+        entityName: 'media_uploads',
+        withoutRowId: false,
+        isStrict: false,
+        tableConstraints: [],
+        columns: [
+          _column_41,
+          _column_42,
+          _column_43,
+          _column_44,
+          _column_45,
+          _column_46,
+          _column_47,
+        ],
+        attachedDatabase: database,
+      ),
+      alias: null);
+  late final Shape9 mediaDownloads = Shape9(
+      source: i0.VersionedTable(
+        entityName: 'media_downloads',
+        withoutRowId: false,
+        isStrict: false,
+        tableConstraints: [],
+        columns: [
+          _column_50,
+          _column_51,
+        ],
+        attachedDatabase: database,
+      ),
+      alias: null);
+  late final Shape2 signalIdentityKeyStores = Shape2(
+      source: i0.VersionedTable(
+        entityName: 'signal_identity_key_stores',
+        withoutRowId: false,
+        isStrict: false,
+        tableConstraints: [
+          'PRIMARY KEY(device_id, name)',
+        ],
+        columns: [
+          _column_31,
+          _column_32,
+          _column_33,
+          _column_10,
+        ],
+        attachedDatabase: database,
+      ),
+      alias: null);
+  late final Shape3 signalPreKeyStores = Shape3(
+      source: i0.VersionedTable(
+        entityName: 'signal_pre_key_stores',
+        withoutRowId: false,
+        isStrict: false,
+        tableConstraints: [
+          'PRIMARY KEY(pre_key_id)',
+        ],
+        columns: [
+          _column_34,
+          _column_35,
+          _column_10,
+        ],
+        attachedDatabase: database,
+      ),
+      alias: null);
+  late final Shape4 signalSenderKeyStores = Shape4(
+      source: i0.VersionedTable(
+        entityName: 'signal_sender_key_stores',
+        withoutRowId: false,
+        isStrict: false,
+        tableConstraints: [
+          'PRIMARY KEY(sender_key_name)',
+        ],
+        columns: [
+          _column_36,
+          _column_37,
+        ],
+        attachedDatabase: database,
+      ),
+      alias: null);
+  late final Shape5 signalSessionStores = Shape5(
+      source: i0.VersionedTable(
+        entityName: 'signal_session_stores',
+        withoutRowId: false,
+        isStrict: false,
+        tableConstraints: [
+          'PRIMARY KEY(device_id, name)',
+        ],
+        columns: [
+          _column_31,
+          _column_32,
+          _column_38,
+          _column_10,
+        ],
+        attachedDatabase: database,
+      ),
+      alias: null);
+}
+
+class Shape10 extends i0.VersionedTable {
+  Shape10({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get contactId =>
+      columnsByName['contact_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get messageId =>
+      columnsByName['message_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get messageOtherId =>
+      columnsByName['message_other_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get mediaUploadId =>
+      columnsByName['media_upload_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get mediaDownloadId =>
+      columnsByName['media_download_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get responseToMessageId =>
+      columnsByName['response_to_message_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get responseToOtherMessageId =>
+      columnsByName['response_to_other_message_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<bool> get acknowledgeByUser =>
+      columnsByName['acknowledge_by_user']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get mediaStored =>
+      columnsByName['media_stored']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<int> get downloadState =>
+      columnsByName['download_state']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<bool> get acknowledgeByServer =>
+      columnsByName['acknowledge_by_server']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get errorWhileSending =>
+      columnsByName['error_while_sending']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<String> get kind =>
+      columnsByName['kind']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get contentJson =>
+      columnsByName['content_json']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<DateTime> get openedAt =>
+      columnsByName['opened_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get sendAt =>
+      columnsByName['send_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<DateTime>;
+}
+
+i1.GeneratedColumn<bool> _column_52(String aliasedName) =>
+    i1.GeneratedColumn<bool>('media_stored', aliasedName, false,
+        type: i1.DriftSqlType.bool,
+        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+            'CHECK ("media_stored" IN (0, 1))'),
+        defaultValue: const CustomExpression('0'));
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
   required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
+  required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -1054,6 +1271,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from4To5(migrator, schema);
         return 5;
+      case 5:
+        final schema = Schema6(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from5To6(migrator, schema);
+        return 6;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -1065,6 +1287,7 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
   required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
+  required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
 }) =>
     i0.VersionedSchema.stepByStepHelper(
         step: migrationSteps(
@@ -1072,4 +1295,5 @@ i1.OnUpgrade stepByStep({
       from2To3: from2To3,
       from3To4: from3To4,
       from4To5: from4To5,
+      from5To6: from5To6,
     ));

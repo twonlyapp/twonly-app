@@ -16,6 +16,7 @@ import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
+import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:video_compress/video_compress.dart';
 
@@ -45,9 +46,9 @@ Future sendMediaFile(
   if (mediaUploadId != null) {
     if (videoFilePath != null) {
       String basePath = await getMediaFilePath(mediaUploadId, "send");
-      await File(videoFilePath.path).rename("$basePath.mp4");
+      await File(videoFilePath.path).rename("$basePath.orginal.mp4");
     }
-    await writeMediaFile(mediaUploadId, "png", imageBytes);
+    await writeMediaFile(mediaUploadId, "orginal.png", imageBytes);
     await handleSingleMediaFile(mediaUploadId);
   }
 }
@@ -168,7 +169,7 @@ Future handleAddToMessageDb(MediaUpload media) async {
 }
 
 Future handleCompressionState(MediaUpload media) async {
-  Uint8List imageBytes = await readMediaFile(media, "png");
+  Uint8List imageBytes = await readMediaFile(media, "orginal.png");
 
   try {
     Uint8List imageBytesCompressed =
@@ -186,18 +187,17 @@ Future handleCompressionState(MediaUpload media) async {
         quality: 60,
       );
     }
-    await writeMediaFile(
-        media.mediaUploadId, "compressed.png", imageBytesCompressed);
+    await writeMediaFile(media.mediaUploadId, "png", imageBytesCompressed);
   } catch (e) {
     Logger("media_send.dart").shout("$e");
-    // as a fall back use the original image
-    await writeMediaFile(media.mediaUploadId, "compressed.png", imageBytes);
+    // as a fall back use the orginal image
+    await writeMediaFile(media.mediaUploadId, "png", imageBytes);
   }
 
   if (media.metadata.isVideo) {
     String basePath = await getMediaFilePath(media.mediaUploadId, "send");
-    File videoOriginalFile = File("$basePath.mp4");
-    File videoCompressedFile = File("$basePath.compressed.mp4");
+    File videoOriginalFile = File("$basePath.orginal.mp4");
+    File videoCompressedFile = File("$basePath.mp4");
 
     MediaInfo? mediaInfo;
 
@@ -235,8 +235,8 @@ Future handleCompressionState(MediaUpload media) async {
   }
 
   // delete non compressed media files
-  await deleteMediaFile(media, "png");
-  await deleteMediaFile(media, "mp4");
+  await deleteMediaFile(media, "orginal.png");
+  await deleteMediaFile(media, "orginal.mp4");
 
   await twonlyDatabase.mediaUploadsDao.updateMediaUpload(
     media.mediaUploadId,
@@ -251,10 +251,10 @@ Future handleCompressionState(MediaUpload media) async {
 Future handleEncryptionState(MediaUpload media) async {
   var state = MediaEncryptionData();
 
-  Uint8List dataToEncrypt = await readMediaFile(media, "compressed.png");
+  Uint8List dataToEncrypt = await readMediaFile(media, "png");
 
   if (media.metadata.isVideo) {
-    Uint8List compressedVideo = await readMediaFile(media, "compressed.mp4");
+    Uint8List compressedVideo = await readMediaFile(media, "mp4");
     dataToEncrypt = combineUint8Lists(dataToEncrypt, compressedVideo);
   }
 
@@ -487,4 +487,10 @@ List<Uint8List> extractUint8Lists(Uint8List combinedList) {
   final list2 = Uint8List.view(combinedList.buffer, 4 + sizeOfList1,
       combinedList.lengthInBytes - 4 - sizeOfList1);
   return [list1, list2];
+}
+
+Future<void> purgeSendMediaFiles() async {
+  final basedir = await getApplicationSupportDirectory();
+  final directory = Directory(join(basedir.path, 'media', "send"));
+  await purgeMediaFiles(directory);
 }

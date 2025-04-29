@@ -100,6 +100,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Future nextMediaOrExit() async {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
+    if (allMediaFiles.isNotEmpty) {
+      try {
+        if (!imageSaved) {
+          await deleteMediaFile(allMediaFiles.first.messageId, "mp4");
+          await deleteMediaFile(allMediaFiles.first.messageId, "png");
+        }
+      } catch (e) {
+        Logger("media_viewer_view.dart").shout("$e");
+      }
+    }
     if (allMediaFiles.isEmpty || allMediaFiles.length == 1) {
       if (context.mounted) {
         Navigator.pop(context);
@@ -268,6 +278,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     setState(() {
       imageSaving = true;
     });
+    await twonlyDatabase.messagesDao.updateMessageByMessageId(
+      allMediaFiles.first.messageId,
+      MessagesCompanion(mediaStored: Value(true)),
+    );
     encryptAndSendMessage(
       null,
       widget.contact.userId,
@@ -281,11 +295,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       ),
       pushKind: PushKind.storedMediaFile,
     );
+    setState(() {
+      imageSaved = true;
+    });
     final res = await saveImageToGallery(imageBytes!);
     if (res == null) {
       setState(() {
         imageSaving = false;
-        imageSaved = true;
       });
     }
   }
@@ -295,7 +311,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (maxShowTime == gMediaShowInfinite)
+        if (maxShowTime == gMediaShowInfinite && videoController == null)
           OutlinedButton(
             style: OutlinedButton.styleFrom(
               iconColor: imageSaved

@@ -108,7 +108,10 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       break;
 
     case MessageKind.ack:
-      final update = MessagesCompanion(acknowledgeByUser: Value(true));
+      final update = MessagesCompanion(
+        acknowledgeByUser: Value(true),
+        errorWhileSending: Value(false),
+      );
       await twonlyDatabase.messagesDao.updateMessageByOtherUser(
         fromUserId,
         message.messageId!,
@@ -150,6 +153,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         }
 
         int? responseToMessageId;
+        int? messageId;
 
         final content = message.content!;
         if (content is TextMessageContent) {
@@ -157,33 +161,40 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         }
         if (content is StoredMediaFileContent) {
           responseToMessageId = content.messageId;
+          await twonlyDatabase.messagesDao.updateMessageByOtherUser(
+            fromUserId,
+            content.messageId,
+            MessagesCompanion(
+              mediaStored: Value(true),
+            ),
+          );
+        } else {
+          String contentJson = jsonEncode(content.toJson());
+          final update = MessagesCompanion(
+            contactId: Value(fromUserId),
+            kind: Value(message.kind),
+            messageOtherId: Value(message.messageId),
+            contentJson: Value(contentJson),
+            acknowledgeByServer: Value(true),
+            acknowledgeByUser: Value(acknowledgeByUser),
+            responseToMessageId: Value(responseToMessageId),
+            openedAt: Value(openedAt),
+            downloadState: Value(message.kind == MessageKind.media
+                ? DownloadState.pending
+                : DownloadState.downloaded),
+            sendAt: Value(message.timestamp),
+          );
+
+          messageId = await twonlyDatabase.messagesDao.insertMessage(
+            update,
+          );
+
+          if (messageId == null) {
+            return client.Response()..error = ErrorCode.InternalError;
+          }
         }
 
-        String contentJson = jsonEncode(content.toJson());
-        final update = MessagesCompanion(
-          contactId: Value(fromUserId),
-          kind: Value(message.kind),
-          messageOtherId: Value(message.messageId),
-          contentJson: Value(contentJson),
-          acknowledgeByServer: Value(true),
-          acknowledgeByUser: Value(acknowledgeByUser),
-          responseToMessageId: Value(responseToMessageId),
-          openedAt: Value(openedAt),
-          downloadState: Value(message.kind == MessageKind.media
-              ? DownloadState.pending
-              : DownloadState.downloaded),
-          sendAt: Value(message.timestamp),
-        );
-
-        final messageId = await twonlyDatabase.messagesDao.insertMessage(
-          update,
-        );
-
-        if (messageId == null) {
-          return client.Response()..error = ErrorCode.InternalError;
-        }
-
-        await encryptAndSendMessage(
+        encryptAndSendMessage(
           message.messageId!,
           fromUserId,
           MessageJson(
@@ -194,7 +205,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           ),
         );
 
-        if (message.kind == MessageKind.media) {
+        if (message.kind == MessageKind.media && messageId != null) {
           twonlyDatabase.contactsDao.incFlameCounter(
             fromUserId,
             true,

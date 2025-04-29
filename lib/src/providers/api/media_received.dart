@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:drift/drift.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -235,7 +237,55 @@ Future<void> writeMediaFile(int mediaId, String type, Uint8List data) async {
 Future<void> deleteMediaFile(int mediaId, String type) async {
   String basePath = await getMediaFilePath(mediaId, "received");
   File file = File("$basePath.$type");
-  if (await file.exists()) {
-    await file.delete();
+  try {
+    if (await file.exists()) {
+      await file.delete();
+    }
+  } catch (e) {
+    Logger("media_received.dart").shout("Erro deleting: $e");
+  }
+}
+
+Future<void> purgeReceivedMediaFiles() async {
+  final basedir = await getApplicationSupportDirectory();
+  final directory = Directory(join(basedir.path, 'media', "received"));
+  await purgeMediaFiles(directory);
+}
+
+Future<void> purgeMediaFiles(Directory directory) async {
+  // Check if the directory exists
+  if (await directory.exists()) {
+    // List all files in the directory
+    List<FileSystemEntity> files = directory.listSync();
+
+    List<int> integerFilenames = [];
+
+    // Iterate over each file
+    for (var file in files) {
+      // Get the filename
+      String filename = file.uri.pathSegments.last;
+
+      // Use a regular expression to extract the integer part
+      final match = RegExp(r'(\d+)').firstMatch(filename);
+      if (match != null) {
+        // Parse the integer and add it to the list
+        int messageId = int.parse(match.group(0)!);
+        Message? message = await twonlyDatabase.messagesDao
+            .getMessageByMessageId(messageId)
+            .getSingleOrNull();
+
+        if ((message == null) ||
+            (message.openedAt != null && !message.mediaStored) ||
+            message.errorWhileSending) {
+          try {
+            file.deleteSync();
+          } catch (e) {
+            Logger("media_received.dart").shout("$e");
+          }
+        }
+      }
+    }
+
+    print(integerFilenames);
   }
 }
