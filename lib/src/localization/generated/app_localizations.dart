@@ -251,6 +251,12 @@ abstract class AppLocalizations {
   /// **'Best friends'**
   String get shareImageBestFriends;
 
+  /// No description provided for @shareImagePinnedContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinnded'**
+  String get shareImagePinnedContacts;
+
   /// No description provided for @shareImagedEditorSendImage.
   ///
   /// In en, this message translates to:
@@ -280,6 +286,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search all contacts'**
   String get shareImageSearchAllContacts;
+
+  /// No description provided for @shareImagedSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get shareImagedSelectAll;
 
   /// No description provided for @startNewChatTitle.
   ///
@@ -413,11 +425,17 @@ abstract class AppLocalizations {
   /// **'Open chat'**
   String get contextMenuOpenChat;
 
-  /// No description provided for @contextMenuSendImage.
+  /// No description provided for @contextMenuPin.
   ///
   /// In en, this message translates to:
-  /// **'Send image'**
-  String get contextMenuSendImage;
+  /// **'Pin'**
+  String get contextMenuPin;
+
+  /// No description provided for @contextMenuUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get contextMenuUnpin;
 
   /// No description provided for @mediaViewerAuthReason.
   ///

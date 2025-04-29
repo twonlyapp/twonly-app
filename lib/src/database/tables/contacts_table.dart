@@ -15,6 +15,7 @@ class Contacts extends Table {
   BoolColumn get blocked => boolean().withDefault(Constant(false))();
   BoolColumn get verified => boolean().withDefault(Constant(false))();
   BoolColumn get archived => boolean().withDefault(Constant(false))();
+  BoolColumn get pinned => boolean().withDefault(Constant(false))();
 
   IntColumn get deleteMessagesAfterXMinutes =>
       integer().withDefault(Constant(60 * 24))();

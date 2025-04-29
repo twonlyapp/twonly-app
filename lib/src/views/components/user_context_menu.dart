@@ -5,7 +5,6 @@ import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:twonly/src/views/contact/contact_verify_view.dart';
 
@@ -74,15 +73,22 @@ class _UserContextMenuState extends State<UserContextMenu> {
           child: const FaIcon(FontAwesomeIcons.solidComments),
         ),
         PieAction(
-          tooltip: Text(context.lang.contextMenuSendImage),
-          onSelect: () {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (context) {
-                return CameraSendToView(widget.contact);
-              },
-            ));
+          tooltip: Text(
+            widget.contact.pinned
+                ? context.lang.contextMenuUnpin
+                : context.lang.contextMenuPin,
+          ),
+          onSelect: () async {
+            final update =
+                ContactsCompanion(pinned: Value(!widget.contact.pinned));
+            if (context.mounted) {
+              await twonlyDatabase.contactsDao
+                  .updateContact(widget.contact.userId, update);
+            }
           },
-          child: const FaIcon(FontAwesomeIcons.camera),
+          child: FaIcon(widget.contact.pinned
+              ? FontAwesomeIcons.thumbtackSlash
+              : FontAwesomeIcons.thumbtack),
         ),
       ],
       child: widget.child,

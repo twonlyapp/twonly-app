@@ -116,24 +116,45 @@ class _ChatListViewState extends State<ChatListView> {
                       .reduce((a, b) => a > b ? a : b);
                 }
 
+                final pinnedUsers = contacts.where((c) => c.pinned);
+
                 return RefreshIndicator(
                   onRefresh: () async {
                     await apiProvider.close(() {});
                     await apiProvider.connect();
                     await Future.delayed(Duration(seconds: 1));
                   },
-                  child: ListView.builder(
-                    restorationId: 'chat_list_view',
-                    itemCount: contacts.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final user = contacts[index];
-                      return UserListItem(
-                        key: ValueKey(user.userId),
-                        user: user,
-                        maxTotalMediaCounter: maxTotalMediaCounter,
-                      );
-                    },
+                  child: ListView(
+                    children: [
+                      ...pinnedUsers.map((contact) {
+                        return UserListItem(
+                          key: ValueKey(contact.userId),
+                          user: contact,
+                          maxTotalMediaCounter: maxTotalMediaCounter,
+                        );
+                      }),
+                      if (pinnedUsers.isNotEmpty) Divider(),
+                      ...contacts.where((c) => !c.pinned).map((contact) {
+                        return UserListItem(
+                          key: ValueKey(contact.userId),
+                          user: contact,
+                          maxTotalMediaCounter: maxTotalMediaCounter,
+                        );
+                      })
+                    ],
                   ),
+                  // child: ListView.builder(
+                  //   restorationId: 'chat_list_view',
+                  //   itemCount: contacts.length,
+                  //   itemBuilder: (BuildContext context, int index) {
+                  //     final user = contacts[index];
+                  //     return UserListItem(
+                  //       key: ValueKey(user.userId),
+                  //       user: user,
+                  //       maxTotalMediaCounter: maxTotalMediaCounter,
+                  //     );
+                  //   },
+                  // ),
                 );
               },
             ),

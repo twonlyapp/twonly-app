@@ -42,6 +42,7 @@ class _ShareImageView extends State<ShareImageView> {
   List<Contact> contacts = [];
   List<Contact> _otherUsers = [];
   List<Contact> _bestFriends = [];
+  List<Contact> _pinnedContacs = [];
   int maxTotalMediaCounter = 0;
   Uint8List? imageBytes;
   bool sendingImage = false;
@@ -105,8 +106,10 @@ class _ShareImageView extends State<ShareImageView> {
     // Separate best friends and other users
     List<Contact> bestFriends = [];
     List<Contact> otherUsers = [];
+    List<Contact> pinnedContacts = users.where((c) => c.pinned).toList();
 
     for (var contact in users) {
+      if (contact.pinned) continue;
       if (!contact.archived &&
           (getFlameCounterFromContact(contact)) > 0 &&
           bestFriends.length < 6) {
@@ -118,6 +121,7 @@ class _ShareImageView extends State<ShareImageView> {
 
     setState(() {
       _bestFriends = bestFriends;
+      _pinnedContacs = pinnedContacts;
       _otherUsers = otherUsers;
     });
   }
@@ -184,6 +188,15 @@ class _ShareImageView extends State<ShareImageView> {
                   ),
                 ),
               ),
+              if (_pinnedContacs.isNotEmpty) const SizedBox(height: 10),
+              BestFriendsSelector(
+                users: _pinnedContacs,
+                selectedUserIds: _selectedUserIds,
+                maxTotalMediaCounter: maxTotalMediaCounter,
+                isRealTwonly: widget.isRealTwonly,
+                updateStatus: updateStatus,
+                title: context.lang.shareImagePinnedContacts,
+              ),
               const SizedBox(height: 10),
               BestFriendsSelector(
                 users: _bestFriends,
@@ -191,6 +204,7 @@ class _ShareImageView extends State<ShareImageView> {
                 maxTotalMediaCounter: maxTotalMediaCounter,
                 isRealTwonly: widget.isRealTwonly,
                 updateStatus: updateStatus,
+                title: context.lang.shareImageBestFriends,
               ),
               const SizedBox(height: 10),
               if (_otherUsers.isNotEmpty)

@@ -87,6 +87,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareImageBestFriends => 'Beste Freunde';
 
   @override
+  String get shareImagePinnedContacts => 'Angeheftet';
+
+  @override
   String get shareImagedEditorSendImage => 'Senden';
 
   @override
@@ -100,6 +103,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shareImageSearchAllContacts => 'Alle Kontakte durchsuchen';
+
+  @override
+  String get shareImagedSelectAll => 'Alle auswählen';
 
   @override
   String get startNewChatTitle => 'Kontakt wählen';
@@ -170,7 +176,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contextMenuOpenChat => 'Chat';
 
   @override
-  String get contextMenuSendImage => 'Bild senden';
+  String get contextMenuPin => 'Anheften';
+
+  @override
+  String get contextMenuUnpin => 'Lösen';
 
   @override
   String get mediaViewerAuthReason => 'Bitte authentifiziere dich, um diesen twonly zu sehen!';

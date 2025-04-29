@@ -97,6 +97,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
       defaultValue: Constant(false));
+  static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
+  @override
+  late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
+      'pinned', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
+      defaultValue: Constant(false));
   static const VerificationMeta _deleteMessagesAfterXMinutesMeta =
       const VerificationMeta('deleteMessagesAfterXMinutes');
   @override
@@ -169,6 +178,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         blocked,
         verified,
         archived,
+        pinned,
         deleteMessagesAfterXMinutes,
         createdAt,
         totalMediaCounter,
@@ -237,6 +247,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     if (data.containsKey('archived')) {
       context.handle(_archivedMeta,
           archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
+    }
+    if (data.containsKey('pinned')) {
+      context.handle(_pinnedMeta,
+          pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta));
     }
     if (data.containsKey('delete_messages_after_x_minutes')) {
       context.handle(
@@ -316,6 +330,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.bool, data['${effectivePrefix}verified'])!,
       archived: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
+      pinned: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
       deleteMessagesAfterXMinutes: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}delete_messages_after_x_minutes'])!,
@@ -357,6 +373,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool blocked;
   final bool verified;
   final bool archived;
+  final bool pinned;
   final int deleteMessagesAfterXMinutes;
   final DateTime createdAt;
   final int totalMediaCounter;
@@ -377,6 +394,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       required this.blocked,
       required this.verified,
       required this.archived,
+      required this.pinned,
       required this.deleteMessagesAfterXMinutes,
       required this.createdAt,
       required this.totalMediaCounter,
@@ -405,6 +423,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['blocked'] = Variable<bool>(blocked);
     map['verified'] = Variable<bool>(verified);
     map['archived'] = Variable<bool>(archived);
+    map['pinned'] = Variable<bool>(pinned);
     map['delete_messages_after_x_minutes'] =
         Variable<int>(deleteMessagesAfterXMinutes);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -443,6 +462,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       blocked: Value(blocked),
       verified: Value(verified),
       archived: Value(archived),
+      pinned: Value(pinned),
       deleteMessagesAfterXMinutes: Value(deleteMessagesAfterXMinutes),
       createdAt: Value(createdAt),
       totalMediaCounter: Value(totalMediaCounter),
@@ -475,6 +495,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       blocked: serializer.fromJson<bool>(json['blocked']),
       verified: serializer.fromJson<bool>(json['verified']),
       archived: serializer.fromJson<bool>(json['archived']),
+      pinned: serializer.fromJson<bool>(json['pinned']),
       deleteMessagesAfterXMinutes:
           serializer.fromJson<int>(json['deleteMessagesAfterXMinutes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -504,6 +525,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'blocked': serializer.toJson<bool>(blocked),
       'verified': serializer.toJson<bool>(verified),
       'archived': serializer.toJson<bool>(archived),
+      'pinned': serializer.toJson<bool>(pinned),
       'deleteMessagesAfterXMinutes':
           serializer.toJson<int>(deleteMessagesAfterXMinutes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -529,6 +551,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           bool? blocked,
           bool? verified,
           bool? archived,
+          bool? pinned,
           int? deleteMessagesAfterXMinutes,
           DateTime? createdAt,
           int? totalMediaCounter,
@@ -549,6 +572,7 @@ class Contact extends DataClass implements Insertable<Contact> {
         blocked: blocked ?? this.blocked,
         verified: verified ?? this.verified,
         archived: archived ?? this.archived,
+        pinned: pinned ?? this.pinned,
         deleteMessagesAfterXMinutes:
             deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
         createdAt: createdAt ?? this.createdAt,
@@ -581,6 +605,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       blocked: data.blocked.present ? data.blocked.value : this.blocked,
       verified: data.verified.present ? data.verified.value : this.verified,
       archived: data.archived.present ? data.archived.value : this.archived,
+      pinned: data.pinned.present ? data.pinned.value : this.pinned,
       deleteMessagesAfterXMinutes: data.deleteMessagesAfterXMinutes.present
           ? data.deleteMessagesAfterXMinutes.value
           : this.deleteMessagesAfterXMinutes,
@@ -620,6 +645,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
           ..write('archived: $archived, ')
+          ..write('pinned: $pinned, ')
           ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
           ..write('createdAt: $createdAt, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
@@ -645,6 +671,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       blocked,
       verified,
       archived,
+      pinned,
       deleteMessagesAfterXMinutes,
       createdAt,
       totalMediaCounter,
@@ -668,6 +695,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.blocked == this.blocked &&
           other.verified == this.verified &&
           other.archived == this.archived &&
+          other.pinned == this.pinned &&
           other.deleteMessagesAfterXMinutes ==
               this.deleteMessagesAfterXMinutes &&
           other.createdAt == this.createdAt &&
@@ -691,6 +719,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> blocked;
   final Value<bool> verified;
   final Value<bool> archived;
+  final Value<bool> pinned;
   final Value<int> deleteMessagesAfterXMinutes;
   final Value<DateTime> createdAt;
   final Value<int> totalMediaCounter;
@@ -711,6 +740,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.blocked = const Value.absent(),
     this.verified = const Value.absent(),
     this.archived = const Value.absent(),
+    this.pinned = const Value.absent(),
     this.deleteMessagesAfterXMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
@@ -732,6 +762,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.blocked = const Value.absent(),
     this.verified = const Value.absent(),
     this.archived = const Value.absent(),
+    this.pinned = const Value.absent(),
     this.deleteMessagesAfterXMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
@@ -753,6 +784,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? blocked,
     Expression<bool>? verified,
     Expression<bool>? archived,
+    Expression<bool>? pinned,
     Expression<int>? deleteMessagesAfterXMinutes,
     Expression<DateTime>? createdAt,
     Expression<int>? totalMediaCounter,
@@ -774,6 +806,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (blocked != null) 'blocked': blocked,
       if (verified != null) 'verified': verified,
       if (archived != null) 'archived': archived,
+      if (pinned != null) 'pinned': pinned,
       if (deleteMessagesAfterXMinutes != null)
         'delete_messages_after_x_minutes': deleteMessagesAfterXMinutes,
       if (createdAt != null) 'created_at': createdAt,
@@ -801,6 +834,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<bool>? blocked,
       Value<bool>? verified,
       Value<bool>? archived,
+      Value<bool>? pinned,
       Value<int>? deleteMessagesAfterXMinutes,
       Value<DateTime>? createdAt,
       Value<int>? totalMediaCounter,
@@ -821,6 +855,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       blocked: blocked ?? this.blocked,
       verified: verified ?? this.verified,
       archived: archived ?? this.archived,
+      pinned: pinned ?? this.pinned,
       deleteMessagesAfterXMinutes:
           deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
       createdAt: createdAt ?? this.createdAt,
@@ -870,6 +905,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (archived.present) {
       map['archived'] = Variable<bool>(archived.value);
     }
+    if (pinned.present) {
+      map['pinned'] = Variable<bool>(pinned.value);
+    }
     if (deleteMessagesAfterXMinutes.present) {
       map['delete_messages_after_x_minutes'] =
           Variable<int>(deleteMessagesAfterXMinutes.value);
@@ -915,6 +953,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
           ..write('archived: $archived, ')
+          ..write('pinned: $pinned, ')
           ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
           ..write('createdAt: $createdAt, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
@@ -3445,6 +3484,7 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   Value<bool> blocked,
   Value<bool> verified,
   Value<bool> archived,
+  Value<bool> pinned,
   Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
   Value<int> totalMediaCounter,
@@ -3466,6 +3506,7 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<bool> blocked,
   Value<bool> verified,
   Value<bool> archived,
+  Value<bool> pinned,
   Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
   Value<int> totalMediaCounter,
@@ -3538,6 +3579,9 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get archived => $composableBuilder(
       column: $table.archived, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get pinned => $composableBuilder(
+      column: $table.pinned, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get deleteMessagesAfterXMinutes => $composableBuilder(
       column: $table.deleteMessagesAfterXMinutes,
@@ -3634,6 +3678,9 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<bool> get archived => $composableBuilder(
       column: $table.archived, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get pinned => $composableBuilder(
+      column: $table.pinned, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get deleteMessagesAfterXMinutes => $composableBuilder(
       column: $table.deleteMessagesAfterXMinutes,
       builder: (column) => ColumnOrderings(column));
@@ -3707,6 +3754,9 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get archived =>
       $composableBuilder(column: $table.archived, builder: (column) => column);
+
+  GeneratedColumn<bool> get pinned =>
+      $composableBuilder(column: $table.pinned, builder: (column) => column);
 
   GeneratedColumn<int> get deleteMessagesAfterXMinutes => $composableBuilder(
       column: $table.deleteMessagesAfterXMinutes, builder: (column) => column);
@@ -3788,6 +3838,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
             Value<bool> archived = const Value.absent(),
+            Value<bool> pinned = const Value.absent(),
             Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
@@ -3809,6 +3860,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             blocked: blocked,
             verified: verified,
             archived: archived,
+            pinned: pinned,
             deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
             totalMediaCounter: totalMediaCounter,
@@ -3830,6 +3882,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
             Value<bool> archived = const Value.absent(),
+            Value<bool> pinned = const Value.absent(),
             Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
@@ -3851,6 +3904,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             blocked: blocked,
             verified: verified,
             archived: archived,
+            pinned: pinned,
             deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
             totalMediaCounter: totalMediaCounter,

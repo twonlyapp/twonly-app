@@ -15,15 +15,16 @@ class BestFriendsSelector extends StatelessWidget {
   final HashSet<int> selectedUserIds;
   final int maxTotalMediaCounter;
   final bool isRealTwonly;
+  final String title;
 
-  const BestFriendsSelector({
-    super.key,
-    required this.users,
-    required this.maxTotalMediaCounter,
-    required this.isRealTwonly,
-    required this.updateStatus,
-    required this.selectedUserIds,
-  });
+  const BestFriendsSelector(
+      {super.key,
+      required this.users,
+      required this.maxTotalMediaCounter,
+      required this.isRealTwonly,
+      required this.updateStatus,
+      required this.selectedUserIds,
+      required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +37,7 @@ class BestFriendsSelector extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: HeadLineComponent(context.lang.shareImageBestFriends),
+              child: HeadLineComponent(title),
             ),
             if (!isRealTwonly)
               GestureDetector(
@@ -57,7 +58,8 @@ class BestFriendsSelector extends StatelessWidget {
                     ],
                     borderRadius: BorderRadius.circular(8.0),
                   ),
-                  child: Text("Alle auswählen", style: TextStyle(fontSize: 10)),
+                  child: Text(context.lang.shareImagedSelectAll,
+                      style: TextStyle(fontSize: 10)),
                 ),
               ),
           ],
