@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/image_editor/data/data.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 
@@ -10,6 +11,44 @@ class Emojis extends StatefulWidget {
 }
 
 class _EmojisState extends State<Emojis> {
+  List<String> lastUsed = emojis;
+
+  @override
+  void initState() {
+    super.initState();
+    initAsync();
+  }
+
+  Future initAsync() async {
+    final user = await getUser();
+    if (user == null) return;
+    setState(() {
+      lastUsed = user.lastUsedEditorEmojis ?? [];
+      lastUsed.addAll(emojis);
+    });
+  }
+
+  Future selectEmojis(String emoji) async {
+    final user = await getUser();
+    if (user == null) return;
+    if (user.lastUsedEditorEmojis == null) {
+      user.lastUsedEditorEmojis = [emoji];
+    } else {
+      user.lastUsedEditorEmojis!.insert(0, emoji);
+      if (user.lastUsedEditorEmojis!.length > 12) {
+        user.lastUsedEditorEmojis = user.lastUsedEditorEmojis!.sublist(0, 12);
+      }
+    }
+    await updateUser(user);
+    if (!context.mounted) return;
+    Navigator.pop(
+      context,
+      EmojiLayerData(
+        text: emoji,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -43,16 +82,11 @@ class _EmojisState extends State<Emojis> {
                   mainAxisSpacing: 0.0,
                   maxCrossAxisExtent: 60.0,
                 ),
-                children: emojis.map((String emoji) {
+                children: lastUsed.map((String emoji) {
                   return GridTile(
                       child: GestureDetector(
                     onTap: () {
-                      Navigator.pop(
-                        context,
-                        EmojiLayerData(
-                          text: emoji,
-                        ),
-                      );
+                      selectEmojis(emoji);
                     },
                     child: Container(
                       padding: EdgeInsets.zero,

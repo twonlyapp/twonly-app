@@ -24,6 +24,7 @@ class UserData {
   ThemeMode? themeMode;
   Map<String, List<String>>? autoDownloadOptions;
   bool? storeMediaFilesInGallery;
+  List<String>? lastUsedEditorEmojis;
 
   final int userId;
 

@@ -25,7 +25,10 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
         (k, e) =>
             MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
       )
-      ..storeMediaFilesInGallery = json['storeMediaFilesInGallery'] as bool?;
+      ..storeMediaFilesInGallery = json['storeMediaFilesInGallery'] as bool?
+      ..lastUsedEditorEmojis = (json['lastUsedEditorEmojis'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList();
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'username': instance.username,
@@ -39,6 +42,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'themeMode': _$ThemeModeEnumMap[instance.themeMode],
       'autoDownloadOptions': instance.autoDownloadOptions,
       'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
+      'lastUsedEditorEmojis': instance.lastUsedEditorEmojis,
       'userId': instance.userId,
     };
 
