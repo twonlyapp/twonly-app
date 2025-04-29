@@ -443,6 +443,12 @@ abstract class AppLocalizations {
   /// **'Please authenticate to see this twonly!'**
   String get mediaViewerAuthReason;
 
+  /// No description provided for @mediaViewerTwonlyTapToOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open your twonly!'**
+  String get mediaViewerTwonlyTapToOpen;
+
   /// No description provided for @messageSendState_Received.
   ///
   /// In en, this message translates to:

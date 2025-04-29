@@ -187,11 +187,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               return;
             }
             if (maxShowTime == gMediaShowInfinite) {
-              maxShowTime = 4;
-            } else if (maxShowTime >= 22) {
-              maxShowTime = gMediaShowInfinite;
+              maxShowTime = 1;
+            } else if (maxShowTime == 1) {
+              maxShowTime = 5;
+            } else if (maxShowTime == 5) {
+              maxShowTime = 20;
             } else {
-              maxShowTime = maxShowTime + 8;
+              maxShowTime = gMediaShowInfinite;
             }
             setState(() {});
             var user = await getUser();

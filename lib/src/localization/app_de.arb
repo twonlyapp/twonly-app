@@ -73,6 +73,7 @@
     "contextMenuPin": "Anheften",
     "contextMenuUnpin": "Lösen",
     "mediaViewerAuthReason": "Bitte authentifiziere dich, um diesen twonly zu sehen!",
+    "mediaViewerTwonlyTapToOpen": "Tippe um den twonly zu öffnen!",
     "messageSendState_Received": "Empfangen",
     "messageSendState_Opened": "Geöffnet",
     "messageSendState_Send": "Gesendet",

@@ -53,6 +53,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   bool imageSaved = false;
   bool imageSaving = false;
+  bool isMounted = true;
 
   StreamSubscription<Message?>? downloadStateListener;
 
@@ -268,6 +269,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _subscription.cancel();
     downloadStateListener?.cancel();
     videoController?.dispose();
+    isMounted = false;
     super.dispose();
   }
 
@@ -390,11 +392,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         IconButton.outlined(
           icon: FaIcon(FontAwesomeIcons.camera),
           onPressed: () async {
+            nextMediaTimer?.cancel();
+            progressTimer?.cancel();
             await Navigator.push(context, MaterialPageRoute(
               builder: (context) {
                 return CameraSendToView(widget.contact);
               },
             ));
+            if (isMounted && maxShowTime != gMediaShowInfinite) {
+              nextMediaOrExit();
+            }
           },
           style: ButtonStyle(
             padding: WidgetStateProperty.all<EdgeInsets>(
@@ -481,7 +488,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                       ),
                       Container(
                         padding: EdgeInsets.only(bottom: 200),
-                        child: Text("Tap to open your twonly!"),
+                        child: Text(context.lang.mediaViewerTwonlyTapToOpen),
                       ),
                     ],
                   ),
@@ -658,13 +665,29 @@ class _ReactionButtonsState extends State<ReactionButtons> {
       child: AnimatedOpacity(
         opacity: widget.show ? 1.0 : 0.0, // Fade in/out
         duration: Duration(milliseconds: 150),
-        child: Column(
-          children: [
-            if (secondRowEmojis.isNotEmpty)
+        child: Container(
+          color: Colors.transparent,
+          child: Column(
+            children: [
+              if (secondRowEmojis.isNotEmpty)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: secondRowEmojis
+                      .map((emoji) => EmojiReactionWidget(
+                            userId: widget.userId,
+                            responseToMessageId: widget.responseToMessageId,
+                            hide: widget.hide,
+                            show: widget.show,
+                            emoji: emoji,
+                          ))
+                      .toList(),
+                ),
+              if (secondRowEmojis.isNotEmpty) SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: secondRowEmojis
+                children: firstRowEmojis
                     .map((emoji) => EmojiReactionWidget(
                           userId: widget.userId,
                           responseToMessageId: widget.responseToMessageId,
@@ -674,21 +697,8 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                         ))
                     .toList(),
               ),
-            if (secondRowEmojis.isNotEmpty) SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: firstRowEmojis
-                  .map((emoji) => EmojiReactionWidget(
-                        userId: widget.userId,
-                        responseToMessageId: widget.responseToMessageId,
-                        hide: widget.hide,
-                        show: widget.show,
-                        emoji: emoji,
-                      ))
-                  .toList(),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

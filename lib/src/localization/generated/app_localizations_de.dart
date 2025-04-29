@@ -185,6 +185,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get mediaViewerAuthReason => 'Bitte authentifiziere dich, um diesen twonly zu sehen!';
 
   @override
+  String get mediaViewerTwonlyTapToOpen => 'Tippe um den twonly zu öffnen!';
+
+  @override
   String get messageSendState_Received => 'Empfangen';
 
   @override

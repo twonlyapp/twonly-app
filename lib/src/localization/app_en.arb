@@ -120,6 +120,8 @@
   "@contextMenuUnpin": {},
   "mediaViewerAuthReason": "Please authenticate to see this twonly!",
   "@mediaViewerAuthReason": {},
+  "mediaViewerTwonlyTapToOpen": "Tap to open your twonly!",
+  "@mediaViewerTwonlyTapToOpen": {},
   "messageSendState_Received": "Received",
   "@messageSendState_Received": {},
   "messageSendState_Opened": "Opened",
