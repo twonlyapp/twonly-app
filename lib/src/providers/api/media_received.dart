@@ -178,7 +178,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     if (content.isVideo) {
       final splited = extractUint8Lists(imageBytes);
       imageBytes = splited[0];
-      await writeMediaFile(media.messageId, "video", splited[1]);
+      await writeMediaFile(media.messageId, "mp4", splited[1]);
     }
 
     await writeMediaFile(media.messageId, "image", imageBytes);
@@ -212,7 +212,7 @@ Future<Uint8List?> getImageBytes(int mediaId) async {
 
 Future<File?> getVideoPath(int mediaId) async {
   String basePath = await getMediaFilePath(mediaId, "received");
-  return File("$basePath.video");
+  return File("$basePath.mp4");
 }
 
 /// --- helper functions ---

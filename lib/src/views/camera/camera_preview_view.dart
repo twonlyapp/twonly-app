@@ -414,6 +414,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         onLongPressEnd: (a) {
           stopVideoRecording();
         },
+        onPanEnd: (a) {
+          stopVideoRecording();
+        },
         onPanUpdate: onPanUpdate,
         child: Stack(
           children: [

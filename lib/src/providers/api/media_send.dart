@@ -170,6 +170,7 @@ Future handleCompressionState(MediaUpload media) async {
   try {
     Uint8List imageBytesCompressed =
         await FlutterImageCompress.compressWithList(
+      format: CompressFormat.png,
       imageBytes,
       quality: 90,
     );
@@ -177,6 +178,7 @@ Future handleCompressionState(MediaUpload media) async {
     if (imageBytesCompressed.length >= 1 * 1000 * 1000) {
       // if the media file is over 1MB compress it with 60%
       imageBytesCompressed = await FlutterImageCompress.compressWithList(
+        format: CompressFormat.png,
         imageBytes,
         quality: 60,
       );

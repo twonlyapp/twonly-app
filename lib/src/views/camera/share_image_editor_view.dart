@@ -27,6 +27,8 @@ List<Layer> layers = [];
 List<Layer> undoLayers = [];
 List<Layer> removedLayers = [];
 
+const gMediaShowInfinite = 999999;
+
 class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView(
       {super.key, this.imageBytes, this.sendTo, this.videoFilePath});
@@ -40,7 +42,7 @@ class ShareImageEditorView extends StatefulWidget {
 class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _isRealTwonly = false;
   bool videoWithAudio = true;
-  int maxShowTime = 999999;
+  int maxShowTime = gMediaShowInfinite;
   String? sendNextMediaToUserName;
   double tabDownPostion = 0;
   bool sendingOrLoadingImage = true;
@@ -58,6 +60,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (widget.imageBytes != null) {
       loadImage(widget.imageBytes!);
     } else if (widget.videoFilePath != null) {
+      layers.add(FilterLayerData());
       setState(() {
         sendingOrLoadingImage = false;
       });
@@ -161,7 +164,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 : maxShowTime.toString(),
         child: ActionButton(
           (widget.videoFilePath != null)
-              ? maxShowTime == 1
+              ? maxShowTime == 999999
                   ? Icons.repeat_rounded
                   : Icons.repeat_one_rounded
               : Icons.timer_outlined,
@@ -169,14 +172,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           onPressed: () async {
             if (widget.videoFilePath != null) {
               setState(() {
-                maxShowTime = (maxShowTime + 1) % 2;
+                if (maxShowTime == gMediaShowInfinite) {
+                  maxShowTime = 0;
+                } else {
+                  maxShowTime = gMediaShowInfinite;
+                }
               });
               return;
             }
-            if (maxShowTime == 999999) {
+            if (maxShowTime == gMediaShowInfinite) {
               maxShowTime = 4;
             } else if (maxShowTime >= 22) {
-              maxShowTime = 999999;
+              maxShowTime = gMediaShowInfinite;
             } else {
               maxShowTime = maxShowTime + 8;
             }

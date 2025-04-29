@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -183,17 +184,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       final vidoePath = await getVideoPath(current.messageId);
       if (vidoePath != null) {
         videoController = VideoPlayerController.file(File(vidoePath.path));
-        videoController?.setLooping(content.maxShowTime == 1);
-        if (content.maxShowTime == 0) {
-          videoController?.addListener(() {
-            if (videoController?.value.position ==
-                videoController?.value.duration) {
-              nextMediaOrExit();
-            }
-          });
-        }
+        videoController?.setLooping(content.maxShowTime == gMediaShowInfinite);
         videoController?.initialize().then((_) {
           videoController!.play();
+          if (content.maxShowTime != gMediaShowInfinite) {
+            videoController?.addListener(() {
+              if (videoController?.value.position ==
+                  videoController?.value.duration) {
+                nextMediaOrExit();
+              }
+            });
+          }
           setState(() {});
         }).catchError((Object error) {
           Logger("media_viewer_view.dart").shout(error);
@@ -219,11 +220,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         canBeSeenUntil = DateTime.now().add(
           Duration(seconds: content.maxShowTime),
         );
-        maxShowTime = content.maxShowTime;
         startTimer();
       }
     }
     setState(() {
+      maxShowTime = content.maxShowTime;
       isDownloading = false;
     });
   }
@@ -291,7 +292,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (maxShowTime == 999999)
+        if (maxShowTime == gMediaShowInfinite)
           OutlinedButton(
             style: OutlinedButton.styleFrom(
               iconColor: imageSaved
@@ -424,8 +425,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                                 duration: const Duration(milliseconds: 200),
                                 child: frame != null
                                     ? child
-                                    : SizedBox(
+                                    : Container(
                                         height: 60,
+                                        color: Colors.transparent,
                                         width: 60,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
