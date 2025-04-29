@@ -56,6 +56,7 @@ class InChatMediaViewer extends StatefulWidget {
 class _InChatMediaViewerState extends State<InChatMediaViewer> {
   File? image;
   File? video;
+  bool isMounted = true;
 
   @override
   void initState() {
@@ -70,6 +71,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
       isSend ? widget.message.mediaUploadId! : widget.message.messageId,
       isSend ? "send" : "received",
     );
+    if (!isMounted) return;
     final imagePath = File("$basePath.png");
     if (imagePath.existsSync()) {
       setState(() {
@@ -83,6 +85,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   @override
   void dispose() {
     super.dispose();
+    isMounted = false;
   }
 
   @override
