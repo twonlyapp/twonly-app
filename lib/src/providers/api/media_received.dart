@@ -274,6 +274,12 @@ Future<Uint8List?> readMediaFile(int mediaId, String type) async {
   return await file.readAsBytes();
 }
 
+Future<bool> existsMediaFile(int mediaId, String type) async {
+  String basePath = await getMediaFilePath(mediaId, "received");
+  File file = File("$basePath.$type");
+  return await file.exists();
+}
+
 Future<void> writeMediaFile(int mediaId, String type, Uint8List data) async {
   String basePath = await getMediaFilePath(mediaId, "received");
   File file = File("$basePath.$type");

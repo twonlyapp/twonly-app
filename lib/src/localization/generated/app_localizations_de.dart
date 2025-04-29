@@ -206,7 +206,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messageSendState_Loading => 'Herunterladen';
 
   @override
-  String get messageStoredInGalery => 'In Gallerie gespeichert';
+  String get messageStoredInGalery => 'Gespeichert';
+
+  @override
+  String get messageReopened => 'Erneut geöffnet';
 
   @override
   String get imageEditorDrawOk => 'Zeichnung machen';

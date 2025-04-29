@@ -130,7 +130,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
     default:
       if (message.kind != MessageKind.textMessage &&
           message.kind != MessageKind.media &&
-          message.kind != MessageKind.storedMediaFile) {
+          message.kind != MessageKind.storedMediaFile &&
+          message.kind != MessageKind.reopenedMedia) {
         Logger("handleServerMessages")
             .shout("Got unknown MessageKind $message");
       } else if (message.content == null || message.messageId == null) {
@@ -147,7 +148,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         bool acknowledgeByUser = false;
         DateTime? openedAt;
 
-        if (message.kind == MessageKind.storedMediaFile) {
+        if (message.kind == MessageKind.storedMediaFile ||
+            message.kind == MessageKind.reopenedMedia) {
           acknowledgeByUser = true;
           openedAt = DateTime.now();
         }
@@ -158,6 +160,9 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         final content = message.content!;
         if (content is TextMessageContent) {
           responseToMessageId = content.responseToMessageId;
+        }
+        if (content is ReopenedMediaFileContent) {
+          responseToMessageId = content.messageId;
         }
         if (content is StoredMediaFileContent) {
           responseToMessageId = content.messageId;

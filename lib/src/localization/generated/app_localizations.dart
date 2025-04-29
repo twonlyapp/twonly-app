@@ -491,6 +491,12 @@ abstract class AppLocalizations {
   /// **'Stored in gallery'**
   String get messageStoredInGalery;
 
+  /// No description provided for @messageReopened.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-opened'**
+  String get messageReopened;
+
   /// No description provided for @imageEditorDrawOk.
   ///
   /// In en, this message translates to:

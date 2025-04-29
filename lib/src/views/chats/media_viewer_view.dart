@@ -103,7 +103,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     progressTimer?.cancel();
     if (allMediaFiles.isNotEmpty) {
       try {
-        if (!imageSaved) {
+        if (!imageSaved && maxShowTime != gMediaShowInfinite) {
           await deleteMediaFile(allMediaFiles.first.messageId, "mp4");
           await deleteMediaFile(allMediaFiles.first.messageId, "png");
         }

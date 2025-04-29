@@ -209,6 +209,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageStoredInGalery => 'Stored in gallery';
 
   @override
+  String get messageReopened => 'Re-opened';
+
+  @override
   String get imageEditorDrawOk => 'Take drawing';
 
   @override

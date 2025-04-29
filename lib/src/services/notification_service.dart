@@ -163,7 +163,8 @@ enum PushKind {
   contactRequest,
   acceptRequest,
   storedMediaFile,
-  testNotification
+  testNotification,
+  reopenedMedia
 }
 
 extension PushKindExtension on PushKind {
@@ -532,7 +533,8 @@ String getPushNotificationTextWithoutUserId(PushKind pushKind) {
       PushKind.contactRequest.name: "Du hast eine Kontaktanfrage erhalten.",
       PushKind.acceptRequest.name: "Deine Kontaktanfrage wurde angenommen.",
       PushKind.storedMediaFile.name: "Dein Bild wurde gespeichert.",
-      PushKind.reaction.name: "Du hast eine Reaktion auf dein Bild erhalten."
+      PushKind.reaction.name: "Du hast eine Reaktion auf dein Bild erhalten.",
+      PushKind.reopenedMedia.name: "Dein Bild wurde erneut geöffnet."
     };
   } else {
     pushNotificationText = {
@@ -543,7 +545,8 @@ String getPushNotificationTextWithoutUserId(PushKind pushKind) {
       PushKind.contactRequest.name: "You got a contact request.",
       PushKind.acceptRequest.name: "Your contact request has been accepted.",
       PushKind.storedMediaFile.name: "Your image has been saved.",
-      PushKind.reaction.name: "You got a reaction to your image."
+      PushKind.reaction.name: "You got a reaction to your image.",
+      PushKind.reopenedMedia.name: "Your image was reopened."
     };
   }
   return pushNotificationText[pushKind.name] ?? "";
@@ -563,7 +566,8 @@ String getPushNotificationText(PushKind pushKind) {
       PushKind.contactRequest.name: "möchte sich mir dir vernetzen.",
       PushKind.acceptRequest.name: "ist jetzt mit dir vernetzt.",
       PushKind.storedMediaFile.name: "hat dein Bild gespeichert.",
-      PushKind.reaction.name: "hat auf dein Bild reagiert."
+      PushKind.reaction.name: "hat auf dein Bild reagiert.",
+      PushKind.reopenedMedia.name: "hat dein Bild erneut geöffnet."
     };
   } else {
     pushNotificationText = {
@@ -574,7 +578,8 @@ String getPushNotificationText(PushKind pushKind) {
       PushKind.contactRequest.name: "wants to connect with you.",
       PushKind.acceptRequest.name: "is now connected with you.",
       PushKind.storedMediaFile.name: "has stored your image.",
-      PushKind.reaction.name: "has reacted to your image."
+      PushKind.reaction.name: "has reacted to your image.",
+      PushKind.reopenedMedia.name: "has reopened your image."
     };
   }
   return pushNotificationText[pushKind.name] ?? "";

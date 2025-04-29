@@ -136,6 +136,8 @@
   "@messageSendState_Loading": {},
   "messageStoredInGalery": "Stored in gallery",
   "@messageStoredInGalery": {},
+  "messageReopened": "Re-opened",
+  "@messageReopened": {},
   "imageEditorDrawOk": "Take drawing",
   "@imageEditorDrawOk": {},
   "settingsTitle": "Settings",

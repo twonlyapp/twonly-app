@@ -32,7 +32,7 @@ class NotificationService: UNNotificationServiceExtension {
                 bestAttemptContent.body = data!.body;
                 bestAttemptContent.threadIdentifier = String(format: "%d", data!.notificationId)
             } else {
-                bestAttemptContent.title = "\(bestAttemptContent.title) [failed to decrypt]"
+                bestAttemptContent.title = "\(bestAttemptContent.title) [10]"
             }
             
             contentHandler(bestAttemptContent)
@@ -60,6 +60,7 @@ enum PushKind: String, Codable {
     case storedMediaFile
     case reaction
     case testNotification
+    case reopenedMedia
 }
 
 import CryptoKit
@@ -105,8 +106,6 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
 
     // Handle the push notification based on the pushKind
     if let pushKind = pushKind {
-        
-        let bestAttemptContent = UNMutableNotificationContent()
         
         if pushKind == .testNotification {
             return ("Test Notification", "This is a test notification.", 0)
@@ -180,6 +179,8 @@ func determinePushKind(from message: String) -> PushKind? {
         return .reaction
     } else if message.contains("testNotification") {
         return .testNotification
+    } else if message.contains("reopenedMedia") {
+        return .reopenedMedia
     } else {
         return nil // Unknown PushKind
     }
@@ -319,7 +320,8 @@ func getPushNotificationText(pushKind: PushKind) -> String {
             .contactRequest: "möchte sich mit dir vernetzen.",
             .acceptRequest: "ist jetzt mit dir vernetzt.",
             .storedMediaFile: "hat dein Bild gespeichert.",
-            .reaction: "hat auf dein Bild reagiert."
+            .reaction: "hat auf dein Bild reagiert.",
+            .reopenedMedia: "Dein Bild wurde erneut geöffnet."
         ]
     } else { // Default to English
         pushNotificationText = [
@@ -330,7 +332,8 @@ func getPushNotificationText(pushKind: PushKind) -> String {
             .contactRequest: "wants to connect with you.",
             .acceptRequest: "is now connected with you.",
             .storedMediaFile: "has stored your image.",
-            .reaction: "has reacted to your image."
+            .reaction: "has reacted to your image.",
+            .reopenedMedia: "Your image was reopened."
         ]
     }
 
@@ -353,7 +356,8 @@ func getPushNotificationTextWithoutUserId(pushKind: PushKind) -> String {
             .contactRequest: "Du hast eine Kontaktanfrage erhalten.",
             .acceptRequest: "Deine Kontaktanfrage wurde angenommen.",
             .storedMediaFile: "Dein Bild wurde gespeichert.",
-            .reaction: "Du hast eine Reaktion auf dein Bild erhalten."
+            .reaction: "Du hast eine Reaktion auf dein Bild erhalten.",
+            .reopenedMedia: "hat dein Bild erneut geöffnet."
         ]
     } else { // Default to English
         pushNotificationText = [
@@ -364,7 +368,8 @@ func getPushNotificationTextWithoutUserId(pushKind: PushKind) -> String {
             .contactRequest: "You got a contact request.",
             .acceptRequest: "Your contact request has been accepted.",
             .storedMediaFile: "Your image has been saved.",
-            .reaction: "You got a reaction to your image."
+            .reaction: "You got a reaction to your image.",
+            .reopenedMedia: "has reopened your image."
         ]
     }
 

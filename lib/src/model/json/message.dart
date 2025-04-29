@@ -19,7 +19,7 @@ Color getMessageColorFromType(MessageContent content, BuildContext context) {
         }
       }
     } else {
-      return Colors.black;
+      return (isDarkMode(context)) ? Colors.white : Colors.black;
     }
   }
   return color;
@@ -85,6 +85,8 @@ class MessageContent {
         return StoredMediaFileContent.fromJson(json);
       case MessageKind.pushKey:
         return PushKeyContent.fromJson(json);
+      case MessageKind.reopenedMedia:
+        return ReopenedMediaFileContent.fromJson(json);
       default:
         return null;
     }
@@ -180,6 +182,20 @@ class StoredMediaFileContent extends MessageContent {
 
   static StoredMediaFileContent fromJson(Map json) {
     return StoredMediaFileContent(messageId: json['messageId']);
+  }
+
+  @override
+  Map toJson() {
+    return {'messageId': messageId};
+  }
+}
+
+class ReopenedMediaFileContent extends MessageContent {
+  int messageId;
+  ReopenedMediaFileContent({required this.messageId});
+
+  static ReopenedMediaFileContent fromJson(Map json) {
+    return ReopenedMediaFileContent(messageId: json['messageId']);
   }
 
   @override

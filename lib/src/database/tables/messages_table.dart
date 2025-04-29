@@ -4,6 +4,7 @@ import 'package:twonly/src/database/tables/contacts_table.dart';
 enum MessageKind {
   textMessage,
   storedMediaFile,
+  reopenedMedia,
   media,
   contactRequest,
   profileChange,

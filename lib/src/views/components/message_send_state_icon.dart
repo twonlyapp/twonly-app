@@ -144,6 +144,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         text = context.lang.messageStoredInGalery;
       }
 
+      if (message.kind == MessageKind.reopenedMedia) {
+        icon = FaIcon(FontAwesomeIcons.repeat, size: 12, color: color);
+        text = context.lang.messageReopened;
+      }
+
       if (message.errorWhileSending) {
         icon =
             FaIcon(FontAwesomeIcons.circleExclamation, size: 12, color: color);

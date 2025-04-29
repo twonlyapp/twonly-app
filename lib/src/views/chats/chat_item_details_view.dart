@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -118,11 +119,35 @@ class ChatListEntry extends StatelessWidget {
   Widget getReactionRow() {
     List<Widget> children = [];
     bool hasOneTextReaction = false;
+    bool hasOneStored = false;
+    bool hasOneReopened = false;
     for (final reaction in reactions) {
       MessageContent? content = MessageContent.fromJson(
           reaction.kind, jsonDecode(reaction.contentJson!));
 
-      if (content is StoredMediaFileContent || message.mediaStored) {
+      // if (content is StoredMediaFileContent || message.mediaStored) {
+      //   if (hasOneStored) continue;
+      //   hasOneStored = true;
+      //   children.add(
+      //     Expanded(
+      //       child: Align(
+      //         alignment: Alignment.bottomRight,
+      //         child: Padding(
+      //           padding: EdgeInsets.only(right: 3),
+      //           child: FaIcon(
+      //             FontAwesomeIcons.floppyDisk,
+      //             size: 12,
+      //             color: Colors.blue,
+      //           ),
+      //         ),
+      //       ),
+      //     ),
+      //   );
+      // }
+
+      if (content is ReopenedMediaFileContent) {
+        if (hasOneReopened) continue;
+        hasOneReopened = true;
         children.add(
           Expanded(
             child: Align(
@@ -130,16 +155,15 @@ class ChatListEntry extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.only(right: 3),
                 child: FaIcon(
-                  FontAwesomeIcons.floppyDisk,
+                  FontAwesomeIcons.repeat,
                   size: 12,
-                  color: Colors.blue,
+                  color: Colors.yellow,
                 ),
               ),
             ),
           ),
         );
       }
-
       // only show one reaction
       if (hasOneTextReaction) continue;
 
@@ -282,6 +306,30 @@ class ChatListEntry extends StatelessWidget {
       );
 
       child = GestureDetector(
+        onDoubleTap: () async {
+          if (message.openedAt == null && message.messageOtherId != null) {
+            return;
+          }
+          if (await existsMediaFile(message.messageId, "png")) {
+            encryptAndSendMessage(
+              null,
+              contact.userId,
+              MessageJson(
+                kind: MessageKind.reopenedMedia,
+                messageId: message.messageId,
+                content: ReopenedMediaFileContent(
+                  messageId: message.messageOtherId!,
+                ),
+                timestamp: DateTime.now(),
+              ),
+              pushKind: PushKind.reopenedMedia,
+            );
+            await twonlyDatabase.messagesDao.updateMessageByMessageId(
+              message.messageId,
+              MessagesCompanion(openedAt: Value(null)),
+            );
+          }
+        },
         onTap: () {
           if (message.kind == MessageKind.media) {
             if (message.downloadState == DownloadState.downloaded &&
