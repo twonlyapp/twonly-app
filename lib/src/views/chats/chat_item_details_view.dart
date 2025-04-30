@@ -307,7 +307,8 @@ class ChatListEntry extends StatelessWidget {
 
       child = GestureDetector(
         onDoubleTap: () async {
-          if (message.openedAt == null && message.messageOtherId != null) {
+          if (message.openedAt == null && message.messageOtherId != null ||
+              message.mediaStored) {
             return;
           }
           if (await existsMediaFile(message.messageId, "png")) {

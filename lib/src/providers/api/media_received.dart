@@ -322,9 +322,13 @@ Future<void> purgeMediaFiles(Directory directory) async {
       if (match != null) {
         // Parse the integer and add it to the list
         int messageId = int.parse(match.group(0)!);
-        Message? message = await twonlyDatabase.messagesDao
-            .getMessageByMessageId(messageId)
-            .getSingleOrNull();
+        Message? message = (directory.path.endsWith("received"))
+            ? await twonlyDatabase.messagesDao
+                .getMessageByMediaUploadId(messageId)
+                .getSingleOrNull()
+            : await twonlyDatabase.messagesDao
+                .getMessageByMessageId(messageId)
+                .getSingleOrNull();
 
         if ((message == null) ||
             (message.openedAt != null && !message.mediaStored) ||
