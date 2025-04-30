@@ -36,11 +36,13 @@ class ShareImageEditorView extends StatefulWidget {
     this.sendTo,
     this.videoFilePath,
     required this.mirrorVideo,
+    required this.useHighQuality,
   });
   final Future<Uint8List?>? imageBytes;
   final XFile? videoFilePath;
   final Contact? sendTo;
   final bool mirrorVideo;
+  final bool useHighQuality;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -318,7 +320,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         x.showCustomButtons = false;
       }
       setState(() {});
-      image = await screenshotController.capture(pixelRatio: pixelRatio);
+      image = await screenshotController.capture(
+          pixelRatio: (widget.useHighQuality) ? pixelRatio : 1);
       for (var x in layers) {
         x.showCustomButtons = true;
       }

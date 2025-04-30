@@ -185,39 +185,40 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       sharePreviewIsShown = true;
     });
 
-    if (useHighQuality && !isFront) {
-      if (Platform.isIOS) {
-        await controller?.pausePreview();
-        if (!context.mounted) return;
+    // if (useHighQuality && !isFront) {
+    //   if (Platform.isIOS) {
+    //     await controller?.pausePreview();
+    //     if (!context.mounted) return;
+    //   }
+    //   try {
+    //     // Take the picture
+    //     final XFile? picture = await controller?.takePicture();
+    //     if (picture == null) return;
+    //     imageBytes = loadAndDeletePictureFromFile(picture);
+    //   } catch (e) {
+    //     _showCameraException(e);
+    //     return;
+    //   }
+    // } else {
+    if (isFlashOn) {
+      if (isFront) {
+        setState(() {
+          showSelfieFlash = true;
+        });
+      } else {
+        controller?.setFlashMode(FlashMode.torch);
       }
-      try {
-        // Take the picture
-        final XFile? picture = await controller?.takePicture();
-        if (picture == null) return;
-        imageBytes = loadAndDeletePictureFromFile(picture);
-      } catch (e) {
-        _showCameraException(e);
-        return;
-      }
-    } else {
-      if (isFlashOn) {
-        if (isFront) {
-          setState(() {
-            showSelfieFlash = true;
-          });
-        } else {
-          controller?.setFlashMode(FlashMode.torch);
-        }
-        await Future.delayed(Duration(milliseconds: 1000));
-      }
-
-      await controller?.pausePreview();
-      if (!context.mounted) return;
-
-      controller?.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
-      imageBytes = screenshotController.capture(
-          pixelRatio: MediaQuery.of(context).devicePixelRatio);
+      await Future.delayed(Duration(milliseconds: 1000));
     }
+
+    await controller?.pausePreview();
+    if (!context.mounted) return;
+
+    controller?.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
+    imageBytes = screenshotController.capture(
+        pixelRatio:
+            (useHighQuality) ? MediaQuery.of(context).devicePixelRatio : 1);
+    // }
 
     if (await pushMediaEditor(imageBytes, null)) {
       return;
@@ -235,6 +236,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           imageBytes: imageBytes,
           sendTo: widget.sendTo,
           mirrorVideo: isFront && Platform.isAndroid,
+          useHighQuality: useHighQuality,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;
