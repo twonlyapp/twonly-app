@@ -91,7 +91,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
   }
 
-  Future selectCamera(int sCameraId, {bool init = false}) async {
+  Future selectCamera(int sCameraId,
+      {bool init = false, bool enableAudio = false}) async {
     if (sCameraId >= gCameras.length) return;
     if (init) {
       for (; sCameraId < gCameras.length; sCameraId++) {
@@ -106,9 +107,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     controller = CameraController(
       gCameras[sCameraId],
       ResolutionPreset.high,
-      enableAudio: await Permission.microphone.isGranted && videoWithAudio,
+      enableAudio: enableAudio,
     );
-    controller?.initialize().then((_) async {
+    await controller?.initialize().then((_) async {
       if (!mounted) {
         return;
       }
@@ -306,6 +307,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   Future startVideoRecording() async {
     if (controller != null && controller!.value.isRecordingVideo) return;
+    if (hasAudioPermission && videoWithAudio) {
+      await selectCamera(cameraId,
+          enableAudio: await Permission.microphone.isGranted && videoWithAudio);
+    }
 
     try {
       await controller?.startVideoRecording();
