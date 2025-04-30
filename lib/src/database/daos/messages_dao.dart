@@ -186,9 +186,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
   SingleOrNullSelectable<Message> getMessageByMessageId(int messageId) {
     return select(messages)..where((t) => t.messageId.equals(messageId));
   }
-  
-  SingleOrNullSelectable<Message> getMessageByMediaUploadId(int mediaUploadId{
-    return select(messages)..where((t) => t.mediaUploadId.equals(mediaUploadId));
+
+  SingleOrNullSelectable<Message> getMessageByMediaUploadId(int mediaUploadId) {
+    return select(messages)
+      ..where((t) => t.mediaUploadId.equals(mediaUploadId));
   }
 
   SingleOrNullSelectable<Message> getMessageByOtherMessageId(
