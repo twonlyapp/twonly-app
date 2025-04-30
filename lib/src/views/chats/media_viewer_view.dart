@@ -99,6 +99,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future nextMediaOrExit() async {
+    if (!isMounted) return;
+    videoController?.dispose();
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
     if (allMediaFiles.isNotEmpty) {
@@ -112,7 +114,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
     }
     if (allMediaFiles.isEmpty || allMediaFiles.length == 1) {
-      if (context.mounted) {
+      if (isMounted) {
         Navigator.pop(context);
       }
     } else {
@@ -122,6 +124,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future loadCurrentMediaFile({bool showTwonly = false}) async {
+    if (!isMounted) return;
     await _noScreenshot.screenshotOff();
     if (!context.mounted || allMediaFiles.isEmpty) return nextMediaOrExit();
 
@@ -394,6 +397,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           onPressed: () async {
             nextMediaTimer?.cancel();
             progressTimer?.cancel();
+            videoController?.pause();
             await Navigator.push(context, MaterialPageRoute(
               builder: (context) {
                 return CameraSendToView(widget.contact);
@@ -401,6 +405,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             ));
             if (isMounted && maxShowTime != gMediaShowInfinite) {
               nextMediaOrExit();
+            } else {
+              videoController?.play();
             }
           },
           style: ButtonStyle(

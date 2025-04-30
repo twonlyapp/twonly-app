@@ -288,6 +288,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   Future pushShareImageView() async {
     Future<Uint8List?> imageBytes = getMergedImage();
+    videoController?.pause();
     bool? wasSend = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -304,6 +305,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (wasSend != null && wasSend && context.mounted) {
       // ignore: use_build_context_synchronously
       Navigator.pop(context, true);
+    } else {
+      videoController?.play();
     }
   }
 

@@ -18,6 +18,7 @@ import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/permissions_view.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/home_view.dart';
 
 class CameraPreviewView extends StatefulWidget {
   const CameraPreviewView({super.key, this.sendTo});
@@ -245,9 +246,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (!context.mounted) return true;
     // shouldReturn is null when the user used the back button
     if (shoudReturn != null && shoudReturn) {
-      if (!context.mounted) return true;
       // ignore: use_build_context_synchronously
-      Navigator.pop(context);
+      if (widget.sendTo == null) {
+        globalUpdateOfHomeViewPageIndex(1);
+      } else {
+        Navigator.pop(context);
+      }
       return true;
     }
     selectCamera(cameraId);
@@ -381,9 +385,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   @override
   Widget build(BuildContext context) {
     if (cameraId >= gCameras.length || controller == null) {
-      return Center(
-        child: Text("No camera found."),
-      );
+      return Container();
     }
     return MediaViewSizing(
       child: GestureDetector(

@@ -14,7 +14,6 @@ import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/home_view.dart';
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView(
@@ -257,12 +256,13 @@ class _ShareImageView extends State<ShareImageView> {
                     widget.mirrorVideo,
                   );
                   if (context.mounted) {
-                    if (widget.preselectedUser != null) {
-                      Navigator.pop(context, true);
-                    } else {
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      globalUpdateOfHomeViewPageIndex(1);
-                    }
+                    Navigator.pop(context, true);
+                    // if (widget.preselectedUser != null) {
+                    //   Navigator.pop(context, true);
+                    // } else {
+                    // Navigator.popUntil(context, (route) => route.isFirst, true);
+                    // globalUpdateOfHomeViewPageIndex(1);
+                    // }
                   }
                 },
                 style: ButtonStyle(
