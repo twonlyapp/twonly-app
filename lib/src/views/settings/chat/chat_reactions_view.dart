@@ -79,7 +79,10 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
                 child: SizedBox(
                   width: 40,
                   height: 40,
-                  child: EmojiAnimation(emoji: emoji),
+                  child: EmojiAnimation(
+                    emoji: emoji,
+                    repeat: selectedEmojis.contains(emoji),
+                  ),
                 ),
               ),
             ),

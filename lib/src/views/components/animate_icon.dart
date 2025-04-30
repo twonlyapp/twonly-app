@@ -18,6 +18,7 @@ bool isEmoji(String character) {
 
 class EmojiAnimation extends StatelessWidget {
   final String emoji;
+  final bool repeat;
   static final Map<String, String> animatedIcons = {
     "❤": "red_heart.json",
     "😂": "joy.json",
@@ -388,7 +389,7 @@ class EmojiAnimation extends StatelessWidget {
     "🏴": "black-flag.json",
   };
 
-  const EmojiAnimation({super.key, required this.emoji});
+  const EmojiAnimation({super.key, required this.emoji, this.repeat = true});
 
   static bool supported(String emoji) {
     if (emoji.length > 4) return false;
@@ -401,7 +402,10 @@ class EmojiAnimation extends StatelessWidget {
 
     // Check if the emoji has a corresponding Lottie animation
     if (animatedIcons.containsKey(emoji)) {
-      return Lottie.asset("assets/animated_icons/${animatedIcons[emoji]}");
+      return Lottie.asset(
+        "assets/animated_icons/${animatedIcons[emoji]}",
+        repeat: repeat,
+      );
     } else if (isEmoji(emoji)) {
       return Text(
         emoji,
@@ -421,6 +425,7 @@ class EmojiAnimationFlying extends StatelessWidget {
   final Duration duration;
   final double startPosition;
   final int size;
+  final bool repeat;
 
   const EmojiAnimationFlying({
     super.key,
@@ -428,6 +433,7 @@ class EmojiAnimationFlying extends StatelessWidget {
     required this.duration,
     required this.startPosition,
     required this.size,
+    this.repeat = true,
   });
 
   @override
