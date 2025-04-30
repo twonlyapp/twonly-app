@@ -242,8 +242,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       ),
     );
     if (!context.mounted) return true;
-    if (shoudReturn == null) return true;
-    if (shoudReturn) {
+    // shouldReturn is null when the user used the back button
+    if (shoudReturn != null && shoudReturn) {
       if (!context.mounted) return true;
       // ignore: use_build_context_synchronously
       Navigator.pop(context);
