@@ -21,14 +21,14 @@ import 'package:twonly/src/utils/storage.dart';
 
 Map<int, DateTime> downloadStartedForMediaReceived = {};
 
-Future tryDownloadAllMediaFiles() async {
+Future tryDownloadAllMediaFiles({bool force = false}) async {
   // this is called when websocket is newly connected, so allow all downloads to be restarted.
   downloadStartedForMediaReceived = {};
   List<Message> messages =
       await twonlyDatabase.messagesDao.getAllMessagesPendingDownloading();
 
   for (Message message in messages) {
-    await startDownloadMedia(message, false);
+    await startDownloadMedia(message, force);
   }
 }
 

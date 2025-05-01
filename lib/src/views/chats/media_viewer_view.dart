@@ -85,7 +85,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           // to not modify the first message
           // If the message exists, replace it
           allMediaFiles[index] = msg;
-        } else {
+        } else if (index == -1) {
           // If the message does not exist, add it
           allMediaFiles.add(msg);
         }
@@ -143,6 +143,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     });
 
     flutterLocalNotificationsPlugin.cancel(allMediaFiles.first.contactId);
+
     if (allMediaFiles.first.downloadState != DownloadState.downloaded) {
       setState(() {
         isDownloading = true;
@@ -158,6 +159,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           if (updated.downloadState == DownloadState.downloaded) {
             downloadStateListener?.cancel();
             await handleNextDownloadedMedia(updated, showTwonly);
+            // start downloading all the other possibile missing media files.
+            tryDownloadAllMediaFiles(force: true);
           }
         }
       });
