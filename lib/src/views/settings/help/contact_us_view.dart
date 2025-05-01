@@ -73,32 +73,30 @@ class _ContactUsState extends State<ContactUsView> {
               ),
               maxLines: 10,
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  launchUrl(Uri.parse("https://twonly.eu/support"));
-                },
-                child: Text(
-                  'Have you read our FAQ yet?',
-                  style: TextStyle(
-                    color: Colors.blue,
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      launchUrl(Uri.parse("https://twonly.eu/support"));
+                    },
+                    child: Text(
+                      'Have you read our FAQ yet?',
+                      style: TextStyle(
+                        color: Colors.blue,
+                      ),
+                    ),
                   ),
-                ),
+                  ElevatedButton(
+                    onPressed: _submitFeedback,
+                    child: Text('Submit'),
+                  ),
+                ],
               ),
-              ElevatedButton(
-                onPressed: _submitFeedback,
-                child: Text('Submit'),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
