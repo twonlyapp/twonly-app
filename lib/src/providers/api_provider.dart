@@ -208,6 +208,7 @@ class ApiProvider {
 
     Result res = asResult(await _waitForResponse(seq));
     if (res.isError) {
+      Logger("api_provider").shout("Got error from SERVER: ${res.error}");
       if (res.error == ErrorCode.SessionNotAuthenticated) {
         isAuthenticated = false;
         if (authenticated) {
