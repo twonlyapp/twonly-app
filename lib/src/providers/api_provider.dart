@@ -163,7 +163,7 @@ class ApiProvider {
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
     final startTime = DateTime.now();
 
-    final timeout = Duration(seconds: 5);
+    final timeout = Duration(seconds: 10);
 
     while (true) {
       if (messagesV0[seq] != null) {

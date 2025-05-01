@@ -321,17 +321,20 @@ Future<void> purgeMediaFiles(Directory directory) async {
       final match = RegExp(r'(\d+)').firstMatch(filename);
       if (match != null) {
         // Parse the integer and add it to the list
-        int messageId = int.parse(match.group(0)!);
+        int fileId = int.parse(match.group(0)!);
+
         Message? message = (directory.path.endsWith("send"))
             ? await twonlyDatabase.messagesDao
-                .getMessageByMediaUploadId(messageId)
+                .getMessageByMediaUploadId(fileId)
                 .getSingleOrNull()
             : await twonlyDatabase.messagesDao
-                .getMessageByMessageId(messageId)
+                .getMessageByMessageId(fileId)
                 .getSingleOrNull();
 
         if ((message == null) ||
-            (message.openedAt != null && !message.mediaStored) ||
+            (message.openedAt != null &&
+                !message.mediaStored &&
+                message.acknowledgeByServer == true) ||
             message.errorWhileSending) {
           try {
             file.deleteSync();
