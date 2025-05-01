@@ -72,8 +72,6 @@ Future initFCMService() async {
   }
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    Logger("firebase-notification")
-        .finer('Got a message while in the foreground!');
     handleRemoteMessage(message);
   });
 }
@@ -82,7 +80,7 @@ Future initFCMService() async {
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   setupLogger();
   Logger("firebase-background")
-      .shout('Handling a background message: ${message.messageId}');
+      .info('Handling a background message: ${message.messageId}');
   twonlyDatabase = TwonlyDatabase();
   await handleRemoteMessage(message);
 

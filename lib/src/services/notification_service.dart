@@ -274,7 +274,8 @@ Future<PushKind?> tryDecryptMessage(
     final plaintextString = utf8.decode(plaintext);
     return PushKindExtension.fromString(plaintextString);
   } catch (e) {
-    Logger("notification-service").shout(e);
+    // this error is allowed to happen...
+    // Logger("notification-service").shout(e);
     return null;
   }
 }
