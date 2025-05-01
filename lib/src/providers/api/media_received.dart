@@ -322,8 +322,6 @@ Future<void> purgeMediaFiles(Directory directory) async {
     // List all files in the directory
     List<FileSystemEntity> files = directory.listSync();
 
-    List<int> integerFilenames = [];
-
     // Iterate over each file
     for (var file in files) {
       // Get the filename
@@ -356,7 +354,5 @@ Future<void> purgeMediaFiles(Directory directory) async {
         }
       }
     }
-
-    print(integerFilenames);
   }
 }
