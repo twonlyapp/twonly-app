@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class DiagnosticsView extends StatefulWidget {
@@ -52,14 +53,27 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       TextButton(
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: logText));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Log copied to clipboard!')),
+                        onPressed: () async {
+                          final directory =
+                              await getApplicationSupportDirectory();
+                          final logFile = XFile('${directory.path}/app.log');
+
+                          final params = ShareParams(
+                            text: 'Debug log',
+                            files: [logFile],
                           );
+
+                          final result = await SharePlus.instance.share(params);
+
+                          if (result.status != ShareResultStatus.success) {
+                            Clipboard.setData(ClipboardData(text: logText));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Log copied to clipboard!')),
+                            );
+                          }
                         },
-                        child: const Text('Copy All Text'),
+                        child: const Text('Share debug log'),
                       ),
                       TextButton(
                         onPressed: _scrollToBottom,
