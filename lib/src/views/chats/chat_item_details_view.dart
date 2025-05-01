@@ -157,7 +157,7 @@ class ChatListEntry extends StatelessWidget {
                 child: FaIcon(
                   FontAwesomeIcons.repeat,
                   size: 12,
-                  color: Colors.yellow,
+                  color: Colors.white,
                 ),
               ),
             ),
