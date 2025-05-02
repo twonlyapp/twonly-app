@@ -333,24 +333,23 @@ Future<void> purgeMediaFiles(Directory directory) async {
         // Parse the integer and add it to the list
         int fileId = int.parse(match.group(0)!);
 
-        Message? message = (directory.path.endsWith("send"))
-            ? await twonlyDatabase.messagesDao
-                .getMessageByMediaUploadId(fileId)
-                .getSingleOrNull()
-            : await twonlyDatabase.messagesDao
-                .getMessageByMessageId(fileId)
-                .getSingleOrNull();
+        try {
+          Message? message = (directory.path.endsWith("send"))
+              ? await twonlyDatabase.messagesDao
+                  .getMessageByMediaUploadId(fileId)
+              : await twonlyDatabase.messagesDao
+                  .getMessageByMessageId(fileId)
+                  .getSingleOrNull();
 
-        if ((message == null) ||
-            (message.openedAt != null &&
-                !message.mediaStored &&
-                message.acknowledgeByServer == true) ||
-            message.errorWhileSending) {
-          try {
+          if ((message == null) ||
+              (message.openedAt != null &&
+                  !message.mediaStored &&
+                  message.acknowledgeByServer == true) ||
+              message.errorWhileSending) {
             file.deleteSync();
-          } catch (e) {
-            Logger("media_received.dart").shout("$e");
           }
+        } catch (e) {
+          Logger("media_received.dart").shout("$e");
         }
       }
     }
