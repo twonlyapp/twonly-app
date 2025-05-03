@@ -187,18 +187,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     return select(messages)..where((t) => t.messageId.equals(messageId));
   }
 
-  Future<Message?> getMessageByMediaUploadId(int mediaUploadId) async {
-    List<Message> msgs = await (select(messages)
+  Future<List<Message>> getMessagesByMediaUploadId(int mediaUploadId) async {
+    return await (select(messages)
           ..where((t) => t.mediaUploadId.equals(mediaUploadId)))
         .get();
-    if (msgs.isEmpty) return null;
-    if (msgs.length == 1) return msgs[0];
-
-    /// when there are multiple message ids with this id delete all but the last one
-    for (var i = 0; i < (msgs.length - 1); i++) {
-      await deleteMessageById(msgs[i].messageId);
-    }
-    return msgs[msgs.length - 1];
   }
 
   SingleOrNullSelectable<Message> getMessageByOtherMessageId(

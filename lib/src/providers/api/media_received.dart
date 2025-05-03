@@ -334,19 +334,31 @@ Future<void> purgeMediaFiles(Directory directory) async {
         int fileId = int.parse(match.group(0)!);
 
         try {
-          Message? message = (directory.path.endsWith("send"))
-              ? await twonlyDatabase.messagesDao
-                  .getMessageByMediaUploadId(fileId)
-              : await twonlyDatabase.messagesDao
-                  .getMessageByMessageId(fileId)
-                  .getSingleOrNull();
+          if (directory.path.endsWith("send")) {
+            List<Message> messages = await twonlyDatabase.messagesDao
+                .getMessagesByMediaUploadId(fileId);
+            bool canBeDeleted = true;
 
-          if ((message == null) ||
-              (message.openedAt != null &&
-                  !message.mediaStored &&
-                  message.acknowledgeByServer == true) ||
-              message.errorWhileSending) {
-            file.deleteSync();
+            for (final message in messages) {
+              if ((message.openedAt == null && !message.errorWhileSending) ||
+                  message.mediaStored) {
+                canBeDeleted = false;
+              }
+            }
+            if (canBeDeleted) {
+              file.deleteSync();
+            }
+          } else {
+            Message? message = await twonlyDatabase.messagesDao
+                .getMessageByMessageId(fileId)
+                .getSingleOrNull();
+            if ((message == null) ||
+                (message.openedAt != null &&
+                    !message.mediaStored &&
+                    message.acknowledgeByServer == true) ||
+                message.errorWhileSending) {
+              file.deleteSync();
+            }
           }
         } catch (e) {
           Logger("media_received.dart").shout("$e");
