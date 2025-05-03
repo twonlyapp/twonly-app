@@ -75,6 +75,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
             (t) =>
                 t.downloadState.equals(DownloadState.downloaded.index).not() &
                 t.messageOtherId.isNotNull() &
+                t.errorWhileSending.equals(false) &
                 t.kind.equals(MessageKind.media.name),
           ))
         .get();
