@@ -335,6 +335,18 @@ abstract class AppLocalizations {
   /// **'Search username'**
   String get searchUsernameTitle;
 
+  /// No description provided for @searchUserNamePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'To protect you and other twonly users from spam and abuse, it is not possible to search for other people in preview mode. Other users can find you and their requests will be displayed here!'**
+  String get searchUserNamePreview;
+
+  /// No description provided for @selectSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select subscription'**
+  String get selectSubscription;
+
   /// No description provided for @searchUserNamePending.
   ///
   /// In en, this message translates to:

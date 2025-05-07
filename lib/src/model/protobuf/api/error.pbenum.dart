@@ -37,6 +37,11 @@ class ErrorCode extends $pb.ProtobufEnum {
   static const ErrorCode ApiEndpointNotFound = ErrorCode._(1018, _omitEnumNames ? '' : 'ApiEndpointNotFound');
   static const ErrorCode AuthTokenNotValid = ErrorCode._(1019, _omitEnumNames ? '' : 'AuthTokenNotValid');
   static const ErrorCode InvalidPreKeys = ErrorCode._(1020, _omitEnumNames ? '' : 'InvalidPreKeys');
+  static const ErrorCode VoucherInValid = ErrorCode._(1021, _omitEnumNames ? '' : 'VoucherInValid');
+  static const ErrorCode PlanNotAllowed = ErrorCode._(1022, _omitEnumNames ? '' : 'PlanNotAllowed');
+  static const ErrorCode PlanLimitReached = ErrorCode._(1023, _omitEnumNames ? '' : 'PlanLimitReached');
+  static const ErrorCode NotEnoughCredit = ErrorCode._(1024, _omitEnumNames ? '' : 'NotEnoughCredit');
+  static const ErrorCode PlanDowngrade = ErrorCode._(1025, _omitEnumNames ? '' : 'PlanDowngrade');
 
   static const $core.List<ErrorCode> values = <ErrorCode> [
     Unknown,
@@ -62,6 +67,11 @@ class ErrorCode extends $pb.ProtobufEnum {
     ApiEndpointNotFound,
     AuthTokenNotValid,
     InvalidPreKeys,
+    VoucherInValid,
+    PlanNotAllowed,
+    PlanLimitReached,
+    NotEnoughCredit,
+    PlanDowngrade,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue = $pb.ProtobufEnum.initByValue(values);

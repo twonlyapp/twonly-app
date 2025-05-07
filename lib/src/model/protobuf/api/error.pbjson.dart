@@ -40,6 +40,11 @@ const ErrorCode$json = {
     {'1': 'ApiEndpointNotFound', '2': 1018},
     {'1': 'AuthTokenNotValid', '2': 1019},
     {'1': 'InvalidPreKeys', '2': 1020},
+    {'1': 'VoucherInValid', '2': 1021},
+    {'1': 'PlanNotAllowed', '2': 1022},
+    {'1': 'PlanLimitReached', '2': 1023},
+    {'1': 'NotEnoughCredit', '2': 1024},
+    {'1': 'PlanDowngrade', '2': 1025},
   ],
 };
 
@@ -55,5 +60,7 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'V0EPUHEhoKFUludmFsaWRHb29nbGVGY21Ub2tlbhD2BxIZChRVcGxvYWRUb2tlbklzQmxvY2tl'
     'ZBD3BxIaChVVcGxvYWRDaGVja3N1bUludmFsaWQQ+AcSGQoUSW52YWxpZERvd25sb2FkVG9rZW'
     '4Q+QcSGAoTQXBpRW5kcG9pbnROb3RGb3VuZBD6BxIWChFBdXRoVG9rZW5Ob3RWYWxpZBD7BxIT'
-    'Cg5JbnZhbGlkUHJlS2V5cxD8Bw==');
+    'Cg5JbnZhbGlkUHJlS2V5cxD8BxITCg5Wb3VjaGVySW5WYWxpZBD9BxITCg5QbGFuTm90QWxsb3'
+    'dlZBD+BxIVChBQbGFuTGltaXRSZWFjaGVkEP8HEhQKD05vdEVub3VnaENyZWRpdBCACBISCg1Q'
+    'bGFuRG93bmdyYWRlEIEI');
 

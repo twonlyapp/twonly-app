@@ -11,10 +11,12 @@ import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/app.dart';
+import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
     as server;
+import 'package:twonly/src/model/protobuf/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/media_received.dart';
@@ -242,6 +244,15 @@ class ApiProvider {
       final result = await sendRequestSync(req, authenticated: false);
 
       if (result.isSuccess) {
+        server.Response_Ok ok = result.value;
+        if (ok.hasAuthenticated()) {
+          server.Response_Authenticated authenticated = ok.authenticated;
+          UserData? user = await getUser();
+          if (user != null) {
+            user.subscriptionPlan = authenticated.plan;
+            await updateUser(user);
+          }
+        }
         log.info("Authenticated using api_auth_token");
         onAuthenticated();
         return true;
@@ -392,6 +403,20 @@ class ApiProvider {
     var appData = ApplicationData()..getuserbyusername = get;
     var req = createClientToServerFromApplicationData(appData);
     return await sendRequestSync(req);
+  }
+
+  Future<Response_PlanBallance?> getPlanBallance() async {
+    var get = ApplicationData_GetCurrentPlanInfos();
+    var appData = ApplicationData()..getcurrentplaninfos = get;
+    var req = createClientToServerFromApplicationData(appData);
+    Result res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      server.Response_Ok ok = res.value;
+      if (ok.hasPlanballance()) {
+        return ok.planballance;
+      }
+    }
+    return null;
   }
 
   Future<Result> updateFCMToken(String googleFcm) async {

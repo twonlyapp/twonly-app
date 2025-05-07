@@ -21,6 +21,7 @@ import 'package:twonly/src/views/chats/start_new_chat.dart';
 import 'package:twonly/src/views/settings/settings_main_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -31,10 +32,34 @@ class ChatListView extends StatefulWidget {
 class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) {
-    bool isConnected = context.watch<ConnectionChangeProvider>().isConnected;
+    bool isConnected = context.watch<CustomChangeProvider>().isConnected;
     return Scaffold(
       appBar: AppBar(
-        title: Text("twonly"),
+        title: Row(children: [
+          Text("twonly "),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return SubscriptionView();
+              }));
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: context.color.primary,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+              child: Text(
+                context.watch<CustomChangeProvider>().plan,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+        ]),
         actions: [
           StreamBuilder(
             stream: twonlyDatabase.contactsDao.watchContactsRequested(),

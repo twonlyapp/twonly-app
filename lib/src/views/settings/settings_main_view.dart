@@ -13,6 +13,7 @@ import 'package:twonly/src/views/settings/notification_view.dart';
 import 'package:twonly/src/views/settings/profile/profile_view.dart';
 import 'package:twonly/src/views/settings/help/help_view.dart';
 import 'package:twonly/src/views/settings/privacy_view.dart';
+import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 
 class SettingsMainView extends StatefulWidget {
   const SettingsMainView({super.key});
@@ -109,7 +110,12 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                 BetterListTile(
                   icon: FontAwesomeIcons.shieldHeart,
                   text: context.lang.settingsSubscription,
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return SubscriptionView();
+                    }));
+                  },
                 ),
                 const Divider(),
                 BetterListTile(

@@ -43,7 +43,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => settingsController),
-        ChangeNotifierProvider(create: (_) => ConnectionChangeProvider()),
+        ChangeNotifierProvider(create: (_) => CustomChangeProvider()),
       ],
       child: App(),
     ),

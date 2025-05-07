@@ -43,6 +43,7 @@ class _RegisterViewState extends State<RegisterView> {
         userId: res.value.userid.toInt(),
         username: username,
         displayName: username,
+        subscriptionPlan: "Preview",
       );
       storage.write(key: "userData", value: jsonEncode(userData));
     }

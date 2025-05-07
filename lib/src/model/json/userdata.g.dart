@@ -10,6 +10,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       userId: (json['userId'] as num).toInt(),
       username: json['username'] as String,
       displayName: json['displayName'] as String,
+      subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Preview',
     )
       ..avatarSvg = json['avatarSvg'] as String?
       ..avatarJson = json['avatarJson'] as String?
@@ -37,6 +38,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'avatarJson': instance.avatarJson,
       'avatarCounter': instance.avatarCounter,
       'defaultShowTime': instance.defaultShowTime,
+      'subscriptionPlan': instance.subscriptionPlan,
       'useHighQuality': instance.useHighQuality,
       'preSelectedEmojies': instance.preSelectedEmojies,
       'themeMode': _$ThemeModeEnumMap[instance.themeMode],

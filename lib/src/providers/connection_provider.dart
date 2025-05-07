@@ -1,10 +1,16 @@
 import 'package:flutter/foundation.dart';
 
-class ConnectionChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
+class CustomChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
   bool _isConnected = false;
   bool get isConnected => _isConnected;
+  String plan = "";
   Future<void> updateConnectionState(bool update) async {
     _isConnected = update;
+    notifyListeners();
+  }
+
+  Future<void> updatePlan(String newPlan) async {
+    plan = newPlan;
     notifyListeners();
   }
 }

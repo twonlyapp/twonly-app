@@ -129,6 +129,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchUsernameTitle => 'Search username';
 
   @override
+  String get searchUserNamePreview => 'To protect you and other twonly users from spam and abuse, it is not possible to search for other people in preview mode. Other users can find you and their requests will be displayed here!';
+
+  @override
+  String get selectSubscription => 'Select subscription';
+
+  @override
   String get searchUserNamePending => 'Pending';
 
   @override

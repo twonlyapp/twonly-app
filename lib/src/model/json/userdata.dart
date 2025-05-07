@@ -4,11 +4,11 @@ part 'userdata.g.dart';
 
 @JsonSerializable()
 class UserData {
-  UserData({
-    required this.userId,
-    required this.username,
-    required this.displayName,
-  });
+  UserData(
+      {required this.userId,
+      required this.username,
+      required this.displayName,
+      required this.subscriptionPlan});
 
   String username;
   String displayName;
@@ -19,6 +19,8 @@ class UserData {
 
   // settings
   int? defaultShowTime;
+  @JsonKey(defaultValue: "Preview")
+  String subscriptionPlan;
   bool? useHighQuality;
   List<String>? preSelectedEmojies;
   ThemeMode? themeMode;

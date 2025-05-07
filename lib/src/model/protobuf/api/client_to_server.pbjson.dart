@@ -145,8 +145,16 @@ const ApplicationData$json = {
     {'1': 'downloaddata', '3': 7, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.DownloadData', '9': 0, '10': 'downloaddata'},
     {'1': 'updategooglefcmtoken', '3': 8, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.UpdateGoogleFcmToken', '9': 0, '10': 'updategooglefcmtoken'},
     {'1': 'getlocation', '3': 9, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetLocation', '9': 0, '10': 'getlocation'},
+    {'1': 'getcurrentplaninfos', '3': 10, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetCurrentPlanInfos', '9': 0, '10': 'getcurrentplaninfos'},
+    {'1': 'redeemvoucher', '3': 11, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.RedeemVoucher', '9': 0, '10': 'redeemvoucher'},
+    {'1': 'getavailableplans', '3': 12, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetAvailablePlans', '9': 0, '10': 'getavailableplans'},
+    {'1': 'createvoucher', '3': 13, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.CreateVoucher', '9': 0, '10': 'createvoucher'},
+    {'1': 'getvouchers', '3': 14, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetVouchers', '9': 0, '10': 'getvouchers'},
+    {'1': 'Switchtopayedplan', '3': 15, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.SwitchToPayedPlan', '9': 0, '10': 'Switchtopayedplan'},
+    {'1': 'getaddaccountsinvites', '3': 16, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetAddAccountsInvites', '9': 0, '10': 'getaddaccountsinvites'},
+    {'1': 'redeemadditionalcode', '3': 17, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.RedeemAdditionalCode', '9': 0, '10': 'redeemadditionalcode'},
   ],
-  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_UpdateGoogleFcmToken$json, ApplicationData_GetUserById$json, ApplicationData_GetLocation$json, ApplicationData_GetPrekeysByUserId$json, ApplicationData_GetUploadToken$json, ApplicationData_UploadData$json, ApplicationData_DownloadData$json],
+  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_UpdateGoogleFcmToken$json, ApplicationData_GetUserById$json, ApplicationData_RedeemVoucher$json, ApplicationData_SwitchToPayedPlan$json, ApplicationData_CreateVoucher$json, ApplicationData_GetLocation$json, ApplicationData_GetVouchers$json, ApplicationData_GetAvailablePlans$json, ApplicationData_GetAddAccountsInvites$json, ApplicationData_GetCurrentPlanInfos$json, ApplicationData_RedeemAdditionalCode$json, ApplicationData_GetPrekeysByUserId$json, ApplicationData_GetUploadToken$json, ApplicationData_UploadData$json, ApplicationData_DownloadData$json],
   '8': [
     {'1': 'ApplicationData'},
   ],
@@ -190,8 +198,61 @@ const ApplicationData_GetUserById$json = {
 };
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_RedeemVoucher$json = {
+  '1': 'RedeemVoucher',
+  '2': [
+    {'1': 'voucher', '3': 1, '4': 1, '5': 9, '10': 'voucher'},
+  ],
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_SwitchToPayedPlan$json = {
+  '1': 'SwitchToPayedPlan',
+  '2': [
+    {'1': 'plan_id', '3': 1, '4': 1, '5': 9, '10': 'planId'},
+    {'1': 'pay_monthly', '3': 2, '4': 1, '5': 8, '10': 'payMonthly'},
+  ],
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_CreateVoucher$json = {
+  '1': 'CreateVoucher',
+  '2': [
+    {'1': 'value_cents', '3': 1, '4': 1, '5': 13, '10': 'valueCents'},
+  ],
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData_GetLocation$json = {
   '1': 'GetLocation',
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_GetVouchers$json = {
+  '1': 'GetVouchers',
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_GetAvailablePlans$json = {
+  '1': 'GetAvailablePlans',
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_GetAddAccountsInvites$json = {
+  '1': 'GetAddAccountsInvites',
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_GetCurrentPlanInfos$json = {
+  '1': 'GetCurrentPlanInfos',
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_RedeemAdditionalCode$json = {
+  '1': 'RedeemAdditionalCode',
+  '2': [
+    {'1': 'invite_code', '3': 2, '4': 1, '5': 9, '10': 'inviteCode'},
+  ],
 };
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
@@ -250,18 +311,38 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'b2tlbhgIIAEoCzI2LmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLlVwZGF0ZUdvb2'
     'dsZUZjbVRva2VuSABSFHVwZGF0ZWdvb2dsZWZjbXRva2VuElEKC2dldGxvY2F0aW9uGAkgASgL'
     'Mi0uY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuR2V0TG9jYXRpb25IAFILZ2V0bG'
-    '9jYXRpb24aagoLVGV4dE1lc3NhZ2USFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEhIKBGJvZHkY'
-    'AyABKAxSBGJvZHkSIAoJcHVzaF9kYXRhGAQgASgMSABSCHB1c2hEYXRhiAEBQgwKCl9wdXNoX2'
-    'RhdGEaLwoRR2V0VXNlckJ5VXNlcm5hbWUSGgoIdXNlcm5hbWUYASABKAlSCHVzZXJuYW1lGjUK'
-    'FFVwZGF0ZUdvb2dsZUZjbVRva2VuEh0KCmdvb2dsZV9mY20YASABKAlSCWdvb2dsZUZjbRomCg'
-    'tHZXRVc2VyQnlJZBIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQaDQoLR2V0TG9jYXRpb24aLQoS'
-    'R2V0UHJla2V5c0J5VXNlcklkEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBo7Cg5HZXRVcGxvYW'
-    'RUb2tlbhIpChByZWNpcGllbnRzX2NvdW50GAEgASgNUg9yZWNpcGllbnRzQ291bnQaiQEKClVw'
-    'bG9hZERhdGESIQoMdXBsb2FkX3Rva2VuGAEgASgMUgt1cGxvYWRUb2tlbhIWCgZvZmZzZXQYAi'
-    'ABKA1SBm9mZnNldBISCgRkYXRhGAMgASgMUgRkYXRhEh8KCGNoZWNrc3VtGAQgASgMSABSCGNo'
-    'ZWNrc3VtiAEBQgsKCV9jaGVja3N1bRpNCgxEb3dubG9hZERhdGESJQoOZG93bmxvYWRfdG9rZW'
-    '4YASABKAxSDWRvd25sb2FkVG9rZW4SFgoGb2Zmc2V0GAIgASgNUgZvZmZzZXRCEQoPQXBwbGlj'
-    'YXRpb25EYXRh');
+    '9jYXRpb24SaQoTZ2V0Y3VycmVudHBsYW5pbmZvcxgKIAEoCzI1LmNsaWVudF90b19zZXJ2ZXIu'
+    'QXBwbGljYXRpb25EYXRhLkdldEN1cnJlbnRQbGFuSW5mb3NIAFITZ2V0Y3VycmVudHBsYW5pbm'
+    'ZvcxJXCg1yZWRlZW12b3VjaGVyGAsgASgLMi8uY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlv'
+    'bkRhdGEuUmVkZWVtVm91Y2hlckgAUg1yZWRlZW12b3VjaGVyEmMKEWdldGF2YWlsYWJsZXBsYW'
+    '5zGAwgASgLMjMuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuR2V0QXZhaWxhYmxl'
+    'UGxhbnNIAFIRZ2V0YXZhaWxhYmxlcGxhbnMSVwoNY3JlYXRldm91Y2hlchgNIAEoCzIvLmNsaW'
+    'VudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLkNyZWF0ZVZvdWNoZXJIAFINY3JlYXRldm91'
+    'Y2hlchJRCgtnZXR2b3VjaGVycxgOIAEoCzItLmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb2'
+    '5EYXRhLkdldFZvdWNoZXJzSABSC2dldHZvdWNoZXJzEmMKEVN3aXRjaHRvcGF5ZWRwbGFuGA8g'
+    'ASgLMjMuY2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuU3dpdGNoVG9QYXllZFBsYW'
+    '5IAFIRU3dpdGNodG9wYXllZHBsYW4SbwoVZ2V0YWRkYWNjb3VudHNpbnZpdGVzGBAgASgLMjcu'
+    'Y2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuR2V0QWRkQWNjb3VudHNJbnZpdGVzSA'
+    'BSFWdldGFkZGFjY291bnRzaW52aXRlcxJsChRyZWRlZW1hZGRpdGlvbmFsY29kZRgRIAEoCzI2'
+    'LmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLlJlZGVlbUFkZGl0aW9uYWxDb2RlSA'
+    'BSFHJlZGVlbWFkZGl0aW9uYWxjb2RlGmoKC1RleHRNZXNzYWdlEhcKB3VzZXJfaWQYASABKANS'
+    'BnVzZXJJZBISCgRib2R5GAMgASgMUgRib2R5EiAKCXB1c2hfZGF0YRgEIAEoDEgAUghwdXNoRG'
+    'F0YYgBAUIMCgpfcHVzaF9kYXRhGi8KEUdldFVzZXJCeVVzZXJuYW1lEhoKCHVzZXJuYW1lGAEg'
+    'ASgJUgh1c2VybmFtZRo1ChRVcGRhdGVHb29nbGVGY21Ub2tlbhIdCgpnb29nbGVfZmNtGAEgAS'
+    'gJUglnb29nbGVGY20aJgoLR2V0VXNlckJ5SWQSFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkGikK'
+    'DVJlZGVlbVZvdWNoZXISGAoHdm91Y2hlchgBIAEoCVIHdm91Y2hlchpNChFTd2l0Y2hUb1BheW'
+    'VkUGxhbhIXCgdwbGFuX2lkGAEgASgJUgZwbGFuSWQSHwoLcGF5X21vbnRobHkYAiABKAhSCnBh'
+    'eU1vbnRobHkaMAoNQ3JlYXRlVm91Y2hlchIfCgt2YWx1ZV9jZW50cxgBIAEoDVIKdmFsdWVDZW'
+    '50cxoNCgtHZXRMb2NhdGlvbhoNCgtHZXRWb3VjaGVycxoTChFHZXRBdmFpbGFibGVQbGFucxoX'
+    'ChVHZXRBZGRBY2NvdW50c0ludml0ZXMaFQoTR2V0Q3VycmVudFBsYW5JbmZvcxo3ChRSZWRlZW'
+    '1BZGRpdGlvbmFsQ29kZRIfCgtpbnZpdGVfY29kZRgCIAEoCVIKaW52aXRlQ29kZRotChJHZXRQ'
+    'cmVrZXlzQnlVc2VySWQSFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkGjsKDkdldFVwbG9hZFRva2'
+    'VuEikKEHJlY2lwaWVudHNfY291bnQYASABKA1SD3JlY2lwaWVudHNDb3VudBqJAQoKVXBsb2Fk'
+    'RGF0YRIhCgx1cGxvYWRfdG9rZW4YASABKAxSC3VwbG9hZFRva2VuEhYKBm9mZnNldBgCIAEoDV'
+    'IGb2Zmc2V0EhIKBGRhdGEYAyABKAxSBGRhdGESHwoIY2hlY2tzdW0YBCABKAxIAFIIY2hlY2tz'
+    'dW2IAQFCCwoJX2NoZWNrc3VtGk0KDERvd25sb2FkRGF0YRIlCg5kb3dubG9hZF90b2tlbhgBIA'
+    'EoDFINZG93bmxvYWRUb2tlbhIWCgZvZmZzZXQYAiABKA1SBm9mZnNldEIRCg9BcHBsaWNhdGlv'
+    'bkRhdGE=');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

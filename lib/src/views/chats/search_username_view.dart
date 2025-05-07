@@ -3,6 +3,8 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -17,6 +19,7 @@ import 'package:twonly/src/providers/api/api.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 
 class SearchUsernameView extends StatefulWidget {
   const SearchUsernameView({super.key});
@@ -113,26 +116,27 @@ class _SearchUsernameView extends State<SearchUsernameView> {
     });
   }
 
+  InputDecoration getInputDecoration(hintText) {
+    final primaryColor =
+        Theme.of(context).colorScheme.primary; // Get the primary color
+    return InputDecoration(
+      hintText: hintText,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(9.0),
+        borderSide: BorderSide(color: primaryColor, width: 1.0),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.0),
+        borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outline, width: 1.0),
+      ),
+      contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    InputDecoration getInputDecoration(hintText) {
-      final primaryColor =
-          Theme.of(context).colorScheme.primary; // Get the primary color
-      return InputDecoration(
-        hintText: hintText,
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(9.0),
-          borderSide: BorderSide(color: primaryColor, width: 1.0),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(
-              color: Theme.of(context).colorScheme.outline, width: 1.0),
-        ),
-        contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
-      );
-    }
-
+    bool isPreview = context.read<CustomChangeProvider>().plan == "Preview";
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.searchUsernameTitle),
@@ -142,37 +146,50 @@ class _SearchUsernameView extends State<SearchUsernameView> {
           padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
           child: Column(
             children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                  onSubmitted: (_) {
-                    _addNewUser(context);
-                  },
-                  onChanged: (value) {
-                    searchUserName.text = value.toLowerCase();
-                    searchUserName.selection = TextSelection.fromPosition(
-                      TextPosition(offset: searchUserName.text.length),
-                    );
-                  },
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(12),
-                    FilteringTextInputFormatter.allow(RegExp(r'[a-z0-9A-Z]')),
-                  ],
-                  controller: searchUserName,
-                  decoration:
-                      getInputDecoration(context.lang.searchUsernameInput),
+              if (isPreview) ...[
+                Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Text(
+                    context.lang.searchUserNamePreview,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
+                FilledButton.icon(
+                  icon: FaIcon(FontAwesomeIcons.shieldHeart),
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return SubscriptionView();
+                    }));
+                  },
+                  label: Text(context.lang.selectSubscription),
+                ),
+                SizedBox(height: 30),
+              ],
+              if (!isPreview) ...[
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: TextField(
+                    onSubmitted: (_) {
+                      _addNewUser(context);
+                    },
+                    onChanged: (value) {
+                      searchUserName.text = value.toLowerCase();
+                      searchUserName.selection = TextSelection.fromPosition(
+                        TextPosition(offset: searchUserName.text.length),
+                      );
+                    },
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(12),
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-z0-9A-Z]')),
+                    ],
+                    controller: searchUserName,
+                    decoration:
+                        getInputDecoration(context.lang.searchUsernameInput),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
-              OutlinedButton.icon(
-                icon: Icon(Icons.qr_code),
-                onPressed: () {
-                  showAlertDialog(context, "Coming soon",
-                      "This feature is not yet implemented!");
-                },
-                label: Text(context.lang.searchUsernameQrCodeBtn),
-              ),
-              SizedBox(height: 30),
               if (contacts.isNotEmpty)
                 HeadLineComponent(
                   context.lang.searchUsernameNewFollowerTitle,
@@ -184,18 +201,20 @@ class _SearchUsernameView extends State<SearchUsernameView> {
           ),
         ),
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 30.0),
-        child: FloatingActionButton(
-          foregroundColor: Colors.white,
-          onPressed: () {
-            if (!_isLoading) _addNewUser(context);
-          },
-          child: (_isLoading)
-              ? const Center(child: CircularProgressIndicator())
-              : FaIcon(FontAwesomeIcons.magnifyingGlassPlus),
-        ),
-      ),
+      floatingActionButton: (isPreview)
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 30.0),
+              child: FloatingActionButton(
+                foregroundColor: Colors.white,
+                onPressed: () {
+                  if (!_isLoading) _addNewUser(context);
+                },
+                child: (_isLoading)
+                    ? const Center(child: CircularProgressIndicator())
+                    : FaIcon(FontAwesomeIcons.magnifyingGlassPlus),
+              ),
+            ),
     );
   }
 }

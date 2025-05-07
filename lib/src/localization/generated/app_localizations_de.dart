@@ -129,6 +129,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchUsernameTitle => 'Benutzernamen suchen';
 
   @override
+  String get searchUserNamePreview => 'Um dich und andere twonly Benutzer vor Spam und Missbrauch zu schützen, ist es nicht möglich, im Preview-Modus nach anderen Personen zu suchen. Andere Benutzer können dich finden und deren Anfragen werden dann hier angezeigt!';
+
+  @override
+  String get selectSubscription => 'Abo auswählen';
+
+  @override
   String get searchUserNamePending => 'Ausstehend';
 
   @override
