@@ -8,6 +8,7 @@ import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/settings/subscription/transaction_view.dart';
 import 'package:twonly/src/views/settings/subscription/voucher_view.dart';
 
 class SubscriptionView extends StatefulWidget {
@@ -21,6 +22,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   bool loaded = false;
   int ballanceInCents = 0;
   DateTime? nextPayment;
+  Response_PlanBallance? ballance;
 
   @override
   void initState() {
@@ -29,15 +31,15 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future initAsync() async {
-    Response_PlanBallance? ballance = await apiProvider.getPlanBallance();
+    ballance = await apiProvider.getPlanBallance();
     if (ballance != null) {
       setState(() {
         DateTime lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
-            ballance.lastPaymentDoneUnixTimestamp.toInt() * 1000);
+            ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000);
         nextPayment = lastPaymentDateTime
-            .add(Duration(days: ballance.paymentPeriodDays.toInt()));
+            .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
         ballanceInCents =
-            ballance.transactions.map((a) => a.depositCents.toInt()).sum;
+            ballance!.transactions.map((a) => a.depositCents.toInt()).sum;
         loaded = true;
       });
       return;
@@ -163,7 +165,14 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             subtitle: (loaded)
                 ? Text("${context.lang.currentBalance}: $formattedBalance")
                 : null,
-            onTap: () {},
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return TransactionView(
+                  transactions: ballance!.transactions,
+                  formattedBalance: formattedBalance,
+                );
+              }));
+            },
           ),
           if (currentPlan == "Family" || currentPlan == "Pro")
             BetterListTile(
