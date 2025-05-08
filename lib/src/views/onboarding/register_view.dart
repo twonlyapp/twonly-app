@@ -37,6 +37,10 @@ class _RegisterViewState extends State<RegisterView> {
 
     final res = await apiProvider.register(username, inviteCode);
 
+    setState(() {
+      _isTryingToRegister = false;
+    });
+
     if (res.isSuccess) {
       Logger("create_new_user").info("Got user_id ${res.value} from server");
       final userData = UserData(
@@ -46,13 +50,6 @@ class _RegisterViewState extends State<RegisterView> {
         subscriptionPlan: "Preview",
       );
       storage.write(key: "userData", value: jsonEncode(userData));
-    }
-
-    setState(() {
-      _isTryingToRegister = false;
-    });
-
-    if (res.isSuccess) {
       apiProvider.authenticate();
       widget.callbackOnSuccess();
       return;
@@ -130,31 +127,24 @@ class _RegisterViewState extends State<RegisterView> {
                     child: Text(
                       context.lang.registerUsernameLimits,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 7),
+                      style: TextStyle(fontSize: 9),
                     ),
                   ),
                 ),
-                // const SizedBox(height: 15),
-                // Center(
-                //   child: Text(
-                //     "To protect this small experimental project you need an invitation code! To get one just ask the right person!",
-                //     textAlign: TextAlign.center,
-                //   ),
-                // ),
-                // const SizedBox(height: 10),
-                // TextField(
-                //     controller: inviteCodeController,
-                //     decoration: getInputDecoration("Voucher code")),
-                // const SizedBox(height: 25),
-                // Center(
-                //   child: Text(
-                //     "Please ",
-                //     textAlign: TextAlign.center,
-                //   ),
-                // ),
-                const SizedBox(height: 50),
-                // Padding(
-                //   padding: EdgeInsets.symmetric(horizontal: 10),
+                const SizedBox(height: 20),
+                Center(
+                  child: Text(
+                    context.lang.registerTwonlyCodeText,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: inviteCodeController,
+                  decoration:
+                      getInputDecoration(context.lang.registerTwonlyCodeLabel),
+                ),
+                const SizedBox(height: 30),
                 Column(children: [
                   FilledButton.icon(
                     icon: _isTryingToRegister

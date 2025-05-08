@@ -188,7 +188,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingGetStartedBody.
   ///
   /// In en, this message translates to:
-  /// **'You can test twonly free of charge for 14 days, after that it costs either 1€/month or 9€/year.'**
+  /// **'You can test twonly free of charge in preview mode. In this mode you can be found by others and receive pictures or videos but you cannot send any yourself.'**
   String get onboardingGetStartedBody;
 
   /// No description provided for @onboardingTryForFree.
@@ -220,6 +220,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Register now!'**
   String get registerSubmitButton;
+
+  /// No description provided for @registerTwonlyCodeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Have you received a twonly code? Then redeem it either directly here or later!'**
+  String get registerTwonlyCodeText;
+
+  /// No description provided for @registerTwonlyCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly-Code'**
+  String get registerTwonlyCodeLabel;
 
   /// No description provided for @newMessageTitle.
   ///
@@ -982,6 +994,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only one active session is allowed per user. Please log out from other devices to continue.'**
   String get errorOnlyOneSessionAllowed;
+
+  /// No description provided for @errorNotEnoughCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have enough twonly-credit.'**
+  String get errorNotEnoughCredit;
+
+  /// No description provided for @errorVoucherInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The voucher code you entered is not valid.'**
+  String get errorVoucherInvalid;
+
+  /// No description provided for @errorPlanLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You have reached your plans limit. Please upgrade your plan.'**
+  String get errorPlanLimitReached;
+
+  /// No description provided for @errorPlanNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is not available in your current plan.'**
+  String get errorPlanNotAllowed;
+
+  /// No description provided for @upgradeToPaidPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to a paid plan.'**
+  String get upgradeToPaidPlan;
+
+  /// No description provided for @proYearlyPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'10€/year'**
+  String get proYearlyPrice;
+
+  /// No description provided for @proMonthlyPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'1€/month'**
+  String get proMonthlyPrice;
+
+  /// No description provided for @proFeature1.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Unlimited media file uploads'**
+  String get proFeature1;
+
+  /// No description provided for @proFeature2.
+  ///
+  /// In en, this message translates to:
+  /// **'1 additional Plus user'**
+  String get proFeature2;
+
+  /// No description provided for @proFeature3.
+  ///
+  /// In en, this message translates to:
+  /// **'3 additional Free users'**
+  String get proFeature3;
+
+  /// No description provided for @familyYearlyPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'20€/year'**
+  String get familyYearlyPrice;
+
+  /// No description provided for @familyMonthlyPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'2€/month'**
+  String get familyMonthlyPrice;
+
+  /// No description provided for @familyFeature1.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Unlimited media file uploads'**
+  String get familyFeature1;
+
+  /// No description provided for @familyFeature2.
+  ///
+  /// In en, this message translates to:
+  /// **'4 additional Plus users'**
+  String get familyFeature2;
+
+  /// No description provided for @familyFeature3.
+  ///
+  /// In en, this message translates to:
+  /// **'5 additional Free users'**
+  String get familyFeature3;
+
+  /// No description provided for @redeemUserInviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Or redeem an additional user invite code.'**
+  String get redeemUserInviteCode;
+
+  /// No description provided for @freeFeature1.
+  ///
+  /// In en, this message translates to:
+  /// **'3 Media file uploads per day'**
+  String get freeFeature1;
+
+  /// No description provided for @plusFeature1.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Unlimited media file uploads'**
+  String get plusFeature1;
+
+  /// No description provided for @transactionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Your transaction history'**
+  String get transactionHistory;
+
+  /// No description provided for @currentBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Current balance'**
+  String get currentBalance;
+
+  /// No description provided for @manageAdditionalUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your additional users'**
+  String get manageAdditionalUsers;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @createOrRedeemVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy or redeem voucher'**
+  String get createOrRedeemVoucher;
+
+  /// No description provided for @createVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy voucher'**
+  String get createVoucher;
+
+  /// No description provided for @createVoucherDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the value of the voucher. The value of the voucher will be deducted from your twonly balance.'**
+  String get createVoucherDesc;
+
+  /// No description provided for @redeemVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeem voucher'**
+  String get redeemVoucher;
+
+  /// No description provided for @openVouchers.
+  ///
+  /// In en, this message translates to:
+  /// **'Open vouchers'**
+  String get openVouchers;
+
+  /// No description provided for @voucherCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher created'**
+  String get voucherCreated;
+
+  /// No description provided for @voucherRedeemed.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher redeemed'**
+  String get voucherRedeemed;
+
+  /// No description provided for @enterVoucherCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Voucher Code'**
+  String get enterVoucherCode;
+
+  /// No description provided for @requestedVouchers.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested vouchers'**
+  String get requestedVouchers;
+
+  /// No description provided for @redeemedVouchers.
+  ///
+  /// In en, this message translates to:
+  /// **'Redeemed vouchers'**
+  String get redeemedVouchers;
+
+  /// No description provided for @buy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get buy;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

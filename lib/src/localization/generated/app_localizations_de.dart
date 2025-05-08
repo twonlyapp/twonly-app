@@ -54,7 +54,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingGetStartedTitle => 'Auf geht\'s';
 
   @override
-  String get onboardingGetStartedBody => 'Du kannst twonly 14 Tage lang kostenlos testen, danach kostet es entweder 1€/Monat oder 9€/Jahr.';
+  String get onboardingGetStartedBody => 'Du kannst twonly kostenlos im Preview-Modus testen. In diesem Modus kannst du von anderen gefunden werden und Bilder oder Videos empfangen, aber du kannst selbst keine senden.';
 
   @override
   String get onboardingTryForFree => 'Kostenlos testen';
@@ -70,6 +70,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get registerSubmitButton => 'Jetzt registrieren!';
+
+  @override
+  String get registerTwonlyCodeText => 'Hast du einen twonly-Code erhalten? Dann löse ihn entweder direkt hier oder später ein!';
+
+  @override
+  String get registerTwonlyCodeLabel => 'twonly-Code';
 
   @override
   String get newMessageTitle => 'Neue Nachricht';
@@ -463,4 +469,103 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get errorOnlyOneSessionAllowed => 'Es ist nur eine aktive Sitzung pro Benutzer erlaubt. Bitte melde dich von anderen Geräten ab, um fortzufahren.';
+
+  @override
+  String get errorNotEnoughCredit => 'Du hast nicht genügend twonly-Guthaben.';
+
+  @override
+  String get errorVoucherInvalid => 'Der eingegebene Gutschein-Code ist nicht gültig.';
+
+  @override
+  String get errorPlanLimitReached => 'Du hast das Limit deines Plans erreicht. Bitte upgrade deinen Plan.';
+
+  @override
+  String get errorPlanNotAllowed => 'Dieses Feature ist in deinem aktuellen Plan nicht verfügbar.';
+
+  @override
+  String get upgradeToPaidPlan => 'Upgrade auf einen kostenpflichtigen Plan.';
+
+  @override
+  String get proYearlyPrice => '10€/Jahr';
+
+  @override
+  String get proMonthlyPrice => '1€/Monat';
+
+  @override
+  String get proFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+
+  @override
+  String get proFeature2 => '1 zusätzlicher Plus Benutzer';
+
+  @override
+  String get proFeature3 => '3 zusätzliche kostenlose Benutzer';
+
+  @override
+  String get familyYearlyPrice => '20€/Jahr';
+
+  @override
+  String get familyMonthlyPrice => '2€/Monat';
+
+  @override
+  String get familyFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+
+  @override
+  String get familyFeature2 => '4 zusätzliche Plus Benutzer';
+
+  @override
+  String get familyFeature3 => '5 zusätzliche kostenlose Benutzer';
+
+  @override
+  String get redeemUserInviteCode => 'Oder löse einen zusätzlichen twonly-Code ein.';
+
+  @override
+  String get freeFeature1 => '3 Medien-Datei-Uploads pro Tag';
+
+  @override
+  String get plusFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+
+  @override
+  String get transactionHistory => 'Transaktionshistorie';
+
+  @override
+  String get currentBalance => 'Aktueller Kontostand';
+
+  @override
+  String get manageAdditionalUsers => 'Zusätzlichen Benutzer verwalten';
+
+  @override
+  String get open => 'Offene';
+
+  @override
+  String get createOrRedeemVoucher => 'Gutschein erstellen oder einlösen';
+
+  @override
+  String get createVoucher => 'Gutschein kaufen';
+
+  @override
+  String get createVoucherDesc => 'Wähle den Wert des Gutscheins. Der Wert des Gutschein wird von deinem twonly-Guthaben abgezogen.';
+
+  @override
+  String get redeemVoucher => 'Gutschein einlösen';
+
+  @override
+  String get openVouchers => 'Offene Gutscheine';
+
+  @override
+  String get voucherCreated => 'Gutschein wurde erstellt';
+
+  @override
+  String get voucherRedeemed => 'Gutschein eingelöst';
+
+  @override
+  String get enterVoucherCode => 'Gutschein Code eingeben';
+
+  @override
+  String get requestedVouchers => 'Beantragte Gutscheine';
+
+  @override
+  String get redeemedVouchers => 'Eingelöste Gutscheine';
+
+  @override
+  String get buy => 'Kaufen';
 }

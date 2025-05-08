@@ -68,33 +68,23 @@ Uint8List getRandomUint8List(int length) {
 }
 
 String errorCodeToText(BuildContext context, ErrorCode code) {
-  switch (code.toString()) {
-    case "Unknown":
-      return context.lang.errorUnknown;
-    case "BadRequest":
-      return context.lang.errorBadRequest;
-    case "TooManyRequests":
-      return context.lang.errorTooManyRequests;
-    case "InternalError":
+  switch (code) {
+    case ErrorCode.InternalError:
       return context.lang.errorInternalError;
-    case "InvalidInvitationCode":
+    case ErrorCode.InvalidInvitationCode:
       return context.lang.errorInvalidInvitationCode;
-    case "UsernameAlreadyTaken":
+    case ErrorCode.UsernameAlreadyTaken:
       return context.lang.errorUsernameAlreadyTaken;
-    case "SignatureNotValid":
-      return context.lang.errorSignatureNotValid;
-    case "UsernameNotFound":
-      return context.lang.errorUsernameNotFound;
-    case "UsernameNotValid":
+    case ErrorCode.UsernameNotValid:
       return context.lang.errorUsernameNotValid;
-    case "InvalidPublicKey":
-      return context.lang.errorInvalidPublicKey;
-    case "SessionAlreadyAuthenticated":
-      return context.lang.errorSessionAlreadyAuthenticated;
-    case "SessionNotAuthenticated":
-      return context.lang.errorSessionNotAuthenticated;
-    case "OnlyOneSessionAllowed":
-      return context.lang.errorOnlyOneSessionAllowed;
+    case ErrorCode.NotEnoughCredit:
+      return context.lang.errorNotEnoughCredit;
+    case ErrorCode.PlanLimitReached:
+      return context.lang.errorPlanLimitReached;
+    case ErrorCode.PlanNotAllowed:
+      return context.lang.errorPlanNotAllowed;
+    case ErrorCode.VoucherInValid:
+      return context.lang.errorVoucherInvalid;
     default:
       return code.toString(); // Fallback for unrecognized keys
   }

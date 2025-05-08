@@ -54,7 +54,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingGetStartedTitle => 'Let\'s go!';
 
   @override
-  String get onboardingGetStartedBody => 'You can test twonly free of charge for 14 days, after that it costs either 1€/month or 9€/year.';
+  String get onboardingGetStartedBody => 'You can test twonly free of charge in preview mode. In this mode you can be found by others and receive pictures or videos but you cannot send any yourself.';
 
   @override
   String get onboardingTryForFree => 'Try for free';
@@ -70,6 +70,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerSubmitButton => 'Register now!';
+
+  @override
+  String get registerTwonlyCodeText => 'Have you received a twonly code? Then redeem it either directly here or later!';
+
+  @override
+  String get registerTwonlyCodeLabel => 'twonly-Code';
 
   @override
   String get newMessageTitle => 'New message';
@@ -463,4 +469,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorOnlyOneSessionAllowed => 'Only one active session is allowed per user. Please log out from other devices to continue.';
+
+  @override
+  String get errorNotEnoughCredit => 'You do not have enough twonly-credit.';
+
+  @override
+  String get errorVoucherInvalid => 'The voucher code you entered is not valid.';
+
+  @override
+  String get errorPlanLimitReached => 'You have reached your plans limit. Please upgrade your plan.';
+
+  @override
+  String get errorPlanNotAllowed => 'This feature is not available in your current plan.';
+
+  @override
+  String get upgradeToPaidPlan => 'Upgrade to a paid plan.';
+
+  @override
+  String get proYearlyPrice => '10€/year';
+
+  @override
+  String get proMonthlyPrice => '1€/month';
+
+  @override
+  String get proFeature1 => '✓ Unlimited media file uploads';
+
+  @override
+  String get proFeature2 => '1 additional Plus user';
+
+  @override
+  String get proFeature3 => '3 additional Free users';
+
+  @override
+  String get familyYearlyPrice => '20€/year';
+
+  @override
+  String get familyMonthlyPrice => '2€/month';
+
+  @override
+  String get familyFeature1 => '✓ Unlimited media file uploads';
+
+  @override
+  String get familyFeature2 => '4 additional Plus users';
+
+  @override
+  String get familyFeature3 => '5 additional Free users';
+
+  @override
+  String get redeemUserInviteCode => 'Or redeem an additional user invite code.';
+
+  @override
+  String get freeFeature1 => '3 Media file uploads per day';
+
+  @override
+  String get plusFeature1 => '✓ Unlimited media file uploads';
+
+  @override
+  String get transactionHistory => 'Your transaction history';
+
+  @override
+  String get currentBalance => 'Current balance';
+
+  @override
+  String get manageAdditionalUsers => 'Manage your additional users';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get createOrRedeemVoucher => 'Buy or redeem voucher';
+
+  @override
+  String get createVoucher => 'Buy voucher';
+
+  @override
+  String get createVoucherDesc => 'Choose the value of the voucher. The value of the voucher will be deducted from your twonly balance.';
+
+  @override
+  String get redeemVoucher => 'Redeem voucher';
+
+  @override
+  String get openVouchers => 'Open vouchers';
+
+  @override
+  String get voucherCreated => 'Voucher created';
+
+  @override
+  String get voucherRedeemed => 'Voucher redeemed';
+
+  @override
+  String get enterVoucherCode => 'Enter Voucher Code';
+
+  @override
+  String get requestedVouchers => 'Requested vouchers';
+
+  @override
+  String get redeemedVouchers => 'Redeemed vouchers';
+
+  @override
+  String get buy => 'Buy';
 }

@@ -419,6 +419,34 @@ class ApiProvider {
     return null;
   }
 
+  Future<Response_Vouchers?> getVoucherList() async {
+    var get = ApplicationData_GetVouchers();
+    var appData = ApplicationData()..getvouchers = get;
+    var req = createClientToServerFromApplicationData(appData);
+    Result res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      server.Response_Ok ok = res.value;
+      if (ok.hasVouchers()) {
+        return ok.vouchers;
+      }
+    }
+    return null;
+  }
+
+  Future<Result> buyVoucher(int valueInCents) async {
+    var get = ApplicationData_CreateVoucher()..valueCents = valueInCents;
+    var appData = ApplicationData()..createvoucher = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
+  Future<Result> redeemVoucher(String voucher) async {
+    var get = ApplicationData_RedeemVoucher()..voucher = voucher;
+    var appData = ApplicationData()..redeemvoucher = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
   Future<Result> updateFCMToken(String googleFcm) async {
     var get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
     var appData = ApplicationData()..updategooglefcmtoken = get;

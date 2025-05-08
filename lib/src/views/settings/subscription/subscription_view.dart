@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/settings/subscription/voucher_view.dart';
 
 class SubscriptionView extends StatefulWidget {
   const SubscriptionView({super.key});
@@ -16,8 +18,9 @@ class SubscriptionView extends StatefulWidget {
 }
 
 class _SubscriptionViewState extends State<SubscriptionView> {
-  bool hasInternet = true;
+  bool loaded = false;
   int ballanceInCents = 0;
+  DateTime? nextPayment;
 
   @override
   void initState() {
@@ -26,13 +29,16 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future initAsync() async {
-    // userData = await getUser();
-    // setState(() {});
-
     Response_PlanBallance? ballance = await apiProvider.getPlanBallance();
-    if (ballance == null) {
+    if (ballance != null) {
       setState(() {
-        hasInternet = false;
+        DateTime lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
+            ballance.lastPaymentDoneUnixTimestamp.toInt() * 1000);
+        nextPayment = lastPaymentDateTime
+            .add(Duration(days: ballance.paymentPeriodDays.toInt()));
+        ballanceInCents =
+            ballance.transactions.map((a) => a.depositCents.toInt()).sum;
+        loaded = true;
       });
       return;
     }
@@ -40,17 +46,20 @@ class _SubscriptionViewState extends State<SubscriptionView> {
 
   @override
   Widget build(BuildContext context) {
+    Locale myLocale = Localizations.localeOf(context);
     String formattedBalance = NumberFormat.currency(
-      locale: 'de_DE', // Locale for Euro formatting
+      locale: myLocale.toString(),
       symbol: '€',
       decimalDigits: 2,
     ).format(ballanceInCents / 100);
+
+    String currentPlan = context.read<CustomChangeProvider>().plan;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsSubscription),
       ),
-      body: Column(
+      body: ListView(
         children: [
           Padding(
             padding: const EdgeInsets.all(32.0),
@@ -62,73 +71,119 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 child: Text(
-                  context.watch<CustomChangeProvider>().plan,
+                  currentPlan,
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: isDarkMode(context) ? Colors.black : Colors.white,
                   ),
                 ),
               ),
             ),
           ),
-          Expanded(
-            child: ListView(
-              children: [
-                Center(
-                  child: Text("Upgrade your current plan."),
+          if (currentPlan != "Family" && currentPlan != "Pro")
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(18.0),
+                child: Text(
+                  context.lang.upgradeToPaidPlan,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18),
                 ),
-                SizedBox(height: 10),
-                PlanCard(
-                  title: 'Pro',
-                  yearlyPrice: '10€/year',
-                  monthlyPrice: '1€/month',
-                  features: [
-                    '✓ Unlimited media files',
-                    '1 additional Plus user',
-                    '3 additional Free users',
-                  ],
-                ),
-                SizedBox(height: 10),
-                PlanCard(
-                  title: 'Family',
-                  yearlyPrice: '20€/year',
-                  monthlyPrice: '2€/month',
-                  features: [
-                    '✓ All from Pro',
-                    '4 additional Plus users',
-                    '5 additional Free users',
-                  ],
-                ),
-                SizedBox(height: 10),
-                Divider(),
-                BetterListTile(
-                  icon: FontAwesomeIcons.ticket,
-                  text: "Redeem code for additional user",
-                  onTap: () {},
-                ),
-                BetterListTile(
-                  icon: FontAwesomeIcons.moneyBillTransfer,
-                  text: "Your transaction history",
-                  subtitle: Text("Current ballance: $formattedBalance"),
-                  onTap: () {},
-                ),
-                BetterListTile(
-                  icon: FontAwesomeIcons.userPlus,
-                  text: "Manage your additional users",
-                  subtitle: Text("Open: 3"),
-                  onTap: () {},
-                ),
-                BetterListTile(
-                  icon: FontAwesomeIcons.gift,
-                  text: "Create or redeem voucher",
-                  onTap: () {},
-                ),
-                SizedBox(height: 30)
-              ],
-              // tranaction
+              ),
             ),
-          )
+          if (currentPlan != "Family" && currentPlan != "Pro")
+            PlanCard(
+              title: "Pro",
+              yearlyPrice: context.lang.proYearlyPrice,
+              monthlyPrice: context.lang.proMonthlyPrice,
+              features: [
+                context.lang.proFeature1,
+                context.lang.proFeature2,
+                context.lang.proFeature3,
+              ],
+            ),
+          if (currentPlan != "Family")
+            PlanCard(
+              title: "Family",
+              yearlyPrice: context.lang.familyYearlyPrice,
+              monthlyPrice: context.lang.familyMonthlyPrice,
+              features: [
+                context.lang.familyFeature1,
+                context.lang.familyFeature2,
+                context.lang.familyFeature3,
+              ],
+            ),
+          if (currentPlan == "Preview" || currentPlan == "Free") ...[
+            SizedBox(height: 10),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: Text(
+                  context.lang.redeemUserInviteCode,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            if (currentPlan != "Free")
+              PlanCard(
+                title: "Free",
+                yearlyPrice: "",
+                monthlyPrice: "",
+                features: [
+                  context.lang.freeFeature1,
+                ],
+              ),
+            PlanCard(
+              title: "Plus",
+              yearlyPrice: "",
+              monthlyPrice: "",
+              features: [
+                context.lang.plusFeature1,
+              ],
+            ),
+          ],
+          SizedBox(height: 10),
+          if (currentPlan != "Family") Divider(),
+          if (currentPlan == "Family" || currentPlan == "Pro")
+            BetterListTile(
+              icon: FontAwesomeIcons.userPlus,
+              text: "Manage your subscription",
+              subtitle: (nextPayment != null)
+                  ? Text(
+                      "Next payment: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment!)}")
+                  : null,
+              onTap: () {},
+            ),
+          BetterListTile(
+            icon: FontAwesomeIcons.moneyBillTransfer,
+            text: context.lang.transactionHistory,
+            subtitle: (loaded)
+                ? Text("${context.lang.currentBalance}: $formattedBalance")
+                : null,
+            onTap: () {},
+          ),
+          if (currentPlan == "Family" || currentPlan == "Pro")
+            BetterListTile(
+              icon: FontAwesomeIcons.userPlus,
+              text: context.lang.manageAdditionalUsers,
+              subtitle: (loaded) ? Text("${context.lang.open}: 3") : null,
+              onTap: () {},
+            ),
+          BetterListTile(
+            icon: FontAwesomeIcons.ticket,
+            text: context.lang.createOrRedeemVoucher,
+            onTap: () async {
+              await Navigator.push(context,
+                  MaterialPageRoute(builder: (context) {
+                return VoucherView();
+              }));
+              initAsync();
+            },
+          ),
+          SizedBox(height: 30)
         ],
       ),
     );
@@ -175,27 +230,28 @@ class PlanCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 10),
-                  Column(
-                    children: [
-                      Text(
-                        yearlyPrice,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                  if (yearlyPrice != "") SizedBox(height: 10),
+                  if (yearlyPrice != "")
+                    Column(
+                      children: [
+                        Text(
+                          yearlyPrice,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        monthlyPrice,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
+                        Text(
+                          monthlyPrice,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
                         ),
-                      ),
-                    ],
-                  )
+                      ],
+                    )
                 ],
               ),
               SizedBox(height: 10),

@@ -41,18 +41,23 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     // register global callbacks to the widget tree
     globalCallbackConnectionState = (update) {
       context.read<CustomChangeProvider>().updateConnectionState(update);
+      setUserPlan();
       setupNotificationWithUsers();
     };
 
     initAsync();
   }
 
-  Future initAsync() async {
-    apiProvider.connect();
+  Future setUserPlan() async {
     final user = await getUser();
     if (user != null && context.mounted) {
       context.read<CustomChangeProvider>().updatePlan(user.subscriptionPlan);
     }
+  }
+
+  Future initAsync() async {
+    setUserPlan();
+    apiProvider.connect();
   }
 
   @override
