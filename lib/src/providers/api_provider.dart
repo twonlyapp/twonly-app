@@ -440,6 +440,17 @@ class ApiProvider {
     return await sendRequestSync(req);
   }
 
+  Future<Result> switchToPayedPlan(
+      String planId, bool payMonthly, bool autoRenewal) async {
+    var get = ApplicationData_SwitchToPayedPlan()
+      ..planId = planId
+      ..payMonthly = payMonthly
+      ..autoRenewal = autoRenewal;
+    var appData = ApplicationData()..switchtopayedplan = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
   Future<Result> redeemVoucher(String voucher) async {
     var get = ApplicationData_RedeemVoucher()..voucher = voucher;
     var appData = ApplicationData()..redeemvoucher = get;

@@ -1019,23 +1019,29 @@ abstract class AppLocalizations {
   /// **'This feature is not available in your current plan.'**
   String get errorPlanNotAllowed;
 
+  /// No description provided for @errorPlanUpgradeNotYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'The plan upgrade must be paid for annually, as the current plan is also billed annually.'**
+  String get errorPlanUpgradeNotYearly;
+
   /// No description provided for @upgradeToPaidPlan.
   ///
   /// In en, this message translates to:
   /// **'Upgrade to a paid plan.'**
   String get upgradeToPaidPlan;
 
-  /// No description provided for @proYearlyPrice.
+  /// No description provided for @year.
   ///
   /// In en, this message translates to:
-  /// **'10€/year'**
-  String get proYearlyPrice;
+  /// **'year'**
+  String get year;
 
-  /// No description provided for @proMonthlyPrice.
+  /// No description provided for @month.
   ///
   /// In en, this message translates to:
-  /// **'1€/month'**
-  String get proMonthlyPrice;
+  /// **'month'**
+  String get month;
 
   /// No description provided for @proFeature1.
   ///
@@ -1054,18 +1060,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'3 additional Free users'**
   String get proFeature3;
-
-  /// No description provided for @familyYearlyPrice.
-  ///
-  /// In en, this message translates to:
-  /// **'20€/year'**
-  String get familyYearlyPrice;
-
-  /// No description provided for @familyMonthlyPrice.
-  ///
-  /// In en, this message translates to:
-  /// **'2€/month'**
-  String get familyMonthlyPrice;
 
   /// No description provided for @familyFeature1.
   ///
@@ -1108,6 +1102,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your transaction history'**
   String get transactionHistory;
+
+  /// No description provided for @manageSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your subscription'**
+  String get manageSubscription;
+
+  /// No description provided for @nextPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Next payment'**
+  String get nextPayment;
 
   /// No description provided for @currentBalance.
   ///
@@ -1234,6 +1240,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Voucher redeemed'**
   String get transactionVoucherRedeemed;
+
+  /// No description provided for @checkoutOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get checkoutOptions;
+
+  /// No description provided for @checkoutPayYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay yearly'**
+  String get checkoutPayYearly;
+
+  /// No description provided for @checkoutTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get checkoutTotal;
+
+  /// No description provided for @selectPaymentMethode.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Payment Method'**
+  String get selectPaymentMethode;
+
+  /// No description provided for @twonlyCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly-Credit'**
+  String get twonlyCredit;
+
+  /// No description provided for @notEnoughCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have enough credit!'**
+  String get notEnoughCredit;
+
+  /// No description provided for @chargeCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Charge credit'**
+  String get chargeCredit;
+
+  /// No description provided for @autoRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto renewal'**
+  String get autoRenewal;
+
+  /// No description provided for @autoRenewalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this at any time.'**
+  String get autoRenewalDesc;
+
+  /// No description provided for @planSuccessUpgraded.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully upgraded your plan.'**
+  String get planSuccessUpgraded;
+
+  /// No description provided for @checkoutSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Order with a fee.'**
+  String get checkoutSubmit;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -10,8 +10,46 @@ import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/settings/subscription/checkout_view.dart';
 import 'package:twonly/src/views/settings/subscription/transaction_view.dart';
 import 'package:twonly/src/views/settings/subscription/voucher_view.dart';
+
+String localePrizing(BuildContext context, int cents) {
+  Locale myLocale = Localizations.localeOf(context);
+
+  double euros = cents / 100;
+
+  if (euros == euros.toInt()) {
+    return "${euros.toInt()}€";
+  }
+
+  return NumberFormat.currency(
+    locale: myLocale.toString(),
+    symbol: '€',
+    decimalDigits: 2,
+  ).format(cents / 100);
+}
+
+Future<Response_PlanBallance?> loadPlanBallance() async {
+  Response_PlanBallance? ballance;
+  final user = await getUser();
+  if (user == null) return ballance;
+  ballance = await apiProvider.getPlanBallance();
+  if (ballance != null) {
+    user.lastPlanBallance = ballance.writeToJson();
+    await updateUser(user);
+  } else if (user.lastPlanBallance != null) {
+    try {
+      ballance = Response_PlanBallance.fromJson(
+        user.lastPlanBallance!,
+      );
+    } catch (e) {
+      Logger("subscription_view.dart").shout("from json: $e");
+    }
+  }
+
+  return ballance;
+}
 
 class SubscriptionView extends StatefulWidget {
   const SubscriptionView({super.key});
@@ -31,21 +69,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future initAsync() async {
-    final user = await getUser();
-    if (user == null) return;
-    ballance = await apiProvider.getPlanBallance();
-    if (ballance != null) {
-      user.lastPlanBallance = ballance!.writeToJson();
-      await updateUser(user);
-    } else if (user.lastPlanBallance != null) {
-      try {
-        ballance = Response_PlanBallance.fromJson(
-          user.lastPlanBallance!,
-        );
-      } catch (e) {
-        Logger("subscription_view.dart").shout("from json: $e");
-      }
-    }
+    ballance = await loadPlanBallance();
     setState(() {});
   }
 
@@ -110,25 +134,25 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             ),
           if (currentPlan != "Family" && currentPlan != "Pro")
             PlanCard(
-              title: "Pro",
-              yearlyPrice: context.lang.proYearlyPrice,
-              monthlyPrice: context.lang.proMonthlyPrice,
-              features: [
-                context.lang.proFeature1,
-                context.lang.proFeature2,
-                context.lang.proFeature3,
-              ],
+              planId: "Pro",
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return CheckoutView(planId: "Pro");
+                }));
+                initAsync();
+              },
             ),
           if (currentPlan != "Family")
             PlanCard(
-              title: "Family",
-              yearlyPrice: context.lang.familyYearlyPrice,
-              monthlyPrice: context.lang.familyMonthlyPrice,
-              features: [
-                context.lang.familyFeature1,
-                context.lang.familyFeature2,
-                context.lang.familyFeature3,
-              ],
+              planId: "Family",
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return CheckoutView(planId: "Family");
+                }));
+                initAsync();
+              },
             ),
           if (currentPlan == "Preview" || currentPlan == "Free") ...[
             SizedBox(height: 10),
@@ -145,31 +169,23 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             SizedBox(height: 10),
             if (currentPlan != "Free")
               PlanCard(
-                title: "Free",
-                yearlyPrice: "",
-                monthlyPrice: "",
-                features: [
-                  context.lang.freeFeature1,
-                ],
+                planId: "Free",
+                onTap: () {},
               ),
             PlanCard(
-              title: "Plus",
-              yearlyPrice: "",
-              monthlyPrice: "",
-              features: [
-                context.lang.plusFeature1,
-              ],
+              planId: "Plus",
+              onTap: () {},
             ),
           ],
           SizedBox(height: 10),
           if (currentPlan != "Family") Divider(),
           if (currentPlan == "Family" || currentPlan == "Pro")
             BetterListTile(
-              icon: FontAwesomeIcons.userPlus,
-              text: "Manage your subscription",
+              icon: FontAwesomeIcons.gears,
+              text: context.lang.manageSubscription,
               subtitle: (nextPayment != null)
                   ? Text(
-                      "Next payment: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}")
+                      "${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}")
                   : null,
               onTap: () {},
             ),
@@ -214,81 +230,118 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 }
 
+int getPlanPrice(String planId, bool paidMonthly) {
+  switch (planId) {
+    case "Pro":
+      return (paidMonthly) ? 100 : 1000;
+    case "Family":
+      return (paidMonthly) ? 200 : 2000;
+  }
+  return 0;
+}
+
 class PlanCard extends StatelessWidget {
-  final String title;
-  final String yearlyPrice;
-  final String monthlyPrice;
-  final List<String> features;
+  final String planId;
+  final Function()? onTap;
 
   const PlanCard({
     super.key,
-    required this.title,
-    required this.yearlyPrice,
-    required this.monthlyPrice,
-    required this.features,
+    required this.planId,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    int yearlyPrice = getPlanPrice(planId, false);
+    int monthlyPrice = getPlanPrice(planId, true);
+    List<String> features = [];
+
+    switch (planId) {
+      case "Free":
+        features = [context.lang.freeFeature1];
+        break;
+      case "Plus":
+        features = [context.lang.plusFeature1];
+        break;
+      case "Pro":
+        features = [
+          context.lang.proFeature1,
+          context.lang.proFeature2,
+          context.lang.proFeature3
+        ];
+        break;
+      case "Family":
+        features = [
+          context.lang.familyFeature1,
+          context.lang.familyFeature2,
+          context.lang.familyFeature3
+        ];
+        break;
+      default:
+    }
+
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16),
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                      planId,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (yearlyPrice != 0) SizedBox(height: 10),
+                    if (yearlyPrice != 0)
+                      Column(
+                        children: [
+                          Text(
+                            "${localePrizing(context, yearlyPrice)}/${context.lang.year}",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            "${localePrizing(context, monthlyPrice)}/${context.lang.month}",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      )
+                  ],
+                ),
+                SizedBox(height: 10),
+                ...features.map(
+                  (feature) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    child: Text(
+                      feature,
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                  if (yearlyPrice != "") SizedBox(height: 10),
-                  if (yearlyPrice != "")
-                    Column(
-                      children: [
-                        Text(
-                          yearlyPrice,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          monthlyPrice,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    )
-                ],
-              ),
-              SizedBox(height: 10),
-              ...features.map(
-                (feature) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2.0),
-                  child: Text(
-                    feature,
-                    textAlign: TextAlign.center,
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

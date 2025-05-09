@@ -14,17 +14,6 @@ class TransactionView extends StatefulWidget {
 }
 
 class _TransactionViewState extends State<TransactionView> {
-  // String typeToText(String type) {
-
-  //   switch (type) {
-  //     case "VoucherCreated":
-
-  //       break;
-  //     default:
-  //   }
-
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

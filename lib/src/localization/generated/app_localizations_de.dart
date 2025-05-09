@@ -483,13 +483,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get errorPlanNotAllowed => 'Dieses Feature ist in deinem aktuellen Plan nicht verfügbar.';
 
   @override
+  String get errorPlanUpgradeNotYearly => 'Das Upgrade des Plans muss jährlich bezahlt werden, da der aktuelle Plan ebenfalls jährlich abgerechnet wird.';
+
+  @override
   String get upgradeToPaidPlan => 'Upgrade auf einen kostenpflichtigen Plan.';
 
   @override
-  String get proYearlyPrice => '10€/Jahr';
+  String get year => 'year';
 
   @override
-  String get proMonthlyPrice => '1€/Monat';
+  String get month => 'month';
 
   @override
   String get proFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
@@ -499,12 +502,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get proFeature3 => '3 zusätzliche kostenlose Benutzer';
-
-  @override
-  String get familyYearlyPrice => '20€/Jahr';
-
-  @override
-  String get familyMonthlyPrice => '2€/Monat';
 
   @override
   String get familyFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
@@ -528,7 +525,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transactionHistory => 'Transaktionshistorie';
 
   @override
-  String get currentBalance => 'Aktueller Kontostand';
+  String get manageSubscription => 'Manage your subscription';
+
+  @override
+  String get nextPayment => 'Next payment';
+
+  @override
+  String get currentBalance => 'Dein Guthaben';
 
   @override
   String get manageAdditionalUsers => 'Zusätzlichen Benutzer verwalten';
@@ -589,4 +592,37 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get transactionVoucherRedeemed => 'Gutschein eingelöst';
+
+  @override
+  String get checkoutOptions => 'Optionen';
+
+  @override
+  String get checkoutPayYearly => 'Jährlich bezahlen';
+
+  @override
+  String get checkoutTotal => 'Gesamt';
+
+  @override
+  String get selectPaymentMethode => 'Zahlungsmethode auswählen';
+
+  @override
+  String get twonlyCredit => 'twonly-Guthaben';
+
+  @override
+  String get notEnoughCredit => 'Du hast nicht genügend Guthaben!';
+
+  @override
+  String get chargeCredit => 'Guthaben aufladen';
+
+  @override
+  String get autoRenewal => 'Automatische Verlängerung';
+
+  @override
+  String get autoRenewalDesc => 'Du kannst dies jederzeit ändern.';
+
+  @override
+  String get planSuccessUpgraded => 'Dein Plan wurde erfolgreich aktualisiert.';
+
+  @override
+  String get checkoutSubmit => 'Kostenpflichtig bestellen';
 }

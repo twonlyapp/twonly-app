@@ -45,6 +45,7 @@ const ErrorCode$json = {
     {'1': 'PlanLimitReached', '2': 1023},
     {'1': 'NotEnoughCredit', '2': 1024},
     {'1': 'PlanDowngrade', '2': 1025},
+    {'1': 'PlanUpgradeNotYearly', '2': 1026},
   ],
 };
 
@@ -62,5 +63,5 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     '4Q+QcSGAoTQXBpRW5kcG9pbnROb3RGb3VuZBD6BxIWChFBdXRoVG9rZW5Ob3RWYWxpZBD7BxIT'
     'Cg5JbnZhbGlkUHJlS2V5cxD8BxITCg5Wb3VjaGVySW5WYWxpZBD9BxITCg5QbGFuTm90QWxsb3'
     'dlZBD+BxIVChBQbGFuTGltaXRSZWFjaGVkEP8HEhQKD05vdEVub3VnaENyZWRpdBCACBISCg1Q'
-    'bGFuRG93bmdyYWRlEIEI');
+    'bGFuRG93bmdyYWRlEIEIEhkKFFBsYW5VcGdyYWRlTm90WWVhcmx5EIII');
 

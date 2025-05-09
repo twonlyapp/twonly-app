@@ -483,13 +483,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorPlanNotAllowed => 'This feature is not available in your current plan.';
 
   @override
+  String get errorPlanUpgradeNotYearly => 'The plan upgrade must be paid for annually, as the current plan is also billed annually.';
+
+  @override
   String get upgradeToPaidPlan => 'Upgrade to a paid plan.';
 
   @override
-  String get proYearlyPrice => '10€/year';
+  String get year => 'year';
 
   @override
-  String get proMonthlyPrice => '1€/month';
+  String get month => 'month';
 
   @override
   String get proFeature1 => '✓ Unlimited media file uploads';
@@ -499,12 +502,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proFeature3 => '3 additional Free users';
-
-  @override
-  String get familyYearlyPrice => '20€/year';
-
-  @override
-  String get familyMonthlyPrice => '2€/month';
 
   @override
   String get familyFeature1 => '✓ Unlimited media file uploads';
@@ -526,6 +523,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionHistory => 'Your transaction history';
+
+  @override
+  String get manageSubscription => 'Manage your subscription';
+
+  @override
+  String get nextPayment => 'Next payment';
 
   @override
   String get currentBalance => 'Current balance';
@@ -589,4 +592,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transactionVoucherRedeemed => 'Voucher redeemed';
+
+  @override
+  String get checkoutOptions => 'Options';
+
+  @override
+  String get checkoutPayYearly => 'Pay yearly';
+
+  @override
+  String get checkoutTotal => 'Total';
+
+  @override
+  String get selectPaymentMethode => 'Select Payment Method';
+
+  @override
+  String get twonlyCredit => 'twonly-Credit';
+
+  @override
+  String get notEnoughCredit => 'You do not have enough credit!';
+
+  @override
+  String get chargeCredit => 'Charge credit';
+
+  @override
+  String get autoRenewal => 'Auto renewal';
+
+  @override
+  String get autoRenewalDesc => 'You can change this at any time.';
+
+  @override
+  String get planSuccessUpgraded => 'Successfully upgraded your plan.';
+
+  @override
+  String get checkoutSubmit => 'Order with a fee.';
 }

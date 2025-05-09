@@ -85,6 +85,8 @@ String errorCodeToText(BuildContext context, ErrorCode code) {
       return context.lang.errorPlanNotAllowed;
     case ErrorCode.VoucherInValid:
       return context.lang.errorVoucherInvalid;
+    case ErrorCode.PlanUpgradeNotYearly:
+      return context.lang.errorPlanUpgradeNotYearly;
     default:
       return code.toString(); // Fallback for unrecognized keys
   }

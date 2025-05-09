@@ -919,6 +919,7 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
   factory ApplicationData_SwitchToPayedPlan({
     $core.String? planId,
     $core.bool? payMonthly,
+    $core.bool? autoRenewal,
   }) {
     final $result = create();
     if (planId != null) {
@@ -926,6 +927,9 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
     }
     if (payMonthly != null) {
       $result.payMonthly = payMonthly;
+    }
+    if (autoRenewal != null) {
+      $result.autoRenewal = autoRenewal;
     }
     return $result;
   }
@@ -936,6 +940,7 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.SwitchToPayedPlan', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'planId')
     ..aOB(2, _omitFieldNames ? '' : 'payMonthly')
+    ..aOB(3, _omitFieldNames ? '' : 'autoRenewal')
     ..hasRequiredFields = false
   ;
 
@@ -977,6 +982,15 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
   $core.bool hasPayMonthly() => $_has(1);
   @$pb.TagNumber(2)
   void clearPayMonthly() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.bool get autoRenewal => $_getBF(2);
+  @$pb.TagNumber(3)
+  set autoRenewal($core.bool v) { $_setBool(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasAutoRenewal() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAutoRenewal() => clearField(3);
 }
 
 class ApplicationData_CreateVoucher extends $pb.GeneratedMessage {

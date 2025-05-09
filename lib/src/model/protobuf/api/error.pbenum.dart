@@ -42,6 +42,7 @@ class ErrorCode extends $pb.ProtobufEnum {
   static const ErrorCode PlanLimitReached = ErrorCode._(1023, _omitEnumNames ? '' : 'PlanLimitReached');
   static const ErrorCode NotEnoughCredit = ErrorCode._(1024, _omitEnumNames ? '' : 'NotEnoughCredit');
   static const ErrorCode PlanDowngrade = ErrorCode._(1025, _omitEnumNames ? '' : 'PlanDowngrade');
+  static const ErrorCode PlanUpgradeNotYearly = ErrorCode._(1026, _omitEnumNames ? '' : 'PlanUpgradeNotYearly');
 
   static const $core.List<ErrorCode> values = <ErrorCode> [
     Unknown,
@@ -72,6 +73,7 @@ class ErrorCode extends $pb.ProtobufEnum {
     PlanLimitReached,
     NotEnoughCredit,
     PlanDowngrade,
+    PlanUpgradeNotYearly,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue = $pb.ProtobufEnum.initByValue(values);
