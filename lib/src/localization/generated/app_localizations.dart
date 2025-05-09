@@ -1192,6 +1192,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Buy'**
   String get buy;
+
+  /// No description provided for @transactionCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash transaction'**
+  String get transactionCash;
+
+  /// No description provided for @transactionPlanUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan upgrade'**
+  String get transactionPlanUpgrade;
+
+  /// No description provided for @transactionRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund transaction'**
+  String get transactionRefund;
+
+  /// No description provided for @transactionThanksForTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for testing'**
+  String get transactionThanksForTesting;
+
+  /// No description provided for @transactionUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown transaction'**
+  String get transactionUnknown;
+
+  /// No description provided for @transactionVoucherCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher created'**
+  String get transactionVoucherCreated;
+
+  /// No description provided for @transactionVoucherRedeemed.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher redeemed'**
+  String get transactionVoucherRedeemed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

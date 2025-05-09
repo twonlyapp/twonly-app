@@ -135,6 +135,7 @@ Future startDownloadMedia(Message message, bool force) async {
         await apiProvider.triggerDownload(content.downloadToken!, offset);
     if (res.isError) {
       if (res.error == ErrorCode.InvalidDownloadToken) {
+        // TODO: notfy the sender about this issue
         await twonlyDatabase.messagesDao.updateMessageByMessageId(
           media.messageId,
           MessagesCompanion(

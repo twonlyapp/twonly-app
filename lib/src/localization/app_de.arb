@@ -196,5 +196,12 @@
     "enterVoucherCode": "Gutschein Code eingeben",
     "voucherRedeemed": "Gutschein eingelöst",
     "requestedVouchers": "Beantragte Gutscheine",
-    "redeemedVouchers": "Eingelöste Gutscheine"
+    "redeemedVouchers": "Eingelöste Gutscheine",
+    "transactionCash": "Bargeldtransaktion",
+    "transactionPlanUpgrade": "Planupgrade",
+    "transactionRefund": "Rückerstattung",
+    "transactionThanksForTesting": "Danke fürs Testen",
+    "transactionUnknown": "Unbekannte Transaktion",
+    "transactionVoucherCreated": "Gutschein erstellt",
+    "transactionVoucherRedeemed": "Gutschein eingelöst"
 }

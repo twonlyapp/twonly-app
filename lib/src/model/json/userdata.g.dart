@@ -29,7 +29,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..storeMediaFilesInGallery = json['storeMediaFilesInGallery'] as bool?
       ..lastUsedEditorEmojis = (json['lastUsedEditorEmojis'] as List<dynamic>?)
           ?.map((e) => e as String)
-          .toList();
+          .toList()
+      ..lastPlanBallance = json['lastPlanBallance'] as String?;
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'username': instance.username,
@@ -45,6 +46,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'autoDownloadOptions': instance.autoDownloadOptions,
       'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
       'lastUsedEditorEmojis': instance.lastUsedEditorEmojis,
+      'lastPlanBallance': instance.lastPlanBallance,
       'userId': instance.userId,
     };
 

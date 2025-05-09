@@ -2,11 +2,13 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/settings/subscription/transaction_view.dart';
 import 'package:twonly/src/views/settings/subscription/voucher_view.dart';
@@ -20,8 +22,6 @@ class SubscriptionView extends StatefulWidget {
 
 class _SubscriptionViewState extends State<SubscriptionView> {
   bool loaded = false;
-  int ballanceInCents = 0;
-  DateTime? nextPayment;
   Response_PlanBallance? ballance;
 
   @override
@@ -31,29 +31,43 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future initAsync() async {
+    final user = await getUser();
+    if (user == null) return;
     ballance = await apiProvider.getPlanBallance();
     if (ballance != null) {
-      setState(() {
-        DateTime lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
-            ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000);
-        nextPayment = lastPaymentDateTime
-            .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
-        ballanceInCents =
-            ballance!.transactions.map((a) => a.depositCents.toInt()).sum;
-        loaded = true;
-      });
-      return;
+      user.lastPlanBallance = ballance!.writeToJson();
+      await updateUser(user);
+    } else if (user.lastPlanBallance != null) {
+      try {
+        ballance = Response_PlanBallance.fromJson(
+          user.lastPlanBallance!,
+        );
+      } catch (e) {
+        Logger("subscription_view.dart").shout("from json: $e");
+      }
     }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     Locale myLocale = Localizations.localeOf(context);
-    String formattedBalance = NumberFormat.currency(
-      locale: myLocale.toString(),
-      symbol: '€',
-      decimalDigits: 2,
-    ).format(ballanceInCents / 100);
+    String? formattedBalance;
+    DateTime? nextPayment;
+
+    if (ballance != null) {
+      DateTime lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
+          ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000);
+      nextPayment = lastPaymentDateTime
+          .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
+      int ballanceInCents =
+          ballance!.transactions.map((a) => a.depositCents.toInt()).sum;
+      formattedBalance = NumberFormat.currency(
+        locale: myLocale.toString(),
+        symbol: '€',
+        decimalDigits: 2,
+      ).format(ballanceInCents / 100);
+    }
 
     String currentPlan = context.read<CustomChangeProvider>().plan;
 
@@ -155,21 +169,22 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               text: "Manage your subscription",
               subtitle: (nextPayment != null)
                   ? Text(
-                      "Next payment: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment!)}")
+                      "Next payment: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}")
                   : null,
               onTap: () {},
             ),
           BetterListTile(
             icon: FontAwesomeIcons.moneyBillTransfer,
             text: context.lang.transactionHistory,
-            subtitle: (loaded)
+            subtitle: (formattedBalance != null)
                 ? Text("${context.lang.currentBalance}: $formattedBalance")
                 : null,
             onTap: () {
+              if (formattedBalance == null) return;
               Navigator.push(context, MaterialPageRoute(builder: (context) {
                 return TransactionView(
-                  transactions: ballance!.transactions,
-                  formattedBalance: formattedBalance,
+                  transactions: ballance?.transactions,
+                  formattedBalance: formattedBalance!,
                 );
               }));
             },

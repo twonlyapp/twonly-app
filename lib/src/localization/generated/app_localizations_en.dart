@@ -568,4 +568,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get buy => 'Buy';
+
+  @override
+  String get transactionCash => 'Cash transaction';
+
+  @override
+  String get transactionPlanUpgrade => 'Plan upgrade';
+
+  @override
+  String get transactionRefund => 'Refund transaction';
+
+  @override
+  String get transactionThanksForTesting => 'Thank you for testing';
+
+  @override
+  String get transactionUnknown => 'Unknown transaction';
+
+  @override
+  String get transactionVoucherCreated => 'Voucher created';
+
+  @override
+  String get transactionVoucherRedeemed => 'Voucher redeemed';
 }

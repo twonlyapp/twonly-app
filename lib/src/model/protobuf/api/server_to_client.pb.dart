@@ -15,6 +15,9 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'error.pbenum.dart' as $0;
+import 'server_to_client.pbenum.dart';
+
+export 'server_to_client.pbenum.dart';
 
 enum ServerToClient_V {
   v0, 
@@ -765,7 +768,7 @@ class Response_AddAccountsInvites extends $pb.GeneratedMessage {
 class Response_Transaction extends $pb.GeneratedMessage {
   factory Response_Transaction({
     $fixnum.Int64? depositCents,
-    $core.String? transactionType,
+    Response_TransactionTypes? transactionType,
     $fixnum.Int64? createdAtUnixTimestamp,
   }) {
     final $result = create();
@@ -786,7 +789,7 @@ class Response_Transaction extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Transaction', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'depositCents')
-    ..aOS(2, _omitFieldNames ? '' : 'transactionType')
+    ..e<Response_TransactionTypes>(2, _omitFieldNames ? '' : 'transactionType', $pb.PbFieldType.OE, defaultOrMaker: Response_TransactionTypes.Refund, valueOf: Response_TransactionTypes.valueOf, enumValues: Response_TransactionTypes.values)
     ..aInt64(3, _omitFieldNames ? '' : 'createdAtUnixTimestamp')
     ..hasRequiredFields = false
   ;
@@ -822,9 +825,9 @@ class Response_Transaction extends $pb.GeneratedMessage {
   void clearDepositCents() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get transactionType => $_getSZ(1);
+  Response_TransactionTypes get transactionType => $_getN(1);
   @$pb.TagNumber(2)
-  set transactionType($core.String v) { $_setString(1, v); }
+  set transactionType(Response_TransactionTypes v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasTransactionType() => $_has(1);
   @$pb.TagNumber(2)

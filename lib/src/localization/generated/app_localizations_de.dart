@@ -568,4 +568,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get buy => 'Kaufen';
+
+  @override
+  String get transactionCash => 'Bargeldtransaktion';
+
+  @override
+  String get transactionPlanUpgrade => 'Planupgrade';
+
+  @override
+  String get transactionRefund => 'Rückerstattung';
+
+  @override
+  String get transactionThanksForTesting => 'Danke fürs Testen';
+
+  @override
+  String get transactionUnknown => 'Unbekannte Transaktion';
+
+  @override
+  String get transactionVoucherCreated => 'Gutschein erstellt';
+
+  @override
+  String get transactionVoucherRedeemed => 'Gutschein eingelöst';
 }

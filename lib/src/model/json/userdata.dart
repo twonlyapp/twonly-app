@@ -28,6 +28,8 @@ class UserData {
   bool? storeMediaFilesInGallery;
   List<String>? lastUsedEditorEmojis;
 
+  String? lastPlanBallance;
+
   final int userId;
 
   factory UserData.fromJson(Map<String, dynamic> json) =>

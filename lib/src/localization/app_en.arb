@@ -354,5 +354,12 @@
   "enterVoucherCode": "Enter Voucher Code",
   "requestedVouchers": "Requested vouchers",
   "redeemedVouchers": "Redeemed vouchers",
-  "buy": "Buy"
+  "buy": "Buy",
+  "transactionCash": "Cash transaction",
+  "transactionPlanUpgrade": "Plan upgrade",
+  "transactionRefund": "Refund transaction",
+  "transactionThanksForTesting": "Thank you for testing",
+  "transactionUnknown": "Unknown transaction",
+  "transactionVoucherCreated": "Voucher created",
+  "transactionVoucherRedeemed": "Voucher redeemed"
 }

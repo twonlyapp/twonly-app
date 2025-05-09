@@ -6,7 +6,7 @@ import 'package:twonly/src/utils/misc.dart';
 class TransactionView extends StatefulWidget {
   const TransactionView(
       {super.key, required this.transactions, required this.formattedBalance});
-  final List<Response_Transaction> transactions;
+  final List<Response_Transaction>? transactions;
   final String formattedBalance;
 
   @override
@@ -53,7 +53,8 @@ class _TransactionViewState extends State<TransactionView> {
               ),
             ),
           ),
-          ...widget.transactions.map((x) => TransactionCard(transaction: x))
+          if (widget.transactions != null)
+            ...widget.transactions!.map((x) => TransactionCard(transaction: x))
         ],
       ),
     );
@@ -70,6 +71,26 @@ class TransactionCard extends StatefulWidget {
 }
 
 class _TransactionCardState extends State<TransactionCard> {
+  String typeToText(Response_TransactionTypes type) {
+    switch (type) {
+      case Response_TransactionTypes.Cash:
+        return context.lang.transactionCash;
+      case Response_TransactionTypes.PlanUpgrade:
+        return context.lang.transactionPlanUpgrade;
+      case Response_TransactionTypes.Refund:
+        return context.lang.transactionRefund;
+      case Response_TransactionTypes.ThanksForTesting:
+        return context.lang.transactionThanksForTesting;
+      case Response_TransactionTypes.Unknown:
+        return context.lang.transactionUnknown;
+      case Response_TransactionTypes.VoucherCreated:
+        return context.lang.transactionVoucherCreated;
+      case Response_TransactionTypes.VoucherRedeemed:
+        return context.lang.transactionVoucherRedeemed;
+    }
+    return type.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final myLocale = Localizations.localeOf(context);
@@ -98,7 +119,7 @@ class _TransactionCardState extends State<TransactionCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.transaction.transactionType,
+                      typeToText(widget.transaction.transactionType),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
