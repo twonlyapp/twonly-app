@@ -51,6 +51,33 @@ Future<Response_PlanBallance?> loadPlanBallance() async {
   return ballance;
 }
 
+// ignore: constant_identifier_names
+const int MONTHLY_PAYMENT_DAYS = 30;
+// ignore: constant_identifier_names
+const int YEARLY_PAYMENT_DAYS = 365;
+
+int calculateRefund(Response_PlanBallance current) {
+  int refund = getPlanPrice("Pro", true);
+
+  if (current.paymentPeriodDays == YEARLY_PAYMENT_DAYS) {
+    final elapsedDays = DateTime.now()
+        .difference(DateTime.fromMillisecondsSinceEpoch(
+            current.lastPaymentDoneUnixTimestamp.toInt() * 1000))
+        .inDays;
+    if (elapsedDays < current.paymentPeriodDays.toInt()) {
+      // User has yearly plan with 10€
+      // used it half a year and wants now to upgrade => gets 5€ discount...
+      // math.ceil(((365-(365/2))/365)*10)
+      // => 5€
+
+      refund = (((YEARLY_PAYMENT_DAYS - elapsedDays) / YEARLY_PAYMENT_DAYS) *
+              getPlanPrice("Pro", false))
+          .ceil();
+    }
+  }
+  return refund;
+}
+
 class SubscriptionView extends StatefulWidget {
   const SubscriptionView({super.key});
 
@@ -94,6 +121,10 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     }
 
     String currentPlan = context.read<CustomChangeProvider>().plan;
+    int refund = 0;
+    if (currentPlan == "Pro" && ballance != null) {
+      refund = calculateRefund(ballance!);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -138,7 +169,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
-                  return CheckoutView(planId: "Pro");
+                  return CheckoutView(
+                    planId: "Pro",
+                  );
                 }));
                 initAsync();
               },
@@ -146,10 +179,17 @@ class _SubscriptionViewState extends State<SubscriptionView> {
           if (currentPlan != "Family")
             PlanCard(
               planId: "Family",
+              refund: refund,
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
-                  return CheckoutView(planId: "Family");
+                  return CheckoutView(
+                    planId: "Family",
+                    refund: (refund > 0) ? refund : null,
+                    disableMonthlyOption: (currentPlan == "Pro" &&
+                        ballance!.paymentPeriodDays.toInt() ==
+                            YEARLY_PAYMENT_DAYS),
+                  );
                 }));
                 initAsync();
               },
@@ -243,10 +283,12 @@ int getPlanPrice(String planId, bool paidMonthly) {
 class PlanCard extends StatelessWidget {
   final String planId;
   final Function()? onTap;
+  final int? refund;
 
   const PlanCard({
     super.key,
     required this.planId,
+    this.refund,
     this.onTap,
   });
 
@@ -340,6 +382,19 @@ class PlanCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (refund != null && refund! > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 7),
+                    child: Text(
+                      context.lang
+                          .subscriptionRefund(localePrizing(context, refund!)),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: context.color.primary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  )
               ],
             ),
           ),

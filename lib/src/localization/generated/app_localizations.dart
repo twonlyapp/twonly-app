@@ -1199,6 +1199,12 @@ abstract class AppLocalizations {
   /// **'Buy'**
   String get buy;
 
+  /// No description provided for @subscriptionRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'When you upgrade, you will receive a refund of {refund} for your current subscription.'**
+  String subscriptionRefund(Object refund);
+
   /// No description provided for @transactionCash.
   ///
   /// In en, this message translates to:
@@ -1246,6 +1252,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Options'**
   String get checkoutOptions;
+
+  /// No description provided for @refund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get refund;
 
   /// No description provided for @checkoutPayYearly.
   ///

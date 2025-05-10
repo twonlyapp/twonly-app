@@ -10,16 +10,17 @@ import 'package:twonly/src/views/settings/subscription/voucher_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SelectPaymentView extends StatefulWidget {
-  const SelectPaymentView({
-    super.key,
-    this.planId,
-    this.payMonthly,
-    this.valueInCents,
-  });
+  const SelectPaymentView(
+      {super.key,
+      this.planId,
+      this.payMonthly,
+      this.valueInCents,
+      this.refund});
 
   final String? planId;
   final bool? payMonthly;
   final int? valueInCents;
+  final int? refund;
 
   @override
   State<SelectPaymentView> createState() => _SelectPaymentViewState();
@@ -162,8 +163,31 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 ),
               ),
             ),
+            if (widget.refund != null)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          context.lang.refund,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "+${localePrizing(context, widget.refund!)}",
+                          textAlign: TextAlign.end,
+                          style: TextStyle(color: context.color.primary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Card(
                 child: Padding(
                   padding: EdgeInsets.all(16),
@@ -183,6 +207,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 ),
               ),
             ),
+            SizedBox(height: 16),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: FilledButton(
@@ -199,6 +224,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                             user.subscriptionPlan = widget.planId!;
                             await updateUser(user);
                           }
+                          if (!context.mounted) return;
                           context
                               .read<CustomChangeProvider>()
                               .updatePlan(widget.planId!);

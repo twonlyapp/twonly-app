@@ -573,6 +573,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get buy => 'Kaufen';
 
   @override
+  String subscriptionRefund(Object refund) {
+    return 'Wenn du ein Upgrade durchführst, erhältst du eine Rückerstattung von $refund für dein aktuelles Abonnement.';
+  }
+
+  @override
   String get transactionCash => 'Bargeldtransaktion';
 
   @override
@@ -595,6 +600,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get checkoutOptions => 'Optionen';
+
+  @override
+  String get refund => 'Rückerstattung';
 
   @override
   String get checkoutPayYearly => 'Jährlich bezahlen';

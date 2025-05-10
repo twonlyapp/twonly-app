@@ -4,12 +4,15 @@ import 'package:twonly/src/views/settings/subscription/select_payment.dart';
 import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 
 class CheckoutView extends StatefulWidget {
-  const CheckoutView({
-    super.key,
-    required this.planId,
-  });
+  const CheckoutView(
+      {super.key,
+      required this.planId,
+      this.refund,
+      this.disableMonthlyOption});
 
   final String planId;
+  final int? refund;
+  final bool? disableMonthlyOption;
 
   @override
   State<CheckoutView> createState() => _CheckoutViewState();
@@ -49,28 +52,53 @@ class _CheckoutViewState extends State<CheckoutView> {
               child: ListView(
                 children: [
                   PlanCard(planId: widget.planId),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ListTile(
-                      title: Text(context.lang.checkoutPayYearly),
-                      onTap: () {
-                        paidMonthly = !paidMonthly;
-                        setCheckout(false);
-                      },
-                      trailing: Checkbox(
-                        value: !paidMonthly,
-                        onChanged: (a) {
+                  if (widget.disableMonthlyOption == null ||
+                      !widget.disableMonthlyOption!)
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ListTile(
+                        title: Text(context.lang.checkoutPayYearly),
+                        onTap: () {
                           paidMonthly = !paidMonthly;
                           setCheckout(false);
                         },
+                        trailing: Checkbox(
+                          value: !paidMonthly,
+                          onChanged: (a) {
+                            paidMonthly = !paidMonthly;
+                            setCheckout(false);
+                          },
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
+            if (widget.refund != null)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          context.lang.refund,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "+${localePrizing(context, widget.refund!)}",
+                          textAlign: TextAlign.end,
+                          style: TextStyle(color: context.color.primary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Card(
                 child: Padding(
                   padding: EdgeInsets.all(16),
@@ -90,6 +118,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                 ),
               ),
             ),
+            SizedBox(height: 16),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: FilledButton(
@@ -97,7 +126,10 @@ class _CheckoutViewState extends State<CheckoutView> {
                     bool? success = await Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
                       return SelectPaymentView(
-                          planId: widget.planId, payMonthly: paidMonthly);
+                        planId: widget.planId,
+                        payMonthly: paidMonthly,
+                        refund: widget.refund,
+                      );
                     }));
                     if (success != null && success && context.mounted) {
                       Navigator.pop(context);

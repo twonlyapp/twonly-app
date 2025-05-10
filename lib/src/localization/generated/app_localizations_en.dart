@@ -573,6 +573,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buy => 'Buy';
 
   @override
+  String subscriptionRefund(Object refund) {
+    return 'When you upgrade, you will receive a refund of $refund for your current subscription.';
+  }
+
+  @override
   String get transactionCash => 'Cash transaction';
 
   @override
@@ -595,6 +600,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkoutOptions => 'Options';
+
+  @override
+  String get refund => 'Refund';
 
   @override
   String get checkoutPayYearly => 'Pay yearly';
