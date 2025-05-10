@@ -486,6 +486,13 @@ class ApiProvider {
     return await sendRequestSync(req);
   }
 
+  Future<Result> redeemUserInviteCode(String inviteCode) async {
+    var get = ApplicationData_RedeemAdditionalCode()..inviteCode = inviteCode;
+    var appData = ApplicationData()..redeemadditionalcode = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
   Future<Result> updateFCMToken(String googleFcm) async {
     var get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
     var appData = ApplicationData()..updategooglefcmtoken = get;

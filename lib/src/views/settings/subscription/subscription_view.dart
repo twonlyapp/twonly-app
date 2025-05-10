@@ -72,8 +72,10 @@ int calculateRefund(Response_PlanBallance current) {
       // => 5€
 
       refund = (((YEARLY_PAYMENT_DAYS - elapsedDays) / YEARLY_PAYMENT_DAYS) *
-              getPlanPrice("Pro", false))
-          .ceil();
+                  getPlanPrice("Pro", false) /
+                  100)
+              .ceil() *
+          100;
     }
   }
   return refund;
@@ -211,11 +213,17 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             if (currentPlan != "Free")
               PlanCard(
                 planId: "Free",
-                onTap: () {},
+                onTap: () async {
+                  await redeemUserInviteCode(context, "Free");
+                  initAsync();
+                },
               ),
             PlanCard(
               planId: "Plus",
-              onTap: () {},
+              onTap: () async {
+                await redeemUserInviteCode(context, "Plus");
+                initAsync();
+              },
             ),
           ],
           SizedBox(height: 10),
@@ -432,4 +440,74 @@ class PlanCard extends StatelessWidget {
       ),
     );
   }
+}
+
+Future redeemUserInviteCode(BuildContext context, String newPlan) async {
+  String inviteCode = '';
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(context.lang.redeemUserInviteCodeTitle),
+        content: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: TextField(
+                      onChanged: (value) {
+                        // Convert to uppercase
+                        setState(() {
+                          inviteCode = value.toUpperCase();
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: context.lang.registerTwonlyCodeLabel,
+                        border: OutlineInputBorder(),
+                      ),
+                      // Set the text to be uppercase
+                      textCapitalization: TextCapitalization.characters,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(context.lang.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final res = await apiProvider.redeemUserInviteCode(inviteCode);
+              if (!context.mounted) return;
+              if (res.isSuccess) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(context.lang.redeemUserInviteCodeSuccess)),
+                );
+                // reconnect to load new plan.
+                apiProvider.close(() {
+                  apiProvider.connect();
+                });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(errorCodeToText(context, res.error))),
+                );
+              }
+              Navigator.of(context).pop();
+            },
+            child: Text(context.lang.ok),
+          ),
+        ],
+      );
+    },
+  );
 }

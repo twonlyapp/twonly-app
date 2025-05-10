@@ -513,7 +513,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyFeature3 => '4 additional Free users';
 
   @override
-  String get redeemUserInviteCode => 'Or redeem an additional user invite code.';
+  String get redeemUserInviteCodeTitle => 'Redeem twonly-Code';
+
+  @override
+  String get redeemUserInviteCodeSuccess => 'Your plan has been successfully adjusted.';
 
   @override
   String get freeFeature1 => '3 Media file uploads per day';

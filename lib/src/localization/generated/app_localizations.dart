@@ -1079,11 +1079,17 @@ abstract class AppLocalizations {
   /// **'4 additional Free users'**
   String get familyFeature3;
 
-  /// No description provided for @redeemUserInviteCode.
+  /// No description provided for @redeemUserInviteCodeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Or redeem an additional user invite code.'**
-  String get redeemUserInviteCode;
+  /// **'Redeem twonly-Code'**
+  String get redeemUserInviteCodeTitle;
+
+  /// No description provided for @redeemUserInviteCodeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan has been successfully adjusted.'**
+  String get redeemUserInviteCodeSuccess;
 
   /// No description provided for @freeFeature1.
   ///

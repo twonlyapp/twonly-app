@@ -193,6 +193,8 @@
     "createVoucher": "Gutschein kaufen",
     "createVoucherDesc": "Wähle den Wert des Gutscheins. Der Wert des Gutschein wird von deinem twonly-Guthaben abgezogen.",
     "redeemVoucher": "Gutschein einlösen",
+    "redeemUserInviteCodeTitle": "twonly-Code einlösen",
+    "redeemUserInviteCodeSuccess": "Dein Plan wurde erfolgreich angepasst.",
     "voucherCreated": "Gutschein wurde erstellt",
     "openVouchers": "Offene Gutscheine",
     "enterVoucherCode": "Gutschein Code eingeben",
