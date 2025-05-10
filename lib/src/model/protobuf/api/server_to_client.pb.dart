@@ -1068,6 +1068,7 @@ class Response_PlanBallance extends $pb.GeneratedMessage {
     $fixnum.Int64? lastPaymentDoneUnixTimestamp,
     $core.Iterable<Response_Transaction>? transactions,
     $core.Iterable<Response_AdditionalAccount>? additionalAccounts,
+    $core.bool? autoRenewal,
   }) {
     final $result = create();
     if (usedDailyMediaUploadLimit != null) {
@@ -1088,6 +1089,9 @@ class Response_PlanBallance extends $pb.GeneratedMessage {
     if (additionalAccounts != null) {
       $result.additionalAccounts.addAll(additionalAccounts);
     }
+    if (autoRenewal != null) {
+      $result.autoRenewal = autoRenewal;
+    }
     return $result;
   }
   Response_PlanBallance._() : super();
@@ -1101,6 +1105,7 @@ class Response_PlanBallance extends $pb.GeneratedMessage {
     ..aInt64(4, _omitFieldNames ? '' : 'lastPaymentDoneUnixTimestamp')
     ..pc<Response_Transaction>(5, _omitFieldNames ? '' : 'transactions', $pb.PbFieldType.PM, subBuilder: Response_Transaction.create)
     ..pc<Response_AdditionalAccount>(6, _omitFieldNames ? '' : 'additionalAccounts', $pb.PbFieldType.PM, subBuilder: Response_AdditionalAccount.create)
+    ..aOB(7, _omitFieldNames ? '' : 'autoRenewal')
     ..hasRequiredFields = false
   ;
 
@@ -1166,6 +1171,15 @@ class Response_PlanBallance extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(6)
   $core.List<Response_AdditionalAccount> get additionalAccounts => $_getList(5);
+
+  @$pb.TagNumber(7)
+  $core.bool get autoRenewal => $_getBF(6);
+  @$pb.TagNumber(7)
+  set autoRenewal($core.bool v) { $_setBool(6, v); }
+  @$pb.TagNumber(7)
+  $core.bool hasAutoRenewal() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAutoRenewal() => clearField(7);
 }
 
 class Response_Location extends $pb.GeneratedMessage {

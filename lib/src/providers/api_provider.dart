@@ -433,6 +433,34 @@ class ApiProvider {
     return null;
   }
 
+  Future<List<Response_AddAccountsInvite>?> getAdditionalUserInvites() async {
+    var get = ApplicationData_GetAddAccountsInvites();
+    var appData = ApplicationData()..getaddaccountsinvites = get;
+    var req = createClientToServerFromApplicationData(appData);
+    Result res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      server.Response_Ok ok = res.value;
+      if (ok.hasAddaccountsinvites()) {
+        return ok.addaccountsinvites.invites;
+      }
+    }
+    return null;
+  }
+
+  Future<Result> updatePlanOptions(bool autoRenewal) async {
+    var get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
+    var appData = ApplicationData()..updateplanoptions = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
+  Future<Result> removeAdditionalUser(Int64 userId) async {
+    var get = ApplicationData_RemoveAdditionalUser()..userId = userId;
+    var appData = ApplicationData()..removeadditionaluser = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
   Future<Result> buyVoucher(int valueInCents) async {
     var get = ApplicationData_CreateVoucher()..valueCents = valueInCents;
     var appData = ApplicationData()..createvoucher = get;

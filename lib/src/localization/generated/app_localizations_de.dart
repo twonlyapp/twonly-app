@@ -510,7 +510,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get familyFeature2 => '4 zusätzliche Plus Benutzer';
 
   @override
-  String get familyFeature3 => '5 zusätzliche kostenlose Benutzer';
+  String get familyFeature3 => '4 zusätzliche kostenlose Benutzer';
 
   @override
   String get redeemUserInviteCode => 'Oder löse einen zusätzlichen twonly-Code ein.';
@@ -525,16 +525,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transactionHistory => 'Transaktionshistorie';
 
   @override
-  String get manageSubscription => 'Manage your subscription';
+  String get manageSubscription => 'Abonnement verwalten';
 
   @override
-  String get nextPayment => 'Next payment';
+  String get nextPayment => 'Nächste Zahlung';
 
   @override
   String get currentBalance => 'Dein Guthaben';
 
   @override
-  String get manageAdditionalUsers => 'Zusätzlichen Benutzer verwalten';
+  String get manageAdditionalUsers => 'Zusätzliche Benutzer verwalten';
 
   @override
   String get open => 'Offene';
@@ -627,6 +627,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get autoRenewalDesc => 'Du kannst dies jederzeit ändern.';
+
+  @override
+  String get autoRenewalLongDesc => 'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Vorschau-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst.  Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
 
   @override
   String get planSuccessUpgraded => 'Dein Plan wurde erfolgreich aktualisiert.';

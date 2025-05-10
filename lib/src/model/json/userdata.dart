@@ -29,6 +29,7 @@ class UserData {
   List<String>? lastUsedEditorEmojis;
 
   String? lastPlanBallance;
+  String? additionalUserInvites;
 
   final int userId;
 

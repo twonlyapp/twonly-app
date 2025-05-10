@@ -510,7 +510,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyFeature2 => '4 additional Plus users';
 
   @override
-  String get familyFeature3 => '5 additional Free users';
+  String get familyFeature3 => '4 additional Free users';
 
   @override
   String get redeemUserInviteCode => 'Or redeem an additional user invite code.';
@@ -534,7 +534,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentBalance => 'Current balance';
 
   @override
-  String get manageAdditionalUsers => 'Manage your additional users';
+  String get manageAdditionalUsers => 'Manage additional users';
 
   @override
   String get open => 'Open';
@@ -627,6 +627,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoRenewalDesc => 'You can change this at any time.';
+
+  @override
+  String get autoRenewalLongDesc => 'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal.  We will notify you in good time before the automatic renewal.';
 
   @override
   String get planSuccessUpgraded => 'Successfully upgraded your plan.';

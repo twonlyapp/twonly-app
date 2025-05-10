@@ -35,7 +35,6 @@ class _VoucherViewState extends State<VoucherView> {
   Widget build(BuildContext context) {
     final openVoucher = vouchers.where((x) => !x.redeemed && !x.requested);
     final redeemedVoucher = vouchers.where((x) => x.redeemed);
-    // final requestedVoucher = vouchers.where((x) => !x.redeemed && x.requested);
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.createOrRedeemVoucher),
@@ -65,14 +64,6 @@ class _VoucherViewState extends State<VoucherView> {
               ),
             ),
           ...openVoucher.map((x) => VoucherCard(voucher: x)),
-          // if (requestedVoucher.isNotEmpty)
-          //   ListTile(
-          //     title: Text(
-          //       context.lang.requestedVouchers,
-          //       style: TextStyle(fontSize: 13),
-          //     ),
-          //   ),
-          // ...requestedVoucher.map((x) => VoucherCard(voucher: x)),
           if (redeemedVoucher.isNotEmpty)
             ListTile(
               title: Text(

@@ -993,6 +993,56 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
   void clearAutoRenewal() => clearField(3);
 }
 
+class ApplicationData_UpdatePlanOptions extends $pb.GeneratedMessage {
+  factory ApplicationData_UpdatePlanOptions({
+    $core.bool? autoRenewal,
+  }) {
+    final $result = create();
+    if (autoRenewal != null) {
+      $result.autoRenewal = autoRenewal;
+    }
+    return $result;
+  }
+  ApplicationData_UpdatePlanOptions._() : super();
+  factory ApplicationData_UpdatePlanOptions.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_UpdatePlanOptions.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UpdatePlanOptions', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'autoRenewal')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdatePlanOptions clone() => ApplicationData_UpdatePlanOptions()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdatePlanOptions copyWith(void Function(ApplicationData_UpdatePlanOptions) updates) => super.copyWith((message) => updates(message as ApplicationData_UpdatePlanOptions)) as ApplicationData_UpdatePlanOptions;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UpdatePlanOptions create() => ApplicationData_UpdatePlanOptions._();
+  ApplicationData_UpdatePlanOptions createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_UpdatePlanOptions> createRepeated() => $pb.PbList<ApplicationData_UpdatePlanOptions>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UpdatePlanOptions getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdatePlanOptions>(create);
+  static ApplicationData_UpdatePlanOptions? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.bool get autoRenewal => $_getBF(0);
+  @$pb.TagNumber(1)
+  set autoRenewal($core.bool v) { $_setBool(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasAutoRenewal() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAutoRenewal() => clearField(1);
+}
+
 class ApplicationData_CreateVoucher extends $pb.GeneratedMessage {
   factory ApplicationData_CreateVoucher({
     $core.int? valueCents,
@@ -1251,6 +1301,56 @@ class ApplicationData_RedeemAdditionalCode extends $pb.GeneratedMessage {
   $core.bool hasInviteCode() => $_has(0);
   @$pb.TagNumber(2)
   void clearInviteCode() => clearField(2);
+}
+
+class ApplicationData_RemoveAdditionalUser extends $pb.GeneratedMessage {
+  factory ApplicationData_RemoveAdditionalUser({
+    $fixnum.Int64? userId,
+  }) {
+    final $result = create();
+    if (userId != null) {
+      $result.userId = userId;
+    }
+    return $result;
+  }
+  ApplicationData_RemoveAdditionalUser._() : super();
+  factory ApplicationData_RemoveAdditionalUser.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_RemoveAdditionalUser.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.RemoveAdditionalUser', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_RemoveAdditionalUser clone() => ApplicationData_RemoveAdditionalUser()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_RemoveAdditionalUser copyWith(void Function(ApplicationData_RemoveAdditionalUser) updates) => super.copyWith((message) => updates(message as ApplicationData_RemoveAdditionalUser)) as ApplicationData_RemoveAdditionalUser;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RemoveAdditionalUser create() => ApplicationData_RemoveAdditionalUser._();
+  ApplicationData_RemoveAdditionalUser createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_RemoveAdditionalUser> createRepeated() => $pb.PbList<ApplicationData_RemoveAdditionalUser>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_RemoveAdditionalUser getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_RemoveAdditionalUser>(create);
+  static ApplicationData_RemoveAdditionalUser? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
 }
 
 class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
@@ -1527,6 +1627,8 @@ enum ApplicationData_ApplicationData {
   switchtopayedplan, 
   getaddaccountsinvites, 
   redeemadditionalcode, 
+  removeadditionaluser, 
+  updateplanoptions, 
   notSet
 }
 
@@ -1549,6 +1651,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_SwitchToPayedPlan? switchtopayedplan,
     ApplicationData_GetAddAccountsInvites? getaddaccountsinvites,
     ApplicationData_RedeemAdditionalCode? redeemadditionalcode,
+    ApplicationData_RemoveAdditionalUser? removeadditionaluser,
+    ApplicationData_UpdatePlanOptions? updateplanoptions,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -1602,6 +1706,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (redeemadditionalcode != null) {
       $result.redeemadditionalcode = redeemadditionalcode;
     }
+    if (removeadditionaluser != null) {
+      $result.removeadditionaluser = removeadditionaluser;
+    }
+    if (updateplanoptions != null) {
+      $result.updateplanoptions = updateplanoptions;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -1626,10 +1736,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     15 : ApplicationData_ApplicationData.switchtopayedplan,
     16 : ApplicationData_ApplicationData.getaddaccountsinvites,
     17 : ApplicationData_ApplicationData.redeemadditionalcode,
+    18 : ApplicationData_ApplicationData.removeadditionaluser,
+    19 : ApplicationData_ApplicationData.updateplanoptions,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
@@ -1647,6 +1759,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_SwitchToPayedPlan>(15, _omitFieldNames ? '' : 'Switchtopayedplan', protoName: 'Switchtopayedplan', subBuilder: ApplicationData_SwitchToPayedPlan.create)
     ..aOM<ApplicationData_GetAddAccountsInvites>(16, _omitFieldNames ? '' : 'getaddaccountsinvites', subBuilder: ApplicationData_GetAddAccountsInvites.create)
     ..aOM<ApplicationData_RedeemAdditionalCode>(17, _omitFieldNames ? '' : 'redeemadditionalcode', subBuilder: ApplicationData_RedeemAdditionalCode.create)
+    ..aOM<ApplicationData_RemoveAdditionalUser>(18, _omitFieldNames ? '' : 'removeadditionaluser', subBuilder: ApplicationData_RemoveAdditionalUser.create)
+    ..aOM<ApplicationData_UpdatePlanOptions>(19, _omitFieldNames ? '' : 'updateplanoptions', subBuilder: ApplicationData_UpdatePlanOptions.create)
     ..hasRequiredFields = false
   ;
 
@@ -1860,6 +1974,28 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearRedeemadditionalcode() => clearField(17);
   @$pb.TagNumber(17)
   ApplicationData_RedeemAdditionalCode ensureRedeemadditionalcode() => $_ensure(16);
+
+  @$pb.TagNumber(18)
+  ApplicationData_RemoveAdditionalUser get removeadditionaluser => $_getN(17);
+  @$pb.TagNumber(18)
+  set removeadditionaluser(ApplicationData_RemoveAdditionalUser v) { setField(18, v); }
+  @$pb.TagNumber(18)
+  $core.bool hasRemoveadditionaluser() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearRemoveadditionaluser() => clearField(18);
+  @$pb.TagNumber(18)
+  ApplicationData_RemoveAdditionalUser ensureRemoveadditionaluser() => $_ensure(17);
+
+  @$pb.TagNumber(19)
+  ApplicationData_UpdatePlanOptions get updateplanoptions => $_getN(18);
+  @$pb.TagNumber(19)
+  set updateplanoptions(ApplicationData_UpdatePlanOptions v) { setField(19, v); }
+  @$pb.TagNumber(19)
+  $core.bool hasUpdateplanoptions() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearUpdateplanoptions() => clearField(19);
+  @$pb.TagNumber(19)
+  ApplicationData_UpdatePlanOptions ensureUpdateplanoptions() => $_ensure(18);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

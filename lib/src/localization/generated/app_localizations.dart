@@ -1076,7 +1076,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyFeature3.
   ///
   /// In en, this message translates to:
-  /// **'5 additional Free users'**
+  /// **'4 additional Free users'**
   String get familyFeature3;
 
   /// No description provided for @redeemUserInviteCode.
@@ -1124,7 +1124,7 @@ abstract class AppLocalizations {
   /// No description provided for @manageAdditionalUsers.
   ///
   /// In en, this message translates to:
-  /// **'Manage your additional users'**
+  /// **'Manage additional users'**
   String get manageAdditionalUsers;
 
   /// No description provided for @open.
@@ -1306,6 +1306,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can change this at any time.'**
   String get autoRenewalDesc;
+
+  /// No description provided for @autoRenewalLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal.  We will notify you in good time before the automatic renewal.'**
+  String get autoRenewalLongDesc;
 
   /// No description provided for @planSuccessUpgraded.
   ///

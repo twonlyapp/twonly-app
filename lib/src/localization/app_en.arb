@@ -335,7 +335,7 @@
   "proFeature3": "3 additional Free users",
   "familyFeature1": "✓ Unlimited media file uploads",
   "familyFeature2": "4 additional Plus users",
-  "familyFeature3": "5 additional Free users",
+  "familyFeature3": "4 additional Free users",
   "redeemUserInviteCode": "Or redeem an additional user invite code.",
   "freeFeature1": "3 Media file uploads per day",
   "plusFeature1": "✓ Unlimited media file uploads",
@@ -343,7 +343,7 @@
   "manageSubscription": "Manage your subscription",
   "nextPayment": "Next payment",
   "currentBalance": "Current balance",
-  "manageAdditionalUsers": "Manage your additional users",
+  "manageAdditionalUsers": "Manage additional users",
   "open": "Open",
   "createOrRedeemVoucher": "Buy or redeem voucher",
   "createVoucher": "Buy voucher",
@@ -375,6 +375,7 @@
   "chargeCredit": "Charge credit",
   "autoRenewal": "Auto renewal",
   "autoRenewalDesc": "You can change this at any time.",
+  "autoRenewalLongDesc": "When your subscription expires, you will automatically be downgraded to the Preview plan. If you activate the automatic renewal, please make sure that you have enough credit for the automatic renewal.  We will notify you in good time before the automatic renewal.",
   "planSuccessUpgraded": "Successfully upgraded your plan.",
   "checkoutSubmit": "Order with a fee."
 }

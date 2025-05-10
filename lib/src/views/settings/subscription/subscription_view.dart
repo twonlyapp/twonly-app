@@ -10,7 +10,9 @@ import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/settings/subscription/additional_users_view.dart';
 import 'package:twonly/src/views/settings/subscription/checkout_view.dart';
+import 'package:twonly/src/views/settings/subscription/manage_subscription_view.dart';
 import 'package:twonly/src/views/settings/subscription/transaction_view.dart';
 import 'package:twonly/src/views/settings/subscription/voucher_view.dart';
 
@@ -47,7 +49,6 @@ Future<Response_PlanBallance?> loadPlanBallance() async {
       Logger("subscription_view.dart").shout("from json: $e");
     }
   }
-
   return ballance;
 }
 
@@ -227,7 +228,14 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   ? Text(
                       "${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}")
                   : null,
-              onTap: () {},
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return ManageSubscriptionView(
+                      ballance: ballance, nextPayment: nextPayment);
+                }));
+                initAsync();
+              },
             ),
           BetterListTile(
             icon: FontAwesomeIcons.moneyBillTransfer,
@@ -250,7 +258,15 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               icon: FontAwesomeIcons.userPlus,
               text: context.lang.manageAdditionalUsers,
               subtitle: (loaded) ? Text("${context.lang.open}: 3") : null,
-              onTap: () {},
+              onTap: () async {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return AdditionalUsersView(
+                    ballance: ballance,
+                  );
+                }));
+                initAsync();
+              },
             ),
           BetterListTile(
             icon: FontAwesomeIcons.ticket,
@@ -284,13 +300,14 @@ class PlanCard extends StatelessWidget {
   final String planId;
   final Function()? onTap;
   final int? refund;
+  final bool? paidMonthly;
 
-  const PlanCard({
-    super.key,
-    required this.planId,
-    this.refund,
-    this.onTap,
-  });
+  const PlanCard(
+      {super.key,
+      required this.planId,
+      this.refund,
+      this.onTap,
+      this.paidMonthly});
 
   @override
   Widget build(BuildContext context) {
@@ -349,27 +366,40 @@ class PlanCard extends StatelessWidget {
                       ),
                     ),
                     if (yearlyPrice != 0) SizedBox(height: 10),
-                    if (yearlyPrice != 0)
+                    if (yearlyPrice != 0 && paidMonthly == null)
                       Column(
                         children: [
-                          Text(
-                            "${localePrizing(context, yearlyPrice)}/${context.lang.year}",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          if (paidMonthly == null || paidMonthly!)
+                            Text(
+                              "${localePrizing(context, yearlyPrice)}/${context.lang.year}",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          Text(
-                            "${localePrizing(context, monthlyPrice)}/${context.lang.month}",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
+                          if (paidMonthly == null || !paidMonthly!)
+                            Text(
+                              "${localePrizing(context, monthlyPrice)}/${context.lang.month}",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
                         ],
-                      )
+                      ),
+                    if (paidMonthly != null)
+                      Text(
+                        (paidMonthly!)
+                            ? "${localePrizing(context, monthlyPrice)}/${context.lang.month}"
+                            : "${localePrizing(context, yearlyPrice)}/${context.lang.year}",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                   ],
                 ),
                 SizedBox(height: 10),
