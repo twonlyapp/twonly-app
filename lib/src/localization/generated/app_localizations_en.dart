@@ -513,6 +513,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyFeature3 => '4 additional Free users';
 
   @override
+  String get redeemUserInviteCode => 'Or redeem a twonly-Code.';
+
+  @override
   String get redeemUserInviteCodeTitle => 'Redeem twonly-Code';
 
   @override
@@ -639,4 +642,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkoutSubmit => 'Order with a fee.';
+
+  @override
+  String get additionalUsersList => 'Your additional users';
+
+  @override
+  String get additionalUsersPlusTokens => 'twonly-Codes für \"Plus\" user';
+
+  @override
+  String get additionalUsersFreeTokens => 'twonly-Codes für \"Free\" user';
 }

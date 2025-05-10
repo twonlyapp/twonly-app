@@ -81,7 +81,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
           if (ballance != null && ballance!.additionalAccounts.isNotEmpty)
             ListTile(
               title: Text(
-                "Your additional users",
+                context.lang.additionalUsersList,
                 style: TextStyle(fontSize: 13),
               ),
             ),
@@ -95,7 +95,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
           if (plusInvites.isNotEmpty)
             ListTile(
               title: Text(
-                "Additional invite codes for \"Plus\" users",
+                context.lang.additionalUsersPlusTokens,
                 style: TextStyle(fontSize: 13),
               ),
             ),
@@ -109,7 +109,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
           if (freeInvites.isNotEmpty)
             ListTile(
               title: Text(
-                "Additional invite codes for \"Free\" users",
+                context.lang.additionalUsersFreeTokens,
                 style: TextStyle(fontSize: 13),
               ),
             ),

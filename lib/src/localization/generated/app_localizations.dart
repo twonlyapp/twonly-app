@@ -1079,6 +1079,12 @@ abstract class AppLocalizations {
   /// **'4 additional Free users'**
   String get familyFeature3;
 
+  /// No description provided for @redeemUserInviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Or redeem a twonly-Code.'**
+  String get redeemUserInviteCode;
+
   /// No description provided for @redeemUserInviteCodeTitle.
   ///
   /// In en, this message translates to:
@@ -1330,6 +1336,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order with a fee.'**
   String get checkoutSubmit;
+
+  /// No description provided for @additionalUsersList.
+  ///
+  /// In en, this message translates to:
+  /// **'Your additional users'**
+  String get additionalUsersList;
+
+  /// No description provided for @additionalUsersPlusTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly-Codes für \"Plus\" user'**
+  String get additionalUsersPlusTokens;
+
+  /// No description provided for @additionalUsersFreeTokens.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly-Codes für \"Free\" user'**
+  String get additionalUsersFreeTokens;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

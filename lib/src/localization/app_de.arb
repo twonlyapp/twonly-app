@@ -220,5 +220,8 @@
     "autoRenewalDesc": "Du kannst dies jederzeit ändern.",
     "autoRenewalLongDesc": "Wenn dein Abonnement ausläuft, wirst du automatisch auf den Vorschau-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst.  Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.",
     "planSuccessUpgraded": "Dein Plan wurde erfolgreich aktualisiert.",
-    "checkoutSubmit": "Kostenpflichtig bestellen"
+    "checkoutSubmit": "Kostenpflichtig bestellen",
+    "additionalUsersList": "Ihre zusätzlichen Benutzer",
+    "additionalUsersPlusTokens": "twonly-Codes für \"Plus\"-Benutzer",
+    "additionalUsersFreeTokens": "twonly-Codes für \"Free\"-Benutzer"
 }
