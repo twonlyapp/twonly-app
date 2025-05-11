@@ -54,7 +54,7 @@ class _ChatListViewState extends State<ChatListView> {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: isDarkMode(context) ? Colors.black : Colors.white,
                 ),
               ),
             ),

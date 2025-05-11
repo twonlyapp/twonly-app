@@ -59,31 +59,34 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                             }));
                             initAsync();
                           },
-                          child: Row(
-                            children: [
-                              ContactAvatar(
-                                userData: userData!,
-                                fontSize: 30,
-                              ),
-                              Container(width: 20, color: Colors.transparent),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    userData!.displayName,
-                                    style: TextStyle(fontSize: 20),
-                                    textAlign: TextAlign.left,
-                                  ),
-                                  Text(
-                                    userData!.username,
-                                    style: TextStyle(
-                                      fontSize: 14,
+                          child: Container(
+                            color: context.color.surface,
+                            child: Row(
+                              children: [
+                                ContactAvatar(
+                                  userData: userData!,
+                                  fontSize: 30,
+                                ),
+                                Container(width: 20, color: Colors.transparent),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      userData!.displayName,
+                                      style: TextStyle(fontSize: 20),
+                                      textAlign: TextAlign.left,
                                     ),
-                                    textAlign: TextAlign.left,
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    Text(
+                                      userData!.username,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
