@@ -335,6 +335,12 @@ abstract class AppLocalizations {
   /// **'twonlies can only be send to verified contacts!'**
   String get shareImageAllTwonlyWarning;
 
+  /// No description provided for @shareImageShowArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Show archived users'**
+  String get shareImageShowArchived;
+
   /// No description provided for @searchUsernameInput.
   ///
   /// In en, this message translates to:

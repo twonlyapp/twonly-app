@@ -129,6 +129,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareImageAllTwonlyWarning => 'twonlies can only be send to verified contacts!';
 
   @override
+  String get shareImageShowArchived => 'Show archived users';
+
+  @override
   String get searchUsernameInput => 'Username';
 
   @override

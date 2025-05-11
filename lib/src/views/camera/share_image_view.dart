@@ -47,10 +47,12 @@ class _ShareImageView extends State<ShareImageView> {
   int maxTotalMediaCounter = 0;
   Uint8List? imageBytes;
   bool sendingImage = false;
+  bool hideArchivedUsers = true;
   final HashSet<int> _selectedUserIds = HashSet<int>();
   final TextEditingController searchUserName = TextEditingController();
   bool showRealTwonlyWarning = false;
   late StreamSubscription<List<Contact>> contactSub;
+  String lastQuery = "";
 
   @override
   void initState() {
@@ -128,8 +130,14 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   Future _filterUsers(String query) async {
+    lastQuery = query;
     if (query.isEmpty) {
-      updateUsers(contacts.where((x) => !x.archived).toList());
+      updateUsers(contacts
+          .where((x) =>
+              !x.archived ||
+              !hideArchivedUsers ||
+              _selectedUserIds.contains(x.userId))
+          .toList());
       return;
     }
     List<Contact> usersFiltered = contacts
@@ -209,7 +217,45 @@ class _ShareImageView extends State<ShareImageView> {
               ),
               const SizedBox(height: 10),
               if (_otherUsers.isNotEmpty)
-                HeadLineComponent(context.lang.shareImageAllUsers),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    HeadLineComponent(context.lang.shareImageAllUsers),
+                    if (contacts.any((x) => x.archived))
+                      Row(
+                        children: [
+                          Text(
+                            context.lang.shareImageShowArchived,
+                            style: TextStyle(fontSize: 10),
+                          ),
+                          Transform.scale(
+                            scale: 0.75,
+                            child: Checkbox(
+                              value: !hideArchivedUsers,
+                              side: WidgetStateBorderSide.resolveWith(
+                                (Set states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return BorderSide(width: 0);
+                                  }
+                                  return BorderSide(
+                                      width: 1,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outline);
+                                },
+                              ),
+                              onChanged: (a) {
+                                setState(() {
+                                  hideArchivedUsers = !hideArchivedUsers;
+                                  _filterUsers(lastQuery);
+                                });
+                              },
+                            ),
+                          )
+                        ],
+                      )
+                  ],
+                ),
               Expanded(
                 child: UserList(
                   List.from(_otherUsers),

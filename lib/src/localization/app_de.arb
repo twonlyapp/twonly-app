@@ -38,6 +38,7 @@
     "shareImageAllTwonlyWarning": "Twonlies können nur an verifizierte Kontakte gesendet werden!",
     "shareImageSearchAllContacts": "Alle Kontakte durchsuchen",
     "@shareImageSearchAllContacts": {},
+    "shareImageShowArchived": "Archivierte Benutzer anzeigen",
     "searchUsernameInput": "Benutzername",
     "searchUsernameTitle": "Benutzernamen suchen",
     "searchUserNamePreview": "Um dich und andere twonly Benutzer vor Spam und Missbrauch zu schützen, ist es nicht möglich, im Preview-Modus nach anderen Personen zu suchen. Andere Benutzer können dich finden und deren Anfragen werden dann hier angezeigt!",

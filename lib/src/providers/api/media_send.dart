@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';

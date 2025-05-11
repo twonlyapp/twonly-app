@@ -78,6 +78,7 @@
   "@shareImageAllUsers": {},
   "shareImageAllTwonlyWarning": "twonlies can only be send to verified contacts!",
   "@shareImageAllTwonlyWarning": {},
+  "shareImageShowArchived": "Show archived users",
   "searchUsernameInput": "Username",
   "@searchUsernameInput": {},
   "searchUsernameTitle": "Search username",
