@@ -60,7 +60,6 @@ class _ContactViewState extends State<ContactView> {
                     FlameCounterWidget(
                       contact,
                       flameCounter,
-                      110000000,
                       prefix: true,
                     ),
                 ],

@@ -24,7 +24,6 @@ class _StartNewChat extends State<StartNewChat> {
   List<Contact> allContacts = [];
   final TextEditingController searchUserName = TextEditingController();
   late StreamSubscription<List<Contact>> contactSub;
-  int maxTotalMediaCounter = 1000;
 
   @override
   void initState() {
@@ -96,7 +95,6 @@ class _StartNewChat extends State<StartNewChat> {
                 Expanded(
                   child: UserList(
                     contacts,
-                    maxTotalMediaCounter,
                   ),
                 )
               ],
@@ -110,12 +108,10 @@ class _StartNewChat extends State<StartNewChat> {
 
 class UserList extends StatelessWidget {
   const UserList(
-    this.users,
-    this.maxTotalMediaCounter, {
+    this.users, {
     super.key,
   });
   final List<Contact> users;
-  final int maxTotalMediaCounter;
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +157,6 @@ class UserList extends StatelessWidget {
                   FlameCounterWidget(
                     user,
                     flameCounter,
-                    maxTotalMediaCounter,
                     prefix: true,
                   ),
                 Spacer(),

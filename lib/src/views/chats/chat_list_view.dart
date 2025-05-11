@@ -334,7 +334,6 @@ class _UserListItem extends State<UserListItem> {
                     FlameCounterWidget(
                       widget.user,
                       flameCounter,
-                      widget.maxTotalMediaCounter,
                       prefix: true,
                     ),
                 ],

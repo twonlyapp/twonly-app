@@ -13,14 +13,12 @@ class BestFriendsSelector extends StatelessWidget {
   final List<Contact> users;
   final Function(int, bool) updateStatus;
   final HashSet<int> selectedUserIds;
-  final int maxTotalMediaCounter;
   final bool isRealTwonly;
   final String title;
 
   const BestFriendsSelector(
       {super.key,
       required this.users,
-      required this.maxTotalMediaCounter,
       required this.isRealTwonly,
       required this.updateStatus,
       required this.selectedUserIds,
@@ -81,18 +79,17 @@ class BestFriendsSelector extends StatelessWidget {
                       user: users[firstUserIndex],
                       onChanged: updateStatus,
                       isRealTwonly: isRealTwonly,
-                      maxTotalMediaCounter: maxTotalMediaCounter,
                     ),
                   ),
                   (secondUserIndex < users.length)
                       ? Expanded(
                           child: UserCheckbox(
-                              isChecked: selectedUserIds
-                                  .contains(users[secondUserIndex].userId),
-                              user: users[secondUserIndex],
-                              onChanged: updateStatus,
-                              isRealTwonly: isRealTwonly,
-                              maxTotalMediaCounter: maxTotalMediaCounter),
+                            isChecked: selectedUserIds
+                                .contains(users[secondUserIndex].userId),
+                            user: users[secondUserIndex],
+                            onChanged: updateStatus,
+                            isRealTwonly: isRealTwonly,
+                          ),
                         )
                       : Expanded(
                           child: Container(),
@@ -112,12 +109,10 @@ class UserCheckbox extends StatelessWidget {
   final Function(int, bool) onChanged;
   final bool isChecked;
   final bool isRealTwonly;
-  final int maxTotalMediaCounter;
 
   const UserCheckbox({
     super.key,
     required this.user,
-    required this.maxTotalMediaCounter,
     required this.onChanged,
     required this.isRealTwonly,
     required this.isChecked,
@@ -181,8 +176,7 @@ class UserCheckbox extends StatelessWidget {
                       if (!snapshot.hasData || snapshot.data! == 0) {
                         return Container();
                       }
-                      return FlameCounterWidget(
-                          user, snapshot.data!, maxTotalMediaCounter);
+                      return FlameCounterWidget(user, snapshot.data!);
                     },
                   )
                 ],

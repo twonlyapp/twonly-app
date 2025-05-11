@@ -16,6 +16,7 @@ class Contacts extends Table {
   BoolColumn get verified => boolean().withDefault(Constant(false))();
   BoolColumn get archived => boolean().withDefault(Constant(false))();
   BoolColumn get pinned => boolean().withDefault(Constant(false))();
+  BoolColumn get alsoBestFriend => boolean().withDefault(Constant(false))();
 
   IntColumn get deleteMessagesAfterXMinutes =>
       integer().withDefault(Constant(60 * 24))();
@@ -27,6 +28,7 @@ class Contacts extends Table {
   DateTimeColumn get lastMessageSend => dateTime().nullable()();
   DateTimeColumn get lastMessageReceived => dateTime().nullable()();
   DateTimeColumn get lastFlameCounterChange => dateTime().nullable()();
+  DateTimeColumn get lastFlameSync => dateTime().nullable()();
   DateTimeColumn get lastMessageExchange =>
       dateTime().withDefault(currentDateAndTime)();
 

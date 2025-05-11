@@ -106,6 +106,16 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
       defaultValue: Constant(false));
+  static const VerificationMeta _alsoBestFriendMeta =
+      const VerificationMeta('alsoBestFriend');
+  @override
+  late final GeneratedColumn<bool> alsoBestFriend = GeneratedColumn<bool>(
+      'also_best_friend', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("also_best_friend" IN (0, 1))'),
+      defaultValue: Constant(false));
   static const VerificationMeta _deleteMessagesAfterXMinutesMeta =
       const VerificationMeta('deleteMessagesAfterXMinutes');
   @override
@@ -149,6 +159,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   late final GeneratedColumn<DateTime> lastFlameCounterChange =
       GeneratedColumn<DateTime>('last_flame_counter_change', aliasedName, true,
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _lastFlameSyncMeta =
+      const VerificationMeta('lastFlameSync');
+  @override
+  late final GeneratedColumn<DateTime> lastFlameSync =
+      GeneratedColumn<DateTime>('last_flame_sync', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _lastMessageExchangeMeta =
       const VerificationMeta('lastMessageExchange');
   @override
@@ -179,12 +195,14 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         verified,
         archived,
         pinned,
+        alsoBestFriend,
         deleteMessagesAfterXMinutes,
         createdAt,
         totalMediaCounter,
         lastMessageSend,
         lastMessageReceived,
         lastFlameCounterChange,
+        lastFlameSync,
         lastMessageExchange,
         flameCounter
       ];
@@ -252,6 +270,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       context.handle(_pinnedMeta,
           pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta));
     }
+    if (data.containsKey('also_best_friend')) {
+      context.handle(
+          _alsoBestFriendMeta,
+          alsoBestFriend.isAcceptableOrUnknown(
+              data['also_best_friend']!, _alsoBestFriendMeta));
+    }
     if (data.containsKey('delete_messages_after_x_minutes')) {
       context.handle(
           _deleteMessagesAfterXMinutesMeta,
@@ -286,6 +310,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           _lastFlameCounterChangeMeta,
           lastFlameCounterChange.isAcceptableOrUnknown(
               data['last_flame_counter_change']!, _lastFlameCounterChangeMeta));
+    }
+    if (data.containsKey('last_flame_sync')) {
+      context.handle(
+          _lastFlameSyncMeta,
+          lastFlameSync.isAcceptableOrUnknown(
+              data['last_flame_sync']!, _lastFlameSyncMeta));
     }
     if (data.containsKey('last_message_exchange')) {
       context.handle(
@@ -332,6 +362,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
       pinned: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
+      alsoBestFriend: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}also_best_friend'])!,
       deleteMessagesAfterXMinutes: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}delete_messages_after_x_minutes'])!,
@@ -347,6 +379,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       lastFlameCounterChange: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}last_flame_counter_change']),
+      lastFlameSync: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_flame_sync']),
       lastMessageExchange: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}last_message_exchange'])!,
@@ -374,12 +408,14 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool verified;
   final bool archived;
   final bool pinned;
+  final bool alsoBestFriend;
   final int deleteMessagesAfterXMinutes;
   final DateTime createdAt;
   final int totalMediaCounter;
   final DateTime? lastMessageSend;
   final DateTime? lastMessageReceived;
   final DateTime? lastFlameCounterChange;
+  final DateTime? lastFlameSync;
   final DateTime lastMessageExchange;
   final int flameCounter;
   const Contact(
@@ -395,12 +431,14 @@ class Contact extends DataClass implements Insertable<Contact> {
       required this.verified,
       required this.archived,
       required this.pinned,
+      required this.alsoBestFriend,
       required this.deleteMessagesAfterXMinutes,
       required this.createdAt,
       required this.totalMediaCounter,
       this.lastMessageSend,
       this.lastMessageReceived,
       this.lastFlameCounterChange,
+      this.lastFlameSync,
       required this.lastMessageExchange,
       required this.flameCounter});
   @override
@@ -424,6 +462,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['verified'] = Variable<bool>(verified);
     map['archived'] = Variable<bool>(archived);
     map['pinned'] = Variable<bool>(pinned);
+    map['also_best_friend'] = Variable<bool>(alsoBestFriend);
     map['delete_messages_after_x_minutes'] =
         Variable<int>(deleteMessagesAfterXMinutes);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -437,6 +476,9 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || lastFlameCounterChange != null) {
       map['last_flame_counter_change'] =
           Variable<DateTime>(lastFlameCounterChange);
+    }
+    if (!nullToAbsent || lastFlameSync != null) {
+      map['last_flame_sync'] = Variable<DateTime>(lastFlameSync);
     }
     map['last_message_exchange'] = Variable<DateTime>(lastMessageExchange);
     map['flame_counter'] = Variable<int>(flameCounter);
@@ -463,6 +505,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: Value(verified),
       archived: Value(archived),
       pinned: Value(pinned),
+      alsoBestFriend: Value(alsoBestFriend),
       deleteMessagesAfterXMinutes: Value(deleteMessagesAfterXMinutes),
       createdAt: Value(createdAt),
       totalMediaCounter: Value(totalMediaCounter),
@@ -475,6 +518,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       lastFlameCounterChange: lastFlameCounterChange == null && nullToAbsent
           ? const Value.absent()
           : Value(lastFlameCounterChange),
+      lastFlameSync: lastFlameSync == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastFlameSync),
       lastMessageExchange: Value(lastMessageExchange),
       flameCounter: Value(flameCounter),
     );
@@ -496,6 +542,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: serializer.fromJson<bool>(json['verified']),
       archived: serializer.fromJson<bool>(json['archived']),
       pinned: serializer.fromJson<bool>(json['pinned']),
+      alsoBestFriend: serializer.fromJson<bool>(json['alsoBestFriend']),
       deleteMessagesAfterXMinutes:
           serializer.fromJson<int>(json['deleteMessagesAfterXMinutes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -505,6 +552,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           serializer.fromJson<DateTime?>(json['lastMessageReceived']),
       lastFlameCounterChange:
           serializer.fromJson<DateTime?>(json['lastFlameCounterChange']),
+      lastFlameSync: serializer.fromJson<DateTime?>(json['lastFlameSync']),
       lastMessageExchange:
           serializer.fromJson<DateTime>(json['lastMessageExchange']),
       flameCounter: serializer.fromJson<int>(json['flameCounter']),
@@ -526,6 +574,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'verified': serializer.toJson<bool>(verified),
       'archived': serializer.toJson<bool>(archived),
       'pinned': serializer.toJson<bool>(pinned),
+      'alsoBestFriend': serializer.toJson<bool>(alsoBestFriend),
       'deleteMessagesAfterXMinutes':
           serializer.toJson<int>(deleteMessagesAfterXMinutes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -534,6 +583,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'lastMessageReceived': serializer.toJson<DateTime?>(lastMessageReceived),
       'lastFlameCounterChange':
           serializer.toJson<DateTime?>(lastFlameCounterChange),
+      'lastFlameSync': serializer.toJson<DateTime?>(lastFlameSync),
       'lastMessageExchange': serializer.toJson<DateTime>(lastMessageExchange),
       'flameCounter': serializer.toJson<int>(flameCounter),
     };
@@ -552,12 +602,14 @@ class Contact extends DataClass implements Insertable<Contact> {
           bool? verified,
           bool? archived,
           bool? pinned,
+          bool? alsoBestFriend,
           int? deleteMessagesAfterXMinutes,
           DateTime? createdAt,
           int? totalMediaCounter,
           Value<DateTime?> lastMessageSend = const Value.absent(),
           Value<DateTime?> lastMessageReceived = const Value.absent(),
           Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+          Value<DateTime?> lastFlameSync = const Value.absent(),
           DateTime? lastMessageExchange,
           int? flameCounter}) =>
       Contact(
@@ -573,6 +625,7 @@ class Contact extends DataClass implements Insertable<Contact> {
         verified: verified ?? this.verified,
         archived: archived ?? this.archived,
         pinned: pinned ?? this.pinned,
+        alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
         deleteMessagesAfterXMinutes:
             deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
         createdAt: createdAt ?? this.createdAt,
@@ -586,6 +639,8 @@ class Contact extends DataClass implements Insertable<Contact> {
         lastFlameCounterChange: lastFlameCounterChange.present
             ? lastFlameCounterChange.value
             : this.lastFlameCounterChange,
+        lastFlameSync:
+            lastFlameSync.present ? lastFlameSync.value : this.lastFlameSync,
         lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
         flameCounter: flameCounter ?? this.flameCounter,
       );
@@ -606,6 +661,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: data.verified.present ? data.verified.value : this.verified,
       archived: data.archived.present ? data.archived.value : this.archived,
       pinned: data.pinned.present ? data.pinned.value : this.pinned,
+      alsoBestFriend: data.alsoBestFriend.present
+          ? data.alsoBestFriend.value
+          : this.alsoBestFriend,
       deleteMessagesAfterXMinutes: data.deleteMessagesAfterXMinutes.present
           ? data.deleteMessagesAfterXMinutes.value
           : this.deleteMessagesAfterXMinutes,
@@ -622,6 +680,9 @@ class Contact extends DataClass implements Insertable<Contact> {
       lastFlameCounterChange: data.lastFlameCounterChange.present
           ? data.lastFlameCounterChange.value
           : this.lastFlameCounterChange,
+      lastFlameSync: data.lastFlameSync.present
+          ? data.lastFlameSync.value
+          : this.lastFlameSync,
       lastMessageExchange: data.lastMessageExchange.present
           ? data.lastMessageExchange.value
           : this.lastMessageExchange,
@@ -646,12 +707,14 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('verified: $verified, ')
           ..write('archived: $archived, ')
           ..write('pinned: $pinned, ')
+          ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
           ..write('createdAt: $createdAt, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
           ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
+          ..write('lastFlameSync: $lastFlameSync, ')
           ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('flameCounter: $flameCounter')
           ..write(')'))
@@ -659,27 +722,30 @@ class Contact extends DataClass implements Insertable<Contact> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      userId,
-      username,
-      displayName,
-      nickName,
-      avatarSvg,
-      myAvatarCounter,
-      accepted,
-      requested,
-      blocked,
-      verified,
-      archived,
-      pinned,
-      deleteMessagesAfterXMinutes,
-      createdAt,
-      totalMediaCounter,
-      lastMessageSend,
-      lastMessageReceived,
-      lastFlameCounterChange,
-      lastMessageExchange,
-      flameCounter);
+  int get hashCode => Object.hashAll([
+        userId,
+        username,
+        displayName,
+        nickName,
+        avatarSvg,
+        myAvatarCounter,
+        accepted,
+        requested,
+        blocked,
+        verified,
+        archived,
+        pinned,
+        alsoBestFriend,
+        deleteMessagesAfterXMinutes,
+        createdAt,
+        totalMediaCounter,
+        lastMessageSend,
+        lastMessageReceived,
+        lastFlameCounterChange,
+        lastFlameSync,
+        lastMessageExchange,
+        flameCounter
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -696,6 +762,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.verified == this.verified &&
           other.archived == this.archived &&
           other.pinned == this.pinned &&
+          other.alsoBestFriend == this.alsoBestFriend &&
           other.deleteMessagesAfterXMinutes ==
               this.deleteMessagesAfterXMinutes &&
           other.createdAt == this.createdAt &&
@@ -703,6 +770,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.lastMessageSend == this.lastMessageSend &&
           other.lastMessageReceived == this.lastMessageReceived &&
           other.lastFlameCounterChange == this.lastFlameCounterChange &&
+          other.lastFlameSync == this.lastFlameSync &&
           other.lastMessageExchange == this.lastMessageExchange &&
           other.flameCounter == this.flameCounter);
 }
@@ -720,12 +788,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> verified;
   final Value<bool> archived;
   final Value<bool> pinned;
+  final Value<bool> alsoBestFriend;
   final Value<int> deleteMessagesAfterXMinutes;
   final Value<DateTime> createdAt;
   final Value<int> totalMediaCounter;
   final Value<DateTime?> lastMessageSend;
   final Value<DateTime?> lastMessageReceived;
   final Value<DateTime?> lastFlameCounterChange;
+  final Value<DateTime?> lastFlameSync;
   final Value<DateTime> lastMessageExchange;
   final Value<int> flameCounter;
   const ContactsCompanion({
@@ -741,12 +811,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.archived = const Value.absent(),
     this.pinned = const Value.absent(),
+    this.alsoBestFriend = const Value.absent(),
     this.deleteMessagesAfterXMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
     this.lastMessageSend = const Value.absent(),
     this.lastMessageReceived = const Value.absent(),
     this.lastFlameCounterChange = const Value.absent(),
+    this.lastFlameSync = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.flameCounter = const Value.absent(),
   });
@@ -763,12 +835,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.archived = const Value.absent(),
     this.pinned = const Value.absent(),
+    this.alsoBestFriend = const Value.absent(),
     this.deleteMessagesAfterXMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
     this.lastMessageSend = const Value.absent(),
     this.lastMessageReceived = const Value.absent(),
     this.lastFlameCounterChange = const Value.absent(),
+    this.lastFlameSync = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.flameCounter = const Value.absent(),
   }) : username = Value(username);
@@ -785,12 +859,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? verified,
     Expression<bool>? archived,
     Expression<bool>? pinned,
+    Expression<bool>? alsoBestFriend,
     Expression<int>? deleteMessagesAfterXMinutes,
     Expression<DateTime>? createdAt,
     Expression<int>? totalMediaCounter,
     Expression<DateTime>? lastMessageSend,
     Expression<DateTime>? lastMessageReceived,
     Expression<DateTime>? lastFlameCounterChange,
+    Expression<DateTime>? lastFlameSync,
     Expression<DateTime>? lastMessageExchange,
     Expression<int>? flameCounter,
   }) {
@@ -807,6 +883,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (verified != null) 'verified': verified,
       if (archived != null) 'archived': archived,
       if (pinned != null) 'pinned': pinned,
+      if (alsoBestFriend != null) 'also_best_friend': alsoBestFriend,
       if (deleteMessagesAfterXMinutes != null)
         'delete_messages_after_x_minutes': deleteMessagesAfterXMinutes,
       if (createdAt != null) 'created_at': createdAt,
@@ -816,6 +893,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'last_message_received': lastMessageReceived,
       if (lastFlameCounterChange != null)
         'last_flame_counter_change': lastFlameCounterChange,
+      if (lastFlameSync != null) 'last_flame_sync': lastFlameSync,
       if (lastMessageExchange != null)
         'last_message_exchange': lastMessageExchange,
       if (flameCounter != null) 'flame_counter': flameCounter,
@@ -835,12 +913,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<bool>? verified,
       Value<bool>? archived,
       Value<bool>? pinned,
+      Value<bool>? alsoBestFriend,
       Value<int>? deleteMessagesAfterXMinutes,
       Value<DateTime>? createdAt,
       Value<int>? totalMediaCounter,
       Value<DateTime?>? lastMessageSend,
       Value<DateTime?>? lastMessageReceived,
       Value<DateTime?>? lastFlameCounterChange,
+      Value<DateTime?>? lastFlameSync,
       Value<DateTime>? lastMessageExchange,
       Value<int>? flameCounter}) {
     return ContactsCompanion(
@@ -856,6 +936,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       verified: verified ?? this.verified,
       archived: archived ?? this.archived,
       pinned: pinned ?? this.pinned,
+      alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
       deleteMessagesAfterXMinutes:
           deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
       createdAt: createdAt ?? this.createdAt,
@@ -864,6 +945,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       lastMessageReceived: lastMessageReceived ?? this.lastMessageReceived,
       lastFlameCounterChange:
           lastFlameCounterChange ?? this.lastFlameCounterChange,
+      lastFlameSync: lastFlameSync ?? this.lastFlameSync,
       lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
       flameCounter: flameCounter ?? this.flameCounter,
     );
@@ -908,6 +990,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (pinned.present) {
       map['pinned'] = Variable<bool>(pinned.value);
     }
+    if (alsoBestFriend.present) {
+      map['also_best_friend'] = Variable<bool>(alsoBestFriend.value);
+    }
     if (deleteMessagesAfterXMinutes.present) {
       map['delete_messages_after_x_minutes'] =
           Variable<int>(deleteMessagesAfterXMinutes.value);
@@ -928,6 +1013,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (lastFlameCounterChange.present) {
       map['last_flame_counter_change'] =
           Variable<DateTime>(lastFlameCounterChange.value);
+    }
+    if (lastFlameSync.present) {
+      map['last_flame_sync'] = Variable<DateTime>(lastFlameSync.value);
     }
     if (lastMessageExchange.present) {
       map['last_message_exchange'] =
@@ -954,12 +1042,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('verified: $verified, ')
           ..write('archived: $archived, ')
           ..write('pinned: $pinned, ')
+          ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
           ..write('createdAt: $createdAt, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
           ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
+          ..write('lastFlameSync: $lastFlameSync, ')
           ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('flameCounter: $flameCounter')
           ..write(')'))
@@ -3485,12 +3575,14 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   Value<bool> verified,
   Value<bool> archived,
   Value<bool> pinned,
+  Value<bool> alsoBestFriend,
   Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
   Value<int> totalMediaCounter,
   Value<DateTime?> lastMessageSend,
   Value<DateTime?> lastMessageReceived,
   Value<DateTime?> lastFlameCounterChange,
+  Value<DateTime?> lastFlameSync,
   Value<DateTime> lastMessageExchange,
   Value<int> flameCounter,
 });
@@ -3507,12 +3599,14 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<bool> verified,
   Value<bool> archived,
   Value<bool> pinned,
+  Value<bool> alsoBestFriend,
   Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
   Value<int> totalMediaCounter,
   Value<DateTime?> lastMessageSend,
   Value<DateTime?> lastMessageReceived,
   Value<DateTime?> lastFlameCounterChange,
+  Value<DateTime?> lastFlameSync,
   Value<DateTime> lastMessageExchange,
   Value<int> flameCounter,
 });
@@ -3583,6 +3677,10 @@ class $$ContactsTableFilterComposer
   ColumnFilters<bool> get pinned => $composableBuilder(
       column: $table.pinned, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<bool> get alsoBestFriend => $composableBuilder(
+      column: $table.alsoBestFriend,
+      builder: (column) => ColumnFilters(column));
+
   ColumnFilters<int> get deleteMessagesAfterXMinutes => $composableBuilder(
       column: $table.deleteMessagesAfterXMinutes,
       builder: (column) => ColumnFilters(column));
@@ -3605,6 +3703,9 @@ class $$ContactsTableFilterComposer
   ColumnFilters<DateTime> get lastFlameCounterChange => $composableBuilder(
       column: $table.lastFlameCounterChange,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastFlameSync => $composableBuilder(
+      column: $table.lastFlameSync, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange,
@@ -3681,6 +3782,10 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<bool> get pinned => $composableBuilder(
       column: $table.pinned, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get alsoBestFriend => $composableBuilder(
+      column: $table.alsoBestFriend,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get deleteMessagesAfterXMinutes => $composableBuilder(
       column: $table.deleteMessagesAfterXMinutes,
       builder: (column) => ColumnOrderings(column));
@@ -3702,6 +3807,10 @@ class $$ContactsTableOrderingComposer
 
   ColumnOrderings<DateTime> get lastFlameCounterChange => $composableBuilder(
       column: $table.lastFlameCounterChange,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastFlameSync => $composableBuilder(
+      column: $table.lastFlameSync,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get lastMessageExchange => $composableBuilder(
@@ -3758,6 +3867,9 @@ class $$ContactsTableAnnotationComposer
   GeneratedColumn<bool> get pinned =>
       $composableBuilder(column: $table.pinned, builder: (column) => column);
 
+  GeneratedColumn<bool> get alsoBestFriend => $composableBuilder(
+      column: $table.alsoBestFriend, builder: (column) => column);
+
   GeneratedColumn<int> get deleteMessagesAfterXMinutes => $composableBuilder(
       column: $table.deleteMessagesAfterXMinutes, builder: (column) => column);
 
@@ -3775,6 +3887,9 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastFlameCounterChange => $composableBuilder(
       column: $table.lastFlameCounterChange, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastFlameSync => $composableBuilder(
+      column: $table.lastFlameSync, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange, builder: (column) => column);
@@ -3839,12 +3954,14 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> verified = const Value.absent(),
             Value<bool> archived = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
+            Value<bool> alsoBestFriend = const Value.absent(),
             Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
             Value<DateTime?> lastMessageSend = const Value.absent(),
             Value<DateTime?> lastMessageReceived = const Value.absent(),
             Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+            Value<DateTime?> lastFlameSync = const Value.absent(),
             Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<int> flameCounter = const Value.absent(),
           }) =>
@@ -3861,12 +3978,14 @@ class $$ContactsTableTableManager extends RootTableManager<
             verified: verified,
             archived: archived,
             pinned: pinned,
+            alsoBestFriend: alsoBestFriend,
             deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
             totalMediaCounter: totalMediaCounter,
             lastMessageSend: lastMessageSend,
             lastMessageReceived: lastMessageReceived,
             lastFlameCounterChange: lastFlameCounterChange,
+            lastFlameSync: lastFlameSync,
             lastMessageExchange: lastMessageExchange,
             flameCounter: flameCounter,
           ),
@@ -3883,12 +4002,14 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> verified = const Value.absent(),
             Value<bool> archived = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
+            Value<bool> alsoBestFriend = const Value.absent(),
             Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
             Value<DateTime?> lastMessageSend = const Value.absent(),
             Value<DateTime?> lastMessageReceived = const Value.absent(),
             Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+            Value<DateTime?> lastFlameSync = const Value.absent(),
             Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<int> flameCounter = const Value.absent(),
           }) =>
@@ -3905,12 +4026,14 @@ class $$ContactsTableTableManager extends RootTableManager<
             verified: verified,
             archived: archived,
             pinned: pinned,
+            alsoBestFriend: alsoBestFriend,
             deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
             totalMediaCounter: totalMediaCounter,
             lastMessageSend: lastMessageSend,
             lastMessageReceived: lastMessageReceived,
             lastFlameCounterChange: lastFlameCounterChange,
+            lastFlameSync: lastFlameSync,
             lastMessageExchange: lastMessageExchange,
             flameCounter: flameCounter,
           ),

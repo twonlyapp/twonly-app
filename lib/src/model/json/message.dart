@@ -87,6 +87,8 @@ class MessageContent {
         return PushKeyContent.fromJson(json);
       case MessageKind.reopenedMedia:
         return ReopenedMediaFileContent.fromJson(json);
+      case MessageKind.flameSync:
+        return FlameSyncContent.fromJson(json);
       default:
         return null;
     }
@@ -239,6 +241,36 @@ class PushKeyContent extends MessageContent {
     return {
       'keyId': keyId,
       'key': key,
+    };
+  }
+}
+
+class FlameSyncContent extends MessageContent {
+  int flameCounter;
+  DateTime lastFlameCounterChange;
+  bool bestFriend;
+
+  FlameSyncContent(
+      {required this.flameCounter,
+      required this.bestFriend,
+      required this.lastFlameCounterChange});
+
+  static FlameSyncContent fromJson(Map json) {
+    return FlameSyncContent(
+      flameCounter: json['flameCounter'],
+      bestFriend: json['bestFriend'],
+      lastFlameCounterChange:
+          DateTime.fromMillisecondsSinceEpoch(json['lastFlameCounterChange']),
+    );
+  }
+
+  @override
+  Map toJson() {
+    return {
+      'flameCounter': flameCounter,
+      'bestFriend': bestFriend,
+      'lastFlameCounterChange':
+          lastFlameCounterChange.toUtc().millisecondsSinceEpoch,
     };
   }
 }

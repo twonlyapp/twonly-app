@@ -34,6 +34,8 @@ class UserData {
   DateTime? lastImageSend;
   int? todaysImageCounter;
 
+  int? myBestFriendContactId;
+
   final int userId;
 
   factory UserData.fromJson(Map<String, dynamic> json) =>

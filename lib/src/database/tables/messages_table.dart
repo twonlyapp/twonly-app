@@ -10,6 +10,7 @@ enum MessageKind {
   profileChange,
   rejectRequest,
   acceptRequest,
+  flameSync,
   opened,
   ack,
   pushKey

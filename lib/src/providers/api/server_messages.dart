@@ -18,6 +18,7 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/utils/misc.dart';
 // ignore: library_prefixes
 import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
@@ -66,6 +67,29 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
   switch (message.kind) {
     case MessageKind.contactRequest:
       return handleContactRequest(fromUserId, message);
+
+    case MessageKind.flameSync:
+      Contact? contact = await twonlyDatabase.contactsDao
+          .getContactByUserId(fromUserId)
+          .getSingleOrNull();
+      if (contact != null && contact.lastFlameCounterChange != null) {
+        final content = message.content;
+        if (content is FlameSyncContent) {
+          var updates = ContactsCompanion(
+            alsoBestFriend: Value(content.bestFriend),
+          );
+          if (isToday(contact.lastFlameCounterChange!) &&
+              isToday(content.lastFlameCounterChange)) {
+            if (content.flameCounter > contact.flameCounter) {
+              updates = ContactsCompanion(
+                alsoBestFriend: Value(content.bestFriend),
+                flameCounter: Value(content.flameCounter),
+              );
+            }
+          }
+          await twonlyDatabase.contactsDao.updateContact(fromUserId, updates);
+        }
+      }
 
     case MessageKind.opened:
       final update = MessagesCompanion(openedAt: Value(message.timestamp));

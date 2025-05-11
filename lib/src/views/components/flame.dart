@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/app.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 
 class FlameCounterWidget extends StatelessWidget {
   final Contact user;
-  final int maxTotalMediaCounter;
   final int flameCounter;
   final bool prefix;
 
   const FlameCounterWidget(
     this.user,
-    this.flameCounter,
-    this.maxTotalMediaCounter, {
+    this.flameCounter, {
     this.prefix = false,
     super.key,
   });
@@ -30,9 +29,7 @@ class FlameCounterWidget extends StatelessWidget {
         SizedBox(
           height: 15,
           child: EmojiAnimation(
-              emoji: (maxTotalMediaCounter == user.totalMediaCounter)
-                  ? "❤️‍🔥"
-                  : "🔥"),
+              emoji: (globalBestFriendUserId == user.userId) ? "❤️‍🔥" : "🔥"),
         ),
       ],
     );

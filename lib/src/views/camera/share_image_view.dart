@@ -44,7 +44,6 @@ class _ShareImageView extends State<ShareImageView> {
   List<Contact> _otherUsers = [];
   List<Contact> _bestFriends = [];
   List<Contact> _pinnedContacs = [];
-  int maxTotalMediaCounter = 0;
   Uint8List? imageBytes;
   bool sendingImage = false;
   bool hideArchivedUsers = true;
@@ -99,12 +98,6 @@ class _ShareImageView extends State<ShareImageView> {
       return b.totalMediaCounter.compareTo(
           a.totalMediaCounter); // Sort by totalMediaCounter in descending order
     });
-
-    maxTotalMediaCounter = 0;
-    if (users.isNotEmpty) {
-      maxTotalMediaCounter =
-          users.map((x) => x.totalMediaCounter).reduce((a, b) => a > b ? a : b);
-    }
 
     // Separate best friends and other users
     List<Contact> bestFriends = [];
@@ -201,7 +194,6 @@ class _ShareImageView extends State<ShareImageView> {
               BestFriendsSelector(
                 users: _pinnedContacs,
                 selectedUserIds: _selectedUserIds,
-                maxTotalMediaCounter: maxTotalMediaCounter,
                 isRealTwonly: widget.isRealTwonly,
                 updateStatus: updateStatus,
                 title: context.lang.shareImagePinnedContacts,
@@ -210,7 +202,6 @@ class _ShareImageView extends State<ShareImageView> {
               BestFriendsSelector(
                 users: _bestFriends,
                 selectedUserIds: _selectedUserIds,
-                maxTotalMediaCounter: maxTotalMediaCounter,
                 isRealTwonly: widget.isRealTwonly,
                 updateStatus: updateStatus,
                 title: context.lang.shareImageBestFriends,
@@ -259,7 +250,6 @@ class _ShareImageView extends State<ShareImageView> {
               Expanded(
                 child: UserList(
                   List.from(_otherUsers),
-                  maxTotalMediaCounter,
                   selectedUserIds: _selectedUserIds,
                   isRealTwonly: widget.isRealTwonly,
                   updateStatus: updateStatus,
@@ -351,8 +341,7 @@ class _ShareImageView extends State<ShareImageView> {
 
 class UserList extends StatelessWidget {
   const UserList(
-    this.users,
-    this.maxTotalMediaCounter, {
+    this.users, {
     super.key,
     required this.selectedUserIds,
     required this.updateStatus,
@@ -360,7 +349,6 @@ class UserList extends StatelessWidget {
   });
   final Function(int, bool) updateStatus;
   final List<Contact> users;
-  final int maxTotalMediaCounter;
   final bool isRealTwonly;
   final HashSet<int> selectedUserIds;
 
@@ -391,7 +379,6 @@ class UserList extends StatelessWidget {
                 FlameCounterWidget(
                   user,
                   flameCounter,
-                  maxTotalMediaCounter,
                   prefix: true,
                 ),
             ],

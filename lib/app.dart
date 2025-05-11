@@ -19,6 +19,7 @@ import 'dart:async';
 // this callback is called by the apiProvider
 Function(bool) globalCallbackConnectionState = (a) {};
 bool globalIsAppInBackground = true;
+int globalBestFriendUserId = -1;
 
 // these two callbacks are called on updated to the corresponding database
 
@@ -50,7 +51,18 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future setUserPlan() async {
     final user = await getUser();
+    globalBestFriendUserId = -1;
     if (user != null && context.mounted) {
+      if (user.myBestFriendContactId != null) {
+        final contact = await twonlyDatabase.contactsDao
+            .getContactByUserId(user.myBestFriendContactId!)
+            .getSingleOrNull();
+        if (contact != null) {
+          if (contact.alsoBestFriend) {
+            globalBestFriendUserId = user.myBestFriendContactId ?? 0;
+          }
+        }
+      }
       context.read<CustomChangeProvider>().updatePlan(user.subscriptionPlan);
     }
   }

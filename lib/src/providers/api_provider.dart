@@ -23,6 +23,7 @@ import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/providers/api/media_send.dart';
 import 'package:twonly/src/providers/api/server_messages.dart';
 import 'package:twonly/src/services/fcm_service.dart';
+import 'package:twonly/src/services/flame_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 // ignore: library_prefixes
@@ -77,10 +78,6 @@ class ApiProvider {
   Future onAuthenticated() async {
     isAuthenticated = true;
     initFCMAfterAuthenticated();
-  }
-
-  Future onConnected() async {
-    await authenticate();
     globalCallbackConnectionState(true);
 
     if (!globalIsAppInBackground) {
@@ -89,7 +86,13 @@ class ApiProvider {
       tryDownloadAllMediaFiles();
       notifyContactsAboutProfileChange();
       twonlyDatabase.markUpdated();
+      syncFlameCounters();
     }
+  }
+
+  Future onConnected() async {
+    await authenticate();
+    globalCallbackConnectionState(true);
   }
 
   Future onClosed() async {
