@@ -159,11 +159,19 @@ class MediaMessageContent extends MessageContent {
 class TextMessageContent extends MessageContent {
   String text;
   int? responseToMessageId;
-  TextMessageContent({required this.text, this.responseToMessageId});
+  int? responseToOtherMessageId;
+  TextMessageContent({
+    required this.text,
+    this.responseToMessageId,
+    this.responseToOtherMessageId,
+  });
 
   static TextMessageContent fromJson(Map json) {
     return TextMessageContent(
         text: json['text'],
+        responseToOtherMessageId: json.containsKey('responseToOtherMessageId')
+            ? json['responseToOtherMessageId']
+            : null,
         responseToMessageId: json.containsKey('responseToMessageId')
             ? json['responseToMessageId']
             : null);
@@ -174,6 +182,7 @@ class TextMessageContent extends MessageContent {
     return {
       'text': text,
       'responseToMessageId': responseToMessageId,
+      'responseToOtherMessageId': responseToOtherMessageId,
     };
   }
 }

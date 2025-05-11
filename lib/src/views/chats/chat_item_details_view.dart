@@ -103,13 +103,16 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
             tmpReactionsToOtherMessages[msg.responseToOtherMessageId!]!
                 .add(msg);
           }
-        } else if (msg.responseToMessageId != null) {
+        }
+        if (msg.responseToMessageId != null) {
           if (!tmpReactionsToMyMessages.containsKey(msg.responseToMessageId!)) {
             tmpReactionsToMyMessages[msg.responseToMessageId!] = [msg];
           } else {
             tmpReactionsToMyMessages[msg.responseToMessageId!]!.add(msg);
           }
-        } else {
+        }
+        if (msg.responseToMessageId == null &&
+            msg.responseToOtherMessageId == null) {
           displayedMessages.add(msg);
         }
       }
@@ -138,9 +141,9 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       TextMessageContent(
         text: newMessageController.text,
         responseToMessageId: responseToMessage?.messageOtherId,
+        responseToOtherMessageId: responseToMessage?.messageId,
       ),
       PushKind.text,
-      responseToMessageId: responseToMessage?.messageId,
     );
     newMessageController.clear();
     currentInputText = "";

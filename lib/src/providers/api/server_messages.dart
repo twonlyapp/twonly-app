@@ -179,11 +179,13 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         }
 
         int? responseToMessageId;
+        int? responseToOtherMessageId;
         int? messageId;
 
         final content = message.content!;
         if (content is TextMessageContent) {
           responseToMessageId = content.responseToMessageId;
+          responseToOtherMessageId = content.responseToOtherMessageId;
         }
         if (content is ReopenedMediaFileContent) {
           responseToMessageId = content.messageId;
@@ -207,6 +209,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             acknowledgeByServer: Value(true),
             acknowledgeByUser: Value(acknowledgeByUser),
             responseToMessageId: Value(responseToMessageId),
+            responseToOtherMessageId: Value(responseToOtherMessageId),
             openedAt: Value(openedAt),
             downloadState: Value(message.kind == MessageKind.media
                 ? DownloadState.pending
