@@ -140,19 +140,16 @@ Future<Result> encryptAndSendMessage(
     Result resp = await apiProvider.sendTextMessage(userId, bytes, pushData);
 
     if (resp.isSuccess) {
+      {
+        var retransmit = await getAllMessagesForRetransmitting();
+        retransmit.remove(stateId);
+        box.put("messages-to-retransmit", jsonEncode(retransmit));
+      }
       if (messageId != null) {
         await twonlyDatabase.messagesDao.updateMessageByMessageId(
           messageId,
           MessagesCompanion(acknowledgeByServer: Value(true)),
         );
-
-        {
-          var retransmit = await getAllMessagesForRetransmitting();
-          retransmit.remove(stateId);
-          box.put("messages-to-retransmit", jsonEncode(retransmit));
-        }
-
-        box.delete("retransmit-$messageId-textmessage");
       }
     }
 
