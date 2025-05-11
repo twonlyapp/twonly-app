@@ -501,6 +501,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               children: [
                 SaveToGalleryButton(
                   getMergedImage: getMergedImage,
+                  videoFilePath: widget.videoFilePath,
                   sendNextMediaToUserName: sendNextMediaToUserName,
                 ),
                 if (sendNextMediaToUserName != null) SizedBox(width: 10),

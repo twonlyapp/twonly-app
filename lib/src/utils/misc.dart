@@ -56,6 +56,19 @@ Future<String?> saveImageToGallery(Uint8List imageBytes) async {
   }
 }
 
+Future<String?> saveVideoToGallery(String videoPath) async {
+  final hasAccess = await Gal.hasAccess();
+  if (!hasAccess) {
+    await Gal.requestAccess();
+  }
+  try {
+    await Gal.putVideo(videoPath);
+    return null;
+  } on GalException catch (e) {
+    return e.type.message;
+  }
+}
+
 Uint8List getRandomUint8List(int length) {
   final Random random = Random.secure();
   final Uint8List randomBytes = Uint8List(length);

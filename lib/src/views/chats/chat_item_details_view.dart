@@ -23,32 +23,29 @@ import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_view.dart';
+import 'package:video_player/video_player.dart';
 
-InputDecoration inputTextMessageDeco(BuildContext context) {
-  return InputDecoration(
-    hintText: context.lang.chatListDetailInput,
-    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20),
-      borderSide:
-          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20.0),
-      borderSide:
-          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20.0),
-      borderSide: BorderSide(color: Colors.grey, width: 2.0),
-    ),
-  );
+class ChatMediaViewerFullScreen extends StatelessWidget {
+  const ChatMediaViewerFullScreen({super.key, required this.message});
+  final Message message;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: InChatMediaViewer(message: message, isInFullscreen: true),
+        ),
+      ),
+    );
+  }
 }
 
 class InChatMediaViewer extends StatefulWidget {
-  const InChatMediaViewer({super.key, required this.message});
+  const InChatMediaViewer(
+      {super.key, required this.message, this.isInFullscreen = false});
 
   final Message message;
+  final bool isInFullscreen;
 
   @override
   State<InChatMediaViewer> createState() => _InChatMediaViewerState();
@@ -58,6 +55,8 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   File? image;
   File? video;
   bool isMounted = true;
+  bool mirrorVideo = false;
+  VideoPlayerController? videoController;
 
   @override
   void initState() {
@@ -73,7 +72,26 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
       isSend ? "send" : "received",
     );
     if (!isMounted) return;
+    final videoPath = File("$basePath.mp4");
     final imagePath = File("$basePath.png");
+    if (videoPath.existsSync() && widget.message.contentJson != null) {
+      MessageContent? content = MessageContent.fromJson(
+          MessageKind.media, jsonDecode(widget.message.contentJson!));
+      if (content is MediaMessageContent) {
+        mirrorVideo = content.mirrorVideo;
+      }
+      videoController = VideoPlayerController.file(videoPath);
+      videoController?.initialize().then((_) {
+        if (!widget.isInFullscreen) {
+          videoController!.setVolume(0);
+        }
+        videoController!.play();
+      });
+
+      setState(() {
+        image = imagePath;
+      });
+    }
     if (imagePath.existsSync()) {
       setState(() {
         image = imagePath;
@@ -87,22 +105,41 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   void dispose() {
     super.dispose();
     isMounted = false;
+    videoController?.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        if (image != null) Image.file(image!),
-        if (image == null && video == null)
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: MessageSendStateIcon(
-              [widget.message],
-              mainAxisAlignment: MainAxisAlignment.center,
+    return GestureDetector(
+      onTap: () {
+        if (widget.isInFullscreen) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) {
+            return ChatMediaViewerFullScreen(message: widget.message);
+          }),
+        );
+      },
+      child: Stack(
+        children: [
+          if (image != null) Image.file(image!),
+          if (videoController != null)
+            Positioned.fill(
+              child: Transform.flip(
+                flipX: mirrorVideo,
+                child: VideoPlayer(videoController!),
+              ),
             ),
-          )
-      ],
+          if (image == null && video == null)
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: MessageSendStateIcon(
+                [widget.message],
+                mainAxisAlignment: MainAxisAlignment.center,
+              ),
+            )
+        ],
+      ),
     );
   }
 }
@@ -649,4 +686,25 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       ),
     );
   }
+}
+
+InputDecoration inputTextMessageDeco(BuildContext context) {
+  return InputDecoration(
+    hintText: context.lang.chatListDetailInput,
+    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20),
+      borderSide:
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20.0),
+      borderSide:
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20.0),
+      borderSide: BorderSide(color: Colors.grey, width: 2.0),
+    ),
+  );
 }

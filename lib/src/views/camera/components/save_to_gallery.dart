@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:typed_data';
@@ -7,12 +8,13 @@ import 'package:twonly/src/utils/misc.dart';
 class SaveToGalleryButton extends StatefulWidget {
   final Future<Uint8List?> Function() getMergedImage;
   final String? sendNextMediaToUserName;
+  final XFile? videoFilePath;
 
-  const SaveToGalleryButton({
-    super.key,
-    required this.getMergedImage,
-    this.sendNextMediaToUserName,
-  });
+  const SaveToGalleryButton(
+      {super.key,
+      required this.getMergedImage,
+      this.sendNextMediaToUserName,
+      this.videoFilePath});
 
   @override
   State<SaveToGalleryButton> createState() => SaveToGalleryButtonState();
@@ -37,15 +39,31 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
         setState(() {
           _imageSaving = true;
         });
-        Uint8List? imageBytes = await widget.getMergedImage();
-        if (imageBytes == null || !context.mounted) return;
-        final res = await saveImageToGallery(imageBytes);
+
+        String? res;
+
+        if (widget.videoFilePath != null) {
+          res = await saveVideoToGallery(widget.videoFilePath!.path);
+        } else {
+          Uint8List? imageBytes = await widget.getMergedImage();
+          if (imageBytes == null || !context.mounted) return;
+          res = await saveImageToGallery(imageBytes);
+        }
         if (res == null) {
           setState(() {
-            _imageSaving = false;
             _imageSaved = true;
           });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(res),
+              duration: Duration(seconds: 3),
+            ),
+          );
         }
+        setState(() {
+          _imageSaving = false;
+        });
       },
       child: Row(
         children: [

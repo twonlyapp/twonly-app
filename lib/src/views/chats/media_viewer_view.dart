@@ -41,6 +41,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   // current image related
   Uint8List? imageBytes;
+  String? videoPath;
   VideoPlayerController? videoController;
 
   DateTime? canBeSeenUntil;
@@ -137,6 +138,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       imageSaved = false;
       mirrorVideo = false;
       progress = 0;
+      videoPath = null;
       isDownloading = false;
       isRealTwonly = false;
       showSendTextMessageInput = false;
@@ -200,9 +202,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     );
 
     if (content.isVideo) {
-      final vidoePath = await getVideoPath(current.messageId);
-      if (vidoePath != null) {
-        videoController = VideoPlayerController.file(File(vidoePath.path));
+      final videoPathTmp = await getVideoPath(current.messageId);
+      if (videoPathTmp != null) {
+        videoController = VideoPlayerController.file(File(videoPathTmp.path));
         videoController?.setLooping(content.maxShowTime == gMediaShowInfinite);
         videoController?.initialize().then((_) {
           videoController!.play();
@@ -214,7 +216,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               }
             });
           }
-          setState(() {});
+          setState(() {
+            videoPath = videoPathTmp.path;
+          });
         }).catchError((Object error) {
           Logger("media_viewer_view.dart").shout(error);
         });
@@ -307,8 +311,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       imageSaved = true;
     });
     final user = await getUser();
+
     if (user != null && (user.storeMediaFilesInGallery ?? true)) {
-      await saveImageToGallery(imageBytes!);
+      if (videoPath != null) {
+        await saveVideoToGallery(videoPath!);
+      } else {
+        await saveImageToGallery(imageBytes!);
+      }
     }
     setState(() {
       imageSaving = false;
@@ -320,7 +329,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (maxShowTime == gMediaShowInfinite && videoController == null)
+        if (maxShowTime == gMediaShowInfinite)
           OutlinedButton(
             style: OutlinedButton.styleFrom(
               iconColor: imageSaved
