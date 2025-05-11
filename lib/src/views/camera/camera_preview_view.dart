@@ -20,6 +20,8 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/home_view.dart';
 
+int maxVideoRecordingTime = 15;
+
 class CameraPreviewView extends StatefulWidget {
   const CameraPreviewView({super.key, this.sendTo});
   final Contact? sendTo;
@@ -92,8 +94,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
   }
 
-  Future selectCamera(int sCameraId,
-      {bool init = false, bool enableAudio = false}) async {
+  Future selectCamera(
+    int sCameraId, {
+    bool init = false,
+    bool enableAudio = false,
+  }) async {
     if (sCameraId >= gCameras.length) return;
     if (init) {
       for (; sCameraId < gCameras.length; sCameraId++) {
@@ -104,6 +109,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
     setState(() {
       isZoomAble = false;
+      scaleFactor = 1;
     });
     controller = CameraController(
       gCameras[sCameraId],
@@ -320,13 +326,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
     try {
       await controller?.startVideoRecording();
-      videoRecordingTimer = Timer.periodic(Duration(milliseconds: 10), (timer) {
+      videoRecordingTimer = Timer.periodic(Duration(milliseconds: 15), (timer) {
         setState(() {
           currentTime = DateTime.now();
         });
 
         if (videoRecordingStarted != null &&
-            currentTime.difference(videoRecordingStarted!).inSeconds >= 10) {
+            currentTime.difference(videoRecordingStarted!).inSeconds >=
+                maxVideoRecordingTime) {
           timer.cancel();
           videoRecordingTimer = null;
           stopVideoRecording();
@@ -636,7 +643,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             value:
                                 (currentTime.difference(videoRecordingStarted!))
                                         .inMilliseconds /
-                                    (10 * 1000),
+                                    (maxVideoRecordingTime * 1000),
                             strokeWidth: 4,
                             valueColor:
                                 AlwaysStoppedAnimation<Color>(Colors.red),
