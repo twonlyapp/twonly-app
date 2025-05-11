@@ -322,7 +322,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpDiagnostics => 'Diagnostic protocol';
 
   @override
-  String get settingsHelpSupport => 'Support Center';
+  String get settingsHelpFAQ => 'FAQ';
 
   @override
   String get settingsHelpContactUs => 'Contact us';

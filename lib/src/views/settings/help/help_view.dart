@@ -5,6 +5,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/help/contact_us_view.dart';
 import 'package:twonly/src/views/settings/help/credits_view.dart';
 import 'package:twonly/src/views/settings/help/diagnostics_view.dart';
+import 'package:twonly/src/views/settings/help/faq.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpView extends StatelessWidget {
@@ -18,11 +19,13 @@ class HelpView extends StatelessWidget {
       body: ListView(
         children: [
           ListTile(
-            title: Text(context.lang.settingsHelpSupport),
+            title: Text(context.lang.settingsHelpFAQ),
             onTap: () {
-              launchUrl(Uri.parse("https://twonly.eu/support"));
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return FAQPage();
+              }));
             },
-            trailing: FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            // trailing: FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpContactUs),

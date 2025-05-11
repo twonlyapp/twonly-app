@@ -713,11 +713,11 @@ abstract class AppLocalizations {
   /// **'Diagnostic protocol'**
   String get settingsHelpDiagnostics;
 
-  /// No description provided for @settingsHelpSupport.
+  /// No description provided for @settingsHelpFAQ.
   ///
   /// In en, this message translates to:
-  /// **'Support Center'**
-  String get settingsHelpSupport;
+  /// **'FAQ'**
+  String get settingsHelpFAQ;
 
   /// No description provided for @settingsHelpContactUs.
   ///

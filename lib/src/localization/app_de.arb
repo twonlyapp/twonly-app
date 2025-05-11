@@ -118,7 +118,7 @@
     "settingsNotifyTroubleshootingNoProblem": "Kein Problem festgestellt",
     "settingsNotifyTroubleshootingNoProblemDesc": "Klicke auf OK, um eine Testbenachrichtigung zu erhalten. Wenn du auch nach 10 Minuten warten keine Nachricht erhältst, sende uns bitte dein Diagnoseprotokoll unter Einstellungen > Hilfe > Diagnoseprotokoll, damit wir uns das Problem ansehen können.",
     "settingsHelp": "Hilfe",
-    "settingsHelpSupport": "Support-Center",
+    "settingsHelpFAQ": "FAQ",
     "settingsHelpContactUs": "Kontaktiere uns",
     "settingsHelpDiagnostics": "Diagnoseprotokoll",
     "settingsHelpVersion": "Version",
