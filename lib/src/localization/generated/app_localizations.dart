@@ -818,7 +818,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAllContactMessagesBody.
   ///
   /// In en, this message translates to:
-  /// **'This will remove all messages in your chat with {username}. This will NOT delete the messages stored at {username}s device!'**
+  /// **'This will remove all messages, except stored media files, in your chat with {username}. This will NOT delete the messages stored at {username}s device!'**
   String deleteAllContactMessagesBody(Object username);
 
   /// No description provided for @contactBlock.

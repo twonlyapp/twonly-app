@@ -129,9 +129,9 @@ Future handleSingleMediaFile(
         }
         try {
           // delete non compressed media files
-          await deleteMediaFile(media, "orginal.png");
-          await deleteMediaFile(media, "orginal.mp4");
-          await deleteMediaFile(media, "encrypted");
+          await deleteMediaFile(media.mediaUploadId, "orginal.png");
+          await deleteMediaFile(media.mediaUploadId, "orginal.mp4");
+          await deleteMediaFile(media.mediaUploadId, "encrypted");
         } catch (e) {
           Logger("media_send.dart").shout("$e");
         }
@@ -512,8 +512,8 @@ Future<void> writeMediaFile(
   await file.writeAsBytes(data);
 }
 
-Future<void> deleteMediaFile(MediaUpload media, String type) async {
-  String basePath = await getMediaFilePath(media.mediaUploadId, "send");
+Future<void> deleteMediaFile(int mediaUploadId, String type) async {
+  String basePath = await getMediaFilePath(mediaUploadId, "send");
   File file = File("$basePath.$type");
   if (await file.exists()) {
     await file.delete();

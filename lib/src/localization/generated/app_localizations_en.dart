@@ -376,7 +376,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deleteAllContactMessagesBody(Object username) {
-    return 'This will remove all messages in your chat with $username. This will NOT delete the messages stored at ${username}s device!';
+    return 'This will remove all messages, except stored media files, in your chat with $username. This will NOT delete the messages stored at ${username}s device!';
   }
 
   @override

@@ -6,7 +6,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/providers/api/media_send.dart';
+import 'package:twonly/src/providers/api/media_send.dart' as send;
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/better_text.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
@@ -17,7 +17,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/api/media_received.dart';
+import 'package:twonly/src/providers/api/media_received.dart' as received;
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
@@ -67,7 +67,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   Future initAsync() async {
     if (!widget.message.mediaStored) return;
     bool isSend = widget.message.messageOtherId == null;
-    final basePath = await getMediaFilePath(
+    final basePath = await send.getMediaFilePath(
       isSend ? widget.message.mediaUploadId! : widget.message.messageId,
       isSend ? "send" : "received",
     );
@@ -108,18 +108,39 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     videoController?.dispose();
   }
 
+  Future deleteFiles() async {
+    await twonlyDatabase.messagesDao.updateMessageByMessageId(
+      widget.message.messageId,
+      MessagesCompanion(mediaStored: Value(false)),
+    );
+    await send.purgeSendMediaFiles();
+    await received.purgeReceivedMediaFiles();
+    if (context.mounted) {
+      Navigator.pop(context, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (widget.isInFullscreen) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) {
-            return ChatMediaViewerFullScreen(message: widget.message);
-          }),
-        );
-      },
+      onTap: (image == null && videoController == null)
+          ? null
+          : () async {
+              if (widget.isInFullscreen) return;
+              bool? removed = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) {
+                  return ChatMediaViewerFullScreen(message: widget.message);
+                }),
+              );
+
+              if (removed != null && removed) {
+                image = null;
+                videoController?.dispose();
+                videoController = null;
+                setState(() {});
+              }
+            },
       child: Stack(
         children: [
           if (image != null) Image.file(image!),
@@ -137,7 +158,23 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
                 [widget.message],
                 mainAxisAlignment: MainAxisAlignment.center,
               ),
-            )
+            ),
+          if (widget.isInFullscreen)
+            Positioned(
+              bottom: 10,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: deleteFiles,
+                    icon: FaIcon(FontAwesomeIcons.trashCan),
+                    label: Text("Delete media file"),
+                  )
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -348,7 +385,7 @@ class ChatListEntry extends StatelessWidget {
               message.mediaStored) {
             return;
           }
-          if (await existsMediaFile(message.messageId, "png")) {
+          if (await received.existsMediaFile(message.messageId, "png")) {
             encryptAndSendMessage(
               null,
               contact.userId,
@@ -379,7 +416,7 @@ class ChatListEntry extends StatelessWidget {
                 }),
               );
             } else if (message.downloadState == DownloadState.pending) {
-              startDownloadMedia(message, true);
+              received.startDownloadMedia(message, true);
             }
           }
         },

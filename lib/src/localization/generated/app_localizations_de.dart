@@ -376,7 +376,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String deleteAllContactMessagesBody(Object username) {
-    return 'Dadurch werden alle Nachrichten in deinem Chat mit $username gelöscht. Dies löscht NICHT die auf dem Gerät von $username gespeicherten Nachrichten!';
+    return 'Dadurch werden alle Nachrichten, ausgenommen gespeicherte Mediendateien, in deinem Chat mit $username gelöscht. Dies löscht NICHT die auf dem Gerät von $username gespeicherten Nachrichten!';
   }
 
   @override
