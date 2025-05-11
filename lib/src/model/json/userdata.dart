@@ -31,6 +31,9 @@ class UserData {
   String? lastPlanBallance;
   String? additionalUserInvites;
 
+  DateTime? lastImageSend;
+  int? todaysImageCounter;
+
   final int userId;
 
   factory UserData.fromJson(Map<String, dynamic> json) =>

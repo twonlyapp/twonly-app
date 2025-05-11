@@ -1354,6 +1354,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'twonly-Codes für \"Free\" user'**
   String get additionalUsersFreeTokens;
+
+  /// No description provided for @planLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You have reached your plan limit for today. Upgrade your plan now to send the media file.'**
+  String get planLimitReached;
+
+  /// No description provided for @planNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot send media files with your current tariff.  Upgrade your plan now to send the media file.'**
+  String get planNotAllowed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

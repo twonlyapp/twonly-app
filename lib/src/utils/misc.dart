@@ -194,3 +194,10 @@ bool isDarkMode(BuildContext context) {
   return selectedTheme == ThemeMode.dark ||
       (selectedTheme == ThemeMode.system && isDarkMode);
 }
+
+bool isToday(DateTime lastImageSend) {
+  final now = DateTime.now();
+  return lastImageSend.year == now.year &&
+      lastImageSend.month == now.month &&
+      lastImageSend.day == now.day;
+}

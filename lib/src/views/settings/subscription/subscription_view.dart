@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -82,7 +83,9 @@ int calculateRefund(Response_PlanBallance current) {
 }
 
 class SubscriptionView extends StatefulWidget {
-  const SubscriptionView({super.key});
+  const SubscriptionView({super.key, this.redirectError});
+
+  final ErrorCode? redirectError;
 
   @override
   State<SubscriptionView> createState() => _SubscriptionViewState();
@@ -135,6 +138,24 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       ),
       body: ListView(
         children: [
+          if (widget.redirectError != null)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                margin: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orangeAccent,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(
+                  (widget.redirectError == ErrorCode.PlanLimitReached)
+                      ? context.lang.planLimitReached
+                      : context.lang.planNotAllowed,
+                  style: TextStyle(color: Colors.black),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.all(32.0),
             child: Center(

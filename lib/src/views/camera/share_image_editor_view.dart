@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/api/error.pb.dart' show ErrorCode;
 import 'package:twonly/src/providers/api/media_send.dart';
 import 'package:twonly/src/views/camera/components/save_to_gallery.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
@@ -21,6 +22,7 @@ import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/layers_viewer.dart';
 import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 import 'package:video_player/video_player.dart';
 
 List<Layer> layers = [];
@@ -365,18 +367,32 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       Navigator.pop(context, true);
       return;
     }
-    sendMediaFile(
-      [widget.sendTo!.userId],
-      imageBytes,
-      _isRealTwonly,
-      maxShowTime,
-      widget.videoFilePath,
-      videoWithAudio,
-      widget.mirrorVideo,
-    );
-    if (context.mounted) {
-      // ignore: use_build_context_synchronously
-      Navigator.pop(context, true);
+    ErrorCode? err = await isAllowedToSend();
+    if (!context.mounted) return;
+
+    if (err != null) {
+      setState(() {
+        sendingOrLoadingImage = false;
+      });
+      await Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return SubscriptionView(
+          redirectError: err,
+        );
+      }));
+    } else {
+      sendMediaFile(
+        [widget.sendTo!.userId],
+        imageBytes,
+        _isRealTwonly,
+        maxShowTime,
+        widget.videoFilePath,
+        videoWithAudio,
+        widget.mirrorVideo,
+      );
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        Navigator.pop(context, true);
+      }
     }
   }
 

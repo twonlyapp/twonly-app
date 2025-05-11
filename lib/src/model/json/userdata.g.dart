@@ -31,7 +31,11 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           ?.map((e) => e as String)
           .toList()
       ..lastPlanBallance = json['lastPlanBallance'] as String?
-      ..additionalUserInvites = json['additionalUserInvites'] as String?;
+      ..additionalUserInvites = json['additionalUserInvites'] as String?
+      ..lastImageSend = json['lastImageSend'] == null
+          ? null
+          : DateTime.parse(json['lastImageSend'] as String)
+      ..todaysImageCounter = (json['todaysImageCounter'] as num?)?.toInt();
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'username': instance.username,
@@ -49,6 +53,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'lastUsedEditorEmojis': instance.lastUsedEditorEmojis,
       'lastPlanBallance': instance.lastPlanBallance,
       'additionalUserInvites': instance.additionalUserInvites,
+      'lastImageSend': instance.lastImageSend?.toIso8601String(),
+      'todaysImageCounter': instance.todaysImageCounter,
       'userId': instance.userId,
     };
 

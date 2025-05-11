@@ -651,4 +651,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get additionalUsersFreeTokens => 'twonly-Codes für \"Free\"-Benutzer';
+
+  @override
+  String get planLimitReached => 'Du hast dein Planlimit für heute erreicht. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.';
+
+  @override
+  String get planNotAllowed => 'In deinem aktuellen Plan kannst du keine Mediendateien versenden. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.';
 }

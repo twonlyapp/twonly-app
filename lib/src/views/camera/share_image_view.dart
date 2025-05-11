@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/providers/api/media_send.dart';
 import 'package:twonly/src/views/camera/components/best_friends_selector.dart';
 import 'package:twonly/src/views/components/flame.dart';
@@ -14,6 +15,7 @@ import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView(
@@ -243,26 +245,40 @@ class _ShareImageView extends State<ShareImageView> {
                   if (imageBytes == null || _selectedUserIds.isEmpty) {
                     return;
                   }
-                  setState(() {
-                    sendingImage = true;
-                  });
-                  sendMediaFile(
-                    _selectedUserIds.toList(),
-                    imageBytes!,
-                    widget.isRealTwonly,
-                    widget.maxShowTime,
-                    widget.videoFilePath,
-                    widget.enableVideoAudio,
-                    widget.mirrorVideo,
-                  );
-                  if (context.mounted) {
-                    Navigator.pop(context, true);
-                    // if (widget.preselectedUser != null) {
-                    //   Navigator.pop(context, true);
-                    // } else {
-                    // Navigator.popUntil(context, (route) => route.isFirst, true);
-                    // globalUpdateOfHomeViewPageIndex(1);
-                    // }
+
+                  ErrorCode? err = await isAllowedToSend();
+                  if (!context.mounted) return;
+
+                  if (err != null) {
+                    await Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return SubscriptionView(
+                        redirectError: err,
+                      );
+                    }));
+                  } else {
+                    setState(() {
+                      sendingImage = true;
+                    });
+
+                    sendMediaFile(
+                      _selectedUserIds.toList(),
+                      imageBytes!,
+                      widget.isRealTwonly,
+                      widget.maxShowTime,
+                      widget.videoFilePath,
+                      widget.enableVideoAudio,
+                      widget.mirrorVideo,
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context, true);
+                      // if (widget.preselectedUser != null) {
+                      //   Navigator.pop(context, true);
+                      // } else {
+                      // Navigator.popUntil(context, (route) => route.isFirst, true);
+                      // globalUpdateOfHomeViewPageIndex(1);
+                      // }
+                    }
                   }
                 },
                 style: ButtonStyle(

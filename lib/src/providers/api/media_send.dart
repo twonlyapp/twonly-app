@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
@@ -19,16 +20,44 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:video_compress/video_compress.dart';
 
+Future<ErrorCode?> isAllowedToSend() async {
+  final user = await getUser();
+  if (user == null) return null;
+  if (user.subscriptionPlan == "Preview") {
+    return ErrorCode.PlanNotAllowed;
+  }
+  if (user.subscriptionPlan == "Free") {
+    if (user.lastImageSend != null && user.todaysImageCounter != null) {
+      if (isToday(user.lastImageSend!)) {
+        if (user.todaysImageCounter == 3) {
+          return ErrorCode.PlanLimitReached;
+        }
+        user.todaysImageCounter = user.todaysImageCounter! + 1;
+      } else {
+        user.todaysImageCounter = 1;
+      }
+    } else {
+      user.todaysImageCounter = 1;
+    }
+    user.lastImageSend = DateTime.now();
+    await updateUser(user);
+  }
+  return null;
+}
+
 Future sendMediaFile(
-    List<int> userIds,
-    Uint8List imageBytes,
-    bool isRealTwonly,
-    int maxShowTime,
-    XFile? videoFilePath,
-    bool? enableVideoAudio,
-    bool mirrorVideo) async {
+  List<int> userIds,
+  Uint8List imageBytes,
+  bool isRealTwonly,
+  int maxShowTime,
+  XFile? videoFilePath,
+  bool? enableVideoAudio,
+  bool mirrorVideo,
+) async {
   MediaUploadMetadata metadata = MediaUploadMetadata();
   metadata.contactIds = userIds;
   metadata.isRealTwonly = isRealTwonly;
@@ -314,6 +343,14 @@ Future<bool> handleGetUploadToken(MediaUpload media) async {
       await apiProvider.getUploadToken(media.metadata.contactIds.length);
 
   if (res.isError || !res.value.hasUploadtoken()) {
+    if (res.isError) {
+      if (res.error == ErrorCode.PlanNotAllowed) {
+        throw Exception("PlanNotAllowed");
+      }
+      if (res.error == ErrorCode.PlanLimitReached) {
+        throw Exception("PlanLimitReached");
+      }
+    }
     Logger("media_send.dart")
         .shout("Will be tried again when reconnected to server!");
     return false;

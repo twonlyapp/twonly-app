@@ -223,5 +223,7 @@
     "checkoutSubmit": "Kostenpflichtig bestellen",
     "additionalUsersList": "Ihre zusätzlichen Benutzer",
     "additionalUsersPlusTokens": "twonly-Codes für \"Plus\"-Benutzer",
-    "additionalUsersFreeTokens": "twonly-Codes für \"Free\"-Benutzer"
+    "additionalUsersFreeTokens": "twonly-Codes für \"Free\"-Benutzer",
+    "planNotAllowed": "In deinem aktuellen Plan kannst du keine Mediendateien versenden. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.",
+    "planLimitReached": "Du hast dein Planlimit für heute erreicht. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden."
 }
