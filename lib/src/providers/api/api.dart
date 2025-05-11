@@ -161,7 +161,11 @@ Future<Result> encryptAndSendMessage(
 }
 
 Future sendTextMessage(
-    int target, TextMessageContent content, PushKind? pushKind) async {
+  int target,
+  TextMessageContent content,
+  PushKind? pushKind, {
+  int? responseToMessageId,
+}) async {
   DateTime messageSendAt = DateTime.now();
 
   int? messageId = await twonlyDatabase.messagesDao.insertMessage(
@@ -170,6 +174,7 @@ Future sendTextMessage(
       kind: Value(MessageKind.textMessage),
       sendAt: Value(messageSendAt),
       responseToOtherMessageId: Value(content.responseToMessageId),
+      responseToMessageId: Value(responseToMessageId),
       downloadState: Value(DownloadState.downloaded),
       contentJson: Value(
         jsonEncode(content.toJson()),

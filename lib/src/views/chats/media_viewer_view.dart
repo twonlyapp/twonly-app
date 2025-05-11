@@ -20,7 +20,6 @@ import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
-import 'package:twonly/src/views/chats/chat_item_details_view.dart';
 import 'package:video_player/video_player.dart';
 
 final _noScreenshot = NoScreenshot.instance;

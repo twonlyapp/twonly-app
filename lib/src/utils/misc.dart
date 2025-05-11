@@ -214,3 +214,31 @@ bool isToday(DateTime lastImageSend) {
       lastImageSend.month == now.month &&
       lastImageSend.day == now.day;
 }
+
+InputDecoration inputTextMessageDeco(BuildContext context) {
+  return InputDecoration(
+    hintText: context.lang.chatListDetailInput,
+    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20),
+      borderSide:
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20.0),
+      borderSide:
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(20.0),
+      borderSide: BorderSide(color: Colors.grey, width: 2.0),
+    ),
+  );
+}
+
+String truncateString(String input, {int maxLength = 20}) {
+  if (input.length > maxLength) {
+    return '${input.substring(0, maxLength)}...';
+  }
+  return input;
+}
