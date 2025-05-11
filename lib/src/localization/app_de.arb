@@ -38,6 +38,8 @@
     "shareImageAllTwonlyWarning": "Twonlies können nur an verifizierte Kontakte gesendet werden!",
     "shareImageSearchAllContacts": "Alle Kontakte durchsuchen",
     "@shareImageSearchAllContacts": {},
+    "shareImageUserNotVerified": "Benutzer ist nicht verifiziert",
+    "shareImageUserNotVerifiedDesc": "twonlies können nur an verifizierte Nutzer gesendet werden. Um einen Nutzer zu verifizieren, gehe auf sein Profil und auf „Sicherheitsnummer verifizieren“.",
     "shareImageShowArchived": "Archivierte Benutzer anzeigen",
     "searchUsernameInput": "Benutzername",
     "searchUsernameTitle": "Benutzernamen suchen",

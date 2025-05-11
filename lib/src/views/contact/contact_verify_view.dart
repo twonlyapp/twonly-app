@@ -113,7 +113,8 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
                       const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                   child: GestureDetector(
                     onTap: () {
-                      launchUrl(Uri.parse("https://twonly.eu/verify"));
+                      launchUrl(Uri.parse(
+                          "https://twonly.eu/faq/security/verify-security-number"));
                     },
                     child: Text(
                       "Read more.",

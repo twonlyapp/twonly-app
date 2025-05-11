@@ -335,6 +335,18 @@ abstract class AppLocalizations {
   /// **'twonlies can only be send to verified contacts!'**
   String get shareImageAllTwonlyWarning;
 
+  /// No description provided for @shareImageUserNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'User is not verified'**
+  String get shareImageUserNotVerified;
+
+  /// No description provided for @shareImageUserNotVerifiedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'twonlies can only be sent to verified users. To verify a user, go to their profile and to verify security number.'**
+  String get shareImageUserNotVerifiedDesc;
+
   /// No description provided for @shareImageShowArchived.
   ///
   /// In en, this message translates to:

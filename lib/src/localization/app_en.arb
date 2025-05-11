@@ -78,6 +78,8 @@
   "@shareImageAllUsers": {},
   "shareImageAllTwonlyWarning": "twonlies can only be send to verified contacts!",
   "@shareImageAllTwonlyWarning": {},
+  "shareImageUserNotVerified": "User is not verified",
+  "shareImageUserNotVerifiedDesc": "twonlies can only be sent to verified users. To verify a user, go to their profile and to verify security number.",
   "shareImageShowArchived": "Show archived users",
   "searchUsernameInput": "Username",
   "@searchUsernameInput": {},

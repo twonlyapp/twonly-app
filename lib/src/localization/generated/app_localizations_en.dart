@@ -129,6 +129,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareImageAllTwonlyWarning => 'twonlies can only be send to verified contacts!';
 
   @override
+  String get shareImageUserNotVerified => 'User is not verified';
+
+  @override
+  String get shareImageUserNotVerifiedDesc => 'twonlies can only be sent to verified users. To verify a user, go to their profile and to verify security number.';
+
+  @override
   String get shareImageShowArchived => 'Show archived users';
 
   @override

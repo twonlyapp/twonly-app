@@ -9,6 +9,7 @@ import 'package:twonly/src/model/protobuf/api/error.pb.dart' show ErrorCode;
 import 'package:twonly/src/providers/api/media_send.dart';
 import 'package:twonly/src/views/camera/components/save_to_gallery.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
@@ -229,6 +230,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             ? Theme.of(context).colorScheme.primary
             : Colors.white,
         onPressed: () async {
+          if (widget.sendTo != null) {
+            if (!widget.sendTo!.verified) {
+              showAlertDialog(context, context.lang.shareImageUserNotVerified,
+                  context.lang.shareImageUserNotVerifiedDesc);
+              return;
+            }
+          }
           _isRealTwonly = !_isRealTwonly;
           if (_isRealTwonly) {
             maxShowTime = 12;
