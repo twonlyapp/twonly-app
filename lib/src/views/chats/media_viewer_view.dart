@@ -667,7 +667,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
 
     return AnimatedPositioned(
       duration: Duration(milliseconds: 200), // Animation duration
-      bottom: widget.show ? 100 : 90,
+      bottom: widget.show ? 80 : 60,
       left: widget.show ? 0 : 150,
       right: widget.show ? 0 : 150,
       curve: Curves.linearToEaseOut,
@@ -675,7 +675,9 @@ class _ReactionButtonsState extends State<ReactionButtons> {
         opacity: widget.show ? 1.0 : 0.0, // Fade in/out
         duration: Duration(milliseconds: 150),
         child: Container(
-          color: Colors.transparent,
+          color: Colors.black.withAlpha(
+              0), // so the gesture detector will be prevented to detect a click on this...
+          padding: EdgeInsets.symmetric(vertical: 32),
           child: Column(
             children: [
               if (secondRowEmojis.isNotEmpty)
