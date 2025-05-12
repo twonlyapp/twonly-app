@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -21,7 +22,7 @@ class _FAQPageState extends State<FAQPage> {
   @override
   void initState() {
     super.initState();
-    domain = "http://10.99.0.140:8000";
+    domain = (kDebugMode) ? "http://10.99.0.140:8000" : "https://twonly.eu";
     _fetchFAQData();
   }
 
