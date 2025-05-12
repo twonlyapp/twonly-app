@@ -21,6 +21,7 @@ class Response_TransactionTypes extends $pb.ProtobufEnum {
   static const Response_TransactionTypes PlanUpgrade = Response_TransactionTypes._(4, _omitEnumNames ? '' : 'PlanUpgrade');
   static const Response_TransactionTypes Unknown = Response_TransactionTypes._(5, _omitEnumNames ? '' : 'Unknown');
   static const Response_TransactionTypes ThanksForTesting = Response_TransactionTypes._(6, _omitEnumNames ? '' : 'ThanksForTesting');
+  static const Response_TransactionTypes AutoRenewal = Response_TransactionTypes._(7, _omitEnumNames ? '' : 'AutoRenewal');
 
   static const $core.List<Response_TransactionTypes> values = <Response_TransactionTypes> [
     Refund,
@@ -30,6 +31,7 @@ class Response_TransactionTypes extends $pb.ProtobufEnum {
     PlanUpgrade,
     Unknown,
     ThanksForTesting,
+    AutoRenewal,
   ];
 
   static final $core.Map<$core.int, Response_TransactionTypes> _byValue = $pb.ProtobufEnum.initByValue(values);

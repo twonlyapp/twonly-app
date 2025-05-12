@@ -207,6 +207,7 @@
     "transactionCash": "Bargeldtransaktion",
     "transactionPlanUpgrade": "Planupgrade",
     "transactionRefund": "Rückerstattung",
+    "transactionAutoRenewal": "Automatische Verlängerung",
     "refund": "Rückerstattung",
     "transactionThanksForTesting": "Danke fürs Testen",
     "transactionUnknown": "Unbekannte Transaktion",

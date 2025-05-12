@@ -106,6 +106,7 @@ class ApiProvider {
     log.info("Closing the websocket connection!");
     if (_channel != null) {
       await _channel!.sink.close();
+      onClosed();
       callback();
       return;
     }

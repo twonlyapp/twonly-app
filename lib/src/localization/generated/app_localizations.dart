@@ -1277,6 +1277,12 @@ abstract class AppLocalizations {
   /// **'Voucher redeemed'**
   String get transactionVoucherRedeemed;
 
+  /// No description provided for @transactionAutoRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic renewal'**
+  String get transactionAutoRenewal;
+
   /// No description provided for @checkoutOptions.
   ///
   /// In en, this message translates to:

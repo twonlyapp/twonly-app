@@ -78,6 +78,14 @@ int calculateRefund(Response_PlanBallance current) {
               .ceil() *
           100;
     }
+  } else {
+    final elapsedDays = DateTime.now()
+        .difference(DateTime.fromMillisecondsSinceEpoch(
+            current.lastPaymentDoneUnixTimestamp.toInt() * 1000))
+        .inDays;
+    if (elapsedDays > 14) {
+      refund = 0;
+    }
   }
   return refund;
 }

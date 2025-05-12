@@ -289,6 +289,7 @@ const Response_TransactionTypes$json = {
     {'1': 'PlanUpgrade', '2': 4},
     {'1': 'Unknown', '2': 5},
     {'1': 'ThanksForTesting', '2': 6},
+    {'1': 'AutoRenewal', '2': 7},
   ],
 };
 
@@ -355,8 +356,8 @@ final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'YWxsYW5jZUgAUgxwbGFuYmFsbGFuY2USQQoIdm91Y2hlcnMYCyABKAsyIy5zZXJ2ZXJfdG9fY2'
     'xpZW50LlJlc3BvbnNlLlZvdWNoZXJzSABSCHZvdWNoZXJzEl8KEmFkZGFjY291bnRzaW52aXRl'
     'cxgMIAEoCzItLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuQWRkQWNjb3VudHNJbnZpdGVzSA'
-    'BSEmFkZGFjY291bnRzaW52aXRlc0IECgJPayKFAQoQVHJhbnNhY3Rpb25UeXBlcxIKCgZSZWZ1'
+    'BSEmFkZGFjY291bnRzaW52aXRlc0IECgJPayKWAQoQVHJhbnNhY3Rpb25UeXBlcxIKCgZSZWZ1'
     'bmQQABITCg9Wb3VjaGVyUmVkZWVtZWQQARISCg5Wb3VjaGVyQ3JlYXRlZBACEggKBENhc2gQAx'
-    'IPCgtQbGFuVXBncmFkZRAEEgsKB1Vua25vd24QBRIUChBUaGFua3NGb3JUZXN0aW5nEAZCCgoI'
-    'UmVzcG9uc2U=');
+    'IPCgtQbGFuVXBncmFkZRAEEgsKB1Vua25vd24QBRIUChBUaGFua3NGb3JUZXN0aW5nEAYSDwoL'
+    'QXV0b1JlbmV3YWwQB0IKCghSZXNwb25zZQ==');
 

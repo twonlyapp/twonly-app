@@ -369,6 +369,7 @@
   "transactionUnknown": "Unknown transaction",
   "transactionVoucherCreated": "Voucher created",
   "transactionVoucherRedeemed": "Voucher redeemed",
+  "transactionAutoRenewal": "Automatic renewal",
   "checkoutOptions": "Options",
   "refund": "Refund",
   "checkoutPayYearly": "Pay yearly",

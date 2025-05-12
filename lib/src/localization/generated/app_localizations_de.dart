@@ -614,6 +614,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get transactionVoucherRedeemed => 'Gutschein eingelöst';
 
   @override
+  String get transactionAutoRenewal => 'Automatische Verlängerung';
+
+  @override
   String get checkoutOptions => 'Optionen';
 
   @override
@@ -644,7 +647,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get autoRenewalDesc => 'Du kannst dies jederzeit ändern.';
 
   @override
-  String get autoRenewalLongDesc => 'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Vorschau-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst.  Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
+  String get autoRenewalLongDesc => 'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Preview-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst.  Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
 
   @override
   String get planSuccessUpgraded => 'Dein Plan wurde erfolgreich aktualisiert.';

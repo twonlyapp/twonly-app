@@ -614,6 +614,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionVoucherRedeemed => 'Voucher redeemed';
 
   @override
+  String get transactionAutoRenewal => 'Automatic renewal';
+
+  @override
   String get checkoutOptions => 'Options';
 
   @override

@@ -76,6 +76,8 @@ class _TransactionCardState extends State<TransactionCard> {
         return context.lang.transactionVoucherCreated;
       case Response_TransactionTypes.VoucherRedeemed:
         return context.lang.transactionVoucherRedeemed;
+      case Response_TransactionTypes.AutoRenewal:
+        return context.lang.transactionAutoRenewal;
     }
     return type.toString();
   }
