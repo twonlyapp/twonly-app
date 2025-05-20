@@ -33,7 +33,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get onboardingFocusBody => 'Verabschiede dich von süchtig machenden Funktionen! twonly wurde für das Teilen von Momenten ohne nutzlose Ablenkungen oder Werbung entwickelt.';
 
   @override
-  String get onboardingSendTwonliesTitle => 'Twonlies senden';
+  String get onboardingSendTwonliesTitle => 'twonlies senden';
 
   @override
   String get onboardingSendTwonliesBody => 'Teile Momente sicher mit deinem Partner. twonly stellt sicher, dass nur dein Partner sie öffnen kann, sodass deine Momente mit deinem Partner eine two(o)nly Sache bleiben!';
@@ -126,7 +126,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareImageAllUsers => 'Alle Kontakte';
 
   @override
-  String get shareImageAllTwonlyWarning => 'Twonlies können nur an verifizierte Kontakte gesendet werden!';
+  String get shareImageAllTwonlyWarning => 'twonlies können nur an verifizierte Kontakte gesendet werden!';
 
   @override
   String get shareImageUserNotVerified => 'Benutzer ist nicht verifiziert';

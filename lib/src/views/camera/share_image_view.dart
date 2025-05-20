@@ -24,7 +24,8 @@ class ShareImageView extends StatefulWidget {
       required this.isRealTwonly,
       required this.mirrorVideo,
       required this.maxShowTime,
-      this.preselectedUser,
+      required this.selectedUserIds,
+      required this.updateStatus,
       required this.videoFilePath,
       this.enableVideoAudio});
   final Future<Uint8List?> imageBytesFuture;
@@ -32,8 +33,9 @@ class ShareImageView extends StatefulWidget {
   final bool mirrorVideo;
   final int maxShowTime;
   final XFile? videoFilePath;
-  final Contact? preselectedUser;
+  final HashSet<int> selectedUserIds;
   final bool? enableVideoAudio;
+  final Function(int, bool) updateStatus;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -47,7 +49,6 @@ class _ShareImageView extends State<ShareImageView> {
   Uint8List? imageBytes;
   bool sendingImage = false;
   bool hideArchivedUsers = true;
-  final HashSet<int> _selectedUserIds = HashSet<int>();
   final TextEditingController searchUserName = TextEditingController();
   bool showRealTwonlyWarning = false;
   late StreamSubscription<List<Contact>> contactSub;
@@ -56,10 +57,6 @@ class _ShareImageView extends State<ShareImageView> {
   @override
   void initState() {
     super.initState();
-
-    if (widget.preselectedUser != null) {
-      _selectedUserIds.add(widget.preselectedUser!.userId);
-    }
 
     Stream<List<Contact>> allContacts =
         twonlyDatabase.contactsDao.watchContactsForShareView();
@@ -129,7 +126,7 @@ class _ShareImageView extends State<ShareImageView> {
           .where((x) =>
               !x.archived ||
               !hideArchivedUsers ||
-              _selectedUserIds.contains(x.userId))
+              widget.selectedUserIds.contains(x.userId))
           .toList());
       return;
     }
@@ -151,14 +148,7 @@ class _ShareImageView extends State<ShareImageView> {
       }
     }
     showRealTwonlyWarning = false;
-    if (checked) {
-      if (widget.isRealTwonly) {
-        _selectedUserIds.clear();
-      }
-      _selectedUserIds.add(userId);
-    } else {
-      _selectedUserIds.remove(userId);
-    }
+    widget.updateStatus(userId, checked);
     setState(() {});
   }
 
@@ -193,7 +183,7 @@ class _ShareImageView extends State<ShareImageView> {
               if (_pinnedContacs.isNotEmpty) const SizedBox(height: 10),
               BestFriendsSelector(
                 users: _pinnedContacs,
-                selectedUserIds: _selectedUserIds,
+                selectedUserIds: widget.selectedUserIds,
                 isRealTwonly: widget.isRealTwonly,
                 updateStatus: updateStatus,
                 title: context.lang.shareImagePinnedContacts,
@@ -201,7 +191,7 @@ class _ShareImageView extends State<ShareImageView> {
               const SizedBox(height: 10),
               BestFriendsSelector(
                 users: _bestFriends,
-                selectedUserIds: _selectedUserIds,
+                selectedUserIds: widget.selectedUserIds,
                 isRealTwonly: widget.isRealTwonly,
                 updateStatus: updateStatus,
                 title: context.lang.shareImageBestFriends,
@@ -250,7 +240,7 @@ class _ShareImageView extends State<ShareImageView> {
               Expanded(
                 child: UserList(
                   List.from(_otherUsers),
-                  selectedUserIds: _selectedUserIds,
+                  selectedUserIds: widget.selectedUserIds,
                   isRealTwonly: widget.isRealTwonly,
                   updateStatus: updateStatus,
                 ),
@@ -278,7 +268,7 @@ class _ShareImageView extends State<ShareImageView> {
                       )
                     : FaIcon(FontAwesomeIcons.solidPaperPlane),
                 onPressed: () async {
-                  if (imageBytes == null || _selectedUserIds.isEmpty) {
+                  if (imageBytes == null || widget.selectedUserIds.isEmpty) {
                     return;
                   }
 
@@ -298,7 +288,7 @@ class _ShareImageView extends State<ShareImageView> {
                     });
 
                     sendMediaFile(
-                      _selectedUserIds.toList(),
+                      widget.selectedUserIds.toList(),
                       imageBytes!,
                       widget.isRealTwonly,
                       widget.maxShowTime,
@@ -322,7 +312,7 @@ class _ShareImageView extends State<ShareImageView> {
                       EdgeInsets.symmetric(vertical: 10, horizontal: 30),
                     ),
                     backgroundColor: WidgetStateProperty.all<Color>(
-                      imageBytes == null || _selectedUserIds.isEmpty
+                      imageBytes == null || widget.selectedUserIds.isEmpty
                           ? Theme.of(context).colorScheme.secondary
                           : Theme.of(context).colorScheme.primary,
                     )),

@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:async';
 import 'package:camera/camera.dart';
@@ -58,6 +59,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   double tabDownPostion = 0;
   bool sendingOrLoadingImage = true;
   bool isDisposed = false;
+  HashSet<int> selectedUserIds = HashSet();
   double widthRatio = 1, heightRatio = 1, pixelRatio = 1;
   VideoPlayerController? videoController;
 
@@ -103,6 +105,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     layers.clear();
     videoController?.dispose();
     super.dispose();
+  }
+
+  void updateStatus(int userId, bool checked) {
+    if (checked) {
+      if (_isRealTwonly) {
+        selectedUserIds.clear();
+      }
+      selectedUserIds.add(userId);
+    } else {
+      selectedUserIds.remove(userId);
+    }
+    setState(() {});
   }
 
   Future updateAsync(int userId) async {
@@ -241,6 +255,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           if (_isRealTwonly) {
             maxShowTime = 12;
           }
+          selectedUserIds = HashSet();
           setState(() {});
         },
       ),
@@ -308,7 +323,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           imageBytesFuture: imageBytes,
           isRealTwonly: _isRealTwonly,
           maxShowTime: maxShowTime,
-          preselectedUser: widget.sendTo,
+          selectedUserIds: selectedUserIds,
+          updateStatus: updateStatus,
           videoFilePath: widget.videoFilePath,
           mirrorVideo: widget.mirrorVideo,
         ),
