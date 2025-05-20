@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
@@ -555,6 +556,26 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               ),
             if (showSendTextMessageInput)
               Positioned(
+                top: 20,
+                left: 0,
+                right: 0,
+                child: Text(
+                  getContactDisplayName(widget.contact),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: const Color.fromARGB(122, 0, 0, 0),
+                        blurRadius: 5.0,
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            if (showSendTextMessageInput)
+              Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
@@ -614,6 +635,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if (allMediaFiles.isNotEmpty)
               ReactionButtons(
                 show: showShortReactions,
+                textInputFocused: showSendTextMessageInput,
                 userId: widget.contact.userId,
                 responseToMessageId: allMediaFiles.first.messageOtherId!,
                 hide: () {
@@ -634,11 +656,13 @@ class ReactionButtons extends StatefulWidget {
   const ReactionButtons(
       {super.key,
       required this.show,
+      required this.textInputFocused,
       required this.userId,
       required this.responseToMessageId,
       required this.hide});
 
   final bool show;
+  final bool textInputFocused;
   final int userId;
   final int responseToMessageId;
   final Function() hide;
@@ -675,7 +699,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
 
     return AnimatedPositioned(
       duration: Duration(milliseconds: 200), // Animation duration
-      bottom: widget.show ? 80 : 60,
+      bottom: widget.show ? (widget.textInputFocused ? 50 : 80) : 60,
       left: widget.show ? 0 : 150,
       right: widget.show ? 0 : 150,
       curve: Curves.linearToEaseOut,
