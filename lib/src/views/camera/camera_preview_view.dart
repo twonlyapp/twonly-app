@@ -47,6 +47,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   bool videoWithAudio = true;
   DateTime? videoRecordingStarted;
   Timer? videoRecordingTimer;
+
+  double _minAvailableZoom = 1.0;
+  double _maxAvailableZoom = 1.0;
+
   DateTime currentTime = DateTime.now();
   final GlobalKey keyTriggerButton = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -109,7 +113,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
     setState(() {
       isZoomAble = false;
-      scaleFactor = 1;
+      if (cameraId != sCameraId) {
+        // switch between front and back
+        scaleFactor = 1;
+      }
     });
     controller = CameraController(
       gCameras[sCameraId],
@@ -120,9 +127,17 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       if (!mounted) {
         return;
       }
+
+      await controller!.setZoomLevel(scaleFactor);
       await controller?.lockCaptureOrientation(DeviceOrientation.portraitUp);
       controller?.setFlashMode(isFlashOn ? FlashMode.always : FlashMode.off);
 
+      controller
+          ?.getMaxZoomLevel()
+          .then((double value) => _maxAvailableZoom = value);
+      controller
+          ?.getMinZoomLevel()
+          .then((double value) => _minAvailableZoom = value);
       isZoomAble = await controller?.getMinZoomLevel() !=
           await controller?.getMaxZoomLevel();
       setState(() {
@@ -147,16 +162,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   Future<void> updateScaleFactor(double newScale) async {
     if (scaleFactor == newScale || controller == null) return;
-    var minFactor = await controller!.getMinZoomLevel();
-    var maxFactor = await controller!.getMaxZoomLevel();
-    if (newScale < minFactor) {
-      newScale = minFactor;
-    }
-    if (newScale > maxFactor) {
-      newScale = maxFactor;
-    }
-
-    await controller?.setZoomLevel(newScale);
+    await controller
+        ?.setZoomLevel(newScale.clamp(_minAvailableZoom, _maxAvailableZoom));
     setState(() {
       scaleFactor = newScale;
     });
@@ -279,22 +286,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (isFront) {
       return;
     }
-    var diff = basePanY - details.localPosition.dy;
 
-    var baseDiff = Platform.isAndroid ? 200.0 : 300.0;
+    scaleFactor = (baseScaleFactor + (basePanY - details.localPosition.dy) / 30)
+        .clamp(1, _maxAvailableZoom);
 
-    if (diff > baseDiff) diff = baseDiff;
-    if (diff < -baseDiff) diff = -baseDiff;
-    var tmp = 0.0;
-    if (Platform.isAndroid) {
-      tmp = (diff / baseDiff * (7 * 2)).toInt() / 2;
-    } else {
-      tmp = (diff / baseDiff * (14 * 2)).toInt() / 4;
-    }
-
-    tmp = baseScaleFactor + tmp;
-    if (tmp < 1) tmp = 1;
-    updateScaleFactor(tmp);
+    await controller!.setZoomLevel(scaleFactor);
+    setState(() {});
   }
 
   Future pickImageFromGallery() async {
