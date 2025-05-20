@@ -226,7 +226,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           }
         }
 
-        encryptAndSendMessage(
+        await encryptAndSendMessageAsync(
           message.messageId!,
           fromUserId,
           MessageJson(

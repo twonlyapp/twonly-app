@@ -124,7 +124,7 @@ Future setupNotificationWithUsers({bool force = false}) async {
 }
 
 Future sendNewPushKey(int userId, PushKeyMeta pushKey) async {
-  await encryptAndSendMessage(
+  await encryptAndSendMessageAsync(
     null,
     userId,
     my.MessageJson(

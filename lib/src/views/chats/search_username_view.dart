@@ -95,7 +95,7 @@ class _SearchUsernameView extends State<SearchUsernameView> {
         if (await SignalHelper.addNewContact(res.value.userdata)) {
           // before notifying the other party, add
           await setupNotificationWithUsers();
-          encryptAndSendMessage(
+          await encryptAndSendMessageAsync(
             null,
             res.value.userdata.userId.toInt(),
             MessageJson(
@@ -267,7 +267,7 @@ class _ContactsListViewState extends State<ContactsListView> {
           onPressed: () async {
             await twonlyDatabase.contactsDao
                 .deleteContactByUserId(contact.userId);
-            encryptAndSendMessage(
+            await encryptAndSendMessageAsync(
               null,
               contact.userId,
               MessageJson(
@@ -285,7 +285,7 @@ class _ContactsListViewState extends State<ContactsListView> {
           final update = ContactsCompanion(accepted: Value(true));
           await twonlyDatabase.contactsDao
               .updateContact(contact.userId, update);
-          await encryptAndSendMessage(
+          await encryptAndSendMessageAsync(
             null,
             contact.userId,
             MessageJson(

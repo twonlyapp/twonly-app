@@ -36,7 +36,7 @@ Future syncFlameCounters() async {
     // only sync when flame counter is higher than three days
     if (flameCounter < 1 && bestFriend.userId != contact.userId) continue;
 
-    encryptAndSendMessage(
+    await encryptAndSendMessageAsync(
       null,
       contact.userId,
       my.MessageJson(

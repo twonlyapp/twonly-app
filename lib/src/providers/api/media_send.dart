@@ -451,7 +451,7 @@ Future<bool> handleNotifyReceiver(MediaUpload media) async {
     );
 
     // Ensures the retransmit of the message
-    await encryptAndSendMessage(
+    await encryptAndSendMessageAsync(
       messageId,
       message.contactId,
       MessageJson(

@@ -132,8 +132,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   Future loadCurrentMediaFile({bool showTwonly = false}) async {
     if (!isMounted) return;
-    await _noScreenshot.screenshotOff();
     if (!context.mounted || allMediaFiles.isEmpty) return nextMediaOrExit();
+    await _noScreenshot.screenshotOff();
 
     setState(() {
       videoController = null;
@@ -230,6 +230,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         });
       }
     }
+
     imageBytes = await getImageBytes(current.messageId);
 
     if ((imageBytes == null && !content.isVideo) ||
@@ -300,7 +301,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       allMediaFiles.first.messageId,
       MessagesCompanion(mediaStored: Value(true)),
     );
-    encryptAndSendMessage(
+    await encryptAndSendMessageAsync(
       null,
       widget.contact.userId,
       MessageJson(

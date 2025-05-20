@@ -89,6 +89,17 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       Map<int, List<Message>> tmpEmojiReactionsToMessageId = {};
 
       List<int> openedMessageOtherIds = [];
+
+      Map<int, int> messageOtherMessageIdToMyMessageId = {};
+
+      /// there is probably a better way...
+      for (Message msg in msgs) {
+        if (msg.messageOtherId != null) {
+          messageOtherMessageIdToMyMessageId[msg.messageOtherId!] =
+              msg.messageId;
+        }
+      }
+
       for (Message msg in msgs) {
         if (msg.kind == MessageKind.textMessage &&
             msg.messageOtherId != null &&
@@ -96,8 +107,9 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
           openedMessageOtherIds.add(msg.messageOtherId!);
         }
 
-        int? responseId =
-            msg.responseToMessageId ?? msg.responseToOtherMessageId;
+        int? responseId = msg.responseToMessageId ??
+            messageOtherMessageIdToMyMessageId[msg.responseToOtherMessageId];
+
         if (responseId != null) {
           bool added = false;
           MessageContent? content =
@@ -243,9 +255,11 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
           children: [
             Expanded(
               child: ListView.builder(
-                itemCount: messages.length,
+                itemCount: messages.length + 1,
                 reverse: true,
                 itemExtentBuilder: (index, dimensions) {
+                  if (index == 0) return 10; // empty padding
+                  index -= 1;
                   double size = 44;
                   if (messages[index].kind == MessageKind.textMessage) {
                     MessageContent? content = MessageContent.fromJson(
@@ -277,6 +291,10 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
                   return size;
                 },
                 itemBuilder: (context, i) {
+                  if (i == 0) {
+                    return Container(); // just a padding
+                  }
+                  i -= 1;
                   return ChatListEntry(
                     key: Key(messages[i].messageId.toString()),
                     messages[i],

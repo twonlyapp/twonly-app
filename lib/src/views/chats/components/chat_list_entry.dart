@@ -204,7 +204,7 @@ class ChatListEntry extends StatelessWidget {
             return;
           }
           if (await received.existsMediaFile(message.messageId, "png")) {
-            encryptAndSendMessage(
+            await encryptAndSendMessageAsync(
               null,
               contact.userId,
               MessageJson(
@@ -291,22 +291,22 @@ class ChatListEntry extends StatelessWidget {
           crossAxisAlignment:
               right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            Stack(
-              alignment: right ? Alignment.centerRight : Alignment.centerLeft,
-              children: [
-                SlidingResponse(
-                  child: child,
-                  onResponseTriggered: () {
-                    onResponseTriggered(message);
-                  },
-                ),
-                Positioned(
-                  bottom: 5,
-                  left: 5,
-                  right: 5,
-                  child: getReactionRow(),
-                ),
-              ],
+            SlidingResponse(
+              child: Stack(
+                alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+                children: [
+                  child,
+                  Positioned(
+                    bottom: 5,
+                    left: 5,
+                    right: 5,
+                    child: getReactionRow(),
+                  ),
+                ],
+              ),
+              onResponseTriggered: () {
+                onResponseTriggered(message);
+              },
             ),
             getTextResponseColumns(context, !right)
           ],
