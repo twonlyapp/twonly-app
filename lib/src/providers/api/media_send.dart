@@ -82,19 +82,25 @@ Future sendMediaFile(
   }
 }
 
-Future retryMediaUpload() async {
-  final mediaFiles =
-      await twonlyDatabase.mediaUploadsDao.getMediaUploadsForRetry();
-  for (final mediaFile in mediaFiles) {
-    await handleSingleMediaFile(mediaFile.mediaUploadId, null);
-  }
-}
-
 final lockingHandleMediaFile = Mutex();
+Future retryMediaUpload({int maxRetries = 3}) async {
+  await lockingHandleMediaFile.protect(() async {
+    final mediaFiles =
+        await twonlyDatabase.mediaUploadsDao.getMediaUploadsForRetry();
+    if (mediaFiles.isEmpty) return;
+    for (final mediaFile in mediaFiles) {
+      await handleSingleMediaFile(mediaFile.mediaUploadId, null);
+    }
+  });
+  if (maxRetries == 0) return;
+  // retry upload
+  Future.delayed(const Duration(milliseconds: 1000), () {
+    retryMediaUpload(maxRetries: maxRetries - 1);
+  });
+}
 
 Future handleSingleMediaFile(
     int mediaUploadId, Uint8List? tmpCurrentImageBytes) async {
-  // await lockingHandleMediaFile.protect(() async {
   MediaUpload? media = await twonlyDatabase.mediaUploadsDao
       .getMediaUploadById(mediaUploadId)
       .getSingleOrNull();
@@ -156,7 +162,6 @@ Future handleSingleMediaFile(
         .shout("Non recoverable error while sending media file: $e");
     return;
   }
-  // });
   // this will be called until there is an recoverable error OR
   // the upload is ready
   await handleSingleMediaFile(mediaUploadId, tmpCurrentImageBytes);
