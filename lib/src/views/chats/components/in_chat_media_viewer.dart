@@ -68,7 +68,11 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
       if (content is MediaMessageContent) {
         mirrorVideo = content.mirrorVideo;
       }
-      videoController = VideoPlayerController.file(videoPath);
+      videoController = VideoPlayerController.file(
+        videoPath,
+        videoPlayerOptions:
+            VideoPlayerOptions(mixWithOthers: !widget.isInFullscreen),
+      );
       videoController?.initialize().then((_) {
         if (!widget.isInFullscreen) {
           videoController!.setVolume(0);
