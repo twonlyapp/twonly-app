@@ -365,6 +365,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         sharePreviewIsShown = true;
       });
       XFile? videoPath = await controller?.stopVideoRecording();
+      if (videoPath != null) {
+        if (Platform.isAndroid) {
+          // see https://github.com/flutter/flutter/issues/148335
+          await File(videoPath.path).rename("${videoPath.path}.mp4");
+          videoPath = XFile("${videoPath.path}.mp4");
+        }
+      }
       await controller?.pausePreview();
       if (await pushMediaEditor(null, videoPath)) {
         return;
