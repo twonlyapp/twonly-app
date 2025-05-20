@@ -743,11 +743,17 @@ abstract class AppLocalizations {
   /// **'Licenses (Images)'**
   String get settingsHelpCredits;
 
-  /// No description provided for @settingsHelpLegal.
+  /// No description provided for @settingsHelpImprint.
   ///
   /// In en, this message translates to:
-  /// **'Imprint, Terms & Privacy Policy'**
-  String get settingsHelpLegal;
+  /// **'Imprint & Privacy Policy'**
+  String get settingsHelpImprint;
+
+  /// No description provided for @settingsHelpTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get settingsHelpTerms;
 
   /// No description provided for @settingsAppearanceTheme.
   ///

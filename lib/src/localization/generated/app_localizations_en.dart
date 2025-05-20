@@ -337,7 +337,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpCredits => 'Licenses (Images)';
 
   @override
-  String get settingsHelpLegal => 'Imprint, Terms & Privacy Policy';
+  String get settingsHelpImprint => 'Imprint & Privacy Policy';
+
+  @override
+  String get settingsHelpTerms => 'Terms of Service';
 
   @override
   String get settingsAppearanceTheme => 'Theme';

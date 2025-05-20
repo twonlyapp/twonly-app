@@ -73,9 +73,16 @@ class HelpView extends StatelessWidget {
             },
           ),
           ListTile(
-            title: Text(context.lang.settingsHelpLegal),
+            title: Text(context.lang.settingsHelpImprint),
             onTap: () {
-              launchUrl(Uri.parse("https://twonly.eu/legal"));
+              launchUrl(Uri.parse("https://twonly.eu/de/legal/"));
+            },
+            trailing: FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+          ),
+          ListTile(
+            title: Text(context.lang.settingsHelpTerms),
+            onTap: () {
+              launchUrl(Uri.parse("https://twonly.eu/de/legal/agb.html"));
             },
             trailing: FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
