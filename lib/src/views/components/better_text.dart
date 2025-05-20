@@ -17,19 +17,16 @@ class BetterText extends StatelessWidget {
       multiLine: false,
     );
 
-    // Split the text into parts based on the URLs and domains
     final List<TextSpan> spans = [];
     final Iterable<RegExpMatch> matches = urlRegExp.allMatches(text);
 
     int lastMatchEnd = 0;
 
     for (final match in matches) {
-      // Add the text before the URL/domain
       if (match.start > lastMatchEnd) {
         spans.add(TextSpan(text: text.substring(lastMatchEnd, match.start)));
       }
 
-      // Add the URL/domain as a clickable TextSpan
       final String? url = match.group(0);
       spans.add(TextSpan(
         text: url,
@@ -49,7 +46,6 @@ class BetterText extends StatelessWidget {
       lastMatchEnd = match.end;
     }
 
-    // Add any remaining text after the last URL/domain
     if (lastMatchEnd < text.length) {
       spans.add(TextSpan(text: text.substring(lastMatchEnd)));
     }
@@ -59,19 +55,9 @@ class BetterText extends StatelessWidget {
         children: spans,
       ),
       style: TextStyle(
-        color: Colors.white, // Set text color for contrast
+        color: Colors.white,
         fontSize: 17,
       ),
     );
-
-//           child: SelectableText(
-//             content.text,
-//             style: TextStyle(
-//               color: Colors.white, // Set text color for contrast
-//               fontSize: 17,
-//             ),
-//             textAlign: TextAlign.left, // Center the text
-//           ),
-// RichText
   }
 }

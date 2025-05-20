@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/views/chats/components/chat_list_entry.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
@@ -20,7 +21,7 @@ import 'package:twonly/src/views/contact/contact_view.dart';
 
 Color getMessageColor(Message message) {
   return (message.messageOtherId == null)
-      ? Color.fromARGB(107, 124, 77, 255)
+      ? Color.fromARGB(255, 58, 136, 102)
       : Color.fromARGB(83, 68, 137, 255);
 }
 
@@ -42,8 +43,8 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
   late StreamSubscription<Contact> userSub;
   late StreamSubscription<List<Message>> messageSub;
   List<Message> messages = [];
-  Map<int, List<Message>> reactionsToMyMessages = {};
-  Map<int, List<Message>> reactionsToOtherMessages = {};
+  Map<int, List<Message>> textReactionsToMessageId = {};
+  Map<int, List<Message>> emojiReactionsToMessageId = {};
   Message? responseToMessage;
   late FocusNode textFieldFocus;
 
@@ -84,8 +85,8 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       }
       List<Message> displayedMessages = [];
       // should be cleared
-      Map<int, List<Message>> tmpReactionsToMyMessages = {};
-      Map<int, List<Message>> tmpReactionsToOtherMessages = {};
+      Map<int, List<Message>> tmpTextReactionsToMessageId = {};
+      Map<int, List<Message>> tmpEmojiReactionsToMessageId = {};
 
       List<int> openedMessageOtherIds = [];
       for (Message msg in msgs) {
@@ -95,24 +96,26 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
           openedMessageOtherIds.add(msg.messageOtherId!);
         }
 
-        if (msg.responseToOtherMessageId != null) {
-          if (!tmpReactionsToOtherMessages
-              .containsKey(msg.responseToOtherMessageId!)) {
-            tmpReactionsToOtherMessages[msg.responseToOtherMessageId!] = [msg];
-          } else {
-            tmpReactionsToOtherMessages[msg.responseToOtherMessageId!]!
+        int? responseId =
+            msg.responseToMessageId ?? msg.responseToOtherMessageId;
+        if (responseId != null) {
+          bool added = false;
+          MessageContent? content =
+              MessageContent.fromJson(msg.kind, jsonDecode(msg.contentJson!));
+          if (content is TextMessageContent) {
+            if (content.text.isNotEmpty && !isEmoji(content.text)) {
+              added = true;
+              tmpTextReactionsToMessageId
+                  .putIfAbsent(responseId, () => [])
+                  .add(msg);
+            }
+          }
+          if (!added) {
+            tmpEmojiReactionsToMessageId
+                .putIfAbsent(responseId, () => [])
                 .add(msg);
           }
-        }
-        if (msg.responseToMessageId != null) {
-          if (!tmpReactionsToMyMessages.containsKey(msg.responseToMessageId!)) {
-            tmpReactionsToMyMessages[msg.responseToMessageId!] = [msg];
-          } else {
-            tmpReactionsToMyMessages[msg.responseToMessageId!]!.add(msg);
-          }
-        }
-        if (msg.responseToMessageId == null &&
-            msg.responseToOtherMessageId == null) {
+        } else {
           displayedMessages.add(msg);
         }
       }
@@ -126,8 +129,8 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       // if (!updated) {
       //   // The stream should be get an update, so only update the UI when all are opened
       setState(() {
-        reactionsToMyMessages = tmpReactionsToMyMessages;
-        reactionsToOtherMessages = tmpReactionsToOtherMessages;
+        textReactionsToMessageId = tmpTextReactionsToMessageId;
+        emojiReactionsToMessageId = tmpEmojiReactionsToMessageId;
         messages = displayedMessages;
       });
       // }
@@ -242,31 +245,45 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
               child: ListView.builder(
                 itemCount: messages.length,
                 reverse: true,
+                itemExtentBuilder: (index, dimensions) {
+                  double size = 44;
+                  if (messages[index].kind == MessageKind.textMessage) {
+                    MessageContent? content = MessageContent.fromJson(
+                        messages[index].kind,
+                        jsonDecode(messages[index].contentJson!));
+                    if (content is TextMessageContent) {
+                      if (EmojiAnimation.supported(content.text)) {
+                        size = 95;
+                      } else {
+                        size = 11 +
+                            calculateNumberOfLines(content.text,
+                                    MediaQuery.of(context).size.width * 0.8) *
+                                27;
+                      }
+                    }
+                  }
+                  if (messages[index].mediaStored) {
+                    size = 271;
+                  }
+                  // add reaction size
+                  size += (textReactionsToMessageId[messages[index].messageId]
+                              ?.length ??
+                          0) *
+                      27;
+
+                  if (!isLastMessageFromSameUser(messages, index)) {
+                    size += 20;
+                  }
+                  return size;
+                },
                 itemBuilder: (context, i) {
-                  bool lastMessageFromSameUser = false;
-                  if (i > 0) {
-                    lastMessageFromSameUser =
-                        (messages[i - 1].messageOtherId == null &&
-                                messages[i].messageOtherId == null) ||
-                            (messages[i - 1].messageOtherId != null &&
-                                messages[i].messageOtherId != null);
-                  }
-                  Message msg = messages[i];
-                  List<Message> reactions = [];
-                  if (reactionsToMyMessages.containsKey(msg.messageId)) {
-                    reactions = reactionsToMyMessages[msg.messageId]!;
-                  }
-                  if (msg.messageOtherId != null &&
-                      reactionsToOtherMessages
-                          .containsKey(msg.messageOtherId!)) {
-                    reactions = reactionsToOtherMessages[msg.messageOtherId!]!;
-                  }
                   return ChatListEntry(
-                    key: Key(msg.messageId.toString()),
-                    msg,
+                    key: Key(messages[i].messageId.toString()),
+                    messages[i],
                     user,
-                    lastMessageFromSameUser,
-                    reactions,
+                    isLastMessageFromSameUser(messages, i),
+                    textReactionsToMessageId[messages[i].messageId] ?? [],
+                    emojiReactionsToMessageId[messages[i].messageId] ?? [],
                     onResponseTriggered: (message) {
                       setState(() {
                         responseToMessage = message;
@@ -354,4 +371,29 @@ class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
       ),
     );
   }
+}
+
+bool isLastMessageFromSameUser(List<Message> messages, int index) {
+  if (index <= 0) {
+    return true; // If there is no previous message, return true
+  }
+
+  final lastMessage = messages[index - 1];
+  final currentMessage = messages[index];
+
+  // Check if both messages have the same messageOtherId (or both are null)
+  return (lastMessage.messageOtherId == null &&
+          currentMessage.messageOtherId == null) ||
+      (lastMessage.messageOtherId != null &&
+          currentMessage.messageOtherId != null);
+}
+
+double calculateNumberOfLines(String text, double width) {
+  final textPainter = TextPainter(
+    text: TextSpan(text: text, style: TextStyle(fontSize: 17)),
+    // maxLines: null,
+    textDirection: TextDirection.ltr,
+  );
+  textPainter.layout(maxWidth: (width - 20));
+  return textPainter.computeLineMetrics().length.toDouble();
 }

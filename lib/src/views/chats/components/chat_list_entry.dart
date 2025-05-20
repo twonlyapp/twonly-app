@@ -22,21 +22,23 @@ class ChatListEntry extends StatelessWidget {
     this.message,
     this.contact,
     this.lastMessageFromSameUser,
-    this.reactions, {
+    this.textReactions,
+    this.otherReactions, {
     super.key,
     required this.onResponseTriggered,
   });
   final Message message;
   final Contact contact;
   final bool lastMessageFromSameUser;
-  final List<Message> reactions;
+  final List<Message> textReactions;
+  final List<Message> otherReactions;
   final Function(Message) onResponseTriggered;
 
   Widget getReactionRow() {
     List<Widget> children = [];
     bool hasOneTextReaction = false;
     bool hasOneReopened = false;
-    for (final reaction in reactions) {
+    for (final reaction in otherReactions) {
       MessageContent? content = MessageContent.fromJson(
           reaction.kind, jsonDecode(reaction.contentJson!));
 
@@ -96,13 +98,11 @@ class ChatListEntry extends StatelessWidget {
 
   Widget getTextResponseColumns(BuildContext context, bool right) {
     List<Widget> children = [];
-    for (final reaction in reactions) {
+    for (final reaction in textReactions) {
       MessageContent? content = MessageContent.fromJson(
           reaction.kind, jsonDecode(reaction.contentJson!));
 
       if (content is TextMessageContent) {
-        if (content.text.length <= 1) continue;
-        if (isEmoji(content.text)) continue;
         var entries = [
           FaIcon(
             FontAwesomeIcons.reply,

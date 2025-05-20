@@ -134,14 +134,7 @@ class _ChatListViewState extends State<ChatListView> {
                   );
                 }
 
-                int maxTotalMediaCounter = 0;
-                if (contacts.isNotEmpty) {
-                  maxTotalMediaCounter = contacts
-                      .map((x) => x.totalMediaCounter)
-                      .reduce((a, b) => a > b ? a : b);
-                }
-
-                final pinnedUsers = contacts.where((c) => c.pinned);
+                final pinnedUsers = contacts.where((c) => c.pinned).toList();
 
                 return RefreshIndicator(
                   onRefresh: () async {
@@ -149,37 +142,46 @@ class _ChatListViewState extends State<ChatListView> {
                     await apiProvider.connect();
                     await Future.delayed(Duration(seconds: 1));
                   },
-                  child: ListView(
-                    children: [
-                      ...pinnedUsers.map((contact) {
+                  child: ListView.builder(
+                    itemCount: pinnedUsers.length +
+                        (pinnedUsers.isNotEmpty ? 1 : 0) +
+                        contacts.where((c) => !c.pinned).length,
+                    itemExtentBuilder: (index, dimensions) {
+                      int adjustedIndex = index - pinnedUsers.length;
+                      if (pinnedUsers.isNotEmpty && adjustedIndex == 0) {
+                        return 16;
+                      }
+                      return 72;
+                    },
+                    itemBuilder: (context, index) {
+                      // Check if the index is for the pinned users
+                      if (index < pinnedUsers.length) {
+                        final contact = pinnedUsers[index];
                         return UserListItem(
                           key: ValueKey(contact.userId),
                           user: contact,
-                          maxTotalMediaCounter: maxTotalMediaCounter,
                         );
-                      }),
-                      if (pinnedUsers.isNotEmpty) Divider(),
-                      ...contacts.where((c) => !c.pinned).map((contact) {
-                        return UserListItem(
-                          key: ValueKey(contact.userId),
-                          user: contact,
-                          maxTotalMediaCounter: maxTotalMediaCounter,
-                        );
-                      })
-                    ],
+                      }
+
+                      // If there are pinned users, account for the Divider
+                      int adjustedIndex = index - pinnedUsers.length;
+                      if (pinnedUsers.isNotEmpty && adjustedIndex == 0) {
+                        return Divider();
+                      }
+
+                      // Adjust the index for the contacts list
+                      adjustedIndex -= (pinnedUsers.isNotEmpty ? 1 : 0);
+
+                      // Get the contacts that are not pinned
+                      final contact = contacts
+                          .where((c) => !c.pinned)
+                          .elementAt(adjustedIndex);
+                      return UserListItem(
+                        key: ValueKey(contact.userId),
+                        user: contact,
+                      );
+                    },
                   ),
-                  // child: ListView.builder(
-                  //   restorationId: 'chat_list_view',
-                  //   itemCount: contacts.length,
-                  //   itemBuilder: (BuildContext context, int index) {
-                  //     final user = contacts[index];
-                  //     return UserListItem(
-                  //       key: ValueKey(user.userId),
-                  //       user: user,
-                  //       maxTotalMediaCounter: maxTotalMediaCounter,
-                  //     );
-                  //   },
-                  // ),
                 );
               },
             ),
@@ -207,12 +209,10 @@ class _ChatListViewState extends State<ChatListView> {
 
 class UserListItem extends StatefulWidget {
   final Contact user;
-  final int maxTotalMediaCounter;
 
   const UserListItem({
     super.key,
     required this.user,
-    required this.maxTotalMediaCounter,
   });
 
   @override
