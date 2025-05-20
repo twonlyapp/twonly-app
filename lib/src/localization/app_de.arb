@@ -169,6 +169,8 @@
     "errorSessionNotAuthenticated": "Deine Sitzung ist nicht authentifiziert. Bitte melde dich an, um fortzufahren.",
     "errorOnlyOneSessionAllowed": "Es ist nur eine aktive Sitzung pro Benutzer erlaubt. Bitte melde dich von anderen Geräten ab, um fortzufahren.",
     "upgradeToPaidPlan": "Upgrade auf einen kostenpflichtigen Plan.",
+    "upgradeToPaidPlanButton": "Auf {planId} upgraden",
+    "partOfPaidPlanOf": "Du bist Teil des bezahlten Plans von {username}!",
     "errorNotEnoughCredit": "Du hast nicht genügend twonly-Guthaben.",
     "errorPlanLimitReached": "Du hast das Limit deines Plans erreicht. Bitte upgrade deinen Plan.",
     "errorPlanNotAllowed": "Dieses Feature ist in deinem aktuellen Plan nicht verfügbar.",

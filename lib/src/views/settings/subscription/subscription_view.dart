@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
@@ -102,6 +104,7 @@ class SubscriptionView extends StatefulWidget {
 class _SubscriptionViewState extends State<SubscriptionView> {
   bool loaded = false;
   Response_PlanBallance? ballance;
+  String? additionalOwnerName;
 
   @override
   void initState() {
@@ -111,6 +114,17 @@ class _SubscriptionViewState extends State<SubscriptionView> {
 
   Future initAsync() async {
     ballance = await loadPlanBallance();
+    if (ballance != null && ballance!.hasAdditionalAccountOwnerId()) {
+      final ownerId = ballance!.additionalAccountOwnerId.toInt();
+      Contact? contact = await twonlyDatabase.contactsDao
+          .getContactByUserId(ownerId)
+          .getSingleOrNull();
+      if (contact != null) {
+        additionalOwnerName = getContactDisplayName(contact);
+      } else {
+        additionalOwnerName = ownerId.toString();
+      }
+    }
     setState(() {});
   }
 
@@ -119,12 +133,15 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     Locale myLocale = Localizations.localeOf(context);
     String? formattedBalance;
     DateTime? nextPayment;
+    String currentPlan = context.read<CustomChangeProvider>().plan;
 
     if (ballance != null) {
       DateTime lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
           ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000);
-      nextPayment = lastPaymentDateTime
-          .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
+      if (currentPlan == "Pro" || currentPlan == "Family") {
+        nextPayment = lastPaymentDateTime
+            .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
+      }
       int ballanceInCents =
           ballance!.transactions.map((a) => a.depositCents.toInt()).sum;
       formattedBalance = NumberFormat.currency(
@@ -134,7 +151,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       ).format(ballanceInCents / 100);
     }
 
-    String currentPlan = context.read<CustomChangeProvider>().plan;
     int refund = 0;
     if (currentPlan == "Pro" && ballance != null) {
       refund = calculateRefund(ballance!);
@@ -184,6 +200,14 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               ),
             ),
           ),
+          if (additionalOwnerName != null)
+            Center(
+              child: Text(
+                context.lang.partOfPaidPlanOf(additionalOwnerName!),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.orange),
+              ),
+            ),
           if (currentPlan != "Family" && currentPlan != "Pro")
             Center(
               child: Padding(
@@ -257,7 +281,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
           ],
           SizedBox(height: 10),
           if (currentPlan != "Family") Divider(),
-          if (currentPlan == "Family" || currentPlan == "Pro")
+          if (currentPlan != "Preview")
             BetterListTile(
               icon: FontAwesomeIcons.gears,
               text: context.lang.manageSubscription,
@@ -269,7 +293,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
                   return ManageSubscriptionView(
-                      ballance: ballance, nextPayment: nextPayment);
+                    ballance: ballance,
+                    nextPayment: nextPayment,
+                  );
                 }));
                 initAsync();
               },
@@ -460,6 +486,16 @@ class PlanCard extends StatelessWidget {
                         color: context.color.primary,
                         fontSize: 12,
                       ),
+                    ),
+                  ),
+                if (onTap != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: FilledButton.icon(
+                      onPressed: onTap,
+                      label: (planId == "Free" || planId == "Plus")
+                          ? Text(context.lang.redeemUserInviteCodeTitle)
+                          : Text(context.lang.upgradeToPaidPlanButton(planId)),
                     ),
                   )
               ],

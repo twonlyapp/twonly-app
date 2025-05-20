@@ -1055,6 +1055,18 @@ abstract class AppLocalizations {
   /// **'Upgrade to a paid plan.'**
   String get upgradeToPaidPlan;
 
+  /// No description provided for @upgradeToPaidPlanButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade subscription to {planId}'**
+  String upgradeToPaidPlanButton(Object planId);
+
+  /// No description provided for @partOfPaidPlanOf.
+  ///
+  /// In en, this message translates to:
+  /// **'You are part of the paid plan of {username}!'**
+  String partOfPaidPlanOf(Object username);
+
   /// No description provided for @year.
   ///
   /// In en, this message translates to:

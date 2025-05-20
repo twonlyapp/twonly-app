@@ -501,6 +501,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upgradeToPaidPlan => 'Upgrade to a paid plan.';
 
   @override
+  String upgradeToPaidPlanButton(Object planId) {
+    return 'Upgrade subscription to $planId';
+  }
+
+  @override
+  String partOfPaidPlanOf(Object username) {
+    return 'You are part of the paid plan of $username!';
+  }
+
+  @override
   String get year => 'year';
 
   @override

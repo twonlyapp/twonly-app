@@ -58,6 +58,7 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
     String planId = context.read<CustomChangeProvider>().plan;
     Locale myLocale = Localizations.localeOf(context);
     bool? paidMonthly = ballance?.paymentPeriodDays == MONTHLY_PAYMENT_DAYS;
+    bool isAdditionalUser = planId == "Free" || planId == "Plus";
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.manageSubscription),
@@ -65,14 +66,14 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
       body: ListView(
         children: [
           PlanCard(planId: planId, paidMonthly: paidMonthly),
-          SizedBox(height: 20),
-          if (widget.nextPayment != null)
+          if (!isAdditionalUser) SizedBox(height: 20),
+          if (widget.nextPayment != null && !isAdditionalUser)
             ListTile(
               title: Text(
                 "${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(widget.nextPayment!)}",
               ),
             ),
-          if (autoRenewal != null)
+          if (autoRenewal != null && !isAdditionalUser)
             ListTile(
               title: Text(context.lang.autoRenewal),
               subtitle: Text(
@@ -87,6 +88,8 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
                 },
               ),
             ),
+          SizedBox(height: 20),
+          Divider(),
           ListTile(
             title: Text("Kündigen"),
             onTap: () async {},

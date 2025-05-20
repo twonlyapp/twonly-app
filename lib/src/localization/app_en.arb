@@ -331,6 +331,8 @@
   "errorPlanNotAllowed": "This feature is not available in your current plan.",
   "errorPlanUpgradeNotYearly": "The plan upgrade must be paid for annually, as the current plan is also billed annually.",
   "upgradeToPaidPlan": "Upgrade to a paid plan.",
+  "upgradeToPaidPlanButton": "Upgrade subscription to {planId}",
+  "partOfPaidPlanOf": "You are part of the paid plan of {username}!",
   "year": "year",
   "month": "month",
   "proFeature1": "✓ Unlimited media file uploads",
