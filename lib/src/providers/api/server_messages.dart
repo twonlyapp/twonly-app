@@ -58,7 +58,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
   MessageJson? message = await SignalHelper.getDecryptedText(fromUserId, body);
   if (message == null) {
     Logger("server_messages")
-        .info("Got invalid cypher text from $fromUserId. Deleting it.");
+        .info("Got invalid cipher text from $fromUserId. Deleting it.");
     // Message is not valid, so server can delete it
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
