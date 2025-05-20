@@ -230,7 +230,7 @@ class ChatListEntry extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) {
-                  return MediaViewerView(contact);
+                  return MediaViewerView(contact, initialMessage: message);
                 }),
               );
             } else if (message.downloadState == DownloadState.pending) {

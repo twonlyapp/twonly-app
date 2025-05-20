@@ -27,7 +27,9 @@ final _noScreenshot = NoScreenshot.instance;
 
 class MediaViewerView extends StatefulWidget {
   final Contact contact;
-  const MediaViewerView(this.contact, {super.key});
+  const MediaViewerView(this.contact, {super.key, this.initialMessage});
+
+  final Message? initialMessage;
 
   @override
   State<MediaViewerView> createState() => _MediaViewerViewState();
@@ -65,6 +67,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   @override
   void initState() {
     super.initState();
+
+    if (widget.initialMessage != null) {
+      allMediaFiles = [widget.initialMessage!];
+    }
 
     asyncLoadNextMedia(true);
   }
