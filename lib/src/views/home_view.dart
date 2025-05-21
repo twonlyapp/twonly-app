@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/views/gallery/gallery_main_view.dart';
 import 'camera/camera_preview_view.dart';
 import 'chats/chat_list_view.dart';
 import 'package:flutter/material.dart';
@@ -72,8 +73,9 @@ class HomeViewState extends State<HomeView> {
             setState(() {});
           },
           children: [
-            CameraPreviewViewPermission(),
             ChatListView(),
+            CameraPreviewViewPermission(),
+            GalleryMainView()
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -86,11 +88,15 @@ class HomeViewState extends State<HomeView> {
               color: Theme.of(context).colorScheme.inverseSurface),
           items: [
             BottomNavigationBarItem(
+                icon: FaIcon(FontAwesomeIcons.solidComments), label: ""),
+            BottomNavigationBarItem(
               icon: FaIcon(FontAwesomeIcons.camera),
               label: "",
             ),
             BottomNavigationBarItem(
-                icon: FaIcon(FontAwesomeIcons.solidComments), label: ""),
+              icon: FaIcon(FontAwesomeIcons.photoFilm),
+              label: "",
+            ),
           ],
           onTap: (int index) {
             activePageIdx = index;

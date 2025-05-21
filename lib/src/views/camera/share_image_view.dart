@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 import 'dart:typed_data';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -32,7 +32,7 @@ class ShareImageView extends StatefulWidget {
   final bool isRealTwonly;
   final bool mirrorVideo;
   final int maxShowTime;
-  final XFile? videoFilePath;
+  final File? videoFilePath;
   final HashSet<int> selectedUserIds;
   final bool? enableVideoAudio;
   final Function(int, bool) updateStatus;

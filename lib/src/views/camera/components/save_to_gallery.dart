@@ -1,4 +1,4 @@
-import 'package:camera/camera.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:typed_data';
@@ -8,7 +8,7 @@ import 'package:twonly/src/utils/misc.dart';
 class SaveToGalleryButton extends StatefulWidget {
   final Future<Uint8List?> Function() getMergedImage;
   final String? sendNextMediaToUserName;
-  final XFile? videoFilePath;
+  final File? videoFilePath;
 
   const SaveToGalleryButton(
       {super.key,

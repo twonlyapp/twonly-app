@@ -53,7 +53,7 @@ Future sendMediaFile(
   Uint8List imageBytes,
   bool isRealTwonly,
   int maxShowTime,
-  XFile? videoFilePath,
+  File? videoFilePath,
   bool? enableVideoAudio,
   bool mirrorVideo,
 ) async {
@@ -75,7 +75,7 @@ Future sendMediaFile(
   if (mediaUploadId != null) {
     if (videoFilePath != null) {
       String basePath = await getMediaFilePath(mediaUploadId, "send");
-      await File(videoFilePath.path).rename("$basePath.orginal.mp4");
+      await videoFilePath.rename("$basePath.orginal.mp4");
     }
     await writeMediaFile(mediaUploadId, "orginal.png", imageBytes);
     await handleSingleMediaFile(mediaUploadId, imageBytes);

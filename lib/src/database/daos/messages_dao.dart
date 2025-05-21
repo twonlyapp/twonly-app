@@ -81,6 +81,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .get();
   }
 
+  Future<List<Message>> getAllStoredMediaFiles() {
+    return (select(messages)
+          ..where((t) => t.mediaStored.equals(true))
+          ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
+        .get();
+  }
+
   Future<List<Message>> getAllMessagesPendingUploadOlderThanAMinute() {
     return (select(messages)
           ..where(

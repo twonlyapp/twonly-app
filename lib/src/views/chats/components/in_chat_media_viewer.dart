@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/providers/api/media_send.dart' as send;
+import 'package:twonly/src/views/camera/camera_send_to_view.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -13,26 +16,107 @@ import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/media_received.dart' as received;
 import 'package:video_player/video_player.dart';
 
-class ChatMediaViewerFullScreen extends StatelessWidget {
-  const ChatMediaViewerFullScreen({super.key, required this.message});
+class ChatMediaViewerFullScreen extends StatefulWidget {
+  const ChatMediaViewerFullScreen(
+      {super.key, required this.message, required this.contact});
   final Message message;
+  final Contact contact;
+
+  @override
+  State<ChatMediaViewerFullScreen> createState() =>
+      _ChatMediaViewerFullScreenState();
+}
+
+class _ChatMediaViewerFullScreenState extends State<ChatMediaViewerFullScreen> {
+  bool hideMediaFile = false;
+
+  Future deleteFiles(context) async {
+    bool confirmed = await showAlertDialog(
+        context, "Are you sure?", "The image will be irrevocably deleted.");
+
+    if (!confirmed) return;
+
+    await twonlyDatabase.messagesDao.updateMessageByMessageId(
+      widget.message.messageId,
+      MessagesCompanion(mediaStored: Value(false)),
+    );
+    await send.purgeSendMediaFiles();
+    await received.purgeReceivedMediaFiles();
+    if (context.mounted) {
+      Navigator.pop(context, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: InChatMediaViewer(message: message, isInFullscreen: true),
+      body: Container(
+          child: MediaViewSizing(
+        bottomNavigation: Positioned(
+          bottom: 10,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton.outlined(
+                onPressed: () {
+                  deleteFiles(context);
+                },
+                icon: FaIcon(FontAwesomeIcons.trashCan),
+                style: ButtonStyle(
+                  padding: WidgetStateProperty.all<EdgeInsets>(
+                    EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  ),
+                ),
+              ),
+              IconButton.filled(
+                icon: FaIcon(FontAwesomeIcons.camera),
+                onPressed: () async {
+                  setState(() {
+                    hideMediaFile = true;
+                  });
+                  await Navigator.push(context, MaterialPageRoute(
+                    builder: (context) {
+                      return CameraSendToView(widget.contact);
+                    },
+                  ));
+                  setState(() {
+                    hideMediaFile = false;
+                  });
+                },
+                style: ButtonStyle(
+                    padding: WidgetStateProperty.all<EdgeInsets>(
+                      EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                    ),
+                    backgroundColor: WidgetStateProperty.all<Color>(
+                      Theme.of(context).colorScheme.primary,
+                    )),
+              ),
+            ],
+          ),
         ),
-      ),
+        child: (hideMediaFile)
+            ? Container()
+            : InChatMediaViewer(
+                message: widget.message,
+                contact: widget.contact,
+                isInFullscreen: true,
+              ),
+      )),
     );
   }
 }
 
 class InChatMediaViewer extends StatefulWidget {
   const InChatMediaViewer(
-      {super.key, required this.message, this.isInFullscreen = false});
+      {super.key,
+      required this.message,
+      required this.contact,
+      this.isInFullscreen = false});
 
   final Message message;
+  final Contact contact;
   final bool isInFullscreen;
 
   @override
@@ -78,6 +162,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
           videoController!.setVolume(0);
         }
         videoController!.play();
+        videoController!.setLooping(true);
       });
 
       setState(() {
@@ -100,39 +185,29 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     videoController?.dispose();
   }
 
-  Future deleteFiles() async {
-    await twonlyDatabase.messagesDao.updateMessageByMessageId(
-      widget.message.messageId,
-      MessagesCompanion(mediaStored: Value(false)),
+  Future onTap() async {
+    if (image == null && videoController == null) return;
+    if (widget.isInFullscreen) return;
+    bool? removed = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        return ChatMediaViewerFullScreen(
+            message: widget.message, contact: widget.contact);
+      }),
     );
-    await send.purgeSendMediaFiles();
-    await received.purgeReceivedMediaFiles();
-    if (context.mounted) {
-      Navigator.pop(context, true);
+
+    if (removed != null && removed) {
+      image = null;
+      videoController?.dispose();
+      videoController = null;
+      if (isMounted) setState(() {});
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (image == null && videoController == null)
-          ? null
-          : () async {
-              if (widget.isInFullscreen) return;
-              bool? removed = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) {
-                  return ChatMediaViewerFullScreen(message: widget.message);
-                }),
-              );
-
-              if (removed != null && removed) {
-                image = null;
-                videoController?.dispose();
-                videoController = null;
-                setState(() {});
-              }
-            },
+      onTap: onTap,
       child: Stack(
         children: [
           if (image != null) Image.file(image!),
@@ -149,22 +224,6 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
               child: MessageSendStateIcon(
                 [widget.message],
                 mainAxisAlignment: MainAxisAlignment.center,
-              ),
-            ),
-          if (widget.isInFullscreen)
-            Positioned(
-              bottom: 10,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: deleteFiles,
-                    icon: FaIcon(FontAwesomeIcons.trashCan),
-                    label: Text("Delete media file"),
-                  )
-                ],
               ),
             ),
         ],

@@ -72,6 +72,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       useHighQuality = user.useHighQuality!;
     }
     hasAudioPermission = await Permission.microphone.isGranted;
+    if (!mounted) return;
     setState(() {});
   }
 
@@ -155,6 +156,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         }
       }
     });
+    if (!mounted) {
+      return;
+    }
     setState(() {
       cameraId = sCameraId;
     });
@@ -239,7 +243,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<bool> pushMediaEditor(
-      Future<Uint8List?>? imageBytes, XFile? videoFilePath) async {
+      Future<Uint8List?>? imageBytes, File? videoFilePath) async {
     bool? shoudReturn = await Navigator.push(
       context,
       PageRouteBuilder(
@@ -361,16 +365,19 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         isVideoRecording = false;
         sharePreviewIsShown = true;
       });
+      File? videoPathFile;
       XFile? videoPath = await controller?.stopVideoRecording();
       if (videoPath != null) {
         if (Platform.isAndroid) {
           // see https://github.com/flutter/flutter/issues/148335
           await File(videoPath.path).rename("${videoPath.path}.mp4");
-          videoPath = XFile("${videoPath.path}.mp4");
+          videoPathFile = File("${videoPath.path}.mp4");
+        } else {
+          videoPathFile = File(videoPath.path);
         }
       }
       await controller?.pausePreview();
-      if (await pushMediaEditor(null, videoPath)) {
+      if (await pushMediaEditor(null, videoPathFile)) {
         return;
       }
     } on CameraException catch (e) {

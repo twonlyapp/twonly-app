@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
 import 'dart:async';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:logging/logging.dart';
@@ -43,7 +42,7 @@ class ShareImageEditorView extends StatefulWidget {
     required this.useHighQuality,
   });
   final Future<Uint8List?>? imageBytes;
-  final XFile? videoFilePath;
+  final File? videoFilePath;
   final Contact? sendTo;
   final bool mirrorVideo;
   final bool useHighQuality;
@@ -77,8 +76,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       setState(() {
         sendingOrLoadingImage = false;
       });
-      videoController =
-          VideoPlayerController.file(File(widget.videoFilePath!.path));
+      videoController = VideoPlayerController.file(widget.videoFilePath!);
       videoController?.setLooping(true);
       videoController?.initialize().then((_) {
         videoController!.play();
