@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:cryptography_plus/cryptography_plus.dart';
@@ -125,9 +127,12 @@ Future handleSingleMediaFile(
         }
         break;
       case UploadState.hasUploadToken:
-        if (!await handleUpload(media, tmpCurrentImageBytes)) {
-          return; // recoverable error. try again when connected again to the server...
+        if (!await handleUploadHttp(media, tmpCurrentImageBytes)) {
+          return;
         }
+        // if (!await handleUpload(media, tmpCurrentImageBytes)) {
+        //   return; // recoverable error. try again when connected again to the server...
+        // }
         break;
       case UploadState.isUploaded:
         if (!await handleNotifyReceiver(media)) {
@@ -377,61 +382,50 @@ Future<bool> handleGetUploadToken(MediaUpload media) async {
   return true;
 }
 
-Future<bool> handleUpload(
+String uint8ListToHex(List<int> bytes) {
+  return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+}
+
+Future<bool> handleUploadHttp(
     MediaUpload media, Uint8List? tmpCurrentImageBytes) async {
   Uint8List bytesToUpload = (tmpCurrentImageBytes != null)
       ? tmpCurrentImageBytes
       : await readMediaFile(media, "encrypted");
 
-  int fragmentedTransportSize = 1000000;
+  String apiUrl =
+      "http${apiProvider.apiSecure}://${apiProvider.apiHost}/api/upload";
 
-  int offset = 0;
-
-  while (offset < bytesToUpload.length) {
-    Logger("media_send.dart").fine(
-        "Uploading media file ${media.mediaUploadId} with offset: $offset");
-
-    int end;
-    List<int>? checksum;
-    if (offset + fragmentedTransportSize < bytesToUpload.length) {
-      end = offset + fragmentedTransportSize;
-    } else {
-      end = bytesToUpload.length;
-      checksum = media.encryptionData!.sha2Hash;
-    }
-
-    Result wasSend = await apiProvider.uploadData(
-      media.uploadTokens!.uploadToken,
-      Uint8List.fromList(bytesToUpload.sublist(offset, end)),
-      offset,
-      checksum,
-    );
-
-    if (wasSend.isError) {
-      if (wasSend.error == ErrorCode.InvalidUpdateToken) {
-        await twonlyDatabase.mediaUploadsDao.updateMediaUpload(
-          media.mediaUploadId,
-          MediaUploadsCompanion(
-            state: Value(UploadState.isEncrypted),
-          ),
-        );
-        return true; // this will trigger a new token request
-      }
-      Logger("media_send.dart")
-          .shout("error while uploading media: ${wasSend.error}");
-      return false;
-    }
-    offset = end;
-  }
-
-  await twonlyDatabase.mediaUploadsDao.updateMediaUpload(
-    media.mediaUploadId,
-    MediaUploadsCompanion(
-      state: Value(UploadState.isUploaded),
-    ),
+  var requestMultipart = http.MultipartRequest(
+    "POST",
+    Uri.parse(apiUrl),
   );
 
-  return true;
+  requestMultipart.files.add(http.MultipartFile.fromBytes(
+    "file",
+    bytesToUpload,
+    filename: uint8ListToHex(media.uploadTokens!.uploadToken),
+  ));
+
+  try {
+    var streamedResponse = await requestMultipart.send();
+
+    await streamedResponse.stream.drain();
+    Logger("media_send.dart").info("Uploaded: ${streamedResponse.statusCode}");
+
+    if (streamedResponse.statusCode == 200) {
+      await twonlyDatabase.mediaUploadsDao.updateMediaUpload(
+        media.mediaUploadId,
+        MediaUploadsCompanion(
+          state: Value(UploadState.isUploaded),
+        ),
+      );
+      return true;
+    }
+    return false;
+  } catch (e) {
+    Logger("media_send.dart").shout("Exception during upload: $e");
+    return false;
+  }
 }
 
 Future<bool> handleNotifyReceiver(MediaUpload media) async {

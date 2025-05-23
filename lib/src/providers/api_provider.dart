@@ -39,13 +39,9 @@ final lockConnecting = Mutex();
 /// It handles errors and does automatically tries to reconnect on
 /// errors or network changes.
 class ApiProvider {
-  final String apiUrl = (kDebugMode)
-      ? "ws://10.99.0.140:3030/api/client"
-      : "wss://api.twonly.eu/api/client";
-  // ws://api.twonly.eu/api/client
-  final String? backupApiUrl = (kDebugMode)
-      ? "ws://10.99.0.140:3030/api/client"
-      : "wss://api2.twonly.eu/api/client";
+  final String apiHost = (kDebugMode) ? "10.99.0.140:3030" : "api.twonly.eu";
+  final String apiSecure = (kDebugMode) ? "" : "s";
+
   bool isAuthenticated = false;
   ApiProvider();
 
@@ -125,17 +121,12 @@ class ApiProvider {
 
       isAuthenticated = false;
 
+      String apiUrl = "ws$apiSecure://$apiHost/api/client";
+
       log.fine("Trying to connect to the backend $apiUrl!");
       if (await _connectTo(apiUrl)) {
         await onConnected();
         return true;
-      }
-      if (backupApiUrl != null) {
-        log.fine("Trying to connect to the backup backend $backupApiUrl!");
-        if (await _connectTo(backupApiUrl!)) {
-          await onConnected();
-          return true;
-        }
       }
       return false;
     });
