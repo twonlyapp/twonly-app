@@ -1545,6 +1545,70 @@ class ApplicationData_UploadData extends $pb.GeneratedMessage {
   void clearChecksum() => clearField(4);
 }
 
+class ApplicationData_UploadDone extends $pb.GeneratedMessage {
+  factory ApplicationData_UploadDone({
+    $core.List<$core.int>? uploadToken,
+    $core.int? recipientsCount,
+  }) {
+    final $result = create();
+    if (uploadToken != null) {
+      $result.uploadToken = uploadToken;
+    }
+    if (recipientsCount != null) {
+      $result.recipientsCount = recipientsCount;
+    }
+    return $result;
+  }
+  ApplicationData_UploadDone._() : super();
+  factory ApplicationData_UploadDone.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_UploadDone.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UploadDone', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
+    ..a<$core.int>(2, _omitFieldNames ? '' : 'recipientsCount', $pb.PbFieldType.OU3)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UploadDone clone() => ApplicationData_UploadDone()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UploadDone copyWith(void Function(ApplicationData_UploadDone) updates) => super.copyWith((message) => updates(message as ApplicationData_UploadDone)) as ApplicationData_UploadDone;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UploadDone create() => ApplicationData_UploadDone._();
+  ApplicationData_UploadDone createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_UploadDone> createRepeated() => $pb.PbList<ApplicationData_UploadDone>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UploadDone getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UploadDone>(create);
+  static ApplicationData_UploadDone? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get uploadToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUploadToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUploadToken() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get recipientsCount => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set recipientsCount($core.int v) { $_setUnsignedInt32(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasRecipientsCount() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRecipientsCount() => clearField(2);
+}
+
 class ApplicationData_DownloadData extends $pb.GeneratedMessage {
   factory ApplicationData_DownloadData({
     $core.List<$core.int>? downloadToken,
@@ -1609,6 +1673,56 @@ class ApplicationData_DownloadData extends $pb.GeneratedMessage {
   void clearOffset() => clearField(2);
 }
 
+class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
+  factory ApplicationData_DownloadDone({
+    $core.List<$core.int>? downloadToken,
+  }) {
+    final $result = create();
+    if (downloadToken != null) {
+      $result.downloadToken = downloadToken;
+    }
+    return $result;
+  }
+  ApplicationData_DownloadDone._() : super();
+  factory ApplicationData_DownloadDone.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_DownloadDone.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.DownloadDone', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DownloadDone clone() => ApplicationData_DownloadDone()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DownloadDone copyWith(void Function(ApplicationData_DownloadDone) updates) => super.copyWith((message) => updates(message as ApplicationData_DownloadDone)) as ApplicationData_DownloadDone;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DownloadDone create() => ApplicationData_DownloadDone._();
+  ApplicationData_DownloadDone createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_DownloadDone> createRepeated() => $pb.PbList<ApplicationData_DownloadDone>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DownloadDone getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_DownloadDone>(create);
+  static ApplicationData_DownloadDone? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get downloadToken => $_getN(0);
+  @$pb.TagNumber(1)
+  set downloadToken($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasDownloadToken() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearDownloadToken() => clearField(1);
+}
+
 enum ApplicationData_ApplicationData {
   textmessage, 
   getuserbyusername, 
@@ -1629,6 +1743,8 @@ enum ApplicationData_ApplicationData {
   redeemadditionalcode, 
   removeadditionaluser, 
   updateplanoptions, 
+  downloaddone, 
+  uploaddone, 
   notSet
 }
 
@@ -1653,6 +1769,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_RedeemAdditionalCode? redeemadditionalcode,
     ApplicationData_RemoveAdditionalUser? removeadditionaluser,
     ApplicationData_UpdatePlanOptions? updateplanoptions,
+    ApplicationData_DownloadDone? downloaddone,
+    ApplicationData_UploadDone? uploaddone,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -1712,6 +1830,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (updateplanoptions != null) {
       $result.updateplanoptions = updateplanoptions;
     }
+    if (downloaddone != null) {
+      $result.downloaddone = downloaddone;
+    }
+    if (uploaddone != null) {
+      $result.uploaddone = uploaddone;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -1738,10 +1862,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     17 : ApplicationData_ApplicationData.redeemadditionalcode,
     18 : ApplicationData_ApplicationData.removeadditionaluser,
     19 : ApplicationData_ApplicationData.updateplanoptions,
+    20 : ApplicationData_ApplicationData.downloaddone,
+    21 : ApplicationData_ApplicationData.uploaddone,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
@@ -1761,6 +1887,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_RedeemAdditionalCode>(17, _omitFieldNames ? '' : 'redeemadditionalcode', subBuilder: ApplicationData_RedeemAdditionalCode.create)
     ..aOM<ApplicationData_RemoveAdditionalUser>(18, _omitFieldNames ? '' : 'removeadditionaluser', subBuilder: ApplicationData_RemoveAdditionalUser.create)
     ..aOM<ApplicationData_UpdatePlanOptions>(19, _omitFieldNames ? '' : 'updateplanoptions', subBuilder: ApplicationData_UpdatePlanOptions.create)
+    ..aOM<ApplicationData_DownloadDone>(20, _omitFieldNames ? '' : 'downloaddone', subBuilder: ApplicationData_DownloadDone.create)
+    ..aOM<ApplicationData_UploadDone>(21, _omitFieldNames ? '' : 'uploaddone', subBuilder: ApplicationData_UploadDone.create)
     ..hasRequiredFields = false
   ;
 
@@ -1996,6 +2124,28 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearUpdateplanoptions() => clearField(19);
   @$pb.TagNumber(19)
   ApplicationData_UpdatePlanOptions ensureUpdateplanoptions() => $_ensure(18);
+
+  @$pb.TagNumber(20)
+  ApplicationData_DownloadDone get downloaddone => $_getN(19);
+  @$pb.TagNumber(20)
+  set downloaddone(ApplicationData_DownloadDone v) { setField(20, v); }
+  @$pb.TagNumber(20)
+  $core.bool hasDownloaddone() => $_has(19);
+  @$pb.TagNumber(20)
+  void clearDownloaddone() => clearField(20);
+  @$pb.TagNumber(20)
+  ApplicationData_DownloadDone ensureDownloaddone() => $_ensure(19);
+
+  @$pb.TagNumber(21)
+  ApplicationData_UploadDone get uploaddone => $_getN(20);
+  @$pb.TagNumber(21)
+  set uploaddone(ApplicationData_UploadDone v) { setField(21, v); }
+  @$pb.TagNumber(21)
+  $core.bool hasUploaddone() => $_has(20);
+  @$pb.TagNumber(21)
+  void clearUploaddone() => clearField(21);
+  @$pb.TagNumber(21)
+  ApplicationData_UploadDone ensureUploaddone() => $_ensure(20);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

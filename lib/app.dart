@@ -129,8 +129,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           themeMode: context.watch<SettingsChangeProvider>().themeMode,
           initialRoute: '/',
           routes: {
-            "/": (context) => AppMainWidget(initialPage: 0),
-            "/chats": (context) => AppMainWidget(initialPage: 1)
+            "/": (context) => AppMainWidget(initialPage: 1),
+            "/chats": (context) => AppMainWidget(initialPage: 0)
           },
         );
       },

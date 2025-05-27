@@ -52,23 +52,26 @@ class ShareImageEditorView extends StatefulWidget {
 
 class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _isRealTwonly = false;
-  bool videoWithAudio = true;
   int maxShowTime = gMediaShowInfinite;
   String? sendNextMediaToUserName;
-  double tabDownPostion = 0;
+  double tabDownPosition = 0;
   bool sendingOrLoadingImage = true;
   bool isDisposed = false;
   HashSet<int> selectedUserIds = HashSet();
   double widthRatio = 1, heightRatio = 1, pixelRatio = 1;
   VideoPlayerController? videoController;
-
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
+
+  /// Media upload variables
+  int? mediaUploadId;
+  Future<bool>? videoUploadHandler;
 
   @override
   void initState() {
     super.initState();
     initAsync();
+    initMediaFileUpload();
     if (widget.imageBytes != null) {
       loadImage(widget.imageBytes!);
     } else if (widget.videoFilePath != null) {
@@ -94,6 +97,19 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       setState(() {
         maxShowTime = user.defaultShowTime!;
       });
+    }
+  }
+
+  Future initMediaFileUpload() async {
+    // media init was already called...
+    if (mediaUploadId != null) return;
+
+    mediaUploadId = await initMediaUpload();
+
+    if (widget.videoFilePath != null && mediaUploadId != null) {
+      // start with the video compression...
+      videoUploadHandler =
+          addVideoToUpload(mediaUploadId!, widget.videoFilePath!);
     }
   }
 
@@ -221,19 +237,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           },
         ),
       ),
-      // https://github.com/jonataslaw/VideoCompress/issues/184
-      // if (widget.videoFilePath != null) const SizedBox(height: 8),
-      // if (widget.videoFilePath != null)
-      //   ActionButton(
-      //     (videoWithAudio) ? Icons.volume_up_rounded : Icons.volume_off_rounded,
-      //     tooltipText: context.lang.protectAsARealTwonly,
-      //     color: Colors.white,
-      //     onPressed: () async {
-      //       setState(() {
-      //         videoWithAudio = !videoWithAudio;
-      //       });
-      //     },
-      //   ),
       const SizedBox(height: 8),
       ActionButton(
         FontAwesomeIcons.shieldHeart,
@@ -312,8 +315,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future pushShareImageView() async {
+    if (mediaUploadId == null) {
+      await initMediaFileUpload();
+      if (mediaUploadId == null) return;
+    }
     Future<Uint8List?> imageBytes = getMergedImage();
     videoController?.pause();
+    if (isDisposed || !context.mounted) return;
     bool? wasSend = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -323,7 +331,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           maxShowTime: maxShowTime,
           selectedUserIds: selectedUserIds,
           updateStatus: updateStatus,
-          videoFilePath: widget.videoFilePath,
+          videoUploadHandler: videoUploadHandler,
+          mediaUploadId: mediaUploadId!,
           mirrorVideo: widget.mirrorVideo,
         ),
       ),
@@ -402,14 +411,26 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         );
       }));
     } else {
-      sendMediaFile(
+      Future imageHandler =
+          addOrModifyImageToUpload(mediaUploadId!, imageBytes);
+
+      // first finalize the upload
+      await finalizeUpload(
+        mediaUploadId!,
         [widget.sendTo!.userId],
-        imageBytes,
         _isRealTwonly,
-        maxShowTime,
-        widget.videoFilePath,
+        widget.videoFilePath != null,
         widget.mirrorVideo,
+        maxShowTime,
       );
+
+      /// then call the upload process in the background
+      encryptAndPreUploadMediaFiles(
+        mediaUploadId!,
+        imageHandler,
+        videoUploadHandler,
+      );
+
       if (context.mounted) {
         // ignore: use_build_context_synchronously
         Navigator.pop(context, true);
@@ -434,9 +455,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           GestureDetector(
             onTapDown: (details) {
               if (details.globalPosition.dy > 60) {
-                tabDownPostion = details.globalPosition.dy - 60;
+                tabDownPosition = details.globalPosition.dy - 60;
               } else {
-                tabDownPostion = details.globalPosition.dy;
+                tabDownPosition = details.globalPosition.dy;
               }
             },
             onTap: () {
@@ -446,7 +467,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               undoLayers.clear();
               removedLayers.clear();
               layers.add(TextLayerData(
-                offset: Offset(0, tabDownPostion),
+                offset: Offset(0, tabDownPosition),
                 textLayersBefore: layers.whereType<TextLayerData>().length,
               ));
               setState(() {});

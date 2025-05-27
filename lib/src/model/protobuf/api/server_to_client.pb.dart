@@ -1524,6 +1524,50 @@ class Response_UploadToken extends $pb.GeneratedMessage {
   $core.List<$core.List<$core.int>> get downloadTokens => $_getList(1);
 }
 
+class Response_DownloadTokens extends $pb.GeneratedMessage {
+  factory Response_DownloadTokens({
+    $core.Iterable<$core.List<$core.int>>? downloadTokens,
+  }) {
+    final $result = create();
+    if (downloadTokens != null) {
+      $result.downloadTokens.addAll(downloadTokens);
+    }
+    return $result;
+  }
+  Response_DownloadTokens._() : super();
+  factory Response_DownloadTokens.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_DownloadTokens.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.DownloadTokens', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
+    ..p<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'downloadTokens', $pb.PbFieldType.PY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response_DownloadTokens clone() => Response_DownloadTokens()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_DownloadTokens copyWith(void Function(Response_DownloadTokens) updates) => super.copyWith((message) => updates(message as Response_DownloadTokens)) as Response_DownloadTokens;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_DownloadTokens create() => Response_DownloadTokens._();
+  Response_DownloadTokens createEmptyInstance() => create();
+  static $pb.PbList<Response_DownloadTokens> createRepeated() => $pb.PbList<Response_DownloadTokens>();
+  @$core.pragma('dart2js:noInline')
+  static Response_DownloadTokens getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_DownloadTokens>(create);
+  static Response_DownloadTokens? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.List<$core.int>> get downloadTokens => $_getList(0);
+}
+
 enum Response_Ok_Ok {
   none, 
   userid, 
@@ -1537,6 +1581,7 @@ enum Response_Ok_Ok {
   planballance, 
   vouchers, 
   addaccountsinvites, 
+  downloadtokens, 
   notSet
 }
 
@@ -1554,6 +1599,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_PlanBallance? planballance,
     Response_Vouchers? vouchers,
     Response_AddAccountsInvites? addaccountsinvites,
+    Response_DownloadTokens? downloadtokens,
   }) {
     final $result = create();
     if (none != null) {
@@ -1592,6 +1638,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (addaccountsinvites != null) {
       $result.addaccountsinvites = addaccountsinvites;
     }
+    if (downloadtokens != null) {
+      $result.downloadtokens = downloadtokens;
+    }
     return $result;
   }
   Response_Ok._() : super();
@@ -1611,10 +1660,11 @@ class Response_Ok extends $pb.GeneratedMessage {
     10 : Response_Ok_Ok.planballance,
     11 : Response_Ok_Ok.vouchers,
     12 : Response_Ok_Ok.addaccountsinvites,
+    13 : Response_Ok_Ok.downloadtokens,
     0 : Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Ok', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'authchallenge', $pb.PbFieldType.OY)
@@ -1627,6 +1677,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     ..aOM<Response_PlanBallance>(10, _omitFieldNames ? '' : 'planballance', subBuilder: Response_PlanBallance.create)
     ..aOM<Response_Vouchers>(11, _omitFieldNames ? '' : 'vouchers', subBuilder: Response_Vouchers.create)
     ..aOM<Response_AddAccountsInvites>(12, _omitFieldNames ? '' : 'addaccountsinvites', subBuilder: Response_AddAccountsInvites.create)
+    ..aOM<Response_DownloadTokens>(13, _omitFieldNames ? '' : 'downloadtokens', subBuilder: Response_DownloadTokens.create)
     ..hasRequiredFields = false
   ;
 
@@ -1777,6 +1828,17 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearAddaccountsinvites() => clearField(12);
   @$pb.TagNumber(12)
   Response_AddAccountsInvites ensureAddaccountsinvites() => $_ensure(11);
+
+  @$pb.TagNumber(13)
+  Response_DownloadTokens get downloadtokens => $_getN(12);
+  @$pb.TagNumber(13)
+  set downloadtokens(Response_DownloadTokens v) { setField(13, v); }
+  @$pb.TagNumber(13)
+  $core.bool hasDownloadtokens() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearDownloadtokens() => clearField(13);
+  @$pb.TagNumber(13)
+  Response_DownloadTokens ensureDownloadtokens() => $_ensure(12);
 }
 
 enum Response_Response {

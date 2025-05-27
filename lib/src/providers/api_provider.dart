@@ -362,6 +362,16 @@ class ApiProvider {
     return await sendRequestSync(req);
   }
 
+  Future<Result> getDownloadTokens(
+      List<int> uploadToken, int recipientsCount) async {
+    var get = ApplicationData_UploadDone()
+      ..uploadToken = uploadToken
+      ..recipientsCount = recipientsCount;
+    var appData = ApplicationData()..uploaddone = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
   Future<Result> getCurrentLocation() async {
     var get = ApplicationData_GetLocation();
     var appData = ApplicationData()..getlocation = get;

@@ -1934,11 +1934,11 @@ class $MediaUploadsTable extends MediaUploads
               defaultValue: Constant(UploadState.pending.name))
           .withConverter<UploadState>($MediaUploadsTable.$converterstate);
   @override
-  late final GeneratedColumnWithTypeConverter<MediaUploadMetadata, String>
-      metadata = GeneratedColumn<String>('metadata', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<MediaUploadMetadata>(
-              $MediaUploadsTable.$convertermetadata);
+  late final GeneratedColumnWithTypeConverter<MediaUploadMetadata?, String>
+      metadata = GeneratedColumn<String>('metadata', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<MediaUploadMetadata?>(
+              $MediaUploadsTable.$convertermetadatan);
   @override
   late final GeneratedColumnWithTypeConverter<List<int>?, String> messageIds =
       GeneratedColumn<String>('message_ids', aliasedName, true,
@@ -2006,9 +2006,9 @@ class $MediaUploadsTable extends MediaUploads
       state: $MediaUploadsTable.$converterstate.fromSql(attachedDatabase
           .typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}state'])!),
-      metadata: $MediaUploadsTable.$convertermetadata.fromSql(attachedDatabase
+      metadata: $MediaUploadsTable.$convertermetadatan.fromSql(attachedDatabase
           .typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}metadata'])!),
+          .read(DriftSqlType.string, data['${effectivePrefix}metadata'])),
       messageIds: $MediaUploadsTable.$convertermessageIdsn.fromSql(
           attachedDatabase.typeMapping.read(
               DriftSqlType.string, data['${effectivePrefix}message_ids'])),
@@ -2033,6 +2033,9 @@ class $MediaUploadsTable extends MediaUploads
       const EnumNameConverter<UploadState>(UploadState.values);
   static JsonTypeConverter2<MediaUploadMetadata, String, Map<String, Object?>>
       $convertermetadata = MediaUploadMetadataConverter();
+  static JsonTypeConverter2<MediaUploadMetadata?, String?,
+          Map<String, Object?>?> $convertermetadatan =
+      JsonTypeConverter2.asNullable($convertermetadata);
   static TypeConverter<List<int>, String> $convertermessageIds =
       IntListTypeConverter();
   static TypeConverter<List<int>?, String?> $convertermessageIdsn =
@@ -2054,7 +2057,7 @@ class $MediaUploadsTable extends MediaUploads
 class MediaUpload extends DataClass implements Insertable<MediaUpload> {
   final int mediaUploadId;
   final UploadState state;
-  final MediaUploadMetadata metadata;
+  final MediaUploadMetadata? metadata;
 
   /// exists in UploadState.addedToMessagesDb
   final List<int>? messageIds;
@@ -2070,7 +2073,7 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
   const MediaUpload(
       {required this.mediaUploadId,
       required this.state,
-      required this.metadata,
+      this.metadata,
       this.messageIds,
       this.encryptionData,
       this.uploadTokens,
@@ -2083,9 +2086,9 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       map['state'] =
           Variable<String>($MediaUploadsTable.$converterstate.toSql(state));
     }
-    {
+    if (!nullToAbsent || metadata != null) {
       map['metadata'] = Variable<String>(
-          $MediaUploadsTable.$convertermetadata.toSql(metadata));
+          $MediaUploadsTable.$convertermetadatan.toSql(metadata));
     }
     if (!nullToAbsent || messageIds != null) {
       map['message_ids'] = Variable<String>(
@@ -2110,7 +2113,9 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
     return MediaUploadsCompanion(
       mediaUploadId: Value(mediaUploadId),
       state: Value(state),
-      metadata: Value(metadata),
+      metadata: metadata == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metadata),
       messageIds: messageIds == null && nullToAbsent
           ? const Value.absent()
           : Value(messageIds),
@@ -2131,8 +2136,8 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       mediaUploadId: serializer.fromJson<int>(json['mediaUploadId']),
       state: $MediaUploadsTable.$converterstate
           .fromJson(serializer.fromJson<String>(json['state'])),
-      metadata: $MediaUploadsTable.$convertermetadata.fromJson(
-          serializer.fromJson<Map<String, Object?>>(json['metadata'])),
+      metadata: $MediaUploadsTable.$convertermetadatan.fromJson(
+          serializer.fromJson<Map<String, Object?>?>(json['metadata'])),
       messageIds: serializer.fromJson<List<int>?>(json['messageIds']),
       encryptionData: $MediaUploadsTable.$converterencryptionDatan.fromJson(
           serializer.fromJson<Map<String, Object?>?>(json['encryptionData'])),
@@ -2148,8 +2153,8 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       'mediaUploadId': serializer.toJson<int>(mediaUploadId),
       'state': serializer
           .toJson<String>($MediaUploadsTable.$converterstate.toJson(state)),
-      'metadata': serializer.toJson<Map<String, Object?>>(
-          $MediaUploadsTable.$convertermetadata.toJson(metadata)),
+      'metadata': serializer.toJson<Map<String, Object?>?>(
+          $MediaUploadsTable.$convertermetadatan.toJson(metadata)),
       'messageIds': serializer.toJson<List<int>?>(messageIds),
       'encryptionData': serializer.toJson<Map<String, Object?>?>(
           $MediaUploadsTable.$converterencryptionDatan.toJson(encryptionData)),
@@ -2162,7 +2167,7 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
   MediaUpload copyWith(
           {int? mediaUploadId,
           UploadState? state,
-          MediaUploadMetadata? metadata,
+          Value<MediaUploadMetadata?> metadata = const Value.absent(),
           Value<List<int>?> messageIds = const Value.absent(),
           Value<MediaEncryptionData?> encryptionData = const Value.absent(),
           Value<MediaUploadTokens?> uploadTokens = const Value.absent(),
@@ -2170,7 +2175,7 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       MediaUpload(
         mediaUploadId: mediaUploadId ?? this.mediaUploadId,
         state: state ?? this.state,
-        metadata: metadata ?? this.metadata,
+        metadata: metadata.present ? metadata.value : this.metadata,
         messageIds: messageIds.present ? messageIds.value : this.messageIds,
         encryptionData:
             encryptionData.present ? encryptionData.value : this.encryptionData,
@@ -2232,7 +2237,7 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
 class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
   final Value<int> mediaUploadId;
   final Value<UploadState> state;
-  final Value<MediaUploadMetadata> metadata;
+  final Value<MediaUploadMetadata?> metadata;
   final Value<List<int>?> messageIds;
   final Value<MediaEncryptionData?> encryptionData;
   final Value<MediaUploadTokens?> uploadTokens;
@@ -2249,12 +2254,12 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
   MediaUploadsCompanion.insert({
     this.mediaUploadId = const Value.absent(),
     this.state = const Value.absent(),
-    required MediaUploadMetadata metadata,
+    this.metadata = const Value.absent(),
     this.messageIds = const Value.absent(),
     this.encryptionData = const Value.absent(),
     this.uploadTokens = const Value.absent(),
     this.alreadyNotified = const Value.absent(),
-  }) : metadata = Value(metadata);
+  });
   static Insertable<MediaUpload> custom({
     Expression<int>? mediaUploadId,
     Expression<String>? state,
@@ -2278,7 +2283,7 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
   MediaUploadsCompanion copyWith(
       {Value<int>? mediaUploadId,
       Value<UploadState>? state,
-      Value<MediaUploadMetadata>? metadata,
+      Value<MediaUploadMetadata?>? metadata,
       Value<List<int>?>? messageIds,
       Value<MediaEncryptionData?>? encryptionData,
       Value<MediaUploadTokens?>? uploadTokens,
@@ -2306,7 +2311,7 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
     }
     if (metadata.present) {
       map['metadata'] = Variable<String>(
-          $MediaUploadsTable.$convertermetadata.toSql(metadata.value));
+          $MediaUploadsTable.$convertermetadatan.toSql(metadata.value));
     }
     if (messageIds.present) {
       map['message_ids'] = Variable<String>(
@@ -4549,7 +4554,7 @@ typedef $$MediaUploadsTableCreateCompanionBuilder = MediaUploadsCompanion
     Function({
   Value<int> mediaUploadId,
   Value<UploadState> state,
-  required MediaUploadMetadata metadata,
+  Value<MediaUploadMetadata?> metadata,
   Value<List<int>?> messageIds,
   Value<MediaEncryptionData?> encryptionData,
   Value<MediaUploadTokens?> uploadTokens,
@@ -4559,7 +4564,7 @@ typedef $$MediaUploadsTableUpdateCompanionBuilder = MediaUploadsCompanion
     Function({
   Value<int> mediaUploadId,
   Value<UploadState> state,
-  Value<MediaUploadMetadata> metadata,
+  Value<MediaUploadMetadata?> metadata,
   Value<List<int>?> messageIds,
   Value<MediaEncryptionData?> encryptionData,
   Value<MediaUploadTokens?> uploadTokens,
@@ -4583,7 +4588,7 @@ class $$MediaUploadsTableFilterComposer
           column: $table.state,
           builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnWithTypeConverterFilters<MediaUploadMetadata, MediaUploadMetadata,
+  ColumnWithTypeConverterFilters<MediaUploadMetadata?, MediaUploadMetadata,
           String>
       get metadata => $composableBuilder(
           column: $table.metadata,
@@ -4661,7 +4666,7 @@ class $$MediaUploadsTableAnnotationComposer
   GeneratedColumnWithTypeConverter<UploadState, String> get state =>
       $composableBuilder(column: $table.state, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<MediaUploadMetadata, String> get metadata =>
+  GeneratedColumnWithTypeConverter<MediaUploadMetadata?, String> get metadata =>
       $composableBuilder(column: $table.metadata, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<List<int>?, String> get messageIds =>
@@ -4709,7 +4714,7 @@ class $$MediaUploadsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> mediaUploadId = const Value.absent(),
             Value<UploadState> state = const Value.absent(),
-            Value<MediaUploadMetadata> metadata = const Value.absent(),
+            Value<MediaUploadMetadata?> metadata = const Value.absent(),
             Value<List<int>?> messageIds = const Value.absent(),
             Value<MediaEncryptionData?> encryptionData = const Value.absent(),
             Value<MediaUploadTokens?> uploadTokens = const Value.absent(),
@@ -4727,7 +4732,7 @@ class $$MediaUploadsTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             Value<int> mediaUploadId = const Value.absent(),
             Value<UploadState> state = const Value.absent(),
-            required MediaUploadMetadata metadata,
+            Value<MediaUploadMetadata?> metadata = const Value.absent(),
             Value<List<int>?> messageIds = const Value.absent(),
             Value<MediaEncryptionData?> encryptionData = const Value.absent(),
             Value<MediaUploadTokens?> uploadTokens = const Value.absent(),

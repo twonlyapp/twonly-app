@@ -155,8 +155,10 @@ const ApplicationData$json = {
     {'1': 'redeemadditionalcode', '3': 17, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.RedeemAdditionalCode', '9': 0, '10': 'redeemadditionalcode'},
     {'1': 'removeadditionaluser', '3': 18, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.RemoveAdditionalUser', '9': 0, '10': 'removeadditionaluser'},
     {'1': 'updateplanoptions', '3': 19, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.UpdatePlanOptions', '9': 0, '10': 'updateplanoptions'},
+    {'1': 'downloaddone', '3': 20, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.DownloadDone', '9': 0, '10': 'downloaddone'},
+    {'1': 'uploaddone', '3': 21, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.UploadDone', '9': 0, '10': 'uploaddone'},
   ],
-  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_UpdateGoogleFcmToken$json, ApplicationData_GetUserById$json, ApplicationData_RedeemVoucher$json, ApplicationData_SwitchToPayedPlan$json, ApplicationData_UpdatePlanOptions$json, ApplicationData_CreateVoucher$json, ApplicationData_GetLocation$json, ApplicationData_GetVouchers$json, ApplicationData_GetAvailablePlans$json, ApplicationData_GetAddAccountsInvites$json, ApplicationData_GetCurrentPlanInfos$json, ApplicationData_RedeemAdditionalCode$json, ApplicationData_RemoveAdditionalUser$json, ApplicationData_GetPrekeysByUserId$json, ApplicationData_GetUploadToken$json, ApplicationData_UploadData$json, ApplicationData_DownloadData$json],
+  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_UpdateGoogleFcmToken$json, ApplicationData_GetUserById$json, ApplicationData_RedeemVoucher$json, ApplicationData_SwitchToPayedPlan$json, ApplicationData_UpdatePlanOptions$json, ApplicationData_CreateVoucher$json, ApplicationData_GetLocation$json, ApplicationData_GetVouchers$json, ApplicationData_GetAvailablePlans$json, ApplicationData_GetAddAccountsInvites$json, ApplicationData_GetCurrentPlanInfos$json, ApplicationData_RedeemAdditionalCode$json, ApplicationData_RemoveAdditionalUser$json, ApplicationData_GetPrekeysByUserId$json, ApplicationData_GetUploadToken$json, ApplicationData_UploadData$json, ApplicationData_UploadDone$json, ApplicationData_DownloadData$json, ApplicationData_DownloadDone$json],
   '8': [
     {'1': 'ApplicationData'},
   ],
@@ -305,11 +307,28 @@ const ApplicationData_UploadData$json = {
 };
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_UploadDone$json = {
+  '1': 'UploadDone',
+  '2': [
+    {'1': 'upload_token', '3': 1, '4': 1, '5': 12, '10': 'uploadToken'},
+    {'1': 'recipients_count', '3': 2, '4': 1, '5': 13, '10': 'recipientsCount'},
+  ],
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData_DownloadData$json = {
   '1': 'DownloadData',
   '2': [
     {'1': 'download_token', '3': 1, '4': 1, '5': 12, '10': 'downloadToken'},
     {'1': 'offset', '3': 2, '4': 1, '5': 13, '10': 'offset'},
+  ],
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_DownloadDone$json = {
+  '1': 'DownloadDone',
+  '2': [
+    {'1': 'download_token', '3': 1, '4': 1, '5': 12, '10': 'downloadToken'},
   ],
 };
 
@@ -348,26 +367,32 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'Y2xpZW50X3RvX3NlcnZlci5BcHBsaWNhdGlvbkRhdGEuUmVtb3ZlQWRkaXRpb25hbFVzZXJIAF'
     'IUcmVtb3ZlYWRkaXRpb25hbHVzZXISYwoRdXBkYXRlcGxhbm9wdGlvbnMYEyABKAsyMy5jbGll'
     'bnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5VcGRhdGVQbGFuT3B0aW9uc0gAUhF1cGRhdG'
-    'VwbGFub3B0aW9ucxpqCgtUZXh0TWVzc2FnZRIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQSEgoE'
-    'Ym9keRgDIAEoDFIEYm9keRIgCglwdXNoX2RhdGEYBCABKAxIAFIIcHVzaERhdGGIAQFCDAoKX3'
-    'B1c2hfZGF0YRovChFHZXRVc2VyQnlVc2VybmFtZRIaCgh1c2VybmFtZRgBIAEoCVIIdXNlcm5h'
-    'bWUaNQoUVXBkYXRlR29vZ2xlRmNtVG9rZW4SHQoKZ29vZ2xlX2ZjbRgBIAEoCVIJZ29vZ2xlRm'
-    'NtGiYKC0dldFVzZXJCeUlkEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBopCg1SZWRlZW1Wb3Vj'
-    'aGVyEhgKB3ZvdWNoZXIYASABKAlSB3ZvdWNoZXIacAoRU3dpdGNoVG9QYXllZFBsYW4SFwoHcG'
-    'xhbl9pZBgBIAEoCVIGcGxhbklkEh8KC3BheV9tb250aGx5GAIgASgIUgpwYXlNb250aGx5EiEK'
-    'DGF1dG9fcmVuZXdhbBgDIAEoCFILYXV0b1JlbmV3YWwaNgoRVXBkYXRlUGxhbk9wdGlvbnMSIQ'
-    'oMYXV0b19yZW5ld2FsGAEgASgIUgthdXRvUmVuZXdhbBowCg1DcmVhdGVWb3VjaGVyEh8KC3Zh'
-    'bHVlX2NlbnRzGAEgASgNUgp2YWx1ZUNlbnRzGg0KC0dldExvY2F0aW9uGg0KC0dldFZvdWNoZX'
-    'JzGhMKEUdldEF2YWlsYWJsZVBsYW5zGhcKFUdldEFkZEFjY291bnRzSW52aXRlcxoVChNHZXRD'
-    'dXJyZW50UGxhbkluZm9zGjcKFFJlZGVlbUFkZGl0aW9uYWxDb2RlEh8KC2ludml0ZV9jb2RlGA'
-    'IgASgJUgppbnZpdGVDb2RlGi8KFFJlbW92ZUFkZGl0aW9uYWxVc2VyEhcKB3VzZXJfaWQYASAB'
-    'KANSBnVzZXJJZBotChJHZXRQcmVrZXlzQnlVc2VySWQSFwoHdXNlcl9pZBgBIAEoA1IGdXNlck'
-    'lkGjsKDkdldFVwbG9hZFRva2VuEikKEHJlY2lwaWVudHNfY291bnQYASABKA1SD3JlY2lwaWVu'
-    'dHNDb3VudBqJAQoKVXBsb2FkRGF0YRIhCgx1cGxvYWRfdG9rZW4YASABKAxSC3VwbG9hZFRva2'
-    'VuEhYKBm9mZnNldBgCIAEoDVIGb2Zmc2V0EhIKBGRhdGEYAyABKAxSBGRhdGESHwoIY2hlY2tz'
-    'dW0YBCABKAxIAFIIY2hlY2tzdW2IAQFCCwoJX2NoZWNrc3VtGk0KDERvd25sb2FkRGF0YRIlCg'
-    '5kb3dubG9hZF90b2tlbhgBIAEoDFINZG93bmxvYWRUb2tlbhIWCgZvZmZzZXQYAiABKA1SBm9m'
-    'ZnNldEIRCg9BcHBsaWNhdGlvbkRhdGE=');
+    'VwbGFub3B0aW9ucxJUCgxkb3dubG9hZGRvbmUYFCABKAsyLi5jbGllbnRfdG9fc2VydmVyLkFw'
+    'cGxpY2F0aW9uRGF0YS5Eb3dubG9hZERvbmVIAFIMZG93bmxvYWRkb25lEk4KCnVwbG9hZGRvbm'
+    'UYFSABKAsyLC5jbGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5VcGxvYWREb25lSABS'
+    'CnVwbG9hZGRvbmUaagoLVGV4dE1lc3NhZ2USFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEhIKBG'
+    'JvZHkYAyABKAxSBGJvZHkSIAoJcHVzaF9kYXRhGAQgASgMSABSCHB1c2hEYXRhiAEBQgwKCl9w'
+    'dXNoX2RhdGEaLwoRR2V0VXNlckJ5VXNlcm5hbWUSGgoIdXNlcm5hbWUYASABKAlSCHVzZXJuYW'
+    '1lGjUKFFVwZGF0ZUdvb2dsZUZjbVRva2VuEh0KCmdvb2dsZV9mY20YASABKAlSCWdvb2dsZUZj'
+    'bRomCgtHZXRVc2VyQnlJZBIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQaKQoNUmVkZWVtVm91Y2'
+    'hlchIYCgd2b3VjaGVyGAEgASgJUgd2b3VjaGVyGnAKEVN3aXRjaFRvUGF5ZWRQbGFuEhcKB3Bs'
+    'YW5faWQYASABKAlSBnBsYW5JZBIfCgtwYXlfbW9udGhseRgCIAEoCFIKcGF5TW9udGhseRIhCg'
+    'xhdXRvX3JlbmV3YWwYAyABKAhSC2F1dG9SZW5ld2FsGjYKEVVwZGF0ZVBsYW5PcHRpb25zEiEK'
+    'DGF1dG9fcmVuZXdhbBgBIAEoCFILYXV0b1JlbmV3YWwaMAoNQ3JlYXRlVm91Y2hlchIfCgt2YW'
+    'x1ZV9jZW50cxgBIAEoDVIKdmFsdWVDZW50cxoNCgtHZXRMb2NhdGlvbhoNCgtHZXRWb3VjaGVy'
+    'cxoTChFHZXRBdmFpbGFibGVQbGFucxoXChVHZXRBZGRBY2NvdW50c0ludml0ZXMaFQoTR2V0Q3'
+    'VycmVudFBsYW5JbmZvcxo3ChRSZWRlZW1BZGRpdGlvbmFsQ29kZRIfCgtpbnZpdGVfY29kZRgC'
+    'IAEoCVIKaW52aXRlQ29kZRovChRSZW1vdmVBZGRpdGlvbmFsVXNlchIXCgd1c2VyX2lkGAEgAS'
+    'gDUgZ1c2VySWQaLQoSR2V0UHJla2V5c0J5VXNlcklkEhcKB3VzZXJfaWQYASABKANSBnVzZXJJ'
+    'ZBo7Cg5HZXRVcGxvYWRUb2tlbhIpChByZWNpcGllbnRzX2NvdW50GAEgASgNUg9yZWNpcGllbn'
+    'RzQ291bnQaiQEKClVwbG9hZERhdGESIQoMdXBsb2FkX3Rva2VuGAEgASgMUgt1cGxvYWRUb2tl'
+    'bhIWCgZvZmZzZXQYAiABKA1SBm9mZnNldBISCgRkYXRhGAMgASgMUgRkYXRhEh8KCGNoZWNrc3'
+    'VtGAQgASgMSABSCGNoZWNrc3VtiAEBQgsKCV9jaGVja3N1bRpaCgpVcGxvYWREb25lEiEKDHVw'
+    'bG9hZF90b2tlbhgBIAEoDFILdXBsb2FkVG9rZW4SKQoQcmVjaXBpZW50c19jb3VudBgCIAEoDV'
+    'IPcmVjaXBpZW50c0NvdW50Gk0KDERvd25sb2FkRGF0YRIlCg5kb3dubG9hZF90b2tlbhgBIAEo'
+    'DFINZG93bmxvYWRUb2tlbhIWCgZvZmZzZXQYAiABKA1SBm9mZnNldBo1CgxEb3dubG9hZERvbm'
+    'USJQoOZG93bmxvYWRfdG9rZW4YASABKAxSDWRvd25sb2FkVG9rZW5CEQoPQXBwbGljYXRpb25E'
+    'YXRh');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

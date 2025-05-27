@@ -2,16 +2,18 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 enum UploadState {
-  pending,
+  // legacy
   addedToMessagesDb,
-  // added .compressed to filename
   isCompressed,
-  // added .encypted to filename
   isEncrypted,
   hasUploadToken,
   isUploaded,
+  // ^^ legacy  ^^
+
+  pending,
+  readyToUpload,
   receiverNotified,
-  // after all users notified all media files that are not storeable by the other person will be deleted
+  // after all users notified all media files that are not storable by the other person will be deleted
 }
 
 @DataClassName('MediaUpload')
@@ -20,7 +22,8 @@ class MediaUploads extends Table {
   TextColumn get state =>
       textEnum<UploadState>().withDefault(Constant(UploadState.pending.name))();
 
-  TextColumn get metadata => text().map(MediaUploadMetadataConverter())();
+  TextColumn get metadata =>
+      text().map(MediaUploadMetadataConverter()).nullable()();
 
   /// exists in UploadState.addedToMessagesDb
   TextColumn get messageIds => text().map(IntListTypeConverter()).nullable()();

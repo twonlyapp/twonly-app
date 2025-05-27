@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -26,16 +25,18 @@ class ShareImageView extends StatefulWidget {
       required this.maxShowTime,
       required this.selectedUserIds,
       required this.updateStatus,
-      required this.videoFilePath,
+      required this.videoUploadHandler,
+      required this.mediaUploadId,
       this.enableVideoAudio});
   final Future<Uint8List?> imageBytesFuture;
   final bool isRealTwonly;
   final bool mirrorVideo;
   final int maxShowTime;
-  final File? videoFilePath;
   final HashSet<int> selectedUserIds;
   final bool? enableVideoAudio;
+  final int mediaUploadId;
   final Function(int, bool) updateStatus;
+  final Future<bool>? videoUploadHandler;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -73,6 +74,13 @@ class _ShareImageView extends State<ShareImageView> {
 
   Future initAsync() async {
     imageBytes = await widget.imageBytesFuture;
+    if (imageBytes != null) {
+      final imageHandler =
+          addOrModifyImageToUpload(widget.mediaUploadId, imageBytes!);
+      // start with the pre upload of the media file...
+      encryptAndPreUploadMediaFiles(
+          widget.mediaUploadId, imageHandler, widget.videoUploadHandler);
+    }
     setState(() {});
   }
 
@@ -287,14 +295,18 @@ class _ShareImageView extends State<ShareImageView> {
                       sendingImage = true;
                     });
 
-                    sendMediaFile(
+                    await finalizeUpload(
+                      widget.mediaUploadId,
                       widget.selectedUserIds.toList(),
-                      imageBytes!,
                       widget.isRealTwonly,
-                      widget.maxShowTime,
-                      widget.videoFilePath,
+                      widget.videoUploadHandler != null,
                       widget.mirrorVideo,
+                      widget.maxShowTime,
                     );
+
+                    /// trigger the upload of the media file.
+                    handleNextMediaUploadSteps(widget.mediaUploadId);
+
                     if (context.mounted) {
                       Navigator.pop(context, true);
                       // if (widget.preselectedUser != null) {

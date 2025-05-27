@@ -267,7 +267,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (shoudReturn != null && shoudReturn) {
       // ignore: use_build_context_synchronously
       if (widget.sendTo == null) {
-        globalUpdateOfHomeViewPageIndex(1);
+        globalUpdateOfHomeViewPageIndex(0);
       } else {
         Navigator.pop(context);
       }

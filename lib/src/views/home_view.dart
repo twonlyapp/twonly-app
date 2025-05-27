@@ -39,7 +39,7 @@ class HomeViewState extends State<HomeView> {
 
     selectNotificationStream.stream
         .listen((NotificationResponse? response) async {
-      globalUpdateOfHomeViewPageIndex(1);
+      globalUpdateOfHomeViewPageIndex(0);
     });
     initAsync();
   }
@@ -50,7 +50,7 @@ class HomeViewState extends State<HomeView> {
 
     if (notificationAppLaunchDetails != null) {
       if (notificationAppLaunchDetails.didNotificationLaunchApp) {
-        globalUpdateOfHomeViewPageIndex(1);
+        globalUpdateOfHomeViewPageIndex(0);
       }
     }
   }
