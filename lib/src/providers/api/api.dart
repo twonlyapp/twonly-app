@@ -28,10 +28,10 @@ Future tryTransmitMessages() async {
 
     Map<String, dynamic> failed = {};
 
-    // List<MapEntry<String, dynamic>> sortedList = retransmit.entries.toList()
-    //   ..sort((a, b) => int.parse(a.key).compareTo(int.parse(b.key)));
+    List<MapEntry<String, dynamic>> sortedList = retransmit.entries.toList()
+      ..sort((a, b) => int.parse(a.key).compareTo(int.parse(b.key)));
 
-    for (final element in retransmit.entries) {
+    for (final element in sortedList) {
       RetransmitMessage msg =
           RetransmitMessage.fromJson(jsonDecode(element.value));
 
@@ -145,8 +145,18 @@ Future<(String, RetransmitMessage)?> encryptMessage(
       return null;
     }
 
-    String stateId =
-        (messageId ?? (60001 + Random().nextInt(100000))).toString();
+    var retransmit = await getAllMessagesForRetransmitting();
+
+    int currentMaxStateId = messageId ?? 60000;
+    if (retransmit.isNotEmpty && messageId == null) {
+      currentMaxStateId = retransmit.keys.map((x) => int.parse(x)).reduce(max);
+      if (currentMaxStateId < 60000) {
+        currentMaxStateId = 60000;
+      }
+    }
+
+    String stateId = (currentMaxStateId + 1).toString();
+
     Box box = await getMediaStorage();
 
     List<int>? pushData;
@@ -162,10 +172,7 @@ Future<(String, RetransmitMessage)?> encryptMessage(
     );
 
     {
-      var retransmit = await getAllMessagesForRetransmitting();
-
       retransmit[stateId] = jsonEncode(encryptedMessage.toJson());
-
       box.put("messages-to-retransmit", jsonEncode(retransmit));
     }
 

@@ -408,7 +408,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         _isRealTwonly,
         maxShowTime,
         widget.videoFilePath,
-        videoWithAudio,
         widget.mirrorVideo,
       );
       if (context.mounted) {

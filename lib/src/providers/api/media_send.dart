@@ -18,7 +18,6 @@ import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/api/api.dart';
-import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -50,13 +49,23 @@ Future<ErrorCode?> isAllowedToSend() async {
   return null;
 }
 
+/// Process the image up to the point more user informations are required
+/// Returns the media upload id
+Future<int> preSendMediaFile(Uint8List imageBytes, File? videoFilePath) async {
+  return 0;
+}
+
+Future cancelSendMediaFile(int mediaUploadId) async {}
+
+Future finalizeSendMediaFile(int mediaUploadId, List<int> userIds,
+    bool isRealTwonly, bool isVideo, bool mirrorVideo, int maxShowTime) async {}
+
 Future sendMediaFile(
   List<int> userIds,
   Uint8List imageBytes,
   bool isRealTwonly,
   int maxShowTime,
   File? videoFilePath,
-  bool? enableVideoAudio,
   bool mirrorVideo,
 ) async {
   MediaUploadMetadata metadata = MediaUploadMetadata();
@@ -64,7 +73,6 @@ Future sendMediaFile(
   metadata.isRealTwonly = isRealTwonly;
   metadata.messageSendAt = DateTime.now();
   metadata.isVideo = videoFilePath != null;
-  metadata.videoWithAudio = enableVideoAudio != null && enableVideoAudio;
   metadata.maxShowTime = maxShowTime;
   metadata.mirrorVideo = mirrorVideo;
 
@@ -266,13 +274,13 @@ Future<Uint8List?> handleCompressionState(
             true, // https://github.com/jonataslaw/VideoCompress/issues/184
       );
 
-      if (mediaInfo!.filesize! >= 20 * 1000 * 1000) {
+      if (mediaInfo!.filesize! >= 30 * 1000 * 1000) {
         // if the media file is over 20MB compress it with low quality
         mediaInfo = await VideoCompress.compressVideo(
           videoOriginalFile.path,
           quality: VideoQuality.Res960x540Quality,
           deleteOrigin: false,
-          includeAudio: media.metadata.videoWithAudio,
+          includeAudio: true,
         );
       }
     } catch (e) {

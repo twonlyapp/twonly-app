@@ -202,7 +202,10 @@ Future<MessageJson?> getDecryptedText(int source, Uint8List msg) async {
         signalStore, SignalProtocolAddress(source.toString(), defaultDeviceId));
 
     List<Uint8List>? msgs = removeLastXBytes(msg, 4);
-    if (msgs == null) return null;
+    if (msgs == null) {
+      Logger("utils/signal").shout("Message requires at least 4 bytes.");
+      return null;
+    }
     Uint8List body = msgs[0];
     int type = bytesToInt(msgs[1]);
     Uint8List plaintext;
@@ -213,6 +216,7 @@ Future<MessageJson?> getDecryptedText(int source, Uint8List msg) async {
       SignalMessage signalMsg = SignalMessage.fromSerialized(body);
       plaintext = await session.decryptFromSignal(signalMsg);
     } else {
+      Logger("utils/signal").shout("Type not known: $type");
       return null;
     }
     MessageJson dectext =
