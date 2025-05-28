@@ -75,7 +75,10 @@ Future retryMediaUpload({int maxRetries = 3}) async {
         if (mediaFile.uploadTokens != null) {
           /// the file was already uploaded.
           /// notify the server to remove the upload
+          apiProvider.getDownloadTokens(mediaFile.uploadTokens!.uploadToken, 0);
         }
+        await twonlyDatabase.mediaUploadsDao
+            .deleteMediaUpload(mediaFile.mediaUploadId);
         Logger("media_send.dart").shout(
             "upload can be removed, the finalized function was never called...");
         continue;
@@ -90,9 +93,9 @@ Future retryMediaUpload({int maxRetries = 3}) async {
   });
   if (maxRetries == 0) return;
   // retry upload
-  Future.delayed(const Duration(milliseconds: 1000), () {
-    retryMediaUpload(maxRetries: maxRetries - 1);
-  });
+  // Future.delayed(const Duration(milliseconds: 1000), () {
+  //   retryMediaUpload(maxRetries: maxRetries - 1);
+  // });
 }
 
 Future<int?> initMediaUpload() async {
@@ -406,7 +409,6 @@ Future<bool> handleMediaUpload(int mediaUploadId) async {
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200) {
-      Logger("media_send.dart").info("Uploaded: $response");
       if (response.body.length != 64) {
         Logger("media_send.dart").info("Got invalid upload token.");
         return false;

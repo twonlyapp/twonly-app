@@ -187,17 +187,11 @@ class ApiProvider {
 
   Future<Map<String, dynamic>> getRetransmission() async {
     final box = await getMediaStorage();
-    Map<String, dynamic>? retransmit = box.get("rawbytes-to-retransmit");
-    // Map<String, dynamic> retransmit = {};
-    // if (retransmitJson != null) {
-    //   try {
-    //     retransmit = jsonDecode(retransmitJson);
-    //   } catch (e) {
-    //     Logger("api.dart").shout("Could not decode the rawbytes messages: $e");
-    //     await box.delete("rawbytes-to-retransmit");
-    //   }
-    // }
-    return retransmit ?? {};
+    try {
+      return box.get("rawbytes-to-retransmit");
+    } catch (e) {
+      return {};
+    }
   }
 
   Future retransmitRawBytes() async {
@@ -413,14 +407,15 @@ class ApiProvider {
     return await sendRequestSync(req);
   }
 
-  Future<Result> getDownloadTokens(
-      List<int> uploadToken, int recipientsCount) async {
+  Future<Result> getDownloadTokens(List<int> uploadToken, int recipientsCount,
+      {bool ensureRetransmission = false}) async {
     var get = ApplicationData_UploadDone()
       ..uploadToken = uploadToken
       ..recipientsCount = recipientsCount;
     var appData = ApplicationData()..uploaddone = get;
     var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    return await sendRequestSync(req,
+        ensureRetransmission: ensureRetransmission);
   }
 
   Future<Result> downloadDone(List<int> token) async {

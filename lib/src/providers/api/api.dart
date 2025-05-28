@@ -184,7 +184,7 @@ Future<(String, RetransmitMessage)?> encryptMessage(
 Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
     {PushKind? pushKind}) async {
   (String, RetransmitMessage)? stateData =
-      await encryptMessage(messageId, userId, msg);
+      await encryptMessage(messageId, userId, msg, pushKind: pushKind);
   if (stateData != null) {
     final (stateId, message) = stateData;
     sendRetransmitMessage(stateId, message);
