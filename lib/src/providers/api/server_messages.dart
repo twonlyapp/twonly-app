@@ -35,8 +35,6 @@ Future handleServerMessage(server.ServerToClient msg) async {
         Uint8List body = Uint8List.fromList(msg.v0.newMessage.body);
         int fromUserId = msg.v0.newMessage.fromUserId.toInt();
         response = await handleNewMessage(fromUserId, body);
-      } else if (msg.v0.hasDownloaddata()) {
-        response = await handleDownloadData(msg.v0.downloaddata);
       } else {
         Logger("handleServerMessage")
             .shout("Got a new message from the server: $msg");

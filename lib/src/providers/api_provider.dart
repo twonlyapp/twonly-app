@@ -22,6 +22,7 @@ import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/media_received.dart';
 import 'package:twonly/src/providers/api/media_send.dart';
 import 'package:twonly/src/providers/api/server_messages.dart';
+import 'package:twonly/src/providers/hive.dart';
 import 'package:twonly/src/services/fcm_service.dart';
 import 'package:twonly/src/services/flame_service.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -77,6 +78,7 @@ class ApiProvider {
     globalCallbackConnectionState(true);
 
     if (!globalIsAppInBackground) {
+      retransmitRawBytes();
       tryTransmitMessages();
       retryMediaUpload();
       tryDownloadAllMediaFiles();
@@ -148,6 +150,7 @@ class ApiProvider {
     try {
       final msg = server.ServerToClient.fromBuffer(msgBuffer);
       if (msg.v0.hasResponse()) {
+        removeFromRetransmissionBuffer(msg.v0.seq);
         messagesV0[msg.v0.seq] = msg;
       } else {
         await handleServerMessage(msg);
@@ -160,7 +163,7 @@ class ApiProvider {
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
     final startTime = DateTime.now();
 
-    final timeout = Duration(seconds: 10);
+    final timeout = Duration(seconds: 20);
 
     while (true) {
       if (messagesV0[seq] != null) {
@@ -182,18 +185,51 @@ class ApiProvider {
     }
   }
 
-  Future<Result> sendRequestSync(ClientToServer request,
-      {bool authenticated = true}) async {
-    if (_channel == null) {
-      log.shout("sending request, but api is not connected.");
-      if (!await connect()) {
-        return Result.error(ErrorCode.InternalError);
+  Future<Map<String, dynamic>> getRetransmission() async {
+    final box = await getMediaStorage();
+    Map<String, dynamic>? retransmit = box.get("rawbytes-to-retransmit");
+    // Map<String, dynamic> retransmit = {};
+    // if (retransmitJson != null) {
+    //   try {
+    //     retransmit = jsonDecode(retransmitJson);
+    //   } catch (e) {
+    //     Logger("api.dart").shout("Could not decode the rawbytes messages: $e");
+    //     await box.delete("rawbytes-to-retransmit");
+    //   }
+    // }
+    return retransmit ?? {};
+  }
+
+  Future retransmitRawBytes() async {
+    var retransmit = await getRetransmission();
+    Logger("api_provider.dart")
+        .info("Retransmit: ${retransmit.keys.length} messages");
+    for (final seq in retransmit.keys) {
+      try {
+        _channel!.sink.add(base64Decode(retransmit[seq]));
+      } catch (e) {
+        Logger("api_provider.dart").shout("$e");
       }
     }
-    if (_channel == null) {
-      return Result.error(ErrorCode.InternalError);
-    }
+  }
 
+  Future addToRetransmissionBuffer(Int64 seq, Uint8List bytes) async {
+    var retransmit = await getRetransmission();
+    retransmit[seq.toString()] = base64Encode(bytes);
+    final box = await getMediaStorage();
+    box.put("rawbytes-to-retransmit", retransmit);
+  }
+
+  Future removeFromRetransmissionBuffer(Int64 seq) async {
+    var retransmit = await getRetransmission();
+    if (retransmit.isEmpty) return;
+    retransmit.remove(seq.toString());
+    final box = await getMediaStorage();
+    box.put("rawbytes-to-retransmit", retransmit);
+  }
+
+  Future<Result> sendRequestSync(ClientToServer request,
+      {bool authenticated = true, bool ensureRetransmission = false}) async {
     var seq = Int64(Random().nextInt(4294967296));
     while (messagesV0.containsKey(seq)) {
       seq = Int64(Random().nextInt(4294967296));
@@ -201,6 +237,21 @@ class ApiProvider {
 
     request.v0.seq = seq;
     final requestBytes = request.writeToBuffer();
+
+    if (ensureRetransmission) {
+      addToRetransmissionBuffer(seq, requestBytes);
+    }
+
+    if (_channel == null) {
+      log.shout("sending request, but api is not connected.");
+      if (!await connect()) {
+        return Result.error(ErrorCode.InternalError);
+      }
+      if (_channel == null) {
+        return Result.error(ErrorCode.InternalError);
+      }
+    }
+
     _channel!.sink.add(requestBytes);
 
     Result res = asResult(await _waitForResponse(seq));
@@ -372,18 +423,16 @@ class ApiProvider {
     return await sendRequestSync(req);
   }
 
+  Future<Result> downloadDone(List<int> token) async {
+    var get = ApplicationData_DownloadDone()..downloadToken = token;
+    var appData = ApplicationData()..downloaddone = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req, ensureRetransmission: true);
+  }
+
   Future<Result> getCurrentLocation() async {
     var get = ApplicationData_GetLocation();
     var appData = ApplicationData()..getlocation = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
-  }
-
-  Future<Result> triggerDownload(List<int> token, int offset) async {
-    var get = ApplicationData_DownloadData()
-      ..downloadToken = token
-      ..offset = offset;
-    var appData = ApplicationData()..downloaddata = get;
     var req = createClientToServerFromApplicationData(appData);
     return await sendRequestSync(req);
   }

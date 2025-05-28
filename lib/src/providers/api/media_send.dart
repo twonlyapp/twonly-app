@@ -102,7 +102,7 @@ Future<int?> initMediaUpload() async {
 
 Future<bool> addVideoToUpload(int mediaUploadId, File videoFilePath) async {
   String basePath = await getMediaFilePath(mediaUploadId, "send");
-  await videoFilePath.rename("$basePath.original.mp4");
+  await videoFilePath.copy("$basePath.original.mp4");
   return await compressVideoIfExists(mediaUploadId);
 }
 
@@ -499,7 +499,7 @@ Future<bool> handleNotifyReceiver(MediaUpload media) async {
 
 Future<bool> compressVideoIfExists(int mediaUploadId) async {
   String basePath = await getMediaFilePath(mediaUploadId, "send");
-  File videoOriginalFile = File("$basePath.orginal.mp4");
+  File videoOriginalFile = File("$basePath.original.mp4");
   File videoCompressedFile = File("$basePath.mp4");
 
   if (videoCompressedFile.existsSync()) {

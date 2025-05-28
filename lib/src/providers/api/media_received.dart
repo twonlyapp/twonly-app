@@ -8,16 +8,13 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/providers/api/api_utils.dart';
+import 'package:http/http.dart' as http;
+// import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/providers/api/media_send.dart';
-import 'dart:typed_data';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:logging/logging.dart';
-import 'package:twonly/app.dart';
 import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
     as client;
-import 'package:twonly/src/model/protobuf/api/error.pb.dart';
-import 'package:twonly/src/model/protobuf/api/server_to_client.pbserver.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 Map<int, DateTime> downloadStartedForMediaReceived = {};
@@ -91,7 +88,6 @@ Future startDownloadMedia(Message message, bool force) async {
 
   final content =
       MessageContent.fromJson(message.kind, jsonDecode(message.contentJson!));
-
   if (content is! MediaMessageContent) return;
   if (content.downloadToken == null) return;
 
@@ -123,100 +119,70 @@ Future startDownloadMedia(Message message, bool force) async {
         downloadState: Value(DownloadState.downloading),
       ),
     );
+  }
 
-    int offset = 0;
-    Uint8List? bytes = await readMediaFile(media.messageId, "encrypted");
-    if (bytes != null && bytes.isNotEmpty) {
-      offset = bytes.length;
-    }
+  // int offset = 0;
+  // Uint8List? bytes = await readMediaFile(media.messageId, "encrypted");
+  // if (bytes != null && bytes.isNotEmpty) {
+  //   offset = bytes.length;
 
-    downloadStartedForMediaReceived[message.messageId] = DateTime.now();
-    Result res =
-        await apiProvider.triggerDownload(content.downloadToken!, offset);
-    if (res.isError) {
-      if (res.error == ErrorCode.InvalidDownloadToken) {
-        // TODO: notfy the sender about this issue
+  downloadStartedForMediaReceived[message.messageId] = DateTime.now();
+
+  String downloadToken = uint8ListToHex(content.downloadToken!);
+
+  String apiUrl =
+      "http${apiProvider.apiSecure}://${apiProvider.apiHost}/api/download/$downloadToken";
+
+  var httpClient = http.Client();
+  var request = http.Request('GET', Uri.parse(apiUrl));
+  var response = httpClient.send(request);
+
+  List<List<int>> chunks = [];
+  int downloaded = 0;
+
+  response.asStream().listen((http.StreamedResponse r) {
+    r.stream.listen((List<int> chunk) {
+      // Display percentage of completion
+      print('downloadPercentage: ${downloaded / (r.contentLength ?? 0) * 100}');
+
+      chunks.add(chunk);
+      downloaded += chunk.length;
+    }, onDone: () async {
+      if (r.statusCode != 200) {
+        Logger("media_received.dart").shout("Download error: $r");
         await twonlyDatabase.messagesDao.updateMessageByMessageId(
-          media.messageId,
+          message.messageId,
           MessagesCompanion(
             errorWhileSending: Value(true),
           ),
         );
+        return;
       }
-    }
-  }
+
+      // Display percentage of completion
+      print('downloadPercentage: ${downloaded / (r.contentLength ?? 0) * 100}');
+
+      // Save the file
+      final Uint8List bytes = Uint8List(r.contentLength ?? 0);
+      int offset = 0;
+      for (List<int> chunk in chunks) {
+        bytes.setRange(offset, offset + chunk.length, chunk);
+        offset += chunk.length;
+      }
+      await writeMediaFile(message.messageId, "encrypted", bytes);
+      handleEncryptedFile(message, encryptedBytesTmp: bytes);
+      return;
+    });
+  });
 }
 
-Future<client.Response> handleDownloadData(DownloadData data) async {
-  if (globalIsAppInBackground) {
-    // download should only be done when the app is open
-    return client.Response()..error = ErrorCode.InternalError;
-  }
+Future handleEncryptedFile(Message msg, {Uint8List? encryptedBytesTmp}) async {
+  Uint8List? encryptedBytes =
+      encryptedBytesTmp ?? await readMediaFile(msg.messageId, "encrypted");
 
-  Logger("server_messages")
-      .info("downloading: ${data.downloadToken} ${data.fin}");
-
-  final media = await twonlyDatabase.mediaDownloadsDao
-      .getMediaDownloadByDownloadToken(data.downloadToken)
-      .getSingleOrNull();
-
-  if (media == null) {
-    Logger("server_messages")
-        .shout("download data received, but unknown messageID");
-    // answers with ok, so the server will delete the message
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
-  }
-
-  if (data.fin && data.offset == 3_980_938_213 && data.data.isEmpty) {
-    Logger("media_received.dart").shout("Image already deleted by the server!");
-    // media file was deleted by the server. remove the media from device
-    await twonlyDatabase.messagesDao.updateMessageByMessageId(
-      media.messageId,
-      MessagesCompanion(
-        errorWhileSending: Value(true),
-      ),
-    );
-    await deleteMediaFile(media.messageId, "encrypted");
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
-  }
-
-  Uint8List? buffered = await readMediaFile(media.messageId, "encrypted");
-  Uint8List downloadedBytes;
-  if (buffered != null) {
-    if (data.offset != buffered.length) {
-      Logger("media_received.dart")
-          .shout("server send wrong offset: ${data.offset} ${buffered.length}");
-      return client.Response()..error = ErrorCode.InvalidOffset;
-    }
-    var b = BytesBuilder();
-    b.add(buffered);
-    b.add(data.data);
-    downloadedBytes = b.takeBytes();
-  } else {
-    downloadedBytes = Uint8List.fromList(data.data);
-  }
-
-  await writeMediaFile(media.messageId, "encrypted", downloadedBytes);
-
-  if (!data.fin) {
-    // download not finished, so waiting for more data...
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
-  }
-
-  Message? msg = await twonlyDatabase.messagesDao
-      .getMessageByMessageId(media.messageId)
-      .getSingleOrNull();
-
-  if (msg == null) {
-    await deleteMediaFile(media.messageId, "encrypted");
+  if (encryptedBytes == null) {
     Logger("media_received.dart")
-        .info("messageId not found in database. Ignoring download");
-    // answers with ok, so the server will delete the message
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
+        .shout("encrypted bytes are not found for ${msg.messageId}");
   }
 
   MediaMessageContent content =
@@ -226,7 +192,7 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   SecretKeyData secretKeyData = SecretKeyData(content.encryptionKey!);
 
   SecretBox secretBox = SecretBox(
-    downloadedBytes,
+    encryptedBytes!,
     nonce: content.encryptionNonce!,
     mac: Mac(content.encryptionMac!),
   );
@@ -239,14 +205,14 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
     if (content.isVideo) {
       final splited = extractUint8Lists(imageBytes);
       imageBytes = splited[0];
-      await writeMediaFile(media.messageId, "mp4", splited[1]);
+      await writeMediaFile(msg.messageId, "mp4", splited[1]);
     }
 
-    await writeMediaFile(media.messageId, "png", imageBytes);
+    await writeMediaFile(msg.messageId, "png", imageBytes);
   } catch (e) {
     Logger("media_received.dart").info("Decryption error: $e");
     await twonlyDatabase.messagesDao.updateMessageByMessageId(
-      media.messageId,
+      msg.messageId,
       MessagesCompanion(
         errorWhileSending: Value(true),
       ),
@@ -257,14 +223,13 @@ Future<client.Response> handleDownloadData(DownloadData data) async {
   }
 
   await twonlyDatabase.messagesDao.updateMessageByMessageId(
-    media.messageId,
+    msg.messageId,
     MessagesCompanion(downloadState: Value(DownloadState.downloaded)),
   );
 
-  await deleteMediaFile(media.messageId, "encrypted");
+  await deleteMediaFile(msg.messageId, "encrypted");
 
-  var ok = client.Response_Ok()..none = true;
-  return client.Response()..ok = ok;
+  apiProvider.downloadDone(content.downloadToken!);
 }
 
 Future<Uint8List?> getImageBytes(int mediaId) async {

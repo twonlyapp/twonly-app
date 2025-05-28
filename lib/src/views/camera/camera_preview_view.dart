@@ -290,12 +290,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (isFront) {
       return;
     }
+    if (controller == null) return;
+    if (!controller!.value.isInitialized) return;
 
     scaleFactor = (baseScaleFactor + (basePanY - details.localPosition.dy) / 30)
         .clamp(1, _maxAvailableZoom);
 
     await controller!.setZoomLevel(scaleFactor);
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future pickImageFromGallery() async {
