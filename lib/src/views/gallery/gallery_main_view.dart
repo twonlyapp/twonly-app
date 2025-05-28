@@ -21,7 +21,7 @@ class GalleryItem {
     this.imagePath,
     this.videoPath,
   });
-  final int id;
+  final String id;
   final List<Message> messages;
   final DateTime date;
   final File? imagePath;
@@ -135,6 +135,40 @@ class GalleryMainViewState extends State<GalleryMainView> {
     initAsync();
   }
 
+  Future<List<GalleryItem>> loadMemoriesDirectory() async {
+    final directoryPath = await send.getMediaBaseFilePath("memories");
+    final directory = Directory(directoryPath);
+
+    List<GalleryItem> items = [];
+    if (await directory.exists()) {
+      final files = directory.listSync();
+
+      for (var file in files) {
+        if (file is File) {
+          final fileName = file.uri.pathSegments.last;
+          File? imagePath;
+          File? videoPath;
+          if (fileName.contains(".png")) {
+            imagePath = file;
+          } else if (fileName.contains(".mp4")) {
+            videoPath = file;
+          } else {
+            break;
+          }
+          final creationDate = await file.lastModified();
+          items.add(GalleryItem(
+            id: fileName,
+            messages: [],
+            date: creationDate,
+            imagePath: imagePath,
+            videoPath: videoPath,
+          ));
+        }
+      }
+    }
+    return items;
+  }
+
   Future initAsync() async {
     List<Message> storedMediaFiles =
         await twonlyDatabase.messagesDao.getAllStoredMediaFiles();
@@ -160,7 +194,7 @@ class GalleryMainViewState extends State<GalleryMainView> {
           .putIfAbsent(
               id,
               () => GalleryItem(
-                  id: id,
+                  id: id.toString(),
                   messages: [],
                   date: message.sendAt,
                   imagePath: imagePath,
@@ -174,7 +208,9 @@ class GalleryMainViewState extends State<GalleryMainView> {
     months = [];
 
     String lastMonth = "";
-    galleryItems = items.values.toList();
+    galleryItems = await loadMemoriesDirectory();
+    galleryItems += items.values.toList();
+    galleryItems.sort((a, b) => b.date.compareTo(a.date));
     for (var i = 0; i < galleryItems.length; i++) {
       String month = DateFormat('MMMM yyyy').format(galleryItems[i].date);
       if (lastMonth != month) {
@@ -232,9 +268,9 @@ class GalleryMainViewState extends State<GalleryMainView> {
       MaterialPageRoute(
         builder: (context) => GalleryPhotoViewWrapper(
           galleryItems: galleryItems,
-          backgroundDecoration: const BoxDecoration(
-            color: Colors.black,
-          ),
+          // backgroundDecoration: const BoxDecoration(
+          //   color: Colors.black,
+          // ),
           initialIndex: index,
           scrollDirection: verticalGallery ? Axis.vertical : Axis.horizontal,
         ),
@@ -298,12 +334,10 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
                   FilledButton.icon(
                     icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
                     onPressed: () async {
-                      await Navigator.push(
+                      Navigator.push(
                         context,
-                        PageRouteBuilder(
-                          opaque: false,
-                          pageBuilder: (context, a1, a2) =>
-                              ShareImageEditorView(
+                        MaterialPageRoute(
+                          builder: (context) => ShareImageEditorView(
                             videoFilePath:
                                 widget.galleryItems[currentIndex].videoPath,
                             imageBytes: widget
@@ -312,12 +346,6 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
                             mirrorVideo: false,
                             useHighQuality: true,
                           ),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            return child;
-                          },
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
                         ),
                       );
                     },

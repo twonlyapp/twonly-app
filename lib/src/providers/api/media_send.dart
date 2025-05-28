@@ -91,11 +91,6 @@ Future retryMediaUpload({int maxRetries = 3}) async {
       }
     }
   });
-  if (maxRetries == 0) return;
-  // retry upload
-  // Future.delayed(const Duration(milliseconds: 1000), () {
-  //   retryMediaUpload(maxRetries: maxRetries - 1);
-  // });
 }
 
 Future<int?> initMediaUpload() async {
@@ -576,13 +571,22 @@ Future<void> deleteMediaFile(int mediaUploadId, String type) async {
   }
 }
 
-Future<String> getMediaFilePath(int mediaId, String type) async {
+Future<String> getMediaFilePath(dynamic mediaId, String type) async {
   final basedir = await getApplicationSupportDirectory();
   final mediaSendDir = Directory(join(basedir.path, 'media', type));
   if (!await mediaSendDir.exists()) {
     await mediaSendDir.create(recursive: true);
   }
   return join(mediaSendDir.path, '$mediaId');
+}
+
+Future<String> getMediaBaseFilePath(String type) async {
+  final basedir = await getApplicationSupportDirectory();
+  final mediaSendDir = Directory(join(basedir.path, 'media', type));
+  if (!await mediaSendDir.exists()) {
+    await mediaSendDir.create(recursive: true);
+  }
+  return mediaSendDir.path;
 }
 
 /// combines two utf8 list
