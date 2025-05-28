@@ -40,6 +40,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Timer? progressTimer;
 
   bool showShortReactions = false;
+  double mediaViewerDistanceFromBottom = 0;
 
   // current image related
   Uint8List? imageBytes;
@@ -53,6 +54,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   bool mirrorVideo = false;
   bool isDownloading = false;
   bool showSendTextMessageInput = false;
+  final GlobalKey mediaWidgetKey = GlobalKey();
 
   bool imageSaved = false;
   bool imageSaving = false;
@@ -331,8 +333,18 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     });
   }
 
+  void displayShortReactions() {
+    RenderBox renderBox =
+        mediaWidgetKey.currentContext?.findRenderObject() as RenderBox;
+    setState(() {
+      showShortReactions = true;
+      mediaViewerDistanceFromBottom = renderBox.size.height;
+    });
+  }
+
   Widget bottomNavigation() {
     return Row(
+      key: mediaWidgetKey,
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -385,9 +397,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             ),
           ),
           onPressed: () async {
-            setState(() {
-              showShortReactions = !showShortReactions;
-            });
+            if (!showShortReactions) {
+              displayShortReactions();
+            } else {
+              setState(() {
+                showShortReactions = false;
+              });
+            }
           },
           style: ButtonStyle(
             padding: WidgetStateProperty.all<EdgeInsets>(
@@ -399,9 +415,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         IconButton.outlined(
           icon: FaIcon(FontAwesomeIcons.message),
           onPressed: () async {
+            displayShortReactions();
             setState(() {
               showSendTextMessageInput = true;
-              showShortReactions = true;
             });
           },
           style: ButtonStyle(
@@ -460,7 +476,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 },
                 child: MediaViewSizing(
                   bottomNavigation: bottomNavigation(),
-                  requiredHeight: 80,
+                  requiredHeight: 90,
                   child: Stack(
                     children: [
                       if (videoController != null)
@@ -643,6 +659,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               ReactionButtons(
                 show: showShortReactions,
                 textInputFocused: showSendTextMessageInput,
+                mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
                 userId: widget.contact.userId,
                 responseToMessageId: allMediaFiles.first.messageOtherId!,
                 hide: () {
@@ -665,9 +682,11 @@ class ReactionButtons extends StatefulWidget {
       required this.show,
       required this.textInputFocused,
       required this.userId,
+      required this.mediaViewerDistanceFromBottom,
       required this.responseToMessageId,
       required this.hide});
 
+  final double mediaViewerDistanceFromBottom;
   final bool show;
   final bool textInputFocused;
   final int userId;
@@ -706,7 +725,11 @@ class _ReactionButtonsState extends State<ReactionButtons> {
 
     return AnimatedPositioned(
       duration: Duration(milliseconds: 200), // Animation duration
-      bottom: widget.show ? (widget.textInputFocused ? 50 : 80) : 60,
+      bottom: widget.show
+          ? (widget.textInputFocused
+              ? 50
+              : widget.mediaViewerDistanceFromBottom)
+          : widget.mediaViewerDistanceFromBottom - 20,
       left: widget.show ? 0 : 150,
       right: widget.show ? 0 : 150,
       curve: Curves.linearToEaseOut,
@@ -714,8 +737,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
         opacity: widget.show ? 1.0 : 0.0, // Fade in/out
         duration: Duration(milliseconds: 150),
         child: Container(
-          color: Colors.black.withAlpha(
-              0), // so the gesture detector will be prevented to detect a click on this...
+          color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
           padding: EdgeInsets.symmetric(vertical: 32),
           child: Column(
             children: [
