@@ -18,7 +18,7 @@ import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_view.dart';
-import 'package:twonly/src/views/gallery/gallery_main_view.dart';
+import 'package:twonly/src/views/gallery/gallery_item.dart';
 
 Color getMessageColor(Message message) {
   return (message.messageOtherId == null)

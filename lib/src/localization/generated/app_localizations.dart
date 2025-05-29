@@ -1408,6 +1408,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You cannot send media files with your current tariff.  Upgrade your plan now to send the media file.'**
   String get planNotAllowed;
+
+  /// No description provided for @galleryDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete file'**
+  String get galleryDelete;
+
+  /// No description provided for @galleryDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details'**
+  String get galleryDetails;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

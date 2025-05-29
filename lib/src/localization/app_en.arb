@@ -390,5 +390,7 @@
   "additionalUsersPlusTokens": "twonly-Codes für \"Plus\" user",
   "additionalUsersFreeTokens": "twonly-Codes für \"Free\" user",
   "planLimitReached": "You have reached your plan limit for today. Upgrade your plan now to send the media file.",
-  "planNotAllowed": "You cannot send media files with your current tariff.  Upgrade your plan now to send the media file."
+  "planNotAllowed": "You cannot send media files with your current tariff.  Upgrade your plan now to send the media file.",
+  "galleryDelete": "Delete file",
+  "galleryDetails": "Show details"
 }

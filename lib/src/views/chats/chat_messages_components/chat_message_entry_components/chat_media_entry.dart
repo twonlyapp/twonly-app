@@ -9,7 +9,7 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media_received.dart' as received;
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
-import 'package:twonly/src/views/gallery/gallery_main_view.dart';
+import 'package:twonly/src/views/gallery/gallery_item.dart';
 
 class ChatMediaEntry extends StatelessWidget {
   const ChatMediaEntry({

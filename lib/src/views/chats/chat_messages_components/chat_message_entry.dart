@@ -7,7 +7,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/chat_message_ent
 import 'package:twonly/src/views/chats/chat_messages_components/sliding_response.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/views/gallery/gallery_main_view.dart';
+import 'package:twonly/src/views/gallery/gallery_item.dart';
 
 class ChatListEntry extends StatefulWidget {
   const ChatListEntry(

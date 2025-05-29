@@ -682,4 +682,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planNotAllowed => 'You cannot send media files with your current tariff.  Upgrade your plan now to send the media file.';
+
+  @override
+  String get galleryDelete => 'Delete file';
+
+  @override
+  String get galleryDetails => 'Show details';
 }

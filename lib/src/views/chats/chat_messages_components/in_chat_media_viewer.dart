@@ -8,7 +8,8 @@ import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/views/gallery/gallery_main_view.dart';
+import 'package:twonly/src/views/gallery/gallery_item.dart';
+import 'package:twonly/src/views/gallery/gallery_photo_view.dart';
 import 'package:video_player/video_player.dart';
 
 class InChatMediaViewer extends StatefulWidget {
