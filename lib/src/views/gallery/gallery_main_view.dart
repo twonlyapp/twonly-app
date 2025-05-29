@@ -26,6 +26,40 @@ class GalleryItem {
   final DateTime date;
   final File? imagePath;
   final File? videoPath;
+
+  static Future<Map<int, GalleryItem>> convertFromMessages(
+      List<Message> messages) async {
+    Map<int, GalleryItem> items = {};
+    for (final message in messages) {
+      bool isSend = message.messageOtherId == null;
+      int id = message.mediaUploadId ?? message.messageId;
+      final basePath = await send.getMediaFilePath(
+        isSend ? message.mediaUploadId! : message.messageId,
+        isSend ? "send" : "received",
+      );
+      File? imagePath;
+      File? videoPath;
+      if (await File("$basePath.mp4").exists()) {
+        videoPath = File("$basePath.mp4");
+      } else if (await File("$basePath.png").exists()) {
+        imagePath = File("$basePath.png");
+      } else {
+        continue;
+      }
+      items
+          .putIfAbsent(
+              id,
+              () => GalleryItem(
+                  id: id.toString(),
+                  messages: [],
+                  date: message.sendAt,
+                  imagePath: imagePath,
+                  videoPath: videoPath))
+          .messages
+          .add(message);
+    }
+    return items;
+  }
 }
 
 class GalleryItemGrid {
@@ -180,40 +214,12 @@ class GalleryMainViewState extends State<GalleryMainView> {
     List<Message> storedMediaFiles =
         await twonlyDatabase.messagesDao.getAllStoredMediaFiles();
 
-    Map<int, GalleryItem> items = {};
-    for (final message in storedMediaFiles) {
-      bool isSend = message.messageOtherId == null;
-      int id = message.mediaUploadId ?? message.messageId;
-      final basePath = await send.getMediaFilePath(
-        isSend ? message.mediaUploadId! : message.messageId,
-        isSend ? "send" : "received",
-      );
-      File? imagePath;
-      File? videoPath;
-      if (await File("$basePath.mp4").exists()) {
-        videoPath = File("$basePath.mp4");
-      } else if (await File("$basePath.png").exists()) {
-        imagePath = File("$basePath.png");
-      } else {
-        continue;
-      }
-      items
-          .putIfAbsent(
-              id,
-              () => GalleryItem(
-                  id: id.toString(),
-                  messages: [],
-                  date: message.sendAt,
-                  imagePath: imagePath,
-                  videoPath: videoPath))
-          .messages
-          .add(message);
-    }
+    Map<int, GalleryItem> items =
+        await GalleryItem.convertFromMessages(storedMediaFiles);
 
     // Group items by month
     orderedByMonth = {};
     months = [];
-
     String lastMonth = "";
     galleryItems = await loadMemoriesDirectory();
     galleryItems += items.values.toList();

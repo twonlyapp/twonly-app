@@ -9,6 +9,7 @@ import 'package:twonly/src/providers/api/api.dart';
 import 'package:twonly/src/providers/api/media_received.dart' as received;
 import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
+import 'package:twonly/src/views/gallery/gallery_main_view.dart';
 
 class ChatMediaEntry extends StatelessWidget {
   const ChatMediaEntry({
@@ -16,11 +17,13 @@ class ChatMediaEntry extends StatelessWidget {
     required this.message,
     required this.contact,
     required this.content,
+    required this.galleryItems,
   });
 
   final Message message;
   final Contact contact;
   final MessageContent content;
+  final List<GalleryItem> galleryItems;
 
   @override
   Widget build(BuildContext context) {
@@ -70,15 +73,8 @@ class ChatMediaEntry extends StatelessWidget {
           }
         }
       },
-      child: Container(
+      child: SizedBox(
         width: 150,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: color,
-            width: 1.0,
-          ),
-          borderRadius: BorderRadius.circular(12.0),
-        ),
         child: Align(
           alignment: Alignment.centerRight,
           child: ClipRRect(
@@ -86,6 +82,8 @@ class ChatMediaEntry extends StatelessWidget {
             child: InChatMediaViewer(
               message: message,
               contact: contact,
+              color: color,
+              galleryItems: galleryItems,
             ),
           ),
         ),

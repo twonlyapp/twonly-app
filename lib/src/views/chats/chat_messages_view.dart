@@ -18,6 +18,7 @@ import 'package:twonly/src/services/notification_service.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_view.dart';
+import 'package:twonly/src/views/gallery/gallery_main_view.dart';
 
 Color getMessageColor(Message message) {
   return (message.messageOtherId == null)
@@ -43,6 +44,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   late StreamSubscription<Contact> userSub;
   late StreamSubscription<List<Message>> messageSub;
   List<Message> messages = [];
+  List<GalleryItem> galleryItems = [];
   Map<int, List<Message>> textReactionsToMessageId = {};
   Map<int, List<Message>> emojiReactionsToMessageId = {};
   Message? responseToMessage;
@@ -76,7 +78,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
     Stream<List<Message>> msgStream =
         twonlyDatabase.messagesDao.watchAllMessagesFrom(widget.contact.userId);
-    messageSub = msgStream.listen((msgs) {
+    messageSub = msgStream.listen((msgs) async {
       // if (!context.mounted) return;
       if (Platform.isAndroid) {
         flutterLocalNotificationsPlugin.cancel(widget.contact.userId);
@@ -131,6 +133,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           displayedMessages.add(msg);
         }
       }
+
       if (openedMessageOtherIds.isNotEmpty) {
         notifyContactAboutOpeningMessage(
             widget.contact.userId, openedMessageOtherIds);
@@ -145,7 +148,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         emojiReactionsToMessageId = tmpEmojiReactionsToMessageId;
         messages = displayedMessages;
       });
-      // }
+      Map<int, GalleryItem> items = await GalleryItem.convertFromMessages(
+          displayedMessages
+              .where((x) => x.kind == MessageKind.media)
+              .toList()
+              .reversed
+              .toList());
+      setState(() {
+        galleryItems = items.values.toList();
+      });
     });
   }
 
@@ -299,6 +310,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     key: Key(messages[i].messageId.toString()),
                     messages[i],
                     user,
+                    galleryItems,
                     isLastMessageFromSameUser(messages, i),
                     textReactionsToMessageId[messages[i].messageId] ?? [],
                     emojiReactionsToMessageId[messages[i].messageId] ?? [],
