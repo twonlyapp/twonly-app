@@ -23,6 +23,14 @@ class CameraSendToViewState extends State<CameraSendToView> {
     selectCamera(0, true, false);
   }
 
+  @override
+  void dispose() {
+    cameraController?.dispose();
+    cameraController = null;
+    selectedCameraDetails = SelectedCameraDetails();
+    super.dispose();
+  }
+
   Future selectCamera(int sCameraId, bool init, bool enableAudio) async {
     final opts = await initializeCameraController(
         selectedCameraDetails, sCameraId, init, enableAudio);
