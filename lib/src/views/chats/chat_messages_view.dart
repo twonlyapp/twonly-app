@@ -149,7 +149,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       });
 
       final filteredMediaFiles = displayedMessages
-          .where((x) => x.kind == MessageKind.media)
+          .where((x) => x.kind == MessageKind.media && x.mediaStored)
           .toList()
           .reversed
           .toList();
