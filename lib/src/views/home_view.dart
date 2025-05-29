@@ -1,13 +1,9 @@
 import 'dart:async';
-
 import 'package:camera/camera.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:logging/logging.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
@@ -58,6 +54,7 @@ class HomeViewState extends State<HomeView> {
   double offsetFromOne = 0.0;
 
   Timer? disableCameraTimer;
+  bool initCameraStarted = true;
 
   static CameraController? cameraController;
   static ScreenshotController screenshotController = ScreenshotController();
@@ -71,7 +68,8 @@ class HomeViewState extends State<HomeView> {
         offsetRatio = offsetFromOne.abs();
       });
     }
-    if (cameraController == null) {
+    if (cameraController == null && !initCameraStarted) {
+      initCameraStarted = true;
       selectCamera(selectedCameraDetails.cameraId, false, false);
     }
     if (offsetRatio == 1) {
@@ -110,46 +108,13 @@ class HomeViewState extends State<HomeView> {
   }
 
   Future selectCamera(int sCameraId, bool init, bool enableAudio) async {
-    if (sCameraId >= gCameras.length) return;
-    if (init) {
-      for (; sCameraId < gCameras.length; sCameraId++) {
-        if (gCameras[sCameraId].lensDirection == CameraLensDirection.back) {
-          break;
-        }
-      }
+    final opts = await initializeCameraController(
+        selectedCameraDetails, sCameraId, init, enableAudio);
+    if (opts != null) {
+      selectedCameraDetails = opts.$1;
+      cameraController = opts.$2;
+      initCameraStarted = false;
     }
-    selectedCameraDetails.isZoomAble = false;
-    if (selectedCameraDetails.cameraId != sCameraId) {
-      // switch between front and back
-      selectedCameraDetails.scaleFactor = 1;
-    }
-
-    cameraController = CameraController(
-      gCameras[sCameraId],
-      ResolutionPreset.high,
-      enableAudio: enableAudio,
-    );
-
-    await cameraController?.initialize().then((_) async {
-      await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
-      await cameraController
-          ?.lockCaptureOrientation(DeviceOrientation.portraitUp);
-      cameraController?.setFlashMode(
-          selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off);
-      await cameraController?.getMaxZoomLevel().then(
-          (double value) => selectedCameraDetails.maxAvailableZoom = value);
-      await cameraController?.getMinZoomLevel().then(
-          (double value) => selectedCameraDetails.minAvailableZoom = value);
-      selectedCameraDetails.isZoomAble =
-          selectedCameraDetails.maxAvailableZoom !=
-              selectedCameraDetails.minAvailableZoom;
-      setState(() {
-        selectedCameraDetails.cameraLoaded = true;
-        selectedCameraDetails.cameraId = sCameraId;
-      });
-    }).catchError((Object e) {
-      Logger("home_view.dart").shout("$e");
-    });
     setState(() {});
   }
 
@@ -177,7 +142,7 @@ class HomeViewState extends State<HomeView> {
           onDoubleTap: offsetRatio == 0 ? toggleSelectedCamera : null,
           child: Stack(
             children: <Widget>[
-              CameraPreviewWidget(),
+              HomeViewCameraPreview(),
               Shade(
                 opacity: offsetRatio,
               ),
@@ -210,6 +175,7 @@ class HomeViewState extends State<HomeView> {
                     opacity: (1 - (offsetRatio * 4) % 1),
                     child: CameraPreviewControllerView(
                       selectCamera: selectCamera,
+                      isHomeView: true,
                     ),
                   )),
             ],
