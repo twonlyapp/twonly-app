@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/providers/api/media_send.dart' as send;
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
@@ -18,10 +20,12 @@ class GalleryItem {
     required this.id,
     required this.messages,
     required this.date,
+    required this.mirrorVideo,
     this.imagePath,
     this.videoPath,
   });
   final String id;
+  final bool mirrorVideo;
   final List<Message> messages;
   final DateTime date;
   final File? imagePath;
@@ -46,6 +50,13 @@ class GalleryItem {
       } else {
         continue;
       }
+      bool mirrorVideo = false;
+      if (videoPath != null) {
+        MediaMessageContent content =
+            MediaMessageContent.fromJson(jsonDecode(message.contentJson!));
+        mirrorVideo = content.mirrorVideo;
+      }
+
       items
           .putIfAbsent(
               id,
@@ -53,6 +64,7 @@ class GalleryItem {
                   id: id.toString(),
                   messages: [],
                   date: message.sendAt,
+                  mirrorVideo: mirrorVideo,
                   imagePath: imagePath,
                   videoPath: videoPath))
           .messages
@@ -201,6 +213,7 @@ class GalleryMainViewState extends State<GalleryMainView> {
             id: fileName,
             messages: [],
             date: creationDate,
+            mirrorVideo: false,
             imagePath: imagePath,
             videoPath: videoPath,
           ));
@@ -399,7 +412,10 @@ class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
     final GalleryItem item = widget.galleryItems[index];
     return item.videoPath != null
         ? PhotoViewGalleryPageOptions.customChild(
-            child: VideoPlayerWrapper(videoPath: item.videoPath!),
+            child: VideoPlayerWrapper(
+              videoPath: item.videoPath!,
+              mirrorVideo: item.mirrorVideo,
+            ),
             // childSize: const Size(300, 300),
             initialScale: PhotoViewComputedScale.contained,
             minScale: PhotoViewComputedScale.contained,

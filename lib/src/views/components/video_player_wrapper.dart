@@ -5,8 +5,10 @@ import 'package:video_player/video_player.dart';
 
 class VideoPlayerWrapper extends StatefulWidget {
   final File videoPath;
+  final bool mirrorVideo;
 
-  const VideoPlayerWrapper({super.key, required this.videoPath});
+  const VideoPlayerWrapper(
+      {super.key, required this.videoPath, required this.mirrorVideo});
 
   @override
   State<VideoPlayerWrapper> createState() => _VideoPlayerWrapperState();
@@ -21,7 +23,8 @@ class _VideoPlayerWrapperState extends State<VideoPlayerWrapper> {
     _controller = VideoPlayerController.file(widget.videoPath)
       ..initialize().then((_) {
         setState(() {
-          _controller.play(); // Auto-play the video
+          _controller.setLooping(true);
+          _controller.play();
         });
       });
   }
@@ -38,7 +41,10 @@ class _VideoPlayerWrapperState extends State<VideoPlayerWrapper> {
       child: _controller.value.isInitialized
           ? AspectRatio(
               aspectRatio: _controller.value.aspectRatio,
-              child: VideoPlayer(_controller),
+              child: Transform.flip(
+                flipX: widget.mirrorVideo,
+                child: VideoPlayer(_controller),
+              ),
             )
           : CircularProgressIndicator(), // Show loading indicator while initializing
     );

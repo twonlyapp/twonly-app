@@ -73,7 +73,7 @@ class HomeViewState extends State<HomeView> {
       selectCamera(selectedCameraDetails.cameraId, false, false);
     }
     if (offsetRatio == 1) {
-      disableCameraTimer = Timer(Duration(seconds: 2), () {
+      disableCameraTimer = Timer(Duration(seconds: 1), () {
         cameraController?.dispose();
         cameraController = null;
         disableCameraTimer = null;
