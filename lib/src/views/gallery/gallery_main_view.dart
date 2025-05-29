@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:drift/drift.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:twonly/src/model/json/message.dart';
@@ -48,6 +49,11 @@ class GalleryItem {
       } else if (await File("$basePath.png").exists()) {
         imagePath = File("$basePath.png");
       } else {
+        if (message.mediaStored) {
+          /// media file was deleted, ... remove the file
+          twonlyDatabase.messagesDao.updateMessageByMessageId(
+              message.messageId, MessagesCompanion(mediaStored: Value(false)));
+        }
         continue;
       }
       bool mirrorVideo = false;

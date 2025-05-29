@@ -306,9 +306,13 @@ Future<void> purgeMediaFiles(Directory directory) async {
             bool canBeDeleted = true;
 
             for (final message in messages) {
-              if ((message.openedAt == null && !message.errorWhileSending) ||
-                  message.mediaStored) {
+              if ((message.openedAt == null && !message.errorWhileSending)) {
                 canBeDeleted = false;
+              } else if (message.mediaStored) {
+                if (!file.path.contains(".original.") &&
+                    !file.path.contains(".encrypted")) {
+                  canBeDeleted = false;
+                }
               }
             }
             if (canBeDeleted) {
