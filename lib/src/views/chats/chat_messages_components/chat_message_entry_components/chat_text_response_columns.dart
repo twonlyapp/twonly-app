@@ -36,10 +36,10 @@ class ChatTextResponseColumns extends StatelessWidget {
               child: Text(
                 content.text,
                 style: TextStyle(fontSize: 14),
-                textAlign: right ? TextAlign.left : TextAlign.right,
+                textAlign: right ? TextAlign.right : TextAlign.left,
               )),
         ];
-        if (!right) {
+        if (right) {
           entries = entries.reversed.toList();
         }
 
@@ -72,7 +72,7 @@ class ChatTextResponseColumns extends StatelessWidget {
 
     return Column(
       crossAxisAlignment:
-          right ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: children,
     );
   }

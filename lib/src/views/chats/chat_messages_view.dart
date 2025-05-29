@@ -273,28 +273,34 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                   index -= 1;
                   double size = 44;
                   if (messages[index].kind == MessageKind.textMessage) {
-                    MessageContent? content = MessageContent.fromJson(
-                        messages[index].kind,
+                    TextMessageContent? content = TextMessageContent.fromJson(
                         jsonDecode(messages[index].contentJson!));
-                    if (content is TextMessageContent) {
-                      if (EmojiAnimation.supported(content.text)) {
-                        size = 95;
-                      } else {
-                        size = 11 +
-                            calculateNumberOfLines(content.text,
-                                    MediaQuery.of(context).size.width * 0.8) *
-                                27;
-                      }
+                    if (EmojiAnimation.supported(content.text)) {
+                      size = 95;
+                    } else {
+                      size = 11 +
+                          calculateNumberOfLines(content.text,
+                                  MediaQuery.of(context).size.width * 0.8, 17) *
+                              27;
                     }
                   }
                   if (messages[index].mediaStored) {
                     size = 271;
                   }
-                  // add reaction size
-                  size += (textReactionsToMessageId[messages[index].messageId]
-                              ?.length ??
-                          0) *
-                      27;
+                  final reactions =
+                      textReactionsToMessageId[messages[index].messageId];
+                  if (reactions != null && reactions.isNotEmpty) {
+                    for (final reaction in reactions) {
+                      if (reaction.kind == MessageKind.textMessage) {
+                        TextMessageContent? content =
+                            TextMessageContent.fromJson(
+                                jsonDecode(reaction.contentJson!));
+                        size += calculateNumberOfLines(content.text,
+                                MediaQuery.of(context).size.width * 0.5, 14) *
+                            27;
+                      }
+                    }
+                  }
 
                   if (!isLastMessageFromSameUser(messages, index)) {
                     size += 20;
@@ -418,12 +424,14 @@ bool isLastMessageFromSameUser(List<Message> messages, int index) {
           currentMessage.messageOtherId != null);
 }
 
-double calculateNumberOfLines(String text, double width) {
+double calculateNumberOfLines(String text, double width, double fontSize) {
   final textPainter = TextPainter(
-    text: TextSpan(text: text, style: TextStyle(fontSize: 17)),
-    // maxLines: null,
+    text: TextSpan(
+      text: text,
+      style: TextStyle(fontSize: fontSize),
+    ),
     textDirection: TextDirection.ltr,
   );
-  textPainter.layout(maxWidth: (width - 20));
+  textPainter.layout(maxWidth: (width - 30));
   return textPainter.computeLineMetrics().length.toDouble();
 }
