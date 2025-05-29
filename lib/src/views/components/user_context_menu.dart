@@ -5,7 +5,7 @@ import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/chats/chat_item_details_view.dart';
+import 'package:twonly/src/views/chats/chat_messages_view.dart';
 import 'package:twonly/src/views/contact/contact_verify_view.dart';
 
 class UserContextMenu extends StatefulWidget {
@@ -66,7 +66,7 @@ class _UserContextMenuState extends State<UserContextMenu> {
           onSelect: () {
             Navigator.push(context, MaterialPageRoute(
               builder: (context) {
-                return ChatItemDetailsView(widget.contact);
+                return ChatMessagesView(widget.contact);
               },
             ));
           },

@@ -15,7 +15,7 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/providers/connection_provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
-import 'package:twonly/src/views/chats/chat_item_details_view.dart';
+import 'package:twonly/src/views/chats/chat_messages_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_view.dart';
 import 'package:twonly/src/views/chats/start_new_chat.dart';
 import 'package:twonly/src/views/settings/settings_main_view.dart';
@@ -383,7 +383,7 @@ class _UserListItem extends State<UserListItem> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
-              return ChatItemDetailsView(widget.user);
+              return ChatMessagesView(widget.user);
             }),
           );
         },

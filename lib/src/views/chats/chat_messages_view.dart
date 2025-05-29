@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/views/chats/components/chat_list_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
@@ -26,16 +26,16 @@ Color getMessageColor(Message message) {
 }
 
 /// Displays detailed information about a SampleItem.
-class ChatItemDetailsView extends StatefulWidget {
-  const ChatItemDetailsView(this.contact, {super.key});
+class ChatMessagesView extends StatefulWidget {
+  const ChatMessagesView(this.contact, {super.key});
 
   final Contact contact;
 
   @override
-  State<ChatItemDetailsView> createState() => _ChatItemDetailsViewState();
+  State<ChatMessagesView> createState() => _ChatMessagesViewState();
 }
 
-class _ChatItemDetailsViewState extends State<ChatItemDetailsView> {
+class _ChatMessagesViewState extends State<ChatMessagesView> {
   TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late Contact user;

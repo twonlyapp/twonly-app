@@ -10,7 +10,7 @@ import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/chats/chat_item_details_view.dart';
+import 'package:twonly/src/views/chats/chat_messages_view.dart';
 import 'package:twonly/src/views/chats/search_username_view.dart';
 
 class StartNewChat extends StatefulWidget {
@@ -182,7 +182,7 @@ class UserList extends StatelessWidget {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) {
-                  return ChatItemDetailsView(user);
+                  return ChatMessagesView(user);
                 }),
               );
             },

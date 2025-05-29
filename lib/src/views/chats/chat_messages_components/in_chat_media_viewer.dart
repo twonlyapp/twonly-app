@@ -209,8 +209,6 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   }
 
   Future onTap() async {
-    if (image == null && videoController == null) return;
-    if (widget.isInFullscreen) return;
     bool? removed = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) {
@@ -231,8 +229,20 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
+    if (image == null && video == null) {
+      return Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: MessageSendStateIcon(
+          [widget.message],
+          mainAxisAlignment: MainAxisAlignment.center,
+        ),
+      );
+    }
     return GestureDetector(
-      onTap: onTap,
+      onTap:
+          ((image == null && videoController == null) || widget.isInFullscreen)
+              ? null
+              : onTap,
       child: Stack(
         children: [
           if (image != null) Image.file(image!),
@@ -241,14 +251,6 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
               child: Transform.flip(
                 flipX: mirrorVideo,
                 child: VideoPlayer(videoController!),
-              ),
-            ),
-          if (image == null && video == null)
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: MessageSendStateIcon(
-                [widget.message],
-                mainAxisAlignment: MainAxisAlignment.center,
               ),
             ),
         ],
