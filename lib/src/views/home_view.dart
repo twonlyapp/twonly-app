@@ -104,6 +104,7 @@ class HomeViewState extends State<HomeView> {
   void dispose() {
     selectNotificationStream.close();
     disableCameraTimer?.cancel();
+    cameraController?.dispose();
     super.dispose();
   }
 
@@ -119,6 +120,8 @@ class HomeViewState extends State<HomeView> {
   }
 
   Future toggleSelectedCamera() async {
+    await cameraController?.dispose();
+    cameraController = null;
     selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
   }
 

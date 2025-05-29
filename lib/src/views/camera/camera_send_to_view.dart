@@ -34,6 +34,8 @@ class CameraSendToViewState extends State<CameraSendToView> {
   }
 
   Future toggleSelectedCamera() async {
+    await cameraController?.dispose();
+    cameraController = null;
     selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
   }
 
