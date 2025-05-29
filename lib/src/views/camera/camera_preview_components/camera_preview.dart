@@ -1,0 +1,54 @@
+import 'dart:io';
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:twonly/src/views/components/media_view_sizing.dart';
+import 'package:twonly/src/views/home_view.dart';
+
+class CameraPreviewWidget extends StatefulWidget {
+  const CameraPreviewWidget({
+    super.key,
+  });
+
+  @override
+  State<CameraPreviewWidget> createState() => _CameraPreviewWidgetState();
+}
+
+class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
+  @override
+  Widget build(BuildContext context) {
+    if (HomeViewState.cameraController == null ||
+        !HomeViewState.cameraController!.value.isInitialized) {
+      return Container();
+    }
+    bool isFront = HomeViewState.cameraController?.description.lensDirection ==
+        CameraLensDirection.front;
+    return Positioned.fill(
+      child: MediaViewSizing(
+        child: Screenshot(
+          controller: HomeViewState.screenshotController,
+          child: AspectRatio(
+            aspectRatio: 9 / 16,
+            child: ClipRect(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width:
+                      HomeViewState.cameraController!.value.previewSize!.height,
+                  height:
+                      HomeViewState.cameraController!.value.previewSize!.width,
+                  child: Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.rotationY(
+                        (isFront && Platform.isAndroid) ? 3.14 : 0),
+                    child: CameraPreview(HomeViewState.cameraController!),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

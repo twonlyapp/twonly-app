@@ -7,7 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart' show ErrorCode;
 import 'package:twonly/src/providers/api/media_send.dart';
-import 'package:twonly/src/views/camera/components/save_to_gallery.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/save_to_gallery.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';

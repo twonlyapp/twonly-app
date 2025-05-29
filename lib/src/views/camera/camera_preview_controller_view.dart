@@ -1,0 +1,693 @@
+import 'dart:async';
+import 'dart:io';
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:logging/logging.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/camera/image_editor/action_button.dart';
+import 'package:twonly/src/views/components/media_view_sizing.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
+import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/home_view.dart';
+
+int maxVideoRecordingTime = 15;
+
+class SelectedCameraDetails {
+  double maxAvailableZoom = 1;
+  double minAvailableZoom = 1;
+  int cameraId = 0;
+  bool isZoomAble = false;
+  bool isFlashOn = false;
+  double scaleFactor = 1;
+  bool cameraLoaded = false;
+}
+
+class CameraPreviewControllerView extends StatefulWidget {
+  const CameraPreviewControllerView({
+    super.key,
+    required this.selectCamera,
+    this.sendTo,
+  });
+  final Contact? sendTo;
+  final Function(int sCameraId, bool init, bool enableAudio) selectCamera;
+
+  @override
+  State<CameraPreviewControllerView> createState() =>
+      _CameraPreviewControllerView();
+}
+
+class _CameraPreviewControllerView extends State<CameraPreviewControllerView> {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: checkPermissions(),
+      builder: (context, snap) {
+        if (snap.hasData) {
+          if (snap.data!) {
+            return CameraPreviewView(
+              sendTo: widget.sendTo,
+              selectCamera: widget.selectCamera,
+            );
+          } else {
+            return PermissionHandlerView(onSuccess: () {
+              setState(() {});
+            });
+          }
+        } else {
+          return Container();
+        }
+      },
+    );
+  }
+}
+
+class CameraPreviewView extends StatefulWidget {
+  const CameraPreviewView({
+    super.key,
+    this.sendTo,
+    required this.selectCamera,
+  });
+  final Contact? sendTo;
+  final Function(int sCameraId, bool init, bool enableAudio) selectCamera;
+
+  @override
+  State<CameraPreviewView> createState() => _CameraPreviewViewState();
+}
+
+class _CameraPreviewViewState extends State<CameraPreviewView> {
+  bool sharePreviewIsShown = false;
+  bool galleryLoadedImageIsShown = false;
+  bool showSelfieFlash = false;
+  double basePanY = 0;
+  double baseScaleFactor = 0;
+  bool cameraLoaded = false;
+  bool useHighQuality = false;
+  bool isVideoRecording = false;
+  bool hasAudioPermission = true;
+  bool videoWithAudio = true;
+  DateTime? videoRecordingStarted;
+  Timer? videoRecordingTimer;
+
+  DateTime currentTime = DateTime.now();
+  final GlobalKey keyTriggerButton = GlobalKey();
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    // selectCamera(0, init: true);
+    initAsync();
+  }
+
+  void initAsync() async {
+    final user = await getUser();
+    if (user == null) return;
+    if (user.useHighQuality != null) {
+      useHighQuality = user.useHighQuality!;
+    }
+    hasAudioPermission = await Permission.microphone.isGranted;
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    videoRecordingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future requestMicrophonePermission() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.microphone,
+    ].request();
+    if (statuses[Permission.microphone]!.isPermanentlyDenied) {
+      openAppSettings();
+    } else {
+      hasAudioPermission = await Permission.microphone.isGranted;
+      setState(() {});
+    }
+  }
+
+  Future<void> updateScaleFactor(double newScale) async {
+    if (HomeViewState.selectedCameraDetails.scaleFactor == newScale ||
+        HomeViewState.cameraController == null) return;
+    await HomeViewState.cameraController?.setZoomLevel(newScale.clamp(
+        HomeViewState.selectedCameraDetails.minAvailableZoom,
+        HomeViewState.selectedCameraDetails.maxAvailableZoom));
+    setState(() {
+      HomeViewState.selectedCameraDetails.scaleFactor = newScale;
+    });
+  }
+
+  Future<Uint8List?> loadAndDeletePictureFromFile(XFile picture) async {
+    try {
+      // Load the image into bytes
+      final Uint8List imageBytes = await picture.readAsBytes();
+      // Remove the image file
+      await File(picture.path).delete();
+      return imageBytes;
+    } catch (e) {
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading picture: $e'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      return null;
+    }
+  }
+
+  Future takePicture() async {
+    if (sharePreviewIsShown || isVideoRecording) return;
+    late Future<Uint8List?> imageBytes;
+
+    setState(() {
+      sharePreviewIsShown = true;
+    });
+    if (HomeViewState.selectedCameraDetails.isFlashOn) {
+      if (isFront) {
+        setState(() {
+          showSelfieFlash = true;
+        });
+      } else {
+        HomeViewState.cameraController?.setFlashMode(FlashMode.torch);
+      }
+      await Future.delayed(Duration(milliseconds: 1000));
+    }
+
+    await HomeViewState.cameraController?.pausePreview();
+    if (!context.mounted) return;
+
+    HomeViewState.cameraController?.setFlashMode(
+        HomeViewState.selectedCameraDetails.isFlashOn
+            ? FlashMode.always
+            : FlashMode.off);
+    imageBytes = HomeViewState.screenshotController.capture(
+        pixelRatio:
+            (useHighQuality) ? MediaQuery.of(context).devicePixelRatio : 1);
+
+    if (await pushMediaEditor(imageBytes, null)) {
+      return;
+    }
+  }
+
+  Future<bool> pushMediaEditor(
+      Future<Uint8List?>? imageBytes, File? videoFilePath) async {
+    bool? shoudReturn = await Navigator.push(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, a1, a2) => ShareImageEditorView(
+          videoFilePath: videoFilePath,
+          imageBytes: imageBytes,
+          sendTo: widget.sendTo,
+          mirrorVideo: isFront && Platform.isAndroid,
+          useHighQuality: useHighQuality,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return child;
+        },
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+    if (!context.mounted) return true;
+    // shouldReturn is null when the user used the back button
+    if (shoudReturn != null && shoudReturn) {
+      // ignore: use_build_context_synchronously
+      if (widget.sendTo == null) {
+        globalUpdateOfHomeViewPageIndex(0);
+      } else {
+        Navigator.pop(context);
+      }
+      return true;
+    }
+    widget.selectCamera(
+        HomeViewState.selectedCameraDetails.cameraId, false, false);
+    if (context.mounted) {
+      setState(() {
+        sharePreviewIsShown = false;
+        showSelfieFlash = false;
+      });
+    }
+    return false;
+  }
+
+  bool get isFront =>
+      HomeViewState.cameraController?.description.lensDirection ==
+      CameraLensDirection.front;
+
+  Future onPanUpdate(details) async {
+    if (isFront) {
+      return;
+    }
+    if (HomeViewState.cameraController == null) return;
+    if (!HomeViewState.cameraController!.value.isInitialized) return;
+
+    HomeViewState.selectedCameraDetails.scaleFactor =
+        (baseScaleFactor + (basePanY - details.localPosition.dy) / 30)
+            .clamp(1, HomeViewState.selectedCameraDetails.maxAvailableZoom);
+
+    await HomeViewState.cameraController!
+        .setZoomLevel(HomeViewState.selectedCameraDetails.scaleFactor);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future pickImageFromGallery() async {
+    setState(() {
+      galleryLoadedImageIsShown = true;
+      sharePreviewIsShown = true;
+    });
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      if (await pushMediaEditor(imageFile.readAsBytes(), null)) {
+        return;
+      }
+    }
+    setState(() {
+      galleryLoadedImageIsShown = false;
+      sharePreviewIsShown = false;
+    });
+  }
+
+  Future startVideoRecording() async {
+    if (HomeViewState.cameraController != null &&
+        HomeViewState.cameraController!.value.isRecordingVideo) return;
+    if (hasAudioPermission && videoWithAudio) {
+      await widget.selectCamera(
+        HomeViewState.selectedCameraDetails.cameraId,
+        false,
+        await Permission.microphone.isGranted && videoWithAudio,
+      );
+    }
+
+    setState(() {
+      isVideoRecording = true;
+    });
+
+    try {
+      await HomeViewState.cameraController?.startVideoRecording();
+      videoRecordingTimer = Timer.periodic(Duration(milliseconds: 15), (timer) {
+        setState(() {
+          currentTime = DateTime.now();
+        });
+        if (videoRecordingStarted != null &&
+            currentTime.difference(videoRecordingStarted!).inSeconds >=
+                maxVideoRecordingTime) {
+          timer.cancel();
+          videoRecordingTimer = null;
+          stopVideoRecording();
+        }
+      });
+      setState(() {
+        videoRecordingStarted = DateTime.now();
+        isVideoRecording = true;
+      });
+    } on CameraException catch (e) {
+      setState(() {
+        isVideoRecording = false;
+      });
+      _showCameraException(e);
+      return;
+    }
+  }
+
+  Future stopVideoRecording() async {
+    if (videoRecordingTimer != null) {
+      videoRecordingTimer?.cancel();
+      videoRecordingTimer = null;
+    }
+    if (HomeViewState.cameraController == null ||
+        !HomeViewState.cameraController!.value.isRecordingVideo) {
+      return null;
+    }
+
+    try {
+      setState(() {
+        videoRecordingStarted = null;
+        isVideoRecording = false;
+        sharePreviewIsShown = true;
+      });
+      File? videoPathFile;
+      XFile? videoPath =
+          await HomeViewState.cameraController?.stopVideoRecording();
+      if (videoPath != null) {
+        if (Platform.isAndroid) {
+          // see https://github.com/flutter/flutter/issues/148335
+          await File(videoPath.path).rename("${videoPath.path}.mp4");
+          videoPathFile = File("${videoPath.path}.mp4");
+        } else {
+          videoPathFile = File(videoPath.path);
+        }
+      }
+      await HomeViewState.cameraController?.pausePreview();
+      if (await pushMediaEditor(null, videoPathFile)) {
+        return;
+      }
+    } on CameraException catch (e) {
+      _showCameraException(e);
+      return null;
+    }
+  }
+
+  void _showCameraException(dynamic e) {
+    Logger("ui.camera").shout("$e");
+    try {
+      if (context.mounted) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      // ignore: empty_catches
+    } catch (e) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (HomeViewState.selectedCameraDetails.cameraId >= gCameras.length ||
+        HomeViewState.cameraController == null) {
+      return Container();
+    }
+    return MediaViewSizing(
+      child: GestureDetector(
+        onPanStart: (details) async {
+          if (isFront) {
+            return;
+          }
+          setState(() {
+            basePanY = details.localPosition.dy;
+            baseScaleFactor = HomeViewState.selectedCameraDetails.scaleFactor;
+          });
+        },
+        onLongPressMoveUpdate: onPanUpdate,
+        onLongPressStart: (details) {
+          setState(() {
+            basePanY = details.localPosition.dy;
+            baseScaleFactor = HomeViewState.selectedCameraDetails.scaleFactor;
+          });
+          // Get the position of the pointer
+          RenderBox renderBox =
+              keyTriggerButton.currentContext?.findRenderObject() as RenderBox;
+          Offset localPosition =
+              renderBox.globalToLocal(details.globalPosition);
+
+          final containerRect =
+              Rect.fromLTWH(0, 0, renderBox.size.width, renderBox.size.height);
+
+          if (containerRect.contains(localPosition)) {
+            startVideoRecording();
+          }
+        },
+        onLongPressEnd: (a) {
+          stopVideoRecording();
+        },
+        onPanEnd: (a) {
+          stopVideoRecording();
+        },
+        onPanUpdate: onPanUpdate,
+        child: Stack(
+          children: [
+            // if (!galleryLoadedImageIsShown)
+            //   CameraPreviewWidget(
+            //     controller: HomeViewState.cameraController,
+            //     screenshotController: screenshotController,
+            //   ),
+            if (galleryLoadedImageIsShown)
+              Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 1, color: context.color.primary),
+                ),
+              ),
+            // Positioned.fill(
+            //   child: GestureDetector(),
+            // ),
+            if (!sharePreviewIsShown &&
+                widget.sendTo != null &&
+                !isVideoRecording)
+              SendToWidget(sendTo: getContactDisplayName(widget.sendTo!)),
+            if (!sharePreviewIsShown && !isVideoRecording)
+              Positioned(
+                right: 5,
+                top: 0,
+                child: Container(
+                  alignment: Alignment.bottomCenter,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ActionButton(
+                          Icons.repeat_rounded,
+                          tooltipText: context.lang.switchFrontAndBackCamera,
+                          onPressed: () async {
+                            widget.selectCamera(
+                                (HomeViewState.selectedCameraDetails.cameraId +
+                                        1) %
+                                    2,
+                                false,
+                                false);
+                          },
+                        ),
+                        ActionButton(
+                          HomeViewState.selectedCameraDetails.isFlashOn
+                              ? Icons.flash_on_rounded
+                              : Icons.flash_off_rounded,
+                          tooltipText: context.lang.toggleFlashLight,
+                          color: HomeViewState.selectedCameraDetails.isFlashOn
+                              ? Colors.white
+                              : Colors.white.withAlpha(160),
+                          onPressed: () async {
+                            if (HomeViewState.selectedCameraDetails.isFlashOn) {
+                              HomeViewState.cameraController
+                                  ?.setFlashMode(FlashMode.off);
+                              HomeViewState.selectedCameraDetails.isFlashOn =
+                                  false;
+                            } else {
+                              HomeViewState.cameraController
+                                  ?.setFlashMode(FlashMode.always);
+                              HomeViewState.selectedCameraDetails.isFlashOn =
+                                  true;
+                            }
+                            setState(() {});
+                          },
+                        ),
+                        if (!isFront)
+                          ActionButton(
+                            Icons.hd_rounded,
+                            tooltipText: context.lang.toggleHighQuality,
+                            color: useHighQuality
+                                ? Colors.white
+                                : Colors.white.withAlpha(160),
+                            onPressed: () async {
+                              useHighQuality = !useHighQuality;
+                              setState(() {});
+                              var user = await getUser();
+                              if (user != null) {
+                                user.useHighQuality = useHighQuality;
+                                updateUser(user);
+                              }
+                            },
+                          ),
+                        if (!hasAudioPermission)
+                          ActionButton(
+                            Icons.mic_off_rounded,
+                            color: Colors.white.withAlpha(160),
+                            tooltipText:
+                                "Allow microphone access for video recording.",
+                            onPressed: requestMicrophonePermission,
+                          ),
+                        if (hasAudioPermission)
+                          ActionButton(
+                            (videoWithAudio)
+                                ? Icons.volume_up_rounded
+                                : Icons.volume_off_rounded,
+                            tooltipText: "Record video with audio.",
+                            color: (videoWithAudio)
+                                ? Colors.white
+                                : Colors.white.withAlpha(160),
+                            onPressed: () async {
+                              setState(() {
+                                videoWithAudio = !videoWithAudio;
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (!sharePreviewIsShown)
+              Positioned(
+                bottom: 30,
+                left: 0,
+                right: 0,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Column(
+                    children: [
+                      if (HomeViewState.cameraController!.value.isInitialized &&
+                          HomeViewState.selectedCameraDetails.isZoomAble &&
+                          !isFront &&
+                          !isVideoRecording)
+                        SizedBox(
+                          width: 120,
+                          child: CameraZoomButtons(
+                            key: widget.key,
+                            scaleFactor:
+                                HomeViewState.selectedCameraDetails.scaleFactor,
+                            updateScaleFactor: updateScaleFactor,
+                            controller: HomeViewState.cameraController!,
+                          ),
+                        ),
+                      const SizedBox(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (!isVideoRecording)
+                            GestureDetector(
+                              onTap: pickImageFromGallery,
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: Container(
+                                  height: 50,
+                                  width: 80,
+                                  padding: const EdgeInsets.all(2),
+                                  child: Center(
+                                    child: FaIcon(
+                                      FontAwesomeIcons.photoFilm,
+                                      color: Colors.white,
+                                      size: 25,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          GestureDetector(
+                            onTap: takePicture,
+                            // onLongPress: startVideoRecording,
+                            key: keyTriggerButton,
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Container(
+                                height: 100,
+                                width: 100,
+                                clipBehavior: Clip.antiAliasWithSaveLayer,
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    width: 7,
+                                    color: isVideoRecording
+                                        ? Colors.red
+                                        : Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (!isVideoRecording) SizedBox(width: 80)
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (videoRecordingStarted != null)
+              Positioned(
+                top: 50,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: Stack(
+                      children: [
+                        Center(
+                          child: CircularProgressIndicator(
+                            value:
+                                (currentTime.difference(videoRecordingStarted!))
+                                        .inMilliseconds /
+                                    (maxVideoRecordingTime * 1000),
+                            strokeWidth: 4,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.red),
+                            backgroundColor: Colors.grey[300],
+                          ),
+                        ),
+                        Center(
+                          child: Text(
+                            currentTime
+                                .difference(videoRecordingStarted!)
+                                .inSeconds
+                                .toString(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 17,
+                              shadows: [
+                                Shadow(
+                                  color: const Color.fromARGB(122, 0, 0, 0),
+                                  blurRadius: 5.0,
+                                )
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (!sharePreviewIsShown && widget.sendTo != null)
+              Positioned(
+                left: 5,
+                top: 10,
+                child: ActionButton(
+                  FontAwesomeIcons.xmark,
+                  tooltipText: context.lang.close,
+                  onPressed: () async {
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+            if (showSelfieFlash)
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Container(
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

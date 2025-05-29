@@ -128,11 +128,18 @@ class GalleryMainViewState extends State<GalleryMainView> {
   List<GalleryItem> galleryItems = [];
   Map<String, List<int>> orderedByMonth = {};
   List<String> months = [];
+  bool mounted = true;
 
   @override
   void initState() {
     super.initState();
     initAsync();
+  }
+
+  @override
+  void dispose() {
+    mounted = false;
+    super.dispose();
   }
 
   Future<List<GalleryItem>> loadMemoriesDirectory() async {
@@ -219,7 +226,9 @@ class GalleryMainViewState extends State<GalleryMainView> {
       }
       orderedByMonth.putIfAbsent(month, () => []).add(i);
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override

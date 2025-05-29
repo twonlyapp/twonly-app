@@ -6,7 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/providers/api/media_send.dart';
-import 'package:twonly/src/views/camera/components/best_friends_selector.dart';
+import 'package:twonly/src/views/camera/share_image_components/best_friends_selector.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/headline.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/views/camera/camera_preview_view.dart';
+import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
 
 class CameraSendToView extends StatefulWidget {
   const CameraSendToView(this.sendTo, {super.key});
@@ -12,8 +12,9 @@ class CameraSendToView extends StatefulWidget {
 class CameraSendToViewState extends State<CameraSendToView> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: CameraPreviewViewPermission(sendTo: widget.sendTo),
-    );
+    return Scaffold();
+    // return Scaffold(
+    //   body:  CameraPreviewControllerView(sendTo: widget.sendTo),
+    // );
   }
 }
