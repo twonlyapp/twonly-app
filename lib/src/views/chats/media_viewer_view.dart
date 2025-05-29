@@ -77,6 +77,18 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     asyncLoadNextMedia(true);
   }
 
+  @override
+  void dispose() {
+    nextMediaTimer?.cancel();
+    progressTimer?.cancel();
+    _noScreenshot.screenshotOn();
+    _subscription.cancel();
+    downloadStateListener?.cancel();
+    videoController?.dispose();
+    isMounted = false;
+    super.dispose();
+  }
+
   Future asyncLoadNextMedia(bool firstRun) async {
     Stream<List<Message>> messages = twonlyDatabase.messagesDao
         .watchMediaMessageNotOpened(widget.contact.userId);
@@ -278,18 +290,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         setState(() {});
       }
     });
-  }
-
-  @override
-  void dispose() {
-    nextMediaTimer?.cancel();
-    progressTimer?.cancel();
-    _noScreenshot.screenshotOn();
-    _subscription.cancel();
-    downloadStateListener?.cancel();
-    videoController?.dispose();
-    isMounted = false;
-    super.dispose();
   }
 
   Future onPressedSaveToGallery() async {
