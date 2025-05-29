@@ -734,15 +734,15 @@ class _ReactionButtonsState extends State<ReactionButtons> {
               ? 50
               : widget.mediaViewerDistanceFromBottom)
           : widget.mediaViewerDistanceFromBottom - 20,
-      left: widget.show ? 0 : 150,
-      right: widget.show ? 0 : 150,
+      left: widget.show ? 0 : MediaQuery.sizeOf(context).width / 2,
+      right: widget.show ? 0 : MediaQuery.sizeOf(context).width / 2,
       curve: Curves.linearToEaseOut,
       child: AnimatedOpacity(
         opacity: widget.show ? 1.0 : 0.0, // Fade in/out
         duration: Duration(milliseconds: 150),
         child: Container(
           color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
-          padding: EdgeInsets.symmetric(vertical: 32),
+          padding: widget.show ? EdgeInsets.symmetric(vertical: 32) : null,
           child: Column(
             children: [
               if (secondRowEmojis.isNotEmpty)
