@@ -169,7 +169,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         responseToMessageId: responseToMessage?.messageOtherId,
         responseToOtherMessageId: responseToMessage?.messageId,
       ),
-      PushKind.text,
+      (responseToMessage == null) ? PushKind.text : PushKind.response,
     );
     newMessageController.clear();
     currentInputText = "";

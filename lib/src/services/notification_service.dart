@@ -164,7 +164,11 @@ enum PushKind {
   acceptRequest,
   storedMediaFile,
   testNotification,
-  reopenedMedia
+  reopenedMedia,
+  reactionToVideo,
+  reactionToText,
+  reactionToImage,
+  response,
 }
 
 extension PushKindExtension on PushKind {
@@ -527,27 +531,42 @@ String getPushNotificationTextWithoutUserId(PushKind pushKind) {
 
   if (systemLanguage.contains("de")) {
     pushNotificationText = {
-      PushKind.text.name: "Du hast eine Nachricht erhalten.",
-      PushKind.twonly.name: "Du hast ein twonly erhalten.",
-      PushKind.video.name: "Du hast ein Video erhalten.",
-      PushKind.image.name: "Du hast ein Bild erhalten.",
-      PushKind.contactRequest.name: "Du hast eine Kontaktanfrage erhalten.",
+      PushKind.text.name: "Du hast eine neue Nachricht erhalten.",
+      PushKind.twonly.name: "Du hast ein neues twonly erhalten.",
+      PushKind.video.name: "Du hast ein neues Video erhalten.",
+      PushKind.image.name: "Du hast ein neues Bild erhalten.",
+      PushKind.contactRequest.name:
+          "Du hast eine neue Kontaktanfrage erhalten.",
       PushKind.acceptRequest.name: "Deine Kontaktanfrage wurde angenommen.",
       PushKind.storedMediaFile.name: "Dein Bild wurde gespeichert.",
       PushKind.reaction.name: "Du hast eine Reaktion auf dein Bild erhalten.",
-      PushKind.reopenedMedia.name: "Dein Bild wurde erneut geöffnet."
+      PushKind.reopenedMedia.name: "Dein Bild wurde erneut geöffnet.",
+      PushKind.reactionToVideo.name:
+          "Du hast eine Reaktion auf dein Video erhalten.",
+      PushKind.reactionToText.name:
+          "Du hast eine Reaktion auf deinen Text erhalten.",
+      PushKind.reactionToImage.name:
+          "Du hast eine Reaktion auf dein Bild erhalten.",
+      PushKind.response.name: "Du hast eine Antwort erhalten.",
     };
   } else {
     pushNotificationText = {
-      PushKind.text.name: "You got a message.",
-      PushKind.twonly.name: "You got a twonly.",
-      PushKind.video.name: "You got a video.",
-      PushKind.image.name: "You got an image.",
-      PushKind.contactRequest.name: "You got a contact request.",
+      PushKind.text.name: "You have received a new message.",
+      PushKind.twonly.name: "You have received a new twonly.",
+      PushKind.video.name: "You have received a new video.",
+      PushKind.image.name: "You have received a new image.",
+      PushKind.contactRequest.name: "You have received a new contact request.",
       PushKind.acceptRequest.name: "Your contact request has been accepted.",
       PushKind.storedMediaFile.name: "Your image has been saved.",
-      PushKind.reaction.name: "You got a reaction to your image.",
-      PushKind.reopenedMedia.name: "Your image was reopened."
+      PushKind.reaction.name: "You have received a reaction to your image.",
+      PushKind.reopenedMedia.name: "Your image has been reopened.",
+      PushKind.reactionToVideo.name:
+          "You have received a reaction to your video.",
+      PushKind.reactionToText.name:
+          "You have received a reaction to your text.",
+      PushKind.reactionToImage.name:
+          "You have received a reaction to your image.",
+      PushKind.response.name: "You have received a response.",
     };
   }
   return pushNotificationText[pushKind.name] ?? "";
@@ -564,11 +583,15 @@ String getPushNotificationText(PushKind pushKind) {
       PushKind.twonly.name: "hat dir ein twonly gesendet.",
       PushKind.video.name: "hat dir ein Video gesendet.",
       PushKind.image.name: "hat dir ein Bild gesendet.",
-      PushKind.contactRequest.name: "möchte sich mir dir vernetzen.",
+      PushKind.contactRequest.name: "möchte sich mit dir vernetzen.",
       PushKind.acceptRequest.name: "ist jetzt mit dir vernetzt.",
       PushKind.storedMediaFile.name: "hat dein Bild gespeichert.",
       PushKind.reaction.name: "hat auf dein Bild reagiert.",
-      PushKind.reopenedMedia.name: "hat dein Bild erneut geöffnet."
+      PushKind.reopenedMedia.name: "hat dein Bild erneut geöffnet.",
+      PushKind.reactionToVideo.name: "hat auf dein Video reagiert.",
+      PushKind.reactionToText.name: "hat auf deinen Text reagiert.",
+      PushKind.reactionToImage.name: "hat auf dein Bild reagiert.",
+      PushKind.response.name: "hat dir geantwortet.",
     };
   } else {
     pushNotificationText = {
@@ -580,7 +603,11 @@ String getPushNotificationText(PushKind pushKind) {
       PushKind.acceptRequest.name: "is now connected with you.",
       PushKind.storedMediaFile.name: "has stored your image.",
       PushKind.reaction.name: "has reacted to your image.",
-      PushKind.reopenedMedia.name: "has reopened your image."
+      PushKind.reopenedMedia.name: "has reopened your image.",
+      PushKind.reactionToVideo.name: "has reacted to your video.",
+      PushKind.reactionToText.name: "has reacted to your text.",
+      PushKind.reactionToImage.name: "has reacted to your image.",
+      PushKind.response.name: "has responded.",
     };
   }
   return pushNotificationText[pushKind.name] ?? "";

@@ -662,6 +662,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
                 userId: widget.contact.userId,
                 responseToMessageId: allMediaFiles.first.messageOtherId!,
+                isVideo: videoController != null,
                 hide: () {
                   setState(() {
                     showShortReactions = false;
@@ -677,17 +678,20 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 }
 
 class ReactionButtons extends StatefulWidget {
-  const ReactionButtons(
-      {super.key,
-      required this.show,
-      required this.textInputFocused,
-      required this.userId,
-      required this.mediaViewerDistanceFromBottom,
-      required this.responseToMessageId,
-      required this.hide});
+  const ReactionButtons({
+    super.key,
+    required this.show,
+    required this.textInputFocused,
+    required this.userId,
+    required this.mediaViewerDistanceFromBottom,
+    required this.responseToMessageId,
+    required this.isVideo,
+    required this.hide,
+  });
 
   final double mediaViewerDistanceFromBottom;
   final bool show;
+  final bool isVideo;
   final bool textInputFocused;
   final int userId;
   final int responseToMessageId;
@@ -751,6 +755,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                             responseToMessageId: widget.responseToMessageId,
                             hide: widget.hide,
                             show: widget.show,
+                            isVideo: widget.isVideo,
                             emoji: emoji,
                           ))
                       .toList(),
@@ -760,13 +765,16 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: firstRowEmojis
-                    .map((emoji) => EmojiReactionWidget(
-                          userId: widget.userId,
-                          responseToMessageId: widget.responseToMessageId,
-                          hide: widget.hide,
-                          show: widget.show,
-                          emoji: emoji,
-                        ))
+                    .map(
+                      (emoji) => EmojiReactionWidget(
+                        userId: widget.userId,
+                        responseToMessageId: widget.responseToMessageId,
+                        hide: widget.hide,
+                        show: widget.show,
+                        isVideo: widget.isVideo,
+                        emoji: emoji,
+                      ),
+                    )
                     .toList(),
               ),
             ],
@@ -782,6 +790,7 @@ class EmojiReactionWidget extends StatefulWidget {
   final int responseToMessageId;
   final Function hide;
   final bool show;
+  final bool isVideo;
   final String emoji;
 
   const EmojiReactionWidget({
@@ -789,6 +798,7 @@ class EmojiReactionWidget extends StatefulWidget {
     required this.userId,
     required this.responseToMessageId,
     required this.hide,
+    required this.isVideo,
     required this.show,
     required this.emoji,
   });
@@ -808,13 +818,14 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
       child: GestureDetector(
         onTap: () {
           sendTextMessage(
-            widget.userId,
-            TextMessageContent(
-              text: widget.emoji,
-              responseToMessageId: widget.responseToMessageId,
-            ),
-            PushKind.reaction,
-          );
+              widget.userId,
+              TextMessageContent(
+                text: widget.emoji,
+                responseToMessageId: widget.responseToMessageId,
+              ),
+              widget.isVideo
+                  ? PushKind.reactionToVideo
+                  : PushKind.reactionToImage);
           setState(() {
             selectedShortReaction = 0; // Assuming index is 0 for this example
           });

@@ -61,6 +61,10 @@ enum PushKind: String, Codable {
     case reaction
     case testNotification
     case reopenedMedia
+    case reactionToVideo
+    case reactionToText
+    case reactionToImage
+    case response
 }
 
 import CryptoKit
@@ -181,6 +185,14 @@ func determinePushKind(from message: String) -> PushKind? {
         return .testNotification
     } else if message.contains("reopenedMedia") {
         return .reopenedMedia
+    } else if message.contains("reactionToVideo") {
+        return .reactionToVideo
+    } else if message.contains("reactionToText") {
+        return .reactionToText
+    } else if message.contains("reactionToImage") {
+        return .reactionToImage
+    } else if message.contains("response") {
+        return .response
     } else {
         return nil // Unknown PushKind
     }
@@ -321,7 +333,12 @@ func getPushNotificationText(pushKind: PushKind) -> String {
             .acceptRequest: "ist jetzt mit dir vernetzt.",
             .storedMediaFile: "hat dein Bild gespeichert.",
             .reaction: "hat auf dein Bild reagiert.",
-            .reopenedMedia: "Dein Bild wurde erneut geöffnet."
+            .testNotification: "Das ist eine Testbenachrichtigung.",
+            .reopenedMedia: "hat dein Bild erneut geöffnet.",
+            .reactionToVideo: "hat auf dein Video reagiert.",
+            .reactionToText: "hat auf deinen Text reagiert.",
+            .reactionToImage: "hat auf dein Bild reagiert.",
+            .response: "hat dir geantwortet."
         ]
     } else { // Default to English
         pushNotificationText = [
@@ -333,7 +350,12 @@ func getPushNotificationText(pushKind: PushKind) -> String {
             .acceptRequest: "is now connected with you.",
             .storedMediaFile: "has stored your image.",
             .reaction: "has reacted to your image.",
-            .reopenedMedia: "Your image was reopened."
+            .testNotification: "This is a test notification.",
+            .reopenedMedia: "has reopened your image.",
+            .reactionToVideo: "has reacted to your video.",
+            .reactionToText: "has reacted to your text.",
+            .reactionToImage: "has reacted to your image.",
+            .response: "has responded."
         ]
     }
 
@@ -357,7 +379,12 @@ func getPushNotificationTextWithoutUserId(pushKind: PushKind) -> String {
             .acceptRequest: "Deine Kontaktanfrage wurde angenommen.",
             .storedMediaFile: "Dein Bild wurde gespeichert.",
             .reaction: "Du hast eine Reaktion auf dein Bild erhalten.",
-            .reopenedMedia: "hat dein Bild erneut geöffnet."
+            .testNotification: "Das ist eine Testbenachrichtigung.",
+            .reopenedMedia: "hat dein Bild erneut geöffnet.",
+            .reactionToVideo: "Du hast eine Reaktion auf dein Video erhalten.",
+            .reactionToText: "Du hast eine Reaktion auf deinen Text erhalten.",
+            .reactionToImage: "Du hast eine Reaktion auf dein Bild erhalten.",
+            .response: "Du hast eine Antwort erhalten."
         ]
     } else { // Default to English
         pushNotificationText = [
@@ -369,7 +396,12 @@ func getPushNotificationTextWithoutUserId(pushKind: PushKind) -> String {
             .acceptRequest: "Your contact request has been accepted.",
             .storedMediaFile: "Your image has been saved.",
             .reaction: "You got a reaction to your image.",
-            .reopenedMedia: "has reopened your image."
+            .testNotification: "This is a test notification.",
+            .reopenedMedia: "has reopened your image.",
+            .reactionToVideo: "You got a reaction to your video.",
+            .reactionToText: "You got a reaction to your text.",
+            .reactionToImage: "You got a reaction to your image.",
+            .response: "You got a response."
         ]
     }
 
