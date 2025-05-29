@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -267,7 +268,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   Future<bool> pushMediaEditor(
       Future<Uint8List?>? imageBytes, File? videoFilePath) async {
-    bool? shoudReturn = await Navigator.push(
+    bool? shouldReturn = await Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
@@ -285,9 +286,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         reverseTransitionDuration: Duration.zero,
       ),
     );
+    if (context.mounted) {
+      setState(() {
+        sharePreviewIsShown = false;
+        showSelfieFlash = false;
+      });
+    }
     if (!context.mounted) return true;
     // shouldReturn is null when the user used the back button
-    if (shoudReturn != null && shoudReturn) {
+    if (shouldReturn != null && shouldReturn) {
       // ignore: use_build_context_synchronously
       if (widget.sendTo == null) {
         globalUpdateOfHomeViewPageIndex(0);
@@ -297,12 +304,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return true;
     }
     widget.selectCamera(selectedCameraDetails.cameraId, false, false);
-    if (context.mounted) {
-      setState(() {
-        sharePreviewIsShown = false;
-        showSelfieFlash = false;
-      });
-    }
     return false;
   }
 
@@ -485,11 +486,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         onPanUpdate: onPanUpdate,
         child: Stack(
           children: [
-            // if (!galleryLoadedImageIsShown)
-            //   CameraPreviewWidget(
-            //     controller: cameraController,
-            //     screenshotController: screenshotController,
-            //   ),
             if (galleryLoadedImageIsShown)
               Center(
                 child: SizedBox(
@@ -499,9 +495,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       strokeWidth: 1, color: context.color.primary),
                 ),
               ),
-            // Positioned.fill(
-            //   child: GestureDetector(),
-            // ),
             if (!sharePreviewIsShown &&
                 widget.sendTo != null &&
                 !isVideoRecording)
@@ -667,52 +660,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   ),
                 ),
               ),
-            if (videoRecordingStarted != null)
-              Positioned(
-                top: 50,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: CircularProgressIndicator(
-                            value:
-                                (currentTime.difference(videoRecordingStarted!))
-                                        .inMilliseconds /
-                                    (maxVideoRecordingTime * 1000),
-                            strokeWidth: 4,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.red),
-                            backgroundColor: Colors.grey[300],
-                          ),
-                        ),
-                        Center(
-                          child: Text(
-                            currentTime
-                                .difference(videoRecordingStarted!)
-                                .inSeconds
-                                .toString(),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 17,
-                              shadows: [
-                                Shadow(
-                                  color: const Color.fromARGB(122, 0, 0, 0),
-                                  blurRadius: 5.0,
-                                )
-                              ],
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+            VideoRecordingTimer(
+              videoRecordingStarted: videoRecordingStarted,
+              maxVideoRecordingTime: maxVideoRecordingTime,
+            ),
             if (!sharePreviewIsShown && widget.sendTo != null)
               Positioned(
                 left: 5,

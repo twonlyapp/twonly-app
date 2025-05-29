@@ -138,22 +138,22 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         notifyContactAboutOpeningMessage(
             widget.contact.userId, openedMessageOtherIds);
       }
+
       twonlyDatabase.messagesDao
           .openedAllNonMediaMessages(widget.contact.userId);
-      // should be fixed with that
-      // if (!updated) {
-      //   // The stream should be get an update, so only update the UI when all are opened
+
       setState(() {
         textReactionsToMessageId = tmpTextReactionsToMessageId;
         emojiReactionsToMessageId = tmpEmojiReactionsToMessageId;
         messages = displayedMessages;
       });
-      Map<int, GalleryItem> items = await GalleryItem.convertFromMessages(
-          displayedMessages
-              .where((x) => x.kind == MessageKind.media)
-              .toList()
-              .reversed
-              .toList());
+
+      final filteredMediaFiles = displayedMessages
+          .where((x) => x.kind == MessageKind.media)
+          .toList()
+          .reversed
+          .toList();
+      final items = await GalleryItem.convertFromMessages(filteredMediaFiles);
       setState(() {
         galleryItems = items.values.toList();
       });
