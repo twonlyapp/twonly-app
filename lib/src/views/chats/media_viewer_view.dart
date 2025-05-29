@@ -228,14 +228,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         videoController?.setLooping(content.maxShowTime == gMediaShowInfinite);
         videoController?.initialize().then((_) {
           videoController!.play();
-          if (content.maxShowTime != gMediaShowInfinite) {
-            videoController?.addListener(() {
+          videoController?.addListener(() {
+            setState(() {
+              progress = 1 -
+                  videoController!.value.position.inSeconds /
+                      videoController!.value.duration.inSeconds;
+            });
+            if (content.maxShowTime != gMediaShowInfinite) {
               if (videoController?.value.position ==
                   videoController?.value.duration) {
                 nextMediaOrExit();
               }
-            });
-          }
+            }
+          });
           setState(() {
             videoPath = videoPathTmp.path;
           });
@@ -560,7 +565,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ),
                 ),
               ),
-            if (canBeSeenUntil != null)
+            if (canBeSeenUntil != null || progress >= 0)
               Positioned(
                 right: 20,
                 top: 27,
