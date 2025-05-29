@@ -160,36 +160,10 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         Logger("handleServerMessages")
             .shout("Content or messageid not defined $message");
       } else {
-        // when a message is received doubled ignore it...
-        if ((await twonlyDatabase.messagesDao
-            .containsOtherMessageId(fromUserId, message.messageId!))) {
-          var ok = client.Response_Ok()..none = true;
-          return client.Response()..ok = ok;
-        }
-
-        bool acknowledgeByUser = false;
-        DateTime? openedAt;
-
-        if (message.kind == MessageKind.storedMediaFile ||
-            message.kind == MessageKind.reopenedMedia) {
-          acknowledgeByUser = true;
-          openedAt = DateTime.now();
-        }
-
-        int? responseToMessageId;
-        int? responseToOtherMessageId;
-        int? messageId;
-
         final content = message.content!;
-        if (content is TextMessageContent) {
-          responseToMessageId = content.responseToMessageId;
-          responseToOtherMessageId = content.responseToOtherMessageId;
-        }
-        if (content is ReopenedMediaFileContent) {
-          responseToMessageId = content.messageId;
-        }
+
         if (content is StoredMediaFileContent) {
-          responseToMessageId = content.messageId;
+          /// stored media file just updates the message
           await twonlyDatabase.messagesDao.updateMessageByOtherUser(
             fromUserId,
             content.messageId,
@@ -198,6 +172,33 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             ),
           );
         } else {
+          // when a message is received doubled ignore it...
+          if ((await twonlyDatabase.messagesDao
+              .containsOtherMessageId(fromUserId, message.messageId!))) {
+            var ok = client.Response_Ok()..none = true;
+            return client.Response()..ok = ok;
+          }
+
+          int? responseToMessageId;
+          int? responseToOtherMessageId;
+          int? messageId;
+
+          bool acknowledgeByUser = false;
+          DateTime? openedAt;
+
+          if (message.kind == MessageKind.reopenedMedia) {
+            acknowledgeByUser = true;
+            openedAt = DateTime.now();
+          }
+
+          if (content is TextMessageContent) {
+            responseToMessageId = content.responseToMessageId;
+            responseToOtherMessageId = content.responseToOtherMessageId;
+          }
+          if (content is ReopenedMediaFileContent) {
+            responseToMessageId = content.messageId;
+          }
+
           String contentJson = jsonEncode(content.toJson());
           final update = MessagesCompanion(
             contactId: Value(fromUserId),
@@ -222,6 +223,20 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           if (messageId == null) {
             return client.Response()..error = ErrorCode.InternalError;
           }
+          if (message.kind == MessageKind.media) {
+            twonlyDatabase.contactsDao.incFlameCounter(
+              fromUserId,
+              true,
+              message.timestamp,
+            );
+
+            final msg = await twonlyDatabase.messagesDao
+                .getMessageByMessageId(messageId)
+                .getSingleOrNull();
+            if (msg != null) {
+              startDownloadMedia(msg, false);
+            }
+          }
         }
 
         await encryptAndSendMessageAsync(
@@ -235,21 +250,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           ),
         );
 
-        if (message.kind == MessageKind.media && messageId != null) {
-          twonlyDatabase.contactsDao.incFlameCounter(
-            fromUserId,
-            true,
-            message.timestamp,
-          );
-
-          final msg = await twonlyDatabase.messagesDao
-              .getMessageByMessageId(messageId)
-              .getSingleOrNull();
-          if (msg != null) {
-            startDownloadMedia(msg, false);
-          }
-        }
-        // dearchive contact when receiving a new message
+        // unarchive contact when receiving a new message
         await twonlyDatabase.contactsDao.updateContact(
           fromUserId,
           ContactsCompanion(
