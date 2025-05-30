@@ -10,10 +10,9 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/hive.dart';
 import 'package:twonly/src/services/notification.service.dart';
-// ignore: library_prefixes
-import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 import 'package:twonly/src/utils/storage.dart';
 
 final lockSendingMessages = Mutex();
@@ -138,7 +137,7 @@ Future<(String, RetransmitMessage)?> encryptMessage(
     {PushKind? pushKind}) async {
   return await lockSendingMessages
       .protect<(String, RetransmitMessage)?>(() async {
-    Uint8List? bytes = await SignalHelper.encryptMessage(msg, userId);
+    Uint8List? bytes = await signalEncryptMessage(userId, msg);
 
     if (bytes == null) {
       Logger("api.dart").shout("Error encryption message!");

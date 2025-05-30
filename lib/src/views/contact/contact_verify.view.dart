@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/signal.dart';
+import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ContactVerifyView extends StatefulWidget {

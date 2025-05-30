@@ -17,7 +17,7 @@ import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/services/api/messages.dart';
 // ignore: library_prefixes
-import 'package:twonly/src/utils/signal.dart' as SignalHelper;
+import 'package:twonly/src/services/signal/utils.signal.dart' as SignalHelper;
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 

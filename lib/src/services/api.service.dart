@@ -21,14 +21,14 @@ import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_received.dart';
 import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
+import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/hive.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-// ignore: library_prefixes
-import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 import 'package:web_socket_channel/io.dart';
 // ignore: implementation_imports
 import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
@@ -306,7 +306,7 @@ class ApiService {
 
   Future authenticate() async {
     if (isAuthenticated) return;
-    if (await SignalHelper.getSignalIdentity() == null) {
+    if (await getSignalIdentity() == null) {
       return;
     }
 
@@ -329,7 +329,7 @@ class ApiService {
 
     final challenge = result.value.authchallenge;
 
-    final privKey = await SignalHelper.getPrivateKey();
+    final privKey = await getSignalPrivateIdentityKey();
     if (privKey == null) return;
     final random = getRandomUint8List(32);
     final signature = sign(privKey.serialize(), challenge, random);
@@ -358,13 +358,12 @@ class ApiService {
   }
 
   Future<Result> register(String username, String? inviteCode) async {
-    final signalIdentity = await SignalHelper.getSignalIdentity();
+    final signalIdentity = await getSignalIdentity();
     if (signalIdentity == null) {
       return Result.error(ErrorCode.InternalError);
     }
 
-    final signalStore =
-        await SignalHelper.getSignalStoreFromIdentity(signalIdentity);
+    final signalStore = await getSignalStoreFromIdentity(signalIdentity);
 
     final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
 

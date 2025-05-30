@@ -18,9 +18,9 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_received.dart';
 import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/services/signal/encryption.signal.dart';
+import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
-// ignore: library_prefixes
-import 'package:twonly/src/utils/signal.dart' as SignalHelper;
 
 final lockHandleServerMessage = Mutex();
 
@@ -53,7 +53,7 @@ Future handleServerMessage(server.ServerToClient msg) async {
 }
 
 Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
-  MessageJson? message = await SignalHelper.getDecryptedText(fromUserId, body);
+  MessageJson? message = await signalDecryptMessage(fromUserId, body);
   if (message == null) {
     Logger("server_messages")
         .info("Got invalid cipher text from $fromUserId. Deleting it.");
@@ -264,7 +264,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
 }
 
 Future<client.Response> handleRequestNewPreKey() async {
-  List<PreKeyRecord> localPreKeys = await SignalHelper.getPreKeys();
+  List<PreKeyRecord> localPreKeys = await signalGetPreKeys();
 
   List<client.Response_PreKey> prekeysList = [];
   for (int i = 0; i < localPreKeys.length; i++) {

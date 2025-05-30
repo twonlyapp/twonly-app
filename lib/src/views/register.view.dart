@@ -5,10 +5,10 @@ import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/signal.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key, required this.callbackOnSuccess});
