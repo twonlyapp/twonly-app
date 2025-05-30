@@ -32,13 +32,15 @@ class _FAQPageState extends State<FAQPage> {
       if (response.statusCode == 200) {
         _locale = Localizations.localeOf(context).languageCode;
         setState(() {
-          // print(response.body);
-          _faqData = json.decode(utf8.decode(response.body.codeUnits));
+          _faqData = json.decode(utf8.decode(response.bodyBytes));
+          noInternet = false;
         });
       } else {
+        Logger("faq.dart").shout("FAQ got ${response.statusCode}");
         // throw Exception('Failed to load FAQ data');
       }
     } catch (e) {
+      Logger("faq.dart").shout(e);
       setState(() {
         noInternet = true;
       });
