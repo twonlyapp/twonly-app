@@ -21,6 +21,7 @@ import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_received.dart';
 import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
+import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/hive.dart';
@@ -557,6 +558,44 @@ class ApiService {
     var appData = ApplicationData()..updatesignedprekey = get;
     var req = createClientToServerFromApplicationData(appData);
     return await sendRequestSync(req);
+  }
+
+  Future<Response_SignedPreKey?> getSignedKeyByUserId(int userId) async {
+    var get = ApplicationData_GetSignedPreKeyByUserId()..userId = Int64(userId);
+    var appData = ApplicationData()..getsignedprekeybyuserid = get;
+    var req = createClientToServerFromApplicationData(appData);
+    Result res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      server.Response_Ok ok = res.value;
+      if (ok.hasSignedprekey()) {
+        return ok.signedprekey;
+      }
+    }
+    return null;
+  }
+
+  Future<OtherPreKeys?> getPreKeysByUserId(int userId) async {
+    var get = ApplicationData_GetPrekeysByUserId()..userId = Int64(userId);
+    var appData = ApplicationData()..getprekeysbyuserid = get;
+    var req = createClientToServerFromApplicationData(appData);
+    Result res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      server.Response_Ok ok = res.value;
+      if (ok.hasUserdata()) {
+        server.Response_UserData data = ok.userdata;
+        if (data.hasSignedPrekey() &&
+            data.hasSignedPrekeyId() &&
+            data.hasSignedPrekeySignature()) {
+          return OtherPreKeys(
+            preKeys: ok.userdata.prekeys,
+            signedPreKey: data.signedPrekey,
+            signedPreKeyId: data.signedPrekeyId.toInt(),
+            signedPreKeySignature: data.signedPrekeySignature,
+          );
+        }
+      }
+    }
+    return null;
   }
 
   Future<Result> sendTextMessage(

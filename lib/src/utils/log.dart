@@ -34,7 +34,7 @@ Future<void> _writeLogToFile(LogRecord record) async {
 
   // Prepare the log message
   final logMessage =
-      '${DateTime.now()} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
+      '${DateTime.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
 
   // Append the log message to the file
   await logFile.writeAsString(logMessage, mode: FileMode.append);

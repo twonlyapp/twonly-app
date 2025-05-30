@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/src/database/signal/connect_pre_key_store.dart';
 import 'package:twonly/src/model/json/signal_identity.dart';
 import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
 import 'package:twonly/src/model/json/userdata.dart';
@@ -56,7 +57,10 @@ Future signalHandleNewServerConnection() async {
 }
 
 Future<List<PreKeyRecord>> signalGetPreKeys() async {
-  final preKeys = generatePreKeys(0, 200);
+  int? start = await ConnectPreKeyStore.getNextPreKeyId();
+  if (start == null) return [];
+  print(start);
+  final preKeys = generatePreKeys(start, 200);
   final signalStore = await getSignalStore();
   if (signalStore == null) return [];
   for (final p in preKeys) {

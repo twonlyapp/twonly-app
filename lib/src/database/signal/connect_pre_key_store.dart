@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/utils/log.dart';
 
 class ConnectPreKeyStore extends PreKeyStore {
   @override
@@ -30,6 +31,25 @@ class ConnectPreKeyStore extends PreKeyStore {
     await (twonlyDB.delete(twonlyDB.signalPreKeyStores)
           ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
         .go();
+  }
+
+  static Future<int?> getNextPreKeyId() async {
+    try {
+      String tableName = twonlyDB.signalPreKeyStores.actualTableName;
+      String columnName = twonlyDB.signalPreKeyStores.preKeyId.name;
+
+      final result = await twonlyDB
+          .customSelect('SELECT MAX($columnName) AS max_id FROM $tableName')
+          .get();
+      int? count = result.first.read<int?>('max_id');
+      if (count == null) {
+        return 0;
+      }
+      return count + 1;
+    } catch (e) {
+      Log.error("$e");
+    }
+    return null;
   }
 
   @override
