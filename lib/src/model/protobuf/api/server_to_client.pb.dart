@@ -1338,6 +1338,84 @@ class Response_PreKey extends $pb.GeneratedMessage {
   void clearPrekey() => clearField(2);
 }
 
+class Response_SignedPreKey extends $pb.GeneratedMessage {
+  factory Response_SignedPreKey({
+    $fixnum.Int64? signedPrekeyId,
+    $core.List<$core.int>? signedPrekey,
+    $core.List<$core.int>? signedPrekeySignature,
+  }) {
+    final $result = create();
+    if (signedPrekeyId != null) {
+      $result.signedPrekeyId = signedPrekeyId;
+    }
+    if (signedPrekey != null) {
+      $result.signedPrekey = signedPrekey;
+    }
+    if (signedPrekeySignature != null) {
+      $result.signedPrekeySignature = signedPrekeySignature;
+    }
+    return $result;
+  }
+  Response_SignedPreKey._() : super();
+  factory Response_SignedPreKey.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_SignedPreKey.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.SignedPreKey', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'signedPrekeyId')
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response_SignedPreKey clone() => Response_SignedPreKey()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_SignedPreKey copyWith(void Function(Response_SignedPreKey) updates) => super.copyWith((message) => updates(message as Response_SignedPreKey)) as Response_SignedPreKey;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_SignedPreKey create() => Response_SignedPreKey._();
+  Response_SignedPreKey createEmptyInstance() => create();
+  static $pb.PbList<Response_SignedPreKey> createRepeated() => $pb.PbList<Response_SignedPreKey>();
+  @$core.pragma('dart2js:noInline')
+  static Response_SignedPreKey getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_SignedPreKey>(create);
+  static Response_SignedPreKey? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get signedPrekeyId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set signedPrekeyId($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasSignedPrekeyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSignedPrekeyId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signedPrekey => $_getN(1);
+  @$pb.TagNumber(2)
+  set signedPrekey($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSignedPrekey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignedPrekey() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get signedPrekeySignature => $_getN(2);
+  @$pb.TagNumber(3)
+  set signedPrekeySignature($core.List<$core.int> v) { $_setBytes(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasSignedPrekeySignature() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSignedPrekeySignature() => clearField(3);
+}
+
 class Response_UserData extends $pb.GeneratedMessage {
   factory Response_UserData({
     $fixnum.Int64? userId,
@@ -1582,6 +1660,7 @@ enum Response_Ok_Ok {
   vouchers, 
   addaccountsinvites, 
   downloadtokens, 
+  signedprekey, 
   notSet
 }
 
@@ -1600,6 +1679,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_Vouchers? vouchers,
     Response_AddAccountsInvites? addaccountsinvites,
     Response_DownloadTokens? downloadtokens,
+    Response_SignedPreKey? signedprekey,
   }) {
     final $result = create();
     if (none != null) {
@@ -1641,6 +1721,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (downloadtokens != null) {
       $result.downloadtokens = downloadtokens;
     }
+    if (signedprekey != null) {
+      $result.signedprekey = signedprekey;
+    }
     return $result;
   }
   Response_Ok._() : super();
@@ -1661,10 +1744,11 @@ class Response_Ok extends $pb.GeneratedMessage {
     11 : Response_Ok_Ok.vouchers,
     12 : Response_Ok_Ok.addaccountsinvites,
     13 : Response_Ok_Ok.downloadtokens,
+    14 : Response_Ok_Ok.signedprekey,
     0 : Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Ok', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'authchallenge', $pb.PbFieldType.OY)
@@ -1678,6 +1762,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     ..aOM<Response_Vouchers>(11, _omitFieldNames ? '' : 'vouchers', subBuilder: Response_Vouchers.create)
     ..aOM<Response_AddAccountsInvites>(12, _omitFieldNames ? '' : 'addaccountsinvites', subBuilder: Response_AddAccountsInvites.create)
     ..aOM<Response_DownloadTokens>(13, _omitFieldNames ? '' : 'downloadtokens', subBuilder: Response_DownloadTokens.create)
+    ..aOM<Response_SignedPreKey>(14, _omitFieldNames ? '' : 'signedprekey', subBuilder: Response_SignedPreKey.create)
     ..hasRequiredFields = false
   ;
 
@@ -1839,6 +1924,17 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearDownloadtokens() => clearField(13);
   @$pb.TagNumber(13)
   Response_DownloadTokens ensureDownloadtokens() => $_ensure(12);
+
+  @$pb.TagNumber(14)
+  Response_SignedPreKey get signedprekey => $_getN(13);
+  @$pb.TagNumber(14)
+  set signedprekey(Response_SignedPreKey v) { setField(14, v); }
+  @$pb.TagNumber(14)
+  $core.bool hasSignedprekey() => $_has(13);
+  @$pb.TagNumber(14)
+  void clearSignedprekey() => clearField(14);
+  @$pb.TagNumber(14)
+  Response_SignedPreKey ensureSignedprekey() => $_ensure(13);
 }
 
 enum Response_Response {

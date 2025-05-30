@@ -3,52 +3,63 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
+import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-const int defaultDeviceId = 1;
-
 Future<bool> createNewSignalSession(Response_UserData userData) async {
-  final int userId = userData.userId.toInt();
-
-  SignalProtocolAddress targetAddress =
-      SignalProtocolAddress(userId.toString(), defaultDeviceId);
-
   SignalProtocolStore? signalStore = await getSignalStore();
+
   if (signalStore == null) {
     return false;
   }
 
-  SessionBuilder sessionBuilder =
-      SessionBuilder.fromSignalStore(signalStore, targetAddress);
+  SignalProtocolAddress targetAddress = SignalProtocolAddress(
+    userData.userId.toString(),
+    defaultDeviceId,
+  );
+
+  SessionBuilder sessionBuilder = SessionBuilder.fromSignalStore(
+    signalStore,
+    targetAddress,
+  );
 
   ECPublicKey? tempPrePublicKey;
   int? tempPreKeyId;
+
   if (userData.prekeys.isNotEmpty) {
     tempPrePublicKey = Curve.decodePoint(
-        DjbECPublicKey(Uint8List.fromList(userData.prekeys.first.prekey))
-            .serialize(),
-        1);
+      DjbECPublicKey(
+        Uint8List.fromList(userData.prekeys.first.prekey),
+      ).serialize(),
+      1,
+    );
     tempPreKeyId = userData.prekeys.first.id.toInt();
   }
 
   int tempSignedPreKeyId = userData.signedPrekeyId.toInt();
 
   ECPublicKey? tempSignedPreKeyPublic = Curve.decodePoint(
-      DjbECPublicKey(Uint8List.fromList(userData.signedPrekey)).serialize(), 1);
+    DjbECPublicKey(Uint8List.fromList(userData.signedPrekey)).serialize(),
+    1,
+  );
 
-  Uint8List? tempSignedPreKeySignature =
-      Uint8List.fromList(userData.signedPrekeySignature);
+  Uint8List? tempSignedPreKeySignature = Uint8List.fromList(
+    userData.signedPrekeySignature,
+  );
 
-  IdentityKey tempIdentityKey = IdentityKey(Curve.decodePoint(
+  IdentityKey tempIdentityKey = IdentityKey(
+    Curve.decodePoint(
       DjbECPublicKey(Uint8List.fromList(userData.publicIdentityKey))
           .serialize(),
-      1));
+      1,
+    ),
+  );
 
   PreKeyBundle preKeyBundle = PreKeyBundle(
     userData.userId.toInt(),
-    1,
+    defaultDeviceId,
     tempPreKeyId,
     tempPrePublicKey,
     tempSignedPreKeyId,

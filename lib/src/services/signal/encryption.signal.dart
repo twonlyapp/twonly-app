@@ -4,19 +4,85 @@ import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
+import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
+// Future<void> deleteSession(String userId) async {
+//   await mixinSignalProtocolStore.sessionStore.sessionDao
+//       .deleteSessionsByAddress(userId);
+// }
+
+// Future<void> processSession(String userId, PreKeyBundle preKeyBundle) async {
+//   final signalProtocolAddress = SignalProtocolAddress(
+//     userId,
+//     preKeyBundle.getDeviceId(),
+//   );
+//   final sessionBuilder = SessionBuilder.fromSignalStore(
+//     mixinSignalProtocolStore,
+//     signalProtocolAddress,
+//   );
+//   try {
+//     await sessionBuilder.processPreKeyBundle(preKeyBundle);
+//   } on UntrustedIdentityException {
+//     await mixinSignalProtocolStore.removeIdentity(signalProtocolAddress);
+//     await sessionBuilder.processPreKeyBundle(preKeyBundle);
+//   }
+// }
+
+// Future<bool> checkSignalSession(String recipientId, String sessionId) async {
+//   final contains = await signalProtocol.containsSession(
+//     recipientId,
+//     deviceId: sessionId.getDeviceId(),
+//   );
+//   if (!contains) {
+//     final requestKeys = <BlazeMessageParamSession>[
+//       BlazeMessageParamSession(userId: recipientId, sessionId: sessionId),
+//     ];
+//     final blazeMessage = createConsumeSessionSignalKeys(
+//       createConsumeSignalKeysParam(requestKeys),
+//     );
+//     final data = (await signalKeysChannel(blazeMessage))?.data;
+//     if (data == null) {
+//       return false;
+//     }
+//     final keys = List<SignalKey>.from(
+//       (data as List<dynamic>).map(
+//         (e) => SignalKey.fromJson(e as Map<String, dynamic>),
+//       ),
+//     );
+//     if (keys.isNotEmpty) {
+//       final preKeyBundle = keys.first.createPreKeyBundle();
+//       await signalProtocol.processSession(recipientId, preKeyBundle);
+//     } else {
+//       return false;
+//     }
+//   }
+//   return true;
+// }
+
 Future<Uint8List?> signalEncryptMessage(int target, MessageJson msg) async {
   try {
     ConnectSignalProtocolStore signalStore = (await getSignalStore())!;
+    final address = SignalProtocolAddress(target.toString(), defaultDeviceId);
 
-    SessionCipher session = SessionCipher.fromStore(
-        signalStore, SignalProtocolAddress(target.toString(), defaultDeviceId));
+    SessionCipher session = SessionCipher.fromStore(signalStore, address);
+
+    final SessionRecord sessionRecord =
+        await signalStore.sessionStore.loadSession(address);
+
+    if (!sessionRecord.sessionState.hasUnacknowledgedPreKeyMessage()) {
+      Log.info("There are now pre keys any more... load new...");
+    }
+
+    // sessionRecord.sessionState.sign
+
+    //   session.
 
     final ciphertext = await session.encrypt(
-        Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson())))));
+      Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson())))),
+    );
 
     var b = BytesBuilder();
     b.add(ciphertext.serialize());

@@ -19,7 +19,7 @@ import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_received.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
-import 'package:twonly/src/services/signal/utils.signal.dart';
+import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 final lockHandleServerMessage = Mutex();

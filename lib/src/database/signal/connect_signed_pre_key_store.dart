@@ -3,13 +3,14 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/src/constants/secure_storage_keys.dart';
 
 class ConnectSignedPreKeyStore extends SignedPreKeyStore {
-  // final store = HashMap<int, Uint8List>();
-
   Future<HashMap<int, Uint8List>> getStore() async {
     final storage = FlutterSecureStorage();
-    final storeSerialized = await storage.read(key: "signed_pre_key_store");
+    final storeSerialized = await storage.read(
+      key: SecureStorageKeys.signalSignedPreKey,
+    );
     var store = HashMap<int, Uint8List>();
     if (storeSerialized == null) {
       return store;
@@ -21,6 +22,24 @@ class ConnectSignedPreKeyStore extends SignedPreKeyStore {
     return store;
   }
 
+  Future<int> getNextKeyId() async {
+    final storage = FlutterSecureStorage();
+    final storeSerialized = await storage.read(
+      key: SecureStorageKeys.signalSignedPreKey,
+    );
+    if (storeSerialized == null) {
+      return 0;
+    }
+    final storeHashMap = json.decode(storeSerialized);
+    var maxKeyId = 0;
+    for (final item in storeHashMap) {
+      if (maxKeyId < item[0]) {
+        maxKeyId = item[0];
+      }
+    }
+    return maxKeyId + 1;
+  }
+
   Future safeStore(HashMap<int, Uint8List> store) async {
     final storage = FlutterSecureStorage();
     var storeHashMap = [];
@@ -28,7 +47,10 @@ class ConnectSignedPreKeyStore extends SignedPreKeyStore {
       storeHashMap.add([item.key, base64Encode(item.value)]);
     }
     final storeSerialized = json.encode(storeHashMap);
-    await storage.write(key: "signed_pre_key_store", value: storeSerialized);
+    await storage.write(
+      key: SecureStorageKeys.signalSignedPreKey,
+      value: storeSerialized,
+    );
   }
 
   @override
@@ -36,7 +58,8 @@ class ConnectSignedPreKeyStore extends SignedPreKeyStore {
     final store = await getStore();
     if (!store.containsKey(signedPreKeyId)) {
       throw InvalidKeyIdException(
-          'No such signedprekeyrecord! $signedPreKeyId');
+        'No such signed prekey record! $signedPreKeyId',
+      );
     }
     return SignedPreKeyRecord.fromSerialized(store[signedPreKeyId]!);
   }
@@ -53,7 +76,9 @@ class ConnectSignedPreKeyStore extends SignedPreKeyStore {
 
   @override
   Future<void> storeSignedPreKey(
-      int signedPreKeyId, SignedPreKeyRecord record) async {
+    int signedPreKeyId,
+    SignedPreKeyRecord record,
+  ) async {
     final store = await getStore();
     store[signedPreKeyId] = record.serialize();
     await safeStore(store);

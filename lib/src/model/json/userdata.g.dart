@@ -36,8 +36,11 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           ? null
           : DateTime.parse(json['lastImageSend'] as String)
       ..todaysImageCounter = (json['todaysImageCounter'] as num?)?.toInt()
-      ..myBestFriendContactId =
-          (json['myBestFriendContactId'] as num?)?.toInt();
+      ..myBestFriendContactId = (json['myBestFriendContactId'] as num?)?.toInt()
+      ..signalLastSignedPreKeyUpdated =
+          json['signalLastSignedPreKeyUpdated'] == null
+              ? null
+              : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String);
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'username': instance.username,
@@ -58,6 +61,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'lastImageSend': instance.lastImageSend?.toIso8601String(),
       'todaysImageCounter': instance.todaysImageCounter,
       'myBestFriendContactId': instance.myBestFriendContactId,
+      'signalLastSignedPreKeyUpdated':
+          instance.signalLastSignedPreKeyUpdated?.toIso8601String(),
       'userId': instance.userId,
     };
 

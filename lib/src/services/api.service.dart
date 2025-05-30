@@ -83,6 +83,7 @@ class ApiService {
       notifyContactsAboutProfileChange();
       twonlyDB.markUpdated();
       syncFlameCounters();
+      signalHandleNewServerConnection();
     }
   }
 
@@ -329,7 +330,7 @@ class ApiService {
 
     final challenge = result.value.authchallenge;
 
-    final privKey = await getSignalPrivateIdentityKey();
+    final privKey = (await getSignalIdentityKeyPair())?.getPrivateKey();
     if (privKey == null) return;
     final random = getRandomUint8List(32);
     final signature = sign(privKey.serialize(), challenge, random);
@@ -540,6 +541,20 @@ class ApiService {
   Future<Result> updateFCMToken(String googleFcm) async {
     var get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
     var appData = ApplicationData()..updategooglefcmtoken = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
+  Future<Result> updateSignedPreKey(
+    int signedPreKeyId,
+    Uint8List signedPreKey,
+    Uint8List signedPreKeySignature,
+  ) async {
+    var get = ApplicationData_UpdateSignedPreKey()
+      ..signedPrekeyId = Int64(signedPreKeyId)
+      ..signedPrekey = signedPreKey
+      ..signedPrekeySignature = signedPreKeySignature;
+    var appData = ApplicationData()..updatesignedprekey = get;
     var req = createClientToServerFromApplicationData(appData);
     return await sendRequestSync(req);
   }

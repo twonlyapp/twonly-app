@@ -36,6 +36,8 @@ class UserData {
 
   int? myBestFriendContactId;
 
+  DateTime? signalLastSignedPreKeyUpdated;
+
   final int userId;
 
   factory UserData.fromJson(Map<String, dynamic> json) =>

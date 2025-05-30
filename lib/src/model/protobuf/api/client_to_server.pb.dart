@@ -1403,6 +1403,134 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
   void clearUserId() => clearField(1);
 }
 
+class ApplicationData_GetSignedPreKeyByUserId extends $pb.GeneratedMessage {
+  factory ApplicationData_GetSignedPreKeyByUserId({
+    $fixnum.Int64? userId,
+  }) {
+    final $result = create();
+    if (userId != null) {
+      $result.userId = userId;
+    }
+    return $result;
+  }
+  ApplicationData_GetSignedPreKeyByUserId._() : super();
+  factory ApplicationData_GetSignedPreKeyByUserId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetSignedPreKeyByUserId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetSignedPreKeyByUserId', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetSignedPreKeyByUserId clone() => ApplicationData_GetSignedPreKeyByUserId()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetSignedPreKeyByUserId copyWith(void Function(ApplicationData_GetSignedPreKeyByUserId) updates) => super.copyWith((message) => updates(message as ApplicationData_GetSignedPreKeyByUserId)) as ApplicationData_GetSignedPreKeyByUserId;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetSignedPreKeyByUserId create() => ApplicationData_GetSignedPreKeyByUserId._();
+  ApplicationData_GetSignedPreKeyByUserId createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_GetSignedPreKeyByUserId> createRepeated() => $pb.PbList<ApplicationData_GetSignedPreKeyByUserId>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_GetSignedPreKeyByUserId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetSignedPreKeyByUserId>(create);
+  static ApplicationData_GetSignedPreKeyByUserId? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => clearField(1);
+}
+
+class ApplicationData_UpdateSignedPreKey extends $pb.GeneratedMessage {
+  factory ApplicationData_UpdateSignedPreKey({
+    $fixnum.Int64? signedPrekeyId,
+    $core.List<$core.int>? signedPrekey,
+    $core.List<$core.int>? signedPrekeySignature,
+  }) {
+    final $result = create();
+    if (signedPrekeyId != null) {
+      $result.signedPrekeyId = signedPrekeyId;
+    }
+    if (signedPrekey != null) {
+      $result.signedPrekey = signedPrekey;
+    }
+    if (signedPrekeySignature != null) {
+      $result.signedPrekeySignature = signedPrekeySignature;
+    }
+    return $result;
+  }
+  ApplicationData_UpdateSignedPreKey._() : super();
+  factory ApplicationData_UpdateSignedPreKey.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_UpdateSignedPreKey.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UpdateSignedPreKey', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'signedPrekeyId')
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdateSignedPreKey clone() => ApplicationData_UpdateSignedPreKey()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdateSignedPreKey copyWith(void Function(ApplicationData_UpdateSignedPreKey) updates) => super.copyWith((message) => updates(message as ApplicationData_UpdateSignedPreKey)) as ApplicationData_UpdateSignedPreKey;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UpdateSignedPreKey create() => ApplicationData_UpdateSignedPreKey._();
+  ApplicationData_UpdateSignedPreKey createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_UpdateSignedPreKey> createRepeated() => $pb.PbList<ApplicationData_UpdateSignedPreKey>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_UpdateSignedPreKey getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdateSignedPreKey>(create);
+  static ApplicationData_UpdateSignedPreKey? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get signedPrekeyId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set signedPrekeyId($fixnum.Int64 v) { $_setInt64(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasSignedPrekeyId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSignedPrekeyId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get signedPrekey => $_getN(1);
+  @$pb.TagNumber(2)
+  set signedPrekey($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSignedPrekey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSignedPrekey() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get signedPrekeySignature => $_getN(2);
+  @$pb.TagNumber(3)
+  set signedPrekeySignature($core.List<$core.int> v) { $_setBytes(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasSignedPrekeySignature() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearSignedPrekeySignature() => clearField(3);
+}
+
 class ApplicationData_GetUploadToken extends $pb.GeneratedMessage {
   factory ApplicationData_GetUploadToken({
     $core.int? recipientsCount,
@@ -1745,6 +1873,8 @@ enum ApplicationData_ApplicationData {
   updateplanoptions, 
   downloaddone, 
   uploaddone, 
+  getsignedprekeybyuserid, 
+  updatesignedprekey, 
   notSet
 }
 
@@ -1771,6 +1901,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_UpdatePlanOptions? updateplanoptions,
     ApplicationData_DownloadDone? downloaddone,
     ApplicationData_UploadDone? uploaddone,
+    ApplicationData_GetSignedPreKeyByUserId? getsignedprekeybyuserid,
+    ApplicationData_UpdateSignedPreKey? updatesignedprekey,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -1836,6 +1968,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (uploaddone != null) {
       $result.uploaddone = uploaddone;
     }
+    if (getsignedprekeybyuserid != null) {
+      $result.getsignedprekeybyuserid = getsignedprekeybyuserid;
+    }
+    if (updatesignedprekey != null) {
+      $result.updatesignedprekey = updatesignedprekey;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -1864,10 +2002,12 @@ class ApplicationData extends $pb.GeneratedMessage {
     19 : ApplicationData_ApplicationData.updateplanoptions,
     20 : ApplicationData_ApplicationData.downloaddone,
     21 : ApplicationData_ApplicationData.uploaddone,
+    22 : ApplicationData_ApplicationData.getsignedprekeybyuserid,
+    23 : ApplicationData_ApplicationData.updatesignedprekey,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
@@ -1889,6 +2029,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_UpdatePlanOptions>(19, _omitFieldNames ? '' : 'updateplanoptions', subBuilder: ApplicationData_UpdatePlanOptions.create)
     ..aOM<ApplicationData_DownloadDone>(20, _omitFieldNames ? '' : 'downloaddone', subBuilder: ApplicationData_DownloadDone.create)
     ..aOM<ApplicationData_UploadDone>(21, _omitFieldNames ? '' : 'uploaddone', subBuilder: ApplicationData_UploadDone.create)
+    ..aOM<ApplicationData_GetSignedPreKeyByUserId>(22, _omitFieldNames ? '' : 'getsignedprekeybyuserid', subBuilder: ApplicationData_GetSignedPreKeyByUserId.create)
+    ..aOM<ApplicationData_UpdateSignedPreKey>(23, _omitFieldNames ? '' : 'updatesignedprekey', subBuilder: ApplicationData_UpdateSignedPreKey.create)
     ..hasRequiredFields = false
   ;
 
@@ -2146,6 +2288,28 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearUploaddone() => clearField(21);
   @$pb.TagNumber(21)
   ApplicationData_UploadDone ensureUploaddone() => $_ensure(20);
+
+  @$pb.TagNumber(22)
+  ApplicationData_GetSignedPreKeyByUserId get getsignedprekeybyuserid => $_getN(21);
+  @$pb.TagNumber(22)
+  set getsignedprekeybyuserid(ApplicationData_GetSignedPreKeyByUserId v) { setField(22, v); }
+  @$pb.TagNumber(22)
+  $core.bool hasGetsignedprekeybyuserid() => $_has(21);
+  @$pb.TagNumber(22)
+  void clearGetsignedprekeybyuserid() => clearField(22);
+  @$pb.TagNumber(22)
+  ApplicationData_GetSignedPreKeyByUserId ensureGetsignedprekeybyuserid() => $_ensure(21);
+
+  @$pb.TagNumber(23)
+  ApplicationData_UpdateSignedPreKey get updatesignedprekey => $_getN(22);
+  @$pb.TagNumber(23)
+  set updatesignedprekey(ApplicationData_UpdateSignedPreKey v) { setField(23, v); }
+  @$pb.TagNumber(23)
+  $core.bool hasUpdatesignedprekey() => $_has(22);
+  @$pb.TagNumber(23)
+  void clearUpdatesignedprekey() => clearField(23);
+  @$pb.TagNumber(23)
+  ApplicationData_UpdateSignedPreKey ensureUpdatesignedprekey() => $_ensure(22);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {
