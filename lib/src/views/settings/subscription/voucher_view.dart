@@ -22,7 +22,7 @@ class _VoucherViewState extends State<VoucherView> {
   }
 
   Future initAsync() async {
-    Response_Vouchers? resVouchers = await apiProvider.getVoucherList();
+    Response_Vouchers? resVouchers = await apiService.getVoucherList();
     if (resVouchers != null) {
       setState(() {
         vouchers = resVouchers.vouchers;
@@ -193,7 +193,7 @@ Future redeemVoucher(BuildContext context) async {
           ),
           TextButton(
             onPressed: () async {
-              final res = await apiProvider.redeemVoucher(voucherCode);
+              final res = await apiService.redeemVoucher(voucherCode);
               if (!context.mounted) return;
               if (res.isSuccess) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -284,7 +284,7 @@ Future showBuyVoucher(BuildContext context) async {
           ),
           TextButton(
             onPressed: () async {
-              final res = await apiProvider.buyVoucher(quantity);
+              final res = await apiService.buyVoucher(quantity);
               if (!context.mounted) return;
               if (res.isSuccess) {
                 ScaffoldMessenger.of(context).showSnackBar(

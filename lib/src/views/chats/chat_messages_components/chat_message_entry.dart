@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry_components/chat_media_entry.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry_components/chat_reaction_row.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry_components/chat_text_entry.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry_components/chat_text_response_columns.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/chat_media_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/chat_reaction_row.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/chat_text_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/chat_text_response_columns.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/sliding_response.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/views/gallery/gallery_item.dart';
+import 'package:twonly/src/model/memory_item.model.dart';
 
 class ChatListEntry extends StatefulWidget {
   const ChatListEntry(
@@ -25,7 +25,7 @@ class ChatListEntry extends StatefulWidget {
   final bool lastMessageFromSameUser;
   final List<Message> textReactions;
   final List<Message> otherReactions;
-  final List<GalleryItem> galleryItems;
+  final List<MemoryItem> galleryItems;
   final Function(Message) onResponseTriggered;
 
   @override

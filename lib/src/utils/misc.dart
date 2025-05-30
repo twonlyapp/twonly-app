@@ -6,30 +6,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/providers/settings_change_provider.dart';
+import 'package:twonly/src/providers/settings.provider.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
   TwonlyDatabase get db => Provider.of<TwonlyDatabase>(this);
   ColorScheme get color => Theme.of(this).colorScheme;
-}
-
-Future<void> writeLogToFile(LogRecord record) async {
-  final directory = await getApplicationSupportDirectory();
-  final logFile = File('${directory.path}/app.log');
-
-  // Prepare the log message
-  final logMessage =
-      '${DateTime.now()}: ${record.level.name}: ${record.loggerName}: ${record.message}\n';
-
-  // Append the log message to the file
-  await logFile.writeAsString(logMessage, mode: FileMode.append);
 }
 
 Future<bool> deleteLogFile() async {
@@ -163,17 +150,6 @@ Future<bool> authenticateUser(String localizedReason,
     }
   }
   return false;
-}
-
-void setupLogger() {
-  Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
-  Logger.root.onRecord.listen((record) async {
-    await writeLogToFile(record);
-    if (kDebugMode) {
-      print(
-          '${record.level.name}: twonly:${record.loggerName}: ${record.message}');
-    }
-  });
 }
 
 Uint8List intToBytes(int value) {

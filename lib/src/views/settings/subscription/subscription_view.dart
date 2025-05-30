@@ -9,7 +9,7 @@ import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
-import 'package:twonly/src/providers/connection_provider.dart';
+import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
@@ -39,7 +39,7 @@ Future<Response_PlanBallance?> loadPlanBallance() async {
   Response_PlanBallance? ballance;
   final user = await getUser();
   if (user == null) return ballance;
-  ballance = await apiProvider.getPlanBallance();
+  ballance = await apiService.getPlanBallance();
   if (ballance != null) {
     user.lastPlanBallance = ballance.writeToJson();
     await updateUser(user);
@@ -116,7 +116,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     ballance = await loadPlanBallance();
     if (ballance != null && ballance!.hasAdditionalAccountOwnerId()) {
       final ownerId = ballance!.additionalAccountOwnerId.toInt();
-      Contact? contact = await twonlyDatabase.contactsDao
+      Contact? contact = await twonlyDB.contactsDao
           .getContactByUserId(ownerId)
           .getSingleOrNull();
       if (contact != null) {
@@ -551,7 +551,7 @@ Future redeemUserInviteCode(BuildContext context, String newPlan) async {
           ),
           TextButton(
             onPressed: () async {
-              final res = await apiProvider.redeemUserInviteCode(inviteCode);
+              final res = await apiService.redeemUserInviteCode(inviteCode);
               if (!context.mounted) return;
               if (res.isSuccess) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -559,8 +559,8 @@ Future redeemUserInviteCode(BuildContext context, String newPlan) async {
                       content: Text(context.lang.redeemUserInviteCodeSuccess)),
                 );
                 // reconnect to load new plan.
-                apiProvider.close(() {
-                  apiProvider.connect();
+                apiService.close(() {
+                  apiService.connect();
                 });
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(

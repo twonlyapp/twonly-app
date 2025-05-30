@@ -21,7 +21,7 @@ import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
-import 'package:twonly/src/views/home_view.dart';
+import 'package:twonly/src/views/home.view.dart';
 
 int maxVideoRecordingTime = 15;
 

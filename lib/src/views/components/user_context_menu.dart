@@ -5,8 +5,8 @@ import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/chats/chat_messages_view.dart';
-import 'package:twonly/src/views/contact/contact_verify_view.dart';
+import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/contact/contact_verify.view.dart';
 
 class UserContextMenu extends StatefulWidget {
   final Widget child;
@@ -31,7 +31,7 @@ class _UserContextMenuState extends State<UserContextMenu> {
             onSelect: () async {
               final update = ContactsCompanion(archived: Value(true));
               if (context.mounted) {
-                await twonlyDatabase.contactsDao
+                await twonlyDB.contactsDao
                     .updateContact(widget.contact.userId, update);
               }
             },
@@ -43,7 +43,7 @@ class _UserContextMenuState extends State<UserContextMenu> {
             onSelect: () async {
               final update = ContactsCompanion(archived: Value(false));
               if (context.mounted) {
-                await twonlyDatabase.contactsDao
+                await twonlyDB.contactsDao
                     .updateContact(widget.contact.userId, update);
               }
             },
@@ -82,7 +82,7 @@ class _UserContextMenuState extends State<UserContextMenu> {
             final update =
                 ContactsCompanion(pinned: Value(!widget.contact.pinned));
             if (context.mounted) {
-              await twonlyDatabase.contactsDao
+              await twonlyDB.contactsDao
                   .updateContact(widget.contact.userId, update);
             }
           },

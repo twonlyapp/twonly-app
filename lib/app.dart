@@ -1,13 +1,13 @@
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/providers/connection_provider.dart';
-import 'package:twonly/src/providers/settings_change_provider.dart';
-import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/onboarding/onboarding_view.dart';
-import 'package:twonly/src/views/home_view.dart';
-import 'package:twonly/src/views/onboarding/register_view.dart';
+import 'package:twonly/src/views/onboarding.view.dart';
+import 'package:twonly/src/views/home.view.dart';
+import 'package:twonly/src/views/register.view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
@@ -54,7 +54,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     globalBestFriendUserId = -1;
     if (user != null && context.mounted) {
       if (user.myBestFriendContactId != null) {
-        final contact = await twonlyDatabase.contactsDao
+        final contact = await twonlyDB.contactsDao
             .getContactByUserId(user.myBestFriendContactId!)
             .getSingleOrNull();
         if (contact != null) {
@@ -69,7 +69,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future initAsync() async {
     setUserPlan();
-    apiProvider.connect();
+    apiService.connect();
   }
 
   @override
@@ -78,8 +78,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       if (wasPaused) {
         globalIsAppInBackground = false;
-        twonlyDatabase.markUpdated();
-        apiProvider.connect();
+        twonlyDB.markUpdated();
+        apiService.connect();
       }
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;

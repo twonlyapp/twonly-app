@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
-import 'package:twonly/src/views/home_view.dart';
+import 'package:twonly/src/views/home.view.dart';
 
 class HomeViewCameraPreview extends StatefulWidget {
   const HomeViewCameraPreview({

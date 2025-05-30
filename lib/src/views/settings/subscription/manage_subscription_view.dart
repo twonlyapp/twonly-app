@@ -3,8 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
-import 'package:twonly/src/providers/api/api_utils.dart';
-import 'package:twonly/src/providers/connection_provider.dart';
+import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 
@@ -44,7 +44,7 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
   }
 
   Future toggleRenewalOption() async {
-    Result res = await apiProvider.updatePlanOptions(!autoRenewal!);
+    Result res = await apiService.updatePlanOptions(!autoRenewal!);
     if (res.isError) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorCodeToText(context, res.error))),

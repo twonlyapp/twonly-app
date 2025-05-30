@@ -8,7 +8,7 @@ import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/signal_identity.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
-import 'package:twonly/src/providers/signal/connect_signal_protocol_store.dart';
+import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 

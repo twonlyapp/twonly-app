@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart';
-import 'package:twonly/src/providers/api/media_send.dart';
+import 'package:twonly/src/services/api/media_send.dart';
 import 'dart:typed_data';
 
 import 'package:twonly/src/utils/misc.dart';

@@ -6,7 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart' show ErrorCode;
-import 'package:twonly/src/providers/api/media_send.dart';
+import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/save_to_gallery.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -135,9 +135,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   Future updateAsync(int userId) async {
     if (sendNextMediaToUserName != null) return;
-    Contact? contact = await twonlyDatabase.contactsDao
-        .getContactByUserId(userId)
-        .getSingleOrNull();
+    Contact? contact =
+        await twonlyDB.contactsDao.getContactByUserId(userId).getSingleOrNull();
     if (contact != null) {
       sendNextMediaToUserName = getContactDisplayName(contact);
     }

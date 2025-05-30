@@ -27,7 +27,7 @@ class _LocationFilterState extends State<LocationFilter> {
   }
 
   Future initAsync() async {
-    final res = await apiProvider.getCurrentLocation();
+    final res = await apiService.getCurrentLocation();
     if (res.isSuccess) {
       location = res.value.location;
       _searchForImage();

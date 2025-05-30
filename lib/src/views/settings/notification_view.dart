@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/services/fcm_service.dart';
-import 'package:twonly/src/services/notification_service.dart';
+import 'package:twonly/src/services/fcm.service.dart';
+import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -48,7 +48,7 @@ class NotificationView extends StatelessWidget {
                       user.userId,
                       PushKind.testNotification,
                     );
-                    await apiProvider.sendTextMessage(
+                    await apiService.sendTextMessage(
                       user.userId,
                       Uint8List(0),
                       pushData,

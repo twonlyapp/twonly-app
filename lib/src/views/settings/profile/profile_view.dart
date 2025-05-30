@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/providers/api/api.dart';
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/profile/modify_avatar_view.dart';

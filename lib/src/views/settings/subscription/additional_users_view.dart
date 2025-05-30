@@ -7,7 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
-import 'package:twonly/src/providers/api/api_utils.dart';
+import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -17,7 +17,7 @@ Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
   List<Response_AddAccountsInvite>? ballance;
   final user = await getUser();
   if (user == null) return ballance;
-  ballance = await apiProvider.getAdditionalUserInvites();
+  ballance = await apiService.getAdditionalUserInvites();
   if (ballance != null) {
     user.additionalUserInvites =
         jsonEncode(ballance.map((x) => x.writeToJson()).toList());
@@ -147,7 +147,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
   }
 
   Future initAsync() async {
-    final contact = await twonlyDatabase.contactsDao
+    final contact = await twonlyDB.contactsDao
         .getContactByUserId(widget.account.userId.toInt())
         .getSingleOrNull();
     if (contact != null) {
@@ -188,7 +188,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                     "Remove this additional user",
                     "The additional user will automatically be downgraded to the preview plan after removal and you will receive a new invitation code to give to another person.");
                 if (remove) {
-                  Result res = await apiProvider
+                  Result res = await apiService
                       .removeAdditionalUser(widget.account.userId);
                   if (!context.mounted) return;
                   if (res.isSuccess) {

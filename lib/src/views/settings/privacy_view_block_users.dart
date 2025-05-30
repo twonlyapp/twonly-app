@@ -21,7 +21,7 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
   @override
   void initState() {
     super.initState();
-    allUsers = twonlyDatabase.contactsDao.watchAllContacts();
+    allUsers = twonlyDB.contactsDao.watchAllContacts();
     loadAsync();
   }
 
@@ -91,7 +91,7 @@ class UserList extends StatelessWidget {
   Future block(BuildContext context, int userId, bool? value) async {
     if (value != null) {
       final update = ContactsCompanion(blocked: Value(value));
-      await twonlyDatabase.contactsDao.updateContact(userId, update);
+      await twonlyDB.contactsDao.updateContact(userId, update);
     }
   }
 

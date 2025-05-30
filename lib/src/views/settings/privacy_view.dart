@@ -27,7 +27,7 @@ class _PrivacyViewState extends State<PrivacyView> {
           ListTile(
             title: Text(context.lang.settingsPrivacyBlockUsers),
             subtitle: StreamBuilder(
-              stream: twonlyDatabase.contactsDao.watchContactsBlocked(),
+              stream: twonlyDB.contactsDao.watchContactsBlocked(),
               builder: (context, snapshot) {
                 if (snapshot.hasData && snapshot.data != null) {
                   return Text(

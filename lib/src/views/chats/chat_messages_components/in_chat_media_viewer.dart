@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/providers/api/media_send.dart' as send;
+import 'package:twonly/src/services/api/media_send.dart' as send;
 import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/views/gallery/gallery_item.dart';
-import 'package:twonly/src/views/gallery/gallery_photo_view.dart';
+import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
 import 'package:video_player/video_player.dart';
 
 class InChatMediaViewer extends StatefulWidget {
@@ -23,7 +23,7 @@ class InChatMediaViewer extends StatefulWidget {
 
   final Message message;
   final Contact contact;
-  final List<GalleryItem> galleryItems;
+  final List<MemoryItem> galleryItems;
   final Color color;
 
   @override
@@ -60,7 +60,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     /// image is already show
     if (widget.message.mediaStored) return;
 
-    final stream = twonlyDatabase.messagesDao
+    final stream = twonlyDB.messagesDao
         .getMessageByMessageId(widget.message.messageId)
         .watchSingleOrNull();
     messageStream = stream.listen((updated) async {
@@ -116,7 +116,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => GalleryPhotoViewWrapper(
+        builder: (context) => MemoriesPhotoSliderView(
           galleryItems: widget.galleryItems,
           initialIndex: widget.galleryItems.indexWhere((x) =>
               x.id ==
