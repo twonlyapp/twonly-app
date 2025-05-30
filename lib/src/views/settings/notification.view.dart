@@ -33,8 +33,11 @@ class NotificationView extends StatelessWidget {
 
               if (storedToken == null) {
                 final platform = Platform.isAndroid ? "Google's" : "Apple's";
-                showAlertDialog(context, "Problem detected",
-                    "twonly is not able to register your app to $platform push server infrastrukture. For Android that can happen when you do not have the Google Play Services installed. If you theses installed and want to help us to fix the issue please send us your debug log in Settings > Help > Debug log.");
+                showAlertDialog(
+                  context,
+                  "Problem detected",
+                  "twonly is not able to register your app to $platform push server infrastructure. For Android that can happen when you do not have the Google Play Services installed. If you theses installed and want to help us to fix the issue please send us your debug log in Settings > Help > Debug log.",
+                );
               } else {
                 final run = await showAlertDialog(
                     context,

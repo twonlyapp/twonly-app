@@ -16,13 +16,16 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart' as my;
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/utils/log.dart';
 
 class PushUser {
   String displayName;
+  bool blocked;
   List<PushKeyMeta> keys;
 
   PushUser({
     required this.displayName,
+    required this.blocked,
     required this.keys,
   });
 
@@ -30,6 +33,7 @@ class PushUser {
   factory PushUser.fromJson(Map<String, dynamic> json) {
     return PushUser(
       displayName: json['displayName'],
+      blocked: json['blocked'] ?? false,
       keys: (json['keys'] as List)
           .map((keyJson) => PushKeyMeta.fromJson(keyJson))
           .toList(),
@@ -40,6 +44,7 @@ class PushUser {
   Map<String, dynamic> toJson() {
     return {
       'displayName': displayName,
+      'blocked': blocked,
       'keys': keys.map((key) => key.toJson()).toList(),
     };
   }
@@ -111,6 +116,7 @@ Future setupNotificationWithUsers({bool force = false}) async {
       await sendNewPushKey(contact.userId, pushKey);
       final pushUser = PushUser(
         displayName: getContactDisplayName(contact),
+        blocked: contact.blocked,
         keys: [pushKey],
       );
       pushKeys[contact.userId] = pushUser;
@@ -135,11 +141,29 @@ Future sendNewPushKey(int userId, PushKeyMeta pushKey) async {
   );
 }
 
+Future updatePushUser(Contact contact) async {
+  var receivingPushKeys = await getPushKeys("receivingPushKeys");
+
+  if (receivingPushKeys[contact.userId] == null) {
+    receivingPushKeys[contact.userId] = PushUser(
+      displayName: getContactDisplayName(contact),
+      keys: [],
+      blocked: contact.blocked,
+    );
+  } else {
+    receivingPushKeys[contact.userId]!.displayName =
+        getContactDisplayName(contact);
+    receivingPushKeys[contact.userId]!.blocked = contact.blocked;
+  }
+
+  await setPushKeys("receivingPushKeys", receivingPushKeys);
+}
+
 Future handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
   var pushKeys = await getPushKeys("sendingPushKeys");
 
   if (pushKeys[fromUserId] == null) {
-    pushKeys[fromUserId] = PushUser(displayName: "-", keys: []);
+    pushKeys[fromUserId] = PushUser(displayName: "-", keys: [], blocked: false);
   }
 
   // only store the newest key...
@@ -355,7 +379,14 @@ Future setPushKeys(String storageKey, Map<int, PushUser> pushKeys) async {
     jsonToSend[key.toString()] = value.toJson();
   });
 
-  await storage.delete(key: storageKey);
+  await storage.delete(
+    key: storageKey,
+    iOptions: IOSOptions(
+      groupId: "CN332ZUGRP.eu.twonly.shared",
+      synchronizable: false,
+      accessibility: KeychainAccessibility.first_unlock,
+    ),
+  );
 
   String jsonString = jsonEncode(jsonToSend);
   await storage.write(
@@ -432,6 +463,12 @@ Future showLocalPushNotification(
       .getSingleOrNull();
 
   if (user == null) return;
+
+  // do not show notification for blocked users...
+  if (user.blocked) {
+    Log.info("Blocked a message from a blocked user!");
+    return;
+  }
 
   title = getContactDisplayName(user);
   body = getPushNotificationText(pushKind);

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:twonly/src/database/tables/contacts_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/services/notification.service.dart';
 
 part 'contacts_dao.g.dart';
 
@@ -97,9 +98,17 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     return (delete(contacts)..where((t) => t.userId.equals(userId))).go();
   }
 
-  Future updateContact(int userId, ContactsCompanion updatedValues) {
-    return (update(contacts)..where((c) => c.userId.equals(userId)))
-        .write(updatedValues);
+  Future updateContact(int userId, ContactsCompanion updatedValues) async {
+    await ((update(contacts)..where((c) => c.userId.equals(userId)))
+        .write(updatedValues));
+    if (updatedValues.blocked.present ||
+        updatedValues.displayName.present ||
+        updatedValues.nickName.present) {
+      final contact = await getContactByUserId(userId).getSingleOrNull();
+      if (contact != null) {
+        await updatePushUser(contact);
+      }
+    }
   }
 
   Future newMessageExchange(int userId) {

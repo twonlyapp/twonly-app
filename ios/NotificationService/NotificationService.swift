@@ -28,11 +28,16 @@ class NotificationService: UNNotificationServiceExtension {
             let data = getPushNotificationData(pushDataJson: push_data)
             
             if data != nil {
+                if data!.title == "blocked" {
+                    NSLog("Block message because user is blocked!")
+                    // https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.usernotifications.filtering
+                    return contentHandler(UNNotificationContent())
+                }
                 bestAttemptContent.title = data!.title;
                 bestAttemptContent.body = data!.body;
                 bestAttemptContent.threadIdentifier = String(format: "%d", data!.notificationId)
             } else {
-                bestAttemptContent.title = "\(bestAttemptContent.title) [10]"
+                bestAttemptContent.title = "\(bestAttemptContent.title)"
             }
             
             contentHandler(bestAttemptContent)
@@ -81,6 +86,7 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
     var pushKind: PushKind?
     var displayName: String?
     var fromUserId: Int?
+    var blocked: Bool?
 
     // Check the keyId
     if pushData.keyId == 0 {
@@ -96,6 +102,7 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
                         if pushKind != nil {
                             displayName = userKeys.displayName
                             fromUserId = userId
+                            blocked = userKeys.blocked
                             break
                         }
                     }
@@ -106,6 +113,10 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
         } else {
             NSLog("pushKeys are empty")
         }
+    }
+    
+    if blocked == true {
+        return ("blocked", "blocked", 0)
     }
 
     // Handle the push notification based on the pushKind
@@ -118,7 +129,7 @@ func getPushNotificationData(pushDataJson: String) -> (title: String, body: Stri
         } else {
             return ("", getPushNotificationTextWithoutUserId(pushKind: pushKind), 1)
         }
-        
+
     } else {
         NSLog("Failed to decrypt message or pushKind is nil")
     }
@@ -259,17 +270,19 @@ struct PushKeyMeta: Codable {
 struct PushUser: Codable {
     let displayName: String
     let keys: [PushKeyMeta]
+    let blocked: Bool?
     
     enum CodingKeys: String, CodingKey {
         case displayName
         case keys
+        case blocked
     }
 }
 
 func getPushKey() -> [Int: PushUser]? {
     // Retrieve the data from secure storage (Keychain)
     guard let data = readFromKeychain(key: "receivingPushKeys") else {
-        print("No data found for key: receivingPushKeys")
+        NSLog("No data found for key: receivingPushKeys")
         return nil
     }
     
@@ -279,18 +292,18 @@ func getPushKey() -> [Int: PushUser]? {
         let jsonMap = try JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any]
         
         var pushKeys: [Int: PushUser] = [:]
-        
+    
         // Iterate through the JSON map and decode each PushUser
         for (key, value) in jsonMap ?? [:] {
-            if let userData = try? JSONSerialization.data(withJSONObject: value, options: []),
-               let pushUser = try? JSONDecoder().decode(PushUser.self, from: userData) {
-                pushKeys[Int(key)!] = pushUser
-            }
+                if let userData = try? JSONSerialization.data(withJSONObject: value, options: []),
+                   let pushUser = try? JSONDecoder().decode(PushUser.self, from: userData) {
+                    pushKeys[Int(key)!] = pushUser
+                }
         }
         
         return pushKeys
     } catch {
-        print("Error decoding JSON: \(error)")
+        NSLog("Error decoding JSON: \(error)")
         return nil
     }
 }
