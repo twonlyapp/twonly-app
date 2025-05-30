@@ -5,15 +5,15 @@ import 'package:twonly/src/model/json/userdata.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/settings/account_view.dart';
-import 'package:twonly/src/views/settings/appearance_view.dart';
-import 'package:twonly/src/views/settings/chat/chat_settings_view.dart';
-import 'package:twonly/src/views/settings/data_and_storage_view.dart';
-import 'package:twonly/src/views/settings/notification_view.dart';
-import 'package:twonly/src/views/settings/profile/profile_view.dart';
-import 'package:twonly/src/views/settings/help/help_view.dart';
-import 'package:twonly/src/views/settings/privacy_view.dart';
-import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
+import 'package:twonly/src/views/settings/account.view.dart';
+import 'package:twonly/src/views/settings/appearance.view.dart';
+import 'package:twonly/src/views/settings/chat/chat_settings.view.dart';
+import 'package:twonly/src/views/settings/data_and_storage.view.dart';
+import 'package:twonly/src/views/settings/notification.view.dart';
+import 'package:twonly/src/views/settings/profile/profile.view.dart';
+import 'package:twonly/src/views/settings/help/help.view.dart';
+import 'package:twonly/src/views/settings/privacy.view.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class SettingsMainView extends StatefulWidget {
   const SettingsMainView({super.key});

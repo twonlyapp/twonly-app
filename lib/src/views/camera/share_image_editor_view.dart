@@ -23,7 +23,7 @@ import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/layers_viewer.dart';
 import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 import 'package:video_player/video_player.dart';
 
 List<Layer> layers = [];

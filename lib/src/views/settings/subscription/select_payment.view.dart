@@ -5,8 +5,8 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
-import 'package:twonly/src/views/settings/subscription/voucher_view.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
+import 'package:twonly/src/views/settings/subscription/voucher.view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SelectPaymentView extends StatefulWidget {

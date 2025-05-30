@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/subscription/select_payment.dart';
-import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
+import 'package:twonly/src/views/settings/subscription/select_payment.view.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class CheckoutView extends StatefulWidget {
   const CheckoutView(

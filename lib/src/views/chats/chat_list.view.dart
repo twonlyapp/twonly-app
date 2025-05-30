@@ -18,10 +18,10 @@ import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/views/chats/start_new_chat.view.dart';
-import 'package:twonly/src/views/settings/settings_main_view.dart';
+import 'package:twonly/src/views/settings/settings_main.view.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});

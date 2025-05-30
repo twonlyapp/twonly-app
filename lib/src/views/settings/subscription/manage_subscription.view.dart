@@ -6,7 +6,7 @@ import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class ManageSubscriptionView extends StatefulWidget {
   const ManageSubscriptionView(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/privacy_view_block_users.dart';
+import 'package:twonly/src/views/settings/privacy_view_block.users.dart';
 
 class PrivacyView extends StatefulWidget {
   const PrivacyView({super.key});

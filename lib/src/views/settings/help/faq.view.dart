@@ -5,14 +5,14 @@ import 'package:logging/logging.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class FAQPage extends StatefulWidget {
-  const FAQPage({super.key});
+class FaqView extends StatefulWidget {
+  const FaqView({super.key});
 
   @override
-  State<FAQPage> createState() => _FAQPageState();
+  State<FaqView> createState() => _FaqViewState();
 }
 
-class _FAQPageState extends State<FAQPage> {
+class _FaqViewState extends State<FaqView> {
   Map<String, dynamic>? _faqData;
   String? _locale;
   late String domain;

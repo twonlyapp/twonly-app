@@ -6,7 +6,7 @@ import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/settings/profile/modify_avatar_view.dart';
+import 'package:twonly/src/views/settings/profile/modify_avatar.view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});

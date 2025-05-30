@@ -13,11 +13,11 @@ import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
-import 'package:twonly/src/views/settings/subscription/additional_users_view.dart';
-import 'package:twonly/src/views/settings/subscription/checkout_view.dart';
-import 'package:twonly/src/views/settings/subscription/manage_subscription_view.dart';
-import 'package:twonly/src/views/settings/subscription/transaction_view.dart';
-import 'package:twonly/src/views/settings/subscription/voucher_view.dart';
+import 'package:twonly/src/views/settings/subscription/additional_users.view.dart';
+import 'package:twonly/src/views/settings/subscription/checkout.view.dart';
+import 'package:twonly/src/views/settings/subscription/manage_subscription.view.dart';
+import 'package:twonly/src/views/settings/subscription/transaction.view.dart';
+import 'package:twonly/src/views/settings/subscription/voucher.view.dart';
 
 String localePrizing(BuildContext context, int cents) {
   Locale myLocale = Localizations.localeOf(context);

@@ -11,7 +11,7 @@ import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
   List<Response_AddAccountsInvite>? ballance;
