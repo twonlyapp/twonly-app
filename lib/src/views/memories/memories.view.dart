@@ -21,7 +21,6 @@ class MemoriesViewState extends State<MemoriesView> {
   List<MemoryItem> galleryItems = [];
   Map<String, List<int>> orderedByMonth = {};
   List<String> months = [];
-  bool mounted = true;
   StreamSubscription<List<Message>>? messageSub;
 
   @override
@@ -32,7 +31,6 @@ class MemoriesViewState extends State<MemoriesView> {
 
   @override
   void dispose() {
-    mounted = false;
     messageSub?.cancel();
     super.dispose();
   }

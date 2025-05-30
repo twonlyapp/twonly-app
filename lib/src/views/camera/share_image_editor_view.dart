@@ -320,7 +320,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
     Future<Uint8List?> imageBytes = getMergedImage();
     videoController?.pause();
-    if (isDisposed || !context.mounted) return;
+    if (isDisposed || !mounted) return;
     bool? wasSend = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -336,7 +336,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         ),
       ),
     );
-    if (wasSend != null && wasSend && context.mounted) {
+    if (wasSend != null && wasSend && mounted) {
       // ignore: use_build_context_synchronously
       Navigator.pop(context, true);
     } else {
@@ -404,11 +404,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       setState(() {
         sendingOrLoadingImage = false;
       });
-      await Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return SubscriptionView(
-          redirectError: err,
-        );
-      }));
+      if (mounted) {
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return SubscriptionView(
+            redirectError: err,
+          );
+        }));
+      }
     } else {
       Future imageHandler =
           addOrModifyImageToUpload(mediaUploadId!, imageBytes);

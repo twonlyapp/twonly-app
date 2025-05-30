@@ -44,7 +44,7 @@ class _EmojisState extends State<Emojis> {
       user.lastUsedEditorEmojis!.toSet().toList();
     }
     await updateUser(user);
-    if (!context.mounted) return;
+    if (!mounted) return;
     Navigator.pop(
       context,
       EmojiLayerData(

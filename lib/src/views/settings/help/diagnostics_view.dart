@@ -67,10 +67,12 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
 
                           if (result.status != ShareResultStatus.success) {
                             Clipboard.setData(ClipboardData(text: logText));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Log copied to clipboard!')),
-                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Log copied to clipboard!')),
+                              );
+                            }
                           }
                         },
                         child: const Text('Share debug log'),

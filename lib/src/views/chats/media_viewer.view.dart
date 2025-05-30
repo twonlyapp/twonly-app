@@ -58,7 +58,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   bool imageSaved = false;
   bool imageSaving = false;
-  bool isMounted = true;
 
   StreamSubscription<Message?>? downloadStateListener;
 
@@ -85,7 +84,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _subscription.cancel();
     downloadStateListener?.cancel();
     videoController?.dispose();
-    isMounted = false;
     super.dispose();
   }
 
@@ -120,7 +118,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future nextMediaOrExit() async {
-    if (!isMounted) return;
+    if (!mounted) return;
     videoController?.dispose();
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
@@ -135,7 +133,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
     }
     if (allMediaFiles.isEmpty || allMediaFiles.length == 1) {
-      if (isMounted) {
+      if (mounted) {
         Navigator.pop(context);
       }
     } else {
@@ -145,7 +143,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future loadCurrentMediaFile({bool showTwonly = false}) async {
-    if (!isMounted) return;
+    if (!mounted) return;
     if (!context.mounted || allMediaFiles.isEmpty) return nextMediaOrExit();
     await _noScreenshot.screenshotOff();
 
@@ -181,7 +179,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           if (updated.downloadState == DownloadState.downloaded) {
             downloadStateListener?.cancel();
             await handleNextDownloadedMedia(updated, showTwonly);
-            // start downloading all the other possibile missing media files.
+            // start downloading all the other possible missing media files.
             tryDownloadAllMediaFiles(force: true);
           }
         }
@@ -443,7 +441,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 return CameraSendToView(widget.contact);
               },
             ));
-            if (isMounted && maxShowTime != gMediaShowInfinite) {
+            if (mounted && maxShowTime != gMediaShowInfinite) {
               nextMediaOrExit();
             } else {
               videoController?.play();

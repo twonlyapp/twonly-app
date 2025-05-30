@@ -70,7 +70,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
     setState(() {});
     await send.purgeSendMediaFiles();
     await received.purgeReceivedMediaFiles();
-    if (context.mounted) {
+    if (mounted) {
       Navigator.pop(context, true);
     }
   }

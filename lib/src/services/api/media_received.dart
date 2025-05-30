@@ -15,6 +15,7 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:logging/logging.dart';
 import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
     as client;
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 Map<int, DateTime> downloadStartedForMediaReceived = {};
@@ -143,7 +144,8 @@ Future startDownloadMedia(Message message, bool force) async {
   response.asStream().listen((http.StreamedResponse r) {
     r.stream.listen((List<int> chunk) {
       // Display percentage of completion
-      print('downloadPercentage: ${downloaded / (r.contentLength ?? 0) * 100}');
+      Log.info(
+          'downloadPercentage: ${downloaded / (r.contentLength ?? 0) * 100}');
 
       chunks.add(chunk);
       downloaded += chunk.length;
@@ -160,7 +162,8 @@ Future startDownloadMedia(Message message, bool force) async {
       }
 
       // Display percentage of completion
-      print('downloadPercentage: ${downloaded / (r.contentLength ?? 0) * 100}');
+      Log.info(
+          'downloadPercentage: ${downloaded / (r.contentLength ?? 0) * 100}');
 
       // Save the file
       final Uint8List bytes = Uint8List(r.contentLength ?? 0);
@@ -203,9 +206,9 @@ Future handleEncryptedFile(Message msg, {Uint8List? encryptedBytesTmp}) async {
     var imageBytes = Uint8List.fromList(plaintextBytes);
 
     if (content.isVideo) {
-      final splited = extractUint8Lists(imageBytes);
-      imageBytes = splited[0];
-      await writeMediaFile(msg.messageId, "mp4", splited[1]);
+      final extractedBytes = extractUint8Lists(imageBytes);
+      imageBytes = extractedBytes[0];
+      await writeMediaFile(msg.messageId, "mp4", extractedBytes[1]);
     }
 
     await writeMediaFile(msg.messageId, "png", imageBytes);
@@ -272,7 +275,7 @@ Future<void> deleteMediaFile(int mediaId, String type) async {
       await file.delete();
     }
   } catch (e) {
-    Logger("media_received.dart").shout("Erro deleting: $e");
+    Logger("media_received.dart").shout("Error deleting: $e");
   }
 }
 

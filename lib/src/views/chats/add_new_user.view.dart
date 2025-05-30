@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -16,8 +17,6 @@ import 'package:twonly/src/views/components/headline.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/services/api/messages.dart';
-// ignore: library_prefixes
-import 'package:twonly/src/services/signal/utils.signal.dart' as SignalHelper;
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/subscription/subscription_view.dart';
 
@@ -92,7 +91,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
       );
 
       if (added > 0) {
-        if (await SignalHelper.addNewContact(res.value.userdata)) {
+        if (await createNewSignalSession(res.value.userdata)) {
           // before notifying the other party, add
           await setupNotificationWithUsers();
           await encryptAndSendMessageAsync(

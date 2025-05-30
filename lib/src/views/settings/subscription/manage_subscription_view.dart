@@ -46,9 +46,11 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
   Future toggleRenewalOption() async {
     Result res = await apiService.updatePlanOptions(!autoRenewal!);
     if (res.isError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorCodeToText(context, res.error))),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorCodeToText(context, res.error))),
+        );
+      }
     }
     await initAsync(true);
   }
@@ -88,12 +90,12 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
                 },
               ),
             ),
-          SizedBox(height: 20),
-          Divider(),
-          ListTile(
-            title: Text("Kündigen"),
-            onTap: () async {},
-          ),
+          // SizedBox(height: 20),
+          // Divider(),
+          // ListTile(
+          //   title: Text("Cancel subscription"),
+          //   onTap: () async {},
+          // ),
         ],
       ),
     );

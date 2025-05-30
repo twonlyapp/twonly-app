@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Future<Uint8List?> signalEncryptMessage(int target, MessageJson msg) async {
@@ -24,7 +24,7 @@ Future<Uint8List?> signalEncryptMessage(int target, MessageJson msg) async {
 
     return b.takeBytes();
   } catch (e) {
-    Logger("utils/signal").shout(e.toString());
+    Log.error(e.toString());
     return null;
   }
 }
@@ -38,7 +38,7 @@ Future<MessageJson?> signalDecryptMessage(int source, Uint8List msg) async {
 
     List<Uint8List>? msgs = removeLastXBytes(msg, 4);
     if (msgs == null) {
-      Logger("utils/signal").shout("Message requires at least 4 bytes.");
+      Log.error("Message requires at least 4 bytes.");
       return null;
     }
     Uint8List body = msgs[0];
@@ -51,14 +51,13 @@ Future<MessageJson?> signalDecryptMessage(int source, Uint8List msg) async {
       SignalMessage signalMsg = SignalMessage.fromSerialized(body);
       plaintext = await session.decryptFromSignal(signalMsg);
     } else {
-      Logger("utils/signal").shout("Type not known: $type");
+      Log.error("Type not known: $type");
       return null;
     }
-    MessageJson dectext =
-        MessageJson.fromJson(jsonDecode(utf8.decode(gzip.decode(plaintext))));
-    return dectext;
+    return MessageJson.fromJson(
+        jsonDecode(utf8.decode(gzip.decode(plaintext))));
   } catch (e) {
-    Logger("utils/signal").shout(e.toString());
+    Log.error(e.toString());
     return null;
   }
 }

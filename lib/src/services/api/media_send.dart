@@ -131,7 +131,6 @@ Future<Uint8List> addOrModifyImageToUpload(
 
   /// in case the media file was already encrypted of even uploaded
   /// remove the data so it will be done again.
-  /// TODO: when the uploadTokens are already set notify the server...
   await twonlyDB.mediaUploadsDao.updateMediaUpload(
     mediaUploadId,
     MediaUploadsCompanion(

@@ -204,7 +204,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   Future<void> updateScaleFactor(double newScale) async {
     if (selectedCameraDetails.scaleFactor == newScale ||
-        cameraController == null) return;
+        cameraController == null) {
+      return;
+    }
     await cameraController?.setZoomLevel(newScale.clamp(
         selectedCameraDetails.minAvailableZoom,
         selectedCameraDetails.maxAvailableZoom));
@@ -253,7 +255,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
 
     await cameraController?.pausePreview();
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     cameraController?.setFlashMode(
         selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off);
@@ -286,13 +288,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         reverseTransitionDuration: Duration.zero,
       ),
     );
-    if (context.mounted) {
+    if (mounted) {
       setState(() {
         sharePreviewIsShown = false;
         showSelfieFlash = false;
       });
     }
-    if (!context.mounted) return true;
+    if (!mounted) return true;
     // shouldReturn is null when the user used the back button
     if (shouldReturn != null && shouldReturn) {
       // ignore: use_build_context_synchronously
@@ -348,8 +350,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future startVideoRecording() async {
-    if (cameraController != null && cameraController!.value.isRecordingVideo)
+    if (cameraController != null && cameraController!.value.isRecordingVideo) {
       return;
+    }
     if (hasAudioPermission && videoWithAudio) {
       await widget.selectCamera(
         selectedCameraDetails.cameraId,

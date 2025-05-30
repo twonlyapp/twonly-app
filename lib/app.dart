@@ -52,7 +52,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   Future setUserPlan() async {
     final user = await getUser();
     globalBestFriendUserId = -1;
-    if (user != null && context.mounted) {
+    if (user != null && mounted) {
       if (user.myBestFriendContactId != null) {
         final contact = await twonlyDB.contactsDao
             .getContactByUserId(user.myBestFriendContactId!)
@@ -63,7 +63,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           }
         }
       }
-      context.read<CustomChangeProvider>().updatePlan(user.subscriptionPlan);
+      if (mounted) {
+        context.read<CustomChangeProvider>().updatePlan(user.subscriptionPlan);
+      }
     }
   }
 

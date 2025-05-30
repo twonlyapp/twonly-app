@@ -4,12 +4,12 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/views/components/format_long_string.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ContactVerifyView extends StatefulWidget {

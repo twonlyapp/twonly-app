@@ -64,7 +64,7 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
         } else {
           memoryPath += ".png";
           Uint8List? imageBytes = await widget.getMergedImage();
-          if (imageBytes == null || !context.mounted) return;
+          if (imageBytes == null || !mounted) return;
           await File(memoryPath).writeAsBytes(imageBytes);
           res = await saveImageToGallery(imageBytes);
         }
@@ -72,7 +72,7 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
           setState(() {
             _imageSaved = true;
           });
-        } else {
+        } else if (mounted && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(res),

@@ -30,7 +30,6 @@ class _FAQPageState extends State<FAQPage> {
       final response = await http.get(Uri.parse("$domain/faq.json"));
 
       if (response.statusCode == 200) {
-        _locale = Localizations.localeOf(context).languageCode;
         setState(() {
           _faqData = json.decode(utf8.decode(response.bodyBytes));
           noInternet = false;
