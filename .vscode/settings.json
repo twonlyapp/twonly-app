@@ -1,5 +1,5 @@
 {
-    "files.watcherExclude": {
+    "files.exclude": {
         "dependencies": false
     }
 }
