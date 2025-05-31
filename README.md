@@ -13,5 +13,9 @@ pub.dev or because they require some special installation.
 
 ```bash
 git submodule update --init --recursive
+
+cd dependencies/flutter_zxing
+git submodule update --init --recursive
+./scripts/update_ios_macos_src.s
 ```
 

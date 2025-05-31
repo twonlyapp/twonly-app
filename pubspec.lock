@@ -716,6 +716,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_zxing:
+    dependency: "direct main"
+    description:
+      path: "dependencies/flutter_zxing"
+      relative: true
+    source: path
+    version: "2.1.0"
   font_awesome_flutter:
     dependency: "direct main"
     description:

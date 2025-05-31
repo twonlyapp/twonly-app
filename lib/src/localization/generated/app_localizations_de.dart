@@ -386,6 +386,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactVerifyNumberTitle => 'Sicherheitsnummer verifizieren';
 
   @override
+  String get contactVerifyNumberTapToScan => 'Zum Scannen tippen';
+
+  @override
   String get contactVerifyNumberMarkAsVerified => 'Als verifiziert markieren';
 
   @override

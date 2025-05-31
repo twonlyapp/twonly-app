@@ -788,6 +788,12 @@ abstract class AppLocalizations {
   /// **'Verify safety number'**
   String get contactVerifyNumberTitle;
 
+  /// No description provided for @contactVerifyNumberTapToScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to scan'**
+  String get contactVerifyNumberTapToScan;
+
   /// No description provided for @contactVerifyNumberMarkAsVerified.
   ///
   /// In en, this message translates to:

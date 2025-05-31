@@ -231,6 +231,8 @@
   "@settingsAccountDeleteModalBody": {},
   "contactVerifyNumberTitle": "Verify safety number",
   "@contactVerifyNumberTitle": {},
+  "contactVerifyNumberTapToScan": "Tap to scan",
+  "@contactVerifyNumberTapToScan": {},
   "contactVerifyNumberMarkAsVerified": "Mark as verified",
   "@contactVerifyNumberMarkAsVerified": {},
   "contactVerifyNumberClearVerification": "Clear verification",

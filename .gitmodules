@@ -1,3 +1,6 @@
 [submodule "dependencies/flutter_secure_storage"]
 	path = dependencies/flutter_secure_storage
 	url = https://github.com/juliansteenbakker/flutter_secure_storage
+[submodule "dependencies/flutter_zxing"]
+	path = dependencies/flutter_zxing
+	url = https://github.com/khoren93/flutter_zxing.git

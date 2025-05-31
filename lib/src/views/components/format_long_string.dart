@@ -30,7 +30,7 @@ class FormattedStringWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return SelectableText(
       formatString(longString),
-      style: TextStyle(fontSize: 18, color: Colors.black),
+      style: TextStyle(fontSize: 16, color: Colors.black),
       textAlign: TextAlign.center,
     );
   }

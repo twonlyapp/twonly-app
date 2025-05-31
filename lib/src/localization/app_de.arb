@@ -131,6 +131,7 @@
     "settingsAccountDeleteModalTitle": "Bist du sicher?",
     "settingsAccountDeleteModalBody": "Dein Konto wird gelöscht. Es gibt keine Möglichkeit, es wiederherzustellen.",
     "contactVerifyNumberTitle": "Sicherheitsnummer verifizieren",
+    "contactVerifyNumberTapToScan": "Zum Scannen tippen",
     "contactVerifyNumberMarkAsVerified": "Als verifiziert markieren",
     "contactVerifyNumberClearVerification": "Verifizierung aufheben",
     "contactVerifyNumberLongDesc": "Um die Ende-zu-Ende-Verschlüsselung mit {username} zu verifizieren, vergleiche die Zahlen mit ihrem Gerät. Die Person kann auch deinen Code mit ihrem Gerät scannen.",
