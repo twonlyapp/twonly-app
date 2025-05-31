@@ -371,6 +371,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAccountDeleteAccount => 'Delete account';
 
   @override
+  String settingsAccountDeleteAccountWithBallance(Object credit) {
+    return 'In the next step, you can select what you want to to with the remaining credit ($credit).';
+  }
+
+  @override
+  String get settingsAccountDeleteAccountNoBallance =>
+      'Once you delete your account, there is no going back.';
+
+  @override
+  String get settingsAccountDeleteAccountNoInternet =>
+      'An Internet connection is required to delete your account.';
+
+  @override
   String get settingsAccountDeleteModalTitle => 'Are you sure?';
 
   @override

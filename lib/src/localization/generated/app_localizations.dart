@@ -770,6 +770,24 @@ abstract class AppLocalizations {
   /// **'Delete account'**
   String get settingsAccountDeleteAccount;
 
+  /// No description provided for @settingsAccountDeleteAccountWithBallance.
+  ///
+  /// In en, this message translates to:
+  /// **'In the next step, you can select what you want to to with the remaining credit ({credit}).'**
+  String settingsAccountDeleteAccountWithBallance(Object credit);
+
+  /// No description provided for @settingsAccountDeleteAccountNoBallance.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you delete your account, there is no going back.'**
+  String get settingsAccountDeleteAccountNoBallance;
+
+  /// No description provided for @settingsAccountDeleteAccountNoInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'An Internet connection is required to delete your account.'**
+  String get settingsAccountDeleteAccountNoInternet;
+
   /// No description provided for @settingsAccountDeleteModalTitle.
   ///
   /// In en, this message translates to:

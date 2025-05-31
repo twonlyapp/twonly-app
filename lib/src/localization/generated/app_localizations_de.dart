@@ -376,6 +376,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsAccountDeleteAccount => 'Konto löschen';
 
   @override
+  String settingsAccountDeleteAccountWithBallance(Object credit) {
+    return 'Im nächsten Schritt kannst du auswählen, was du mit dem Restguthaben ($credit) machen willst.';
+  }
+
+  @override
+  String get settingsAccountDeleteAccountNoBallance =>
+      'Wenn du dein Konto gelöscht hast, gibt es keinen Weg zurück.';
+
+  @override
+  String get settingsAccountDeleteAccountNoInternet =>
+      'Zum Löschen deines Accounts ist eine Internetverbindung erforderlich.';
+
+  @override
   String get settingsAccountDeleteModalTitle => 'Bist du sicher?';
 
   @override

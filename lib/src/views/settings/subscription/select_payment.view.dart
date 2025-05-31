@@ -10,12 +10,13 @@ import 'package:twonly/src/views/settings/subscription/voucher.view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SelectPaymentView extends StatefulWidget {
-  const SelectPaymentView(
-      {super.key,
-      this.planId,
-      this.payMonthly,
-      this.valueInCents,
-      this.refund});
+  const SelectPaymentView({
+    super.key,
+    this.planId,
+    this.payMonthly,
+    this.valueInCents,
+    this.refund,
+  });
 
   final String? planId;
   final bool? payMonthly;
@@ -33,7 +34,7 @@ enum PaymentMethods {
 }
 
 class _SelectPaymentViewState extends State<SelectPaymentView> {
-  int? ballanceInCents;
+  int? balanceInCents;
   int checkoutInCents = 0;
   bool tryAutoRenewal = true;
 
@@ -47,9 +48,9 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
   }
 
   Future initAsync() async {
-    final ballance = await loadPlanBallance();
-    ballanceInCents =
-        ballance!.transactions.map((a) => a.depositCents.toInt()).sum;
+    final balance = await loadPlanBalance();
+    balanceInCents =
+        balance!.transactions.map((a) => a.depositCents.toInt()).sum;
     setState(() {});
   }
 
@@ -74,7 +75,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
         ? "${localePrizing(context, checkoutInCents)}/${(widget.payMonthly!) ? context.lang.month : context.lang.year}"
         : localePrizing(context, checkoutInCents);
     bool canPay = (paymentMethods == PaymentMethods.twonlyCredit &&
-        (ballanceInCents == null || ballanceInCents! >= checkoutInCents));
+        (balanceInCents == null || balanceInCents! >= checkoutInCents));
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.selectPaymentMethode),
@@ -98,9 +99,9 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(context.lang.twonlyCredit),
-                                if (ballanceInCents != null)
+                                if (balanceInCents != null)
                                   Text(
-                                    "${context.lang.currentBalance}: ${localePrizing(context, ballanceInCents!)}",
+                                    "${context.lang.currentBalance}: ${localePrizing(context, balanceInCents!)}",
                                     style: TextStyle(fontSize: 10),
                                   )
                               ],

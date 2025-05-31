@@ -532,6 +532,13 @@ class ApiService {
     return await sendRequestSync(req);
   }
 
+  Future<Result> deleteAccount() async {
+    var get = ApplicationData_DeleteAccount();
+    var appData = ApplicationData()..deleteaccount = get;
+    var req = createClientToServerFromApplicationData(appData);
+    return await sendRequestSync(req);
+  }
+
   Future<Result> redeemUserInviteCode(String inviteCode) async {
     var get = ApplicationData_RedeemAdditionalCode()..inviteCode = inviteCode;
     var appData = ApplicationData()..redeemadditionalcode = get;

@@ -47,6 +47,7 @@ const ErrorCode$json = {
     {'1': 'PlanDowngrade', '2': 1025},
     {'1': 'PlanUpgradeNotYearly', '2': 1026},
     {'1': 'InvalidSignedPreKey', '2': 1027},
+    {'1': 'UserIdNotFound', '2': 1028},
   ],
 };
 
@@ -65,5 +66,5 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'Cg5JbnZhbGlkUHJlS2V5cxD8BxITCg5Wb3VjaGVySW5WYWxpZBD9BxITCg5QbGFuTm90QWxsb3'
     'dlZBD+BxIVChBQbGFuTGltaXRSZWFjaGVkEP8HEhQKD05vdEVub3VnaENyZWRpdBCACBISCg1Q'
     'bGFuRG93bmdyYWRlEIEIEhkKFFBsYW5VcGdyYWRlTm90WWVhcmx5EIIIEhgKE0ludmFsaWRTaW'
-    'duZWRQcmVLZXkQgwg=');
+    'duZWRQcmVLZXkQgwgSEwoOVXNlcklkTm90Rm91bmQQhAg=');
 

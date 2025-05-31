@@ -35,7 +35,7 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
 
   Future initAsync(bool force) async {
     if (force) {
-      ballance = await loadPlanBallance();
+      ballance = await loadPlanBalance();
       if (ballance != null) {
         autoRenewal = ballance!.autoRenewal;
       }
@@ -90,12 +90,6 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
                 },
               ),
             ),
-          // SizedBox(height: 20),
-          // Divider(),
-          // ListTile(
-          //   title: Text("Cancel subscription"),
-          //   onTap: () async {},
-          // ),
         ],
       ),
     );

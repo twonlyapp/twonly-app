@@ -57,7 +57,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
   Future initAsync(bool force) async {
     additionalInvites = await loadAdditionalUserInvites();
     if (force) {
-      ballance = await loadPlanBallance();
+      ballance = await loadPlanBalance();
     }
     setState(() {});
   }

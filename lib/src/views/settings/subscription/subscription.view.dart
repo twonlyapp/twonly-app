@@ -35,7 +35,7 @@ String localePrizing(BuildContext context, int cents) {
   ).format(cents / 100);
 }
 
-Future<Response_PlanBallance?> loadPlanBallance() async {
+Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
   Response_PlanBallance? ballance;
   final user = await getUser();
   if (user == null) return ballance;
@@ -43,7 +43,7 @@ Future<Response_PlanBallance?> loadPlanBallance() async {
   if (ballance != null) {
     user.lastPlanBallance = ballance.writeToJson();
     await updateUser(user);
-  } else if (user.lastPlanBallance != null) {
+  } else if (user.lastPlanBallance != null && useCache) {
     try {
       ballance = Response_PlanBallance.fromJson(
         user.lastPlanBallance!,
@@ -113,7 +113,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future initAsync() async {
-    ballance = await loadPlanBallance();
+    ballance = await loadPlanBalance();
     if (ballance != null && ballance!.hasAdditionalAccountOwnerId()) {
       final ownerId = ballance!.additionalAccountOwnerId.toInt();
       Contact? contact = await twonlyDB.contactsDao

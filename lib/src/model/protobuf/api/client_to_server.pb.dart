@@ -1851,6 +1851,38 @@ class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
   void clearDownloadToken() => clearField(1);
 }
 
+class ApplicationData_DeleteAccount extends $pb.GeneratedMessage {
+  factory ApplicationData_DeleteAccount() => create();
+  ApplicationData_DeleteAccount._() : super();
+  factory ApplicationData_DeleteAccount.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_DeleteAccount.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.DeleteAccount', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DeleteAccount clone() => ApplicationData_DeleteAccount()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DeleteAccount copyWith(void Function(ApplicationData_DeleteAccount) updates) => super.copyWith((message) => updates(message as ApplicationData_DeleteAccount)) as ApplicationData_DeleteAccount;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DeleteAccount create() => ApplicationData_DeleteAccount._();
+  ApplicationData_DeleteAccount createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_DeleteAccount> createRepeated() => $pb.PbList<ApplicationData_DeleteAccount>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_DeleteAccount getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_DeleteAccount>(create);
+  static ApplicationData_DeleteAccount? _defaultInstance;
+}
+
 enum ApplicationData_ApplicationData {
   textmessage, 
   getuserbyusername, 
@@ -1875,6 +1907,7 @@ enum ApplicationData_ApplicationData {
   uploaddone, 
   getsignedprekeybyuserid, 
   updatesignedprekey, 
+  deleteaccount, 
   notSet
 }
 
@@ -1903,6 +1936,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_UploadDone? uploaddone,
     ApplicationData_GetSignedPreKeyByUserId? getsignedprekeybyuserid,
     ApplicationData_UpdateSignedPreKey? updatesignedprekey,
+    ApplicationData_DeleteAccount? deleteaccount,
   }) {
     final $result = create();
     if (textmessage != null) {
@@ -1974,6 +2008,9 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (updatesignedprekey != null) {
       $result.updatesignedprekey = updatesignedprekey;
     }
+    if (deleteaccount != null) {
+      $result.deleteaccount = deleteaccount;
+    }
     return $result;
   }
   ApplicationData._() : super();
@@ -2004,10 +2041,11 @@ class ApplicationData extends $pb.GeneratedMessage {
     21 : ApplicationData_ApplicationData.uploaddone,
     22 : ApplicationData_ApplicationData.getsignedprekeybyuserid,
     23 : ApplicationData_ApplicationData.updatesignedprekey,
+    24 : ApplicationData_ApplicationData.deleteaccount,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
@@ -2031,6 +2069,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_UploadDone>(21, _omitFieldNames ? '' : 'uploaddone', subBuilder: ApplicationData_UploadDone.create)
     ..aOM<ApplicationData_GetSignedPreKeyByUserId>(22, _omitFieldNames ? '' : 'getsignedprekeybyuserid', subBuilder: ApplicationData_GetSignedPreKeyByUserId.create)
     ..aOM<ApplicationData_UpdateSignedPreKey>(23, _omitFieldNames ? '' : 'updatesignedprekey', subBuilder: ApplicationData_UpdateSignedPreKey.create)
+    ..aOM<ApplicationData_DeleteAccount>(24, _omitFieldNames ? '' : 'deleteaccount', subBuilder: ApplicationData_DeleteAccount.create)
     ..hasRequiredFields = false
   ;
 
@@ -2310,6 +2349,17 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearUpdatesignedprekey() => clearField(23);
   @$pb.TagNumber(23)
   ApplicationData_UpdateSignedPreKey ensureUpdatesignedprekey() => $_ensure(22);
+
+  @$pb.TagNumber(24)
+  ApplicationData_DeleteAccount get deleteaccount => $_getN(23);
+  @$pb.TagNumber(24)
+  set deleteaccount(ApplicationData_DeleteAccount v) { setField(24, v); }
+  @$pb.TagNumber(24)
+  $core.bool hasDeleteaccount() => $_has(23);
+  @$pb.TagNumber(24)
+  void clearDeleteaccount() => clearField(24);
+  @$pb.TagNumber(24)
+  ApplicationData_DeleteAccount ensureDeleteaccount() => $_ensure(23);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {
