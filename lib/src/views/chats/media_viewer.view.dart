@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:logging/logging.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
@@ -129,7 +129,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           await deleteMediaFile(allMediaFiles.first.messageId, "png");
         }
       } catch (e) {
-        Logger("media_viewer_view.dart").shout("$e");
+        Log.error("$e");
       }
     }
     if (allMediaFiles.isEmpty || allMediaFiles.length == 1) {
@@ -243,7 +243,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             videoPath = videoPathTmp.path;
           });
         }).catchError((Object error) {
-          Logger("media_viewer_view.dart").shout(error);
+          Log.error(error);
         });
       }
     }

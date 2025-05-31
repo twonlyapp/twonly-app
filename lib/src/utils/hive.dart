@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive/hive.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/utils/log.dart';
 
 Future initMediaStorage() async {
   final storage = FlutterSecureStorage();
@@ -35,7 +35,7 @@ Future<Box> getMediaStorage() async {
   } catch (e) {
     await customLocalPushNotification("Secure Storage Error",
         "Settings > Apps > twonly > Storage and Cache > Press clear on both");
-    Logger("hive.dart").shout(e);
+    Log.error(e);
     throw Exception(e);
   }
 }

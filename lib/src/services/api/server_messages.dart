@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -20,6 +19,7 @@ import 'package:twonly/src/services/api/media_received.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 final lockHandleServerMessage = Mutex();
@@ -36,8 +36,7 @@ Future handleServerMessage(server.ServerToClient msg) async {
         int fromUserId = msg.v0.newMessage.fromUserId.toInt();
         response = await handleNewMessage(fromUserId, body);
       } else {
-        Logger("handleServerMessage")
-            .shout("Got a new message from the server: $msg");
+        Log.error("Got a new message from the server: $msg");
         response = client.Response()..error = ErrorCode.InternalError;
       }
     } catch (e) {
@@ -55,8 +54,7 @@ Future handleServerMessage(server.ServerToClient msg) async {
 Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
   MessageJson? message = await signalDecryptMessage(fromUserId, body);
   if (message == null) {
-    Logger("server_messages")
-        .info("Got invalid cipher text from $fromUserId. Deleting it.");
+    Log.info("Got invalid cipher text from $fromUserId. Deleting it.");
     // Message is not valid, so server can delete it
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
@@ -154,11 +152,9 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           message.kind != MessageKind.media &&
           message.kind != MessageKind.storedMediaFile &&
           message.kind != MessageKind.reopenedMedia) {
-        Logger("handleServerMessages")
-            .shout("Got unknown MessageKind $message");
+        Log.error("Got unknown MessageKind $message");
       } else if (message.content == null || message.messageId == null) {
-        Logger("handleServerMessages")
-            .shout("Content or messageid not defined $message");
+        Log.error("Content or messageid not defined $message");
       } else {
         final content = message.content!;
 

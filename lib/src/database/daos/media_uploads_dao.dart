@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/src/database/tables/media_uploads_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/utils/log.dart';
 
 part 'media_uploads_dao.g.dart';
 
@@ -28,8 +28,7 @@ class MediaUploadsDao extends DatabaseAccessor<TwonlyDatabase>
     try {
       return await into(mediaUploads).insert(values);
     } catch (e) {
-      Logger("media_uploads_dao.dart")
-          .shout("Error while inserting media upload: $e");
+      Log.error("Error while inserting media upload: $e");
       return null;
     }
   }

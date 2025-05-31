@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,6 +21,7 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_received.dart';
 import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:video_compress/video_compress.dart';
@@ -78,7 +78,7 @@ Future retryMediaUpload({int maxRetries = 3}) async {
         }
         await twonlyDB.mediaUploadsDao
             .deleteMediaUpload(mediaFile.mediaUploadId);
-        Logger("media_send.dart").shout(
+        Log.info(
             "upload can be removed, the finalized function was never called...");
         continue;
       }
@@ -123,7 +123,7 @@ Future<Uint8List> addOrModifyImageToUpload(
     }
     await writeMediaFile(mediaUploadId, "png", imageBytesCompressed);
   } catch (e) {
-    Logger("media_send.dart").shout("$e");
+    Log.error("$e");
     // as a fall back use the original image
     await writeMediaFile(mediaUploadId, "png", imageBytes);
     imageBytesCompressed = imageBytes;
@@ -203,12 +203,6 @@ Future encryptAndPreUploadMediaFiles(
   await handleNextMediaUploadSteps(mediaUploadId);
 }
 
-Future cancelSendMediaFile(int mediaUploadId) async {
-  await twonlyDB.mediaUploadsDao.deleteMediaUpload(mediaUploadId);
-
-  /// server should purge the uploads... when it did not receive a
-}
-
 Future finalizeUpload(int mediaUploadId, List<int> contactIds,
     bool isRealTwonly, bool isVideo, bool mirrorVideo, int maxShowTime) async {
   MediaUploadMetadata metadata = MediaUploadMetadata();
@@ -251,8 +245,7 @@ Future finalizeUpload(int mediaUploadId, List<int> contactIds,
     if (messageId != null) {
       messageIds.add(messageId);
     } else {
-      Logger("media_send.dart")
-          .shout("Error inserting media upload message in database.");
+      Log.error("Error inserting media upload message in database.");
     }
   }
 
@@ -306,8 +299,7 @@ Future handleNextMediaUploadSteps(int mediaUploadId) async {
       // download tokens are known so send the media file to the receivers
       await handleNotifyReceiver(mediaUpload);
     } catch (e) {
-      Logger("media_send.dart")
-          .shout("Non recoverable error while sending media file: $e");
+      Log.error("Non recoverable error while sending media file: $e");
       await handleUploadError(mediaUpload);
     }
     return false;
@@ -350,8 +342,7 @@ Future<bool> handleUploadDone(MediaUpload media) async {
         throw Exception("PlanLimitReached");
       }
     }
-    Logger("media_send.dart")
-        .info("Upload done will be tried again when reconnected to server!");
+    Log.error("Upload done will be tried again when reconnected to server!");
     return false;
   }
 
@@ -375,7 +366,7 @@ Future<bool> handleMediaUpload(int mediaUploadId) async {
   final storage = FlutterSecureStorage();
   String? apiAuthToken = await storage.read(key: "api_auth_token");
   if (apiAuthToken == null) {
-    Logger("media_send.dart").shout("api auth token not defined.");
+    Log.error("api auth token not defined.");
     return false;
   }
 
@@ -402,7 +393,7 @@ Future<bool> handleMediaUpload(int mediaUploadId) async {
 
     if (response.statusCode == 200) {
       if (response.body.length != 64) {
-        Logger("media_send.dart").info("Got invalid upload token.");
+        Log.error("Got invalid upload token.");
         return false;
       }
 
@@ -421,7 +412,7 @@ Future<bool> handleMediaUpload(int mediaUploadId) async {
       return true;
     }
   } catch (e) {
-    Logger("media_send.dart").shout("Exception during upload: $e");
+    Log.error("Exception during upload: $e");
   }
   return false;
 }
@@ -527,11 +518,11 @@ Future<bool> compressVideoIfExists(int mediaUploadId) async {
       );
     }
   } catch (e) {
-    Logger("media_send.dart").shout("Video compression: $e");
+    Log.error("during video compression: $e");
   }
 
   if (mediaInfo == null) {
-    Logger("media_send.dart").shout("Error compressing video.");
+    Log.error("could not compress video.");
     // as a fall back use the non compressed version
     await videoOriginalFile.copy(videoCompressedFile.path);
     await videoOriginalFile.delete();

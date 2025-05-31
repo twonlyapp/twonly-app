@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:logging/logging.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.dart';
@@ -65,7 +65,7 @@ Future<(SelectedCameraDetails, CameraController)?> initializeCameraController(
     details.cameraLoaded = true;
     details.cameraId = sCameraId;
   }).catchError((Object e) {
-    Logger("camera_preview.dart").shout("$e");
+    Log.error("$e");
   });
   return (details, cameraController);
 }
@@ -429,7 +429,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   void _showCameraException(dynamic e) {
-    Logger("ui.camera").shout("$e");
+    Log.error("$e");
     try {
       if (context.mounted) {
         // ignore: use_build_context_synchronously

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:logging/logging.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -35,11 +35,11 @@ class _FaqViewState extends State<FaqView> {
           noInternet = false;
         });
       } else {
-        Logger("faq.dart").shout("FAQ got ${response.statusCode}");
+        Log.error("FAQ got ${response.statusCode}");
         // throw Exception('Failed to load FAQ data');
       }
     } catch (e) {
-      Logger("faq.dart").shout(e);
+      Log.error(e);
       setState(() {
         noInternet = true;
       });
@@ -101,7 +101,7 @@ class _FaqViewState extends State<FaqView> {
     try {
       await launchUrl(Uri.parse("$domain$path"));
     } catch (e) {
-      Logger("launchUrl").shout("Could not launch $e");
+      Log.error("Could not launch $e");
     }
   }
 }

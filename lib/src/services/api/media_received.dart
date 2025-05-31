@@ -12,7 +12,6 @@ import 'package:http/http.dart' as http;
 // import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/services/api/media_send.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
     as client;
 import 'package:twonly/src/utils/log.dart';
@@ -82,7 +81,7 @@ Future startDownloadMedia(Message message, bool force) async {
     DateTime started = downloadStartedForMediaReceived[message.messageId]!;
     Duration elapsed = DateTime.now().difference(started);
     if (elapsed <= Duration(seconds: 60)) {
-      Logger("media_received.dart").shout("Download already started...");
+      Log.error("Download already started...");
       return;
     }
   }
@@ -151,7 +150,7 @@ Future startDownloadMedia(Message message, bool force) async {
       downloaded += chunk.length;
     }, onDone: () async {
       if (r.statusCode != 200) {
-        Logger("media_received.dart").shout("Download error: $r");
+        Log.error("Download error: $r");
         await twonlyDB.messagesDao.updateMessageByMessageId(
           message.messageId,
           MessagesCompanion(
@@ -184,8 +183,7 @@ Future handleEncryptedFile(Message msg, {Uint8List? encryptedBytesTmp}) async {
       encryptedBytesTmp ?? await readMediaFile(msg.messageId, "encrypted");
 
   if (encryptedBytes == null) {
-    Logger("media_received.dart")
-        .shout("encrypted bytes are not found for ${msg.messageId}");
+    Log.error("encrypted bytes are not found for ${msg.messageId}");
   }
 
   MediaMessageContent content =
@@ -213,7 +211,7 @@ Future handleEncryptedFile(Message msg, {Uint8List? encryptedBytesTmp}) async {
 
     await writeMediaFile(msg.messageId, "png", imageBytes);
   } catch (e) {
-    Logger("media_received.dart").info("Decryption error: $e");
+    Log.error("Decryption error: $e");
     await twonlyDB.messagesDao.updateMessageByMessageId(
       msg.messageId,
       MessagesCompanion(
@@ -275,7 +273,7 @@ Future<void> deleteMediaFile(int mediaId, String type) async {
       await file.delete();
     }
   } catch (e) {
-    Logger("media_received.dart").shout("Error deleting: $e");
+    Log.error("Error deleting: $e");
   }
 }
 
@@ -334,7 +332,7 @@ Future<void> purgeMediaFiles(Directory directory) async {
             }
           }
         } catch (e) {
-          Logger("media_received.dart").shout("$e");
+          Log.error("$e");
         }
       }
     }

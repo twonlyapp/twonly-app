@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -62,7 +61,7 @@ class ConnectPreKeyStore extends PreKeyStore {
     try {
       await twonlyDB.into(twonlyDB.signalPreKeyStores).insert(preKeyCompanion);
     } catch (e) {
-      Logger("pre_key_store").shout("$e");
+      Log.error("$e");
     }
   }
 }

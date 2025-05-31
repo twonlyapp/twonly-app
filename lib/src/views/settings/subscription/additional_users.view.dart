@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -28,7 +28,7 @@ Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
       ballance =
           decoded.map((x) => Response_AddAccountsInvite.fromJson(x)).toList();
     } catch (e) {
-      Logger("additional_users_view.dart").shout("from json: $e");
+      Log.error("from json: $e");
     }
   }
   return ballance;

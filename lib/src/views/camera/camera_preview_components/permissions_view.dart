@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/src/utils/log.dart';
 
 class PermissionHandlerView extends StatefulWidget {
   const PermissionHandlerView({super.key, required this.onSuccess});
@@ -79,7 +79,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
                         widget.onSuccess();
                       }
                     } catch (e) {
-                      Logger("permissions_view").shout(e);
+                      Log.error(e);
                     }
                   },
                 ),

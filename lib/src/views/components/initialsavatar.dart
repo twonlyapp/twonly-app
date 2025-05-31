@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/utils/log.dart';
 
 class ContactAvatar extends StatelessWidget {
   final Contact? contact;
@@ -48,7 +48,7 @@ class ContactAvatar extends StatelessWidget {
                 child: SvgPicture.string(
                   avatarSvg,
                   errorBuilder: (context, error, stackTrace) {
-                    Logger("ui.avater").shout("$error");
+                    Log.error("$error");
                     return Container();
                   },
                 ),

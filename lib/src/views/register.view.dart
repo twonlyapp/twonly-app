@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -42,7 +42,7 @@ class _RegisterViewState extends State<RegisterView> {
     });
 
     if (res.isSuccess) {
-      Logger("create_new_user").info("Got user_id ${res.value} from server");
+      Log.info("Got user_id ${res.value} from server");
       final userData = UserData(
         userId: res.value.userid.toInt(),
         username: username,

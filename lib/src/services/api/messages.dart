@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:hive/hive.dart';
-import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -13,6 +12,7 @@ import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/hive.dart';
 import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 final lockSendingMessages = Mutex();
@@ -23,7 +23,7 @@ Future tryTransmitMessages() async {
 
     if (retransmit.isEmpty) return;
 
-    Logger("api.dart").info("try sending messages: ${retransmit.length}");
+    Log.info("try sending messages: ${retransmit.length}");
 
     Map<String, dynamic> failed = {};
 
@@ -102,7 +102,7 @@ Future<Map<String, dynamic>> getAllMessagesForRetransmitting() async {
     try {
       retransmit = jsonDecode(retransmitJson);
     } catch (e) {
-      Logger("api.dart").shout("Could not decode the retransmit messages: $e");
+      Log.error("Could not decode the retransmit messages: $e");
       await box.delete("messages-to-retransmit");
     }
   }
@@ -140,7 +140,7 @@ Future<(String, RetransmitMessage)?> encryptMessage(
     Uint8List? bytes = await signalEncryptMessage(userId, msg);
 
     if (bytes == null) {
-      Logger("api.dart").shout("Error encryption message!");
+      Log.error("Error encryption message!");
       return null;
     }
 

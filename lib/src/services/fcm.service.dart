@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:logging/logging.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -22,7 +21,7 @@ Future initFCMAfterAuthenticated() async {
   try {
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken == null) {
-      Logger("init_fcm_service").shout("Error getting fcmToken");
+      Log.error("Error getting fcmToken");
       return;
     }
 
@@ -35,10 +34,10 @@ Future initFCMAfterAuthenticated() async {
       await apiService.updateFCMToken(fcmToken);
       await storage.write(key: "google_fcm", value: fcmToken);
     }).onError((err) {
-      // Logger("init_fcm_service").shout("Error getting fcmToken");
+      Log.error("could not listen on token refresh");
     });
   } catch (e) {
-    Logger("fcm_service").shout("Error loading fcmToken: $e");
+    Log.error("could not load fcm token: $e");
   }
 }
 
@@ -79,8 +78,7 @@ Future initFCMService() async {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   initLogger();
-  Logger("firebase-background")
-      .info('Handling a background message: ${message.messageId}');
+  Log.info('Handling a background message: ${message.messageId}');
   twonlyDB = TwonlyDatabase();
   await handleRemoteMessage(message);
 
@@ -90,7 +88,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future handleRemoteMessage(RemoteMessage message) async {
   if (!Platform.isAndroid) {
-    Logger("firebase-notification").shout("Got message in Dart while on iOS");
+    Log.error("Got message in Dart while on iOS");
   }
 
   if (message.notification != null) {

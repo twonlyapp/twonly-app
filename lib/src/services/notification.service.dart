@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
@@ -254,16 +253,14 @@ Future<List<int>?> getPushData(int toUserId, PushKind kind) async {
         kind != PushKind.testNotification) {
       // this will be enforced after every app uses this system... :/
       // return null;
-      Logger("notification_service").shout(
-          "Using insecure key as the receiver does not send a push key!");
+      Log.error("Using insecure key as the receiver does not send a push key!");
     }
   } else {
     try {
       key = pushKeys[toUserId]!.keys.last.key;
       keyId = pushKeys[toUserId]!.keys.last.id;
     } catch (e) {
-      Logger("notification_service")
-          .shout("No push notification key found for user $toUserId");
+      Log.error("No push notification key found for user $toUserId");
       return null;
     }
   }
@@ -303,7 +300,6 @@ Future<PushKind?> tryDecryptMessage(
     return PushKindExtension.fromString(plaintextString);
   } catch (e) {
     // this error is allowed to happen...
-    // Logger("notification-service").shout(e);
     return null;
   }
 }
@@ -348,7 +344,7 @@ Future handlePushData(String pushDataJson) async {
       }
     }
   } catch (e) {
-    Logger("notification-service").shout(e);
+    Log.error(e);
   }
 }
 
@@ -473,8 +469,7 @@ Future showLocalPushNotification(
   title = getContactDisplayName(user);
   body = getPushNotificationText(pushKind);
   if (body == "") {
-    Logger("localPushNotificationNewMessage")
-        .shout("No push notification type defined!");
+    Log.error("No push notification type defined!");
   }
 
   FilePathAndroidBitmap? styleInformation;
@@ -513,8 +508,7 @@ Future showLocalPushNotificationWithoutUserId(
 
   body = getPushNotificationTextWithoutUserId(pushKind);
   if (body == "") {
-    Logger("localPushNotificationNewMessage")
-        .shout("No push notification type defined!");
+    Log.error("No push notification type defined!");
   }
 
   AndroidNotificationDetails androidNotificationDetails =

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/utils/log.dart';
 
 Future<bool> isUserCreated() async {
   UserData? user = await getUser();
@@ -23,7 +23,7 @@ Future<UserData?> getUser() async {
     final user = UserData.fromJson(userMap);
     return user;
   } catch (e) {
-    Logger("get_user").shout("Error getting user: $e");
+    Log.error("Error getting user: $e");
     return null;
   }
 }

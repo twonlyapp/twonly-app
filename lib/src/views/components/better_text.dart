@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
-import 'package:logging/logging.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BetterText extends StatelessWidget {
@@ -38,7 +38,7 @@ class BetterText extends StatelessWidget {
             try {
               await launchUrl(lUrl);
             } catch (e) {
-              Logger("launchUrl").shout("Could not launch $e");
+              Log.error("Could not launch $e");
             }
           },
       ));

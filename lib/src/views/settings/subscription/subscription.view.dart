@@ -2,7 +2,6 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
@@ -10,6 +9,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
@@ -49,7 +49,7 @@ Future<Response_PlanBallance?> loadPlanBallance() async {
         user.lastPlanBallance!,
       );
     } catch (e) {
-      Logger("subscription_view.dart").shout("from json: $e");
+      Log.error("from json: $e");
     }
   }
   return ballance;
