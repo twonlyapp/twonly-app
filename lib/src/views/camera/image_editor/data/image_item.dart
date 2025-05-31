@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:exif/exif.dart';
-import 'package:image/image.dart' as img;
 
 class ImageItem {
   int width = 1;
@@ -30,29 +28,6 @@ class ImageItem {
 
       height = decodedImage.height;
       width = decodedImage.width;
-
-      if (height < width) {
-        final exifData = await readExifFromBytes(bytes);
-
-        img.Image fixedImage;
-
-        if (height < width) {
-          debugPrint('Rotating image necessary');
-          final originalImage = img.decodeImage(bytes)!;
-          if (exifData['Image Orientation']!.printable.contains('Horizontal')) {
-            fixedImage = img.copyRotate(originalImage, angle: 90);
-          } else if (exifData['Image Orientation']!.printable.contains('180')) {
-            fixedImage = img.copyRotate(originalImage, angle: -90);
-          } else if (exifData['Image Orientation']!.printable.contains('CCW')) {
-            fixedImage = img.copyRotate(originalImage, angle: 180);
-          } else {
-            fixedImage = img.copyRotate(originalImage, angle: 0);
-          }
-          bytes = img.encodeJpg(fixedImage);
-          height = fixedImage.height;
-          width = fixedImage.width;
-        }
-      }
 
       return loader.complete(true);
     } else {

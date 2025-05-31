@@ -1,0 +1,3 @@
+[submodule "dependencies/flutter_secure_storage"]
+	path = dependencies/flutter_secure_storage
+	url = https://github.com/juliansteenbakker/flutter_secure_storage
