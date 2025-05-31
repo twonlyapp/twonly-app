@@ -1,48 +1,42 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:mutex/mutex.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-final lockDisplayTutorial = Mutex();
-
 Future showTutorial(BuildContext context, List<TargetFocus> targets) async {
-  await lockDisplayTutorial.protect(() async {
-    Completer completer = Completer();
-    TutorialCoachMark(
-      targets: targets,
-      colorShadow: context.color.primary,
-      textSkip: context.lang.ok,
-      alignSkip: Alignment.bottomCenter,
-      textStyleSkip: TextStyle(
-        color: Colors.black,
-        fontWeight: FontWeight.bold,
-        fontSize: 20,
-      ),
-      onClickTarget: (target) {
-        print(target);
-      },
-      onClickTargetWithTapPosition: (target, tapDetails) {
-        print("target: $target");
-        print(
-            "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
-      },
-      onClickOverlay: (target) {
-        print(target);
-      },
-      onSkip: () {
-        completer.complete();
-        return true;
-      },
-      onFinish: () {
-        completer.complete();
-      },
-    ).show(context: context);
+  Completer completer = Completer();
+  TutorialCoachMark(
+    targets: targets,
+    colorShadow: context.color.primary,
+    textSkip: context.lang.ok,
+    alignSkip: Alignment.bottomCenter,
+    textStyleSkip: TextStyle(
+      color: Colors.black,
+      fontWeight: FontWeight.bold,
+      fontSize: 20,
+    ),
+    onClickTarget: (target) {
+      print(target);
+    },
+    onClickTargetWithTapPosition: (target, tapDetails) {
+      print("target: $target");
+      print(
+          "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+    },
+    onClickOverlay: (target) {
+      print(target);
+    },
+    onSkip: () {
+      completer.complete();
+      return true;
+    },
+    onFinish: () {
+      completer.complete();
+    },
+  ).show(context: context);
 
-    await completer.future;
-  });
+  await completer.future;
 }
 
 Future<bool> checkIfTutorialAlreadyShown(String tutorialId) async {
