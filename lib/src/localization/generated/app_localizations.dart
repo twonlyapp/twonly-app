@@ -1429,6 +1429,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show details'**
   String get galleryDetails;
+
+  /// No description provided for @settingsResetTutorials.
+  ///
+  /// In en, this message translates to:
+  /// **'Show tutorials again'**
+  String get settingsResetTutorials;
+
+  /// No description provided for @settingsResetTutorialsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Click here to show already displayed tutorials again.'**
+  String get settingsResetTutorialsDesc;
+
+  /// No description provided for @settingsResetTutorialsSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutorials will be displayed again.'**
+  String get settingsResetTutorialsSuccess;
+
+  /// No description provided for @tutorialChatListSearchUsersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Friends and Manage Friend Requests'**
+  String get tutorialChatListSearchUsersTitle;
+
+  /// No description provided for @tutorialChatListSearchUsersDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you know your friends\' usernames, you can search for them here and send a friend request. You will also see all requests from other users that you can accept or block.'**
+  String get tutorialChatListSearchUsersDesc;
+
+  /// No description provided for @tutorialChatListContextMenuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Long press on the contact to open the context menu.'**
+  String get tutorialChatListContextMenuTitle;
+
+  /// No description provided for @tutorialChatListContextMenuDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'With the context menu, you can pin, archive, and perform various actions on your contacts. Simply long press the contact and then move your finger to the desired option or tap directly on it.'**
+  String get tutorialChatListContextMenuDesc;
+
+  /// No description provided for @tutorialChatMessagesVerifyShieldTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your contacts!'**
+  String get tutorialChatMessagesVerifyShieldTitle;
+
+  /// No description provided for @tutorialChatMessagesVerifyShieldDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly uses the Signal protocol for secure end-to-end encryption. When you first contact someone, their public identity key is downloaded. To ensure that this key has not been tampered with by third parties, you should compare it with your friend when you meet in person. Once you have verified the user, you can also enable the twonly mode when sending images and videos.'**
+  String get tutorialChatMessagesVerifyShieldDesc;
+
+  /// No description provided for @tutorialChatMessagesReopenMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen Images and Videos'**
+  String get tutorialChatMessagesReopenMessageTitle;
+
+  /// No description provided for @tutorialChatMessagesReopenMessageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If your friend has sent you a picture or video with infinite display time, you can open it again at any time until you restart the app. To do this, simply double-click on the message. Your friend will then receive a notification that you have viewed the picture again.'**
+  String get tutorialChatMessagesReopenMessageDesc;
 }
 
 class _AppLocalizationsDelegate

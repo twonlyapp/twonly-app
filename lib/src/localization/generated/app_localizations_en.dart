@@ -738,4 +738,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get galleryDetails => 'Show details';
+
+  @override
+  String get settingsResetTutorials => 'Show tutorials again';
+
+  @override
+  String get settingsResetTutorialsDesc =>
+      'Click here to show already displayed tutorials again.';
+
+  @override
+  String get settingsResetTutorialsSuccess =>
+      'Tutorials will be displayed again.';
+
+  @override
+  String get tutorialChatListSearchUsersTitle =>
+      'Find Friends and Manage Friend Requests';
+
+  @override
+  String get tutorialChatListSearchUsersDesc =>
+      'If you know your friends\' usernames, you can search for them here and send a friend request. You will also see all requests from other users that you can accept or block.';
+
+  @override
+  String get tutorialChatListContextMenuTitle =>
+      'Long press on the contact to open the context menu.';
+
+  @override
+  String get tutorialChatListContextMenuDesc =>
+      'With the context menu, you can pin, archive, and perform various actions on your contacts. Simply long press the contact and then move your finger to the desired option or tap directly on it.';
+
+  @override
+  String get tutorialChatMessagesVerifyShieldTitle => 'Verify your contacts!';
+
+  @override
+  String get tutorialChatMessagesVerifyShieldDesc =>
+      'twonly uses the Signal protocol for secure end-to-end encryption. When you first contact someone, their public identity key is downloaded. To ensure that this key has not been tampered with by third parties, you should compare it with your friend when you meet in person. Once you have verified the user, you can also enable the twonly mode when sending images and videos.';
+
+  @override
+  String get tutorialChatMessagesReopenMessageTitle =>
+      'Reopen Images and Videos';
+
+  @override
+  String get tutorialChatMessagesReopenMessageDesc =>
+      'If your friend has sent you a picture or video with infinite display time, you can open it again at any time until you restart the app. To do this, simply double-click on the message. Your friend will then receive a notification that you have viewed the picture again.';
 }

@@ -743,4 +743,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get galleryDetails => 'Details anzeigen';
+
+  @override
+  String get settingsResetTutorials => 'Tutorials erneut anzeigen';
+
+  @override
+  String get settingsResetTutorialsDesc =>
+      'Klicke hier, um bereits angezeigte Tutorials erneut anzuzeigen.';
+
+  @override
+  String get settingsResetTutorialsSuccess =>
+      'Tutorials werden erneut angezeigt.';
+
+  @override
+  String get tutorialChatListSearchUsersTitle =>
+      'Freunde finden und Freundschaftsanfragen verwalten';
+
+  @override
+  String get tutorialChatListSearchUsersDesc =>
+      'Wenn du die Benutzernamen deiner Freunde kennst, kannst du sie hier suchen und eine Freundschaftsanfrage senden. Außerdem siehst du hier alle Anfragen von anderen Nutzern, die du annehmen oder blockieren kannst.';
+
+  @override
+  String get tutorialChatListContextMenuTitle =>
+      'Klicke lange auf den Kontakt, um das Kontextmenü zu öffnen.';
+
+  @override
+  String get tutorialChatListContextMenuDesc =>
+      'Mit dem Kontextmenü kannst du deine Kontakte anheften, archivieren und verschiedene Aktionen durchführen. Halte dazu einfach den Kontakt lange gedrückt und bewege dann deinen Finger auf die gewünschte Option oder tippe direkt darauf.';
+
+  @override
+  String get tutorialChatMessagesVerifyShieldTitle =>
+      'Verifiziere deine Kontakte!';
+
+  @override
+  String get tutorialChatMessagesVerifyShieldDesc =>
+      'twonly nutzt das Signal-Protokoll für eine sichere Ende-zu-Ende Verschlüsselung. Bei der ersten Kontaktaufnahme wird dafür der öffentliche Identitätsschlüssel von deinem Kontakt heruntergeladen. Um sicherzustellen, dass dieser Schlüssel nicht von Dritten ausgetauscht wurde, solltest du ihn mit deinem Freund vergleichen, wenn ihr euch persönlich trefft. Sobald du den Benutzer verifiziert hast, kannst du auch beim verschicken von Bildern und Videos den twonly-Modus aktivieren.';
+
+  @override
+  String get tutorialChatMessagesReopenMessageTitle =>
+      'Bilder und Videos erneut öffnen';
+
+  @override
+  String get tutorialChatMessagesReopenMessageDesc =>
+      'Wenn dein Freund dir ein Bild oder Video mit unendlicher Anzeigezeit gesendet hat, kannst du es bis zum Neustart der App jederzeit erneut öffnen. Um dies zu tun, musst du einfach doppelt auf die Nachricht klicken. Dein Freund erhält dann eine Benachrichtigung, dass du das Bild erneut angesehen hast.';
 }

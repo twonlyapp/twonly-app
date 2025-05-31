@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/help/credits.view.dart';
 import 'package:twonly/src/views/settings/help/diagnostics.view.dart';
@@ -32,6 +33,23 @@ class HelpView extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
                 return ContactUsView();
               }));
+            },
+          ),
+          ListTile(
+            title: Text(context.lang.settingsResetTutorials),
+            subtitle: Text(context.lang.settingsResetTutorialsDesc),
+            onTap: () async {
+              final user = await getUser();
+              if (user == null) return;
+              user.tutorialDisplayed = [];
+              await updateUser(user);
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(context.lang.settingsResetTutorialsSuccess),
+                  duration: Duration(seconds: 3),
+                ),
+              );
             },
           ),
           Divider(),

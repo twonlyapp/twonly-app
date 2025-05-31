@@ -33,6 +33,7 @@ class UserData {
 
   DateTime? lastImageSend;
   int? todaysImageCounter;
+  List<String>? tutorialDisplayed;
 
   int? myBestFriendContactId;
 

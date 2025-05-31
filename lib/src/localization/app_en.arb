@@ -394,5 +394,16 @@
   "planLimitReached": "You have reached your plan limit for today. Upgrade your plan now to send the media file.",
   "planNotAllowed": "You cannot send media files with your current tariff.  Upgrade your plan now to send the media file.",
   "galleryDelete": "Delete file",
-  "galleryDetails": "Show details"
+  "galleryDetails": "Show details",
+  "settingsResetTutorials": "Show tutorials again",
+  "settingsResetTutorialsDesc": "Click here to show already displayed tutorials again.",
+  "settingsResetTutorialsSuccess": "Tutorials will be displayed again.",
+  "tutorialChatListSearchUsersTitle": "Find Friends and Manage Friend Requests",
+  "tutorialChatListSearchUsersDesc": "If you know your friends' usernames, you can search for them here and send a friend request. You will also see all requests from other users that you can accept or block.",
+  "tutorialChatListContextMenuTitle": "Long press on the contact to open the context menu.",
+  "tutorialChatListContextMenuDesc": "With the context menu, you can pin, archive, and perform various actions on your contacts. Simply long press the contact and then move your finger to the desired option or tap directly on it.",
+  "tutorialChatMessagesVerifyShieldTitle": "Verify your contacts!",
+  "tutorialChatMessagesVerifyShieldDesc": "twonly uses the Signal protocol for secure end-to-end encryption. When you first contact someone, their public identity key is downloaded. To ensure that this key has not been tampered with by third parties, you should compare it with your friend when you meet in person. Once you have verified the user, you can also enable the twonly mode when sending images and videos.",
+  "tutorialChatMessagesReopenMessageTitle": "Reopen Images and Videos",
+  "tutorialChatMessagesReopenMessageDesc": "If your friend has sent you a picture or video with infinite display time, you can open it again at any time until you restart the app. To do this, simply double-click on the message. Your friend will then receive a notification that you have viewed the picture again."
 }

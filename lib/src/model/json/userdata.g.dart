@@ -36,6 +36,9 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           ? null
           : DateTime.parse(json['lastImageSend'] as String)
       ..todaysImageCounter = (json['todaysImageCounter'] as num?)?.toInt()
+      ..tutorialDisplayed = (json['tutorialDisplayed'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList()
       ..myBestFriendContactId = (json['myBestFriendContactId'] as num?)?.toInt()
       ..signalLastSignedPreKeyUpdated =
           json['signalLastSignedPreKeyUpdated'] == null
@@ -60,6 +63,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'additionalUserInvites': instance.additionalUserInvites,
       'lastImageSend': instance.lastImageSend?.toIso8601String(),
       'todaysImageCounter': instance.todaysImageCounter,
+      'tutorialDisplayed': instance.tutorialDisplayed,
       'myBestFriendContactId': instance.myBestFriendContactId,
       'signalLastSignedPreKeyUpdated':
           instance.signalLastSignedPreKeyUpdated?.toIso8601String(),

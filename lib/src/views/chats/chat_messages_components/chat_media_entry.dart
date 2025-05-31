@@ -10,8 +10,9 @@ import 'package:twonly/src/services/api/media_received.dart' as received;
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/views/tutorial/tutorials.dart';
 
-class ChatMediaEntry extends StatelessWidget {
+class ChatMediaEntry extends StatefulWidget {
   const ChatMediaEntry({
     super.key,
     required this.message,
@@ -26,50 +27,81 @@ class ChatMediaEntry extends StatelessWidget {
   final List<MemoryItem> galleryItems;
 
   @override
+  State<ChatMediaEntry> createState() => _ChatMediaEntryState();
+}
+
+class _ChatMediaEntryState extends State<ChatMediaEntry> {
+  GlobalKey reopenMediaFile = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfTutorialCanBeShown();
+  }
+
+  Future checkIfTutorialCanBeShown() async {
+    if (widget.message.openedAt == null &&
+            widget.message.messageOtherId != null ||
+        widget.message.mediaStored) {
+      return;
+    }
+    if (await received.existsMediaFile(widget.message.messageId, "png")) {
+      Future.delayed(Duration(seconds: 1), () {
+        if (!mounted) return;
+        showReopenMediaFilesTutorial(context, reopenMediaFile);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     Color color = getMessageColorFromType(
-      content,
+      widget.content,
       context,
     );
 
     return GestureDetector(
+      key: reopenMediaFile,
       onDoubleTap: () async {
-        if (message.openedAt == null && message.messageOtherId != null ||
-            message.mediaStored) {
+        if (widget.message.openedAt == null &&
+                widget.message.messageOtherId != null ||
+            widget.message.mediaStored) {
           return;
         }
-        if (await received.existsMediaFile(message.messageId, "png")) {
+        if (await received.existsMediaFile(widget.message.messageId, "png")) {
           await encryptAndSendMessageAsync(
             null,
-            contact.userId,
+            widget.contact.userId,
             MessageJson(
               kind: MessageKind.reopenedMedia,
-              messageId: message.messageId,
+              messageId: widget.message.messageId,
               content: ReopenedMediaFileContent(
-                messageId: message.messageOtherId!,
+                messageId: widget.message.messageOtherId!,
               ),
               timestamp: DateTime.now(),
             ),
             pushKind: PushKind.reopenedMedia,
           );
           await twonlyDB.messagesDao.updateMessageByMessageId(
-            message.messageId,
+            widget.message.messageId,
             MessagesCompanion(openedAt: Value(null)),
           );
         }
       },
-      onTap: () {
-        if (message.kind == MessageKind.media) {
-          if (message.downloadState == DownloadState.downloaded &&
-              message.openedAt == null) {
-            Navigator.push(
+      onTap: () async {
+        if (widget.message.kind == MessageKind.media) {
+          if (widget.message.downloadState == DownloadState.downloaded &&
+              widget.message.openedAt == null) {
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) {
-                return MediaViewerView(contact, initialMessage: message);
+                return MediaViewerView(widget.contact,
+                    initialMessage: widget.message);
               }),
             );
-          } else if (message.downloadState == DownloadState.pending) {
-            received.startDownloadMedia(message, true);
+            checkIfTutorialCanBeShown();
+          } else if (widget.message.downloadState == DownloadState.pending) {
+            received.startDownloadMedia(widget.message, true);
           }
         }
       },
@@ -80,10 +112,10 @@ class ChatMediaEntry extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: InChatMediaViewer(
-              message: message,
-              contact: contact,
+              message: widget.message,
+              contact: widget.contact,
               color: color,
-              galleryItems: galleryItems,
+              galleryItems: widget.galleryItems,
             ),
           ),
         ),

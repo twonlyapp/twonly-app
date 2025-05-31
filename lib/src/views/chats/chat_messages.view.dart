@@ -19,6 +19,7 @@ import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/views/tutorial/tutorials.dart';
 
 Color getMessageColor(Message message) {
   return (message.messageOtherId == null)
@@ -48,6 +49,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   Map<int, List<Message>> textReactionsToMessageId = {};
   Map<int, List<Message>> emojiReactionsToMessageId = {};
   Message? responseToMessage;
+  GlobalKey verifyShieldKey = GlobalKey();
   late FocusNode textFieldFocus;
 
   @override
@@ -56,6 +58,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     user = widget.contact;
     textFieldFocus = FocusNode();
     initStreams();
+
+    Future.delayed(Duration(seconds: 1), () async {
+      if (!mounted) return;
+      await showVerifyShieldTutorial(context, verifyShieldKey);
+    });
   }
 
   @override
@@ -251,7 +258,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     children: [
                       Text(getContactDisplayName(user)),
                       SizedBox(width: 10),
-                      VerifiedShield(user),
+                      VerifiedShield(key: verifyShieldKey, user),
                     ],
                   ),
                 ),
