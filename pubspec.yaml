@@ -69,6 +69,7 @@ dependencies:
   video_compress: ^3.1.4
   share_plus: ^11.0.0
   photo_view: ^0.15.0
+  mobile_scanner: ^7.0.0
 
 dev_dependencies:
   flutter_test:
