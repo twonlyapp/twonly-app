@@ -63,11 +63,55 @@ Future<ErrorCode?> isAllowedToSend() async {
 
 /// Create a new entry in the database
 
+Future<bool> checkForFailedUploads() async {
+  final messages = await twonlyDB.messagesDao.getAllMessagesPendingUpload();
+  List<int> mediaUploadIds = [];
+  for (Message message in messages) {
+    if (mediaUploadIds.contains(message.mediaUploadId)) {
+      continue;
+    }
+    int affectedRows = await twonlyDB.mediaUploadsDao.updateMediaUpload(
+      message.mediaUploadId!,
+      MediaUploadsCompanion(
+        uploadTokens: Value(null), // reupload them
+        state: Value(UploadState.pending),
+        encryptionData: Value(
+          null, // start from scratch e.q. encrypt the files again if already happen
+        ),
+      ),
+    );
+    if (affectedRows == 0) {
+      Log.error(
+        "The media from message ${message.messageId} already deleted.",
+      );
+      await twonlyDB.messagesDao.updateMessageByMessageId(
+        message.messageId,
+        MessagesCompanion(
+          errorWhileSending: Value(true),
+        ),
+      );
+    } else {
+      mediaUploadIds.add(message.mediaUploadId!);
+    }
+  }
+  Log.error(
+    "Got ${messages.length} messages (${mediaUploadIds.length} media upload files) that are not correctly uploaded. Trying from scratch again.",
+  );
+  return mediaUploadIds.isNotEmpty; // return true if there are affected
+}
+
 final lockingHandleMediaFile = Mutex();
 Future retryMediaUpload({int maxRetries = 3}) async {
-  await lockingHandleMediaFile.protect(() async {
+  if (maxRetries == 0) {
+    Log.error("retried media upload 3 times. abort retrying");
+    return;
+  }
+  bool retry = await lockingHandleMediaFile.protect<bool>(() async {
     final mediaFiles = await twonlyDB.mediaUploadsDao.getMediaUploadsForRetry();
-    if (mediaFiles.isEmpty) return;
+    if (mediaFiles.isEmpty) {
+      return checkForFailedUploads();
+    }
+    Log.info("re uploading ${mediaFiles.length} media files.");
     for (final mediaFile in mediaFiles) {
       if (mediaFile.messageIds == null || mediaFile.metadata == null) {
         // the media upload was canceled,
@@ -89,7 +133,11 @@ Future retryMediaUpload({int maxRetries = 3}) async {
         await handlePreProcessingState(mediaFile);
       }
     }
+    return false;
   });
+  if (retry) {
+    await retryMediaUpload(maxRetries: maxRetries - 1);
+  }
 }
 
 Future<int?> initMediaUpload() async {
@@ -151,12 +199,17 @@ Future handlePreProcessingState(MediaUpload media) async {
       videoHandler,
     );
   } catch (e) {
+    Log.error("${media.mediaUploadId} got error in pre processing: $e");
     await handleUploadError(media);
   }
 }
 
 Future encryptAndPreUploadMediaFiles(
-    int mediaUploadId, Future imageHandler, Future<bool>? videoHandler) async {
+  int mediaUploadId,
+  Future imageHandler,
+  Future<bool>? videoHandler,
+) async {
+  Log.info("$mediaUploadId encrypting files");
   Uint8List dataToEncrypt = await imageHandler;
 
   /// if there is a video wait until it is finished with compression
@@ -268,6 +321,7 @@ Future handleNextMediaUploadSteps(int mediaUploadId) async {
     if (mediaUpload == null) return false;
     if (mediaUpload.state == UploadState.receiverNotified) {
       /// Upload done and all users are notified :)
+      Log.info("$mediaUploadId is already done");
       return false;
     }
     try {
@@ -385,6 +439,8 @@ Future<bool> handleMediaUpload(int mediaUploadId) async {
     bytesToUpload,
     filename: "upload",
   ));
+
+  Log.info("Starting upload from $mediaUploadId ");
 
   try {
     var streamedResponse = await requestMultipart.send();

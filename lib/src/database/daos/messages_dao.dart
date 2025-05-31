@@ -88,15 +88,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .watch();
   }
 
-  Future<List<Message>> getAllMessagesPendingUploadOlderThanAMinute() {
+  Future<List<Message>> getAllMessagesPendingUpload() {
     return (select(messages)
           ..where(
             (t) =>
                 t.acknowledgeByServer.equals(false) &
                 t.messageOtherId.isNull() &
+                t.mediaUploadId.isNotNull() &
+                t.downloadState.equals(DownloadState.pending.index) &
                 t.errorWhileSending.equals(false) &
-                t.sendAt.isSmallerThanValue(
-                    DateTime.now().subtract(Duration(minutes: 5))) &
                 t.kind.equals(MessageKind.media.name),
           ))
         .get();

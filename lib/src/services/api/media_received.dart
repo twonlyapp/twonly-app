@@ -317,6 +317,7 @@ Future<void> purgeMediaFiles(Directory directory) async {
               }
             }
             if (canBeDeleted) {
+              Log.info("purged media file ${file.path} ");
               file.deleteSync();
             }
           } else {

@@ -17,7 +17,7 @@ class MediaUploadsDao extends DatabaseAccessor<TwonlyDatabase>
         .get();
   }
 
-  Future updateMediaUpload(
+  Future<int> updateMediaUpload(
       int mediaUploadId, MediaUploadsCompanion updatedValues) {
     return (update(mediaUploads)
           ..where((c) => c.mediaUploadId.equals(mediaUploadId)))
