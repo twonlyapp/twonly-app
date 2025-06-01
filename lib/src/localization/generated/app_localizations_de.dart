@@ -814,4 +814,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get tutorialChatMessagesReopenMessageDesc =>
       'Wenn dein Freund dir ein Bild oder Video mit unendlicher Anzeigezeit gesendet hat, kannst du es bis zum Neustart der App jederzeit erneut öffnen. Um dies zu tun, musst du einfach doppelt auf die Nachricht klicken. Dein Freund erhält dann eine Benachrichtigung, dass du das Bild erneut angesehen hast.';
+
+  @override
+  String get memoriesEmpty =>
+      'Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen.';
 }

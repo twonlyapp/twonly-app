@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
 
@@ -103,37 +104,43 @@ class MemoriesViewState extends State<MemoriesView> {
     return Scaffold(
       appBar: AppBar(title: Text('Memories')),
       body: Scrollbar(
-        child: ListView.builder(
-          itemCount: (months.length * 2),
-          itemBuilder: (context, mIndex) {
-            if (mIndex % 2 == 0) {
-              return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(months[(mIndex / 2).toInt()]),
-              );
-            }
-            int index = ((mIndex - 1) / 2).toInt();
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const ClampingScrollPhysics(),
-              scrollDirection: Axis.vertical,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                childAspectRatio: 9 / 16,
+        child: (galleryItems.isEmpty)
+            ? Center(
+                child: Text(
+                context.lang.memoriesEmpty,
+                textAlign: TextAlign.center,
+              ))
+            : ListView.builder(
+                itemCount: (months.length * 2),
+                itemBuilder: (context, mIndex) {
+                  if (mIndex % 2 == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(months[(mIndex / 2).toInt()]),
+                    );
+                  }
+                  int index = ((mIndex - 1) / 2).toInt();
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const ClampingScrollPhysics(),
+                    scrollDirection: Axis.vertical,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      childAspectRatio: 9 / 16,
+                    ),
+                    itemCount: orderedByMonth[months[index]]!.length,
+                    itemBuilder: (context, gIndex) {
+                      int gaIndex = orderedByMonth[months[index]]![gIndex];
+                      return MemoriesItemThumbnail(
+                        galleryItem: galleryItems[gaIndex],
+                        onTap: () {
+                          open(context, gaIndex);
+                        },
+                      );
+                    },
+                  );
+                },
               ),
-              itemCount: orderedByMonth[months[index]]!.length,
-              itemBuilder: (context, gIndex) {
-                int gaIndex = orderedByMonth[months[index]]![gIndex];
-                return MemoriesItemThumbnail(
-                  galleryItem: galleryItems[gaIndex],
-                  onTap: () {
-                    open(context, gaIndex);
-                  },
-                );
-              },
-            );
-          },
-        ),
       ),
     );
   }

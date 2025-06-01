@@ -1537,6 +1537,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If your friend has sent you a picture or video with infinite display time, you can open it again at any time until you restart the app. To do this, simply double-click on the message. Your friend will then receive a notification that you have viewed the picture again.'**
   String get tutorialChatMessagesReopenMessageDesc;
+
+  /// No description provided for @memoriesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'As soon as you save pictures or videos, they end up here in your memories.'**
+  String get memoriesEmpty;
 }
 
 class _AppLocalizationsDelegate

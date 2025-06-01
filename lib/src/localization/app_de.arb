@@ -253,5 +253,6 @@
     "tutorialChatMessagesVerifyShieldTitle": "Verifiziere deine Kontakte!",
     "tutorialChatMessagesVerifyShieldDesc": "twonly nutzt das Signal-Protokoll für eine sichere Ende-zu-Ende Verschlüsselung. Bei der ersten Kontaktaufnahme wird dafür der öffentliche Identitätsschlüssel von deinem Kontakt heruntergeladen. Um sicherzustellen, dass dieser Schlüssel nicht von Dritten ausgetauscht wurde, solltest du ihn mit deinem Freund vergleichen, wenn ihr euch persönlich trefft. Sobald du den Benutzer verifiziert hast, kannst du auch beim verschicken von Bildern und Videos den twonly-Modus aktivieren.",
     "tutorialChatMessagesReopenMessageTitle": "Bilder und Videos erneut öffnen",
-    "tutorialChatMessagesReopenMessageDesc": "Wenn dein Freund dir ein Bild oder Video mit unendlicher Anzeigezeit gesendet hat, kannst du es bis zum Neustart der App jederzeit erneut öffnen. Um dies zu tun, musst du einfach doppelt auf die Nachricht klicken. Dein Freund erhält dann eine Benachrichtigung, dass du das Bild erneut angesehen hast."
+    "tutorialChatMessagesReopenMessageDesc": "Wenn dein Freund dir ein Bild oder Video mit unendlicher Anzeigezeit gesendet hat, kannst du es bis zum Neustart der App jederzeit erneut öffnen. Um dies zu tun, musst du einfach doppelt auf die Nachricht klicken. Dein Freund erhält dann eine Benachrichtigung, dass du das Bild erneut angesehen hast.",
+    "memoriesEmpty": "Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen."
 }
