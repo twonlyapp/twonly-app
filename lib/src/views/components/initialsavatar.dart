@@ -10,8 +10,12 @@ class ContactAvatar extends StatelessWidget {
   final UserData? userData;
   final double? fontSize;
 
-  const ContactAvatar(
-      {super.key, this.contact, this.userData, this.fontSize = 20});
+  const ContactAvatar({
+    super.key,
+    this.contact,
+    this.userData,
+    this.fontSize = 20,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +23,7 @@ class ContactAvatar extends StatelessWidget {
     String? avatarSvg;
 
     if (contact != null) {
-      displayName = getContactDisplayName(contact!);
+      displayName = getContactDisplayName(contact!).replaceAll("\u0336", "");
       avatarSvg = contact!.avatarSvg;
     } else if (userData != null) {
       displayName = userData!.displayName;
