@@ -363,37 +363,41 @@ class _UserListItem extends State<UserListItem> {
             title: Text(
               getContactDisplayName(widget.user),
             ),
-            subtitle: (currentMessage == null)
-                ? Text(context.lang.chatsTapToSend)
-                : Row(
-                    children: [
-                      MessageSendStateIcon(previewMessages),
-                      Text("•"),
-                      const SizedBox(width: 5),
-                      Text(
-                        formatDuration(lastMessageInSeconds),
-                        style: TextStyle(fontSize: 12),
+            subtitle: (widget.user.deleted)
+                ? Text(context.lang.userDeletedAccount)
+                : (currentMessage == null)
+                    ? Text(context.lang.chatsTapToSend)
+                    : Row(
+                        children: [
+                          MessageSendStateIcon(previewMessages),
+                          Text("•"),
+                          const SizedBox(width: 5),
+                          Text(
+                            formatDuration(lastMessageInSeconds),
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          if (flameCounter > 0)
+                            FlameCounterWidget(
+                              widget.user,
+                              flameCounter,
+                              prefix: true,
+                            ),
+                        ],
                       ),
-                      if (flameCounter > 0)
-                        FlameCounterWidget(
-                          widget.user,
-                          flameCounter,
-                          prefix: true,
-                        ),
-                    ],
-                  ),
             leading: ContactAvatar(contact: widget.user),
-            trailing: IconButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (context) {
-                    return CameraSendToView(widget.user);
-                  },
-                ));
-              },
-              icon: FaIcon(FontAwesomeIcons.camera,
-                  color: context.color.outline.withAlpha(150)),
-            ),
+            trailing: (widget.user.deleted)
+                ? null
+                : IconButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (context) {
+                          return CameraSendToView(widget.user);
+                        },
+                      ));
+                    },
+                    icon: FaIcon(FontAwesomeIcons.camera,
+                        color: context.color.outline.withAlpha(150)),
+                  ),
             onTap: () {
               if (currentMessage == null) {
                 Navigator.push(context, MaterialPageRoute(

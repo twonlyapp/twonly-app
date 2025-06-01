@@ -42,7 +42,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late Contact user;
   String currentInputText = "";
-  late StreamSubscription<Contact> userSub;
+  late StreamSubscription<Contact?> userSub;
   late StreamSubscription<List<Message>> messageSub;
   List<Message> messages = [];
   List<MemoryItem> galleryItems = [];
@@ -75,9 +75,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   Future initStreams() async {
     await twonlyDB.messagesDao.removeOldMessages();
-    Stream<Contact> contact =
+    Stream<Contact?> contact =
         twonlyDB.contactsDao.watchContact(widget.contact.userId);
     userSub = contact.listen((contact) {
+      if (contact == null) return;
       setState(() {
         user = contact;
       });
@@ -336,7 +337,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                 },
               ),
             ),
-            if (responseToMessage != null)
+            if (responseToMessage != null && !user.deleted)
               Container(
                 padding: const EdgeInsets.only(
                   bottom: 00,
@@ -369,43 +370,45 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                 top: 10,
               ),
               child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: newMessageController,
-                      focusNode: textFieldFocus,
-                      onChanged: (value) {
-                        currentInputText = value;
-                        setState(() {});
-                      },
-                      onSubmitted: (_) {
-                        _sendMessage();
-                      },
-                      decoration: inputTextMessageDeco(context),
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  (currentInputText != "")
-                      ? IconButton(
-                          icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-                          onPressed: () {
-                            _sendMessage();
-                          },
-                        )
-                      : IconButton(
-                          icon: FaIcon(FontAwesomeIcons.camera),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) {
-                                  return CameraSendToView(widget.contact);
+                children: (user.deleted)
+                    ? []
+                    : [
+                        Expanded(
+                          child: TextField(
+                            controller: newMessageController,
+                            focusNode: textFieldFocus,
+                            onChanged: (value) {
+                              currentInputText = value;
+                              setState(() {});
+                            },
+                            onSubmitted: (_) {
+                              _sendMessage();
+                            },
+                            decoration: inputTextMessageDeco(context),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        (currentInputText != "")
+                            ? IconButton(
+                                icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                                onPressed: () {
+                                  _sendMessage();
                                 },
-                              ),
-                            );
-                          },
-                        )
-                ],
+                              )
+                            : IconButton(
+                                icon: FaIcon(FontAwesomeIcons.camera),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return CameraSendToView(widget.contact);
+                                      },
+                                    ),
+                                  );
+                                },
+                              )
+                      ],
               ),
             ),
           ],

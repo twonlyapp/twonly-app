@@ -95,6 +95,15 @@ class _AccountViewState extends State<AccountView> {
                         .settingsAccountDeleteAccountWithBallance(
                             formattedBallance!))
                     : Text(context.lang.settingsAccountDeleteAccountNoBallance),
+            onLongPress: (kDebugMode)
+                ? () async {
+                    await deleteLocalUserData();
+                    Restart.restartApp(
+                      notificationTitle: 'Account successfully deleted',
+                      notificationBody: 'Click here to open the app again',
+                    );
+                  }
+                : null,
             onTap: (formattedBallance == null)
                 ? null
                 : () async {

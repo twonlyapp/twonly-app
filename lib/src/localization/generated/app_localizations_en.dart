@@ -202,6 +202,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatListDetailInput => 'Type a message';
 
   @override
+  String get userDeletedAccount => 'The user has deleted its account.';
+
+  @override
   String get contextMenuVerifyUser => 'Verify';
 
   @override
@@ -414,7 +417,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactNicknameNew => 'New nickname';
 
   @override
-  String get deleteAllContactMessages => 'Delete all messages';
+  String get deleteAllContactMessages => 'Delete all text-messages';
 
   @override
   String deleteAllContactMessagesBody(Object username) {
@@ -432,6 +435,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get contactBlockBody =>
       'A blocked user will no longer be able to send you messages and their profile will be hidden from view. To unblock a user, simply navigate to Settings > Privacy > Blocked Users.';
+
+  @override
+  String get contactRemove => 'Remove user';
+
+  @override
+  String contactRemoveTitle(Object username) {
+    return 'Remove $username';
+  }
+
+  @override
+  String get contactRemoveBody =>
+      'Remove the user and permanently delete the chat and all associated media files. This will also delete YOUR ACCOUNT FROM YOUR CONTACT\'S PHONE.';
 
   @override
   String get undo => 'Undo';

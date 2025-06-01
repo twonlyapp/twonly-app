@@ -106,6 +106,16 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
       defaultValue: Constant(false));
+  static const VerificationMeta _deletedMeta =
+      const VerificationMeta('deleted');
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+      'deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
+      defaultValue: Constant(false));
   static const VerificationMeta _alsoBestFriendMeta =
       const VerificationMeta('alsoBestFriend');
   @override
@@ -195,6 +205,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         verified,
         archived,
         pinned,
+        deleted,
         alsoBestFriend,
         deleteMessagesAfterXMinutes,
         createdAt,
@@ -269,6 +280,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     if (data.containsKey('pinned')) {
       context.handle(_pinnedMeta,
           pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta));
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(_deletedMeta,
+          deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
     if (data.containsKey('also_best_friend')) {
       context.handle(
@@ -362,6 +377,8 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
       pinned: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
+      deleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
       alsoBestFriend: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}also_best_friend'])!,
       deleteMessagesAfterXMinutes: attachedDatabase.typeMapping.read(
@@ -408,6 +425,7 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool verified;
   final bool archived;
   final bool pinned;
+  final bool deleted;
   final bool alsoBestFriend;
   final int deleteMessagesAfterXMinutes;
   final DateTime createdAt;
@@ -431,6 +449,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       required this.verified,
       required this.archived,
       required this.pinned,
+      required this.deleted,
       required this.alsoBestFriend,
       required this.deleteMessagesAfterXMinutes,
       required this.createdAt,
@@ -462,6 +481,7 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['verified'] = Variable<bool>(verified);
     map['archived'] = Variable<bool>(archived);
     map['pinned'] = Variable<bool>(pinned);
+    map['deleted'] = Variable<bool>(deleted);
     map['also_best_friend'] = Variable<bool>(alsoBestFriend);
     map['delete_messages_after_x_minutes'] =
         Variable<int>(deleteMessagesAfterXMinutes);
@@ -505,6 +525,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: Value(verified),
       archived: Value(archived),
       pinned: Value(pinned),
+      deleted: Value(deleted),
       alsoBestFriend: Value(alsoBestFriend),
       deleteMessagesAfterXMinutes: Value(deleteMessagesAfterXMinutes),
       createdAt: Value(createdAt),
@@ -542,6 +563,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: serializer.fromJson<bool>(json['verified']),
       archived: serializer.fromJson<bool>(json['archived']),
       pinned: serializer.fromJson<bool>(json['pinned']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
       alsoBestFriend: serializer.fromJson<bool>(json['alsoBestFriend']),
       deleteMessagesAfterXMinutes:
           serializer.fromJson<int>(json['deleteMessagesAfterXMinutes']),
@@ -574,6 +596,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       'verified': serializer.toJson<bool>(verified),
       'archived': serializer.toJson<bool>(archived),
       'pinned': serializer.toJson<bool>(pinned),
+      'deleted': serializer.toJson<bool>(deleted),
       'alsoBestFriend': serializer.toJson<bool>(alsoBestFriend),
       'deleteMessagesAfterXMinutes':
           serializer.toJson<int>(deleteMessagesAfterXMinutes),
@@ -602,6 +625,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           bool? verified,
           bool? archived,
           bool? pinned,
+          bool? deleted,
           bool? alsoBestFriend,
           int? deleteMessagesAfterXMinutes,
           DateTime? createdAt,
@@ -625,6 +649,7 @@ class Contact extends DataClass implements Insertable<Contact> {
         verified: verified ?? this.verified,
         archived: archived ?? this.archived,
         pinned: pinned ?? this.pinned,
+        deleted: deleted ?? this.deleted,
         alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
         deleteMessagesAfterXMinutes:
             deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
@@ -661,6 +686,7 @@ class Contact extends DataClass implements Insertable<Contact> {
       verified: data.verified.present ? data.verified.value : this.verified,
       archived: data.archived.present ? data.archived.value : this.archived,
       pinned: data.pinned.present ? data.pinned.value : this.pinned,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
       alsoBestFriend: data.alsoBestFriend.present
           ? data.alsoBestFriend.value
           : this.alsoBestFriend,
@@ -707,6 +733,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('verified: $verified, ')
           ..write('archived: $archived, ')
           ..write('pinned: $pinned, ')
+          ..write('deleted: $deleted, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
           ..write('createdAt: $createdAt, ')
@@ -735,6 +762,7 @@ class Contact extends DataClass implements Insertable<Contact> {
         verified,
         archived,
         pinned,
+        deleted,
         alsoBestFriend,
         deleteMessagesAfterXMinutes,
         createdAt,
@@ -762,6 +790,7 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.verified == this.verified &&
           other.archived == this.archived &&
           other.pinned == this.pinned &&
+          other.deleted == this.deleted &&
           other.alsoBestFriend == this.alsoBestFriend &&
           other.deleteMessagesAfterXMinutes ==
               this.deleteMessagesAfterXMinutes &&
@@ -788,6 +817,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> verified;
   final Value<bool> archived;
   final Value<bool> pinned;
+  final Value<bool> deleted;
   final Value<bool> alsoBestFriend;
   final Value<int> deleteMessagesAfterXMinutes;
   final Value<DateTime> createdAt;
@@ -811,6 +841,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.archived = const Value.absent(),
     this.pinned = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.alsoBestFriend = const Value.absent(),
     this.deleteMessagesAfterXMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -835,6 +866,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.verified = const Value.absent(),
     this.archived = const Value.absent(),
     this.pinned = const Value.absent(),
+    this.deleted = const Value.absent(),
     this.alsoBestFriend = const Value.absent(),
     this.deleteMessagesAfterXMinutes = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -859,6 +891,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? verified,
     Expression<bool>? archived,
     Expression<bool>? pinned,
+    Expression<bool>? deleted,
     Expression<bool>? alsoBestFriend,
     Expression<int>? deleteMessagesAfterXMinutes,
     Expression<DateTime>? createdAt,
@@ -883,6 +916,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (verified != null) 'verified': verified,
       if (archived != null) 'archived': archived,
       if (pinned != null) 'pinned': pinned,
+      if (deleted != null) 'deleted': deleted,
       if (alsoBestFriend != null) 'also_best_friend': alsoBestFriend,
       if (deleteMessagesAfterXMinutes != null)
         'delete_messages_after_x_minutes': deleteMessagesAfterXMinutes,
@@ -913,6 +947,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<bool>? verified,
       Value<bool>? archived,
       Value<bool>? pinned,
+      Value<bool>? deleted,
       Value<bool>? alsoBestFriend,
       Value<int>? deleteMessagesAfterXMinutes,
       Value<DateTime>? createdAt,
@@ -936,6 +971,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       verified: verified ?? this.verified,
       archived: archived ?? this.archived,
       pinned: pinned ?? this.pinned,
+      deleted: deleted ?? this.deleted,
       alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
       deleteMessagesAfterXMinutes:
           deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
@@ -990,6 +1026,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (pinned.present) {
       map['pinned'] = Variable<bool>(pinned.value);
     }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
     if (alsoBestFriend.present) {
       map['also_best_friend'] = Variable<bool>(alsoBestFriend.value);
     }
@@ -1042,6 +1081,7 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('verified: $verified, ')
           ..write('archived: $archived, ')
           ..write('pinned: $pinned, ')
+          ..write('deleted: $deleted, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
           ..write('createdAt: $createdAt, ')
@@ -4196,6 +4236,7 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   Value<bool> verified,
   Value<bool> archived,
   Value<bool> pinned,
+  Value<bool> deleted,
   Value<bool> alsoBestFriend,
   Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
@@ -4220,6 +4261,7 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<bool> verified,
   Value<bool> archived,
   Value<bool> pinned,
+  Value<bool> deleted,
   Value<bool> alsoBestFriend,
   Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
@@ -4297,6 +4339,9 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get pinned => $composableBuilder(
       column: $table.pinned, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+      column: $table.deleted, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get alsoBestFriend => $composableBuilder(
       column: $table.alsoBestFriend,
@@ -4403,6 +4448,9 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<bool> get pinned => $composableBuilder(
       column: $table.pinned, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+      column: $table.deleted, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get alsoBestFriend => $composableBuilder(
       column: $table.alsoBestFriend,
       builder: (column) => ColumnOrderings(column));
@@ -4487,6 +4535,9 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get pinned =>
       $composableBuilder(column: $table.pinned, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
 
   GeneratedColumn<bool> get alsoBestFriend => $composableBuilder(
       column: $table.alsoBestFriend, builder: (column) => column);
@@ -4575,6 +4626,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> verified = const Value.absent(),
             Value<bool> archived = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
             Value<bool> alsoBestFriend = const Value.absent(),
             Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -4599,6 +4651,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             verified: verified,
             archived: archived,
             pinned: pinned,
+            deleted: deleted,
             alsoBestFriend: alsoBestFriend,
             deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
@@ -4623,6 +4676,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> verified = const Value.absent(),
             Value<bool> archived = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
             Value<bool> alsoBestFriend = const Value.absent(),
             Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -4647,6 +4701,7 @@ class $$ContactsTableTableManager extends RootTableManager<
             verified: verified,
             archived: archived,
             pinned: pinned,
+            deleted: deleted,
             alsoBestFriend: alsoBestFriend,
             deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,

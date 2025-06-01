@@ -77,6 +77,13 @@ Future<bool> createNewSignalSession(Response_UserData userData) async {
   }
 }
 
+Future deleteSessionWithTarget(int target) async {
+  ConnectSignalProtocolStore? signalStore = await getSignalStore();
+  if (signalStore == null) return;
+  final address = SignalProtocolAddress(target.toString(), defaultDeviceId);
+  await signalStore.sessionStore.deleteSession(address);
+}
+
 Future<Fingerprint?> generateSessionFingerPrint(int target) async {
   ConnectSignalProtocolStore? signalStore = await getSignalStore();
   UserData? user = await getUser();

@@ -446,6 +446,12 @@ abstract class AppLocalizations {
   /// **'Type a message'**
   String get chatListDetailInput;
 
+  /// No description provided for @userDeletedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'The user has deleted its account.'**
+  String get userDeletedAccount;
+
   /// No description provided for @contextMenuVerifyUser.
   ///
   /// In en, this message translates to:
@@ -845,7 +851,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAllContactMessages.
   ///
   /// In en, this message translates to:
-  /// **'Delete all messages'**
+  /// **'Delete all text-messages'**
   String get deleteAllContactMessages;
 
   /// No description provided for @deleteAllContactMessagesBody.
@@ -871,6 +877,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A blocked user will no longer be able to send you messages and their profile will be hidden from view. To unblock a user, simply navigate to Settings > Privacy > Blocked Users.'**
   String get contactBlockBody;
+
+  /// No description provided for @contactRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove user'**
+  String get contactRemove;
+
+  /// No description provided for @contactRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {username}'**
+  String contactRemoveTitle(Object username);
+
+  /// No description provided for @contactRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the user and permanently delete the chat and all associated media files. This will also delete YOUR ACCOUNT FROM YOUR CONTACT\'S PHONE.'**
+  String get contactRemoveBody;
 
   /// No description provided for @undo.
   ///

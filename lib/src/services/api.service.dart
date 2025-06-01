@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,6 +11,7 @@ import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/app.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
@@ -221,8 +223,12 @@ class ApiService {
     box.put("rawbytes-to-retransmit", retransmit);
   }
 
-  Future<Result> sendRequestSync(ClientToServer request,
-      {bool authenticated = true, bool ensureRetransmission = false}) async {
+  Future<Result> sendRequestSync(
+    ClientToServer request, {
+    bool authenticated = true,
+    bool ensureRetransmission = false,
+    int? contactId,
+  }) async {
     var seq = Int64(Random().nextInt(4294967296));
     while (messagesV0.containsKey(seq)) {
       seq = Int64(Random().nextInt(4294967296));
@@ -262,6 +268,11 @@ class ApiService {
             return Result.error(ErrorCode.InternalError);
           }
         }
+      }
+      if (res.error == ErrorCode.UserIdNotFound && contactId != null) {
+        Log.error("Contact deleted their account $contactId.");
+        await twonlyDB.contactsDao
+            .updateContact(contactId, ContactsCompanion(deleted: Value(true)));
       }
     }
     return res;
@@ -393,7 +404,7 @@ class ApiService {
     var get = ApplicationData_GetUserById()..userId = Int64(userId);
     var appData = ApplicationData()..getuserbyid = get;
     var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    return await sendRequestSync(req, contactId: userId);
   }
 
   Future<Result> getUploadToken(int recipientsCount) async {
@@ -504,7 +515,7 @@ class ApiService {
     var get = ApplicationData_RemoveAdditionalUser()..userId = userId;
     var appData = ApplicationData()..removeadditionaluser = get;
     var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    return await sendRequestSync(req, contactId: userId.toInt());
   }
 
   Future<Result> buyVoucher(int valueInCents) async {
@@ -571,7 +582,7 @@ class ApiService {
     var get = ApplicationData_GetSignedPreKeyByUserId()..userId = Int64(userId);
     var appData = ApplicationData()..getsignedprekeybyuserid = get;
     var req = createClientToServerFromApplicationData(appData);
-    Result res = await sendRequestSync(req);
+    Result res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
       server.Response_Ok ok = res.value;
       if (ok.hasSignedprekey()) {
@@ -585,7 +596,7 @@ class ApiService {
     var get = ApplicationData_GetPrekeysByUserId()..userId = Int64(userId);
     var appData = ApplicationData()..getprekeysbyuserid = get;
     var req = createClientToServerFromApplicationData(appData);
-    Result res = await sendRequestSync(req);
+    Result res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
       server.Response_Ok ok = res.value;
       if (ok.hasUserdata()) {
@@ -617,7 +628,6 @@ class ApiService {
 
     var appData = ApplicationData()..textmessage = testMessage;
     var req = createClientToServerFromApplicationData(appData);
-
-    return await sendRequestSync(req);
+    return await sendRequestSync(req, contactId: target);
   }
 }

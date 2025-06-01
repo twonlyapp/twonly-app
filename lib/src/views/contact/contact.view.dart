@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/flame.dart';
@@ -22,6 +23,39 @@ class ContactView extends StatefulWidget {
 }
 
 class _ContactViewState extends State<ContactView> {
+  Future handleUserRemoveRequest(Contact contact) async {
+    bool remove = await showAlertDialog(
+      context,
+      context.lang.contactRemoveTitle(getContactDisplayName(contact)),
+      context.lang.contactRemoveBody,
+    );
+    if (remove) {
+      // trigger deletion for the other user...
+      rejectUser(contact.userId);
+      await deleteContact(contact.userId);
+      if (mounted) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+    }
+  }
+
+  Future handleUserBlockRequest(Contact contact) async {
+    bool block = await showAlertDialog(
+      context,
+      context.lang.contactBlockTitle(getContactDisplayName(contact)),
+      context.lang.contactBlockBody,
+    );
+    if (block) {
+      final update = ContactsCompanion(blocked: Value(true));
+      if (context.mounted) {
+        await twonlyDB.contactsDao.updateContact(contact.userId, update);
+      }
+      if (context.mounted) {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Stream<Contact?> contact = twonlyDB.contactsDao
@@ -93,7 +127,8 @@ class _ContactViewState extends State<ContactView> {
                 },
               ),
               BetterListTile(
-                icon: FontAwesomeIcons.trashCan,
+                icon: FontAwesomeIcons.eraser,
+                iconSize: 16,
                 text: context.lang.deleteAllContactMessages,
                 onTap: () async {
                   bool block = await showAlertDialog(
@@ -114,24 +149,14 @@ class _ContactViewState extends State<ContactView> {
                 icon: FontAwesomeIcons.ban,
                 color: Colors.red,
                 text: context.lang.contactBlock,
-                onTap: () async {
-                  bool block = await showAlertDialog(
-                    context,
-                    context.lang
-                        .contactBlockTitle(getContactDisplayName(contact)),
-                    context.lang.contactBlockBody,
-                  );
-                  if (block) {
-                    final update = ContactsCompanion(blocked: Value(true));
-                    if (context.mounted) {
-                      await twonlyDB.contactsDao
-                          .updateContact(contact.userId, update);
-                    }
-                    if (context.mounted) {
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                    }
-                  }
-                },
+                onTap: () => handleUserBlockRequest(contact),
+              ),
+              BetterListTile(
+                icon: FontAwesomeIcons.userMinus,
+                iconSize: 16,
+                color: Colors.red,
+                text: context.lang.contactRemove,
+                onTap: () => handleUserRemoveRequest(contact),
               ),
             ],
           );

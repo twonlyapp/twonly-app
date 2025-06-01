@@ -30,7 +30,7 @@ class _StartNewChatView extends State<StartNewChatView> {
     super.initState();
 
     Stream<List<Contact>> stream =
-        twonlyDB.contactsDao.watchContactsForShareView();
+        twonlyDB.contactsDao.watchContactsForStartNewChat();
 
     contactSub = stream.listen((update) {
       update.sort((a, b) =>

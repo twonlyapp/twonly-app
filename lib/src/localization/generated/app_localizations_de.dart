@@ -204,6 +204,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatListDetailInput => 'Nachricht eingeben';
 
   @override
+  String get userDeletedAccount => 'Der Nutzer hat sein Konto gelöscht.';
+
+  @override
   String get contextMenuVerifyUser => 'Verifizieren';
 
   @override
@@ -419,7 +422,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contactNicknameNew => 'Neuer Spitzname';
 
   @override
-  String get deleteAllContactMessages => 'Alle Nachrichten löschen';
+  String get deleteAllContactMessages => 'Textnachrichten löschen';
 
   @override
   String deleteAllContactMessagesBody(Object username) {
@@ -437,6 +440,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get contactBlockBody =>
       'Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und sein Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.';
+
+  @override
+  String get contactRemove => 'Benutzer löschen';
+
+  @override
+  String contactRemoveTitle(Object username) {
+    return '$username löschen?';
+  }
+
+  @override
+  String get contactRemoveBody =>
+      'Entferne den Benutzer und lösche den Chat sowie alle zugehörigen Mediendateien dauerhaft. Dadurch wird auch DEIN KONTO VON DEM TELEFON DEINES KONTAKTS gelöscht.';
 
   @override
   String get undo => 'Rückgängig';

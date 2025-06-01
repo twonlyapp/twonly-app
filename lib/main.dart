@@ -34,8 +34,10 @@ void main() async {
   apiService = ApiService();
   twonlyDB = TwonlyDatabase();
   await twonlyDB.messagesDao.resetPendingDownloadState();
-  await purgeReceivedMediaFiles();
-  await purgeSendMediaFiles();
+
+  // purge media files in the background
+  purgeReceivedMediaFiles();
+  purgeSendMediaFiles();
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 

@@ -1,10 +1,15 @@
 import 'package:fixnum/fixnum.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
     as client;
 import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
     as server;
+import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 
 class Result<T, E> {
   final T? value;
@@ -41,4 +46,23 @@ ClientToServer createClientToServerFromApplicationData(
     ..seq = Int64(0)
     ..applicationdata = applicationData;
   return ClientToServer()..v0 = v0;
+}
+
+Future deleteContact(int contactId) async {
+  await twonlyDB.messagesDao.deleteAllMessagesByContactId(contactId);
+  await twonlyDB.signalDao.deleteAllByContactId(contactId);
+  await deleteSessionWithTarget(contactId);
+  await twonlyDB.contactsDao.deleteContactByUserId(contactId);
+}
+
+Future rejectUser(int contactId) async {
+  await encryptAndSendMessageAsync(
+    null,
+    contactId,
+    MessageJson(
+      kind: MessageKind.rejectRequest,
+      timestamp: DateTime.now(),
+      content: MessageContent(),
+    ),
+  );
 }

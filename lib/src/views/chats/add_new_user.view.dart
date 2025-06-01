@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
@@ -262,16 +263,8 @@ class _ContactsListViewState extends State<ContactsListView> {
         child: IconButton(
           icon: Icon(Icons.close, color: Colors.red),
           onPressed: () async {
-            await twonlyDB.contactsDao.deleteContactByUserId(contact.userId);
-            await encryptAndSendMessageAsync(
-              null,
-              contact.userId,
-              MessageJson(
-                kind: MessageKind.rejectRequest,
-                timestamp: DateTime.now(),
-                content: MessageContent(),
-              ),
-            );
+            rejectUser(contact.userId);
+            await deleteContact(contact.userId);
           },
         ),
       ),

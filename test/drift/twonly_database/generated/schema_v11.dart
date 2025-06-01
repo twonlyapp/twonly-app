@@ -916,8 +916,8 @@ class Messages extends Table with TableInfo<Messages, MessagesData> {
       'contact_id', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
   late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
       'message_id', aliasedName, false,
       hasAutoIncrement: true,
@@ -1955,7 +1955,10 @@ class MediaDownloads extends Table
   MediaDownloads(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
       'message_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES messages (message_id) ON DELETE CASCADE'));
   late final GeneratedColumn<String> downloadToken = GeneratedColumn<String>(
       'download_token', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
@@ -2972,7 +2975,10 @@ class SignalContactPreKeys extends Table
   SignalContactPreKeys(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
       'contact_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
   late final GeneratedColumn<int> preKeyId = GeneratedColumn<int>(
       'pre_key_id', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
@@ -3209,7 +3215,10 @@ class SignalContactSignedPreKeys extends Table
   SignalContactSignedPreKeys(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
       'contact_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
   late final GeneratedColumn<int> signedPreKeyId = GeneratedColumn<int>(
       'signed_pre_key_id', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
@@ -3478,8 +3487,8 @@ class SignalContactSignedPreKeysCompanion
   }
 }
 
-class DatabaseAtV10 extends GeneratedDatabase {
-  DatabaseAtV10(QueryExecutor e) : super(e);
+class DatabaseAtV11 extends GeneratedDatabase {
+  DatabaseAtV11(QueryExecutor e) : super(e);
   late final Contacts contacts = Contacts(this);
   late final Messages messages = Messages(this);
   late final MediaUploads mediaUploads = MediaUploads(this);
@@ -3512,5 +3521,5 @@ class DatabaseAtV10 extends GeneratedDatabase {
         signalContactSignedPreKeys
       ];
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 }

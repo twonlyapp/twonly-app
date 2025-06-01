@@ -123,12 +123,22 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     // return (select(contacts)).watch();
   }
 
-  Stream<Contact> watchContact(int userid) {
+  Stream<Contact?> watchContact(int userid) {
     return (select(contacts)..where((t) => t.userId.equals(userid)))
-        .watchSingle();
+        .watchSingleOrNull();
   }
 
   Stream<List<Contact>> watchContactsForShareView() {
+    return (select(contacts)
+          ..where((t) =>
+              t.accepted.equals(true) &
+              t.blocked.equals(false) &
+              t.deleted.equals(false))
+          ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
+        .watch();
+  }
+
+  Stream<List<Contact>> watchContactsForStartNewChat() {
     return (select(contacts)
           ..where((t) => t.accepted.equals(true) & t.blocked.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
@@ -190,13 +200,20 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 }
 
 String getContactDisplayName(Contact user) {
-  if (user.nickName != null) {
-    return user.nickName!;
+  String name = user.username;
+  if (user.nickName != null && user.nickName != "") {
+    name = user.nickName!;
+  } else if (user.displayName != null) {
+    name = user.displayName!;
   }
-  if (user.displayName != null) {
-    return user.displayName!;
+  if (user.deleted) {
+    name = applyStrikethrough(name);
   }
-  return user.username;
+  return name;
+}
+
+String applyStrikethrough(String text) {
+  return text.split('').map((char) => '$char\u0336').join('');
 }
 
 int getFlameCounterFromContact(Contact contact) {

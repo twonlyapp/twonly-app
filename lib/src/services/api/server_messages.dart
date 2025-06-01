@@ -107,7 +107,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       break;
 
     case MessageKind.rejectRequest:
-      await twonlyDB.contactsDao.deleteContactByUserId(fromUserId);
+      await deleteContact(fromUserId);
       break;
 
     case MessageKind.acceptRequest:

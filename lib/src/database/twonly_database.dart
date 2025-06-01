@@ -63,6 +63,9 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
+      beforeOpen: (details) async {
+        await customStatement('PRAGMA foreign_keys = ON');
+      },
       onUpgrade: stepByStep(
         from1To2: (m, schema) async {
           m.addColumn(schema.messages, schema.messages.errorWhileSending);
@@ -109,6 +112,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         from9To10: (m, schema) async {
           m.createTable(signalContactPreKeys);
           m.createTable(signalContactSignedPreKeys);
+          m.addColumn(schema.contacts, schema.contacts.deleted);
         },
       ),
     );

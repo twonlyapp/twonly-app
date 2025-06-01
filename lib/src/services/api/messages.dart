@@ -8,6 +8,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/hive.dart';
@@ -114,18 +115,36 @@ Future<Result> sendRetransmitMessage(
   Result resp =
       await apiService.sendTextMessage(msg.userId, msg.bytes, msg.pushData);
 
+  bool retry = true;
+
+  if (resp.isError) {
+    if (resp.error == ErrorCode.UserIdNotFound) {
+      retry = false;
+      if (msg.messageId != null) {
+        await twonlyDB.messagesDao.updateMessageByMessageId(
+          msg.messageId!,
+          MessagesCompanion(errorWhileSending: Value(true)),
+        );
+      }
+    }
+  }
+
   if (resp.isSuccess) {
+    if (msg.messageId != null) {
+      retry = false;
+      await twonlyDB.messagesDao.updateMessageByMessageId(
+        msg.messageId!,
+        MessagesCompanion(acknowledgeByServer: Value(true)),
+      );
+    }
+  }
+
+  if (!retry) {
     {
       var retransmit = await getAllMessagesForRetransmitting();
       retransmit.remove(stateId);
       Box box = await getMediaStorage();
       box.put("messages-to-retransmit", jsonEncode(retransmit));
-    }
-    if (msg.messageId != null) {
-      await twonlyDB.messagesDao.updateMessageByMessageId(
-        msg.messageId!,
-        MessagesCompanion(acknowledgeByServer: Value(true)),
-      );
     }
   }
   return resp;

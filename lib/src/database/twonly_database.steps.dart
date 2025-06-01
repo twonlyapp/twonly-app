@@ -1895,7 +1895,7 @@ final class Schema10 extends i0.VersionedSchema {
     signalContactPreKeys,
     signalContactSignedPreKeys,
   ];
-  late final Shape12 contacts = Shape12(
+  late final Shape13 contacts = Shape13(
       source: i0.VersionedTable(
         entityName: 'contacts',
         withoutRowId: false,
@@ -1916,6 +1916,7 @@ final class Schema10 extends i0.VersionedSchema {
           _column_9,
           _column_39,
           _column_53,
+          _column_57,
           _column_54,
           _column_40,
           _column_10,
@@ -2054,7 +2055,7 @@ final class Schema10 extends i0.VersionedSchema {
         attachedDatabase: database,
       ),
       alias: null);
-  late final Shape13 signalContactPreKeys = Shape13(
+  late final Shape14 signalContactPreKeys = Shape14(
       source: i0.VersionedTable(
         entityName: 'signal_contact_pre_keys',
         withoutRowId: false,
@@ -2063,7 +2064,7 @@ final class Schema10 extends i0.VersionedSchema {
           'PRIMARY KEY(contact_id, pre_key_id)',
         ],
         columns: [
-          _column_57,
+          _column_58,
           _column_34,
           _column_35,
           _column_10,
@@ -2071,19 +2072,19 @@ final class Schema10 extends i0.VersionedSchema {
         attachedDatabase: database,
       ),
       alias: null);
-  late final Shape14 signalContactSignedPreKeys = Shape14(
+  late final Shape15 signalContactSignedPreKeys = Shape15(
       source: i0.VersionedTable(
         entityName: 'signal_contact_signed_pre_keys',
         withoutRowId: false,
         isStrict: false,
         tableConstraints: [
-          'PRIMARY KEY(contact_id, signed_pre_key_id)',
+          'PRIMARY KEY(contact_id)',
         ],
         columns: [
-          _column_57,
           _column_58,
           _column_59,
           _column_60,
+          _column_61,
           _column_10,
         ],
         attachedDatabase: database,
@@ -2093,6 +2094,65 @@ final class Schema10 extends i0.VersionedSchema {
 
 class Shape13 extends i0.VersionedTable {
   Shape13({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get userId =>
+      columnsByName['user_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get username =>
+      columnsByName['username']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get displayName =>
+      columnsByName['display_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get nickName =>
+      columnsByName['nick_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get avatarSvg =>
+      columnsByName['avatar_svg']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get myAvatarCounter =>
+      columnsByName['my_avatar_counter']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<bool> get accepted =>
+      columnsByName['accepted']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get requested =>
+      columnsByName['requested']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get blocked =>
+      columnsByName['blocked']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get verified =>
+      columnsByName['verified']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get archived =>
+      columnsByName['archived']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get pinned =>
+      columnsByName['pinned']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get deleted =>
+      columnsByName['deleted']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get alsoBestFriend =>
+      columnsByName['also_best_friend']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<int> get deleteMessagesAfterXMinutes =>
+      columnsByName['delete_messages_after_x_minutes']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<DateTime> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<int> get totalMediaCounter =>
+      columnsByName['total_media_counter']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<DateTime> get lastMessageSend =>
+      columnsByName['last_message_send']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get lastMessageReceived =>
+      columnsByName['last_message_received']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get lastFlameCounterChange =>
+      columnsByName['last_flame_counter_change']!
+          as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get lastFlameSync =>
+      columnsByName['last_flame_sync']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get lastMessageExchange =>
+      columnsByName['last_message_exchange']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<int> get flameCounter =>
+      columnsByName['flame_counter']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<bool> _column_57(String aliasedName) =>
+    i1.GeneratedColumn<bool>('deleted', aliasedName, false,
+        type: i1.DriftSqlType.bool,
+        defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+            'CHECK ("deleted" IN (0, 1))'),
+        defaultValue: const CustomExpression('0'));
+
+class Shape14 extends i0.VersionedTable {
+  Shape14({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<int> get contactId =>
       columnsByName['contact_id']! as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<int> get preKeyId =>
@@ -2103,12 +2163,12 @@ class Shape13 extends i0.VersionedTable {
       columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
 }
 
-i1.GeneratedColumn<int> _column_57(String aliasedName) =>
+i1.GeneratedColumn<int> _column_58(String aliasedName) =>
     i1.GeneratedColumn<int>('contact_id', aliasedName, false,
         type: i1.DriftSqlType.int);
 
-class Shape14 extends i0.VersionedTable {
-  Shape14({required super.source, required super.alias}) : super.aliased();
+class Shape15 extends i0.VersionedTable {
+  Shape15({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<int> get contactId =>
       columnsByName['contact_id']! as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<int> get signedPreKeyId =>
@@ -2122,13 +2182,13 @@ class Shape14 extends i0.VersionedTable {
       columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
 }
 
-i1.GeneratedColumn<int> _column_58(String aliasedName) =>
+i1.GeneratedColumn<int> _column_59(String aliasedName) =>
     i1.GeneratedColumn<int>('signed_pre_key_id', aliasedName, false,
         type: i1.DriftSqlType.int);
-i1.GeneratedColumn<i2.Uint8List> _column_59(String aliasedName) =>
+i1.GeneratedColumn<i2.Uint8List> _column_60(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>('signed_pre_key', aliasedName, false,
         type: i1.DriftSqlType.blob);
-i1.GeneratedColumn<i2.Uint8List> _column_60(String aliasedName) =>
+i1.GeneratedColumn<i2.Uint8List> _column_61(String aliasedName) =>
     i1.GeneratedColumn<i2.Uint8List>(
         'signed_pre_key_signature', aliasedName, false,
         type: i1.DriftSqlType.blob);

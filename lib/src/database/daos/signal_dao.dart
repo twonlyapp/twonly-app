@@ -11,6 +11,15 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
   // of this object.
   SignalDao(super.db);
 
+  Future deleteAllByContactId(int contactId) async {
+    await (delete(signalContactPreKeys)
+          ..where((t) => t.contactId.equals(contactId)))
+        .go();
+    await (delete(signalContactSignedPreKeys)
+          ..where((t) => t.contactId.equals(contactId)))
+        .go();
+  }
+
   // 1: Count the number of pre-keys by contact ID
   Future<int> countPreKeysByContactId(int contactId) {
     return (select(signalContactPreKeys)
