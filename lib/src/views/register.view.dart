@@ -24,9 +24,10 @@ class _RegisterViewState extends State<RegisterView> {
 
   bool _isTryingToRegister = false;
 
-  Future createNewUser() async {
-    String username = usernameController.text;
+  Future createNewUser({bool isDemoAccount = false}) async {
+    String username = (isDemoAccount) ? "<demo>" : usernameController.text;
     String inviteCode = inviteCodeController.text;
+
     setState(() {
       _isTryingToRegister = true;
     });
@@ -35,30 +36,44 @@ class _RegisterViewState extends State<RegisterView> {
 
     await createIfNotExistsSignalIdentity();
 
-    final res = await apiService.register(username, inviteCode);
+    int userId = 0;
+
+    if (!isDemoAccount) {
+      final res = await apiService.register(username, inviteCode);
+      if (res.isSuccess) {
+        Log.info("Got user_id ${res.value} from server");
+        userId = res.value.userid.toInt();
+      } else {
+        if (mounted) {
+          showAlertDialog(
+            context,
+            "Oh no!",
+            errorCodeToText(context, res.error),
+          );
+        }
+        return;
+      }
+    }
 
     setState(() {
       _isTryingToRegister = false;
     });
 
-    if (res.isSuccess) {
-      Log.info("Got user_id ${res.value} from server");
-      final userData = UserData(
-        userId: res.value.userid.toInt(),
-        username: username,
-        displayName: username,
-        subscriptionPlan: "Preview",
-      );
-      storage.write(key: "userData", value: jsonEncode(userData));
-      apiService.authenticate();
-      widget.callbackOnSuccess();
-      return;
+    final userData = UserData(
+      userId: userId,
+      username: username,
+      displayName: username,
+      subscriptionPlan: "Preview",
+      isDemoUser: isDemoAccount,
+    );
+    storage.write(key: "userData", value: jsonEncode(userData));
+    if (!isDemoAccount) {
+      await apiService.authenticate();
+    } else {
+      gIsDemoUser = true;
+      createFakeDemoData();
     }
-
-    if (context.mounted) {
-      // ignore: use_build_context_synchronously
-      showAlertDialog(context, "Oh no!", errorCodeToText(context, res.error));
-    }
+    widget.callbackOnSuccess();
   }
 
   @override
@@ -174,12 +189,23 @@ class _RegisterViewState extends State<RegisterView> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      showAlertDialog(context, "Coming soon",
-                          "This feature is not yet implemented! Just create a new account :/");
-                    },
-                    label: Text("Restore identity"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          createNewUser(isDemoAccount: true);
+                        },
+                        label: Text("Demo"),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          showAlertDialog(context, "Coming soon",
+                              "This feature is not yet implemented! Just create a new account :/");
+                        },
+                        label: Text("Restore identity"),
+                      ),
+                    ],
                   ),
                 ]),
                 //   ),

@@ -114,6 +114,13 @@ class ApiService {
   }
 
   Future<bool> connect() async {
+    final user = await getUser();
+    if (user != null && user.isDemoUser) {
+      print("DEMO user");
+      // the demo user should not be able to connect to the API server...
+      globalCallbackConnectionState(true);
+      return false;
+    }
     return lockConnecting.protect<bool>(() async {
       if (_channel != null) {
         return true;

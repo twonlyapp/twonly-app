@@ -201,6 +201,9 @@ Future<(String, RetransmitMessage)?> encryptMessage(
 // encrypts and stores the message and then sends it in the background
 Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
     {PushKind? pushKind}) async {
+  if (gIsDemoUser) {
+    return;
+  }
   (String, RetransmitMessage)? stateData =
       await encryptMessage(messageId, userId, msg, pushKind: pushKind);
   if (stateData != null) {

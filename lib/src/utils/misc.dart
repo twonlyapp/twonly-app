@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +10,10 @@ import 'package:gal/gal.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/error.pb.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
@@ -218,3 +223,164 @@ String truncateString(String input, {int maxLength = 20}) {
   }
   return input;
 }
+
+Future insertDemoContacts() async {
+  List<String> commonUsernames = [
+    'James',
+    'Mary',
+    'John',
+    'Patricia',
+    'Robert',
+    'Jennifer',
+    'Michael',
+    'Linda',
+    'William',
+    'Elizabeth',
+    'David',
+    'Barbara',
+    'Richard',
+    'Susan',
+    'Joseph',
+    'Jessica',
+    'Charles',
+    'Sarah',
+    'Thomas',
+    'Karen',
+  ];
+  final List<Map<String, dynamic>> contactConfigs = [
+    {'count': 3, 'requested': true},
+    {'count': 4, 'requested': false, 'accepted': true},
+    {'count': 1, 'accepted': true, 'blocked': true},
+    {'count': 1, 'accepted': true, 'archived': true},
+    {'count': 2, 'accepted': true, 'pinned': true},
+    {'count': 1, 'requested': false},
+  ];
+
+  int counter = 0;
+
+  for (var config in contactConfigs) {
+    for (int i = 0; i < config['count']; i++) {
+      if (counter >= commonUsernames.length) {
+        break;
+      }
+      String username = commonUsernames[counter];
+      int userId = Random().nextInt(1000000);
+      await twonlyDB.contactsDao.insertContact(
+        ContactsCompanion(
+          username: Value(username),
+          userId: Value(userId),
+          requested: Value(config['requested'] ?? false),
+          accepted: Value(config['accepted'] ?? false),
+          blocked: Value(config['blocked'] ?? false),
+          archived: Value(config['archived'] ?? false),
+          pinned: Value(config['pinned'] ?? false),
+        ),
+      );
+      if (config['accepted'] ?? false) {
+        for (var i = 0; i < 20; i++) {
+          int chatId = Random().nextInt(chatMessages.length);
+          int? messageId = await twonlyDB.messagesDao.insertMessage(
+            MessagesCompanion(
+              contactId: Value(userId),
+              kind: Value(MessageKind.textMessage),
+              sendAt: Value(chatMessages[chatId][1]),
+              acknowledgeByServer: Value(true),
+              acknowledgeByUser: Value(true),
+              messageOtherId:
+                  Value(Random().nextBool() ? Random().nextInt(10000) : null),
+              // responseToOtherMessageId: Value(content.responseToMessageId),
+              // responseToMessageId: Value(content.responseToOtherMessageId),
+              downloadState: Value(DownloadState.downloaded),
+              contentJson: Value(
+                jsonEncode(TextMessageContent(text: chatMessages[chatId][0])),
+              ),
+            ),
+          );
+        }
+      }
+      counter++;
+    }
+  }
+}
+
+Future createFakeDemoData() async {
+  await insertDemoContacts();
+}
+
+List<List<dynamic>> chatMessages = [
+  [
+    "Lorem ipsum dolor sit amet.",
+    DateTime.now().subtract(Duration(minutes: 20))
+  ],
+  [
+    "Consectetur adipiscing elit.",
+    DateTime.now().subtract(Duration(minutes: 19))
+  ],
+  [
+    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    DateTime.now().subtract(Duration(minutes: 18))
+  ],
+  ["Ut enim ad minim veniam.", DateTime.now().subtract(Duration(minutes: 17))],
+  [
+    "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+    DateTime.now().subtract(Duration(minutes: 16))
+  ],
+  [
+    "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+    DateTime.now().subtract(Duration(minutes: 15))
+  ],
+  [
+    "Excepteur sint occaecat cupidatat non proident.",
+    DateTime.now().subtract(Duration(minutes: 14))
+  ],
+  [
+    "Sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    DateTime.now().subtract(Duration(minutes: 13))
+  ],
+  [
+    "Curabitur pretium tincidunt lacus.",
+    DateTime.now().subtract(Duration(minutes: 12))
+  ],
+  ["Nulla facilisi.", DateTime.now().subtract(Duration(minutes: 11))],
+  [
+    "Aenean lacinia bibendum nulla sed consectetur.",
+    DateTime.now().subtract(Duration(minutes: 10))
+  ],
+  [
+    "Sed posuere consectetur est at lobortis.",
+    DateTime.now().subtract(Duration(minutes: 9))
+  ],
+  [
+    "Vestibulum id ligula porta felis euismod semper.",
+    DateTime.now().subtract(Duration(minutes: 8))
+  ],
+  [
+    "Cras justo odio, dapibus ac facilisis in, egestas eget quam.",
+    DateTime.now().subtract(Duration(minutes: 7))
+  ],
+  [
+    "Morbi leo risus, porta ac consectetur ac, vestibulum at eros.",
+    DateTime.now().subtract(Duration(minutes: 6))
+  ],
+  [
+    "Praesent commodo cursus magna, vel scelerisque nisl consectetur et.",
+    DateTime.now().subtract(Duration(minutes: 5))
+  ],
+  [
+    "Donec ullamcorper nulla non metus auctor fringilla.",
+    DateTime.now().subtract(Duration(minutes: 4))
+  ],
+  [
+    "Etiam porta sem malesuada magna mollis euismod.",
+    DateTime.now().subtract(Duration(minutes: 3))
+  ],
+  [
+    "Aenean lacinia bibendum nulla sed consectetur.",
+    DateTime.now().subtract(Duration(minutes: 2))
+  ],
+  [
+    "Nullam quis risus eget urna mollis ornare vel eu leo.",
+    DateTime.now().subtract(Duration(minutes: 1))
+  ],
+  ["Curabitur blandit tempus porttitor.", DateTime.now()],
+];

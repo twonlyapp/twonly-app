@@ -8,3 +8,4 @@ late ApiService apiService;
 late TwonlyDatabase twonlyDB;
 
 List<CameraDescription> gCameras = <CameraDescription>[];
+bool gIsDemoUser = false;

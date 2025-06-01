@@ -13,18 +13,26 @@ import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initFCMService();
 
+  initLogger();
+
+  final user = await getUser();
+  if (user != null) {
+    if (user.isDemoUser) {
+      await deleteLocalUserData();
+    }
+  }
+
   final settingsController = SettingsChangeProvider();
   // Load the user's preferred theme while the splash screen is displayed.
   // This prevents a sudden theme change when the app is first displayed.
   await settingsController.loadSettings();
-
-  initLogger();
 
   await setupPushNotification();
   await initMediaStorage();

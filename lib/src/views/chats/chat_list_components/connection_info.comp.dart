@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class ConnectionInfo extends StatefulWidget {
@@ -60,7 +61,7 @@ class _ConnectionInfoWidgetState extends State<ConnectionInfo>
 
   @override
   Widget build(BuildContext context) {
-    if (!showAnimation) return Container();
+    if (!showAnimation || gIsDemoUser) return Container();
     double screenWidth = MediaQuery.of(context).size.width;
 
     return SizedBox(

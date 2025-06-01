@@ -49,8 +49,12 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
 
   Future initAsync() async {
     final balance = await loadPlanBalance();
-    balanceInCents =
-        balance!.transactions.map((a) => a.depositCents.toInt()).sum;
+    if (balance == null) {
+      balanceInCents = 0;
+    } else {
+      balanceInCents =
+          balance.transactions.map((a) => a.depositCents.toInt()).sum;
+    }
     setState(() {});
   }
 
@@ -253,7 +257,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
               children: [
                 TextButton(
                   onPressed: () => launchUrl(Uri.parse(
-                      "https://twonly.eu/legal/de/#revocation-policy")),
+                      "https://twonly.eu/de/legal/#revocation-policy")),
                   child: Text(
                     "Widerrufsbelehrung",
                     style: TextStyle(color: Colors.blue),
@@ -261,7 +265,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 ),
                 TextButton(
                   onPressed: () => launchUrl(
-                      Uri.parse("https://twonly.eu/legal/de/agb.html")),
+                      Uri.parse("https://twonly.eu/de/legal/agb.html")),
                   child: Text(
                     "ABG",
                     style: TextStyle(color: Colors.blue),

@@ -51,6 +51,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   Message? responseToMessage;
   GlobalKey verifyShieldKey = GlobalKey();
   late FocusNode textFieldFocus;
+  Timer? tutorial;
 
   @override
   void initState() {
@@ -59,7 +60,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     textFieldFocus = FocusNode();
     initStreams();
 
-    Future.delayed(Duration(seconds: 1), () async {
+    tutorial = Timer(Duration(seconds: 1), () async {
+      tutorial = null;
       if (!mounted) return;
       await showVerifyShieldTutorial(context, verifyShieldKey);
     });
@@ -70,6 +72,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     super.dispose();
     userSub.cancel();
     messageSub.cancel();
+    tutorial?.cancel();
     textFieldFocus.dispose();
   }
 

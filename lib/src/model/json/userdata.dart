@@ -4,11 +4,13 @@ part 'userdata.g.dart';
 
 @JsonSerializable()
 class UserData {
-  UserData(
-      {required this.userId,
-      required this.username,
-      required this.displayName,
-      required this.subscriptionPlan});
+  UserData({
+    required this.userId,
+    required this.username,
+    required this.displayName,
+    required this.subscriptionPlan,
+    required this.isDemoUser,
+  });
 
   String username;
   String displayName;
@@ -16,6 +18,9 @@ class UserData {
   String? avatarSvg;
   String? avatarJson;
   int? avatarCounter;
+
+  @JsonKey(defaultValue: false)
+  bool isDemoUser = false;
 
   // settings
   int? defaultShowTime;

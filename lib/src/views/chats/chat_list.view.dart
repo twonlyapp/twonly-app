@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:restart_app/restart_app.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/api/media_received.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
@@ -37,6 +39,7 @@ class _ChatListViewState extends State<ChatListView> {
 
   GlobalKey firstUserListItemKey = GlobalKey();
   GlobalKey searchForOtherUsers = GlobalKey();
+  Timer? tutorial;
 
   @override
   void initState() {
@@ -54,7 +57,8 @@ class _ChatListViewState extends State<ChatListView> {
       ;
     });
 
-    Future.delayed(Duration(seconds: 1), () async {
+    tutorial = Timer(Duration(seconds: 1), () async {
+      tutorial = null;
       if (!mounted) return;
       await showChatListTutorialSearchOtherUsers(context, searchForOtherUsers);
       if (!mounted) return;
@@ -66,6 +70,7 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   void dispose() {
+    tutorial?.cancel();
     _contactsSub.cancel();
     super.dispose();
   }
@@ -183,14 +188,50 @@ class _ChatListViewState extends State<ChatListView> {
                         return 72;
                       },
                       itemBuilder: (context, index) {
+                        if (gIsDemoUser && index == 0) {
+                          return Container(
+                            color: isDarkMode(context)
+                                ? Colors.white
+                                : Colors.black,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "This is a Demo-Preview.",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: !isDarkMode(context)
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                FilledButton(
+                                  onPressed: () async {
+                                    await deleteLocalUserData();
+                                    Restart.restartApp(
+                                      notificationTitle: 'Demo-Mode exited.',
+                                      notificationBody:
+                                          'Click here to open the app again',
+                                    );
+                                  },
+                                  child: Text("Register"),
+                                )
+                              ],
+                            ),
+                          );
+                        }
                         // Check if the index is for the pinned users
                         if (index < _pinnedContacts.length) {
                           final contact = _pinnedContacts[index];
                           return UserListItem(
                             key: ValueKey(contact.userId),
                             user: contact,
-                            firstUserListItemKey:
-                                (index == 0) ? firstUserListItemKey : null,
+                            firstUserListItemKey: (index == 0 && !gIsDemoUser ||
+                                    index == 1 && gIsDemoUser)
+                                ? firstUserListItemKey
+                                : null,
                           );
                         }
 
