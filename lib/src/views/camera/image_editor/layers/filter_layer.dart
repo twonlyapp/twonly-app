@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/layers/filters/datetime_filter.dart';
@@ -19,8 +20,8 @@ class FilterLayer extends StatefulWidget {
   State<FilterLayer> createState() => _FilterLayerState();
 }
 
-class FilterSceleton extends StatelessWidget {
-  const FilterSceleton({super.key, this.child});
+class FilterSkeleton extends StatelessWidget {
+  const FilterSkeleton({super.key, this.child});
   final Widget? child;
 
   @override
@@ -65,17 +66,11 @@ class FilterText extends StatelessWidget {
 
 class _FilterLayerState extends State<FilterLayer> {
   final PageController pageController = PageController();
-  final List<Widget> pages = [
-    FilterSceleton(),
+  List<Widget> pages = [
+    FilterSkeleton(),
     DateTimeFilter(),
     LocationFilter(),
-    ImageFilter(imagePath: "random/lol.png"),
-    ImageFilter(imagePath: "random/hide_the_pain.png"),
-    ImageFilter(imagePath: "random/yolo.png"),
-    ImageFilter(imagePath: "random/chillen.png"),
-    ImageFilter(imagePath: "random/avocardio.png"),
-    ImageFilter(imagePath: "random/duck.png"),
-    FilterSceleton(),
+    FilterSkeleton(),
   ];
 
   @override
@@ -84,6 +79,20 @@ class _FilterLayerState extends State<FilterLayer> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       pageController.jumpToPage(1);
     });
+    initAsync();
+  }
+
+  Future initAsync() async {
+    var stickers = (await getStickerIndex())
+        .where((x) => x.imageSrc.contains("/imagefilter/"))
+        .toList();
+    stickers.sortBy((x) => x.imageSrc);
+
+    for (final sticker in stickers) {
+      pages.insert(pages.length - 1, ImageFilter(imagePath: sticker.imageSrc));
+    }
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override

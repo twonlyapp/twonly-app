@@ -72,10 +72,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     super.initState();
     initAsync();
     initMediaFileUpload();
+    layers.add(FilterLayerData());
     if (widget.imageBytes != null) {
       loadImage(widget.imageBytes!);
     } else if (widget.videoFilePath != null) {
-      layers.add(FilterLayerData());
       setState(() {
         sendingOrLoadingImage = false;
       });
@@ -373,13 +373,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     if (!context.mounted) return;
 
-    layers.clear();
-
-    layers.add(BackgroundLayerData(
-      image: currentImage,
-    ));
-
-    layers.add(FilterLayerData());
+    layers.insert(
+      0,
+      BackgroundLayerData(
+        image: currentImage,
+      ),
+    );
     setState(() {
       sendingOrLoadingImage = false;
     });
@@ -465,6 +464,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               if (layers.any((x) => x.isEditing)) {
                 return;
               }
+              layers = layers.where((x) => !x.isDeleted).toList();
               undoLayers.clear();
               removedLayers.clear();
               layers.add(TextLayerData(

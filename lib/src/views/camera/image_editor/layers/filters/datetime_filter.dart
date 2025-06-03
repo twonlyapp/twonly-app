@@ -11,7 +11,7 @@ class DateTimeFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     String currentTime = DateFormat('HH:mm').format(DateTime.now());
     String currentDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
-    return FilterSceleton(
+    return FilterSkeleton(
       child: Positioned(
         bottom: 80,
         left: 40,

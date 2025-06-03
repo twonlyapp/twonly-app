@@ -28,6 +28,7 @@ class _EmojiLayerState extends State<EmojiLayer> {
   final GlobalKey outlineKey = GlobalKey();
   final GlobalKey emojiKey = GlobalKey();
   int pointers = 0;
+  bool display = false;
 
   @override
   void initState() {
@@ -38,15 +39,19 @@ class _EmojiLayerState extends State<EmojiLayer> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
           widget.layerData.offset = Offset(
-              MediaQuery.of(context).size.width / 2 - 64,
-              MediaQuery.of(context).size.height / 2 - 64 - 100);
+              MediaQuery.of(context).size.width / 2 - (153 / 2),
+              MediaQuery.of(context).size.height / 2 - (153 / 2) - 100);
         });
+        display = true;
       });
+    } else {
+      display = true;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!display) return Container();
     if (widget.layerData.isDeleted) return Container();
     return Stack(
       key: outlineKey,

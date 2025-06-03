@@ -46,7 +46,7 @@ class _ShareImageView extends State<ShareImageView> {
   List<Contact> contacts = [];
   List<Contact> _otherUsers = [];
   List<Contact> _bestFriends = [];
-  List<Contact> _pinnedContacs = [];
+  List<Contact> _pinnedContacts = [];
   Uint8List? imageBytes;
   bool sendingImage = false;
   bool hideArchivedUsers = true;
@@ -122,7 +122,7 @@ class _ShareImageView extends State<ShareImageView> {
 
     setState(() {
       _bestFriends = bestFriends;
-      _pinnedContacs = pinnedContacts;
+      _pinnedContacts = pinnedContacts;
       _otherUsers = otherUsers;
     });
   }
@@ -188,9 +188,9 @@ class _ShareImageView extends State<ShareImageView> {
                   ),
                 ),
               ),
-              if (_pinnedContacs.isNotEmpty) const SizedBox(height: 10),
+              if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
               BestFriendsSelector(
-                users: _pinnedContacs,
+                users: _pinnedContacts,
                 selectedUserIds: widget.selectedUserIds,
                 isRealTwonly: widget.isRealTwonly,
                 updateStatus: updateStatus,

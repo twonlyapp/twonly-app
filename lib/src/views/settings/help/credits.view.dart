@@ -1,20 +1,29 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/camera/image_editor/layers/filters/location_filter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UrlListTitle extends StatelessWidget {
-  final String title;
+  final String? title;
   final String url;
   final String? subtitle;
+  final Widget? leading;
 
-  const UrlListTitle(
-      {super.key, required this.title, required this.url, this.subtitle});
+  const UrlListTitle({
+    super.key,
+    required this.title,
+    required this.url,
+    this.leading,
+    this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title),
+      leading: leading,
+      title: (title != null) ? Text(title!) : null,
       subtitle: subtitle == null ? null : Text(subtitle!),
       onTap: () {
         launchUrl(Uri.parse(url));
@@ -24,8 +33,26 @@ class UrlListTitle extends StatelessWidget {
   }
 }
 
-class CreditsView extends StatelessWidget {
+class CreditsView extends StatefulWidget {
   const CreditsView({super.key});
+
+  @override
+  State<CreditsView> createState() => _CreditsViewState();
+}
+
+class _CreditsViewState extends State<CreditsView> {
+  List<Sticker> sticker = [];
+
+  @override
+  void initState() {
+    super.initState();
+    initAsync();
+  }
+
+  Future initAsync() async {
+    sticker = (await getStickerIndex()).where((x) => x.source != "").toList();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,46 +136,25 @@ class CreditsView extends StatelessWidget {
             url: "https://lottiefiles.com/de/free-animation/failed-e5cQFDEtLv",
           ),
           const Divider(),
-          ListTile(
-            title: Center(
-                child: Text(
-              "Filters",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            )),
-          ),
-          UrlListTitle(
-            title: "Avo Cardio",
-            subtitle: "by RalfDesign",
-            url:
-                "https://pixabay.com/illustrations/avocado-cartoon-funny-cardio-gym-4570642/",
-          ),
-          UrlListTitle(
-            title: "Sloth",
-            subtitle: "by RalfDesign",
-            url:
-                "https://pixabay.com/illustrations/sloth-swimming-summer-pool-cartoon-4575121/",
-          ),
-          UrlListTitle(
-            title: "Duck",
-            subtitle: "by lachkegeetanjali",
-            url:
-                "https://pixabay.com/de/vectors/ente-gans-meme-lustig-k%C3%A4mpfen-8409656/",
-          ),
-          UrlListTitle(
-            title: "Lol",
-            subtitle: "TheDigitalArtist",
-            url:
-                "https://pixabay.com/de/illustrations/lachen-lustig-l%C3%A4cheln-spa%C3%9F-meme-7820654/",
-          ),
-          UrlListTitle(
-            title: "Yolo",
-            subtitle: "TheDigitalArtist",
-            url:
-                "https://pixabay.com/illustrations/yolo-meme-modern-live-once-phrase-7820660/",
-          ),
-          UrlListTitle(
-            title: "Hide The Pain Arold",
-            url: "https://hidethepainharold.com/",
+          if (sticker.isNotEmpty)
+            ListTile(
+              title: Center(
+                  child: Text(
+                "Filters",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              )),
+            ),
+          ...sticker.map(
+            (x) => UrlListTitle(
+              leading: SizedBox(
+                height: 50,
+                width: 50,
+                child: CachedNetworkImage(
+                    imageUrl: "https://twonly.eu/${x.imageSrc}"),
+              ),
+              title: "",
+              url: x.source,
+            ),
           ),
         ],
       ),

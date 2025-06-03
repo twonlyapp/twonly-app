@@ -39,6 +39,7 @@ class LayersViewer extends StatelessWidget {
             .map((layerItem) {
           if (layerItem is EmojiLayerData) {
             return EmojiLayer(
+              key: GlobalKey(),
               layerData: layerItem,
               onUpdate: onUpdate,
             );
@@ -52,6 +53,7 @@ class LayersViewer extends StatelessWidget {
         }),
         ...layers.whereType<TextLayerData>().map((layerItem) {
           return TextLayer(
+            key: GlobalKey(),
             layerData: layerItem,
             onUpdate: onUpdate,
           );

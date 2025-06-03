@@ -29,6 +29,8 @@ class _TextViewState extends State<TextLayer> {
   void initState() {
     super.initState();
 
+    textController.text = widget.layerData.text;
+
     if (widget.layerData.offset.dy == 0) {
       // Set the initial offset to the center of the screen
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -78,14 +80,17 @@ class _TextViewState extends State<TextLayer> {
               });
             },
             decoration: InputDecoration(
-              border: InputBorder.none, // Keine Umrandung
-              contentPadding: EdgeInsets.zero, // Kein Padding
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ),
             ),
-            // widget.layerData.text.toString(),
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
-              fontSize: 17,
+              fontSize: 20,
             ),
           ),
         ),
