@@ -99,7 +99,9 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
 
     case MessageKind.opened:
       if (message.messageId != null) {
-        final update = MessagesCompanion(openedAt: Value(message.timestamp));
+        final update = MessagesCompanion(
+            openedAt: Value(message.timestamp),
+            errorWhileSending: Value(false));
         await twonlyDB.messagesDao.updateMessageByOtherUser(
           fromUserId,
           message.messageId!,
@@ -176,6 +178,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             content.messageId,
             MessagesCompanion(
               mediaStored: Value(true),
+              errorWhileSending: Value(false),
             ),
           );
         } else {
@@ -204,6 +207,16 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           }
           if (content is ReopenedMediaFileContent) {
             responseToMessageId = content.messageId;
+          }
+
+          if (responseToMessageId != null) {
+            await twonlyDB.messagesDao.updateMessageByOtherUser(
+              fromUserId,
+              responseToMessageId,
+              MessagesCompanion(
+                errorWhileSending: Value(false),
+              ),
+            );
           }
 
           String contentJson = jsonEncode(content.toJson());
@@ -246,7 +259,6 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           }
         }
 
-        //
         // await encryptAndSendMessageAsync(
         //   message.messageId!,
         //   fromUserId,
