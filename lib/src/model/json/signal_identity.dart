@@ -5,8 +5,10 @@ part 'signal_identity.g.dart';
 
 @JsonSerializable()
 class SignalIdentity {
-  const SignalIdentity(
-      {required this.identityKeyPairU8List, required this.registrationId});
+  const SignalIdentity({
+    required this.identityKeyPairU8List,
+    required this.registrationId,
+  });
 
   final int registrationId;
 

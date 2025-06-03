@@ -72,12 +72,14 @@ Future<List<PreKeyRecord>> signalGetPreKeys() async {
 Future<SignalIdentity?> getSignalIdentity() async {
   try {
     final storage = FlutterSecureStorage();
-    final signalIdentityJson =
+    var signalIdentityJson =
         await storage.read(key: SecureStorageKeys.signalIdentity);
     if (signalIdentityJson == null) {
       return null;
     }
-    return SignalIdentity.fromJson(jsonDecode(signalIdentityJson));
+    final decoded = jsonDecode(signalIdentityJson);
+    signalIdentityJson = null;
+    return SignalIdentity.fromJson(decoded);
   } catch (e) {
     Log.error("could not load signal identity: $e");
     return null;
@@ -118,7 +120,7 @@ Future createIfNotExistsSignalIdentity() async {
 }
 
 Future<SignedPreKeyRecord?> _getNewSignalSignedPreKey() async {
-  final identityKeyPair = await getSignalIdentityKeyPair();
+  var identityKeyPair = await getSignalIdentityKeyPair();
   if (identityKeyPair == null) return null;
   final signalStore = await getSignalStore();
   if (signalStore == null) return null;
@@ -129,6 +131,8 @@ Future<SignedPreKeyRecord?> _getNewSignalSignedPreKey() async {
     identityKeyPair,
     signedPreKeyId,
   );
+
+  identityKeyPair = null;
 
   await signalStore.storeSignedPreKey(signedPreKeyId, signedPreKey);
 

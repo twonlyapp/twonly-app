@@ -356,10 +356,11 @@ class ApiService {
 
     final challenge = result.value.authchallenge;
 
-    final privKey = (await getSignalIdentityKeyPair())?.getPrivateKey();
+    var privKey = (await getSignalIdentityKeyPair())?.getPrivateKey();
     if (privKey == null) return;
     final random = getRandomUint8List(32);
     final signature = sign(privKey.serialize(), challenge, random);
+    privKey = null;
 
     final getAuthToken = Handshake_GetAuthToken()
       ..response = signature
