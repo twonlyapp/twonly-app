@@ -827,4 +827,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteImageBody => 'The image will be irrevocably deleted.';
+
+  @override
+  String get settingsBackup => 'Backup';
 }

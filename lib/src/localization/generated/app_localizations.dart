@@ -1573,6 +1573,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The image will be irrevocably deleted.'**
   String get deleteImageBody;
+
+  /// No description provided for @settingsBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get settingsBackup;
 }
 
 class _AppLocalizationsDelegate

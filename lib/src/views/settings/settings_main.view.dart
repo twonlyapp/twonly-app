@@ -120,6 +120,16 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     }));
                   },
                 ),
+                // BetterListTile(
+                //   icon: Icons.lock_clock_rounded,
+                //   text: context.lang.settingsBackup,
+                //   onTap: () {
+                //     Navigator.push(context,
+                //         MaterialPageRoute(builder: (context) {
+                //       return BackupView();
+                //     }));
+                //   },
+                // ),
                 const Divider(),
                 BetterListTile(
                   icon: FontAwesomeIcons.sun,
