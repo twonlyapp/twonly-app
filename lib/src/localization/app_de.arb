@@ -65,6 +65,7 @@
     "chatListViewSendFirstTwonly": "Sende dein erstes twonly!",
     "chatListDetailInput": "Nachricht eingeben",
     "userDeletedAccount": "Der Nutzer hat sein Konto gelöscht.",
+    "contextMenuUserProfile": "Userprofil",
     "contextMenuVerifyUser": "Verifizieren",
     "@contextMenuVerifyUser": {},
     "contextMenuArchiveUser": "Archivieren",

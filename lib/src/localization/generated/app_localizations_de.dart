@@ -207,6 +207,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get userDeletedAccount => 'Der Nutzer hat sein Konto gelöscht.';
 
   @override
+  String get contextMenuUserProfile => 'Userprofil';
+
+  @override
   String get contextMenuVerifyUser => 'Verifizieren';
 
   @override

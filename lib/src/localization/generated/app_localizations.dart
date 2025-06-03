@@ -452,6 +452,12 @@ abstract class AppLocalizations {
   /// **'The user has deleted its account.'**
   String get userDeletedAccount;
 
+  /// No description provided for @contextMenuUserProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'User profile'**
+  String get contextMenuUserProfile;
+
   /// No description provided for @contextMenuVerifyUser.
   ///
   /// In en, this message translates to:

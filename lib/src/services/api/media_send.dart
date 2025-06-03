@@ -94,9 +94,11 @@ Future<bool> checkForFailedUploads() async {
       mediaUploadIds.add(message.mediaUploadId!);
     }
   }
-  Log.error(
-    "Got ${messages.length} messages (${mediaUploadIds.length} media upload files) that are not correctly uploaded. Trying from scratch again.",
-  );
+  if (messages.isNotEmpty) {
+    Log.error(
+      "Got ${messages.length} messages (${mediaUploadIds.length} media upload files) that are not correctly uploaded. Trying from scratch again.",
+    );
+  }
   return mediaUploadIds.isNotEmpty; // return true if there are affected
 }
 

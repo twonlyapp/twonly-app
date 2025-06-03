@@ -116,6 +116,10 @@ Future<MessageJson?> signalDecryptMessage(int source, Uint8List msg) async {
     }
     return MessageJson.fromJson(
         jsonDecode(utf8.decode(gzip.decode(plaintext))));
+  } on InvalidKeyIdException catch (_) {
+    return null; // got the same message again
+  } on DuplicateMessageException catch (_) {
+    return null; // to the same message again
   } catch (e) {
     Log.error(e.toString());
     return null;

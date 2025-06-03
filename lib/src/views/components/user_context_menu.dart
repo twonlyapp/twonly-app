@@ -6,14 +6,18 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
 
 class UserContextMenu extends StatefulWidget {
   final Widget child;
   final Contact contact;
 
-  const UserContextMenu(
-      {super.key, required this.contact, required this.child});
+  const UserContextMenu({
+    super.key,
+    required this.contact,
+    required this.child,
+  });
 
   @override
   State<UserContextMenu> createState() => _UserContextMenuState();
@@ -89,6 +93,67 @@ class _UserContextMenuState extends State<UserContextMenu> {
           child: FaIcon(widget.contact.pinned
               ? FontAwesomeIcons.thumbtackSlash
               : FontAwesomeIcons.thumbtack),
+        ),
+      ],
+      child: widget.child,
+    );
+  }
+}
+
+class UserContextMenuBlocked extends StatefulWidget {
+  final Widget child;
+  final Contact contact;
+
+  const UserContextMenuBlocked({
+    super.key,
+    required this.contact,
+    required this.child,
+  });
+
+  @override
+  State<UserContextMenuBlocked> createState() => _UserContextMenuBlocked();
+}
+
+class _UserContextMenuBlocked extends State<UserContextMenuBlocked> {
+  @override
+  Widget build(BuildContext context) {
+    return PieMenu(
+      onPressed: () => (),
+      actions: [
+        if (!widget.contact.archived)
+          PieAction(
+            tooltip: Text(context.lang.contextMenuArchiveUser),
+            onSelect: () async {
+              final update = ContactsCompanion(archived: Value(true));
+              if (context.mounted) {
+                await twonlyDB.contactsDao
+                    .updateContact(widget.contact.userId, update);
+              }
+            },
+            child: FaIcon(FontAwesomeIcons.boxArchive),
+          ),
+        if (widget.contact.archived)
+          PieAction(
+            tooltip: Text(context.lang.contextMenuUndoArchiveUser),
+            onSelect: () async {
+              final update = ContactsCompanion(archived: Value(false));
+              if (context.mounted) {
+                await twonlyDB.contactsDao
+                    .updateContact(widget.contact.userId, update);
+              }
+            },
+            child: FaIcon(FontAwesomeIcons.boxOpen),
+          ),
+        PieAction(
+          tooltip: Text(context.lang.contextMenuUserProfile),
+          onSelect: () {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) {
+                return ContactView(widget.contact.userId);
+              },
+            ));
+          },
+          child: const FaIcon(FontAwesomeIcons.user),
         ),
       ],
       child: widget.child,

@@ -116,6 +116,7 @@
   "chatListDetailInput": "Type a message",
   "@chatListDetailInput": {},
   "userDeletedAccount": "The user has deleted its account.",
+  "contextMenuUserProfile": "User profile",
   "contextMenuVerifyUser": "Verify",
   "@contextMenuVerifyUser": {},
   "contextMenuArchiveUser": "Archive",
