@@ -51,7 +51,7 @@ class ApiService {
 
   // reconnection params
   Timer? reconnectionTimer;
-  // int _reconnectionDelay = 5;
+  int _reconnectionDelay = 5;
 
   final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
   IOWebSocketChannel? _channel;
@@ -81,7 +81,7 @@ class ApiService {
     if (!globalIsAppInBackground) {
       retransmitRawBytes();
       tryTransmitMessages();
-      retryMediaUpload();
+      retryMediaUpload(false);
       tryDownloadAllMediaFiles();
       notifyContactsAboutProfileChange();
       twonlyDB.markUpdated();
@@ -92,6 +92,7 @@ class ApiService {
 
   Future onConnected() async {
     await authenticate();
+    _reconnectionDelay = 5;
     globalCallbackConnectionState(true);
   }
 
@@ -100,6 +101,12 @@ class ApiService {
     isAuthenticated = false;
     globalCallbackConnectionState(false);
     await twonlyDB.messagesDao.resetPendingDownloadState();
+    reconnectionTimer ??= Timer(Duration(seconds: _reconnectionDelay), () {
+      Log.info("starting with reconnection.");
+      reconnectionTimer = null;
+      connect();
+    });
+    _reconnectionDelay += 5;
   }
 
   Future close(Function callback) async {
@@ -113,11 +120,13 @@ class ApiService {
     callback();
   }
 
-  Future<bool> connect() async {
+  Future<bool> connect({bool force = false}) async {
+    if (reconnectionTimer != null && !force) {
+      return false;
+    }
+    reconnectionTimer?.cancel();
     final user = await getUser();
     if (user != null && user.isDemoUser) {
-      print("DEMO user");
-      // the demo user should not be able to connect to the API server...
       globalCallbackConnectionState(true);
       return false;
     }
@@ -126,9 +135,7 @@ class ApiService {
         return true;
       }
       // ensure that the connect function is not called again by the timer.
-      if (reconnectionTimer != null) {
-        reconnectionTimer!.cancel();
-      }
+      reconnectionTimer?.cancel();
 
       isAuthenticated = false;
 

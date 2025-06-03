@@ -720,7 +720,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkoutTotal => 'Total';
 
   @override
-  String get selectPaymentMethode => 'Select Payment Method';
+  String get selectPaymentMethod => 'Select Payment Method';
 
   @override
   String get twonlyCredit => 'twonly-Credit';

@@ -13,7 +13,8 @@ enum MessageKind {
   flameSync,
   opened,
   ack,
-  pushKey
+  pushKey,
+  receiveMediaError,
 }
 
 enum DownloadState {

@@ -112,6 +112,7 @@ Future<Map<String, dynamic>> getAllMessagesForRetransmitting() async {
 
 Future<Result> sendRetransmitMessage(
     String stateId, RetransmitMessage msg) async {
+  Log.info("Sending ${msg.messageId}");
   Result resp =
       await apiService.sendTextMessage(msg.userId, msg.bytes, msg.pushData);
 
@@ -130,8 +131,8 @@ Future<Result> sendRetransmitMessage(
   }
 
   if (resp.isSuccess) {
+    retry = false;
     if (msg.messageId != null) {
-      retry = false;
       await twonlyDB.messagesDao.updateMessageByMessageId(
         msg.messageId!,
         MessagesCompanion(acknowledgeByServer: Value(true)),

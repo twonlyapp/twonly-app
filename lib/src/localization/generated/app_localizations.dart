@@ -1382,11 +1382,11 @@ abstract class AppLocalizations {
   /// **'Total'**
   String get checkoutTotal;
 
-  /// No description provided for @selectPaymentMethode.
+  /// No description provided for @selectPaymentMethod.
   ///
   /// In en, this message translates to:
   /// **'Select Payment Method'**
-  String get selectPaymentMethode;
+  String get selectPaymentMethod;
 
   /// No description provided for @twonlyCredit.
   ///

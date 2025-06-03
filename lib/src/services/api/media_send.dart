@@ -103,7 +103,7 @@ Future<bool> checkForFailedUploads() async {
 }
 
 final lockingHandleMediaFile = Mutex();
-Future retryMediaUpload({int maxRetries = 3}) async {
+Future retryMediaUpload(bool appRestarted, {int maxRetries = 3}) async {
   if (maxRetries == 0) {
     Log.error("retried media upload 3 times. abort retrying");
     return;
@@ -116,16 +116,23 @@ Future retryMediaUpload({int maxRetries = 3}) async {
     Log.info("re uploading ${mediaFiles.length} media files.");
     for (final mediaFile in mediaFiles) {
       if (mediaFile.messageIds == null || mediaFile.metadata == null) {
-        // the media upload was canceled,
-        if (mediaFile.uploadTokens != null) {
-          /// the file was already uploaded.
-          /// notify the server to remove the upload
-          apiService.getDownloadTokens(mediaFile.uploadTokens!.uploadToken, 0);
+        if (appRestarted) {
+          /// When the app got restarted and the messageIds or the metadata is not
+          /// set then the app was closed before the images was send.
+
+          // the media upload was canceled,
+          if (mediaFile.uploadTokens != null) {
+            /// the file was already uploaded.
+            /// notify the server to remove the upload
+            apiService.getDownloadTokens(
+                mediaFile.uploadTokens!.uploadToken, 0);
+          }
+          await twonlyDB.mediaUploadsDao
+              .deleteMediaUpload(mediaFile.mediaUploadId);
+          Log.info(
+            "upload can be removed, the finalized function was never called...",
+          );
         }
-        await twonlyDB.mediaUploadsDao
-            .deleteMediaUpload(mediaFile.mediaUploadId);
-        Log.info(
-            "upload can be removed, the finalized function was never called...");
         continue;
       }
 
@@ -138,7 +145,7 @@ Future retryMediaUpload({int maxRetries = 3}) async {
     return false;
   });
   if (retry) {
-    await retryMediaUpload(maxRetries: maxRetries - 1);
+    await retryMediaUpload(false, maxRetries: maxRetries - 1);
   }
 }
 

@@ -12,8 +12,7 @@ import 'package:http/http.dart' as http;
 // import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/services/api/media_send.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
-    as client;
+import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -75,7 +74,8 @@ Future<bool> isAllowedToDownload(bool isVideo) async {
   return false;
 }
 
-Future startDownloadMedia(Message message, bool force) async {
+Future startDownloadMedia(Message message, bool force,
+    {int retryCounter = 0}) async {
   if (message.contentJson == null) return;
   if (downloadStartedForMediaReceived[message.messageId] != null) {
     DateTime started = downloadStartedForMediaReceived[message.messageId]!;
@@ -151,12 +151,10 @@ Future startDownloadMedia(Message message, bool force) async {
     }, onDone: () async {
       if (r.statusCode != 200) {
         Log.error("Download error: $r");
-        await twonlyDB.messagesDao.updateMessageByMessageId(
-          message.messageId,
-          MessagesCompanion(
-            errorWhileSending: Value(true),
-          ),
-        );
+        if (r.statusCode == 418) {
+          Log.error("Got custom error code: ${chunks.toList()}");
+          handleMediaError(message);
+        }
         return;
       }
 
@@ -172,13 +170,18 @@ Future startDownloadMedia(Message message, bool force) async {
         offset += chunk.length;
       }
       await writeMediaFile(message.messageId, "encrypted", bytes);
-      handleEncryptedFile(message, encryptedBytesTmp: bytes);
+      handleEncryptedFile(message,
+          encryptedBytesTmp: bytes, retryCounter: retryCounter);
       return;
     });
   });
 }
 
-Future handleEncryptedFile(Message msg, {Uint8List? encryptedBytesTmp}) async {
+Future handleEncryptedFile(
+  Message msg, {
+  Uint8List? encryptedBytesTmp,
+  int retryCounter = 0,
+}) async {
   Uint8List? encryptedBytes =
       encryptedBytesTmp ?? await readMediaFile(msg.messageId, "encrypted");
 
@@ -211,16 +214,16 @@ Future handleEncryptedFile(Message msg, {Uint8List? encryptedBytesTmp}) async {
 
     await writeMediaFile(msg.messageId, "png", imageBytes);
   } catch (e) {
-    Log.error("Decryption error: $e");
-    await twonlyDB.messagesDao.updateMessageByMessageId(
-      msg.messageId,
-      MessagesCompanion(
-        errorWhileSending: Value(true),
-      ),
-    );
-    // answers with ok, so the server will delete the message
-    var ok = client.Response_Ok()..none = true;
-    return client.Response()..ok = ok;
+    if (retryCounter >= 1) {
+      Log.error(
+          "could not decrypt the media file in the second try. reporting error to user: $e");
+      handleMediaError(msg);
+      return;
+    }
+    Log.error("could not decrypt the media file trying again: $e");
+    startDownloadMedia(msg, true, retryCounter: retryCounter + 1);
+    // try downloading again....
+    return;
   }
 
   await twonlyDB.messagesDao.updateMessageByMessageId(

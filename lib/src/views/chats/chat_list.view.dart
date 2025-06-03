@@ -173,7 +173,7 @@ class _ChatListViewState extends State<ChatListView> {
                 : RefreshIndicator(
                     onRefresh: () async {
                       await apiService.close(() {});
-                      await apiService.connect();
+                      await apiService.connect(force: true);
                       await Future.delayed(Duration(seconds: 1));
                     },
                     child: ListView.builder(

@@ -112,7 +112,7 @@ String formatDuration(int seconds) {
   }
 }
 
-InputDecoration getInputDecoration(context, hintText) {
+InputDecoration getInputDecoration(BuildContext context, String hintText) {
   final primaryColor =
       Theme.of(context).colorScheme.primary; // Get the primary color
   return InputDecoration(
@@ -279,7 +279,7 @@ Future insertDemoContacts() async {
       if (config['accepted'] ?? false) {
         for (var i = 0; i < 20; i++) {
           int chatId = Random().nextInt(chatMessages.length);
-          int? messageId = await twonlyDB.messagesDao.insertMessage(
+          await twonlyDB.messagesDao.insertMessage(
             MessagesCompanion(
               contactId: Value(userId),
               kind: Value(MessageKind.textMessage),

@@ -556,12 +556,12 @@ Future redeemUserInviteCode(BuildContext context, String newPlan) async {
               if (res.isSuccess) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(context.lang.redeemUserInviteCodeSuccess)),
+                    content: Text(context.lang.redeemUserInviteCodeSuccess),
+                  ),
                 );
                 // reconnect to load new plan.
-                apiService.close(() {
-                  apiService.connect();
-                });
+                await apiService.close(() {});
+                await apiService.connect();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(errorCodeToText(context, res.error))),

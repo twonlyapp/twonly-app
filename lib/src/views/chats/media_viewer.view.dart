@@ -8,6 +8,7 @@ import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
@@ -252,13 +253,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     if ((imageBytes == null && !content.isVideo) ||
         (content.isVideo && videoController == null)) {
+      Log.error("media files are not found...");
       // When the message should be downloaded but imageBytes are null then a error happened
-      await twonlyDB.messagesDao.updateMessageByMessageId(
-        current.messageId,
-        MessagesCompanion(
-          errorWhileSending: Value(true),
-        ),
-      );
+      await handleMediaError(current);
       return nextMediaOrExit();
     }
 

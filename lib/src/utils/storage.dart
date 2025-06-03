@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<bool> isUserCreated() async {
@@ -26,6 +29,17 @@ Future<UserData?> getUser() async {
     Log.error("Error getting user: $e");
     return null;
   }
+}
+
+Future updateUsersPlan(BuildContext context, String planId) async {
+  context.read<CustomChangeProvider>().plan = planId;
+  var user = await getUser();
+  if (user != null) {
+    user.subscriptionPlan = planId;
+    await updateUser(user);
+  }
+  if (!context.mounted) return;
+  context.read<CustomChangeProvider>().updatePlan(planId);
 }
 
 Future updateUser(UserData userData) async {

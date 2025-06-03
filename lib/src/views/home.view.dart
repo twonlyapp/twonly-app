@@ -68,7 +68,7 @@ class HomeViewState extends State<HomeView> {
         offsetRatio = offsetFromOne.abs();
       });
     }
-    if (cameraController == null && !initCameraStarted) {
+    if (cameraController == null && !initCameraStarted && offsetRatio < 1) {
       initCameraStarted = true;
       selectCamera(selectedCameraDetails.cameraId, false, false);
     }

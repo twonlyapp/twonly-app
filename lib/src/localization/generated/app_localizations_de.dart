@@ -725,7 +725,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get checkoutTotal => 'Gesamt';
 
   @override
-  String get selectPaymentMethode => 'Zahlungsmethode auswählen';
+  String get selectPaymentMethod => 'Zahlungsmethode auswählen';
 
   @override
   String get twonlyCredit => 'twonly-Guthaben';

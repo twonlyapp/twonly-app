@@ -86,23 +86,35 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         }
       }
 
-    case MessageKind.opened:
-      final update = MessagesCompanion(openedAt: Value(message.timestamp));
-      await twonlyDB.messagesDao.updateMessageByOtherUser(
-        fromUserId,
-        message.messageId!,
-        update,
-      );
-      final openedMessage = await twonlyDB.messagesDao
-          .getMessageByMessageId(message.messageId!)
-          .getSingleOrNull();
-      if (openedMessage != null &&
-          openedMessage.kind == MessageKind.textMessage) {
-        await twonlyDB.messagesDao.openedAllNonMediaMessagesFromOtherUser(
+    case MessageKind.receiveMediaError:
+      if (message.messageId != null) {
+        await twonlyDB.messagesDao.updateMessageByOtherUser(
           fromUserId,
+          message.messageId!,
+          MessagesCompanion(
+            errorWhileSending: Value(true),
+          ),
         );
       }
 
+    case MessageKind.opened:
+      if (message.messageId != null) {
+        final update = MessagesCompanion(openedAt: Value(message.timestamp));
+        await twonlyDB.messagesDao.updateMessageByOtherUser(
+          fromUserId,
+          message.messageId!,
+          update,
+        );
+        final openedMessage = await twonlyDB.messagesDao
+            .getMessageByMessageId(message.messageId!)
+            .getSingleOrNull();
+        if (openedMessage != null &&
+            openedMessage.kind == MessageKind.textMessage) {
+          await twonlyDB.messagesDao.openedAllNonMediaMessagesFromOtherUser(
+            fromUserId,
+          );
+        }
+      }
       break;
 
     case MessageKind.rejectRequest:

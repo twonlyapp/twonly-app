@@ -3,6 +3,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding.view.dart';
@@ -71,7 +72,9 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future initAsync() async {
     setUserPlan();
-    apiService.connect();
+    await apiService.connect();
+    // call this function so invalid media files are get purged
+    retryMediaUpload(true);
   }
 
   @override

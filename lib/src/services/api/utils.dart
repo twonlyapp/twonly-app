@@ -1,6 +1,8 @@
+import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
     as client;
@@ -65,4 +67,24 @@ Future rejectUser(int contactId) async {
       content: MessageContent(),
     ),
   );
+}
+
+Future handleMediaError(Message message) async {
+  await twonlyDB.messagesDao.updateMessageByMessageId(
+    message.messageId,
+    MessagesCompanion(
+      errorWhileSending: Value(true),
+    ),
+  );
+  if (message.messageOtherId != null) {
+    encryptAndSendMessageAsync(
+      null,
+      message.contactId,
+      MessageJson(
+          kind: MessageKind.receiveMediaError,
+          timestamp: DateTime.now(),
+          content: MessageContent(),
+          messageId: message.messageOtherId),
+    );
+  }
 }

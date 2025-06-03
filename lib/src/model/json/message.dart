@@ -39,11 +39,12 @@ class MessageJson {
   final int? messageId;
   DateTime timestamp;
 
-  MessageJson(
-      {required this.kind,
-      this.messageId,
-      required this.content,
-      required this.timestamp});
+  MessageJson({
+    required this.kind,
+    this.messageId,
+    required this.content,
+    required this.timestamp,
+  });
 
   @override
   String toString() {

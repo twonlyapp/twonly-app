@@ -135,7 +135,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                       Navigator.pop(context);
                     }
                   },
-                  child: Text(context.lang.selectPaymentMethode)),
+                  child: Text(context.lang.selectPaymentMethod)),
             ),
             SizedBox(height: 20)
           ],

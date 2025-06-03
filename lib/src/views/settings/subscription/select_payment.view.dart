@@ -1,8 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
@@ -82,7 +80,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
         (balanceInCents == null || balanceInCents! >= checkoutInCents));
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.lang.selectPaymentMethode),
+        title: Text(context.lang.selectPaymentMethod),
       ),
       body: SafeArea(
         child: Column(
@@ -222,21 +220,12 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                             widget.planId!, widget.payMonthly!, tryAutoRenewal);
                         if (!context.mounted) return;
                         if (res.isSuccess) {
-                          context.read<CustomChangeProvider>().plan =
-                              widget.planId!;
-                          var user = await getUser();
-                          if (user != null) {
-                            user.subscriptionPlan = widget.planId!;
-                            await updateUser(user);
-                          }
+                          await updateUsersPlan(context, widget.planId!);
                           if (!context.mounted) return;
-                          context
-                              .read<CustomChangeProvider>()
-                              .updatePlan(widget.planId!);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content:
-                                    Text(context.lang.planSuccessUpgraded)),
+                              content: Text(context.lang.planSuccessUpgraded),
+                            ),
                           );
                           Navigator.of(context).pop(true);
                         } else {
