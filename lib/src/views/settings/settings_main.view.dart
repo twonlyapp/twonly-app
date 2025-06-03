@@ -90,13 +90,13 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                           ),
                         ),
                       ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: IconButton(
-                          onPressed: () {},
-                          icon: FaIcon(FontAwesomeIcons.qrcode),
-                        ),
-                      )
+                      // Align(
+                      //   alignment: Alignment.centerRight,
+                      //   child: IconButton(
+                      //     onPressed: () {},
+                      //     icon: FaIcon(FontAwesomeIcons.qrcode),
+                      //   ),
+                      // )
                     ],
                   ),
                 ),
