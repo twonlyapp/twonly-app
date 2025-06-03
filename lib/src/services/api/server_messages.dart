@@ -246,16 +246,17 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           }
         }
 
-        await encryptAndSendMessageAsync(
-          message.messageId!,
-          fromUserId,
-          MessageJson(
-            kind: MessageKind.ack,
-            messageId: message.messageId!,
-            content: MessageContent(),
-            timestamp: DateTime.now(),
-          ),
-        );
+        //
+        // await encryptAndSendMessageAsync(
+        //   message.messageId!,
+        //   fromUserId,
+        //   MessageJson(
+        //     kind: MessageKind.ack,
+        //     messageId: message.messageId!,
+        //     content: MessageContent(),
+        //     timestamp: DateTime.now(),
+        //   ),
+        // );
 
         // unarchive contact when receiving a new message
         await twonlyDB.contactsDao.updateContact(
