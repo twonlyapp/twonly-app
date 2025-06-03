@@ -243,6 +243,8 @@
     "planNotAllowed": "In deinem aktuellen Plan kannst du keine Mediendateien versenden. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.",
     "planLimitReached": "Du hast dein Planlimit für heute erreicht. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.",
     "galleryDelete": "Datei löschen",
+    "galleryExport": "In Galerie exportieren",
+    "galleryExportSuccess": "Erfolgreich in der Gallery gespeichert.",
     "galleryDetails": "Details anzeigen",
     "settingsResetTutorials": "Tutorials erneut anzeigen",
     "settingsResetTutorialsDesc": "Klicke hier, um bereits angezeigte Tutorials erneut anzuzeigen.",
@@ -255,5 +257,7 @@
     "tutorialChatMessagesVerifyShieldDesc": "twonly nutzt das Signal-Protokoll für eine sichere Ende-zu-Ende Verschlüsselung. Bei der ersten Kontaktaufnahme wird dafür der öffentliche Identitätsschlüssel von deinem Kontakt heruntergeladen. Um sicherzustellen, dass dieser Schlüssel nicht von Dritten ausgetauscht wurde, solltest du ihn mit deinem Freund vergleichen, wenn ihr euch persönlich trefft. Sobald du den Benutzer verifiziert hast, kannst du auch beim verschicken von Bildern und Videos den twonly-Modus aktivieren.",
     "tutorialChatMessagesReopenMessageTitle": "Bilder und Videos erneut öffnen",
     "tutorialChatMessagesReopenMessageDesc": "Wenn dein Freund dir ein Bild oder Video mit unendlicher Anzeigezeit gesendet hat, kannst du es bis zum Neustart der App jederzeit erneut öffnen. Um dies zu tun, musst du einfach doppelt auf die Nachricht klicken. Dein Freund erhält dann eine Benachrichtigung, dass du das Bild erneut angesehen hast.",
-    "memoriesEmpty": "Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen."
+    "memoriesEmpty": "Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen.",
+    "deleteImageTitle": "Bist du dir sicher?",
+    "deleteImageBody": "Das Bild wird unwiderruflich gelöscht."
 }

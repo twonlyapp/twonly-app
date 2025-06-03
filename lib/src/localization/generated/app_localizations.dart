@@ -1478,6 +1478,18 @@ abstract class AppLocalizations {
   /// **'Show details'**
   String get galleryDetails;
 
+  /// No description provided for @galleryExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export to gallery'**
+  String get galleryExport;
+
+  /// No description provided for @galleryExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully saved in the Gallery.'**
+  String get galleryExportSuccess;
+
   /// No description provided for @settingsResetTutorials.
   ///
   /// In en, this message translates to:
@@ -1549,6 +1561,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'As soon as you save pictures or videos, they end up here in your memories.'**
   String get memoriesEmpty;
+
+  /// No description provided for @deleteImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get deleteImageTitle;
+
+  /// No description provided for @deleteImageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The image will be irrevocably deleted.'**
+  String get deleteImageBody;
 }
 
 class _AppLocalizationsDelegate

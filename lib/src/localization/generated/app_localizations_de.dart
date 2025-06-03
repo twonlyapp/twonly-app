@@ -776,6 +776,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get galleryDetails => 'Details anzeigen';
 
   @override
+  String get galleryExport => 'In Galerie exportieren';
+
+  @override
+  String get galleryExportSuccess => 'Erfolgreich in der Gallery gespeichert.';
+
+  @override
   String get settingsResetTutorials => 'Tutorials erneut anzeigen';
 
   @override
@@ -821,4 +827,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get memoriesEmpty =>
       'Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen.';
+
+  @override
+  String get deleteImageTitle => 'Bist du dir sicher?';
+
+  @override
+  String get deleteImageBody => 'Das Bild wird unwiderruflich gelöscht.';
 }

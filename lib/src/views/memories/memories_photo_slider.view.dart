@@ -53,7 +53,10 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
   Future deleteFile() async {
     List<Message> messages = widget.galleryItems[currentIndex].messages;
     bool confirmed = await showAlertDialog(
-        context, "Are you sure?", "The image will be irrevocably deleted.");
+      context,
+      context.lang.deleteImageTitle,
+      context.lang.deleteImageBody,
+    );
 
     if (!confirmed) return;
 
@@ -72,6 +75,28 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
     await received.purgeReceivedMediaFiles();
     if (mounted) {
       Navigator.pop(context, true);
+    }
+  }
+
+  Future exportFile() async {
+    final item = widget.galleryItems[currentIndex];
+
+    try {
+      if (item.videoPath != null) {
+        await saveVideoToGallery(item.videoPath!.path);
+      } else if (item.imagePath != null) {
+        final imageBytes = await item.imagePath!.readAsBytes();
+        await saveImageToGallery(imageBytes);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.galleryExportSuccess)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
     }
   }
 
@@ -142,12 +167,19 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                         if (result == "delete") {
                           deleteFile();
                         }
+                        if (result == "export") {
+                          exportFile();
+                        }
                       },
                       itemBuilder: (BuildContext context) =>
                           <PopupMenuEntry<String>>[
                         PopupMenuItem<String>(
                           value: 'delete',
                           child: Text(context.lang.galleryDelete),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'export',
+                          child: Text(context.lang.galleryExport),
                         ),
                         // PopupMenuItem<String>(
                         //   value: 'details',
