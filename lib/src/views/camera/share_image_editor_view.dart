@@ -535,11 +535,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SaveToGalleryButton(
-                  getMergedImage: getMergedImage,
-                  mediaUploadId: mediaUploadId,
-                  videoFilePath: widget.videoFilePath,
-                  sendNextMediaToUserName: sendNextMediaToUserName,
-                ),
+                    getMergedImage: getMergedImage,
+                    mediaUploadId: mediaUploadId,
+                    videoFilePath: widget.videoFilePath,
+                    sendNextMediaToUserName: sendNextMediaToUserName,
+                    isLoading: sendingOrLoadingImage),
                 if (sendNextMediaToUserName != null) SizedBox(width: 10),
                 if (sendNextMediaToUserName != null)
                   OutlinedButton(

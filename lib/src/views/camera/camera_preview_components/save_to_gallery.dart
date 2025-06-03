@@ -7,19 +7,23 @@ import 'package:twonly/src/services/api/media_send.dart';
 import 'dart:typed_data';
 
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 
 class SaveToGalleryButton extends StatefulWidget {
   final Future<Uint8List?> Function() getMergedImage;
   final String? sendNextMediaToUserName;
   final File? videoFilePath;
   final int? mediaUploadId;
+  final bool isLoading;
 
-  const SaveToGalleryButton(
-      {super.key,
-      required this.getMergedImage,
-      this.sendNextMediaToUserName,
-      this.mediaUploadId,
-      this.videoFilePath});
+  const SaveToGalleryButton({
+    super.key,
+    required this.getMergedImage,
+    required this.isLoading,
+    this.sendNextMediaToUserName,
+    this.mediaUploadId,
+    this.videoFilePath,
+  });
 
   @override
   State<SaveToGalleryButton> createState() => SaveToGalleryButtonState();
@@ -40,53 +44,62 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
             ? Theme.of(context).colorScheme.outline
             : Theme.of(context).colorScheme.primary,
       ),
-      onPressed: () async {
-        setState(() {
-          _imageSaving = true;
-        });
+      onPressed: (widget.isLoading)
+          ? null
+          : () async {
+              setState(() {
+                _imageSaving = true;
+              });
 
-        String? res;
-        String memoryPath = await getMediaBaseFilePath("memories");
+              String? res;
+              String memoryPath = await getMediaBaseFilePath("memories");
 
-        if (widget.mediaUploadId != null) {
-          memoryPath = join(memoryPath, "${widget.mediaUploadId!}");
-        } else {
-          final Random random = Random();
-          String token = uint8ListToHex(
-              List<int>.generate(32, (i) => random.nextInt(256)));
-          memoryPath = join(memoryPath, token);
-        }
+              if (widget.mediaUploadId != null) {
+                memoryPath = join(memoryPath, "${widget.mediaUploadId!}");
+              } else {
+                final Random random = Random();
+                String token = uint8ListToHex(
+                    List<int>.generate(32, (i) => random.nextInt(256)));
+                memoryPath = join(memoryPath, token);
+              }
+              final user = await getUser();
+              if (user != null && (user.storeMediaFilesInGallery ?? true)) {}
+              bool storeToGallery = user?.storeMediaFilesInGallery ?? true;
 
-        if (widget.videoFilePath != null) {
-          memoryPath += ".mp4";
-          await File(widget.videoFilePath!.path).copy(memoryPath);
-          res = await saveVideoToGallery(widget.videoFilePath!.path);
-        } else {
-          memoryPath += ".png";
-          Uint8List? imageBytes = await widget.getMergedImage();
-          if (imageBytes == null || !mounted) return;
-          await File(memoryPath).writeAsBytes(imageBytes);
-          res = await saveImageToGallery(imageBytes);
-        }
-        if (res == null) {
-          setState(() {
-            _imageSaved = true;
-          });
-        } else if (mounted && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(res),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-        setState(() {
-          _imageSaving = false;
-        });
-      },
+              if (widget.videoFilePath != null) {
+                memoryPath += ".mp4";
+                await File(widget.videoFilePath!.path).copy(memoryPath);
+                if (storeToGallery) {
+                  res = await saveVideoToGallery(widget.videoFilePath!.path);
+                }
+              } else {
+                memoryPath += ".png";
+                Uint8List? imageBytes = await widget.getMergedImage();
+                if (imageBytes == null || !mounted) return;
+                await File(memoryPath).writeAsBytes(imageBytes);
+                if (storeToGallery) {
+                  res = await saveImageToGallery(imageBytes);
+                }
+              }
+              if (res == null) {
+                setState(() {
+                  _imageSaved = true;
+                });
+              } else if (mounted && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(res),
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              }
+              setState(() {
+                _imageSaving = false;
+              });
+            },
       child: Row(
         children: [
-          _imageSaving
+          (_imageSaving || widget.isLoading)
               ? SizedBox(
                   width: 12,
                   height: 12,
