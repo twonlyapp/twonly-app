@@ -53,7 +53,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -117,6 +117,9 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           m.createTable(signalContactPreKeys);
           m.createTable(signalContactSignedPreKeys);
           m.addColumn(schema.contacts, schema.contacts.deleted);
+        },
+        from10To11: (m, schema) async {
+          m.createTable(messageRetransmissions);
         },
       ),
     );

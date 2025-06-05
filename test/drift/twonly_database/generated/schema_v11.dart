@@ -916,8 +916,8 @@ class Messages extends Table with TableInfo<Messages, MessagesData> {
       'contact_id', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
   late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
       'message_id', aliasedName, false,
       hasAutoIncrement: true,
@@ -1955,10 +1955,7 @@ class MediaDownloads extends Table
   MediaDownloads(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
       'message_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES messages (message_id) ON DELETE CASCADE'));
+      type: DriftSqlType.int, requiredDuringInsert: true);
   late final GeneratedColumn<String> downloadToken = GeneratedColumn<String>(
       'download_token', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
@@ -2975,10 +2972,7 @@ class SignalContactPreKeys extends Table
   SignalContactPreKeys(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
       'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
+      type: DriftSqlType.int, requiredDuringInsert: true);
   late final GeneratedColumn<int> preKeyId = GeneratedColumn<int>(
       'pre_key_id', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
@@ -3215,10 +3209,7 @@ class SignalContactSignedPreKeys extends Table
   SignalContactSignedPreKeys(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
       'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
+      type: DriftSqlType.int, requiredDuringInsert: false);
   late final GeneratedColumn<int> signedPreKeyId = GeneratedColumn<int>(
       'signed_pre_key_id', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
@@ -3487,6 +3478,332 @@ class SignalContactSignedPreKeysCompanion
   }
 }
 
+class MessageRetransmissions extends Table
+    with TableInfo<MessageRetransmissions, MessageRetransmissionsData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  MessageRetransmissions(this.attachedDatabase, [this._alias]);
+  late final GeneratedColumn<int> retransmissionId = GeneratedColumn<int>(
+      'retransmission_id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+      'contact_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
+  late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
+      'message_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES messages (message_id) ON DELETE CASCADE'));
+  late final GeneratedColumn<Uint8List> plaintextContent =
+      GeneratedColumn<Uint8List>('plaintext_content', aliasedName, false,
+          type: DriftSqlType.blob, requiredDuringInsert: true);
+  late final GeneratedColumn<Uint8List> pushData = GeneratedColumn<Uint8List>(
+      'push_data', aliasedName, true,
+      type: DriftSqlType.blob, requiredDuringInsert: false);
+  late final GeneratedColumn<DateTime> acknowledgeByServerAt =
+      GeneratedColumn<DateTime>('acknowledge_by_server_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        retransmissionId,
+        contactId,
+        messageId,
+        plaintextContent,
+        pushData,
+        acknowledgeByServerAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'message_retransmissions';
+  @override
+  Set<GeneratedColumn> get $primaryKey => {retransmissionId};
+  @override
+  MessageRetransmissionsData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MessageRetransmissionsData(
+      retransmissionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}retransmission_id'])!,
+      contactId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      messageId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}message_id']),
+      plaintextContent: attachedDatabase.typeMapping.read(
+          DriftSqlType.blob, data['${effectivePrefix}plaintext_content'])!,
+      pushData: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}push_data']),
+      acknowledgeByServerAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}acknowledge_by_server_at']),
+    );
+  }
+
+  @override
+  MessageRetransmissions createAlias(String alias) {
+    return MessageRetransmissions(attachedDatabase, alias);
+  }
+}
+
+class MessageRetransmissionsData extends DataClass
+    implements Insertable<MessageRetransmissionsData> {
+  final int retransmissionId;
+  final int contactId;
+  final int? messageId;
+  final Uint8List plaintextContent;
+  final Uint8List? pushData;
+  final DateTime? acknowledgeByServerAt;
+  const MessageRetransmissionsData(
+      {required this.retransmissionId,
+      required this.contactId,
+      this.messageId,
+      required this.plaintextContent,
+      this.pushData,
+      this.acknowledgeByServerAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['retransmission_id'] = Variable<int>(retransmissionId);
+    map['contact_id'] = Variable<int>(contactId);
+    if (!nullToAbsent || messageId != null) {
+      map['message_id'] = Variable<int>(messageId);
+    }
+    map['plaintext_content'] = Variable<Uint8List>(plaintextContent);
+    if (!nullToAbsent || pushData != null) {
+      map['push_data'] = Variable<Uint8List>(pushData);
+    }
+    if (!nullToAbsent || acknowledgeByServerAt != null) {
+      map['acknowledge_by_server_at'] =
+          Variable<DateTime>(acknowledgeByServerAt);
+    }
+    return map;
+  }
+
+  MessageRetransmissionsCompanion toCompanion(bool nullToAbsent) {
+    return MessageRetransmissionsCompanion(
+      retransmissionId: Value(retransmissionId),
+      contactId: Value(contactId),
+      messageId: messageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(messageId),
+      plaintextContent: Value(plaintextContent),
+      pushData: pushData == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pushData),
+      acknowledgeByServerAt: acknowledgeByServerAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(acknowledgeByServerAt),
+    );
+  }
+
+  factory MessageRetransmissionsData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MessageRetransmissionsData(
+      retransmissionId: serializer.fromJson<int>(json['retransmissionId']),
+      contactId: serializer.fromJson<int>(json['contactId']),
+      messageId: serializer.fromJson<int?>(json['messageId']),
+      plaintextContent:
+          serializer.fromJson<Uint8List>(json['plaintextContent']),
+      pushData: serializer.fromJson<Uint8List?>(json['pushData']),
+      acknowledgeByServerAt:
+          serializer.fromJson<DateTime?>(json['acknowledgeByServerAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'retransmissionId': serializer.toJson<int>(retransmissionId),
+      'contactId': serializer.toJson<int>(contactId),
+      'messageId': serializer.toJson<int?>(messageId),
+      'plaintextContent': serializer.toJson<Uint8List>(plaintextContent),
+      'pushData': serializer.toJson<Uint8List?>(pushData),
+      'acknowledgeByServerAt':
+          serializer.toJson<DateTime?>(acknowledgeByServerAt),
+    };
+  }
+
+  MessageRetransmissionsData copyWith(
+          {int? retransmissionId,
+          int? contactId,
+          Value<int?> messageId = const Value.absent(),
+          Uint8List? plaintextContent,
+          Value<Uint8List?> pushData = const Value.absent(),
+          Value<DateTime?> acknowledgeByServerAt = const Value.absent()}) =>
+      MessageRetransmissionsData(
+        retransmissionId: retransmissionId ?? this.retransmissionId,
+        contactId: contactId ?? this.contactId,
+        messageId: messageId.present ? messageId.value : this.messageId,
+        plaintextContent: plaintextContent ?? this.plaintextContent,
+        pushData: pushData.present ? pushData.value : this.pushData,
+        acknowledgeByServerAt: acknowledgeByServerAt.present
+            ? acknowledgeByServerAt.value
+            : this.acknowledgeByServerAt,
+      );
+  MessageRetransmissionsData copyWithCompanion(
+      MessageRetransmissionsCompanion data) {
+    return MessageRetransmissionsData(
+      retransmissionId: data.retransmissionId.present
+          ? data.retransmissionId.value
+          : this.retransmissionId,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      messageId: data.messageId.present ? data.messageId.value : this.messageId,
+      plaintextContent: data.plaintextContent.present
+          ? data.plaintextContent.value
+          : this.plaintextContent,
+      pushData: data.pushData.present ? data.pushData.value : this.pushData,
+      acknowledgeByServerAt: data.acknowledgeByServerAt.present
+          ? data.acknowledgeByServerAt.value
+          : this.acknowledgeByServerAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageRetransmissionsData(')
+          ..write('retransmissionId: $retransmissionId, ')
+          ..write('contactId: $contactId, ')
+          ..write('messageId: $messageId, ')
+          ..write('plaintextContent: $plaintextContent, ')
+          ..write('pushData: $pushData, ')
+          ..write('acknowledgeByServerAt: $acknowledgeByServerAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      retransmissionId,
+      contactId,
+      messageId,
+      $driftBlobEquality.hash(plaintextContent),
+      $driftBlobEquality.hash(pushData),
+      acknowledgeByServerAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MessageRetransmissionsData &&
+          other.retransmissionId == this.retransmissionId &&
+          other.contactId == this.contactId &&
+          other.messageId == this.messageId &&
+          $driftBlobEquality.equals(
+              other.plaintextContent, this.plaintextContent) &&
+          $driftBlobEquality.equals(other.pushData, this.pushData) &&
+          other.acknowledgeByServerAt == this.acknowledgeByServerAt);
+}
+
+class MessageRetransmissionsCompanion
+    extends UpdateCompanion<MessageRetransmissionsData> {
+  final Value<int> retransmissionId;
+  final Value<int> contactId;
+  final Value<int?> messageId;
+  final Value<Uint8List> plaintextContent;
+  final Value<Uint8List?> pushData;
+  final Value<DateTime?> acknowledgeByServerAt;
+  const MessageRetransmissionsCompanion({
+    this.retransmissionId = const Value.absent(),
+    this.contactId = const Value.absent(),
+    this.messageId = const Value.absent(),
+    this.plaintextContent = const Value.absent(),
+    this.pushData = const Value.absent(),
+    this.acknowledgeByServerAt = const Value.absent(),
+  });
+  MessageRetransmissionsCompanion.insert({
+    this.retransmissionId = const Value.absent(),
+    required int contactId,
+    this.messageId = const Value.absent(),
+    required Uint8List plaintextContent,
+    this.pushData = const Value.absent(),
+    this.acknowledgeByServerAt = const Value.absent(),
+  })  : contactId = Value(contactId),
+        plaintextContent = Value(plaintextContent);
+  static Insertable<MessageRetransmissionsData> custom({
+    Expression<int>? retransmissionId,
+    Expression<int>? contactId,
+    Expression<int>? messageId,
+    Expression<Uint8List>? plaintextContent,
+    Expression<Uint8List>? pushData,
+    Expression<DateTime>? acknowledgeByServerAt,
+  }) {
+    return RawValuesInsertable({
+      if (retransmissionId != null) 'retransmission_id': retransmissionId,
+      if (contactId != null) 'contact_id': contactId,
+      if (messageId != null) 'message_id': messageId,
+      if (plaintextContent != null) 'plaintext_content': plaintextContent,
+      if (pushData != null) 'push_data': pushData,
+      if (acknowledgeByServerAt != null)
+        'acknowledge_by_server_at': acknowledgeByServerAt,
+    });
+  }
+
+  MessageRetransmissionsCompanion copyWith(
+      {Value<int>? retransmissionId,
+      Value<int>? contactId,
+      Value<int?>? messageId,
+      Value<Uint8List>? plaintextContent,
+      Value<Uint8List?>? pushData,
+      Value<DateTime?>? acknowledgeByServerAt}) {
+    return MessageRetransmissionsCompanion(
+      retransmissionId: retransmissionId ?? this.retransmissionId,
+      contactId: contactId ?? this.contactId,
+      messageId: messageId ?? this.messageId,
+      plaintextContent: plaintextContent ?? this.plaintextContent,
+      pushData: pushData ?? this.pushData,
+      acknowledgeByServerAt:
+          acknowledgeByServerAt ?? this.acknowledgeByServerAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (retransmissionId.present) {
+      map['retransmission_id'] = Variable<int>(retransmissionId.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
+    }
+    if (messageId.present) {
+      map['message_id'] = Variable<int>(messageId.value);
+    }
+    if (plaintextContent.present) {
+      map['plaintext_content'] = Variable<Uint8List>(plaintextContent.value);
+    }
+    if (pushData.present) {
+      map['push_data'] = Variable<Uint8List>(pushData.value);
+    }
+    if (acknowledgeByServerAt.present) {
+      map['acknowledge_by_server_at'] =
+          Variable<DateTime>(acknowledgeByServerAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageRetransmissionsCompanion(')
+          ..write('retransmissionId: $retransmissionId, ')
+          ..write('contactId: $contactId, ')
+          ..write('messageId: $messageId, ')
+          ..write('plaintextContent: $plaintextContent, ')
+          ..write('pushData: $pushData, ')
+          ..write('acknowledgeByServerAt: $acknowledgeByServerAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class DatabaseAtV11 extends GeneratedDatabase {
   DatabaseAtV11(QueryExecutor e) : super(e);
   late final Contacts contacts = Contacts(this);
@@ -3504,6 +3821,8 @@ class DatabaseAtV11 extends GeneratedDatabase {
       SignalContactPreKeys(this);
   late final SignalContactSignedPreKeys signalContactSignedPreKeys =
       SignalContactSignedPreKeys(this);
+  late final MessageRetransmissions messageRetransmissions =
+      MessageRetransmissions(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3518,7 +3837,8 @@ class DatabaseAtV11 extends GeneratedDatabase {
         signalSenderKeyStores,
         signalSessionStores,
         signalContactPreKeys,
-        signalContactSignedPreKeys
+        signalContactSignedPreKeys,
+        messageRetransmissions
       ];
   @override
   int get schemaVersion => 11;
