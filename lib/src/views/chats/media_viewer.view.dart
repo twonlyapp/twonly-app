@@ -210,7 +210,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
     }
 
-    notifyContactAboutOpeningMessage(
+    await notifyContactAboutOpeningMessage(
       current.contactId,
       [current.messageOtherId!],
     );

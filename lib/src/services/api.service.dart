@@ -26,9 +26,9 @@ import 'package:twonly/src/services/api/server_messages.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
-import 'package:twonly/src/utils/hive.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/flame.service.dart';
+import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -38,6 +38,7 @@ import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 final lockConnecting = Mutex();
+final lockRetransStore = Mutex();
 
 /// The ApiProvider is responsible for communicating with the server.
 /// It handles errors and does automatically tries to reconnect on
@@ -203,39 +204,43 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getRetransmission() async {
-    final box = await getMediaStorage();
-    try {
-      return box.get("rawbytes-to-retransmit");
-    } catch (e) {
-      return {};
-    }
+    return await KeyValueStore.get("rawbytes-to-retransmit") ?? {};
   }
 
   Future retransmitRawBytes() async {
-    var retransmit = await getRetransmission();
-    Log.info("retransmitting ${retransmit.keys.length} messages");
-    for (final seq in retransmit.keys) {
-      try {
-        _channel!.sink.add(base64Decode(retransmit[seq]));
-      } catch (e) {
-        Log.error("$e");
+    await lockRetransStore.protect(() async {
+      var retransmit = await getRetransmission();
+      Log.info("retransmitting ${retransmit.keys.length} messages");
+      bool gotError = false;
+      for (final seq in retransmit.keys) {
+        try {
+          _channel!.sink.add(base64Decode(retransmit[seq]));
+        } catch (e) {
+          gotError = true;
+          Log.error("$e");
+        }
       }
-    }
+      if (!gotError) {
+        KeyValueStore.put("rawbytes-to-retransmit", {});
+      }
+    });
   }
 
   Future addToRetransmissionBuffer(Int64 seq, Uint8List bytes) async {
-    var retransmit = await getRetransmission();
-    retransmit[seq.toString()] = base64Encode(bytes);
-    final box = await getMediaStorage();
-    box.put("rawbytes-to-retransmit", retransmit);
+    await lockRetransStore.protect(() async {
+      var retransmit = await getRetransmission();
+      retransmit[seq.toString()] = base64Encode(bytes);
+      KeyValueStore.put("rawbytes-to-retransmit", retransmit);
+    });
   }
 
   Future removeFromRetransmissionBuffer(Int64 seq) async {
-    var retransmit = await getRetransmission();
-    if (retransmit.isEmpty) return;
-    retransmit.remove(seq.toString());
-    final box = await getMediaStorage();
-    box.put("rawbytes-to-retransmit", retransmit);
+    await lockRetransStore.protect(() async {
+      var retransmit = await getRetransmission();
+      if (retransmit.isEmpty) return;
+      retransmit.remove(seq.toString());
+      KeyValueStore.put("rawbytes-to-retransmit", retransmit);
+    });
   }
 
   Future<Result> sendRequestSync(

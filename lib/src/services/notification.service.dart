@@ -238,7 +238,7 @@ class PushNotification {
 
 /// this will trigger a push notification
 /// push notification only containing the message kind and username
-Future<List<int>?> getPushData(int toUserId, PushKind kind) async {
+Future<Uint8List?> getPushData(int toUserId, PushKind kind) async {
   final Map<int, PushUser> pushKeys = await getPushKeys("sendingPushKeys");
 
   List<int> key = "InsecureOnlyUsedForAddingContact".codeUnits;
@@ -278,8 +278,7 @@ Future<List<int>?> getPushData(int toUserId, PushKind kind) async {
     cipherText: secretBox.cipherText,
     mac: secretBox.mac.bytes,
   );
-
-  return jsonEncode(res.toJson()).codeUnits;
+  return Utf8Encoder().convert(jsonEncode(res.toJson()));
 }
 
 Future<PushKind?> tryDecryptMessage(

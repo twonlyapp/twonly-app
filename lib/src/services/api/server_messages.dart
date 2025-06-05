@@ -100,8 +100,9 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
     case MessageKind.opened:
       if (message.messageId != null) {
         final update = MessagesCompanion(
-            openedAt: Value(message.timestamp),
-            errorWhileSending: Value(false));
+          openedAt: Value(message.timestamp),
+          errorWhileSending: Value(false),
+        );
         await twonlyDB.messagesDao.updateMessageByOtherUser(
           fromUserId,
           message.messageId!,
@@ -214,8 +215,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
               fromUserId,
               responseToMessageId,
               MessagesCompanion(
-                errorWhileSending: Value(false),
-              ),
+                  errorWhileSending: Value(false),
+                  openedAt: Value(
+                    DateTime.now(),
+                  ) // when a user reacted to the media file, it should be marked as opened
+                  ),
             );
           }
 
@@ -259,16 +263,16 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           }
         }
 
-        // await encryptAndSendMessageAsync(
-        //   message.messageId!,
-        //   fromUserId,
-        //   MessageJson(
-        //     kind: MessageKind.ack,
-        //     messageId: message.messageId!,
-        //     content: MessageContent(),
-        //     timestamp: DateTime.now(),
-        //   ),
-        // );
+        await encryptAndSendMessageAsync(
+          message.messageId!,
+          fromUserId,
+          MessageJson(
+            kind: MessageKind.ack,
+            messageId: message.messageId!,
+            content: MessageContent(),
+            timestamp: DateTime.now(),
+          ),
+        );
 
         // unarchive contact when receiving a new message
         await twonlyDB.contactsDao.updateContact(

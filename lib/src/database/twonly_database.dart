@@ -5,11 +5,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/daos/media_downloads_dao.dart';
 import 'package:twonly/src/database/daos/media_uploads_dao.dart';
+import 'package:twonly/src/database/daos/message_retransmissions.dao.dart';
 import 'package:twonly/src/database/daos/messages_dao.dart';
 import 'package:twonly/src/database/daos/signal_dao.dart';
 import 'package:twonly/src/database/tables/contacts_table.dart';
 import 'package:twonly/src/database/tables/media_download_table.dart';
 import 'package:twonly/src/database/tables/media_uploads_table.dart';
+import 'package:twonly/src/database/tables/message_retransmissions.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/tables/signal_contact_prekey_table.dart';
 import 'package:twonly/src/database/tables/signal_contact_signed_prekey_table.dart';
@@ -32,13 +34,15 @@ part 'twonly_database.g.dart';
   SignalSenderKeyStores,
   SignalSessionStores,
   SignalContactPreKeys,
-  SignalContactSignedPreKeys
+  SignalContactSignedPreKeys,
+  MessageRetransmissions
 ], daos: [
   MessagesDao,
   ContactsDao,
   MediaUploadsDao,
   MediaDownloadsDao,
-  SignalDao
+  SignalDao,
+  MessageRetransmissionDao
 ])
 class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase([QueryExecutor? e])

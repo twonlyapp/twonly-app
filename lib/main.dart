@@ -8,7 +8,6 @@ import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/services/api.service.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
-import 'package:twonly/src/utils/hive.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/notification.service.dart';
@@ -33,9 +32,9 @@ void main() async {
   // Load the user's preferred theme while the splash screen is displayed.
   // This prevents a sudden theme change when the app is first displayed.
   await settingsController.loadSettings();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  await setupPushNotification();
-  await initMediaStorage();
+  setupPushNotification();
 
   gCameras = await availableCameras();
 
@@ -47,8 +46,6 @@ void main() async {
   // purge media files in the background
   purgeReceivedMediaFiles();
   purgeSendMediaFiles();
-
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   runApp(
     MultiProvider(

@@ -4179,6 +4179,392 @@ class SignalContactSignedPreKeysCompanion
   }
 }
 
+class $MessageRetransmissionsTable extends MessageRetransmissions
+    with TableInfo<$MessageRetransmissionsTable, MessageRetransmission> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MessageRetransmissionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _retransmissionIdMeta =
+      const VerificationMeta('retransmissionId');
+  @override
+  late final GeneratedColumn<int> retransmissionId = GeneratedColumn<int>(
+      'retransmission_id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _contactIdMeta =
+      const VerificationMeta('contactId');
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+      'contact_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
+  static const VerificationMeta _messageIdMeta =
+      const VerificationMeta('messageId');
+  @override
+  late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
+      'message_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES messages (message_id) ON DELETE CASCADE'));
+  static const VerificationMeta _plaintextContentMeta =
+      const VerificationMeta('plaintextContent');
+  @override
+  late final GeneratedColumn<Uint8List> plaintextContent =
+      GeneratedColumn<Uint8List>('plaintext_content', aliasedName, false,
+          type: DriftSqlType.blob, requiredDuringInsert: true);
+  static const VerificationMeta _pushDataMeta =
+      const VerificationMeta('pushData');
+  @override
+  late final GeneratedColumn<Uint8List> pushData = GeneratedColumn<Uint8List>(
+      'push_data', aliasedName, true,
+      type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _acknowledgeByServerAtMeta =
+      const VerificationMeta('acknowledgeByServerAt');
+  @override
+  late final GeneratedColumn<DateTime> acknowledgeByServerAt =
+      GeneratedColumn<DateTime>('acknowledge_by_server_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        retransmissionId,
+        contactId,
+        messageId,
+        plaintextContent,
+        pushData,
+        acknowledgeByServerAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'message_retransmissions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<MessageRetransmission> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('retransmission_id')) {
+      context.handle(
+          _retransmissionIdMeta,
+          retransmissionId.isAcceptableOrUnknown(
+              data['retransmission_id']!, _retransmissionIdMeta));
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(_contactIdMeta,
+          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    } else if (isInserting) {
+      context.missing(_contactIdMeta);
+    }
+    if (data.containsKey('message_id')) {
+      context.handle(_messageIdMeta,
+          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+    }
+    if (data.containsKey('plaintext_content')) {
+      context.handle(
+          _plaintextContentMeta,
+          plaintextContent.isAcceptableOrUnknown(
+              data['plaintext_content']!, _plaintextContentMeta));
+    } else if (isInserting) {
+      context.missing(_plaintextContentMeta);
+    }
+    if (data.containsKey('push_data')) {
+      context.handle(_pushDataMeta,
+          pushData.isAcceptableOrUnknown(data['push_data']!, _pushDataMeta));
+    }
+    if (data.containsKey('acknowledge_by_server_at')) {
+      context.handle(
+          _acknowledgeByServerAtMeta,
+          acknowledgeByServerAt.isAcceptableOrUnknown(
+              data['acknowledge_by_server_at']!, _acknowledgeByServerAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {retransmissionId};
+  @override
+  MessageRetransmission map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MessageRetransmission(
+      retransmissionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}retransmission_id'])!,
+      contactId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      messageId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}message_id']),
+      plaintextContent: attachedDatabase.typeMapping.read(
+          DriftSqlType.blob, data['${effectivePrefix}plaintext_content'])!,
+      pushData: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}push_data']),
+      acknowledgeByServerAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}acknowledge_by_server_at']),
+    );
+  }
+
+  @override
+  $MessageRetransmissionsTable createAlias(String alias) {
+    return $MessageRetransmissionsTable(attachedDatabase, alias);
+  }
+}
+
+class MessageRetransmission extends DataClass
+    implements Insertable<MessageRetransmission> {
+  final int retransmissionId;
+  final int contactId;
+  final int? messageId;
+  final Uint8List plaintextContent;
+  final Uint8List? pushData;
+  final DateTime? acknowledgeByServerAt;
+  const MessageRetransmission(
+      {required this.retransmissionId,
+      required this.contactId,
+      this.messageId,
+      required this.plaintextContent,
+      this.pushData,
+      this.acknowledgeByServerAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['retransmission_id'] = Variable<int>(retransmissionId);
+    map['contact_id'] = Variable<int>(contactId);
+    if (!nullToAbsent || messageId != null) {
+      map['message_id'] = Variable<int>(messageId);
+    }
+    map['plaintext_content'] = Variable<Uint8List>(plaintextContent);
+    if (!nullToAbsent || pushData != null) {
+      map['push_data'] = Variable<Uint8List>(pushData);
+    }
+    if (!nullToAbsent || acknowledgeByServerAt != null) {
+      map['acknowledge_by_server_at'] =
+          Variable<DateTime>(acknowledgeByServerAt);
+    }
+    return map;
+  }
+
+  MessageRetransmissionsCompanion toCompanion(bool nullToAbsent) {
+    return MessageRetransmissionsCompanion(
+      retransmissionId: Value(retransmissionId),
+      contactId: Value(contactId),
+      messageId: messageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(messageId),
+      plaintextContent: Value(plaintextContent),
+      pushData: pushData == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pushData),
+      acknowledgeByServerAt: acknowledgeByServerAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(acknowledgeByServerAt),
+    );
+  }
+
+  factory MessageRetransmission.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MessageRetransmission(
+      retransmissionId: serializer.fromJson<int>(json['retransmissionId']),
+      contactId: serializer.fromJson<int>(json['contactId']),
+      messageId: serializer.fromJson<int?>(json['messageId']),
+      plaintextContent:
+          serializer.fromJson<Uint8List>(json['plaintextContent']),
+      pushData: serializer.fromJson<Uint8List?>(json['pushData']),
+      acknowledgeByServerAt:
+          serializer.fromJson<DateTime?>(json['acknowledgeByServerAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'retransmissionId': serializer.toJson<int>(retransmissionId),
+      'contactId': serializer.toJson<int>(contactId),
+      'messageId': serializer.toJson<int?>(messageId),
+      'plaintextContent': serializer.toJson<Uint8List>(plaintextContent),
+      'pushData': serializer.toJson<Uint8List?>(pushData),
+      'acknowledgeByServerAt':
+          serializer.toJson<DateTime?>(acknowledgeByServerAt),
+    };
+  }
+
+  MessageRetransmission copyWith(
+          {int? retransmissionId,
+          int? contactId,
+          Value<int?> messageId = const Value.absent(),
+          Uint8List? plaintextContent,
+          Value<Uint8List?> pushData = const Value.absent(),
+          Value<DateTime?> acknowledgeByServerAt = const Value.absent()}) =>
+      MessageRetransmission(
+        retransmissionId: retransmissionId ?? this.retransmissionId,
+        contactId: contactId ?? this.contactId,
+        messageId: messageId.present ? messageId.value : this.messageId,
+        plaintextContent: plaintextContent ?? this.plaintextContent,
+        pushData: pushData.present ? pushData.value : this.pushData,
+        acknowledgeByServerAt: acknowledgeByServerAt.present
+            ? acknowledgeByServerAt.value
+            : this.acknowledgeByServerAt,
+      );
+  MessageRetransmission copyWithCompanion(
+      MessageRetransmissionsCompanion data) {
+    return MessageRetransmission(
+      retransmissionId: data.retransmissionId.present
+          ? data.retransmissionId.value
+          : this.retransmissionId,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      messageId: data.messageId.present ? data.messageId.value : this.messageId,
+      plaintextContent: data.plaintextContent.present
+          ? data.plaintextContent.value
+          : this.plaintextContent,
+      pushData: data.pushData.present ? data.pushData.value : this.pushData,
+      acknowledgeByServerAt: data.acknowledgeByServerAt.present
+          ? data.acknowledgeByServerAt.value
+          : this.acknowledgeByServerAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageRetransmission(')
+          ..write('retransmissionId: $retransmissionId, ')
+          ..write('contactId: $contactId, ')
+          ..write('messageId: $messageId, ')
+          ..write('plaintextContent: $plaintextContent, ')
+          ..write('pushData: $pushData, ')
+          ..write('acknowledgeByServerAt: $acknowledgeByServerAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      retransmissionId,
+      contactId,
+      messageId,
+      $driftBlobEquality.hash(plaintextContent),
+      $driftBlobEquality.hash(pushData),
+      acknowledgeByServerAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MessageRetransmission &&
+          other.retransmissionId == this.retransmissionId &&
+          other.contactId == this.contactId &&
+          other.messageId == this.messageId &&
+          $driftBlobEquality.equals(
+              other.plaintextContent, this.plaintextContent) &&
+          $driftBlobEquality.equals(other.pushData, this.pushData) &&
+          other.acknowledgeByServerAt == this.acknowledgeByServerAt);
+}
+
+class MessageRetransmissionsCompanion
+    extends UpdateCompanion<MessageRetransmission> {
+  final Value<int> retransmissionId;
+  final Value<int> contactId;
+  final Value<int?> messageId;
+  final Value<Uint8List> plaintextContent;
+  final Value<Uint8List?> pushData;
+  final Value<DateTime?> acknowledgeByServerAt;
+  const MessageRetransmissionsCompanion({
+    this.retransmissionId = const Value.absent(),
+    this.contactId = const Value.absent(),
+    this.messageId = const Value.absent(),
+    this.plaintextContent = const Value.absent(),
+    this.pushData = const Value.absent(),
+    this.acknowledgeByServerAt = const Value.absent(),
+  });
+  MessageRetransmissionsCompanion.insert({
+    this.retransmissionId = const Value.absent(),
+    required int contactId,
+    this.messageId = const Value.absent(),
+    required Uint8List plaintextContent,
+    this.pushData = const Value.absent(),
+    this.acknowledgeByServerAt = const Value.absent(),
+  })  : contactId = Value(contactId),
+        plaintextContent = Value(plaintextContent);
+  static Insertable<MessageRetransmission> custom({
+    Expression<int>? retransmissionId,
+    Expression<int>? contactId,
+    Expression<int>? messageId,
+    Expression<Uint8List>? plaintextContent,
+    Expression<Uint8List>? pushData,
+    Expression<DateTime>? acknowledgeByServerAt,
+  }) {
+    return RawValuesInsertable({
+      if (retransmissionId != null) 'retransmission_id': retransmissionId,
+      if (contactId != null) 'contact_id': contactId,
+      if (messageId != null) 'message_id': messageId,
+      if (plaintextContent != null) 'plaintext_content': plaintextContent,
+      if (pushData != null) 'push_data': pushData,
+      if (acknowledgeByServerAt != null)
+        'acknowledge_by_server_at': acknowledgeByServerAt,
+    });
+  }
+
+  MessageRetransmissionsCompanion copyWith(
+      {Value<int>? retransmissionId,
+      Value<int>? contactId,
+      Value<int?>? messageId,
+      Value<Uint8List>? plaintextContent,
+      Value<Uint8List?>? pushData,
+      Value<DateTime?>? acknowledgeByServerAt}) {
+    return MessageRetransmissionsCompanion(
+      retransmissionId: retransmissionId ?? this.retransmissionId,
+      contactId: contactId ?? this.contactId,
+      messageId: messageId ?? this.messageId,
+      plaintextContent: plaintextContent ?? this.plaintextContent,
+      pushData: pushData ?? this.pushData,
+      acknowledgeByServerAt:
+          acknowledgeByServerAt ?? this.acknowledgeByServerAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (retransmissionId.present) {
+      map['retransmission_id'] = Variable<int>(retransmissionId.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
+    }
+    if (messageId.present) {
+      map['message_id'] = Variable<int>(messageId.value);
+    }
+    if (plaintextContent.present) {
+      map['plaintext_content'] = Variable<Uint8List>(plaintextContent.value);
+    }
+    if (pushData.present) {
+      map['push_data'] = Variable<Uint8List>(pushData.value);
+    }
+    if (acknowledgeByServerAt.present) {
+      map['acknowledge_by_server_at'] =
+          Variable<DateTime>(acknowledgeByServerAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageRetransmissionsCompanion(')
+          ..write('retransmissionId: $retransmissionId, ')
+          ..write('contactId: $contactId, ')
+          ..write('messageId: $messageId, ')
+          ..write('plaintextContent: $plaintextContent, ')
+          ..write('pushData: $pushData, ')
+          ..write('acknowledgeByServerAt: $acknowledgeByServerAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TwonlyDatabase extends GeneratedDatabase {
   _$TwonlyDatabase(QueryExecutor e) : super(e);
   $TwonlyDatabaseManager get managers => $TwonlyDatabaseManager(this);
@@ -4198,6 +4584,8 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
       $SignalContactPreKeysTable(this);
   late final $SignalContactSignedPreKeysTable signalContactSignedPreKeys =
       $SignalContactSignedPreKeysTable(this);
+  late final $MessageRetransmissionsTable messageRetransmissions =
+      $MessageRetransmissionsTable(this);
   late final MessagesDao messagesDao = MessagesDao(this as TwonlyDatabase);
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDatabase);
   late final MediaUploadsDao mediaUploadsDao =
@@ -4205,6 +4593,8 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
   late final MediaDownloadsDao mediaDownloadsDao =
       MediaDownloadsDao(this as TwonlyDatabase);
   late final SignalDao signalDao = SignalDao(this as TwonlyDatabase);
+  late final MessageRetransmissionDao messageRetransmissionDao =
+      MessageRetransmissionDao(this as TwonlyDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4219,8 +4609,28 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
         signalSenderKeyStores,
         signalSessionStores,
         signalContactPreKeys,
-        signalContactSignedPreKeys
+        signalContactSignedPreKeys,
+        messageRetransmissions
       ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
+        [
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('contacts',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('message_retransmissions', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('messages',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('message_retransmissions', kind: UpdateKind.delete),
+            ],
+          ),
+        ],
+      );
 }
 
 typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
@@ -4289,6 +4699,26 @@ final class $$ContactsTableReferences
         (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
 
     final cache = $_typedResult.readTableOrNull(_messagesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$MessageRetransmissionsTable,
+      List<MessageRetransmission>> _messageRetransmissionsRefsTable(
+          _$TwonlyDatabase db) =>
+      MultiTypedResultKey.fromTable(db.messageRetransmissions,
+          aliasName: $_aliasNameGenerator(
+              db.contacts.userId, db.messageRetransmissions.contactId));
+
+  $$MessageRetransmissionsTableProcessedTableManager
+      get messageRetransmissionsRefs {
+    final manager = $$MessageRetransmissionsTableTableManager(
+            $_db, $_db.messageRetransmissions)
+        .filter(
+            (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_messageRetransmissionsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -4398,6 +4828,29 @@ class $$ContactsTableFilterComposer
               $removeJoinBuilderFromRootComposer:
                   $removeJoinBuilderFromRootComposer,
             ));
+    return f(composer);
+  }
+
+  Expression<bool> messageRetransmissionsRefs(
+      Expression<bool> Function($$MessageRetransmissionsTableFilterComposer f)
+          f) {
+    final $$MessageRetransmissionsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.userId,
+            referencedTable: $db.messageRetransmissions,
+            getReferencedColumn: (t) => t.contactId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$MessageRetransmissionsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.messageRetransmissions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 }
@@ -4589,6 +5042,29 @@ class $$ContactsTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> messageRetransmissionsRefs<T extends Object>(
+      Expression<T> Function($$MessageRetransmissionsTableAnnotationComposer a)
+          f) {
+    final $$MessageRetransmissionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.userId,
+            referencedTable: $db.messageRetransmissions,
+            getReferencedColumn: (t) => t.contactId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$MessageRetransmissionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.messageRetransmissions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$ContactsTableTableManager extends RootTableManager<
@@ -4602,7 +5078,8 @@ class $$ContactsTableTableManager extends RootTableManager<
     $$ContactsTableUpdateCompanionBuilder,
     (Contact, $$ContactsTableReferences),
     Contact,
-    PrefetchHooks Function({bool messagesRefs})> {
+    PrefetchHooks Function(
+        {bool messagesRefs, bool messageRetransmissionsRefs})> {
   $$ContactsTableTableManager(_$TwonlyDatabase db, $ContactsTable table)
       : super(TableManagerState(
           db: db,
@@ -4717,10 +5194,14 @@ class $$ContactsTableTableManager extends RootTableManager<
               .map((e) =>
                   (e.readTable(table), $$ContactsTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({messagesRefs = false}) {
+          prefetchHooksCallback: (
+              {messagesRefs = false, messageRetransmissionsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (messagesRefs) db.messages],
+              explicitlyWatchedTables: [
+                if (messagesRefs) db.messages,
+                if (messageRetransmissionsRefs) db.messageRetransmissions
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
@@ -4732,6 +5213,19 @@ class $$ContactsTableTableManager extends RootTableManager<
                         managerFromTypedResult: (p0) =>
                             $$ContactsTableReferences(db, table, p0)
                                 .messagesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.contactId == item.userId),
+                        typedResults: items),
+                  if (messageRetransmissionsRefs)
+                    await $_getPrefetchedData<Contact, $ContactsTable,
+                            MessageRetransmission>(
+                        currentTable: table,
+                        referencedTable: $$ContactsTableReferences
+                            ._messageRetransmissionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ContactsTableReferences(db, table, p0)
+                                .messageRetransmissionsRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.contactId == item.userId),
@@ -4754,7 +5248,8 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
     $$ContactsTableUpdateCompanionBuilder,
     (Contact, $$ContactsTableReferences),
     Contact,
-    PrefetchHooks Function({bool messagesRefs})>;
+    PrefetchHooks Function(
+        {bool messagesRefs, bool messageRetransmissionsRefs})>;
 typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   required int contactId,
   Value<int> messageId,
@@ -4811,6 +5306,26 @@ final class $$MessagesTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$MessageRetransmissionsTable,
+      List<MessageRetransmission>> _messageRetransmissionsRefsTable(
+          _$TwonlyDatabase db) =>
+      MultiTypedResultKey.fromTable(db.messageRetransmissions,
+          aliasName: $_aliasNameGenerator(
+              db.messages.messageId, db.messageRetransmissions.messageId));
+
+  $$MessageRetransmissionsTableProcessedTableManager
+      get messageRetransmissionsRefs {
+    final manager = $$MessageRetransmissionsTableTableManager(
+            $_db, $_db.messageRetransmissions)
+        .filter((f) =>
+            f.messageId.messageId.sqlEquals($_itemColumn<int>('message_id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_messageRetransmissionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
   }
 }
 
@@ -4900,6 +5415,29 @@ class $$MessagesTableFilterComposer
                   $removeJoinBuilderFromRootComposer,
             ));
     return composer;
+  }
+
+  Expression<bool> messageRetransmissionsRefs(
+      Expression<bool> Function($$MessageRetransmissionsTableFilterComposer f)
+          f) {
+    final $$MessageRetransmissionsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.messageId,
+            referencedTable: $db.messageRetransmissions,
+            getReferencedColumn: (t) => t.messageId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$MessageRetransmissionsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.messageRetransmissions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
   }
 }
 
@@ -5067,6 +5605,29 @@ class $$MessagesTableAnnotationComposer
             ));
     return composer;
   }
+
+  Expression<T> messageRetransmissionsRefs<T extends Object>(
+      Expression<T> Function($$MessageRetransmissionsTableAnnotationComposer a)
+          f) {
+    final $$MessageRetransmissionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.messageId,
+            referencedTable: $db.messageRetransmissions,
+            getReferencedColumn: (t) => t.messageId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$MessageRetransmissionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.messageRetransmissions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$MessagesTableTableManager extends RootTableManager<
@@ -5080,7 +5641,7 @@ class $$MessagesTableTableManager extends RootTableManager<
     $$MessagesTableUpdateCompanionBuilder,
     (Message, $$MessagesTableReferences),
     Message,
-    PrefetchHooks Function({bool contactId})> {
+    PrefetchHooks Function({bool contactId, bool messageRetransmissionsRefs})> {
   $$MessagesTableTableManager(_$TwonlyDatabase db, $MessagesTable table)
       : super(TableManagerState(
           db: db,
@@ -5171,10 +5732,13 @@ class $$MessagesTableTableManager extends RootTableManager<
               .map((e) =>
                   (e.readTable(table), $$MessagesTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({contactId = false}) {
+          prefetchHooksCallback: (
+              {contactId = false, messageRetransmissionsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [],
+              explicitlyWatchedTables: [
+                if (messageRetransmissionsRefs) db.messageRetransmissions
+              ],
               addJoins: <
                   T extends TableManagerState<
                       dynamic,
@@ -5202,7 +5766,21 @@ class $$MessagesTableTableManager extends RootTableManager<
                 return state;
               },
               getPrefetchedDataCallback: (items) async {
-                return [];
+                return [
+                  if (messageRetransmissionsRefs)
+                    await $_getPrefetchedData<Message, $MessagesTable,
+                            MessageRetransmission>(
+                        currentTable: table,
+                        referencedTable: $$MessagesTableReferences
+                            ._messageRetransmissionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MessagesTableReferences(db, table, p0)
+                                .messageRetransmissionsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.messageId == item.messageId),
+                        typedResults: items)
+                ];
               },
             );
           },
@@ -5220,7 +5798,7 @@ typedef $$MessagesTableProcessedTableManager = ProcessedTableManager<
     $$MessagesTableUpdateCompanionBuilder,
     (Message, $$MessagesTableReferences),
     Message,
-    PrefetchHooks Function({bool contactId})>;
+    PrefetchHooks Function({bool contactId, bool messageRetransmissionsRefs})>;
 typedef $$MediaUploadsTableCreateCompanionBuilder = MediaUploadsCompanion
     Function({
   Value<int> mediaUploadId,
@@ -6522,6 +7100,380 @@ typedef $$SignalContactSignedPreKeysTableProcessedTableManager
         ),
         SignalContactSignedPreKey,
         PrefetchHooks Function()>;
+typedef $$MessageRetransmissionsTableCreateCompanionBuilder
+    = MessageRetransmissionsCompanion Function({
+  Value<int> retransmissionId,
+  required int contactId,
+  Value<int?> messageId,
+  required Uint8List plaintextContent,
+  Value<Uint8List?> pushData,
+  Value<DateTime?> acknowledgeByServerAt,
+});
+typedef $$MessageRetransmissionsTableUpdateCompanionBuilder
+    = MessageRetransmissionsCompanion Function({
+  Value<int> retransmissionId,
+  Value<int> contactId,
+  Value<int?> messageId,
+  Value<Uint8List> plaintextContent,
+  Value<Uint8List?> pushData,
+  Value<DateTime?> acknowledgeByServerAt,
+});
+
+final class $$MessageRetransmissionsTableReferences extends BaseReferences<
+    _$TwonlyDatabase, $MessageRetransmissionsTable, MessageRetransmission> {
+  $$MessageRetransmissionsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ContactsTable _contactIdTable(_$TwonlyDatabase db) =>
+      db.contacts.createAlias($_aliasNameGenerator(
+          db.messageRetransmissions.contactId, db.contacts.userId));
+
+  $$ContactsTableProcessedTableManager get contactId {
+    final $_column = $_itemColumn<int>('contact_id')!;
+
+    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
+        .filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $MessagesTable _messageIdTable(_$TwonlyDatabase db) =>
+      db.messages.createAlias($_aliasNameGenerator(
+          db.messageRetransmissions.messageId, db.messages.messageId));
+
+  $$MessagesTableProcessedTableManager? get messageId {
+    final $_column = $_itemColumn<int>('message_id');
+    if ($_column == null) return null;
+    final manager = $$MessagesTableTableManager($_db, $_db.messages)
+        .filter((f) => f.messageId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_messageIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$MessageRetransmissionsTableFilterComposer
+    extends Composer<_$TwonlyDatabase, $MessageRetransmissionsTable> {
+  $$MessageRetransmissionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get retransmissionId => $composableBuilder(
+      column: $table.retransmissionId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get plaintextContent => $composableBuilder(
+      column: $table.plaintextContent,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get pushData => $composableBuilder(
+      column: $table.pushData, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get acknowledgeByServerAt => $composableBuilder(
+      column: $table.acknowledgeByServerAt,
+      builder: (column) => ColumnFilters(column));
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableFilterComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$MessagesTableFilterComposer get messageId {
+    final $$MessagesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.messageId,
+        referencedTable: $db.messages,
+        getReferencedColumn: (t) => t.messageId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessagesTableFilterComposer(
+              $db: $db,
+              $table: $db.messages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$MessageRetransmissionsTableOrderingComposer
+    extends Composer<_$TwonlyDatabase, $MessageRetransmissionsTable> {
+  $$MessageRetransmissionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get retransmissionId => $composableBuilder(
+      column: $table.retransmissionId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<Uint8List> get plaintextContent => $composableBuilder(
+      column: $table.plaintextContent,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<Uint8List> get pushData => $composableBuilder(
+      column: $table.pushData, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get acknowledgeByServerAt => $composableBuilder(
+      column: $table.acknowledgeByServerAt,
+      builder: (column) => ColumnOrderings(column));
+
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableOrderingComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$MessagesTableOrderingComposer get messageId {
+    final $$MessagesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.messageId,
+        referencedTable: $db.messages,
+        getReferencedColumn: (t) => t.messageId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessagesTableOrderingComposer(
+              $db: $db,
+              $table: $db.messages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$MessageRetransmissionsTableAnnotationComposer
+    extends Composer<_$TwonlyDatabase, $MessageRetransmissionsTable> {
+  $$MessageRetransmissionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get retransmissionId => $composableBuilder(
+      column: $table.retransmissionId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get plaintextContent => $composableBuilder(
+      column: $table.plaintextContent, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get pushData =>
+      $composableBuilder(column: $table.pushData, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get acknowledgeByServerAt => $composableBuilder(
+      column: $table.acknowledgeByServerAt, builder: (column) => column);
+
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$MessagesTableAnnotationComposer get messageId {
+    final $$MessagesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.messageId,
+        referencedTable: $db.messages,
+        getReferencedColumn: (t) => t.messageId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessagesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.messages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$MessageRetransmissionsTableTableManager extends RootTableManager<
+    _$TwonlyDatabase,
+    $MessageRetransmissionsTable,
+    MessageRetransmission,
+    $$MessageRetransmissionsTableFilterComposer,
+    $$MessageRetransmissionsTableOrderingComposer,
+    $$MessageRetransmissionsTableAnnotationComposer,
+    $$MessageRetransmissionsTableCreateCompanionBuilder,
+    $$MessageRetransmissionsTableUpdateCompanionBuilder,
+    (MessageRetransmission, $$MessageRetransmissionsTableReferences),
+    MessageRetransmission,
+    PrefetchHooks Function({bool contactId, bool messageId})> {
+  $$MessageRetransmissionsTableTableManager(
+      _$TwonlyDatabase db, $MessageRetransmissionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MessageRetransmissionsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MessageRetransmissionsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MessageRetransmissionsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> retransmissionId = const Value.absent(),
+            Value<int> contactId = const Value.absent(),
+            Value<int?> messageId = const Value.absent(),
+            Value<Uint8List> plaintextContent = const Value.absent(),
+            Value<Uint8List?> pushData = const Value.absent(),
+            Value<DateTime?> acknowledgeByServerAt = const Value.absent(),
+          }) =>
+              MessageRetransmissionsCompanion(
+            retransmissionId: retransmissionId,
+            contactId: contactId,
+            messageId: messageId,
+            plaintextContent: plaintextContent,
+            pushData: pushData,
+            acknowledgeByServerAt: acknowledgeByServerAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> retransmissionId = const Value.absent(),
+            required int contactId,
+            Value<int?> messageId = const Value.absent(),
+            required Uint8List plaintextContent,
+            Value<Uint8List?> pushData = const Value.absent(),
+            Value<DateTime?> acknowledgeByServerAt = const Value.absent(),
+          }) =>
+              MessageRetransmissionsCompanion.insert(
+            retransmissionId: retransmissionId,
+            contactId: contactId,
+            messageId: messageId,
+            plaintextContent: plaintextContent,
+            pushData: pushData,
+            acknowledgeByServerAt: acknowledgeByServerAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$MessageRetransmissionsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({contactId = false, messageId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (contactId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.contactId,
+                    referencedTable: $$MessageRetransmissionsTableReferences
+                        ._contactIdTable(db),
+                    referencedColumn: $$MessageRetransmissionsTableReferences
+                        ._contactIdTable(db)
+                        .userId,
+                  ) as T;
+                }
+                if (messageId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.messageId,
+                    referencedTable: $$MessageRetransmissionsTableReferences
+                        ._messageIdTable(db),
+                    referencedColumn: $$MessageRetransmissionsTableReferences
+                        ._messageIdTable(db)
+                        .messageId,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$MessageRetransmissionsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$TwonlyDatabase,
+        $MessageRetransmissionsTable,
+        MessageRetransmission,
+        $$MessageRetransmissionsTableFilterComposer,
+        $$MessageRetransmissionsTableOrderingComposer,
+        $$MessageRetransmissionsTableAnnotationComposer,
+        $$MessageRetransmissionsTableCreateCompanionBuilder,
+        $$MessageRetransmissionsTableUpdateCompanionBuilder,
+        (MessageRetransmission, $$MessageRetransmissionsTableReferences),
+        MessageRetransmission,
+        PrefetchHooks Function({bool contactId, bool messageId})>;
 
 class $TwonlyDatabaseManager {
   final _$TwonlyDatabase _db;
@@ -6549,4 +7501,7 @@ class $TwonlyDatabaseManager {
       get signalContactSignedPreKeys =>
           $$SignalContactSignedPreKeysTableTableManager(
               _db, _db.signalContactSignedPreKeys);
+  $$MessageRetransmissionsTableTableManager get messageRetransmissions =>
+      $$MessageRetransmissionsTableTableManager(
+          _db, _db.messageRetransmissions);
 }

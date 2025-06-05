@@ -146,8 +146,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       }
 
       if (openedMessageOtherIds.isNotEmpty) {
-        notifyContactAboutOpeningMessage(
-            widget.contact.userId, openedMessageOtherIds);
+        await notifyContactAboutOpeningMessage(
+          widget.contact.userId,
+          openedMessageOtherIds,
+        );
       }
 
       twonlyDB.messagesDao.openedAllNonMediaMessages(widget.contact.userId);
