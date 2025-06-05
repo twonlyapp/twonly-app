@@ -142,6 +142,7 @@ class ApiService {
       String apiUrl = "ws$apiSecure://$apiHost/api/client";
 
       Log.info("connecting to $apiUrl");
+
       if (await _connectTo(apiUrl)) {
         await onConnected();
         return true;

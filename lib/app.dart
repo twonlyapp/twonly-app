@@ -72,7 +72,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future initAsync() async {
     setUserPlan();
-    await apiService.connect();
+    await apiService.connect(force: true);
     // call this function so invalid media files are get purged
     retryMediaUpload(true);
   }
@@ -84,7 +84,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       if (wasPaused) {
         globalIsAppInBackground = false;
         twonlyDB.markUpdated();
-        apiService.connect();
+        apiService.connect(force: true);
       }
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;

@@ -561,7 +561,7 @@ Future redeemUserInviteCode(BuildContext context, String newPlan) async {
                 );
                 // reconnect to load new plan.
                 await apiService.close(() {});
-                await apiService.connect();
+                await apiService.connect(force: true);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(errorCodeToText(context, res.error))),
