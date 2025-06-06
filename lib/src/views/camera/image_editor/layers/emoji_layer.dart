@@ -68,6 +68,9 @@ class _EmojiLayerState extends State<EmojiLayer> {
                 }
                 if (deleteLayer) {
                   widget.layerData.isDeleted = true;
+                  if (widget.onUpdate != null) {
+                    widget.onUpdate!();
+                  }
                 }
               });
             },

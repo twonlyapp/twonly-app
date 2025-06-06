@@ -283,11 +283,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ActionButton(
         FontAwesomeIcons.rotateLeft,
         tooltipText: context.lang.undo,
-        disable: layers.where((x) => x.isDeleted).length <= 2 &&
-            removedLayers.isEmpty,
+        disable: layers.where((x) => !x.isDeleted).length <= 2,
         onPressed: () {
           if (removedLayers.isNotEmpty) {
-            layers.add(removedLayers.removeLast());
+            var lastLayer = removedLayers.removeLast();
+            lastLayer.isDeleted = false;
+            lastLayer.isEditing = false;
+            layers.add(lastLayer);
             setState(() {});
             return;
           }
@@ -496,7 +498,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         onUpdate: () {
                           for (final layer in layers) {
                             layer.isEditing = false;
+                            if (layer.isDeleted) {
+                              removedLayers.add(layer);
+                            }
                           }
+                          layers = layers.where((x) => !x.isDeleted).toList();
                           setState(() {});
                         },
                       ),

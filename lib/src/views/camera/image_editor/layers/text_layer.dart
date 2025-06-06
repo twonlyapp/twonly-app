@@ -42,6 +42,7 @@ class _TextViewState extends State<TextLayer> {
               MediaQuery.of(context).size.height / 2 -
                   150 +
                   (widget.layerData.textLayersBefore * 40));
+          textController.text = widget.layerData.text;
         });
       });
     }
@@ -135,6 +136,9 @@ class _TextViewState extends State<TextLayer> {
                 textController.text = "";
               }
               elementIsScaled = false;
+              if (widget.onUpdate != null) {
+                widget.onUpdate!();
+              }
               setState(() {});
             },
             onTap: (context
