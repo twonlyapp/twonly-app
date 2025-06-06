@@ -105,7 +105,7 @@ class ApiService {
     reconnectionTimer ??= Timer(Duration(seconds: _reconnectionDelay), () {
       Log.info("starting with reconnection.");
       reconnectionTimer = null;
-      connect();
+      connect(force: true);
     });
     _reconnectionDelay += 5;
   }
@@ -126,6 +126,7 @@ class ApiService {
       return false;
     }
     reconnectionTimer?.cancel();
+    reconnectionTimer = null;
     final user = await getUser();
     if (user != null && user.isDemoUser) {
       globalCallbackConnectionState(true);
@@ -137,6 +138,7 @@ class ApiService {
       }
       // ensure that the connect function is not called again by the timer.
       reconnectionTimer?.cancel();
+      reconnectionTimer = null;
 
       isAuthenticated = false;
 
