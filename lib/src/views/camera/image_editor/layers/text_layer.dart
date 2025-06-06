@@ -67,11 +67,15 @@ class _TextViewState extends State<TextLayer> {
               setState(() {
                 widget.layerData.isDeleted = textController.text == "";
                 widget.layerData.isEditing = false;
-                context
-                    .read<ImageEditorProvider>()
-                    .updateSomeTextViewIsAlreadyEditing(false);
                 widget.layerData.text = textController.text;
               });
+
+              context
+                  .read<ImageEditorProvider>()
+                  .updateSomeTextViewIsAlreadyEditing(false);
+              if (widget.onUpdate != null) {
+                widget.onUpdate!();
+              }
             },
             onTapOutside: (a) {
               widget.layerData.text = textController.text;
@@ -83,9 +87,16 @@ class _TextViewState extends State<TextLayer> {
                     context
                         .read<ImageEditorProvider>()
                         .updateSomeTextViewIsAlreadyEditing(false);
+                    if (widget.onUpdate != null) {
+                      widget.onUpdate!();
+                    }
                   });
                 }
               });
+
+              context
+                  .read<ImageEditorProvider>()
+                  .updateSomeTextViewIsAlreadyEditing(false);
             },
             decoration: InputDecoration(
               border: InputBorder.none,

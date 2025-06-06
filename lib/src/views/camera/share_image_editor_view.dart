@@ -494,6 +494,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       child: LayersViewer(
                         layers: layers.where((x) => !x.isDeleted).toList(),
                         onUpdate: () {
+                          for (final layer in layers) {
+                            layer.isEditing = false;
+                          }
                           setState(() {});
                         },
                       ),
