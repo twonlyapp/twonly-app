@@ -17,6 +17,10 @@ Future tryTransmitMessages() async {
   final retransIds =
       await twonlyDB.messageRetransmissionDao.getRetransmitAbleMessages();
 
+  if (retransIds.isEmpty) return;
+
+  Log.info("Retransmitting ${retransIds.length} text messages");
+
   for (final retransId in retransIds) {
     sendRetransmitMessage(retransId);
   }

@@ -210,7 +210,8 @@ class ApiService {
   Future retransmitRawBytes() async {
     await lockRetransStore.protect(() async {
       var retransmit = await getRetransmission();
-      Log.info("retransmitting ${retransmit.keys.length} messages");
+      if (retransmit.keys.isEmpty) return;
+      Log.info("retransmitting ${retransmit.keys.length} raw bytes messages");
       bool gotError = false;
       for (final seq in retransmit.keys) {
         try {
