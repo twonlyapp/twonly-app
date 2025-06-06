@@ -56,6 +56,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   String? sendNextMediaToUserName;
   double tabDownPosition = 0;
   bool sendingOrLoadingImage = true;
+  bool loadingImage = true;
   bool isDisposed = false;
   HashSet<int> selectedUserIds = HashSet();
   double widthRatio = 1, heightRatio = 1, pixelRatio = 1;
@@ -78,6 +79,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     } else if (widget.videoFilePath != null) {
       setState(() {
         sendingOrLoadingImage = false;
+        loadingImage = false;
       });
       videoController = VideoPlayerController.file(widget.videoFilePath!);
       videoController?.setLooping(true);
@@ -381,6 +383,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     );
     setState(() {
       sendingOrLoadingImage = false;
+      loadingImage = false;
     });
   }
 
@@ -535,11 +538,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SaveToGalleryButton(
-                    getMergedImage: getMergedImage,
-                    mediaUploadId: mediaUploadId,
-                    videoFilePath: widget.videoFilePath,
-                    sendNextMediaToUserName: sendNextMediaToUserName,
-                    isLoading: sendingOrLoadingImage),
+                  getMergedImage: getMergedImage,
+                  mediaUploadId: mediaUploadId,
+                  videoFilePath: widget.videoFilePath,
+                  sendNextMediaToUserName: sendNextMediaToUserName,
+                  isLoading: loadingImage,
+                ),
                 if (sendNextMediaToUserName != null) SizedBox(width: 10),
                 if (sendNextMediaToUserName != null)
                   OutlinedButton(

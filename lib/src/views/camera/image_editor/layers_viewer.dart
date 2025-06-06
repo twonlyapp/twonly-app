@@ -53,7 +53,7 @@ class LayersViewer extends StatelessWidget {
         }),
         ...layers.whereType<TextLayerData>().map((layerItem) {
           return TextLayer(
-            key: GlobalKey(),
+            // key: GlobalKey(),
             layerData: layerItem,
             onUpdate: onUpdate,
           );

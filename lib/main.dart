@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/services/api/media_received.dart';
 import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/services/api.service.dart';
@@ -52,6 +53,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => settingsController),
         ChangeNotifierProvider(create: (_) => CustomChangeProvider()),
+        ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
       ],
       child: App(),
     ),

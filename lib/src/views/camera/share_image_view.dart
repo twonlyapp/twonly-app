@@ -17,17 +17,18 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class ShareImageView extends StatefulWidget {
-  const ShareImageView(
-      {super.key,
-      required this.imageBytesFuture,
-      required this.isRealTwonly,
-      required this.mirrorVideo,
-      required this.maxShowTime,
-      required this.selectedUserIds,
-      required this.updateStatus,
-      required this.videoUploadHandler,
-      required this.mediaUploadId,
-      this.enableVideoAudio});
+  const ShareImageView({
+    super.key,
+    required this.imageBytesFuture,
+    required this.isRealTwonly,
+    required this.mirrorVideo,
+    required this.maxShowTime,
+    required this.selectedUserIds,
+    required this.updateStatus,
+    required this.videoUploadHandler,
+    required this.mediaUploadId,
+    this.enableVideoAudio,
+  });
   final Future<Uint8List?> imageBytesFuture;
   final bool isRealTwonly;
   final bool mirrorVideo;

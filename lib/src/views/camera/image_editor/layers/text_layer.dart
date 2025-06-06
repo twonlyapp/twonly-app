@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 
@@ -65,6 +67,9 @@ class _TextViewState extends State<TextLayer> {
               setState(() {
                 widget.layerData.isDeleted = textController.text == "";
                 widget.layerData.isEditing = false;
+                context
+                    .read<ImageEditorProvider>()
+                    .updateSomeTextViewIsAlreadyEditing(false);
                 widget.layerData.text = textController.text;
               });
             },
@@ -75,6 +80,9 @@ class _TextViewState extends State<TextLayer> {
                   setState(() {
                     widget.layerData.isDeleted = textController.text == "";
                     widget.layerData.isEditing = false;
+                    context
+                        .read<ImageEditorProvider>()
+                        .updateSomeTextViewIsAlreadyEditing(false);
                   });
                 }
               });
@@ -96,6 +104,7 @@ class _TextViewState extends State<TextLayer> {
         ),
       );
     }
+
     return Stack(
       key: _widgetKey,
       children: [
@@ -110,15 +119,25 @@ class _TextViewState extends State<TextLayer> {
               });
             },
             onScaleEnd: (d) {
-              if (deleteLayer) widget.layerData.isDeleted = true;
+              if (deleteLayer) {
+                widget.layerData.isDeleted = true;
+                textController.text = "";
+              }
               elementIsScaled = false;
               setState(() {});
             },
-            onTap: () {
-              setState(() {
-                widget.layerData.isEditing = true;
-              });
-            },
+            onTap: (context
+                    .watch<ImageEditorProvider>()
+                    .someTextViewIsAlreadyEditing)
+                ? null
+                : () {
+                    setState(() {
+                      context
+                          .read<ImageEditorProvider>()
+                          .updateSomeTextViewIsAlreadyEditing(true);
+                      widget.layerData.isEditing = true;
+                    });
+                  },
             onScaleUpdate: (detail) {
               if (detail.pointerCount == 1) {
                 widget.layerData.offset = Offset(
