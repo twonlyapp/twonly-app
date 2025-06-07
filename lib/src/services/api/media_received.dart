@@ -77,7 +77,8 @@ Future<bool> isAllowedToDownload(bool isVideo) async {
 Future startDownloadMedia(Message message, bool force,
     {int retryCounter = 0}) async {
   if (message.contentJson == null) return;
-  if (downloadStartedForMediaReceived[message.messageId] != null) {
+  if (downloadStartedForMediaReceived[message.messageId] != null &&
+      retryCounter == 0) {
     DateTime started = downloadStartedForMediaReceived[message.messageId]!;
     Duration elapsed = DateTime.now().difference(started);
     if (elapsed <= Duration(seconds: 60)) {

@@ -264,7 +264,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         }
 
         await encryptAndSendMessageAsync(
-          message.messageId!,
+          null,
           fromUserId,
           MessageJson(
             kind: MessageKind.ack,

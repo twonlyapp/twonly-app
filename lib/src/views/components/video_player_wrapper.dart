@@ -22,10 +22,12 @@ class _VideoPlayerWrapperState extends State<VideoPlayerWrapper> {
     super.initState();
     _controller = VideoPlayerController.file(widget.videoPath)
       ..initialize().then((_) {
-        setState(() {
-          _controller.setLooping(true);
-          _controller.play();
-        });
+        if (context.mounted) {
+          setState(() {
+            _controller.setLooping(true);
+            _controller.play();
+          });
+        }
       });
   }
 

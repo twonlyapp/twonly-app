@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/image_editor/layers/filter_layer.dart';
 import 'package:twonly/src/views/camera/image_editor/layers/filters/datetime_filter.dart';
 import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
@@ -140,13 +141,18 @@ Future<List<Sticker>> getStickerIndex() async {
       return res;
     }
   }
-  final response =
-      await http.get(Uri.parse('https://twonly.eu/api/sticker/stickers.json'));
-  if (response.statusCode == 200) {
-    await indexFile.writeAsString(response.body);
-    List<dynamic> jsonList = json.decode(response.body);
-    return jsonList.map((json) => Sticker.fromJson(json)).toList();
-  } else {
+  try {
+    final response = await http
+        .get(Uri.parse('https://twonly.eu/api/sticker/stickers.json'));
+    if (response.statusCode == 200) {
+      await indexFile.writeAsString(response.body);
+      List<dynamic> jsonList = json.decode(response.body);
+      return jsonList.map((json) => Sticker.fromJson(json)).toList();
+    } else {
+      return res;
+    }
+  } catch (e) {
+    Log.error("$e");
     return res;
   }
 }
