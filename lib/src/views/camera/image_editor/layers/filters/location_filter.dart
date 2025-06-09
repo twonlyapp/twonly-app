@@ -4,7 +4,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/image_editor/layers/filter_layer.dart';
 import 'package:twonly/src/views/camera/image_editor/layers/filters/datetime_filter.dart';
-import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';

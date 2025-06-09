@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';

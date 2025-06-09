@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: api/server_to_client.proto
+//  source: api/websocket/server_to_client.proto
 //
 // @dart = 2.12
 

@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: api/client_to_server.proto
+//  source: api/websocket/client_to_server.proto
 //
 // @dart = 2.12
 
@@ -1531,276 +1531,6 @@ class ApplicationData_UpdateSignedPreKey extends $pb.GeneratedMessage {
   void clearSignedPrekeySignature() => clearField(3);
 }
 
-class ApplicationData_GetUploadToken extends $pb.GeneratedMessage {
-  factory ApplicationData_GetUploadToken({
-    $core.int? recipientsCount,
-  }) {
-    final $result = create();
-    if (recipientsCount != null) {
-      $result.recipientsCount = recipientsCount;
-    }
-    return $result;
-  }
-  ApplicationData_GetUploadToken._() : super();
-  factory ApplicationData_GetUploadToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetUploadToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetUploadToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.int>(1, _omitFieldNames ? '' : 'recipientsCount', $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  ApplicationData_GetUploadToken clone() => ApplicationData_GetUploadToken()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  ApplicationData_GetUploadToken copyWith(void Function(ApplicationData_GetUploadToken) updates) => super.copyWith((message) => updates(message as ApplicationData_GetUploadToken)) as ApplicationData_GetUploadToken;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetUploadToken create() => ApplicationData_GetUploadToken._();
-  ApplicationData_GetUploadToken createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetUploadToken> createRepeated() => $pb.PbList<ApplicationData_GetUploadToken>();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetUploadToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUploadToken>(create);
-  static ApplicationData_GetUploadToken? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.int get recipientsCount => $_getIZ(0);
-  @$pb.TagNumber(1)
-  set recipientsCount($core.int v) { $_setUnsignedInt32(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasRecipientsCount() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearRecipientsCount() => clearField(1);
-}
-
-class ApplicationData_UploadData extends $pb.GeneratedMessage {
-  factory ApplicationData_UploadData({
-    $core.List<$core.int>? uploadToken,
-    $core.int? offset,
-    $core.List<$core.int>? data,
-    $core.List<$core.int>? checksum,
-  }) {
-    final $result = create();
-    if (uploadToken != null) {
-      $result.uploadToken = uploadToken;
-    }
-    if (offset != null) {
-      $result.offset = offset;
-    }
-    if (data != null) {
-      $result.data = data;
-    }
-    if (checksum != null) {
-      $result.checksum = checksum;
-    }
-    return $result;
-  }
-  ApplicationData_UploadData._() : super();
-  factory ApplicationData_UploadData.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory ApplicationData_UploadData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UploadData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'data', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'checksum', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  ApplicationData_UploadData clone() => ApplicationData_UploadData()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  ApplicationData_UploadData copyWith(void Function(ApplicationData_UploadData) updates) => super.copyWith((message) => updates(message as ApplicationData_UploadData)) as ApplicationData_UploadData;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_UploadData create() => ApplicationData_UploadData._();
-  ApplicationData_UploadData createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_UploadData> createRepeated() => $pb.PbList<ApplicationData_UploadData>();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_UploadData getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UploadData>(create);
-  static ApplicationData_UploadData? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.List<$core.int> get uploadToken => $_getN(0);
-  @$pb.TagNumber(1)
-  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasUploadToken() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUploadToken() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.int get offset => $_getIZ(1);
-  @$pb.TagNumber(2)
-  set offset($core.int v) { $_setUnsignedInt32(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasOffset() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearOffset() => clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.List<$core.int> get data => $_getN(2);
-  @$pb.TagNumber(3)
-  set data($core.List<$core.int> v) { $_setBytes(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasData() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearData() => clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.List<$core.int> get checksum => $_getN(3);
-  @$pb.TagNumber(4)
-  set checksum($core.List<$core.int> v) { $_setBytes(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasChecksum() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearChecksum() => clearField(4);
-}
-
-class ApplicationData_UploadDone extends $pb.GeneratedMessage {
-  factory ApplicationData_UploadDone({
-    $core.List<$core.int>? uploadToken,
-    $core.int? recipientsCount,
-  }) {
-    final $result = create();
-    if (uploadToken != null) {
-      $result.uploadToken = uploadToken;
-    }
-    if (recipientsCount != null) {
-      $result.recipientsCount = recipientsCount;
-    }
-    return $result;
-  }
-  ApplicationData_UploadDone._() : super();
-  factory ApplicationData_UploadDone.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory ApplicationData_UploadDone.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UploadDone', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'uploadToken', $pb.PbFieldType.OY)
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'recipientsCount', $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  ApplicationData_UploadDone clone() => ApplicationData_UploadDone()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  ApplicationData_UploadDone copyWith(void Function(ApplicationData_UploadDone) updates) => super.copyWith((message) => updates(message as ApplicationData_UploadDone)) as ApplicationData_UploadDone;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_UploadDone create() => ApplicationData_UploadDone._();
-  ApplicationData_UploadDone createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_UploadDone> createRepeated() => $pb.PbList<ApplicationData_UploadDone>();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_UploadDone getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UploadDone>(create);
-  static ApplicationData_UploadDone? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.List<$core.int> get uploadToken => $_getN(0);
-  @$pb.TagNumber(1)
-  set uploadToken($core.List<$core.int> v) { $_setBytes(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasUploadToken() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearUploadToken() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.int get recipientsCount => $_getIZ(1);
-  @$pb.TagNumber(2)
-  set recipientsCount($core.int v) { $_setUnsignedInt32(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasRecipientsCount() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearRecipientsCount() => clearField(2);
-}
-
-class ApplicationData_DownloadData extends $pb.GeneratedMessage {
-  factory ApplicationData_DownloadData({
-    $core.List<$core.int>? downloadToken,
-    $core.int? offset,
-  }) {
-    final $result = create();
-    if (downloadToken != null) {
-      $result.downloadToken = downloadToken;
-    }
-    if (offset != null) {
-      $result.offset = offset;
-    }
-    return $result;
-  }
-  ApplicationData_DownloadData._() : super();
-  factory ApplicationData_DownloadData.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory ApplicationData_DownloadData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.DownloadData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY)
-    ..a<$core.int>(2, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  ApplicationData_DownloadData clone() => ApplicationData_DownloadData()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  ApplicationData_DownloadData copyWith(void Function(ApplicationData_DownloadData) updates) => super.copyWith((message) => updates(message as ApplicationData_DownloadData)) as ApplicationData_DownloadData;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_DownloadData create() => ApplicationData_DownloadData._();
-  ApplicationData_DownloadData createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_DownloadData> createRepeated() => $pb.PbList<ApplicationData_DownloadData>();
-  @$core.pragma('dart2js:noInline')
-  static ApplicationData_DownloadData getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_DownloadData>(create);
-  static ApplicationData_DownloadData? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.List<$core.int> get downloadToken => $_getN(0);
-  @$pb.TagNumber(1)
-  set downloadToken($core.List<$core.int> v) { $_setBytes(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasDownloadToken() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearDownloadToken() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.int get offset => $_getIZ(1);
-  @$pb.TagNumber(2)
-  set offset($core.int v) { $_setUnsignedInt32(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasOffset() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearOffset() => clearField(2);
-}
-
 class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
   factory ApplicationData_DownloadDone({
     $core.List<$core.int>? downloadToken,
@@ -1887,10 +1617,7 @@ enum ApplicationData_ApplicationData {
   textmessage, 
   getuserbyusername, 
   getprekeysbyuserid, 
-  getuploadtoken, 
-  uploaddata, 
   getuserbyid, 
-  downloaddata, 
   updategooglefcmtoken, 
   getlocation, 
   getcurrentplaninfos, 
@@ -1904,7 +1631,6 @@ enum ApplicationData_ApplicationData {
   removeadditionaluser, 
   updateplanoptions, 
   downloaddone, 
-  uploaddone, 
   getsignedprekeybyuserid, 
   updatesignedprekey, 
   deleteaccount, 
@@ -1916,10 +1642,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_TextMessage? textmessage,
     ApplicationData_GetUserByUsername? getuserbyusername,
     ApplicationData_GetPrekeysByUserId? getprekeysbyuserid,
-    ApplicationData_GetUploadToken? getuploadtoken,
-    ApplicationData_UploadData? uploaddata,
     ApplicationData_GetUserById? getuserbyid,
-    ApplicationData_DownloadData? downloaddata,
     ApplicationData_UpdateGoogleFcmToken? updategooglefcmtoken,
     ApplicationData_GetLocation? getlocation,
     ApplicationData_GetCurrentPlanInfos? getcurrentplaninfos,
@@ -1933,7 +1656,6 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_RemoveAdditionalUser? removeadditionaluser,
     ApplicationData_UpdatePlanOptions? updateplanoptions,
     ApplicationData_DownloadDone? downloaddone,
-    ApplicationData_UploadDone? uploaddone,
     ApplicationData_GetSignedPreKeyByUserId? getsignedprekeybyuserid,
     ApplicationData_UpdateSignedPreKey? updatesignedprekey,
     ApplicationData_DeleteAccount? deleteaccount,
@@ -1948,17 +1670,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (getprekeysbyuserid != null) {
       $result.getprekeysbyuserid = getprekeysbyuserid;
     }
-    if (getuploadtoken != null) {
-      $result.getuploadtoken = getuploadtoken;
-    }
-    if (uploaddata != null) {
-      $result.uploaddata = uploaddata;
-    }
     if (getuserbyid != null) {
       $result.getuserbyid = getuserbyid;
-    }
-    if (downloaddata != null) {
-      $result.downloaddata = downloaddata;
     }
     if (updategooglefcmtoken != null) {
       $result.updategooglefcmtoken = updategooglefcmtoken;
@@ -1999,9 +1712,6 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (downloaddone != null) {
       $result.downloaddone = downloaddone;
     }
-    if (uploaddone != null) {
-      $result.uploaddone = uploaddone;
-    }
     if (getsignedprekeybyuserid != null) {
       $result.getsignedprekeybyuserid = getsignedprekeybyuserid;
     }
@@ -2021,10 +1731,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     1 : ApplicationData_ApplicationData.textmessage,
     2 : ApplicationData_ApplicationData.getuserbyusername,
     3 : ApplicationData_ApplicationData.getprekeysbyuserid,
-    4 : ApplicationData_ApplicationData.getuploadtoken,
-    5 : ApplicationData_ApplicationData.uploaddata,
     6 : ApplicationData_ApplicationData.getuserbyid,
-    7 : ApplicationData_ApplicationData.downloaddata,
     8 : ApplicationData_ApplicationData.updategooglefcmtoken,
     9 : ApplicationData_ApplicationData.getlocation,
     10 : ApplicationData_ApplicationData.getcurrentplaninfos,
@@ -2038,21 +1745,17 @@ class ApplicationData extends $pb.GeneratedMessage {
     18 : ApplicationData_ApplicationData.removeadditionaluser,
     19 : ApplicationData_ApplicationData.updateplanoptions,
     20 : ApplicationData_ApplicationData.downloaddone,
-    21 : ApplicationData_ApplicationData.uploaddone,
     22 : ApplicationData_ApplicationData.getsignedprekeybyuserid,
     23 : ApplicationData_ApplicationData.updatesignedprekey,
     24 : ApplicationData_ApplicationData.deleteaccount,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24])
+    ..oo(0, [1, 2, 3, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
     ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
     ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
-    ..aOM<ApplicationData_GetUploadToken>(4, _omitFieldNames ? '' : 'getuploadtoken', subBuilder: ApplicationData_GetUploadToken.create)
-    ..aOM<ApplicationData_UploadData>(5, _omitFieldNames ? '' : 'uploaddata', subBuilder: ApplicationData_UploadData.create)
     ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getuserbyid', subBuilder: ApplicationData_GetUserById.create)
-    ..aOM<ApplicationData_DownloadData>(7, _omitFieldNames ? '' : 'downloaddata', subBuilder: ApplicationData_DownloadData.create)
     ..aOM<ApplicationData_UpdateGoogleFcmToken>(8, _omitFieldNames ? '' : 'updategooglefcmtoken', subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
     ..aOM<ApplicationData_GetLocation>(9, _omitFieldNames ? '' : 'getlocation', subBuilder: ApplicationData_GetLocation.create)
     ..aOM<ApplicationData_GetCurrentPlanInfos>(10, _omitFieldNames ? '' : 'getcurrentplaninfos', subBuilder: ApplicationData_GetCurrentPlanInfos.create)
@@ -2066,7 +1769,6 @@ class ApplicationData extends $pb.GeneratedMessage {
     ..aOM<ApplicationData_RemoveAdditionalUser>(18, _omitFieldNames ? '' : 'removeadditionaluser', subBuilder: ApplicationData_RemoveAdditionalUser.create)
     ..aOM<ApplicationData_UpdatePlanOptions>(19, _omitFieldNames ? '' : 'updateplanoptions', subBuilder: ApplicationData_UpdatePlanOptions.create)
     ..aOM<ApplicationData_DownloadDone>(20, _omitFieldNames ? '' : 'downloaddone', subBuilder: ApplicationData_DownloadDone.create)
-    ..aOM<ApplicationData_UploadDone>(21, _omitFieldNames ? '' : 'uploaddone', subBuilder: ApplicationData_UploadDone.create)
     ..aOM<ApplicationData_GetSignedPreKeyByUserId>(22, _omitFieldNames ? '' : 'getsignedprekeybyuserid', subBuilder: ApplicationData_GetSignedPreKeyByUserId.create)
     ..aOM<ApplicationData_UpdateSignedPreKey>(23, _omitFieldNames ? '' : 'updatesignedprekey', subBuilder: ApplicationData_UpdateSignedPreKey.create)
     ..aOM<ApplicationData_DeleteAccount>(24, _omitFieldNames ? '' : 'deleteaccount', subBuilder: ApplicationData_DeleteAccount.create)
@@ -2130,236 +1832,192 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   ApplicationData_GetPrekeysByUserId ensureGetprekeysbyuserid() => $_ensure(2);
 
-  @$pb.TagNumber(4)
-  ApplicationData_GetUploadToken get getuploadtoken => $_getN(3);
-  @$pb.TagNumber(4)
-  set getuploadtoken(ApplicationData_GetUploadToken v) { setField(4, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasGetuploadtoken() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearGetuploadtoken() => clearField(4);
-  @$pb.TagNumber(4)
-  ApplicationData_GetUploadToken ensureGetuploadtoken() => $_ensure(3);
-
-  @$pb.TagNumber(5)
-  ApplicationData_UploadData get uploaddata => $_getN(4);
-  @$pb.TagNumber(5)
-  set uploaddata(ApplicationData_UploadData v) { setField(5, v); }
-  @$pb.TagNumber(5)
-  $core.bool hasUploaddata() => $_has(4);
-  @$pb.TagNumber(5)
-  void clearUploaddata() => clearField(5);
-  @$pb.TagNumber(5)
-  ApplicationData_UploadData ensureUploaddata() => $_ensure(4);
-
   @$pb.TagNumber(6)
-  ApplicationData_GetUserById get getuserbyid => $_getN(5);
+  ApplicationData_GetUserById get getuserbyid => $_getN(3);
   @$pb.TagNumber(6)
   set getuserbyid(ApplicationData_GetUserById v) { setField(6, v); }
   @$pb.TagNumber(6)
-  $core.bool hasGetuserbyid() => $_has(5);
+  $core.bool hasGetuserbyid() => $_has(3);
   @$pb.TagNumber(6)
   void clearGetuserbyid() => clearField(6);
   @$pb.TagNumber(6)
-  ApplicationData_GetUserById ensureGetuserbyid() => $_ensure(5);
-
-  @$pb.TagNumber(7)
-  ApplicationData_DownloadData get downloaddata => $_getN(6);
-  @$pb.TagNumber(7)
-  set downloaddata(ApplicationData_DownloadData v) { setField(7, v); }
-  @$pb.TagNumber(7)
-  $core.bool hasDownloaddata() => $_has(6);
-  @$pb.TagNumber(7)
-  void clearDownloaddata() => clearField(7);
-  @$pb.TagNumber(7)
-  ApplicationData_DownloadData ensureDownloaddata() => $_ensure(6);
+  ApplicationData_GetUserById ensureGetuserbyid() => $_ensure(3);
 
   @$pb.TagNumber(8)
-  ApplicationData_UpdateGoogleFcmToken get updategooglefcmtoken => $_getN(7);
+  ApplicationData_UpdateGoogleFcmToken get updategooglefcmtoken => $_getN(4);
   @$pb.TagNumber(8)
   set updategooglefcmtoken(ApplicationData_UpdateGoogleFcmToken v) { setField(8, v); }
   @$pb.TagNumber(8)
-  $core.bool hasUpdategooglefcmtoken() => $_has(7);
+  $core.bool hasUpdategooglefcmtoken() => $_has(4);
   @$pb.TagNumber(8)
   void clearUpdategooglefcmtoken() => clearField(8);
   @$pb.TagNumber(8)
-  ApplicationData_UpdateGoogleFcmToken ensureUpdategooglefcmtoken() => $_ensure(7);
+  ApplicationData_UpdateGoogleFcmToken ensureUpdategooglefcmtoken() => $_ensure(4);
 
   @$pb.TagNumber(9)
-  ApplicationData_GetLocation get getlocation => $_getN(8);
+  ApplicationData_GetLocation get getlocation => $_getN(5);
   @$pb.TagNumber(9)
   set getlocation(ApplicationData_GetLocation v) { setField(9, v); }
   @$pb.TagNumber(9)
-  $core.bool hasGetlocation() => $_has(8);
+  $core.bool hasGetlocation() => $_has(5);
   @$pb.TagNumber(9)
   void clearGetlocation() => clearField(9);
   @$pb.TagNumber(9)
-  ApplicationData_GetLocation ensureGetlocation() => $_ensure(8);
+  ApplicationData_GetLocation ensureGetlocation() => $_ensure(5);
 
   @$pb.TagNumber(10)
-  ApplicationData_GetCurrentPlanInfos get getcurrentplaninfos => $_getN(9);
+  ApplicationData_GetCurrentPlanInfos get getcurrentplaninfos => $_getN(6);
   @$pb.TagNumber(10)
   set getcurrentplaninfos(ApplicationData_GetCurrentPlanInfos v) { setField(10, v); }
   @$pb.TagNumber(10)
-  $core.bool hasGetcurrentplaninfos() => $_has(9);
+  $core.bool hasGetcurrentplaninfos() => $_has(6);
   @$pb.TagNumber(10)
   void clearGetcurrentplaninfos() => clearField(10);
   @$pb.TagNumber(10)
-  ApplicationData_GetCurrentPlanInfos ensureGetcurrentplaninfos() => $_ensure(9);
+  ApplicationData_GetCurrentPlanInfos ensureGetcurrentplaninfos() => $_ensure(6);
 
   @$pb.TagNumber(11)
-  ApplicationData_RedeemVoucher get redeemvoucher => $_getN(10);
+  ApplicationData_RedeemVoucher get redeemvoucher => $_getN(7);
   @$pb.TagNumber(11)
   set redeemvoucher(ApplicationData_RedeemVoucher v) { setField(11, v); }
   @$pb.TagNumber(11)
-  $core.bool hasRedeemvoucher() => $_has(10);
+  $core.bool hasRedeemvoucher() => $_has(7);
   @$pb.TagNumber(11)
   void clearRedeemvoucher() => clearField(11);
   @$pb.TagNumber(11)
-  ApplicationData_RedeemVoucher ensureRedeemvoucher() => $_ensure(10);
+  ApplicationData_RedeemVoucher ensureRedeemvoucher() => $_ensure(7);
 
   @$pb.TagNumber(12)
-  ApplicationData_GetAvailablePlans get getavailableplans => $_getN(11);
+  ApplicationData_GetAvailablePlans get getavailableplans => $_getN(8);
   @$pb.TagNumber(12)
   set getavailableplans(ApplicationData_GetAvailablePlans v) { setField(12, v); }
   @$pb.TagNumber(12)
-  $core.bool hasGetavailableplans() => $_has(11);
+  $core.bool hasGetavailableplans() => $_has(8);
   @$pb.TagNumber(12)
   void clearGetavailableplans() => clearField(12);
   @$pb.TagNumber(12)
-  ApplicationData_GetAvailablePlans ensureGetavailableplans() => $_ensure(11);
+  ApplicationData_GetAvailablePlans ensureGetavailableplans() => $_ensure(8);
 
   @$pb.TagNumber(13)
-  ApplicationData_CreateVoucher get createvoucher => $_getN(12);
+  ApplicationData_CreateVoucher get createvoucher => $_getN(9);
   @$pb.TagNumber(13)
   set createvoucher(ApplicationData_CreateVoucher v) { setField(13, v); }
   @$pb.TagNumber(13)
-  $core.bool hasCreatevoucher() => $_has(12);
+  $core.bool hasCreatevoucher() => $_has(9);
   @$pb.TagNumber(13)
   void clearCreatevoucher() => clearField(13);
   @$pb.TagNumber(13)
-  ApplicationData_CreateVoucher ensureCreatevoucher() => $_ensure(12);
+  ApplicationData_CreateVoucher ensureCreatevoucher() => $_ensure(9);
 
   @$pb.TagNumber(14)
-  ApplicationData_GetVouchers get getvouchers => $_getN(13);
+  ApplicationData_GetVouchers get getvouchers => $_getN(10);
   @$pb.TagNumber(14)
   set getvouchers(ApplicationData_GetVouchers v) { setField(14, v); }
   @$pb.TagNumber(14)
-  $core.bool hasGetvouchers() => $_has(13);
+  $core.bool hasGetvouchers() => $_has(10);
   @$pb.TagNumber(14)
   void clearGetvouchers() => clearField(14);
   @$pb.TagNumber(14)
-  ApplicationData_GetVouchers ensureGetvouchers() => $_ensure(13);
+  ApplicationData_GetVouchers ensureGetvouchers() => $_ensure(10);
 
   @$pb.TagNumber(15)
-  ApplicationData_SwitchToPayedPlan get switchtopayedplan => $_getN(14);
+  ApplicationData_SwitchToPayedPlan get switchtopayedplan => $_getN(11);
   @$pb.TagNumber(15)
   set switchtopayedplan(ApplicationData_SwitchToPayedPlan v) { setField(15, v); }
   @$pb.TagNumber(15)
-  $core.bool hasSwitchtopayedplan() => $_has(14);
+  $core.bool hasSwitchtopayedplan() => $_has(11);
   @$pb.TagNumber(15)
   void clearSwitchtopayedplan() => clearField(15);
   @$pb.TagNumber(15)
-  ApplicationData_SwitchToPayedPlan ensureSwitchtopayedplan() => $_ensure(14);
+  ApplicationData_SwitchToPayedPlan ensureSwitchtopayedplan() => $_ensure(11);
 
   @$pb.TagNumber(16)
-  ApplicationData_GetAddAccountsInvites get getaddaccountsinvites => $_getN(15);
+  ApplicationData_GetAddAccountsInvites get getaddaccountsinvites => $_getN(12);
   @$pb.TagNumber(16)
   set getaddaccountsinvites(ApplicationData_GetAddAccountsInvites v) { setField(16, v); }
   @$pb.TagNumber(16)
-  $core.bool hasGetaddaccountsinvites() => $_has(15);
+  $core.bool hasGetaddaccountsinvites() => $_has(12);
   @$pb.TagNumber(16)
   void clearGetaddaccountsinvites() => clearField(16);
   @$pb.TagNumber(16)
-  ApplicationData_GetAddAccountsInvites ensureGetaddaccountsinvites() => $_ensure(15);
+  ApplicationData_GetAddAccountsInvites ensureGetaddaccountsinvites() => $_ensure(12);
 
   @$pb.TagNumber(17)
-  ApplicationData_RedeemAdditionalCode get redeemadditionalcode => $_getN(16);
+  ApplicationData_RedeemAdditionalCode get redeemadditionalcode => $_getN(13);
   @$pb.TagNumber(17)
   set redeemadditionalcode(ApplicationData_RedeemAdditionalCode v) { setField(17, v); }
   @$pb.TagNumber(17)
-  $core.bool hasRedeemadditionalcode() => $_has(16);
+  $core.bool hasRedeemadditionalcode() => $_has(13);
   @$pb.TagNumber(17)
   void clearRedeemadditionalcode() => clearField(17);
   @$pb.TagNumber(17)
-  ApplicationData_RedeemAdditionalCode ensureRedeemadditionalcode() => $_ensure(16);
+  ApplicationData_RedeemAdditionalCode ensureRedeemadditionalcode() => $_ensure(13);
 
   @$pb.TagNumber(18)
-  ApplicationData_RemoveAdditionalUser get removeadditionaluser => $_getN(17);
+  ApplicationData_RemoveAdditionalUser get removeadditionaluser => $_getN(14);
   @$pb.TagNumber(18)
   set removeadditionaluser(ApplicationData_RemoveAdditionalUser v) { setField(18, v); }
   @$pb.TagNumber(18)
-  $core.bool hasRemoveadditionaluser() => $_has(17);
+  $core.bool hasRemoveadditionaluser() => $_has(14);
   @$pb.TagNumber(18)
   void clearRemoveadditionaluser() => clearField(18);
   @$pb.TagNumber(18)
-  ApplicationData_RemoveAdditionalUser ensureRemoveadditionaluser() => $_ensure(17);
+  ApplicationData_RemoveAdditionalUser ensureRemoveadditionaluser() => $_ensure(14);
 
   @$pb.TagNumber(19)
-  ApplicationData_UpdatePlanOptions get updateplanoptions => $_getN(18);
+  ApplicationData_UpdatePlanOptions get updateplanoptions => $_getN(15);
   @$pb.TagNumber(19)
   set updateplanoptions(ApplicationData_UpdatePlanOptions v) { setField(19, v); }
   @$pb.TagNumber(19)
-  $core.bool hasUpdateplanoptions() => $_has(18);
+  $core.bool hasUpdateplanoptions() => $_has(15);
   @$pb.TagNumber(19)
   void clearUpdateplanoptions() => clearField(19);
   @$pb.TagNumber(19)
-  ApplicationData_UpdatePlanOptions ensureUpdateplanoptions() => $_ensure(18);
+  ApplicationData_UpdatePlanOptions ensureUpdateplanoptions() => $_ensure(15);
 
   @$pb.TagNumber(20)
-  ApplicationData_DownloadDone get downloaddone => $_getN(19);
+  ApplicationData_DownloadDone get downloaddone => $_getN(16);
   @$pb.TagNumber(20)
   set downloaddone(ApplicationData_DownloadDone v) { setField(20, v); }
   @$pb.TagNumber(20)
-  $core.bool hasDownloaddone() => $_has(19);
+  $core.bool hasDownloaddone() => $_has(16);
   @$pb.TagNumber(20)
   void clearDownloaddone() => clearField(20);
   @$pb.TagNumber(20)
-  ApplicationData_DownloadDone ensureDownloaddone() => $_ensure(19);
-
-  @$pb.TagNumber(21)
-  ApplicationData_UploadDone get uploaddone => $_getN(20);
-  @$pb.TagNumber(21)
-  set uploaddone(ApplicationData_UploadDone v) { setField(21, v); }
-  @$pb.TagNumber(21)
-  $core.bool hasUploaddone() => $_has(20);
-  @$pb.TagNumber(21)
-  void clearUploaddone() => clearField(21);
-  @$pb.TagNumber(21)
-  ApplicationData_UploadDone ensureUploaddone() => $_ensure(20);
+  ApplicationData_DownloadDone ensureDownloaddone() => $_ensure(16);
 
   @$pb.TagNumber(22)
-  ApplicationData_GetSignedPreKeyByUserId get getsignedprekeybyuserid => $_getN(21);
+  ApplicationData_GetSignedPreKeyByUserId get getsignedprekeybyuserid => $_getN(17);
   @$pb.TagNumber(22)
   set getsignedprekeybyuserid(ApplicationData_GetSignedPreKeyByUserId v) { setField(22, v); }
   @$pb.TagNumber(22)
-  $core.bool hasGetsignedprekeybyuserid() => $_has(21);
+  $core.bool hasGetsignedprekeybyuserid() => $_has(17);
   @$pb.TagNumber(22)
   void clearGetsignedprekeybyuserid() => clearField(22);
   @$pb.TagNumber(22)
-  ApplicationData_GetSignedPreKeyByUserId ensureGetsignedprekeybyuserid() => $_ensure(21);
+  ApplicationData_GetSignedPreKeyByUserId ensureGetsignedprekeybyuserid() => $_ensure(17);
 
   @$pb.TagNumber(23)
-  ApplicationData_UpdateSignedPreKey get updatesignedprekey => $_getN(22);
+  ApplicationData_UpdateSignedPreKey get updatesignedprekey => $_getN(18);
   @$pb.TagNumber(23)
   set updatesignedprekey(ApplicationData_UpdateSignedPreKey v) { setField(23, v); }
   @$pb.TagNumber(23)
-  $core.bool hasUpdatesignedprekey() => $_has(22);
+  $core.bool hasUpdatesignedprekey() => $_has(18);
   @$pb.TagNumber(23)
   void clearUpdatesignedprekey() => clearField(23);
   @$pb.TagNumber(23)
-  ApplicationData_UpdateSignedPreKey ensureUpdatesignedprekey() => $_ensure(22);
+  ApplicationData_UpdateSignedPreKey ensureUpdatesignedprekey() => $_ensure(18);
 
   @$pb.TagNumber(24)
-  ApplicationData_DeleteAccount get deleteaccount => $_getN(23);
+  ApplicationData_DeleteAccount get deleteaccount => $_getN(19);
   @$pb.TagNumber(24)
   set deleteaccount(ApplicationData_DeleteAccount v) { setField(24, v); }
   @$pb.TagNumber(24)
-  $core.bool hasDeleteaccount() => $_has(23);
+  $core.bool hasDeleteaccount() => $_has(19);
   @$pb.TagNumber(24)
   void clearDeleteaccount() => clearField(24);
   @$pb.TagNumber(24)
-  ApplicationData_DeleteAccount ensureDeleteaccount() => $_ensure(23);
+  ApplicationData_DeleteAccount ensureDeleteaccount() => $_ensure(19);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

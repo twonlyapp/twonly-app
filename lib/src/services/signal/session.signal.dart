@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';

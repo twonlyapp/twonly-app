@@ -13,11 +13,11 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
-import 'package:twonly/src/model/protobuf/api/error.pb.dart';
-import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
+import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
-import 'package:twonly/src/model/protobuf/api/server_to_client.pbserver.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_received.dart';
@@ -435,25 +435,6 @@ class ApiService {
     return await sendRequestSync(req, contactId: userId);
   }
 
-  Future<Result> getUploadToken(int recipientsCount) async {
-    var get = ApplicationData_GetUploadToken()
-      ..recipientsCount = recipientsCount;
-    var appData = ApplicationData()..getuploadtoken = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
-  }
-
-  Future<Result> getDownloadTokens(List<int> uploadToken, int recipientsCount,
-      {bool ensureRetransmission = false}) async {
-    var get = ApplicationData_UploadDone()
-      ..uploadToken = uploadToken
-      ..recipientsCount = recipientsCount;
-    var appData = ApplicationData()..uploaddone = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req,
-        ensureRetransmission: ensureRetransmission);
-  }
-
   Future<Result> downloadDone(List<int> token) async {
     var get = ApplicationData_DownloadDone()..downloadToken = token;
     var appData = ApplicationData()..downloaddone = get;
@@ -466,21 +447,6 @@ class ApiService {
     var appData = ApplicationData()..getlocation = get;
     var req = createClientToServerFromApplicationData(appData);
     return await sendRequestSync(req);
-  }
-
-  Future<Result> uploadData(List<int> uploadToken, Uint8List data, int offset,
-      List<int>? checksum) async {
-    var get = ApplicationData_UploadData()
-      ..uploadToken = uploadToken
-      ..data = data
-      ..offset = offset;
-    if (checksum != null) {
-      get.checksum = checksum;
-    }
-    var appData = ApplicationData()..uploaddata = get;
-    var req = createClientToServerFromApplicationData(appData);
-    final result = await sendRequestSync(req);
-    return result;
   }
 
   Future<Result> getUserData(String username) async {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class TransactionView extends StatefulWidget {

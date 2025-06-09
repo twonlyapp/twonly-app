@@ -4,7 +4,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/protobuf/api/error.pb.dart' show ErrorCode;
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart'
+    show ErrorCode;
 import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/save_to_gallery.dart';
@@ -430,7 +431,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       );
 
       /// then call the upload process in the background
-      encryptAndPreUploadMediaFiles(
+      encryptMediaFiles(
         mediaUploadId!,
         imageHandler,
         videoUploadHandler,

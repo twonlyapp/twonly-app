@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: api/client_to_server.proto
+//  source: api/http/http_requests.proto
 //
 // @dart = 2.12
 
@@ -10,5 +10,5 @@
 // ignore_for_file: non_constant_identifier_names, prefer_final_fields
 // ignore_for_file: unnecessary_import, unnecessary_this, unused_import
 
-export 'client_to_server.pb.dart';
+export 'http_requests.pb.dart';
 

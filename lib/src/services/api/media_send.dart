@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
+import 'dart:math';
+import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
@@ -15,12 +19,11 @@ import 'package:twonly/src/database/tables/media_uploads_table.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/protobuf/api/error.pb.dart';
-import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/api/media_received.dart';
 import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -73,7 +76,6 @@ Future<bool> checkForFailedUploads() async {
     int affectedRows = await twonlyDB.mediaUploadsDao.updateMediaUpload(
       message.mediaUploadId!,
       MediaUploadsCompanion(
-        uploadTokens: Value(null), // reupload them
         state: Value(UploadState.pending),
         encryptionData: Value(
           null, // start from scratch e.q. encrypt the files again if already happen
@@ -119,14 +121,6 @@ Future retryMediaUpload(bool appRestarted, {int maxRetries = 3}) async {
         if (appRestarted) {
           /// When the app got restarted and the messageIds or the metadata is not
           /// set then the app was closed before the images was send.
-
-          // the media upload was canceled,
-          if (mediaFile.uploadTokens != null) {
-            /// the file was already uploaded.
-            /// notify the server to remove the upload
-            apiService.getDownloadTokens(
-                mediaFile.uploadTokens!.uploadToken, 0);
-          }
           await twonlyDB.mediaUploadsDao
               .deleteMediaUpload(mediaFile.mediaUploadId);
           Log.info(
@@ -192,7 +186,6 @@ Future<Uint8List> addOrModifyImageToUpload(
     mediaUploadId,
     MediaUploadsCompanion(
       encryptionData: Value(null),
-      uploadTokens: Value(null),
     ),
   );
   return imageBytesCompressed;
@@ -202,7 +195,7 @@ Future handlePreProcessingState(MediaUpload media) async {
   try {
     final imageHandler = readMediaFile(media.mediaUploadId, "png");
     final videoHandler = compressVideoIfExists(media.mediaUploadId);
-    await encryptAndPreUploadMediaFiles(
+    await encryptMediaFiles(
       media.mediaUploadId,
       imageHandler,
       videoHandler,
@@ -213,7 +206,7 @@ Future handlePreProcessingState(MediaUpload media) async {
   }
 }
 
-Future encryptAndPreUploadMediaFiles(
+Future encryptMediaFiles(
   int mediaUploadId,
   Future imageHandler,
   Future<bool>? videoHandler,
@@ -237,10 +230,12 @@ Future encryptAndPreUploadMediaFiles(
   state.encryptionKey = secretKey.bytes;
   state.encryptionNonce = xchacha20.newNonce();
 
-  final secretBox = await xchacha20.encrypt(
-    dataToEncrypt,
-    secretKey: secretKey,
-    nonce: state.encryptionNonce,
+  final secretBox = await Isolate.run(
+    () => xchacha20.encrypt(
+      dataToEncrypt,
+      secretKey: secretKey,
+      nonce: state.encryptionNonce,
+    ),
   );
 
   state.encryptionMac = secretBox.mac.bytes;
@@ -262,7 +257,7 @@ Future encryptAndPreUploadMediaFiles(
       encryptionData: Value(state),
     ),
   );
-  await handleNextMediaUploadSteps(mediaUploadId);
+  handleNextMediaUploadSteps(mediaUploadId);
 }
 
 Future finalizeUpload(int mediaUploadId, List<int> contactIds,
@@ -318,6 +313,8 @@ Future finalizeUpload(int mediaUploadId, List<int> contactIds,
       metadata: Value(metadata),
     ),
   );
+
+  handleNextMediaUploadSteps(mediaUploadId);
 }
 
 final lockingHandleNextMediaUploadStep = Mutex();
@@ -340,27 +337,12 @@ Future handleNextMediaUploadSteps(int mediaUploadId) async {
         return false;
       }
 
-      if (mediaUpload.uploadTokens == null) {
-        /// the files are not yet uploaded, handle upload...
-        /// if the upload succeed the uploadTokens was updated and this function
-        /// can be called again to processed the upload done
-        return await handleMediaUpload(mediaUploadId);
-      }
-
       if (mediaUpload.messageIds == null || mediaUpload.metadata == null) {
         /// the finalize function was not called yet...
         return false;
       }
 
-      // at this point the media file is uploaded and the receiver are known.
-      final downloadTokens = mediaUpload.uploadTokens!.downloadTokens;
-      if (downloadTokens.isEmpty) {
-        /// there are no download tokens yet, request them...
-        return await handleUploadDone(mediaUpload);
-      }
-
-      // download tokens are known so send the media file to the receivers
-      await handleNotifyReceiver(mediaUpload);
+      return await handleMediaUpload(mediaUpload);
     } catch (e) {
       Log.error("Non recoverable error while sending media file: $e");
       await handleUploadError(mediaUpload);
@@ -392,39 +374,80 @@ Future handleUploadError(MediaUpload mediaUpload) async {
   await twonlyDB.mediaUploadsDao.deleteMediaUpload(mediaUpload.mediaUploadId);
 }
 
-Future<bool> handleUploadDone(MediaUpload media) async {
-  Result res = await apiService.getDownloadTokens(
-      media.uploadTokens!.uploadToken, media.messageIds!.length);
+Future<bool> handleMediaUpload(MediaUpload media) async {
+  Uint8List bytesToUpload =
+      await readMediaFile(media.mediaUploadId, "encrypted");
 
-  if (res.isError || !res.value.hasDownloadtokens()) {
-    if (res.isError) {
-      if (res.error == ErrorCode.PlanNotAllowed) {
-        throw Exception("PlanNotAllowed");
-      }
-      if (res.error == ErrorCode.PlanLimitReached) {
-        throw Exception("PlanLimitReached");
-      }
+  if (media.messageIds == null) return false;
+
+  List<Uint8List> downloadTokens =
+      createDownloadTokens(media.messageIds!.length);
+
+  List<TextMessage> messagesOnSuccess = [];
+
+  for (var i = 0; i < media.messageIds!.length; i++) {
+    MessageJson msg = MessageJson(
+      kind: MessageKind.media,
+      messageId: media.messageIds![i],
+      content: MediaMessageContent(
+        downloadToken: downloadTokens[i],
+        maxShowTime: media.metadata!.maxShowTime,
+        isRealTwonly: media.metadata!.isRealTwonly,
+        isVideo: media.metadata!.isVideo,
+        mirrorVideo: media.metadata!.mirrorVideo,
+        encryptionKey: media.encryptionData!.encryptionKey,
+        encryptionMac: media.encryptionData!.encryptionMac,
+        encryptionNonce: media.encryptionData!.encryptionNonce,
+      ),
+      timestamp: media.metadata!.messageSendAt,
+    );
+
+    Uint8List plaintextContent =
+        Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson()))));
+
+    Message? message = await twonlyDB.messagesDao
+        .getMessageByMessageId(media.messageIds![i])
+        .getSingleOrNull();
+
+    if (message == null) continue;
+
+    await twonlyDB.contactsDao.incFlameCounter(
+      message.contactId,
+      false,
+      message.sendAt,
+    );
+
+    Uint8List? encryptedBytes = await signalEncryptMessage(
+      message.contactId,
+      plaintextContent,
+    );
+
+    if (encryptedBytes == null) continue;
+    final pushKind = (media.metadata!.isRealTwonly)
+        ? PushKind.twonly
+        : (media.metadata!.isVideo)
+            ? PushKind.video
+            : PushKind.image;
+
+    var messageOnSuccess = TextMessage()
+      ..body = encryptedBytes
+      ..userId = Int64(message.contactId);
+
+    var pushData = await getPushData(message.contactId, pushKind);
+    if (pushData != null) {
+      messageOnSuccess.pushData = pushData.toList();
     }
-    Log.error("Upload done will be tried again when reconnected to server!");
-    return false;
+
+    messagesOnSuccess.add(messageOnSuccess);
   }
 
-  Response_DownloadTokens tokens = res.value.downloadtokens;
-  var token = MediaUploadTokens();
-  token.uploadToken = media.uploadTokens!.uploadToken;
-  token.downloadTokens = tokens.downloadTokens;
-
-  await twonlyDB.mediaUploadsDao.updateMediaUpload(
-    media.mediaUploadId,
-    MediaUploadsCompanion(
-      uploadTokens: Value(token),
-    ),
+  final uploadRequest = UploadRequest(
+    messagesOnSuccess: messagesOnSuccess,
+    downloadTokens: downloadTokens,
+    encryptedData: bytesToUpload,
   );
-  return true;
-}
 
-Future<bool> handleMediaUpload(int mediaUploadId) async {
-  Uint8List bytesToUpload = await readMediaFile(mediaUploadId, "encrypted");
+  final uploadRequestBytes = uploadRequest.writeToBuffer();
 
   final storage = FlutterSecureStorage();
   String? apiAuthToken = await storage.read(key: "api_auth_token");
@@ -445,11 +468,11 @@ Future<bool> handleMediaUpload(int mediaUploadId) async {
 
   requestMultipart.files.add(http.MultipartFile.fromBytes(
     "file",
-    bytesToUpload,
+    uploadRequestBytes,
     filename: "upload",
   ));
 
-  Log.info("Starting upload from $mediaUploadId ");
+  Log.info("Starting upload from ${media.mediaUploadId}");
 
   try {
     var streamedResponse = await requestMultipart.send();
@@ -457,94 +480,43 @@ Future<bool> handleMediaUpload(int mediaUploadId) async {
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200) {
-      if (response.body.length != 64) {
-        Log.error("Got invalid upload token.");
-        return false;
-      }
-
-      final uploadToken = hexToUint8List(response.body);
-
-      var token = MediaUploadTokens();
-      token.uploadToken = uploadToken;
-      token.downloadTokens = [];
+      Log.info("Upload was success!");
 
       await twonlyDB.mediaUploadsDao.updateMediaUpload(
-        mediaUploadId,
+        media.mediaUploadId,
         MediaUploadsCompanion(
-          uploadTokens: Value(token),
+          state: Value(UploadState.receiverNotified),
         ),
       );
+
+      for (final messageId in media.messageIds!) {
+        await twonlyDB.messagesDao.updateMessageByMessageId(
+          messageId,
+          MessagesCompanion(
+            acknowledgeByServer: Value(true),
+            errorWhileSending: Value(false),
+          ),
+        );
+      }
       return true;
+    } else {
+      if (response.statusCode >= 400 && response.statusCode < 500) {
+        for (final messageId in media.messageIds!) {
+          await twonlyDB.messagesDao.updateMessageByMessageId(
+            messageId,
+            MessagesCompanion(
+              acknowledgeByServer: Value(true),
+              errorWhileSending: Value(true),
+            ),
+          );
+        }
+      }
+      Log.error("Got error while uploading: ${response.statusCode}");
     }
   } catch (e) {
     Log.error("Exception during upload: $e");
   }
   return false;
-}
-
-Future<bool> handleNotifyReceiver(MediaUpload media) async {
-  List<int> alreadyNotified = media.alreadyNotified;
-
-  for (var i = 0; i < media.messageIds!.length; i++) {
-    int messageId = media.messageIds![i];
-
-    if (alreadyNotified.contains(messageId)) {
-      continue;
-    }
-
-    Message? message = await twonlyDB.messagesDao
-        .getMessageByMessageId(messageId)
-        .getSingleOrNull();
-    if (message == null) continue;
-
-    await twonlyDB.contactsDao.incFlameCounter(
-      message.contactId,
-      false,
-      message.sendAt,
-    );
-
-    // Ensures the retransmit of the message
-    await encryptAndSendMessageAsync(
-      messageId,
-      message.contactId,
-      MessageJson(
-        kind: MessageKind.media,
-        messageId: messageId,
-        content: MediaMessageContent(
-          downloadToken: media.uploadTokens!.downloadTokens[i],
-          maxShowTime: media.metadata!.maxShowTime,
-          isRealTwonly: media.metadata!.isRealTwonly,
-          isVideo: media.metadata!.isVideo,
-          mirrorVideo: media.metadata!.mirrorVideo,
-          encryptionKey: media.encryptionData!.encryptionKey,
-          encryptionMac: media.encryptionData!.encryptionMac,
-          encryptionNonce: media.encryptionData!.encryptionNonce,
-        ),
-        timestamp: media.metadata!.messageSendAt,
-      ),
-      pushKind: (media.metadata!.isRealTwonly)
-          ? PushKind.twonly
-          : (media.metadata!.isVideo)
-              ? PushKind.video
-              : PushKind.image,
-    );
-
-    alreadyNotified.add(messageId);
-    await twonlyDB.mediaUploadsDao.updateMediaUpload(
-      media.mediaUploadId,
-      MediaUploadsCompanion(
-        alreadyNotified: Value(alreadyNotified),
-      ),
-    );
-  }
-
-  await twonlyDB.mediaUploadsDao.updateMediaUpload(
-    media.mediaUploadId,
-    MediaUploadsCompanion(
-      state: Value(UploadState.receiverNotified),
-    ),
-  );
-  return true;
 }
 
 Future<bool> compressVideoIfExists(int mediaUploadId) async {
@@ -562,40 +534,41 @@ Future<bool> compressVideoIfExists(int mediaUploadId) async {
     return false;
   }
 
-  MediaInfo? mediaInfo;
-
-  try {
-    mediaInfo = await VideoCompress.compressVideo(
-      videoOriginalFile.path,
-      quality: VideoQuality.Res1280x720Quality,
-      deleteOrigin: false,
-      includeAudio:
-          true, // https://github.com/jonataslaw/VideoCompress/issues/184
-    );
-
-    if (mediaInfo!.filesize! >= 30 * 1000 * 1000) {
-      // if the media file is over 20MB compress it with low quality
+  return await Isolate.run(() async {
+    MediaInfo? mediaInfo;
+    try {
       mediaInfo = await VideoCompress.compressVideo(
         videoOriginalFile.path,
-        quality: VideoQuality.Res960x540Quality,
+        quality: VideoQuality.Res1280x720Quality,
         deleteOrigin: false,
-        includeAudio: true,
+        includeAudio:
+            true, // https://github.com/jonataslaw/VideoCompress/issues/184
       );
-    }
-  } catch (e) {
-    Log.error("during video compression: $e");
-  }
 
-  if (mediaInfo == null) {
-    Log.error("could not compress video.");
-    // as a fall back use the non compressed version
-    await videoOriginalFile.copy(videoCompressedFile.path);
-    await videoOriginalFile.delete();
-  } else {
-    await mediaInfo.file!.copy(videoCompressedFile.path);
-    await mediaInfo.file!.delete();
-  }
-  return true;
+      if (mediaInfo!.filesize! >= 30 * 1000 * 1000) {
+        // if the media file is over 20MB compress it with low quality
+        mediaInfo = await VideoCompress.compressVideo(
+          videoOriginalFile.path,
+          quality: VideoQuality.Res960x540Quality,
+          deleteOrigin: false,
+          includeAudio: true,
+        );
+      }
+    } catch (e) {
+      Log.error("during video compression: $e");
+    }
+
+    if (mediaInfo == null) {
+      Log.error("could not compress video.");
+      // as a fall back use the non compressed version
+      await videoOriginalFile.copy(videoCompressedFile.path);
+      await videoOriginalFile.delete();
+    } else {
+      await mediaInfo.file!.copy(videoCompressedFile.path);
+      await mediaInfo.file!.delete();
+    }
+    return true;
+  });
 }
 
 /// --- helper functions ---
@@ -676,3 +649,18 @@ String uint8ListToHex(List<int> bytes) {
 Uint8List hexToUint8List(String hex) => Uint8List.fromList(List<int>.generate(
     hex.length ~/ 2,
     (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16)));
+
+List<Uint8List> createDownloadTokens(int n) {
+  final Random random = Random();
+  List<Uint8List> tokens = [];
+
+  for (int i = 0; i < n; i++) {
+    Uint8List token = Uint8List(32);
+    for (int j = 0; j < 32; j++) {
+      token[j] = random.nextInt(256); // Generate a random byte (0-255)
+    }
+    tokens.add(token);
+  }
+
+  return tokens;
+}

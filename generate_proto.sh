@@ -16,7 +16,7 @@ cd "$SRC_DIR" || {
 }
 
 # Iterate over all .proto files in the source directory
-for proto_file in "api/"*.proto; do
+for proto_file in "api/"**/*.proto; do
   # Check if the file exists to avoid errors if no .proto files are found
 
   if [[ -f "$proto_file" ]]; then

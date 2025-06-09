@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/protobuf/api/error.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/views/camera/share_image_components/best_friends_selector.dart';
 import 'package:twonly/src/views/components/flame.dart';
@@ -79,7 +79,7 @@ class _ShareImageView extends State<ShareImageView> {
       final imageHandler =
           addOrModifyImageToUpload(widget.mediaUploadId, imageBytes!);
       // start with the pre upload of the media file...
-      encryptAndPreUploadMediaFiles(
+      encryptMediaFiles(
           widget.mediaUploadId, imageHandler, widget.videoUploadHandler);
     }
     setState(() {});

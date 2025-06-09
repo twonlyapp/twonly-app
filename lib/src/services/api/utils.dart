@@ -4,11 +4,11 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/protobuf/api/client_to_server.pb.dart'
+import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
     as client;
-import 'package:twonly/src/model/protobuf/api/client_to_server.pbserver.dart';
-import 'package:twonly/src/model/protobuf/api/error.pb.dart';
-import 'package:twonly/src/model/protobuf/api/server_to_client.pb.dart'
+import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';

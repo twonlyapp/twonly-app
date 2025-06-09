@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: api/server_to_client.proto
+//  source: api/websocket/server_to_client.proto
 //
 // @dart = 2.12
 
@@ -37,7 +37,6 @@ const V0$json = {
     {'1': 'response', '3': 2, '4': 1, '5': 11, '6': '.server_to_client.Response', '9': 0, '10': 'response'},
     {'1': 'newMessage', '3': 3, '4': 1, '5': 11, '6': '.server_to_client.NewMessage', '9': 0, '10': 'newMessage'},
     {'1': 'RequestNewPreKeys', '3': 4, '4': 1, '5': 8, '9': 0, '10': 'RequestNewPreKeys'},
-    {'1': 'downloaddata', '3': 5, '4': 1, '5': 11, '6': '.server_to_client.DownloadData', '9': 0, '10': 'downloaddata'},
     {'1': 'error', '3': 6, '4': 1, '5': 14, '6': '.error.ErrorCode', '9': 0, '10': 'error'},
   ],
   '8': [
@@ -50,9 +49,8 @@ final $typed_data.Uint8List v0Descriptor = $convert.base64Decode(
     'CgJWMBIQCgNzZXEYASABKARSA3NlcRI4CghyZXNwb25zZRgCIAEoCzIaLnNlcnZlcl90b19jbG'
     'llbnQuUmVzcG9uc2VIAFIIcmVzcG9uc2USPgoKbmV3TWVzc2FnZRgDIAEoCzIcLnNlcnZlcl90'
     'b19jbGllbnQuTmV3TWVzc2FnZUgAUgpuZXdNZXNzYWdlEi4KEVJlcXVlc3ROZXdQcmVLZXlzGA'
-    'QgASgISABSEVJlcXVlc3ROZXdQcmVLZXlzEkQKDGRvd25sb2FkZGF0YRgFIAEoCzIeLnNlcnZl'
-    'cl90b19jbGllbnQuRG93bmxvYWREYXRhSABSDGRvd25sb2FkZGF0YRIoCgVlcnJvchgGIAEoDj'
-    'IQLmVycm9yLkVycm9yQ29kZUgAUgVlcnJvckIGCgRLaW5k');
+    'QgASgISABSEVJlcXVlc3ROZXdQcmVLZXlzEigKBWVycm9yGAYgASgOMhAuZXJyb3IuRXJyb3JD'
+    'b2RlSABSBWVycm9yQgYKBEtpbmQ=');
 
 @$core.Deprecated('Use newMessageDescriptor instead')
 const NewMessage$json = {
@@ -67,23 +65,6 @@ const NewMessage$json = {
 final $typed_data.Uint8List newMessageDescriptor = $convert.base64Decode(
     'CgpOZXdNZXNzYWdlEiAKDGZyb21fdXNlcl9pZBgCIAEoA1IKZnJvbVVzZXJJZBISCgRib2R5GA'
     'EgASgMUgRib2R5');
-
-@$core.Deprecated('Use downloadDataDescriptor instead')
-const DownloadData$json = {
-  '1': 'DownloadData',
-  '2': [
-    {'1': 'download_token', '3': 1, '4': 1, '5': 12, '10': 'downloadToken'},
-    {'1': 'offset', '3': 2, '4': 1, '5': 13, '10': 'offset'},
-    {'1': 'data', '3': 3, '4': 1, '5': 12, '10': 'data'},
-    {'1': 'fin', '3': 4, '4': 1, '5': 8, '10': 'fin'},
-  ],
-};
-
-/// Descriptor for `DownloadData`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List downloadDataDescriptor = $convert.base64Decode(
-    'CgxEb3dubG9hZERhdGESJQoOZG93bmxvYWRfdG9rZW4YASABKAxSDWRvd25sb2FkVG9rZW4SFg'
-    'oGb2Zmc2V0GAIgASgNUgZvZmZzZXQSEgoEZGF0YRgDIAEoDFIEZGF0YRIQCgNmaW4YBCABKAhS'
-    'A2Zpbg==');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {
