@@ -1,5 +1,4 @@
 import 'dart:isolate';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -51,6 +50,8 @@ void main() async {
     purgeReceivedMediaFiles();
     purgeSendMediaFiles();
   });
+
+  await initMediaUploader();
 
   runApp(
     MultiProvider(

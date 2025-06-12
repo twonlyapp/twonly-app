@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:isolate';
 import 'dart:math';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -52,6 +50,81 @@ Future<ErrorCode?> isAllowedToSend() async {
     await updateUser(user);
   }
   return null;
+}
+
+Future initMediaUploader() async {
+  FileDownloader().updates.listen((update) async {
+    switch (update) {
+      case TaskStatusUpdate():
+        if (update.status == TaskStatus.complete) {
+          int mediaUploadId = int.parse(update.task.taskId);
+          MediaUpload? media = await twonlyDB.mediaUploadsDao
+              .getMediaUploadById(mediaUploadId)
+              .getSingleOrNull();
+          if (media == null) {
+            Log.error(
+                "Got an upload task but no upload media in the mediaupload atabase");
+            return;
+          }
+          if (update.responseStatusCode == 200) {
+            Log.info("Upload was success!");
+
+            await twonlyDB.mediaUploadsDao.updateMediaUpload(
+              mediaUploadId,
+              MediaUploadsCompanion(
+                state: Value(UploadState.receiverNotified),
+              ),
+            );
+
+            for (final messageId in media.messageIds!) {
+              await twonlyDB.messagesDao.updateMessageByMessageId(
+                messageId,
+                MessagesCompanion(
+                  acknowledgeByServer: Value(true),
+                  errorWhileSending: Value(false),
+                ),
+              );
+            }
+            return;
+          } else if (update.responseStatusCode != null) {
+            if (update.responseStatusCode! >= 400 &&
+                update.responseStatusCode! < 500) {
+              for (final messageId in media.messageIds!) {
+                await twonlyDB.messagesDao.updateMessageByMessageId(
+                  messageId,
+                  MessagesCompanion(
+                    acknowledgeByServer: Value(true),
+                    errorWhileSending: Value(true),
+                  ),
+                );
+              }
+            }
+            Log.error(
+                "Got error while uploading: ${update.responseStatusCode}");
+          }
+        }
+
+        print('Status update for ${update.task} with status ${update.status}');
+      case TaskProgressUpdate():
+        print(
+            'Progress update for ${update.task} with progress ${update.progress}');
+    }
+  });
+
+  await FileDownloader().start();
+
+  FileDownloader().configure(androidConfig: [
+    (Config.bypassTLSCertificateValidation, kDebugMode),
+  ]);
+
+  FileDownloader().configureNotification(
+    running: TaskNotification(
+      'Uploading',
+      'Uploading your {filename} ({progress}).',
+    ),
+    complete: null,
+    progressBar: true,
+  );
 }
 
 /// States:
@@ -172,11 +245,11 @@ Future<Uint8List> addOrModifyImageToUpload(
         quality: 60,
       );
     }
-    await writeMediaFile(mediaUploadId, "png", imageBytesCompressed);
+    await writeSendMediaFile(mediaUploadId, "png", imageBytesCompressed);
   } catch (e) {
     Log.error("$e");
     // as a fall back use the original image
-    await writeMediaFile(mediaUploadId, "png", imageBytes);
+    await writeSendMediaFile(mediaUploadId, "png", imageBytes);
     imageBytesCompressed = imageBytes;
   }
 
@@ -193,7 +266,7 @@ Future<Uint8List> addOrModifyImageToUpload(
 
 Future handlePreProcessingState(MediaUpload media) async {
   try {
-    final imageHandler = readMediaFile(media.mediaUploadId, "png");
+    final imageHandler = readSendMediaFile(media.mediaUploadId, "png");
     final videoHandler = compressVideoIfExists(media.mediaUploadId);
     await encryptMediaFiles(
       media.mediaUploadId,
@@ -217,7 +290,7 @@ Future encryptMediaFiles(
   /// if there is a video wait until it is finished with compression
   if (videoHandler != null) {
     if (await videoHandler) {
-      Uint8List compressedVideo = await readMediaFile(mediaUploadId, "mp4");
+      Uint8List compressedVideo = await readSendMediaFile(mediaUploadId, "mp4");
       dataToEncrypt = combineUint8Lists(dataToEncrypt, compressedVideo);
     }
   }
@@ -230,12 +303,10 @@ Future encryptMediaFiles(
   state.encryptionKey = secretKey.bytes;
   state.encryptionNonce = xchacha20.newNonce();
 
-  final secretBox = await Isolate.run(
-    () => xchacha20.encrypt(
-      dataToEncrypt,
-      secretKey: secretKey,
-      nonce: state.encryptionNonce,
-    ),
+  final secretBox = await xchacha20.encrypt(
+    dataToEncrypt,
+    secretKey: secretKey,
+    nonce: state.encryptionNonce,
   );
 
   state.encryptionMac = secretBox.mac.bytes;
@@ -244,7 +315,7 @@ Future encryptMediaFiles(
   state.sha2Hash = (await algorithm.hash(secretBox.cipherText)).bytes;
 
   final encryptedBytes = Uint8List.fromList(secretBox.cipherText);
-  await writeMediaFile(
+  await writeSendMediaFile(
     mediaUploadId,
     "encrypted",
     encryptedBytes,
@@ -376,7 +447,7 @@ Future handleUploadError(MediaUpload mediaUpload) async {
 
 Future<bool> handleMediaUpload(MediaUpload media) async {
   Uint8List bytesToUpload =
-      await readMediaFile(media.mediaUploadId, "encrypted");
+      await readSendMediaFile(media.mediaUploadId, "encrypted");
 
   if (media.messageIds == null) return false;
 
@@ -456,63 +527,33 @@ Future<bool> handleMediaUpload(MediaUpload media) async {
     return false;
   }
 
+  File uploadRequestFile = await writeSendMediaFile(
+    media.mediaUploadId,
+    "upload",
+    uploadRequestBytes,
+  );
+
   String apiUrl =
       "http${apiService.apiSecure}://${apiService.apiHost}/api/upload";
 
-  var requestMultipart = http.MultipartRequest(
-    "POST",
-    Uri.parse(apiUrl),
-  );
-  requestMultipart.headers['x-twonly-auth-token'] =
-      uint8ListToHex(base64Decode(apiAuthToken));
-
-  requestMultipart.files.add(http.MultipartFile.fromBytes(
-    "file",
-    uploadRequestBytes,
-    filename: "upload",
-  ));
-
-  Log.info("Starting upload from ${media.mediaUploadId}");
-
   try {
-    var streamedResponse = await requestMultipart.send();
+    final task = UploadTask.fromFile(
+      taskId: "${media.mediaUploadId}",
+      displayName: (media.metadata?.isVideo ?? false) ? "image" : "video",
+      file: uploadRequestFile,
+      url: apiUrl,
+      priority: 0,
+      retries: 10,
+      headers: {
+        'x-twonly-auth-token': uint8ListToHex(base64Decode(apiAuthToken))
+      },
+    );
 
-    final response = await http.Response.fromStream(streamedResponse);
+    Log.info("Starting upload from ${media.mediaUploadId}");
 
-    if (response.statusCode == 200) {
-      Log.info("Upload was success!");
+    final result = await FileDownloader().enqueue(task);
 
-      await twonlyDB.mediaUploadsDao.updateMediaUpload(
-        media.mediaUploadId,
-        MediaUploadsCompanion(
-          state: Value(UploadState.receiverNotified),
-        ),
-      );
-
-      for (final messageId in media.messageIds!) {
-        await twonlyDB.messagesDao.updateMessageByMessageId(
-          messageId,
-          MessagesCompanion(
-            acknowledgeByServer: Value(true),
-            errorWhileSending: Value(false),
-          ),
-        );
-      }
-      return true;
-    } else {
-      if (response.statusCode >= 400 && response.statusCode < 500) {
-        for (final messageId in media.messageIds!) {
-          await twonlyDB.messagesDao.updateMessageByMessageId(
-            messageId,
-            MessagesCompanion(
-              acknowledgeByServer: Value(true),
-              errorWhileSending: Value(true),
-            ),
-          );
-        }
-      }
-      Log.error("Got error while uploading: ${response.statusCode}");
-    }
+    return result;
   } catch (e) {
     Log.error("Exception during upload: $e");
   }
@@ -534,46 +575,44 @@ Future<bool> compressVideoIfExists(int mediaUploadId) async {
     return false;
   }
 
-  return await Isolate.run(() async {
-    MediaInfo? mediaInfo;
-    try {
+  MediaInfo? mediaInfo;
+  try {
+    mediaInfo = await VideoCompress.compressVideo(
+      videoOriginalFile.path,
+      quality: VideoQuality.Res1280x720Quality,
+      deleteOrigin: false,
+      includeAudio:
+          true, // https://github.com/jonataslaw/VideoCompress/issues/184
+    );
+
+    if (mediaInfo!.filesize! >= 30 * 1000 * 1000) {
+      // if the media file is over 20MB compress it with low quality
       mediaInfo = await VideoCompress.compressVideo(
         videoOriginalFile.path,
-        quality: VideoQuality.Res1280x720Quality,
+        quality: VideoQuality.Res960x540Quality,
         deleteOrigin: false,
-        includeAudio:
-            true, // https://github.com/jonataslaw/VideoCompress/issues/184
+        includeAudio: true,
       );
-
-      if (mediaInfo!.filesize! >= 30 * 1000 * 1000) {
-        // if the media file is over 20MB compress it with low quality
-        mediaInfo = await VideoCompress.compressVideo(
-          videoOriginalFile.path,
-          quality: VideoQuality.Res960x540Quality,
-          deleteOrigin: false,
-          includeAudio: true,
-        );
-      }
-    } catch (e) {
-      Log.error("during video compression: $e");
     }
+  } catch (e) {
+    Log.error("during video compression: $e");
+  }
 
-    if (mediaInfo == null) {
-      Log.error("could not compress video.");
-      // as a fall back use the non compressed version
-      await videoOriginalFile.copy(videoCompressedFile.path);
-      await videoOriginalFile.delete();
-    } else {
-      await mediaInfo.file!.copy(videoCompressedFile.path);
-      await mediaInfo.file!.delete();
-    }
-    return true;
-  });
+  if (mediaInfo == null) {
+    Log.error("could not compress video.");
+    // as a fall back use the non compressed version
+    await videoOriginalFile.copy(videoCompressedFile.path);
+    await videoOriginalFile.delete();
+  } else {
+    await mediaInfo.file!.copy(videoCompressedFile.path);
+    await mediaInfo.file!.delete();
+  }
+  return true;
 }
 
 /// --- helper functions ---
 
-Future<Uint8List> readMediaFile(int mediaUploadId, String type) async {
+Future<Uint8List> readSendMediaFile(int mediaUploadId, String type) async {
   String basePath = await getMediaFilePath(mediaUploadId, "send");
   File file = File("$basePath.$type");
   if (!await file.exists()) {
@@ -582,14 +621,15 @@ Future<Uint8List> readMediaFile(int mediaUploadId, String type) async {
   return await file.readAsBytes();
 }
 
-Future<void> writeMediaFile(
+Future<File> writeSendMediaFile(
     int mediaUploadId, String type, Uint8List data) async {
   String basePath = await getMediaFilePath(mediaUploadId, "send");
   File file = File("$basePath.$type");
   await file.writeAsBytes(data);
+  return file;
 }
 
-Future<void> deleteMediaFile(int mediaUploadId, String type) async {
+Future<void> deleteSendMediaFile(int mediaUploadId, String type) async {
   String basePath = await getMediaFilePath(mediaUploadId, "send");
   File file = File("$basePath.$type");
   if (await file.exists()) {
