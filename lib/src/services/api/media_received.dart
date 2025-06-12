@@ -15,6 +15,7 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 
 Map<int, DateTime> downloadStartedForMediaReceived = {};
 
@@ -311,14 +312,35 @@ Future<void> purgeMediaFiles(Directory directory) async {
             bool canBeDeleted = true;
 
             for (final message in messages) {
-              if ((message.openedAt == null && !message.errorWhileSending)) {
-                canBeDeleted = false;
-              } else if (message.mediaStored) {
-                if (!file.path.contains(".original.") &&
-                    !file.path.contains(".encrypted")) {
+              try {
+                MediaMessageContent content = MediaMessageContent.fromJson(
+                  jsonDecode(message.contentJson!),
+                );
+
+                DateTime oneDayAgo = DateTime.now().subtract(Duration(days: 1));
+
+                if (((message.openedAt == null ||
+                        oneDayAgo.isBefore(message.openedAt!)) &&
+                    !message.errorWhileSending)) {
                   canBeDeleted = false;
+                } else if (message.mediaStored) {
+                  if (!file.path.contains(".original.") &&
+                      !file.path.contains(".encrypted")) {
+                    canBeDeleted = false;
+                  }
                 }
-              }
+                if (message.acknowledgeByServer) {
+                  // preserve images which can be stored by the other person...
+                  if (content.maxShowTime != gMediaShowInfinite) {
+                    canBeDeleted = true;
+                  }
+                  // encrypted or upload data can be removed when acknowledgedByServer
+                  if (file.path.contains(".upload") ||
+                      file.path.contains(".encrypted")) {
+                    canBeDeleted = true;
+                  }
+                }
+              } catch (e) {}
             }
             if (canBeDeleted) {
               Log.info("purged media file ${file.path} ");

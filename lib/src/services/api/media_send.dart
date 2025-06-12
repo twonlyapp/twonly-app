@@ -56,18 +56,25 @@ Future initMediaUploader() async {
   FileDownloader().updates.listen((update) async {
     switch (update) {
       case TaskStatusUpdate():
-        if (update.status == TaskStatus.complete) {
-          int mediaUploadId = int.parse(update.task.taskId);
-          MediaUpload? media = await twonlyDB.mediaUploadsDao
-              .getMediaUploadById(mediaUploadId)
-              .getSingleOrNull();
-          if (media == null) {
-            Log.error(
-                "Got an upload task but no upload media in the mediaupload atabase");
-            return;
-          }
+        bool failed = false;
+        int mediaUploadId = int.parse(update.task.taskId);
+        MediaUpload? media = await twonlyDB.mediaUploadsDao
+            .getMediaUploadById(mediaUploadId)
+            .getSingleOrNull();
+        if (media == null) {
+          Log.error(
+            "Got an upload task but no upload media in the media upload database",
+          );
+          return;
+        }
+
+        if (update.status == TaskStatus.failed ||
+            update.status == TaskStatus.canceled) {
+          Log.error("Upload failed: ${update.status}");
+          failed = true;
+        } else if (update.status == TaskStatus.complete) {
           if (update.responseStatusCode == 200) {
-            Log.info("Upload was success!");
+            Log.info("Upload of $mediaUploadId success!");
 
             await twonlyDB.mediaUploadsDao.updateMediaUpload(
               mediaUploadId,
@@ -89,18 +96,23 @@ Future initMediaUploader() async {
           } else if (update.responseStatusCode != null) {
             if (update.responseStatusCode! >= 400 &&
                 update.responseStatusCode! < 500) {
-              for (final messageId in media.messageIds!) {
-                await twonlyDB.messagesDao.updateMessageByMessageId(
-                  messageId,
-                  MessagesCompanion(
-                    acknowledgeByServer: Value(true),
-                    errorWhileSending: Value(true),
-                  ),
-                );
-              }
+              failed = true;
             }
             Log.error(
-                "Got error while uploading: ${update.responseStatusCode}");
+              "Got error while uploading: ${update.responseStatusCode}",
+            );
+          }
+        }
+
+        if (failed) {
+          for (final messageId in media.messageIds!) {
+            await twonlyDB.messagesDao.updateMessageByMessageId(
+              messageId,
+              MessagesCompanion(
+                acknowledgeByServer: Value(true),
+                errorWhileSending: Value(true),
+              ),
+            );
           }
         }
 
@@ -117,14 +129,16 @@ Future initMediaUploader() async {
     (Config.bypassTLSCertificateValidation, kDebugMode),
   ]);
 
-  FileDownloader().configureNotification(
-    running: TaskNotification(
-      'Uploading',
-      'Uploading your {filename} ({progress}).',
-    ),
-    complete: null,
-    progressBar: true,
-  );
+  if (kDebugMode) {
+    FileDownloader().configureNotification(
+      running: TaskNotification(
+        'Uploading',
+        'Uploading your {filename} ({progress}).',
+      ),
+      complete: null,
+      progressBar: true,
+    );
+  }
 }
 
 /// States:

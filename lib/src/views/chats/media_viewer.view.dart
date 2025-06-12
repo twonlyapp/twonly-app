@@ -260,7 +260,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     }
 
     if (!content.isVideo) {
-      if (content.maxShowTime != 999999) {
+      if (content.maxShowTime != gMediaShowInfinite) {
         canBeSeenUntil = DateTime.now().add(
           Duration(seconds: content.maxShowTime),
         );

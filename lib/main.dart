@@ -1,4 +1,3 @@
-import 'dart:isolate';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -46,10 +45,8 @@ void main() async {
   await twonlyDB.messagesDao.handleMediaFilesOlderThan7Days();
 
   // purge media files in the background
-  Isolate.run(() {
-    purgeReceivedMediaFiles();
-    purgeSendMediaFiles();
-  });
+  purgeReceivedMediaFiles();
+  purgeSendMediaFiles();
 
   await initMediaUploader();
 
