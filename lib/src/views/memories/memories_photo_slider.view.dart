@@ -129,6 +129,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                                 .galleryItems[currentIndex].imagePath
                                 ?.readAsBytes(),
                             mirrorVideo: false,
+                            sharedFromGallery: true,
                             useHighQuality: true,
                           ),
                         ),

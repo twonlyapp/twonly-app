@@ -41,12 +41,14 @@ class ShareImageEditorView extends StatefulWidget {
     this.videoFilePath,
     required this.mirrorVideo,
     required this.useHighQuality,
+    required this.sharedFromGallery,
   });
   final Future<Uint8List?>? imageBytes;
   final File? videoFilePath;
   final Contact? sendTo;
   final bool mirrorVideo;
   final bool useHighQuality;
+  final bool sharedFromGallery;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -453,7 +455,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white.withAlpha(0),
+      backgroundColor:
+          widget.sharedFromGallery ? null : Colors.white.withAlpha(0),
       resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,

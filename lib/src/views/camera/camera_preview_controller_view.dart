@@ -269,7 +269,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<bool> pushMediaEditor(
-      Future<Uint8List?>? imageBytes, File? videoFilePath) async {
+      Future<Uint8List?>? imageBytes, File? videoFilePath,
+      {bool sharedFromGallery = false}) async {
     bool? shouldReturn = await Navigator.push(
       context,
       PageRouteBuilder(
@@ -277,6 +278,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         pageBuilder: (context, a1, a2) => ShareImageEditorView(
           videoFilePath: videoFilePath,
           imageBytes: imageBytes,
+          sharedFromGallery: sharedFromGallery,
           sendTo: widget.sendTo,
           mirrorVideo: isFront && Platform.isAndroid,
           useHighQuality: useHighQuality,
@@ -339,7 +341,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
-      if (await pushMediaEditor(imageFile.readAsBytes(), null)) {
+      if (await pushMediaEditor(
+        imageFile.readAsBytes(),
+        null,
+        sharedFromGallery: true,
+      )) {
         return;
       }
     }
