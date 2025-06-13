@@ -73,6 +73,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   Future initAsync() async {
     setUserPlan();
     await apiService.connect(force: true);
+    apiService.listenToNetworkChanges();
     // call this function so invalid media files are get purged
     retryMediaUpload(true);
   }

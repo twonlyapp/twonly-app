@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
@@ -56,6 +57,7 @@ class ApiService {
 
   final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
   IOWebSocketChannel? _channel;
+  StreamSubscription<List<ConnectivityResult>>? connectivitySubscription;
 
   Future<bool> _connectTo(String apiUrl) async {
     try {
@@ -68,7 +70,11 @@ class ApiService {
       Log.info("websocket connected to $apiUrl");
       return true;
     } on WebSocketChannelException catch (e) {
-      Log.error("could not connect to api got: $e");
+      if (!e.message
+          .toString()
+          .contains("No address associated with hostname")) {
+        Log.error("could not connect to api got: $e");
+      }
       return false;
     }
   }
@@ -102,8 +108,11 @@ class ApiService {
     isAuthenticated = false;
     globalCallbackConnectionState(false);
     await twonlyDB.messagesDao.resetPendingDownloadState();
+  }
+
+  Future startReconnectionTimer() async {
+    reconnectionTimer?.cancel();
     reconnectionTimer ??= Timer(Duration(seconds: _reconnectionDelay), () {
-      Log.info("starting with reconnection.");
       reconnectionTimer = null;
       connect(force: true);
     });
@@ -119,6 +128,20 @@ class ApiService {
       return;
     }
     callback();
+  }
+
+  Future listenToNetworkChanges() async {
+    if (connectivitySubscription != null) {
+      return;
+    }
+    connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> result) {
+      if (!result.contains(ConnectivityResult.none)) {
+        connect(force: true);
+      }
+      // Received changes in available connectivity types!
+    });
   }
 
   Future<bool> connect({bool force = false}) async {
