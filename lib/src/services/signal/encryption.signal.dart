@@ -26,9 +26,7 @@ Future<Uint8List?> signalEncryptMessage(
 
       SignalContactPreKey? preKey = await getPreKeyByContactId(target);
       SignalContactSignedPreKey? signedPreKey =
-          await getSignedPreKeyByContactId(
-        target,
-      );
+          await getSignedPreKeyByContactId(target);
 
       if (signedPreKey != null) {
         SessionBuilder sessionBuilder = SessionBuilder.fromSignalStore(
@@ -127,10 +125,6 @@ Future<MessageJson?> signalDecryptMessage(int source, Uint8List msg) async {
         ),
       ),
     );
-  } on InvalidKeyIdException catch (_) {
-    return null; // got the same message again
-  } on DuplicateMessageException catch (_) {
-    return null; // to the same message again
   } catch (e) {
     Log.error(e.toString());
     return null;

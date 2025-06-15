@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:drift/drift.dart';
@@ -12,6 +13,43 @@ import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
+
+class DirtyResendingItem {
+  DirtyResendingItem({required this.gotLastAck});
+  DateTime gotLastAck;
+  Timer? timer;
+}
+
+class DirtyResending {
+  static final Map<int, DirtyResendingItem> _gotLastAck = {};
+
+  static Future gotAckFromUser(int contactID) async {
+    _gotLastAck[contactID]?.timer?.cancel();
+
+    _gotLastAck[contactID] = DirtyResendingItem(gotLastAck: DateTime.now());
+    _gotLastAck[contactID]?.timer = Timer(Duration(seconds: 10), () async {
+      _gotLastAck.remove(contactID);
+      _handleNonACKMessagesForUser(contactID);
+    });
+  }
+
+  static Future _handleNonACKMessagesForUser(int contactID) async {
+    final List<Message> toResendMessages =
+        await twonlyDB.messagesDao.getAllNonACKMessagesFromUser();
+
+    for (final Message message in toResendMessages) {
+      Log.info("Got newer ACKs from user ${message.messageId}");
+      await twonlyDB.messagesDao.updateMessageByMessageId(
+        message.messageId,
+        MessagesCompanion(
+          errorWhileSending: Value(true),
+        ),
+      );
+    }
+  }
+}
+
+Future handleOlderNonAckMessages() async {}
 
 Future tryTransmitMessages() async {
   final retransIds =
@@ -33,6 +71,20 @@ Future sendRetransmitMessage(int retransId) async {
 
   if (retrans == null) {
     Log.error("$retransId not found in database");
+    return;
+  }
+
+  Contact? contact = await twonlyDB.contactsDao
+      .getContactByUserId(retrans.contactId)
+      .getSingleOrNull();
+  if (contact == null || contact.deleted) {
+    Log.warn("Contact deleted $retransId or not found in database.");
+    if (retrans.messageId != null) {
+      await twonlyDB.messagesDao.updateMessageByMessageId(
+        retrans.messageId!,
+        MessagesCompanion(errorWhileSending: Value(true)),
+      );
+    }
     return;
   }
 
@@ -155,7 +207,9 @@ Future sendTextMessage(
 }
 
 Future notifyContactAboutOpeningMessage(
-    int fromUserId, List<int> messageOtherIds) async {
+  int fromUserId,
+  List<int> messageOtherIds,
+) async {
   for (final messageOtherId in messageOtherIds) {
     await encryptAndSendMessageAsync(
       null,

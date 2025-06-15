@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:background_downloader/background_downloader.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart';
@@ -8,8 +9,6 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:http/http.dart' as http;
-// import 'package:twonly/src/providers/api/api_utils.dart';
 import 'package:twonly/src/services/api/media_send.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:twonly/src/services/api/utils.dart';
@@ -75,6 +74,34 @@ Future<bool> isAllowedToDownload(bool isVideo) async {
   return false;
 }
 
+Future handleDownloadStatusUpdate(TaskStatusUpdate update) async {
+  bool failed = false;
+  int messageId = int.parse(update.task.taskId.replaceAll("download_", ""));
+
+  if (update.status == TaskStatus.failed ||
+      update.status == TaskStatus.canceled) {
+    Log.error("Download failed: ${update.status}");
+    failed = true;
+  } else if (update.status == TaskStatus.complete) {
+    if (update.responseStatusCode == 200) {
+      Log.info("Download was successfully for $messageId");
+      await handleEncryptedFile(messageId);
+    } else {
+      Log.error(
+          "Got invalid response status code: ${update.responseStatusCode}");
+    }
+  }
+
+  if (failed) {
+    Message? message = await twonlyDB.messagesDao
+        .getMessageByMessageId(messageId)
+        .getSingleOrNull();
+    if (message != null) {
+      await handleMediaError(message);
+    }
+  }
+}
+
 Future startDownloadMedia(Message message, bool force,
     {int retryCounter = 0}) async {
   if (message.contentJson == null) return;
@@ -90,6 +117,7 @@ Future startDownloadMedia(Message message, bool force,
 
   final content =
       MessageContent.fromJson(message.kind, jsonDecode(message.contentJson!));
+
   if (content is! MediaMessageContent) return;
   if (content.downloadToken == null) return;
 
@@ -135,60 +163,42 @@ Future startDownloadMedia(Message message, bool force,
   String apiUrl =
       "http${apiService.apiSecure}://${apiService.apiHost}/api/download/$downloadToken";
 
-  var httpClient = http.Client();
-  var request = http.Request('GET', Uri.parse(apiUrl));
-  var response = httpClient.send(request);
+  try {
+    final task = DownloadTask(
+      url: apiUrl,
+      taskId: "download_${media.messageId}",
+      directory: "media/received/",
+      baseDirectory: BaseDirectory.applicationSupport,
+      filename: "${media.messageId}.encrypted",
+      priority: 0,
+      retries: 10,
+    );
 
-  List<List<int>> chunks = [];
-  int downloaded = 0;
+    Log.info(
+        "Got media file. Starting download: ${downloadToken.substring(0, 10)}");
 
-  response.asStream().listen((http.StreamedResponse r) {
-    r.stream.listen((List<int> chunk) {
-      // Display percentage of completion
-      Log.info(
-          'downloadPercentage: ${downloaded / (r.contentLength ?? 0) * 100}');
+    final result = await FileDownloader().enqueue(task);
 
-      chunks.add(chunk);
-      downloaded += chunk.length;
-    }, onDone: () async {
-      if (r.statusCode != 200) {
-        Log.error("Download error: $r");
-        if (r.statusCode == 418) {
-          Log.error("Got custom error code: ${chunks.toList()}");
-          handleMediaError(message);
-        }
-        return;
-      }
-
-      // Display percentage of completion
-      Log.info(
-          'downloadPercentage: ${downloaded / (r.contentLength ?? 0) * 100}');
-
-      // Save the file
-      final Uint8List bytes = Uint8List(r.contentLength ?? 0);
-      int offset = 0;
-      for (List<int> chunk in chunks) {
-        bytes.setRange(offset, offset + chunk.length, chunk);
-        offset += chunk.length;
-      }
-      await writeMediaFile(message.messageId, "encrypted", bytes);
-      handleEncryptedFile(message,
-          encryptedBytesTmp: bytes, retryCounter: retryCounter);
-      return;
-    });
-  });
+    return result;
+  } catch (e) {
+    Log.error("Exception during upload: $e");
+  }
 }
 
-Future handleEncryptedFile(
-  Message msg, {
-  Uint8List? encryptedBytesTmp,
-  int retryCounter = 0,
-}) async {
-  Uint8List? encryptedBytes =
-      encryptedBytesTmp ?? await readMediaFile(msg.messageId, "encrypted");
+Future handleEncryptedFile(int messageId) async {
+  Message? msg = await twonlyDB.messagesDao
+      .getMessageByMessageId(messageId)
+      .getSingleOrNull();
+  if (msg == null) {
+    Log.error("Not message for downloaded file found: $messageId");
+    return;
+  }
+
+  Uint8List? encryptedBytes = await readMediaFile(msg.messageId, "encrypted");
 
   if (encryptedBytes == null) {
     Log.error("encrypted bytes are not found for ${msg.messageId}");
+    return;
   }
 
   MediaMessageContent content =
@@ -198,7 +208,7 @@ Future handleEncryptedFile(
   SecretKeyData secretKeyData = SecretKeyData(content.encryptionKey!);
 
   SecretBox secretBox = SecretBox(
-    encryptedBytes!,
+    encryptedBytes,
     nonce: content.encryptionNonce!,
     mac: Mac(content.encryptionMac!),
   );
@@ -216,15 +226,9 @@ Future handleEncryptedFile(
 
     await writeMediaFile(msg.messageId, "png", imageBytes);
   } catch (e) {
-    if (retryCounter >= 1) {
-      Log.error(
-          "could not decrypt the media file in the second try. reporting error to user: $e");
-      handleMediaError(msg);
-      return;
-    }
-    Log.error("could not decrypt the media file trying again: $e");
-    startDownloadMedia(msg, true, retryCounter: retryCounter + 1);
-    // try downloading again....
+    Log.error(
+        "could not decrypt the media file in the second try. reporting error to user: $e");
+    handleMediaError(msg);
     return;
   }
 
@@ -252,6 +256,7 @@ Future<File?> getVideoPath(int mediaId) async {
 Future<Uint8List?> readMediaFile(int mediaId, String type) async {
   String basePath = await getMediaFilePath(mediaId, "received");
   File file = File("$basePath.$type");
+  Log.info("Reading: ${file}");
   if (!await file.exists()) {
     return null;
   }
@@ -365,3 +370,6 @@ Future<void> purgeMediaFiles(Directory directory) async {
     }
   }
 }
+
+// /data/user/0/eu.twonly.testing/files/media/received/27.encrypted
+// /data/user/0/eu.twonly.testing/app_flutter/data/user/0/eu.twonly.testing/files/media/received/27.encrypted

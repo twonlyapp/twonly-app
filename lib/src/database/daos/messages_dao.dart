@@ -97,6 +97,18 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .get();
   }
 
+  Future<List<Message>> getAllNonACKMessagesFromUser() {
+    return (select(messages)
+          ..where((t) =>
+              t.acknowledgeByUser.equals(false) &
+              t.messageOtherId.isNull() &
+              t.errorWhileSending.equals(false) &
+              t.sendAt.isBiggerThanValue(
+                DateTime.now().subtract(Duration(minutes: 10)),
+              )))
+        .get();
+  }
+
   Stream<List<Message>> getAllStoredMediaFiles() {
     return (select(messages)
           ..where((t) => t.mediaStored.equals(true))
@@ -191,10 +203,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     }
   }
 
-  Future deleteMessageById(int messageId) {
-    return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
-  }
-
   Future deleteMessagesByContactId(int contactId) {
     return (delete(messages)
           ..where((t) =>
@@ -207,7 +215,9 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   Future<bool> containsOtherMessageId(
-      int fromUserId, int messageOtherId) async {
+    int fromUserId,
+    int messageOtherId,
+  ) async {
     final query = select(messages)
       ..where((t) =>
           t.messageOtherId.equals(messageOtherId) &

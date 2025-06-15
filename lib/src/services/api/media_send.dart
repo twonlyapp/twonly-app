@@ -52,73 +52,18 @@ Future<ErrorCode?> isAllowedToSend() async {
   return null;
 }
 
-Future initMediaUploader() async {
+Future initFileDownloader() async {
   FileDownloader().updates.listen((update) async {
     switch (update) {
       case TaskStatusUpdate():
-        bool failed = false;
-        int mediaUploadId = int.parse(update.task.taskId);
-        MediaUpload? media = await twonlyDB.mediaUploadsDao
-            .getMediaUploadById(mediaUploadId)
-            .getSingleOrNull();
-        if (media == null) {
-          Log.error(
-            "Got an upload task but no upload media in the media upload database",
-          );
-          return;
+        if (update.task.taskId.contains("upload_")) {
+          await handleUploadStatusUpdate(update);
         }
-
-        if (update.status == TaskStatus.failed ||
-            update.status == TaskStatus.canceled) {
-          Log.error("Upload failed: ${update.status}");
-          failed = true;
-        } else if (update.status == TaskStatus.complete) {
-          if (update.responseStatusCode == 200) {
-            Log.info("Upload of $mediaUploadId success!");
-
-            await twonlyDB.mediaUploadsDao.updateMediaUpload(
-              mediaUploadId,
-              MediaUploadsCompanion(
-                state: Value(UploadState.receiverNotified),
-              ),
-            );
-
-            for (final messageId in media.messageIds!) {
-              await twonlyDB.messagesDao.updateMessageByMessageId(
-                messageId,
-                MessagesCompanion(
-                  acknowledgeByServer: Value(true),
-                  errorWhileSending: Value(false),
-                ),
-              );
-            }
-            return;
-          } else if (update.responseStatusCode != null) {
-            if (update.responseStatusCode! >= 400 &&
-                update.responseStatusCode! < 500) {
-              failed = true;
-            }
-            Log.error(
-              "Got error while uploading: ${update.responseStatusCode}",
-            );
-          }
+        if (update.task.taskId.contains("download_")) {
+          await handleDownloadStatusUpdate(update);
         }
-
-        if (failed) {
-          for (final messageId in media.messageIds!) {
-            await twonlyDB.messagesDao.updateMessageByMessageId(
-              messageId,
-              MessagesCompanion(
-                acknowledgeByServer: Value(true),
-                errorWhileSending: Value(true),
-              ),
-            );
-          }
-        }
-
-        print('Status update for ${update.task} with status ${update.status}');
       case TaskProgressUpdate():
-        print(
+        Log.info(
             'Progress update for ${update.task} with progress ${update.progress}');
     }
   });
@@ -132,8 +77,8 @@ Future initMediaUploader() async {
   if (kDebugMode) {
     FileDownloader().configureNotification(
       running: TaskNotification(
-        'Uploading',
-        'Uploading your {filename} ({progress}).',
+        'Uploading/Downloading',
+        '{filename} ({progress}).',
       ),
       complete: null,
       progressBar: true,
@@ -325,8 +270,7 @@ Future encryptMediaFiles(
 
   state.encryptionMac = secretBox.mac.bytes;
 
-  final algorithm = Sha256();
-  state.sha2Hash = (await algorithm.hash(secretBox.cipherText)).bytes;
+  state.sha2Hash = (await Sha256().hash(secretBox.cipherText)).bytes;
 
   final encryptedBytes = Uint8List.fromList(secretBox.cipherText);
   await writeSendMediaFile(
@@ -444,6 +388,72 @@ Future handleNextMediaUploadSteps(int mediaUploadId) async {
 ///
 ///
 ///
+
+Future handleUploadStatusUpdate(TaskStatusUpdate update) async {
+  bool failed = false;
+  int mediaUploadId = int.parse(update.task.taskId.replaceAll("upload_", ""));
+
+  MediaUpload? media = await twonlyDB.mediaUploadsDao
+      .getMediaUploadById(mediaUploadId)
+      .getSingleOrNull();
+  if (media == null) {
+    Log.error(
+      "Got an upload task but no upload media in the media upload database",
+    );
+    return;
+  }
+
+  if (update.status == TaskStatus.failed ||
+      update.status == TaskStatus.canceled) {
+    Log.error("Upload failed: ${update.status}");
+    failed = true;
+  } else if (update.status == TaskStatus.complete) {
+    if (update.responseStatusCode == 200) {
+      Log.info("Upload of $mediaUploadId success!");
+
+      await twonlyDB.mediaUploadsDao.updateMediaUpload(
+        mediaUploadId,
+        MediaUploadsCompanion(
+          state: Value(UploadState.receiverNotified),
+        ),
+      );
+
+      for (final messageId in media.messageIds!) {
+        await twonlyDB.messagesDao.updateMessageByMessageId(
+          messageId,
+          MessagesCompanion(
+            acknowledgeByServer: Value(true),
+            errorWhileSending: Value(false),
+          ),
+        );
+      }
+      return;
+    } else if (update.responseStatusCode != null) {
+      if (update.responseStatusCode! >= 400 &&
+          update.responseStatusCode! < 500) {
+        failed = true;
+      }
+      Log.error(
+        "Got error while uploading: ${update.responseStatusCode}",
+      );
+    }
+  }
+
+  if (failed) {
+    for (final messageId in media.messageIds!) {
+      await twonlyDB.messagesDao.updateMessageByMessageId(
+        messageId,
+        MessagesCompanion(
+          acknowledgeByServer: Value(true),
+          errorWhileSending: Value(true),
+        ),
+      );
+    }
+  }
+  Log.info(
+      'Status update for ${update.task.taskId} with status ${update.status}');
+}
+
 Future handleUploadError(MediaUpload mediaUpload) async {
   // if the messageIds are already there notify the user about this error...
   if (mediaUpload.messageIds != null) {
@@ -495,6 +505,20 @@ Future<bool> handleMediaUpload(MediaUpload media) async {
         .getSingleOrNull();
 
     if (message == null) continue;
+
+    Contact? contact = await twonlyDB.contactsDao
+        .getContactByUserId(message.contactId)
+        .getSingleOrNull();
+
+    if (contact == null || contact.deleted) {
+      Log.warn(
+          "Contact deleted ${message.contactId} or not found in database.");
+      await twonlyDB.messagesDao.updateMessageByMessageId(
+        message.messageId,
+        MessagesCompanion(errorWhileSending: Value(true)),
+      );
+      continue;
+    }
 
     await twonlyDB.contactsDao.incFlameCounter(
       message.contactId,
@@ -552,7 +576,7 @@ Future<bool> handleMediaUpload(MediaUpload media) async {
 
   try {
     final task = UploadTask.fromFile(
-      taskId: "${media.mediaUploadId}",
+      taskId: "upload_${media.mediaUploadId}",
       displayName: (media.metadata?.isVideo ?? false) ? "image" : "video",
       file: uploadRequestFile,
       url: apiUrl,

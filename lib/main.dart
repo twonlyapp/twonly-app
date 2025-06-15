@@ -48,7 +48,7 @@ void main() async {
   purgeReceivedMediaFiles();
   purgeSendMediaFiles();
 
-  await initMediaUploader();
+  await initFileDownloader();
 
   runApp(
     MultiProvider(

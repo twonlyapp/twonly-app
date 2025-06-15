@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
 
 void initLogger() {
@@ -28,6 +29,8 @@ class Log {
   }
 }
 
+Mutex writeToLogGuard = Mutex();
+
 Future<void> _writeLogToFile(LogRecord record) async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
@@ -36,8 +39,10 @@ Future<void> _writeLogToFile(LogRecord record) async {
   final logMessage =
       '${DateTime.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
 
-  // Append the log message to the file
-  await logFile.writeAsString(logMessage, mode: FileMode.append);
+  writeToLogGuard.protect(() async {
+    // Append the log message to the file
+    await logFile.writeAsString(logMessage, mode: FileMode.append);
+  });
 }
 
 String _getCallerSourceCodeFilename() {

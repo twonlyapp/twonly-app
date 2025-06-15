@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -13,6 +14,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserve
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
+import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_received.dart';
@@ -34,6 +36,9 @@ Future handleServerMessage(server.ServerToClient msg) async {
       } else if (msg.v0.hasNewMessage()) {
         Uint8List body = Uint8List.fromList(msg.v0.newMessage.body);
         int fromUserId = msg.v0.newMessage.fromUserId.toInt();
+        var hash = uint8ListToHex(Uint8List.fromList(
+            (await Sha256().hash(msg.v0.newMessage.body)).bytes));
+        Log.info("Got new message from server: ${hash.substring(0, 10)}");
         response = await handleNewMessage(fromUserId, body);
       } else {
         Log.error("Got a new message from the server: $msg");
@@ -58,6 +63,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
   }
+
+  Log.info("Got: ${message.kind}");
 
   switch (message.kind) {
     case MessageKind.contactRequest:
@@ -151,6 +158,10 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         message.messageId!,
         update,
       );
+
+      // search for older messages, that where not yet ack by the other party
+      DirtyResending.gotAckFromUser(fromUserId);
+
       break;
 
     case MessageKind.pushKey:
@@ -186,6 +197,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           // when a message is received doubled ignore it...
           if ((await twonlyDB.messagesDao
               .containsOtherMessageId(fromUserId, message.messageId!))) {
+            Log.error(
+                "Got a duplicated message from other user: ${message.messageId!}");
             var ok = client.Response_Ok()..none = true;
             return client.Response()..ok = ok;
           }
@@ -215,11 +228,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
               fromUserId,
               responseToMessageId,
               MessagesCompanion(
-                  errorWhileSending: Value(false),
-                  openedAt: Value(
-                    DateTime.now(),
-                  ) // when a user reacted to the media file, it should be marked as opened
-                  ),
+                errorWhileSending: Value(false),
+                openedAt: Value(
+                  DateTime.now(),
+                ), // when a user reacted to the media file, it should be marked as opened
+              ),
             );
           }
 
@@ -247,6 +260,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           if (messageId == null) {
             return client.Response()..error = ErrorCode.InternalError;
           }
+
           if (message.kind == MessageKind.media) {
             twonlyDB.contactsDao.incFlameCounter(
               fromUserId,
