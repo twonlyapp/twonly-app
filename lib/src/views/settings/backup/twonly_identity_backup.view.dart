@@ -82,10 +82,12 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
             Padding(
               padding: EdgeInsetsGeometry.all(5),
               child: Text(
-                (passwordCtrl.text.length <= 10 && passwordCtrl.text.isNotEmpty)
-                    ? "Passwort muss mind. 10 Zeichen lang sein."
-                    : "",
-                style: TextStyle(color: Colors.red),
+                "Passwort muss mind. 10 Zeichen lang sein.",
+                style: TextStyle(
+                    color: ((passwordCtrl.text.length <= 10 &&
+                            passwordCtrl.text.isNotEmpty))
+                        ? Colors.red
+                        : Colors.transparent),
               ),
             ),
             const SizedBox(height: 5),
@@ -108,11 +110,12 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
             Padding(
               padding: EdgeInsetsGeometry.all(5),
               child: Text(
-                (passwordCtrl.text != repeatedPasswordCtrl.text &&
-                        repeatedPasswordCtrl.text.isNotEmpty)
-                    ? "Passwörter stimmen nicht überein."
-                    : "",
-                style: TextStyle(color: Colors.red),
+                "Passwörter stimmen nicht überein.",
+                style: TextStyle(
+                    color: (passwordCtrl.text != repeatedPasswordCtrl.text &&
+                            repeatedPasswordCtrl.text.isNotEmpty)
+                        ? Colors.red
+                        : Colors.transparent),
               ),
             ),
           ],
