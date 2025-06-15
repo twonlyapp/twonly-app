@@ -54,37 +54,34 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      onPopInvokedWithResult: (bool didPop, Object? result) async {},
-      child: Scaffold(
-        body: Center(
-          child: Container(
-            padding: EdgeInsets.all(100),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  "twonly needs access to the camera and microphone.",
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 50),
-                FilledButton.icon(
-                  label: Text("Request permissions"),
-                  icon: const Icon(Icons.perm_camera_mic),
-                  onPressed: () async {
-                    try {
-                      await permissionServices();
-                      if (await checkPermissions()) {
-                        widget.onSuccess();
-                      }
-                    } catch (e) {
-                      Log.error(e);
+    return Scaffold(
+      body: Center(
+        child: Container(
+          padding: EdgeInsets.all(100),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "twonly needs access to the camera and microphone.",
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 50),
+              FilledButton.icon(
+                label: Text("Request permissions"),
+                icon: const Icon(Icons.perm_camera_mic),
+                onPressed: () async {
+                  try {
+                    await permissionServices();
+                    if (await checkPermissions()) {
+                      widget.onSuccess();
                     }
-                  },
-                ),
-              ],
-            ),
+                  } catch (e) {
+                    Log.error(e);
+                  }
+                },
+              ),
+            ],
           ),
         ),
       ),

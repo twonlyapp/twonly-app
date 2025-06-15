@@ -119,10 +119,18 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           ],
           onGenerateTitle: (BuildContext context) => "twonly",
           theme: ThemeData(
-              colorScheme:
-                  ColorScheme.fromSeed(seedColor: const Color(0xFF57CC99)),
-              inputDecorationTheme:
-                  const InputDecorationTheme(border: OutlineInputBorder())),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF57CC99),
+            ),
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+              },
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              border: OutlineInputBorder(),
+            ),
+          ),
           darkTheme: ThemeData.dark().copyWith(
             colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.dark,
