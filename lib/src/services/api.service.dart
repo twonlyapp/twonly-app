@@ -13,7 +13,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
@@ -347,11 +346,10 @@ class ApiService {
         server.Response_Ok ok = result.value;
         if (ok.hasAuthenticated()) {
           server.Response_Authenticated authenticated = ok.authenticated;
-          UserData? user = await getUser();
-          if (user != null) {
+          updateUserdata((user) {
             user.subscriptionPlan = authenticated.plan;
-            await updateUser(user);
-          }
+            return user;
+          });
         }
         Log.info("websocket is authenticated");
         onAuthenticated();

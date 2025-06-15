@@ -38,8 +38,10 @@ Future signalHandleNewServerConnection() async {
     Log.error("could not generate a new signed pre key!");
     return;
   }
-  user.signalLastSignedPreKeyUpdated = DateTime.now();
-  await updateUser(user);
+  await updateUserdata((user) {
+    user.signalLastSignedPreKeyUpdated = DateTime.now();
+    return user;
+  });
   Result res = await apiService.updateSignedPreKey(
     signedPreKey.id,
     signedPreKey.getKeyPair().publicKey.serialize(),
@@ -47,10 +49,10 @@ Future signalHandleNewServerConnection() async {
   );
   if (res.isError) {
     Log.error("could not update the signed pre key: ${res.error}");
-    final UserData? user = await getUser();
-    if (user == null) return;
-    user.signalLastSignedPreKeyUpdated = null;
-    await updateUser(user);
+    await updateUserdata((user) {
+      user.signalLastSignedPreKeyUpdated = null;
+      return user;
+    });
   } else {
     Log.info("updated signed pre key");
   }

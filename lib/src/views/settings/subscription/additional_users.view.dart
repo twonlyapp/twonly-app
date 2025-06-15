@@ -14,24 +14,27 @@ import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
-  List<Response_AddAccountsInvite>? ballance;
-  final user = await getUser();
-  if (user == null) return ballance;
-  ballance = await apiService.getAdditionalUserInvites();
+  final ballance = await apiService.getAdditionalUserInvites();
   if (ballance != null) {
-    user.additionalUserInvites =
-        jsonEncode(ballance.map((x) => x.writeToJson()).toList());
-    await updateUser(user);
-  } else if (user.lastPlanBallance != null) {
+    await updateUserdata((u) {
+      u.additionalUserInvites =
+          jsonEncode(ballance.map((x) => x.writeToJson()).toList());
+      return u;
+    });
+    return ballance;
+  }
+  final user = await getUser();
+  if (user != null && user.lastPlanBallance != null) {
     try {
       List<String> decoded = jsonDecode(user.additionalUserInvites!);
-      ballance =
-          decoded.map((x) => Response_AddAccountsInvite.fromJson(x)).toList();
+      return decoded
+          .map((x) => Response_AddAccountsInvite.fromJson(x))
+          .toList();
     } catch (e) {
       Log.error("from json: $e");
     }
   }
-  return ballance;
+  return null;
 }
 
 class AdditionalUsersView extends StatefulWidget {

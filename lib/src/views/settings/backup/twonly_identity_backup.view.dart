@@ -13,12 +13,14 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("twonly-Identity Backup"),
+        title: Text("twonly Safe"),
       ),
-      body: ListView(children: [
-        Text(
-            'Backup of your twonly-Identity. As twonly does not have any second factor like your phone number or email, this backup contains your twonly-Identity. If you lose your device, the only option to recover is with the twonly-ID Backup. This backup will be protected by a password chosen by you in the next step and anonymously uploaded to the twonly servers. Read more [here](https://twonly.eu/s/backup).'),
-      ]),
+      body: ListView(
+        children: [
+          Text(
+              'Backup of your twonly-Identity. As twonly does not have any second factor like your phone number or email, this backup contains your twonly-Identity. If you lose your device, the only option to recover is with the twonly-ID Backup. This backup will be protected by a password chosen by you in the next step and anonymously uploaded to the twonly servers. Read more [here](https://twonly.eu/s/backup).'),
+        ],
+      ),
     );
   }
 }

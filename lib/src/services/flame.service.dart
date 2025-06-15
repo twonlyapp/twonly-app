@@ -21,8 +21,10 @@ Future syncFlameCounters() async {
       contacts.firstWhere((x) => x.totalMediaCounter == maxMessageCounter);
 
   if (user.myBestFriendContactId != bestFriend.userId) {
-    user.myBestFriendContactId = bestFriend.userId;
-    await updateUser(user);
+    await updateUserdata((user) {
+      user.myBestFriendContactId = bestFriend.userId;
+      return user;
+    });
   }
 
   for (Contact contact in contacts) {

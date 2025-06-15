@@ -29,16 +29,17 @@ class _ProfileViewState extends State<ProfileView> {
     setState(() {});
   }
 
-  Future updateUserDisplayname(String displayName) async {
-    UserData? user = await getUser();
-    if (user == null) return null;
-    user.displayName = displayName;
-    if (user.avatarCounter == null) {
-      user.avatarCounter = 1;
-    } else {
-      user.avatarCounter = user.avatarCounter! + 1;
-    }
-    await updateUser(user);
+  Future updateUserDisplayName(String displayName) async {
+    await updateUserdata((user) {
+      user.displayName = displayName;
+      if (user.avatarCounter == null) {
+        user.avatarCounter = 1;
+      } else {
+        user.avatarCounter = user.avatarCounter! + 1;
+      }
+      return user;
+    });
+
     await notifyContactsAboutProfileChange();
     initAsync();
   }
@@ -83,7 +84,7 @@ class _ProfileViewState extends State<ProfileView> {
               final displayName =
                   await showDisplayNameChangeDialog(context, user!.displayName);
               if (context.mounted && displayName != null && displayName != "") {
-                updateUserDisplayname(displayName);
+                updateUserDisplayName(displayName);
               }
             },
           ),

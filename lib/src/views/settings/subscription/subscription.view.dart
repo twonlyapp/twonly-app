@@ -36,16 +36,18 @@ String localePrizing(BuildContext context, int cents) {
 }
 
 Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
-  Response_PlanBallance? ballance;
-  final user = await getUser();
-  if (user == null) return ballance;
-  ballance = await apiService.getPlanBallance();
+  final ballance = await apiService.getPlanBallance();
   if (ballance != null) {
-    user.lastPlanBallance = ballance.writeToJson();
-    await updateUser(user);
-  } else if (user.lastPlanBallance != null && useCache) {
+    updateUserdata((u) {
+      u.lastPlanBallance = ballance.writeToJson();
+      return u;
+    });
+    return ballance;
+  }
+  final user = await getUser();
+  if (user != null && user.lastPlanBallance != null && useCache) {
     try {
-      ballance = Response_PlanBallance.fromJson(
+      return Response_PlanBallance.fromJson(
         user.lastPlanBallance!,
       );
     } catch (e) {

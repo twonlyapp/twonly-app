@@ -7,6 +7,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/account.view.dart';
 import 'package:twonly/src/views/settings/appearance.view.dart';
+import 'package:twonly/src/views/settings/backup/backup.view.dart';
 import 'package:twonly/src/views/settings/chat/chat_settings.view.dart';
 import 'package:twonly/src/views/settings/data_and_storage.view.dart';
 import 'package:twonly/src/views/settings/notification.view.dart';
@@ -120,16 +121,16 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     }));
                   },
                 ),
-                // BetterListTile(
-                //   icon: Icons.lock_clock_rounded,
-                //   text: context.lang.settingsBackup,
-                //   onTap: () {
-                //     Navigator.push(context,
-                //         MaterialPageRoute(builder: (context) {
-                //       return BackupView();
-                //     }));
-                //   },
-                // ),
+                BetterListTile(
+                  icon: Icons.lock_clock_rounded,
+                  text: context.lang.settingsBackup,
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return BackupView();
+                    }));
+                  },
+                ),
                 const Divider(),
                 BetterListTile(
                   icon: FontAwesomeIcons.sun,

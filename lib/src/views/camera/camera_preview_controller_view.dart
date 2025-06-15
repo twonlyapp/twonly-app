@@ -558,11 +558,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             onPressed: () async {
                               useHighQuality = !useHighQuality;
                               setState(() {});
-                              var user = await getUser();
-                              if (user != null) {
+                              await updateUserdata((user) {
                                 user.useHighQuality = useHighQuality;
-                                updateUser(user);
-                              }
+                                return user;
+                              });
                             },
                           ),
                         if (!hasAudioPermission)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/services/backup.identitiy.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/backup/twonly_identity_backup.view.dart';
 
@@ -22,10 +23,10 @@ class _BackupViewState extends State<BackupView> {
   }
 
   Future initAsync() async {
-    setState(() {
-      _twonlyIdBackupEnabled = true;
-      _dataBackupEnabled = false;
-    });
+    _twonlyIdBackupEnabled = await isIdentityBackupEnabled();
+    _twonlyIdLastBackup = await getLastIdentityBackup();
+    _dataBackupEnabled = false;
+    setState(() {});
   }
 
   @override
@@ -37,7 +38,7 @@ class _BackupViewState extends State<BackupView> {
       body: ListView(
         children: [
           BackupOption(
-            title: 'twonly-Identity Backup',
+            title: 'twonly Safe',
             description:
                 'Back up your twonly identity, as this is the only way to restore your account if you uninstall or lose your phone.',
             lastBackup: _twonlyIdLastBackup,
@@ -51,7 +52,7 @@ class _BackupViewState extends State<BackupView> {
             },
           ),
           BackupOption(
-            title: 'Daten-Backup',
+            title: 'Daten-Backup (Coming Soon)',
             description:
                 'This backup contains besides of your twonly-Identity also all of your media files. This backup will also be encrypted using a password chosen by the user but stored locally on the smartphone. You then have to ensure to manually copy it onto your laptop or device of your choice.',
             autoBackupEnabled: _dataBackupEnabled,

@@ -34,20 +34,24 @@ Future<ErrorCode?> isAllowedToSend() async {
     return ErrorCode.PlanNotAllowed;
   }
   if (user.subscriptionPlan == "Free") {
+    int? todaysImageCounter = user.todaysImageCounter;
     if (user.lastImageSend != null && user.todaysImageCounter != null) {
       if (isToday(user.lastImageSend!)) {
         if (user.todaysImageCounter == 3) {
           return ErrorCode.PlanLimitReached;
         }
-        user.todaysImageCounter = user.todaysImageCounter! + 1;
+        todaysImageCounter = user.todaysImageCounter! + 1;
       } else {
-        user.todaysImageCounter = 1;
+        todaysImageCounter = 1;
       }
     } else {
-      user.todaysImageCounter = 1;
+      todaysImageCounter = 1;
     }
-    user.lastImageSend = DateTime.now();
-    await updateUser(user);
+    await updateUserdata((user) {
+      user.lastImageSend = DateTime.now();
+      user.todaysImageCounter = todaysImageCounter;
+      return user;
+    });
   }
   return null;
 }

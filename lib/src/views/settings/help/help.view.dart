@@ -39,10 +39,10 @@ class HelpView extends StatelessWidget {
             title: Text(context.lang.settingsResetTutorials),
             subtitle: Text(context.lang.settingsResetTutorialsDesc),
             onTap: () async {
-              final user = await getUser();
-              if (user == null) return;
-              user.tutorialDisplayed = [];
-              await updateUser(user);
+              updateUserdata((user) {
+                user.tutorialDisplayed = [];
+                return user;
+              });
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

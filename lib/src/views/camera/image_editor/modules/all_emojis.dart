@@ -29,21 +29,21 @@ class _EmojisState extends State<Emojis> {
   }
 
   Future selectEmojis(String emoji) async {
-    final user = await getUser();
-    if (user == null) return;
-    if (user.lastUsedEditorEmojis == null) {
-      user.lastUsedEditorEmojis = [emoji];
-    } else {
-      if (user.lastUsedEditorEmojis!.contains(emoji)) {
-        user.lastUsedEditorEmojis!.remove(emoji);
+    await updateUserdata((user) {
+      if (user.lastUsedEditorEmojis == null) {
+        user.lastUsedEditorEmojis = [emoji];
+      } else {
+        if (user.lastUsedEditorEmojis!.contains(emoji)) {
+          user.lastUsedEditorEmojis!.remove(emoji);
+        }
+        user.lastUsedEditorEmojis!.insert(0, emoji);
+        if (user.lastUsedEditorEmojis!.length > 12) {
+          user.lastUsedEditorEmojis = user.lastUsedEditorEmojis!.sublist(0, 12);
+        }
+        user.lastUsedEditorEmojis!.toSet().toList();
       }
-      user.lastUsedEditorEmojis!.insert(0, emoji);
-      if (user.lastUsedEditorEmojis!.length > 12) {
-        user.lastUsedEditorEmojis = user.lastUsedEditorEmojis!.sublist(0, 12);
-      }
-      user.lastUsedEditorEmojis!.toSet().toList();
-    }
-    await updateUser(user);
+      return user;
+    });
     if (!mounted) return;
     Navigator.pop(
       context,

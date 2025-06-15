@@ -48,10 +48,10 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
   }
 
   void toggleStoreInGallery() async {
-    final user = await getUser();
-    if (user == null) return;
-    user.storeMediaFilesInGallery = !storeMediaFilesInGallery;
-    await updateUser(user);
+    await updateUserdata((u) {
+      u.storeMediaFilesInGallery = !storeMediaFilesInGallery;
+      return u;
+    });
     initAsync();
   }
 
@@ -179,10 +179,12 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
     }
 
     // Call the onUpdate callback to notify the parent widget
-    final user = await getUser();
-    if (user == null) return;
-    user.autoDownloadOptions = autoDownloadOptions;
-    await updateUser(user);
+
+    await updateUserdata((u) {
+      u.autoDownloadOptions = autoDownloadOptions;
+      return u;
+    });
+
     widget.onUpdate();
     setState(() {});
   }

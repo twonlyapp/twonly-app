@@ -21,10 +21,9 @@ class SettingsChangeProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
     notifyListeners();
 
-    var user = await getUser();
-    if (user != null) {
+    await updateUserdata((user) {
       user.themeMode = newThemeMode;
-      await updateUser(user);
-    }
+      return user;
+    });
   }
 }

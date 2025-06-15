@@ -44,6 +44,10 @@ class UserData {
 
   DateTime? signalLastSignedPreKeyUpdated;
 
+  @JsonKey(defaultValue: false)
+  bool identityBackupEnabled = false;
+  DateTime? identityBackupLastBackupTime;
+
   final int userId;
 
   factory UserData.fromJson(Map<String, dynamic> json) =>

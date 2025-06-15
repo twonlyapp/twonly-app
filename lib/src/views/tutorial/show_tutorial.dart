@@ -47,7 +47,12 @@ Future<bool> checkIfTutorialAlreadyShown(String tutorialId) async {
     return true;
   }
   user.tutorialDisplayed!.add(tutorialId);
-  await updateUser(user);
+
+  await updateUserdata((u) {
+    u.tutorialDisplayed = user.tutorialDisplayed;
+    return u;
+  });
+
   return false;
 }
 

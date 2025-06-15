@@ -44,7 +44,12 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..signalLastSignedPreKeyUpdated =
           json['signalLastSignedPreKeyUpdated'] == null
               ? null
-              : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String);
+              : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
+      ..identityBackupEnabled = json['identityBackupEnabled'] as bool? ?? false
+      ..identityBackupLastBackupTime =
+          json['identityBackupLastBackupTime'] == null
+              ? null
+              : DateTime.parse(json['identityBackupLastBackupTime'] as String);
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'username': instance.username,
@@ -69,6 +74,9 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'myBestFriendContactId': instance.myBestFriendContactId,
       'signalLastSignedPreKeyUpdated':
           instance.signalLastSignedPreKeyUpdated?.toIso8601String(),
+      'identityBackupEnabled': instance.identityBackupEnabled,
+      'identityBackupLastBackupTime':
+          instance.identityBackupLastBackupTime?.toIso8601String(),
       'userId': instance.userId,
     };
 

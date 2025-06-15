@@ -36,11 +36,10 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
     } else {
       if (selectedEmojis.length < 12) {
         selectedEmojis.add(emoji);
-        var user = await getUser();
-        if (user != null) {
+        await updateUserdata((user) {
           user.preSelectedEmojies = selectedEmojis;
-          await updateUser(user);
-        }
+          return user;
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -98,11 +97,10 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
             selectedEmojis =
                 EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
             setState(() {});
-            var user = await getUser();
-            if (user != null) {
+            await updateUserdata((user) {
               user.preSelectedEmojies = selectedEmojis;
-              await updateUser(user);
-            }
+              return user;
+            });
           },
           child: Icon(Icons.settings_backup_restore_rounded),
         ),

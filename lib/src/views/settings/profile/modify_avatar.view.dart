@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import "package:get/get.dart";
@@ -12,17 +11,16 @@ class ModifyAvatar extends StatelessWidget {
   const ModifyAvatar({super.key});
 
   Future updateUserAvatar(String json, String svg) async {
-    UserData? user = await getUser();
-    if (user == null) return null;
-
-    user.avatarJson = json;
-    user.avatarSvg = svg;
-    if (user.avatarCounter == null) {
-      user.avatarCounter = 1;
-    } else {
-      user.avatarCounter = user.avatarCounter! + 1;
-    }
-    await updateUser(user);
+    await updateUserdata((user) {
+      user.avatarJson = json;
+      user.avatarSvg = svg;
+      if (user.avatarCounter == null) {
+        user.avatarCounter = 1;
+      } else {
+        user.avatarCounter = user.avatarCounter! + 1;
+      }
+      return user;
+    });
     await notifyContactsAboutProfileChange();
   }
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/model/json/userdata.dart';
@@ -33,18 +34,27 @@ Future<UserData?> getUser() async {
 
 Future updateUsersPlan(BuildContext context, String planId) async {
   context.read<CustomChangeProvider>().plan = planId;
-  var user = await getUser();
-  if (user != null) {
+
+  await updateUserdata((user) {
     user.subscriptionPlan = planId;
-    await updateUser(user);
-  }
+    return user;
+  });
+
   if (!context.mounted) return;
   context.read<CustomChangeProvider>().updatePlan(planId);
 }
 
-Future updateUser(UserData userData) async {
-  final storage = FlutterSecureStorage();
-  storage.write(key: "userData", value: jsonEncode(userData));
+Mutex updateProtection = Mutex();
+
+Future<UserData?> updateUserdata(Function(UserData userData) updateUser) async {
+  return await updateProtection.protect<UserData?>(() async {
+    final user = await getUser();
+    if (user == null) return null;
+    UserData updated = updateUser(user);
+    final storage = FlutterSecureStorage();
+    storage.write(key: "userData", value: jsonEncode(updated));
+    return user;
+  });
 }
 
 Future<bool> deleteLocalUserData() async {
