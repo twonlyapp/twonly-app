@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/services/backup.identitiy.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/backup/twonly_identity_backup.view.dart';
 
 class BackupView extends StatefulWidget {
@@ -23,10 +23,13 @@ class _BackupViewState extends State<BackupView> {
   }
 
   Future initAsync() async {
-    _twonlyIdBackupEnabled = await isIdentityBackupEnabled();
-    _twonlyIdLastBackup = await getLastIdentityBackup();
-    _dataBackupEnabled = false;
-    setState(() {});
+    final user = await getUser();
+    if (user != null) {
+      _twonlyIdBackupEnabled = user.identityBackupEnabled;
+      _twonlyIdLastBackup = user.identityBackupLastBackupTime;
+      _dataBackupEnabled = false;
+      setState(() {});
+    }
   }
 
   @override
