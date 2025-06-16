@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:restart_app/restart_app.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/api/media_received.dart';
-import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/chats/chat_list_components/backup_notice.card.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
+import 'package:twonly/src/views/chats/chat_list_components/demo_user.card.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/message_send_state_icon.dart';
@@ -179,48 +179,19 @@ class _ChatListViewState extends State<ChatListView> {
                     child: ListView.builder(
                       itemCount: _pinnedContacts.length +
                           (_pinnedContacts.isNotEmpty ? 1 : 0) +
-                          _contacts.length,
-                      itemExtentBuilder: (index, dimensions) {
-                        int adjustedIndex = index - _pinnedContacts.length;
-                        if (_pinnedContacts.isNotEmpty && adjustedIndex == 0) {
-                          return 16;
-                        }
-                        return 72;
-                      },
+                          (gIsDemoUser ? 1 : 0) +
+                          _contacts.length +
+                          1,
                       itemBuilder: (context, index) {
-                        if (gIsDemoUser && index == 0) {
-                          return Container(
-                            color: isDarkMode(context)
-                                ? Colors.white
-                                : Colors.black,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "This is a Demo-Preview.",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: !isDarkMode(context)
-                                        ? Colors.white
-                                        : Colors.black,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                                FilledButton(
-                                  onPressed: () async {
-                                    await deleteLocalUserData();
-                                    Restart.restartApp(
-                                      notificationTitle: 'Demo-Mode exited.',
-                                      notificationBody:
-                                          'Click here to open the app again',
-                                    );
-                                  },
-                                  child: Text("Register"),
-                                )
-                              ],
-                            ),
-                          );
+                        if (index == 0) {
+                          return BackupNoticeCard();
+                        }
+                        index -= 1;
+                        if (gIsDemoUser) {
+                          if (index == 0) {
+                            return DemoUserCard();
+                          }
+                          index -= 1;
                         }
                         // Check if the index is for the pinned users
                         if (index < _pinnedContacts.length) {

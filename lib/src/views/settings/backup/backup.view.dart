@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/services/backup.identitiy.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/settings/backup/twonly_identity_backup.view.dart';
+import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
 
 class BackupView extends StatefulWidget {
   const BackupView({super.key});
@@ -47,10 +48,14 @@ class _BackupViewState extends State<BackupView> {
             lastBackup: _twonlyIdLastBackup,
             autoBackupEnabled: _twonlyIdBackupEnabled,
             onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return TwonlyIdentityBackupView();
-              }));
+              if (_twonlyIdBackupEnabled) {
+                await disableTwonlySafe();
+              } else {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return TwonlyIdentityBackupView();
+                }));
+              }
               initAsync();
             },
           ),
@@ -71,6 +76,7 @@ class _BackupViewState extends State<BackupView> {
 class BackupOption extends StatelessWidget {
   final String title;
   final String description;
+  final Widget? child;
   final bool autoBackupEnabled;
   final DateTime? lastBackup;
   final Function() onTap;
@@ -82,6 +88,7 @@ class BackupOption extends StatelessWidget {
     required this.autoBackupEnabled,
     required this.lastBackup,
     required this.onTap,
+    this.child,
   });
 
   String formatDateTime(DateTime? dateTime) {
@@ -118,6 +125,7 @@ class BackupOption extends StatelessWidget {
               SizedBox(height: 8.0),
               Text(description),
               SizedBox(height: 8.0),
+              (child != null) ? child! : Container(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

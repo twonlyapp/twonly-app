@@ -836,4 +836,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Backup';
+
+  @override
+  String get backupNoticeTitle => 'Kein Backup konfiguriert';
+
+  @override
+  String get backupNoticeDesc =>
+      'Wenn du dein Gerät wechselst oder verlierst, kann ohne Backup niemand dein Account wiederherstellen. Sichere deshalb deine Daten.';
+
+  @override
+  String get backupNoticeLater => 'Später erinnern';
+
+  @override
+  String get backupNoticeOpenBackup => 'Backup erstellen';
 }

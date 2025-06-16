@@ -259,5 +259,9 @@
     "tutorialChatMessagesReopenMessageDesc": "Wenn dein Freund dir ein Bild oder Video mit unendlicher Anzeigezeit gesendet hat, kannst du es bis zum Neustart der App jederzeit erneut öffnen. Um dies zu tun, musst du einfach doppelt auf die Nachricht klicken. Dein Freund erhält dann eine Benachrichtigung, dass du das Bild erneut angesehen hast.",
     "memoriesEmpty": "Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen.",
     "deleteImageTitle": "Bist du dir sicher?",
-    "deleteImageBody": "Das Bild wird unwiderruflich gelöscht."
+    "deleteImageBody": "Das Bild wird unwiderruflich gelöscht.",
+    "backupNoticeTitle": "Kein Backup konfiguriert",
+    "backupNoticeDesc": "Wenn du dein Gerät wechselst oder verlierst, kann ohne Backup niemand dein Account wiederherstellen. Sichere deshalb deine Daten.",
+    "backupNoticeLater": "Später erinnern",
+    "backupNoticeOpenBackup": "Backup erstellen"
 }

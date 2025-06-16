@@ -787,6 +787,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
+  hashlib:
+    dependency: "direct main"
+    description:
+      name: hashlib
+      sha256: c742f4250067e52686e2bbc73013794e748511473baa7f875289681436daa4ed
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
+  hashlib_codecs:
+    dependency: transitive
+    description:
+      name: hashlib_codecs
+      sha256: "0e1a17c47792fd131a9bf49b811c394b22516287746ee14cd0b0c22a34136699"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   html:
     dependency: transitive
     description:

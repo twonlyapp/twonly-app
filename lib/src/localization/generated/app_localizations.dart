@@ -1579,6 +1579,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup'**
   String get settingsBackup;
+
+  /// No description provided for @backupNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup configured'**
+  String get backupNoticeTitle;
+
+  /// No description provided for @backupNoticeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you change or lose your device, no one can restore your account without a backup. Therefore, back up your data.'**
+  String get backupNoticeDesc;
+
+  /// No description provided for @backupNoticeLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind later'**
+  String get backupNoticeLater;
+
+  /// No description provided for @backupNoticeOpenBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backup'**
+  String get backupNoticeOpenBackup;
 }
 
 class _AppLocalizationsDelegate

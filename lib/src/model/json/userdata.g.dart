@@ -49,15 +49,31 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..identityBackupLastBackupTime =
           json['identityBackupLastBackupTime'] == null
               ? null
-              : DateTime.parse(json['identityBackupLastBackupTime'] as String);
+              : DateTime.parse(json['identityBackupLastBackupTime'] as String)
+      ..identityBackupLastBackupSize =
+          (json['identityBackupLastBackupSize'] as num?)?.toInt() ?? 0
+      ..nextTimeToShowBackupNotice = json['nextTimeToShowBackupNotice'] == null
+          ? null
+          : DateTime.parse(json['nextTimeToShowBackupNotice'] as String)
+      ..backupServer = json['backupServer'] == null
+          ? null
+          : BackupServer.fromJson(json['backupServer'] as Map<String, dynamic>)
+      ..twonlySafeEncryptionKey =
+          (json['twonlySafeEncryptionKey'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList()
+      ..twonlySafeBackupId = (json['twonlySafeBackupId'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList();
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
+      'userId': instance.userId,
+      'isDemoUser': instance.isDemoUser,
       'username': instance.username,
       'displayName': instance.displayName,
       'avatarSvg': instance.avatarSvg,
       'avatarJson': instance.avatarJson,
       'avatarCounter': instance.avatarCounter,
-      'isDemoUser': instance.isDemoUser,
       'defaultShowTime': instance.defaultShowTime,
       'subscriptionPlan': instance.subscriptionPlan,
       'useHighQuality': instance.useHighQuality,
@@ -77,7 +93,12 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'identityBackupEnabled': instance.identityBackupEnabled,
       'identityBackupLastBackupTime':
           instance.identityBackupLastBackupTime?.toIso8601String(),
-      'userId': instance.userId,
+      'identityBackupLastBackupSize': instance.identityBackupLastBackupSize,
+      'nextTimeToShowBackupNotice':
+          instance.nextTimeToShowBackupNotice?.toIso8601String(),
+      'backupServer': instance.backupServer,
+      'twonlySafeEncryptionKey': instance.twonlySafeEncryptionKey,
+      'twonlySafeBackupId': instance.twonlySafeBackupId,
     };
 
 const _$ThemeModeEnumMap = {
@@ -85,3 +106,16 @@ const _$ThemeModeEnumMap = {
   ThemeMode.light: 'light',
   ThemeMode.dark: 'dark',
 };
+
+BackupServer _$BackupServerFromJson(Map<String, dynamic> json) => BackupServer(
+      serverUrl: json['serverUrl'] as String,
+      retentionDays: (json['retentionDays'] as num).toInt(),
+      maxBackupBytes: (json['maxBackupBytes'] as num).toInt(),
+    );
+
+Map<String, dynamic> _$BackupServerToJson(BackupServer instance) =>
+    <String, dynamic>{
+      'serverUrl': instance.serverUrl,
+      'retentionDays': instance.retentionDays,
+      'maxBackupBytes': instance.maxBackupBytes,
+    };

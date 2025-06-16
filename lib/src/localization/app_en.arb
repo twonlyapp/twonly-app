@@ -419,5 +419,9 @@
   "memoriesEmpty": "As soon as you save pictures or videos, they end up here in your memories.",
   "deleteImageTitle": "Are you sure?",
   "deleteImageBody": "The image will be irrevocably deleted.",
-  "settingsBackup": "Backup"
+  "settingsBackup": "Backup",
+  "backupNoticeTitle": "No backup configured",
+  "backupNoticeDesc": "If you change or lose your device, no one can restore your account without a backup. Therefore, back up your data.",
+  "backupNoticeLater": "Remind later",
+  "backupNoticeOpenBackup": "Create backup"
 }

@@ -830,4 +830,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsBackup => 'Backup';
+
+  @override
+  String get backupNoticeTitle => 'No backup configured';
+
+  @override
+  String get backupNoticeDesc =>
+      'If you change or lose your device, no one can restore your account without a backup. Therefore, back up your data.';
+
+  @override
+  String get backupNoticeLater => 'Remind later';
+
+  @override
+  String get backupNoticeOpenBackup => 'Create backup';
 }

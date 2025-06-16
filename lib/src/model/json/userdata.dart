@@ -12,17 +12,21 @@ class UserData {
     required this.isDemoUser,
   });
 
-  String username;
-  String displayName;
-
-  String? avatarSvg;
-  String? avatarJson;
-  int? avatarCounter;
+  final int userId;
 
   @JsonKey(defaultValue: false)
   bool isDemoUser = false;
 
-  // settings
+  // -- USER PROFILE --
+
+  String username;
+  String displayName;
+  String? avatarSvg;
+  String? avatarJson;
+  int? avatarCounter;
+
+  // --- SETTINGS ---
+
   int? defaultShowTime;
   @JsonKey(defaultValue: "Preview")
   String subscriptionPlan;
@@ -44,13 +48,37 @@ class UserData {
 
   DateTime? signalLastSignedPreKeyUpdated;
 
+  // --- BACKUP ---
+
   @JsonKey(defaultValue: false)
   bool identityBackupEnabled = false;
   DateTime? identityBackupLastBackupTime;
 
-  final int userId;
+  @JsonKey(defaultValue: 0)
+  int identityBackupLastBackupSize = 0;
+  DateTime? nextTimeToShowBackupNotice;
+  BackupServer? backupServer;
+  List<int>? twonlySafeEncryptionKey;
+  List<int>? twonlySafeBackupId;
 
   factory UserData.fromJson(Map<String, dynamic> json) =>
       _$UserDataFromJson(json);
   Map<String, dynamic> toJson() => _$UserDataToJson(this);
+}
+
+@JsonSerializable()
+class BackupServer {
+  BackupServer({
+    required this.serverUrl,
+    required this.retentionDays,
+    required this.maxBackupBytes,
+  });
+
+  String serverUrl;
+  int retentionDays;
+  int maxBackupBytes;
+
+  factory BackupServer.fromJson(Map<String, dynamic> json) =>
+      _$BackupServerFromJson(json);
+  Map<String, dynamic> toJson() => _$BackupServerToJson(this);
 }

@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/services/backup.identitiy.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/settings/backup/twonly_safe_server.view.dart';
 
 class TwonlyIdentityBackupView extends StatefulWidget {
   const TwonlyIdentityBackupView({super.key});
@@ -13,8 +16,24 @@ class TwonlyIdentityBackupView extends StatefulWidget {
 
 class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
   bool obscureText = true;
+  bool isLoading = false;
   final TextEditingController passwordCtrl = TextEditingController();
   final TextEditingController repeatedPasswordCtrl = TextEditingController();
+
+  Future onPressedEnableTwonlySafe() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await enableTwonlySafe(passwordCtrl.text);
+
+    if (!mounted) return;
+    setState(() {
+      isLoading = false;
+    });
+
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +44,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
           IconButton(
             onPressed: () {
               showAlertDialog(context, "twonly Safe",
-                  "Backup of your twonly-Identity. As twonly does not have any second factor like your phone number or email, this backup contains your twonly-Identity. If you lose your device, the only option to recover is with the twonly-ID Backup. This backup will be protected by a password chosen by you in the next step and anonymously uploaded to the twonly servers. Read more [here](https://twonly.eu/s/backup)");
+                  "twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen user name so that others can find you.\n\ntwonly Safe regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device. ");
             },
             icon: FaIcon(FontAwesomeIcons.circleInfo),
             iconSize: 18,
@@ -118,6 +137,35 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                         : Colors.transparent),
               ),
             ),
+            SizedBox(height: 10),
+            Center(
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return TwonlySafeServerView();
+                  }));
+                },
+                child: Text("Experten Einstellungen"),
+              ),
+            ),
+            SizedBox(height: 10),
+            Center(
+                child: FilledButton.icon(
+              onPressed: (!isLoading &&
+                      (passwordCtrl.text == repeatedPasswordCtrl.text &&
+                              passwordCtrl.text.length >= 10 ||
+                          kDebugMode))
+                  ? onPressedEnableTwonlySafe
+                  : null,
+              icon: isLoading
+                  ? SizedBox(
+                      height: 12,
+                      width: 12,
+                      child: CircularProgressIndicator(strokeWidth: 1),
+                    )
+                  : Icon(Icons.lock_clock_rounded),
+              label: Text("Automatisches Backup aktivieren"),
+            ))
           ],
         ),
       ),
