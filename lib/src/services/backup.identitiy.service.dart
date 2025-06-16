@@ -52,6 +52,7 @@ Future<(Uint8List, Uint8List)> getMasterKey(
   );
 
   // Derive the key
-  final key = (await compute(scrypt.convert, passwordBytes)).bytes;
+  // final key = (await compute(scrypt.convert, passwordBytes)).bytes;
+  final key = (scrypt.convert(passwordBytes)).bytes;
   return (key.sublist(0, 32), key.sublist(32, 64));
 }
