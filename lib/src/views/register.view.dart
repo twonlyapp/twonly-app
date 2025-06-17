@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -31,8 +32,6 @@ class _RegisterViewState extends State<RegisterView> {
     setState(() {
       _isTryingToRegister = true;
     });
-
-    final storage = FlutterSecureStorage();
 
     await createIfNotExistsSignalIdentity();
 
@@ -66,7 +65,10 @@ class _RegisterViewState extends State<RegisterView> {
       subscriptionPlan: "Preview",
       isDemoUser: isDemoAccount,
     );
-    storage.write(key: "userData", value: jsonEncode(userData));
+
+    FlutterSecureStorage()
+        .write(key: SecureStorageKeys.userData, value: jsonEncode(userData));
+
     if (!isDemoAccount) {
       await apiService.authenticate();
     } else {

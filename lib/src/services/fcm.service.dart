@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/app.dart';
+import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -16,7 +17,7 @@ Future initFCMAfterAuthenticated() async {
 
   final storage = FlutterSecureStorage();
 
-  String? storedToken = await storage.read(key: "google_fcm");
+  String? storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
 
   try {
     final fcmToken = await FirebaseMessaging.instance.getToken();
@@ -27,12 +28,12 @@ Future initFCMAfterAuthenticated() async {
 
     if (storedToken == null || fcmToken != storedToken) {
       await apiService.updateFCMToken(fcmToken);
-      await storage.write(key: "google_fcm", value: fcmToken);
+      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
     }
 
     FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
       await apiService.updateFCMToken(fcmToken);
-      await storage.write(key: "google_fcm", value: fcmToken);
+      await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
     }).onError((err) {
       Log.error("could not listen on token refresh");
     });

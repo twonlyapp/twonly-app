@@ -10,7 +10,6 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
   SignalDao(super.db);
-
   Future deleteAllByContactId(int contactId) async {
     await (delete(signalContactPreKeys)
           ..where((t) => t.contactId.equals(contactId)))

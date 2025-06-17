@@ -129,4 +129,13 @@ class TwonlyDatabase extends _$TwonlyDatabase {
     notifyUpdates({TableUpdate.onTable(messages, kind: UpdateKind.update)});
     notifyUpdates({TableUpdate.onTable(contacts, kind: UpdateKind.update)});
   }
+
+  Future deleteDataForTwonlySafe() async {
+    await delete(messages).go();
+    await delete(messageRetransmissions).go();
+    await delete(mediaDownloads).go();
+    await delete(mediaUploads).go();
+    await delete(signalContactPreKeys).go();
+    await delete(signalContactSignedPreKeys).go();
+  }
 }

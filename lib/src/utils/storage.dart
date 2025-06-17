@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -17,8 +18,8 @@ Future<bool> isUserCreated() async {
 }
 
 Future<UserData?> getUser() async {
-  final storage = FlutterSecureStorage();
-  String? userJson = await storage.read(key: "userData");
+  String? userJson =
+      await FlutterSecureStorage().read(key: SecureStorageKeys.userData);
   if (userJson == null) {
     return null;
   }
@@ -51,8 +52,8 @@ Future<UserData?> updateUserdata(Function(UserData userData) updateUser) async {
     final user = await getUser();
     if (user == null) return null;
     UserData updated = updateUser(user);
-    final storage = FlutterSecureStorage();
-    storage.write(key: "userData", value: jsonEncode(updated));
+    FlutterSecureStorage()
+        .write(key: SecureStorageKeys.userData, value: jsonEncode(updated));
     return user;
   });
 }
@@ -62,7 +63,6 @@ Future<bool> deleteLocalUserData() async {
   if (appDir.existsSync()) {
     appDir.deleteSync(recursive: true);
   }
-  final storage = FlutterSecureStorage();
-  await storage.deleteAll();
+  await FlutterSecureStorage().deleteAll();
   return true;
 }

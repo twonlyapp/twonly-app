@@ -13,6 +13,7 @@ import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/tables/media_uploads_table.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -562,8 +563,8 @@ Future<bool> handleMediaUpload(MediaUpload media) async {
 
   final uploadRequestBytes = uploadRequest.writeToBuffer();
 
-  final storage = FlutterSecureStorage();
-  String? apiAuthToken = await storage.read(key: "api_auth_token");
+  String? apiAuthToken =
+      await FlutterSecureStorage().read(key: SecureStorageKeys.apiAuthToken);
   if (apiAuthToken == null) {
     Log.error("api auth token not defined.");
     return false;

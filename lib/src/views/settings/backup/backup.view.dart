@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/services/backup.identitiy.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
 
 class BackupView extends StatefulWidget {
@@ -49,7 +50,11 @@ class _BackupViewState extends State<BackupView> {
             autoBackupEnabled: _twonlyIdBackupEnabled,
             onTap: () async {
               if (_twonlyIdBackupEnabled) {
-                await disableTwonlySafe();
+                bool disable = await showAlertDialog(context, "Are you sure?",
+                    "Without an backup, you can not restore your user account.");
+                if (disable) {
+                  await disableTwonlySafe();
+                }
               } else {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
@@ -110,7 +115,7 @@ class BackupOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: (autoBackupEnabled) ? null : onTap,
       child: Card(
         margin: EdgeInsets.all(8.0),
         child: Padding(

@@ -12,6 +12,7 @@ import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/app.dart';
+import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
@@ -329,7 +330,8 @@ class ApiService {
 
   Future<bool> tryAuthenticateWithToken(int userId) async {
     final storage = FlutterSecureStorage();
-    String? apiAuthToken = await storage.read(key: "api_auth_token");
+    String? apiAuthToken =
+        await storage.read(key: SecureStorageKeys.apiAuthToken);
 
     if (apiAuthToken != null) {
       final authenticate = Handshake_Authenticate()
@@ -414,7 +416,8 @@ class ApiService {
     String apiAuthTokenB64 = base64Encode(apiAuthToken);
 
     final storage = FlutterSecureStorage();
-    await storage.write(key: "api_auth_token", value: apiAuthTokenB64);
+    await storage.write(
+        key: SecureStorageKeys.apiAuthToken, value: apiAuthTokenB64);
 
     await tryAuthenticateWithToken(userData.userId);
   }
