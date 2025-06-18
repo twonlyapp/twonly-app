@@ -23,25 +23,39 @@ class UserData {
   String displayName;
   String? avatarSvg;
   String? avatarJson;
-  int? avatarCounter;
+
+  @JsonKey(defaultValue: 0)
+  int avatarCounter = 0;
+
+  // --- SUBSCRIPTION DTA ---
+
+  @JsonKey(defaultValue: "Preview")
+  String subscriptionPlan;
+  DateTime? lastImageSend;
+  int? todaysImageCounter;
 
   // --- SETTINGS ---
 
+  @JsonKey(defaultValue: ThemeMode.system)
+  ThemeMode themeMode = ThemeMode.system;
+
   int? defaultShowTime;
-  @JsonKey(defaultValue: "Preview")
-  String subscriptionPlan;
-  bool? useHighQuality;
+
+  @JsonKey(defaultValue: true)
+  bool useHighQuality = true;
+
   List<String>? preSelectedEmojies;
-  ThemeMode? themeMode;
+
   Map<String, List<String>>? autoDownloadOptions;
-  bool? storeMediaFilesInGallery;
+
+  @JsonKey(defaultValue: false)
+  bool storeMediaFilesInGallery = false;
+
   List<String>? lastUsedEditorEmojis;
 
   String? lastPlanBallance;
   String? additionalUserInvites;
 
-  DateTime? lastImageSend;
-  int? todaysImageCounter;
   List<String>? tutorialDisplayed;
 
   int? myBestFriendContactId;
@@ -50,20 +64,33 @@ class UserData {
 
   // --- BACKUP ---
 
-  @JsonKey(defaultValue: false)
-  bool identityBackupEnabled = false;
-  DateTime? identityBackupLastBackupTime;
-
-  @JsonKey(defaultValue: 0)
-  int identityBackupLastBackupSize = 0;
   DateTime? nextTimeToShowBackupNotice;
   BackupServer? backupServer;
-  List<int>? twonlySafeEncryptionKey;
-  List<int>? twonlySafeBackupId;
+  TwonlySafeBackup? twonlySafeBackup;
 
   factory UserData.fromJson(Map<String, dynamic> json) =>
       _$UserDataFromJson(json);
   Map<String, dynamic> toJson() => _$UserDataToJson(this);
+}
+
+enum LastBackupUploadState { none, pending, failed, success }
+
+@JsonSerializable()
+class TwonlySafeBackup {
+  TwonlySafeBackup({
+    required this.backupId,
+    required this.encryptionKey,
+  });
+
+  int lastBackupSize = 0;
+  LastBackupUploadState backupUploadState = LastBackupUploadState.none;
+  DateTime? lastBackupDone;
+  List<int> backupId;
+  List<int> encryptionKey;
+
+  factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) =>
+      _$TwonlySafeBackupFromJson(json);
+  Map<String, dynamic> toJson() => _$TwonlySafeBackupToJson(this);
 }
 
 @JsonSerializable()

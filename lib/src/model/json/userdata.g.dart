@@ -15,28 +15,31 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
     )
       ..avatarSvg = json['avatarSvg'] as String?
       ..avatarJson = json['avatarJson'] as String?
-      ..avatarCounter = (json['avatarCounter'] as num?)?.toInt()
+      ..avatarCounter = (json['avatarCounter'] as num?)?.toInt() ?? 0
+      ..lastImageSend = json['lastImageSend'] == null
+          ? null
+          : DateTime.parse(json['lastImageSend'] as String)
+      ..todaysImageCounter = (json['todaysImageCounter'] as num?)?.toInt()
+      ..themeMode =
+          $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
+              ThemeMode.system
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
-      ..useHighQuality = json['useHighQuality'] as bool?
+      ..useHighQuality = json['useHighQuality'] as bool? ?? true
       ..preSelectedEmojies = (json['preSelectedEmojies'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList()
-      ..themeMode = $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode'])
       ..autoDownloadOptions =
           (json['autoDownloadOptions'] as Map<String, dynamic>?)?.map(
         (k, e) =>
             MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
       )
-      ..storeMediaFilesInGallery = json['storeMediaFilesInGallery'] as bool?
+      ..storeMediaFilesInGallery =
+          json['storeMediaFilesInGallery'] as bool? ?? false
       ..lastUsedEditorEmojis = (json['lastUsedEditorEmojis'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList()
       ..lastPlanBallance = json['lastPlanBallance'] as String?
       ..additionalUserInvites = json['additionalUserInvites'] as String?
-      ..lastImageSend = json['lastImageSend'] == null
-          ? null
-          : DateTime.parse(json['lastImageSend'] as String)
-      ..todaysImageCounter = (json['todaysImageCounter'] as num?)?.toInt()
       ..tutorialDisplayed = (json['tutorialDisplayed'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList()
@@ -45,26 +48,16 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           json['signalLastSignedPreKeyUpdated'] == null
               ? null
               : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
-      ..identityBackupEnabled = json['identityBackupEnabled'] as bool? ?? false
-      ..identityBackupLastBackupTime =
-          json['identityBackupLastBackupTime'] == null
-              ? null
-              : DateTime.parse(json['identityBackupLastBackupTime'] as String)
-      ..identityBackupLastBackupSize =
-          (json['identityBackupLastBackupSize'] as num?)?.toInt() ?? 0
       ..nextTimeToShowBackupNotice = json['nextTimeToShowBackupNotice'] == null
           ? null
           : DateTime.parse(json['nextTimeToShowBackupNotice'] as String)
       ..backupServer = json['backupServer'] == null
           ? null
           : BackupServer.fromJson(json['backupServer'] as Map<String, dynamic>)
-      ..twonlySafeEncryptionKey =
-          (json['twonlySafeEncryptionKey'] as List<dynamic>?)
-              ?.map((e) => (e as num).toInt())
-              .toList()
-      ..twonlySafeBackupId = (json['twonlySafeBackupId'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
-          .toList();
+      ..twonlySafeBackup = json['twonlySafeBackup'] == null
+          ? null
+          : TwonlySafeBackup.fromJson(
+              json['twonlySafeBackup'] as Map<String, dynamic>);
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'userId': instance.userId,
@@ -74,37 +67,65 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'avatarSvg': instance.avatarSvg,
       'avatarJson': instance.avatarJson,
       'avatarCounter': instance.avatarCounter,
-      'defaultShowTime': instance.defaultShowTime,
       'subscriptionPlan': instance.subscriptionPlan,
+      'lastImageSend': instance.lastImageSend?.toIso8601String(),
+      'todaysImageCounter': instance.todaysImageCounter,
+      'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
+      'defaultShowTime': instance.defaultShowTime,
       'useHighQuality': instance.useHighQuality,
       'preSelectedEmojies': instance.preSelectedEmojies,
-      'themeMode': _$ThemeModeEnumMap[instance.themeMode],
       'autoDownloadOptions': instance.autoDownloadOptions,
       'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
       'lastUsedEditorEmojis': instance.lastUsedEditorEmojis,
       'lastPlanBallance': instance.lastPlanBallance,
       'additionalUserInvites': instance.additionalUserInvites,
-      'lastImageSend': instance.lastImageSend?.toIso8601String(),
-      'todaysImageCounter': instance.todaysImageCounter,
       'tutorialDisplayed': instance.tutorialDisplayed,
       'myBestFriendContactId': instance.myBestFriendContactId,
       'signalLastSignedPreKeyUpdated':
           instance.signalLastSignedPreKeyUpdated?.toIso8601String(),
-      'identityBackupEnabled': instance.identityBackupEnabled,
-      'identityBackupLastBackupTime':
-          instance.identityBackupLastBackupTime?.toIso8601String(),
-      'identityBackupLastBackupSize': instance.identityBackupLastBackupSize,
       'nextTimeToShowBackupNotice':
           instance.nextTimeToShowBackupNotice?.toIso8601String(),
       'backupServer': instance.backupServer,
-      'twonlySafeEncryptionKey': instance.twonlySafeEncryptionKey,
-      'twonlySafeBackupId': instance.twonlySafeBackupId,
+      'twonlySafeBackup': instance.twonlySafeBackup,
     };
 
 const _$ThemeModeEnumMap = {
   ThemeMode.system: 'system',
   ThemeMode.light: 'light',
   ThemeMode.dark: 'dark',
+};
+
+TwonlySafeBackup _$TwonlySafeBackupFromJson(Map<String, dynamic> json) =>
+    TwonlySafeBackup(
+      backupId: (json['backupId'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
+      encryptionKey: (json['encryptionKey'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
+    )
+      ..lastBackupSize = (json['lastBackupSize'] as num).toInt()
+      ..backupUploadState =
+          $enumDecode(_$LastBackupUploadStateEnumMap, json['backupUploadState'])
+      ..lastBackupDone = json['lastBackupDone'] == null
+          ? null
+          : DateTime.parse(json['lastBackupDone'] as String);
+
+Map<String, dynamic> _$TwonlySafeBackupToJson(TwonlySafeBackup instance) =>
+    <String, dynamic>{
+      'lastBackupSize': instance.lastBackupSize,
+      'backupUploadState':
+          _$LastBackupUploadStateEnumMap[instance.backupUploadState]!,
+      'lastBackupDone': instance.lastBackupDone?.toIso8601String(),
+      'backupId': instance.backupId,
+      'encryptionKey': instance.encryptionKey,
+    };
+
+const _$LastBackupUploadStateEnumMap = {
+  LastBackupUploadState.none: 'none',
+  LastBackupUploadState.pending: 'pending',
+  LastBackupUploadState.failed: 'failed',
+  LastBackupUploadState.success: 'success',
 };
 
 BackupServer _$BackupServerFromJson(Map<String, dynamic> json) => BackupServer(

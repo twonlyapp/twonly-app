@@ -32,11 +32,7 @@ class _ProfileViewState extends State<ProfileView> {
   Future updateUserDisplayName(String displayName) async {
     await updateUserdata((user) {
       user.displayName = displayName;
-      if (user.avatarCounter == null) {
-        user.avatarCounter = 1;
-      } else {
-        user.avatarCounter = user.avatarCounter! + 1;
-      }
+      user.avatarCounter = user.avatarCounter + 1;
       return user;
     });
 

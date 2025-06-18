@@ -67,7 +67,6 @@ dependencies:
   tutorial_coach_mark: ^1.3.0
   background_downloader: ^9.2.2
   hashlib: ^2.0.0
-  archive: ^4.0.7
 
 dev_dependencies:
   flutter_test:

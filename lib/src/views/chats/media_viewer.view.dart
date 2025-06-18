@@ -320,7 +320,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       imageSaved = true;
     });
     final user = await getUser();
-    if (user != null && (user.storeMediaFilesInGallery ?? true)) {
+    if (user != null && (user.storeMediaFilesInGallery)) {
       if (videoPath != null) {
         await saveVideoToGallery(videoPath!);
       } else {

@@ -230,13 +230,12 @@ Future notifyContactsAboutProfileChange() async {
 
   UserData? user = await getUser();
   if (user == null) return;
-  if (user.avatarCounter == null) return;
   if (user.avatarSvg == null) return;
 
   for (Contact contact in contacts) {
-    if (contact.myAvatarCounter < user.avatarCounter!) {
+    if (contact.myAvatarCounter < user.avatarCounter) {
       twonlyDB.contactsDao.updateContact(contact.userId,
-          ContactsCompanion(myAvatarCounter: Value(user.avatarCounter!)));
+          ContactsCompanion(myAvatarCounter: Value(user.avatarCounter)));
       await encryptAndSendMessageAsync(
         null,
         contact.userId,

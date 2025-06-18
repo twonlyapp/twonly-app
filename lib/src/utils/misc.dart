@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
+import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -384,3 +385,31 @@ List<List<dynamic>> chatMessages = [
   ],
   ["Curabitur blandit tempus porttitor.", DateTime.now()],
 ];
+
+String formatDateTime(BuildContext context, DateTime? dateTime) {
+  if (dateTime == null) {
+    return "Never";
+  }
+  final now = DateTime.now();
+  final difference = now.difference(dateTime);
+
+  final date = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
+      .format(dateTime);
+
+  final time = DateFormat.Hm(Localizations.localeOf(context).toLanguageTag())
+      .format(dateTime);
+
+  if (difference.inDays == 0) {
+    return time;
+  } else {
+    return "$time $date";
+  }
+}
+
+String formatBytes(int bytes, {int decimalPlaces = 2}) {
+  if (bytes <= 0) return "0 Bytes";
+  const List<String> units = ["Bytes", "KB", "MB", "GB", "TB"];
+  final int unitIndex = (log(bytes) / log(1000)).floor();
+  final double formattedSize = bytes / pow(1000, unitIndex);
+  return "${formattedSize.toStringAsFixed(decimalPlaces)} ${units[unitIndex]}";
+}

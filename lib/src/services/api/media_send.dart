@@ -21,6 +21,7 @@ import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/api/media_received.dart';
+import 'package:twonly/src/services/backup.identitiy.service.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -66,6 +67,9 @@ Future initFileDownloader() async {
         }
         if (update.task.taskId.contains("download_")) {
           await handleDownloadStatusUpdate(update);
+        }
+        if (update.task.taskId.contains("backup")) {
+          await handleBackupStatusUpdate(update);
         }
       case TaskProgressUpdate():
         Log.info(

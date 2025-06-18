@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+message TwonlySafeBackupContent {
+    string secureStorageJson = 1;
+    bytes twonlyDatabase = 2;
+}
+
+message TwonlySafeBackupEncrypted {
+    bytes mac = 1;
+    bytes nonce = 2;
+    bytes cipherText = 3;
+}

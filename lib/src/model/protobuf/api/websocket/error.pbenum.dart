@@ -45,6 +45,7 @@ class ErrorCode extends $pb.ProtobufEnum {
   static const ErrorCode PlanUpgradeNotYearly = ErrorCode._(1026, _omitEnumNames ? '' : 'PlanUpgradeNotYearly');
   static const ErrorCode InvalidSignedPreKey = ErrorCode._(1027, _omitEnumNames ? '' : 'InvalidSignedPreKey');
   static const ErrorCode UserIdNotFound = ErrorCode._(1028, _omitEnumNames ? '' : 'UserIdNotFound');
+  static const ErrorCode UserIdAlreadyTaken = ErrorCode._(1029, _omitEnumNames ? '' : 'UserIdAlreadyTaken');
 
   static const $core.List<ErrorCode> values = <ErrorCode> [
     Unknown,
@@ -78,6 +79,7 @@ class ErrorCode extends $pb.ProtobufEnum {
     PlanUpgradeNotYearly,
     InvalidSignedPreKey,
     UserIdNotFound,
+    UserIdAlreadyTaken,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue = $pb.ProtobufEnum.initByValue(values);

@@ -176,9 +176,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   void initAsync() async {
     final user = await getUser();
     if (user == null) return;
-    if (user.useHighQuality != null) {
-      useHighQuality = user.useHighQuality!;
-    }
+    useHighQuality = user.useHighQuality;
     hasAudioPermission = await Permission.microphone.isGranted;
     if (!mounted) return;
     setState(() {});

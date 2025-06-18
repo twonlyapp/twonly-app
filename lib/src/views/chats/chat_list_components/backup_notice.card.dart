@@ -26,7 +26,7 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
     if (user != null &&
         (user.nextTimeToShowBackupNotice == null ||
             DateTime.now().isAfter(user.nextTimeToShowBackupNotice!))) {
-      if (!gIsDemoUser && (!user.identityBackupEnabled)) {
+      if (!gIsDemoUser && (user.twonlySafeBackup == null)) {
         showBackupNotice = true;
       }
     }

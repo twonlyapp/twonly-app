@@ -27,7 +27,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
     setState(() {
       autoDownloadOptions =
           user.autoDownloadOptions ?? defaultAutoDownloadOptions;
-      storeMediaFilesInGallery = user.storeMediaFilesInGallery ?? true;
+      storeMediaFilesInGallery = user.storeMediaFilesInGallery;
     });
   }
 

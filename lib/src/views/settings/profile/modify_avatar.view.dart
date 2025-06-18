@@ -14,11 +14,7 @@ class ModifyAvatar extends StatelessWidget {
     await updateUserdata((user) {
       user.avatarJson = json;
       user.avatarSvg = svg;
-      if (user.avatarCounter == null) {
-        user.avatarCounter = 1;
-      } else {
-        user.avatarCounter = user.avatarCounter! + 1;
-      }
+      user.avatarCounter = user.avatarCounter + 1;
       return user;
     });
     await notifyContactsAboutProfileChange();

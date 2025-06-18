@@ -1,34 +1,50 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:archive/archive_io.dart';
+import 'package:background_downloader/background_downloader.dart';
+import 'package:cryptography_plus/cryptography_plus.dart';
+import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/src/model/protobuf/backup/backup.pb.dart';
+import 'package:twonly/src/services/api/media_send.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/settings/backup/backup.view.dart';
 
-Future performTwonlySafeBackup() async {
+Future performTwonlySafeBackup({bool force = false}) async {
   Log.info("Starting new backup creation.");
+  final user = await getUser();
+
+  if (user == null || user.twonlySafeBackup == null) {
+    Log.warn("perform twonly safe backup was called while it is disabled");
+    return;
+  }
+
+  if (user.twonlySafeBackup!.backupUploadState ==
+      LastBackupUploadState.pending) {
+    Log.warn("Backup upload is already pending.");
+    return;
+  }
+
   final baseDir = (await getApplicationSupportDirectory()).path;
 
-  var originalDatabase = File(join(baseDir, "twonly_database.sqlite"));
-  var backupDir = Directory(join(baseDir, "backup_twonly_safe/"));
-  if (backupDir.existsSync()) {
-    await backupDir.delete(recursive: true);
-  }
+  final backupDir = Directory(join(baseDir, "backup_twonly_safe/"));
   await backupDir.create(recursive: true);
 
-  var backupDatabaseFile =
+  final backupDatabaseFile =
       File(join(backupDir.path, "twonly_database.backup.sqlite"));
 
   // copy database
+  final originalDatabase = File(join(baseDir, "twonly_database.sqlite"));
   await originalDatabase.copy(backupDatabaseFile.path);
 
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   final backupDB = TwonlyDatabase(
     driftDatabase(
       name: "twonly_database.backup",
@@ -48,30 +64,145 @@ Future performTwonlySafeBackup() async {
       await storage.read(key: SecureStorageKeys.signalIdentity);
   secureStorageBackup[SecureStorageKeys.signalSignedPreKey] =
       await storage.read(key: SecureStorageKeys.signalSignedPreKey);
-  secureStorageBackup[SecureStorageKeys.userData] =
-      await storage.read(key: SecureStorageKeys.userData);
 
-  var backupSecureStorage = File(join(backupDir.path, "secure_storage.json"));
+  var userBackup = await getUser();
+  if (userBackup == null) return;
+  // FILTER settings which should not be in the backup
+  userBackup.twonlySafeBackup = null;
 
-  await backupSecureStorage.writeAsString(jsonEncode(secureStorageBackup));
+  secureStorageBackup[SecureStorageKeys.userData] = jsonEncode(userBackup);
+
+  // Compress and convert backup data
+
+  final twonlyDatabaseBytes = await backupDatabaseFile.readAsBytes();
+  await backupDatabaseFile.delete();
+
+  final backupProto = TwonlySafeBackupContent(
+    secureStorageJson: jsonEncode(secureStorageBackup),
+    twonlyDatabase: twonlyDatabaseBytes,
+  );
+
+  final backupBytes = gzip.encode(backupProto.writeToBuffer());
+
+  final backupHash = uint8ListToHex((await Sha256().hash(backupBytes)).bytes);
+
+  if (user.twonlySafeBackup!.lastBackupDone == null ||
+      user.twonlySafeBackup!.lastBackupDone!
+          .isAfter(DateTime.now().subtract(Duration(days: 90)))) {
+    force = true;
+  }
+
+  final lastHash =
+      await storage.read(key: SecureStorageKeys.twonlySafeLastBackupHash);
+
+  if (lastHash != null && !force) {
+    if (backupHash == lastHash) {
+      Log.info("Since last backup nothing has changed.");
+      return;
+    }
+  }
+  await storage.write(
+    key: SecureStorageKeys.twonlySafeLastBackupHash,
+    value: backupHash,
+  );
+
+  // Encrypt backup data
+
+  final xchacha20 = Xchacha20.poly1305Aead();
+  final nonce = xchacha20.newNonce();
+
+  final secretBox = await xchacha20.encrypt(
+    backupBytes,
+    secretKey: SecretKey(user.twonlySafeBackup!.encryptionKey),
+    nonce: nonce,
+  );
+
+  final encryptedBackupBytes = (TwonlySafeBackupEncrypted(
+    mac: secretBox.mac.bytes,
+    nonce: nonce,
+    cipherText: secretBox.cipherText,
+  )).writeToBuffer();
 
   Log.info("Backup files created.");
 
-  var twonlySafeBackupZip = File(join(backupDir.path, "twonly_safe.zip"));
+  var encryptedBackupBytesFile =
+      File(join(backupDir.path, "twonly_safe.backup"));
 
-  await createZipArchive(
-      twonlySafeBackupZip.path, [backupSecureStorage, backupDatabaseFile]);
+  await encryptedBackupBytesFile.writeAsBytes(encryptedBackupBytes);
 
-  // await backupDir.delete(recursive: true);
+  Log.info(
+      "Create twonly Safe backup with a size of ${encryptedBackupBytes.length} bytes.");
+
+  String backupServerUrl = "https://safe.twonly.eu/";
+
+  if (user.backupServer != null) {
+    backupServerUrl = user.backupServer!.serverUrl;
+
+    if (encryptedBackupBytes.length > user.backupServer!.maxBackupBytes) {
+      Log.error("Backup is to big for the alternative backup server.");
+      await updateUserdata((user) {
+        user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
+        return user;
+      });
+      return;
+    }
+  }
+
+  String backupId =
+      uint8ListToHex(user.twonlySafeBackup!.backupId).toLowerCase();
+
+  final task = UploadTask.fromFile(
+    taskId: "backup",
+    file: encryptedBackupBytesFile,
+    httpRequestMethod: "PUT",
+    url: "${backupServerUrl}backups/$backupId",
+    requiresWiFi: true,
+    priority: 5,
+    retries: 2,
+    headers: {
+      "Content-Type": "application/octet-stream",
+    },
+  );
+  if (await FileDownloader().enqueue(task)) {
+    Log.info("Starting upload from twonly Safe backup.");
+    await updateUserdata((user) {
+      user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.pending;
+      user.twonlySafeBackup!.lastBackupDone = DateTime.now();
+      user.twonlySafeBackup!.lastBackupSize = encryptedBackupBytes.length;
+      return user;
+    });
+    gUpdateBackupView();
+  } else {
+    Log.error("Error starting UploadTask for twonly Safe.");
+  }
 }
 
-Future<void> createZipArchive(String zipFilePath, List<File> filesToZip) async {
-  final encoder = ZipFileEncoder();
-  encoder.create(zipFilePath);
-  for (var file in filesToZip) {
-    await encoder.addFile(file);
+Future handleBackupStatusUpdate(TaskStatusUpdate update) async {
+  if (update.status == TaskStatus.failed ||
+      update.status == TaskStatus.canceled) {
+    Log.error(
+        "twonly Safe upload failed. ${update.responseStatusCode} ${update.responseBody} ${update.responseHeaders} ${update.exception}");
+    await updateUserdata((user) {
+      if (user.twonlySafeBackup != null) {
+        user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
+      }
+      return user;
+    });
+  } else if (update.status == TaskStatus.complete) {
+    Log.error(
+        "twonly Safe uploaded with status code ${update.responseStatusCode}");
+    await updateUserdata((user) {
+      if (user.twonlySafeBackup != null) {
+        user.twonlySafeBackup!.backupUploadState =
+            LastBackupUploadState.success;
+      }
+      return user;
+    });
+  } else {
+    Log.info("Backup is in state: ${update.status}");
+    return;
   }
-  await encoder.close();
+  gUpdateBackupView();
 }
 
 Future enableTwonlySafe(String password) async {
@@ -81,9 +212,10 @@ Future enableTwonlySafe(String password) async {
   final (backupId, encryptionKey) = await getMasterKey(password, user.username);
 
   await updateUserdata((user) {
-    user.identityBackupEnabled = true;
-    user.twonlySafeBackupId = backupId.toList();
-    user.twonlySafeEncryptionKey = encryptionKey.toList();
+    user.twonlySafeBackup = TwonlySafeBackup(
+      encryptionKey: encryptionKey,
+      backupId: backupId,
+    );
     return user;
   });
   startTwonlySafeBackup();
@@ -92,11 +224,7 @@ Future enableTwonlySafe(String password) async {
 
 Future disableTwonlySafe() async {
   await updateUserdata((user) {
-    user.identityBackupEnabled = false;
-    user.twonlySafeBackupId = null;
-    user.twonlySafeEncryptionKey = null;
-    user.identityBackupLastBackupTime = null;
-    user.identityBackupLastBackupSize = 0;
+    user.twonlySafeBackup = null;
     return user;
   });
 }

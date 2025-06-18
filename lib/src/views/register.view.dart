@@ -5,8 +5,10 @@ import 'package:twonly/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -43,6 +45,11 @@ class _RegisterViewState extends State<RegisterView> {
         Log.info("Got user_id ${res.value} from server");
         userId = res.value.userid.toInt();
       } else {
+        if (res.error == ErrorCode.UserIdAlreadyTaken) {
+          Log.error("User ID already token. Tying again.");
+          await deleteLocalUserData();
+          return createNewUser();
+        }
         if (mounted) {
           showAlertDialog(
             context,

@@ -2,6 +2,10 @@
 
 # Set the source directory
 
+protoc --proto_path="./lib/src/model/protobuf/backup/" --dart_out="./lib/src/model/protobuf/backup/" "backup.proto"
+
+
+
 SRC_DIR="../twonly-server/twonly/src/"
 
 DST_DIR="$(pwd)/lib/src/model/protobuf/"

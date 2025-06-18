@@ -63,8 +63,8 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                 memoryPath = join(memoryPath, token);
               }
               final user = await getUser();
-              if (user != null && (user.storeMediaFilesInGallery ?? true)) {}
-              bool storeToGallery = user?.storeMediaFilesInGallery ?? true;
+              if (user != null) return;
+              bool storeToGallery = user!.storeMediaFilesInGallery;
 
               if (widget.videoFilePath != null) {
                 memoryPath += ".mp4";
