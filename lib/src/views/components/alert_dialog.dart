@@ -4,11 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Future<bool> showAlertDialog(
-    BuildContext context, String title, String content) async {
+  BuildContext context,
+  String title,
+  String content, {
+  String? customOk,
+  String? customCancel,
+}) async {
   Completer<bool> completer = Completer<bool>();
 
   Widget okButton = TextButton(
-    child: Text(context.lang.ok),
+    child: Text(customOk ?? context.lang.ok),
     onPressed: () {
       completer.complete(true);
       Navigator.pop(context);
@@ -16,7 +21,7 @@ Future<bool> showAlertDialog(
   );
 
   Widget cancelButton = TextButton(
-    child: Text(context.lang.cancel),
+    child: Text(customCancel ?? context.lang.cancel),
     onPressed: () {
       completer.complete(false);
       Navigator.pop(context);

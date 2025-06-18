@@ -926,6 +926,18 @@ abstract class AppLocalizations {
   /// **'Close'**
   String get close;
 
+  /// No description provided for @disable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable'**
+  String get disable;
+
+  /// No description provided for @enable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get enable;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -1603,6 +1615,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create backup'**
   String get backupNoticeOpenBackup;
+
+  /// No description provided for @backupPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get backupPending;
+
+  /// No description provided for @backupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get backupFailed;
+
+  /// No description provided for @backupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get backupSuccess;
+
+  /// No description provided for @backupTwonlySafeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
+  String get backupTwonlySafeDesc;
+
+  /// No description provided for @backupServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get backupServer;
+
+  /// No description provided for @backupMaxBackupSize.
+  ///
+  /// In en, this message translates to:
+  /// **'max. backup size'**
+  String get backupMaxBackupSize;
+
+  /// No description provided for @backupStorageRetention.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage retention'**
+  String get backupStorageRetention;
+
+  /// No description provided for @backupLastBackupDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup'**
+  String get backupLastBackupDate;
+
+  /// No description provided for @backupLastBackupSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup size'**
+  String get backupLastBackupSize;
+
+  /// No description provided for @backupLastBackupResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get backupLastBackupResult;
+
+  /// No description provided for @deleteBackupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get deleteBackupTitle;
+
+  /// No description provided for @deleteBackupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Without an backup, you can not restore your user account.'**
+  String get deleteBackupBody;
+
+  /// No description provided for @backupData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data-Backup'**
+  String get backupData;
+
+  /// No description provided for @backupDataDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup contains besides of your twonly-Identity also all of your media files. This backup will is also encrypted but stored locally. You then have to ensure to manually copy it onto your laptop or device of your choice.'**
+  String get backupDataDesc;
+
+  /// No description provided for @backupInsecurePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Insecure password'**
+  String get backupInsecurePassword;
+
+  /// No description provided for @backupInsecurePasswordDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The chosen password is very insecure and can therefore easily be guessed by attackers. Please choose a secure password.'**
+  String get backupInsecurePasswordDesc;
+
+  /// No description provided for @backupInsecurePasswordOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue anyway'**
+  String get backupInsecurePasswordOk;
+
+  /// No description provided for @backupInsecurePasswordCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get backupInsecurePasswordCancel;
+
+  /// No description provided for @backupTwonlySafeLongDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Safe regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.'**
+  String get backupTwonlySafeLongDesc;
+
+  /// No description provided for @backupSelectStrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a secure password. This is required if you want to restore your twonly Safe backup.'**
+  String get backupSelectStrongPassword;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @passwordRepeated.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat password'**
+  String get passwordRepeated;
+
+  /// No description provided for @passwordRepeatedNotEqual.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get passwordRepeatedNotEqual;
+
+  /// No description provided for @backupPasswordRequirement.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters long.'**
+  String get backupPasswordRequirement;
+
+  /// No description provided for @backupExpertSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Expert settings'**
+  String get backupExpertSettings;
+
+  /// No description provided for @backupEnableBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate automatic backup'**
+  String get backupEnableBackup;
+
+  /// No description provided for @backupOwnServerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your twonly safe backups at twonly or on any server of your choice.'**
+  String get backupOwnServerDesc;
+
+  /// No description provided for @backupUseOwnServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use server'**
+  String get backupUseOwnServer;
+
+  /// No description provided for @backupResetServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Use standard server'**
+  String get backupResetServer;
+
+  /// No description provided for @backupTwonlySaveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Save now'**
+  String get backupTwonlySaveNow;
 }
 
 class _AppLocalizationsDelegate

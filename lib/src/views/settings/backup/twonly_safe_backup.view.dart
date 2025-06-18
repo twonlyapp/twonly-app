@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -21,6 +22,21 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
   final TextEditingController repeatedPasswordCtrl = TextEditingController();
 
   Future onPressedEnableTwonlySafe() async {
+    if (!mounted) return;
+    if (!await isSecurePassword(passwordCtrl.text)) {
+      if (!mounted) return;
+      bool ignore = await showAlertDialog(
+        context,
+        context.lang.backupInsecurePassword,
+        context.lang.backupInsecurePasswordDesc,
+        customCancel: context.lang.backupInsecurePasswordOk,
+        customOk: context.lang.backupInsecurePasswordCancel,
+      );
+      if (ignore) {
+        return;
+      }
+    }
+
     setState(() {
       isLoading = true;
     });
@@ -45,7 +61,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
           IconButton(
             onPressed: () {
               showAlertDialog(context, "twonly Safe",
-                  "twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen user name so that others can find you.\n\ntwonly Safe regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device. ");
+                  context.lang.backupTwonlySafeLongDesc);
             },
             icon: FaIcon(FontAwesomeIcons.circleInfo),
             iconSize: 18,
@@ -57,7 +73,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
         child: ListView(
           children: [
             Text(
-              "Wähle ein sicheres Passwort. Dieses wird benötigt, wenn du dein twonly Safe-Backup wiederherstellen möchtest.",
+              context.lang.backupSelectStrongPassword,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30),
@@ -67,16 +83,12 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                   controller: passwordCtrl,
                   onChanged: (value) {
                     setState(() {});
-                    // usernameController.text = value.toLowerCase();
-                    // usernameController.selection = TextSelection.fromPosition(
-                    //   TextPosition(offset: usernameController.text.length),
-                    // );
                   },
                   style: TextStyle(fontSize: 17),
                   obscureText: obscureText,
                   decoration: getInputDecoration(
                     context,
-                    "Password",
+                    context.lang.password,
                   ),
                 ),
                 Positioned(
@@ -102,9 +114,9 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
             Padding(
               padding: EdgeInsetsGeometry.all(5),
               child: Text(
-                "Passwort muss mind. 10 Zeichen lang sein.",
+                context.lang.backupPasswordRequirement,
                 style: TextStyle(
-                    color: ((passwordCtrl.text.length <= 10 &&
+                    color: ((passwordCtrl.text.length < 8 &&
                             passwordCtrl.text.isNotEmpty))
                         ? Colors.red
                         : Colors.transparent),
@@ -115,22 +127,18 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               controller: repeatedPasswordCtrl,
               onChanged: (value) {
                 setState(() {});
-                // usernameController.text = value.toLowerCase();
-                // usernameController.selection = TextSelection.fromPosition(
-                //   TextPosition(offset: usernameController.text.length),
-                // );
               },
               style: TextStyle(fontSize: 17),
               obscureText: true,
               decoration: getInputDecoration(
                 context,
-                "Passwordwiederholung",
+                context.lang.passwordRepeated,
               ),
             ),
             Padding(
               padding: EdgeInsetsGeometry.all(5),
               child: Text(
-                "Passwörter stimmen nicht überein.",
+                context.lang.passwordRepeatedNotEqual,
                 style: TextStyle(
                     color: (passwordCtrl.text != repeatedPasswordCtrl.text &&
                             repeatedPasswordCtrl.text.isNotEmpty)
@@ -146,7 +154,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                     return TwonlySafeServerView();
                   }));
                 },
-                child: Text("Experten Einstellungen"),
+                child: Text(context.lang.backupExpertSettings),
               ),
             ),
             SizedBox(height: 10),
@@ -165,11 +173,24 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                       child: CircularProgressIndicator(strokeWidth: 1),
                     )
                   : Icon(Icons.lock_clock_rounded),
-              label: Text("Automatisches Backup aktivieren"),
+              label: Text(context.lang.backupEnableBackup),
             ))
           ],
         ),
       ),
     );
   }
+}
+
+Future<bool> isSecurePassword(String password) async {
+  String badPasswordsStr =
+      await rootBundle.loadString('assets/passwords/bad_passwords.txt');
+  List<String> badPasswords = badPasswordsStr.split("\n");
+  if (badPasswords.contains(password)) {
+    return false;
+  }
+  // Check if the password meets all criteria
+  return RegExp(r'[A-Z]').hasMatch(password) &&
+      RegExp(r'[a-z]').hasMatch(password) &&
+      RegExp(r'[0-9]').hasMatch(password);
 }

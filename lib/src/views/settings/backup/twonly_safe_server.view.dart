@@ -1,10 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 class TwonlySafeServerView extends StatefulWidget {
@@ -58,17 +58,15 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
       serverUrl = "https://$username@$password$serverUrl";
     }
 
-    final uri = Uri.parse("${serverUrl}config");
-
-    final response = await http.get(
-      uri,
-      headers: {
-        'User-Agent': 'twonly',
-        'Accept': 'application/json',
-      },
-    );
-
     try {
+      final uri = Uri.parse("${serverUrl}config");
+      final response = await http.get(
+        uri,
+        headers: {
+          'User-Agent': 'twonly',
+          'Accept': 'application/json',
+        },
+      );
       if (response.statusCode == 200) {
         // If the server returns a 200 OK response, parse the JSON.
         final data = jsonDecode(response.body);
@@ -111,7 +109,7 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
         child: ListView(
           children: [
             Text(
-              "Speichere dein twonly Safe-Backup bei twonly oder auf einem beliebigen Server deiner Wahl.",
+              context.lang.backupOwnServerDesc,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 30),
@@ -156,7 +154,7 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
                     ? checkAndUpdateBackupServer
                     : null,
                 icon: FaIcon(FontAwesomeIcons.server),
-                label: Text('Server verwenden'),
+                label: Text(context.lang.backupUseOwnServer),
               ),
             ),
             SizedBox(height: 10.0),
@@ -169,7 +167,7 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
                   });
                   if (context.mounted) Navigator.pop(context);
                 },
-                child: Text("Standardserver verwenden"),
+                child: Text(context.lang.backupResetServer),
               ),
             )
           ],

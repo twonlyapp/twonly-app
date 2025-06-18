@@ -94,6 +94,11 @@ Future performTwonlySafeBackup({bool force = false}) async {
   if (userBackup == null) return;
   // FILTER settings which should not be in the backup
   userBackup.twonlySafeBackup = null;
+  userBackup.lastImageSend = null;
+  userBackup.todaysImageCounter = null;
+  userBackup.lastPlanBallance = "";
+  userBackup.additionalUserInvites = "";
+  userBackup.signalLastSignedPreKeyUpdated = null;
 
   secureStorageBackup[SecureStorageKeys.userData] = jsonEncode(userBackup);
 

@@ -464,6 +464,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get close => 'Close';
 
   @override
+  String get disable => 'Disable';
+
+  @override
+  String get enable => 'Enable';
+
+  @override
   String get cancel => 'Cancel';
 
   @override
@@ -843,4 +849,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupNoticeOpenBackup => 'Create backup';
+
+  @override
+  String get backupPending => 'Pending';
+
+  @override
+  String get backupFailed => 'Failed';
+
+  @override
+  String get backupSuccess => 'Success';
+
+  @override
+  String get backupTwonlySafeDesc =>
+      'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
+
+  @override
+  String get backupServer => 'Server';
+
+  @override
+  String get backupMaxBackupSize => 'max. backup size';
+
+  @override
+  String get backupStorageRetention => 'Storage retention';
+
+  @override
+  String get backupLastBackupDate => 'Last backup';
+
+  @override
+  String get backupLastBackupSize => 'Backup size';
+
+  @override
+  String get backupLastBackupResult => 'Result';
+
+  @override
+  String get deleteBackupTitle => 'Are you sure?';
+
+  @override
+  String get deleteBackupBody =>
+      'Without an backup, you can not restore your user account.';
+
+  @override
+  String get backupData => 'Data-Backup';
+
+  @override
+  String get backupDataDesc =>
+      'This backup contains besides of your twonly-Identity also all of your media files. This backup will is also encrypted but stored locally. You then have to ensure to manually copy it onto your laptop or device of your choice.';
+
+  @override
+  String get backupInsecurePassword => 'Insecure password';
+
+  @override
+  String get backupInsecurePasswordDesc =>
+      'The chosen password is very insecure and can therefore easily be guessed by attackers. Please choose a secure password.';
+
+  @override
+  String get backupInsecurePasswordOk => 'Continue anyway';
+
+  @override
+  String get backupInsecurePasswordCancel => 'Try again';
+
+  @override
+  String get backupTwonlySafeLongDesc =>
+      'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Safe regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.';
+
+  @override
+  String get backupSelectStrongPassword =>
+      'Choose a secure password. This is required if you want to restore your twonly Safe backup.';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get passwordRepeated => 'Repeat password';
+
+  @override
+  String get passwordRepeatedNotEqual => 'Passwords do not match.';
+
+  @override
+  String get backupPasswordRequirement =>
+      'Password must be at least 8 characters long.';
+
+  @override
+  String get backupExpertSettings => 'Expert settings';
+
+  @override
+  String get backupEnableBackup => 'Activate automatic backup';
+
+  @override
+  String get backupOwnServerDesc =>
+      'Save your twonly safe backups at twonly or on any server of your choice.';
+
+  @override
+  String get backupUseOwnServer => 'Use server';
+
+  @override
+  String get backupResetServer => 'Use standard server';
+
+  @override
+  String get backupTwonlySaveNow => 'Save now';
 }

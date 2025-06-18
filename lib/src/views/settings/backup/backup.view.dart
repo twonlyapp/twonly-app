@@ -25,6 +25,7 @@ BackupServer defaultBackupServer = BackupServer(
 class _BackupViewState extends State<BackupView> {
   TwonlySafeBackup? twonlySafeBackup;
   BackupServer backupServer = defaultBackupServer;
+  bool isLoading = false;
 
   int activePageIdx = 0;
 
@@ -57,13 +58,13 @@ class _BackupViewState extends State<BackupView> {
   String backupStatus(LastBackupUploadState status) {
     switch (status) {
       case LastBackupUploadState.none:
-        return '-';
+        return '';
       case LastBackupUploadState.pending:
-        return 'Pending';
+        return context.lang.backupPending;
       case LastBackupUploadState.failed:
-        return 'Failed';
+        return context.lang.backupFailed;
       case LastBackupUploadState.success:
-        return 'Success';
+        return context.lang.backupSuccess;
     }
   }
 
@@ -83,69 +84,96 @@ class _BackupViewState extends State<BackupView> {
         children: [
           BackupOption(
             title: 'twonly Safe',
-            description:
-                'Back up your twonly identity, as this is the only way to restore your account if you uninstall or lose your phone.',
+            description: context.lang.backupTwonlySafeDesc,
             autoBackupEnabled: twonlySafeBackup != null,
-            child: (twonlySafeBackup != null)
-                ? Table(
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            child: (twonlySafeBackup == null)
+                ? null
+                : Column(
                     children: [
-                      ...[
-                        (
-                          "Server",
-                          (backupServer.serverUrl.contains("@"))
-                              ? backupServer.serverUrl.split("@")[1]
-                              : backupServer.serverUrl
-                                  .replaceAll("https://", "")
-                        ),
-                        (
-                          "Max. Backup-Größe",
-                          formatBytes(backupServer.maxBackupBytes)
-                        ),
-                        ("Speicherdauer", "${backupServer.retentionDays} Days"),
-                        (
-                          "Letztes Backup",
-                          formatDateTime(
-                              context, twonlySafeBackup!.lastBackupDone)
-                        ),
-                        (
-                          "Backup-Größe",
-                          formatBytes(twonlySafeBackup!.lastBackupSize)
-                        ),
-                        (
-                          "Ergebnis",
-                          backupStatus(twonlySafeBackup!.backupUploadState)
-                        )
-                      ].map((pair) {
-                        return TableRow(
-                          children: [
-                            TableCell(
-                              // padding: EdgeInsets.all(4),
-                              child: Text(pair.$1),
+                      Table(
+                        defaultVerticalAlignment:
+                            TableCellVerticalAlignment.middle,
+                        children: [
+                          ...[
+                            (
+                              context.lang.backupServer,
+                              (backupServer.serverUrl.contains("@"))
+                                  ? backupServer.serverUrl.split("@")[1]
+                                  : backupServer.serverUrl
+                                      .replaceAll("https://", "")
                             ),
-                            TableCell(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 4),
-                                child: Text(
-                                  pair.$2,
-                                  textAlign: TextAlign.right,
+                            (
+                              context.lang.backupMaxBackupSize,
+                              formatBytes(backupServer.maxBackupBytes)
+                            ),
+                            (
+                              context.lang.backupStorageRetention,
+                              "${backupServer.retentionDays} Days"
+                            ),
+                            (
+                              context.lang.backupLastBackupDate,
+                              formatDateTime(
+                                  context, twonlySafeBackup!.lastBackupDone)
+                            ),
+                            (
+                              context.lang.backupLastBackupSize,
+                              formatBytes(twonlySafeBackup!.lastBackupSize)
+                            ),
+                            (
+                              context.lang.backupLastBackupResult,
+                              backupStatus(twonlySafeBackup!.backupUploadState)
+                            )
+                          ].map((pair) {
+                            return TableRow(
+                              children: [
+                                TableCell(
+                                  // padding: EdgeInsets.all(4),
+                                  child: Text(pair.$1),
                                 ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
+                                TableCell(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 4),
+                                    child: Text(
+                                      pair.$2,
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      FilledButton(
+                        onPressed: (isLoading)
+                            ? null
+                            : () async {
+                                setState(() {
+                                  isLoading = true;
+                                });
+                                await performTwonlySafeBackup(force: true);
+                                setState(() {
+                                  isLoading = false;
+                                });
+                              },
+                        child: Text(context.lang.backupTwonlySaveNow),
+                      )
                     ],
-                  )
-                : null,
+                  ),
             onTap: () async {
               if (twonlySafeBackup != null) {
-                bool disable = await showAlertDialog(context, "Are you sure?",
-                    "Without an backup, you can not restore your user account.");
+                bool disable = await showAlertDialog(
+                    context,
+                    context.lang.deleteBackupTitle,
+                    context.lang.deleteBackupBody);
                 if (disable) {
                   await disableTwonlySafe();
                 }
               } else {
+                setState(() {
+                  isLoading = true;
+                });
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
                   return TwonlyIdentityBackupView();
@@ -155,9 +183,8 @@ class _BackupViewState extends State<BackupView> {
             },
           ),
           BackupOption(
-            title: 'Daten-Backup (Coming Soon)',
-            description:
-                'This backup contains besides of your twonly-Identity also all of your media files. This backup will also be encrypted using a password chosen by the user but stored locally on the smartphone. You then have to ensure to manually copy it onto your laptop or device of your choice.',
+            title: "${context.lang.backupData} (Coming Soon)",
+            description: context.lang.backupDataDesc,
             autoBackupEnabled: false,
             onTap: null,
           ),
@@ -177,7 +204,7 @@ class _BackupViewState extends State<BackupView> {
           ),
           BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.boxArchive, size: 17),
-            label: "Daten-Backup",
+            label: context.lang.backupData,
           ),
         ],
         onTap: (int index) {
@@ -237,11 +264,11 @@ class BackupOption extends StatelessWidget {
                 child: (autoBackupEnabled)
                     ? OutlinedButton(
                         onPressed: onTap,
-                        child: Text("Disable"),
+                        child: Text(context.lang.disable),
                       )
                     : FilledButton(
                         onPressed: onTap,
-                        child: Text("Enable"),
+                        child: Text(context.lang.enable),
                       ),
               )
             ],
