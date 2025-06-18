@@ -12,67 +12,79 @@ class AppLocalizationsDe extends AppLocalizations {
   String get registerTitle => 'Willkommen bei twonly!';
 
   @override
-  String get registerSlogan => 'twonly, eine private und sichere Möglichkeit um mit Freunden in Kontakt zu bleiben.';
+  String get registerSlogan =>
+      'twonly, eine private und sichere Möglichkeit um mit Freunden in Kontakt zu bleiben.';
 
   @override
   String get onboardingWelcomeTitle => 'Willkommen bei twonly!';
 
   @override
-  String get onboardingWelcomeBody => 'Erlebe eine private und sichere Möglichkeit mit Freunden in Kontakt zu bleiben, indem du spontane Bilder teilst.';
+  String get onboardingWelcomeBody =>
+      'Erlebe eine private und sichere Möglichkeit mit Freunden in Kontakt zu bleiben, indem du spontane Bilder teilst.';
 
   @override
   String get onboardingE2eTitle => 'Unbekümmert teilen';
 
   @override
-  String get onboardingE2eBody => 'Genieße durch die Ende-zu-Ende-Verschlüsselung die Gewissheit, dass nur du und deine Freunde die geteilten Momente sehen können.';
+  String get onboardingE2eBody =>
+      'Genieße durch die Ende-zu-Ende-Verschlüsselung die Gewissheit, dass nur du und deine Freunde die geteilten Momente sehen können.';
 
   @override
-  String get onboardingFocusTitle => 'Fokussiere dich auf das Teilen von Momenten';
+  String get onboardingFocusTitle =>
+      'Fokussiere dich auf das Teilen von Momenten';
 
   @override
-  String get onboardingFocusBody => 'Verabschiede dich von süchtig machenden Funktionen! twonly wurde für das Teilen von Momenten ohne nutzlose Ablenkungen oder Werbung entwickelt.';
+  String get onboardingFocusBody =>
+      'Verabschiede dich von süchtig machenden Funktionen! twonly wurde für das Teilen von Momenten ohne nutzlose Ablenkungen oder Werbung entwickelt.';
 
   @override
   String get onboardingSendTwonliesTitle => 'twonlies senden';
 
   @override
-  String get onboardingSendTwonliesBody => 'Teile Momente sicher mit deinem Partner. twonly stellt sicher, dass nur dein Partner sie öffnen kann, sodass deine Momente mit deinem Partner eine two(o)nly Sache bleiben!';
+  String get onboardingSendTwonliesBody =>
+      'Teile Momente sicher mit deinem Partner. twonly stellt sicher, dass nur dein Partner sie öffnen kann, sodass deine Momente mit deinem Partner eine two(o)nly Sache bleiben!';
 
   @override
   String get onboardingNotProductTitle => 'Du bist nicht das Produkt!';
 
   @override
-  String get onboardingNotProductBody => 'twonly finanziert sich durch eine geringe monatliche Gebühr und nicht durch den Verkauf deiner Daten.';
+  String get onboardingNotProductBody =>
+      'twonly finanziert sich durch eine geringe monatliche Gebühr und nicht durch den Verkauf deiner Daten.';
 
   @override
   String get onboardingBuyOneGetTwoTitle => 'Kaufe eins, bekomme zwei';
 
   @override
-  String get onboardingBuyOneGetTwoBody => 'twonly benötigt immer mindestens zwei Personen, daher erhältst du beim Kauf eine zweite kostenlose Lizenz für deinen twonly-Partner.';
+  String get onboardingBuyOneGetTwoBody =>
+      'twonly benötigt immer mindestens zwei Personen, daher erhältst du beim Kauf eine zweite kostenlose Lizenz für deinen twonly-Partner.';
 
   @override
   String get onboardingGetStartedTitle => 'Auf geht\'s';
 
   @override
-  String get onboardingGetStartedBody => 'Du kannst twonly kostenlos im Preview-Modus testen. In diesem Modus kannst du von anderen gefunden werden und Bilder oder Videos empfangen, aber du kannst selbst keine senden.';
+  String get onboardingGetStartedBody =>
+      'Du kannst twonly kostenlos im Preview-Modus testen. In diesem Modus kannst du von anderen gefunden werden und Bilder oder Videos empfangen, aber du kannst selbst keine senden.';
 
   @override
   String get onboardingTryForFree => 'Kostenlos testen';
 
   @override
-  String get registerUsernameSlogan => 'Bitte wähle einen Benutzernamen, damit dich andere finden können!';
+  String get registerUsernameSlogan =>
+      'Bitte wähle einen Benutzernamen, damit dich andere finden können!';
 
   @override
   String get registerUsernameDecoration => 'Benutzername';
 
   @override
-  String get registerUsernameLimits => 'Der Benutzername muss 3 bis 12 Zeichen lang sein und darf nur aus Buchstaben (a-z) und Zahlen (0-9) bestehen.';
+  String get registerUsernameLimits =>
+      'Der Benutzername muss 3 bis 12 Zeichen lang sein und darf nur aus Buchstaben (a-z) und Zahlen (0-9) bestehen.';
 
   @override
   String get registerSubmitButton => 'Jetzt registrieren!';
 
   @override
-  String get registerTwonlyCodeText => 'Hast du einen twonly-Code erhalten? Dann löse ihn entweder direkt hier oder später ein!';
+  String get registerTwonlyCodeText =>
+      'Hast du einen twonly-Code erhalten? Dann löse ihn entweder direkt hier oder später ein!';
 
   @override
   String get registerTwonlyCodeLabel => 'twonly-Code';
@@ -126,13 +138,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareImageAllUsers => 'Alle Kontakte';
 
   @override
-  String get shareImageAllTwonlyWarning => 'twonlies können nur an verifizierte Kontakte gesendet werden!';
+  String get shareImageAllTwonlyWarning =>
+      'twonlies können nur an verifizierte Kontakte gesendet werden!';
 
   @override
   String get shareImageUserNotVerified => 'Benutzer ist nicht verifiziert';
 
   @override
-  String get shareImageUserNotVerifiedDesc => 'twonlies können nur an verifizierte Nutzer gesendet werden. Um einen Nutzer zu verifizieren, gehe auf sein Profil und auf „Sicherheitsnummer verifizieren“.';
+  String get shareImageUserNotVerifiedDesc =>
+      'twonlies können nur an verifizierte Nutzer gesendet werden. Um einen Nutzer zu verifizieren, gehe auf sein Profil und auf „Sicherheitsnummer verifizieren“.';
 
   @override
   String get shareImageShowArchived => 'Archivierte Benutzer anzeigen';
@@ -144,7 +158,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchUsernameTitle => 'Benutzernamen suchen';
 
   @override
-  String get searchUserNamePreview => 'Um dich und andere twonly Benutzer vor Spam und Missbrauch zu schützen, ist es nicht möglich, im Preview-Modus nach anderen Personen zu suchen. Andere Benutzer können dich finden und deren Anfragen werden dann hier angezeigt!';
+  String get searchUserNamePreview =>
+      'Um dich und andere twonly Benutzer vor Spam und Missbrauch zu schützen, ist es nicht möglich, im Preview-Modus nach anderen Personen zu suchen. Andere Benutzer können dich finden und deren Anfragen werden dann hier angezeigt!';
 
   @override
   String get selectSubscription => 'Abo auswählen';
@@ -153,13 +168,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchUserNamePending => 'Ausstehend';
 
   @override
-  String get searchUserNameBlockUserTooltip => 'Benutzer ohne Benachrichtigung blockieren.';
+  String get searchUserNameBlockUserTooltip =>
+      'Benutzer ohne Benachrichtigung blockieren.';
 
   @override
-  String get searchUserNameRejectUserTooltip => 'Die Anfrage ablehnen und den Anfragenden informieren.';
+  String get searchUserNameRejectUserTooltip =>
+      'Die Anfrage ablehnen und den Anfragenden informieren.';
 
   @override
-  String get searchUserNameArchiveUserTooltip => 'Benutzer archivieren. Du wirst informiert sobald er deine Anfrage akzeptiert.';
+  String get searchUserNameArchiveUserTooltip =>
+      'Benutzer archivieren. Du wirst informiert sobald er deine Anfrage akzeptiert.';
 
   @override
   String get searchUsernameNotFound => 'Benutzername nicht gefunden';
@@ -176,7 +194,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchUsernameQrCodeBtn => 'QR-Code scannen';
 
   @override
-  String get chatListViewSearchUserNameBtn => 'Füge deinen ersten twonly-Kontakt hinzu!';
+  String get chatListViewSearchUserNameBtn =>
+      'Füge deinen ersten twonly-Kontakt hinzu!';
 
   @override
   String get chatListViewSendFirstTwonly => 'Sende dein erstes twonly!';
@@ -209,7 +228,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contextMenuUnpin => 'Lösen';
 
   @override
-  String get mediaViewerAuthReason => 'Bitte authentifiziere dich, um diesen twonly zu sehen!';
+  String get mediaViewerAuthReason =>
+      'Bitte authentifiziere dich, um diesen twonly zu sehen!';
 
   @override
   String get mediaViewerTwonlyTapToOpen => 'Tippe um den twonly zu öffnen!';
@@ -251,7 +271,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPreSelectedReactions => 'Vorgewählte Reaktions-Emojis';
 
   @override
-  String get settingsPreSelectedReactionsError => 'Es können maximal 12 Reaktionen ausgewählt werden.';
+  String get settingsPreSelectedReactionsError =>
+      'Es können maximal 12 Reaktionen ausgewählt werden.';
 
   @override
   String get settingsProfile => 'Profil';
@@ -263,10 +284,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsStorageDataStoreInGTitle => 'In der Galerie speichern';
 
   @override
-  String get settingsStorageDataStoreInGSubtitle => 'Speichere Bilder zusätzlich in der Systemgalerie.';
+  String get settingsStorageDataStoreInGSubtitle =>
+      'Speichere Bilder zusätzlich in der Systemgalerie.';
 
   @override
-  String get settingsStorageDataMediaAutoDownload => 'Automatischer Mediendownload';
+  String get settingsStorageDataMediaAutoDownload =>
+      'Automatischer Mediendownload';
 
   @override
   String get settingsStorageDataAutoDownMobile => 'Bei Nutzung mobiler Daten';
@@ -299,7 +322,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsPrivacyBlockUsers => 'Benutzer blockieren';
 
   @override
-  String get settingsPrivacyBlockUsersDesc => 'Blockierte Benutzer können nicht mit dir kommunizieren. Du kannst einen blockierten Benutzer jederzeit wieder entsperren.';
+  String get settingsPrivacyBlockUsersDesc =>
+      'Blockierte Benutzer können nicht mit dir kommunizieren. Du kannst einen blockierten Benutzer jederzeit wieder entsperren.';
 
   @override
   String settingsPrivacyBlockUsersCount(Object len) {
@@ -313,13 +337,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsNotifyTroubleshooting => 'Fehlersuche';
 
   @override
-  String get settingsNotifyTroubleshootingDesc => 'Hier klicken, wenn Probleme beim Empfang von Push-Benachrichtigungen auftreten.';
+  String get settingsNotifyTroubleshootingDesc =>
+      'Hier klicken, wenn Probleme beim Empfang von Push-Benachrichtigungen auftreten.';
 
   @override
-  String get settingsNotifyTroubleshootingNoProblem => 'Kein Problem festgestellt';
+  String get settingsNotifyTroubleshootingNoProblem =>
+      'Kein Problem festgestellt';
 
   @override
-  String get settingsNotifyTroubleshootingNoProblemDesc => 'Klicke auf OK, um eine Testbenachrichtigung zu erhalten. Wenn du auch nach 10 Minuten warten keine Nachricht erhältst, sende uns bitte dein Diagnoseprotokoll unter Einstellungen > Hilfe > Diagnoseprotokoll, damit wir uns das Problem ansehen können.';
+  String get settingsNotifyTroubleshootingNoProblemDesc =>
+      'Klicke auf OK, um eine Testbenachrichtigung zu erhalten. Wenn du auch nach 10 Minuten warten keine Nachricht erhältst, sende uns bitte dein Diagnoseprotokoll unter Einstellungen > Hilfe > Diagnoseprotokoll, damit wir uns das Problem ansehen können.';
 
   @override
   String get settingsHelp => 'Hilfe';
@@ -360,16 +387,19 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get settingsAccountDeleteAccountNoBallance => 'Wenn du dein Konto gelöscht hast, gibt es keinen Weg zurück.';
+  String get settingsAccountDeleteAccountNoBallance =>
+      'Wenn du dein Konto gelöscht hast, gibt es keinen Weg zurück.';
 
   @override
-  String get settingsAccountDeleteAccountNoInternet => 'Zum Löschen deines Accounts ist eine Internetverbindung erforderlich.';
+  String get settingsAccountDeleteAccountNoInternet =>
+      'Zum Löschen deines Accounts ist eine Internetverbindung erforderlich.';
 
   @override
   String get settingsAccountDeleteModalTitle => 'Bist du sicher?';
 
   @override
-  String get settingsAccountDeleteModalBody => 'Dein Konto wird gelöscht. Es gibt keine Möglichkeit, es wiederherzustellen.';
+  String get settingsAccountDeleteModalBody =>
+      'Dein Konto wird gelöscht. Es gibt keine Möglichkeit, es wiederherzustellen.';
 
   @override
   String get contactVerifyNumberTitle => 'Sicherheitsnummer verifizieren';
@@ -411,7 +441,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get contactBlockBody => 'Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und sein Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.';
+  String get contactBlockBody =>
+      'Ein blockierter Benutzer kann dir keine Nachrichten mehr senden, und sein Profil ist nicht mehr sichtbar. Um die Blockierung eines Benutzers aufzuheben, navigiere einfach zu Einstellungen > Datenschutz > Blockierte Benutzer.';
 
   @override
   String get contactRemove => 'Benutzer löschen';
@@ -422,7 +453,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get contactRemoveBody => 'Entferne den Benutzer und lösche den Chat sowie alle zugehörigen Mediendateien dauerhaft. Dadurch wird auch DEIN KONTO VON DEM TELEFON DEINES KONTAKTS gelöscht.';
+  String get contactRemoveBody =>
+      'Entferne den Benutzer und lösche den Chat sowie alle zugehörigen Mediendateien dauerhaft. Dadurch wird auch DEIN KONTO VON DEM TELEFON DEINES KONTAKTS gelöscht.';
 
   @override
   String get undo => 'Rückgängig';
@@ -449,7 +481,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get ok => 'Ok';
 
   @override
-  String get switchFrontAndBackCamera => 'Zwischen Front- und Rückkamera wechseln.';
+  String get switchFrontAndBackCamera =>
+      'Zwischen Front- und Rückkamera wechseln.';
 
   @override
   String get addTextItem => 'Text';
@@ -481,58 +514,75 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get errorUnknown => 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.';
+  String get errorUnknown =>
+      'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.';
 
   @override
-  String get errorBadRequest => 'Die Anfrage konnte vom Server aufgrund einer fehlerhaften Syntax nicht verstanden werden. Bitte überprüfe deine Eingabe und versuche es erneut.';
+  String get errorBadRequest =>
+      'Die Anfrage konnte vom Server aufgrund einer fehlerhaften Syntax nicht verstanden werden. Bitte überprüfe deine Eingabe und versuche es erneut.';
 
   @override
-  String get errorTooManyRequests => 'Du hast in kurzer Zeit zu viele Anfragen gestellt. Bitte warte einen Moment, bevor du es erneut versuchst.';
+  String get errorTooManyRequests =>
+      'Du hast in kurzer Zeit zu viele Anfragen gestellt. Bitte warte einen Moment, bevor du es erneut versuchst.';
 
   @override
-  String get errorInternalError => 'Der Server ist derzeit nicht verfügbar. Bitte versuche es später erneut.';
+  String get errorInternalError =>
+      'Der Server ist derzeit nicht verfügbar. Bitte versuche es später erneut.';
 
   @override
-  String get errorInvalidInvitationCode => 'Der von dir angegebene Einladungscode ist ungültig. Bitte überprüfe den Code und versuche es erneut.';
+  String get errorInvalidInvitationCode =>
+      'Der von dir angegebene Einladungscode ist ungültig. Bitte überprüfe den Code und versuche es erneut.';
 
   @override
-  String get errorUsernameAlreadyTaken => 'Der Benutzername, den du verwenden möchtest, ist bereits vergeben. Bitte wähle einen anderen Benutzernamen.';
+  String get errorUsernameAlreadyTaken =>
+      'Der Benutzername, den du verwenden möchtest, ist bereits vergeben. Bitte wähle einen anderen Benutzernamen.';
 
   @override
-  String get errorSignatureNotValid => 'Die bereitgestellte Signatur ist nicht gültig. Bitte überprüfe deine Anmeldeinformationen und versuche es erneut.';
+  String get errorSignatureNotValid =>
+      'Die bereitgestellte Signatur ist nicht gültig. Bitte überprüfe deine Anmeldeinformationen und versuche es erneut.';
 
   @override
-  String get errorUsernameNotFound => 'Der eingegebene Benutzername existiert nicht. Bitte überprüfe die Schreibweise oder erstelle ein neues Konto.';
+  String get errorUsernameNotFound =>
+      'Der eingegebene Benutzername existiert nicht. Bitte überprüfe die Schreibweise oder erstelle ein neues Konto.';
 
   @override
-  String get errorUsernameNotValid => 'Der von dir angegebene Benutzername entspricht nicht den erforderlichen Kriterien. Bitte wähle einen gültigen Benutzernamen.';
+  String get errorUsernameNotValid =>
+      'Der von dir angegebene Benutzername entspricht nicht den erforderlichen Kriterien. Bitte wähle einen gültigen Benutzernamen.';
 
   @override
-  String get errorInvalidPublicKey => 'Der von dir angegebene öffentliche Schlüssel ist ungültig. Bitte überprüfe den Schlüssel und versuche es erneut.';
+  String get errorInvalidPublicKey =>
+      'Der von dir angegebene öffentliche Schlüssel ist ungültig. Bitte überprüfe den Schlüssel und versuche es erneut.';
 
   @override
-  String get errorSessionAlreadyAuthenticated => 'Du bist bereits angemeldet. Bitte melde dich ab, wenn du dich mit einem anderen Konto anmelden möchtest.';
+  String get errorSessionAlreadyAuthenticated =>
+      'Du bist bereits angemeldet. Bitte melde dich ab, wenn du dich mit einem anderen Konto anmelden möchtest.';
 
   @override
-  String get errorSessionNotAuthenticated => 'Deine Sitzung ist nicht authentifiziert. Bitte melde dich an, um fortzufahren.';
+  String get errorSessionNotAuthenticated =>
+      'Deine Sitzung ist nicht authentifiziert. Bitte melde dich an, um fortzufahren.';
 
   @override
-  String get errorOnlyOneSessionAllowed => 'Es ist nur eine aktive Sitzung pro Benutzer erlaubt. Bitte melde dich von anderen Geräten ab, um fortzufahren.';
+  String get errorOnlyOneSessionAllowed =>
+      'Es ist nur eine aktive Sitzung pro Benutzer erlaubt. Bitte melde dich von anderen Geräten ab, um fortzufahren.';
 
   @override
   String get errorNotEnoughCredit => 'Du hast nicht genügend twonly-Guthaben.';
 
   @override
-  String get errorVoucherInvalid => 'Der eingegebene Gutschein-Code ist nicht gültig.';
+  String get errorVoucherInvalid =>
+      'Der eingegebene Gutschein-Code ist nicht gültig.';
 
   @override
-  String get errorPlanLimitReached => 'Du hast das Limit deines Plans erreicht. Bitte upgrade deinen Plan.';
+  String get errorPlanLimitReached =>
+      'Du hast das Limit deines Plans erreicht. Bitte upgrade deinen Plan.';
 
   @override
-  String get errorPlanNotAllowed => 'Dieses Feature ist in deinem aktuellen Plan nicht verfügbar.';
+  String get errorPlanNotAllowed =>
+      'Dieses Feature ist in deinem aktuellen Plan nicht verfügbar.';
 
   @override
-  String get errorPlanUpgradeNotYearly => 'Das Upgrade des Plans muss jährlich bezahlt werden, da der aktuelle Plan ebenfalls jährlich abgerechnet wird.';
+  String get errorPlanUpgradeNotYearly =>
+      'Das Upgrade des Plans muss jährlich bezahlt werden, da der aktuelle Plan ebenfalls jährlich abgerechnet wird.';
 
   @override
   String get upgradeToPaidPlan => 'Upgrade auf einen kostenpflichtigen Plan.';
@@ -578,7 +628,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get redeemUserInviteCodeTitle => 'twonly-Code einlösen';
 
   @override
-  String get redeemUserInviteCodeSuccess => 'Dein Plan wurde erfolgreich angepasst.';
+  String get redeemUserInviteCodeSuccess =>
+      'Dein Plan wurde erfolgreich angepasst.';
 
   @override
   String get freeFeature1 => '3 Medien-Datei-Uploads pro Tag';
@@ -611,7 +662,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get createVoucher => 'Gutschein kaufen';
 
   @override
-  String get createVoucherDesc => 'Wähle den Wert des Gutscheins. Der Wert des Gutschein wird von deinem twonly-Guthaben abgezogen.';
+  String get createVoucherDesc =>
+      'Wähle den Wert des Gutscheins. Der Wert des Gutschein wird von deinem twonly-Guthaben abgezogen.';
 
   @override
   String get redeemVoucher => 'Gutschein einlösen';
@@ -697,7 +749,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get autoRenewalDesc => 'Du kannst dies jederzeit ändern.';
 
   @override
-  String get autoRenewalLongDesc => 'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Preview-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst.  Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
+  String get autoRenewalLongDesc =>
+      'Wenn dein Abonnement ausläuft, wirst du automatisch auf den Preview-Plan zurückgestuft. Wenn du die automatische Verlängerung aktivierst, vergewissere dich bitte, dass du über genügend Guthaben für die automatische Erneuerung verfügst.  Wir werden dich rechtzeitig vor der automatischen Erneuerung benachrichtigen.';
 
   @override
   String get planSuccessUpgraded => 'Dein Plan wurde erfolgreich aktualisiert.';
@@ -715,10 +768,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get additionalUsersFreeTokens => 'twonly-Codes für \"Free\"-Benutzer';
 
   @override
-  String get planLimitReached => 'Du hast dein Planlimit für heute erreicht. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.';
+  String get planLimitReached =>
+      'Du hast dein Planlimit für heute erreicht. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.';
 
   @override
-  String get planNotAllowed => 'In deinem aktuellen Plan kannst du keine Mediendateien versenden. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.';
+  String get planNotAllowed =>
+      'In deinem aktuellen Plan kannst du keine Mediendateien versenden. Aktualisiere deinen Plan jetzt, um die Mediendatei zu senden.';
 
   @override
   String get galleryDelete => 'Datei löschen';
@@ -736,37 +791,48 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsResetTutorials => 'Tutorials erneut anzeigen';
 
   @override
-  String get settingsResetTutorialsDesc => 'Klicke hier, um bereits angezeigte Tutorials erneut anzuzeigen.';
+  String get settingsResetTutorialsDesc =>
+      'Klicke hier, um bereits angezeigte Tutorials erneut anzuzeigen.';
 
   @override
-  String get settingsResetTutorialsSuccess => 'Tutorials werden erneut angezeigt.';
+  String get settingsResetTutorialsSuccess =>
+      'Tutorials werden erneut angezeigt.';
 
   @override
-  String get tutorialChatListSearchUsersTitle => 'Freunde finden und Freundschaftsanfragen verwalten';
+  String get tutorialChatListSearchUsersTitle =>
+      'Freunde finden und Freundschaftsanfragen verwalten';
 
   @override
-  String get tutorialChatListSearchUsersDesc => 'Wenn du die Benutzernamen deiner Freunde kennst, kannst du sie hier suchen und eine Freundschaftsanfrage senden. Außerdem siehst du hier alle Anfragen von anderen Nutzern, die du annehmen oder blockieren kannst.';
+  String get tutorialChatListSearchUsersDesc =>
+      'Wenn du die Benutzernamen deiner Freunde kennst, kannst du sie hier suchen und eine Freundschaftsanfrage senden. Außerdem siehst du hier alle Anfragen von anderen Nutzern, die du annehmen oder blockieren kannst.';
 
   @override
-  String get tutorialChatListContextMenuTitle => 'Klicke lange auf den Kontakt, um das Kontextmenü zu öffnen.';
+  String get tutorialChatListContextMenuTitle =>
+      'Klicke lange auf den Kontakt, um das Kontextmenü zu öffnen.';
 
   @override
-  String get tutorialChatListContextMenuDesc => 'Mit dem Kontextmenü kannst du deine Kontakte anheften, archivieren und verschiedene Aktionen durchführen. Halte dazu einfach den Kontakt lange gedrückt und bewege dann deinen Finger auf die gewünschte Option oder tippe direkt darauf.';
+  String get tutorialChatListContextMenuDesc =>
+      'Mit dem Kontextmenü kannst du deine Kontakte anheften, archivieren und verschiedene Aktionen durchführen. Halte dazu einfach den Kontakt lange gedrückt und bewege dann deinen Finger auf die gewünschte Option oder tippe direkt darauf.';
 
   @override
-  String get tutorialChatMessagesVerifyShieldTitle => 'Verifiziere deine Kontakte!';
+  String get tutorialChatMessagesVerifyShieldTitle =>
+      'Verifiziere deine Kontakte!';
 
   @override
-  String get tutorialChatMessagesVerifyShieldDesc => 'twonly nutzt das Signal-Protokoll für eine sichere Ende-zu-Ende Verschlüsselung. Bei der ersten Kontaktaufnahme wird dafür der öffentliche Identitätsschlüssel von deinem Kontakt heruntergeladen. Um sicherzustellen, dass dieser Schlüssel nicht von Dritten ausgetauscht wurde, solltest du ihn mit deinem Freund vergleichen, wenn ihr euch persönlich trefft. Sobald du den Benutzer verifiziert hast, kannst du auch beim verschicken von Bildern und Videos den twonly-Modus aktivieren.';
+  String get tutorialChatMessagesVerifyShieldDesc =>
+      'twonly nutzt das Signal-Protokoll für eine sichere Ende-zu-Ende Verschlüsselung. Bei der ersten Kontaktaufnahme wird dafür der öffentliche Identitätsschlüssel von deinem Kontakt heruntergeladen. Um sicherzustellen, dass dieser Schlüssel nicht von Dritten ausgetauscht wurde, solltest du ihn mit deinem Freund vergleichen, wenn ihr euch persönlich trefft. Sobald du den Benutzer verifiziert hast, kannst du auch beim verschicken von Bildern und Videos den twonly-Modus aktivieren.';
 
   @override
-  String get tutorialChatMessagesReopenMessageTitle => 'Bilder und Videos erneut öffnen';
+  String get tutorialChatMessagesReopenMessageTitle =>
+      'Bilder und Videos erneut öffnen';
 
   @override
-  String get tutorialChatMessagesReopenMessageDesc => 'Wenn dein Freund dir ein Bild oder Video mit unendlicher Anzeigezeit gesendet hat, kannst du es bis zum Neustart der App jederzeit erneut öffnen. Um dies zu tun, musst du einfach doppelt auf die Nachricht klicken. Dein Freund erhält dann eine Benachrichtigung, dass du das Bild erneut angesehen hast.';
+  String get tutorialChatMessagesReopenMessageDesc =>
+      'Wenn dein Freund dir ein Bild oder Video mit unendlicher Anzeigezeit gesendet hat, kannst du es bis zum Neustart der App jederzeit erneut öffnen. Um dies zu tun, musst du einfach doppelt auf die Nachricht klicken. Dein Freund erhält dann eine Benachrichtigung, dass du das Bild erneut angesehen hast.';
 
   @override
-  String get memoriesEmpty => 'Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen.';
+  String get memoriesEmpty =>
+      'Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen.';
 
   @override
   String get deleteImageTitle => 'Bist du dir sicher?';
@@ -781,7 +847,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupNoticeTitle => 'Kein Backup konfiguriert';
 
   @override
-  String get backupNoticeDesc => 'Wenn du dein Gerät wechselst oder verlierst, kann ohne Backup niemand dein Account wiederherstellen. Sichere deshalb deine Daten.';
+  String get backupNoticeDesc =>
+      'Wenn du dein Gerät wechselst oder verlierst, kann ohne Backup niemand dein Account wiederherstellen. Sichere deshalb deine Daten.';
 
   @override
   String get backupNoticeLater => 'Später erinnern';
@@ -799,7 +866,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupSuccess => 'Erfolgreich';
 
   @override
-  String get backupTwonlySafeDesc => 'Sichere deine twonly-Identität, da dies die einzige Möglichkeit ist, dein Konto wiederherzustellen, wenn du die App deinstallierst oder dein Handy verlierst.';
+  String get backupTwonlySafeDesc =>
+      'Sichere deine twonly-Identität, da dies die einzige Möglichkeit ist, dein Konto wiederherzustellen, wenn du die App deinstallierst oder dein Handy verlierst.';
 
   @override
   String get backupServer => 'Server';
@@ -823,19 +891,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteBackupTitle => 'Bist du sicher?';
 
   @override
-  String get deleteBackupBody => 'Ohne ein Backup kannst du dein Benutzerkonto nicht wiederherstellen.';
+  String get deleteBackupBody =>
+      'Ohne ein Backup kannst du dein Benutzerkonto nicht wiederherstellen.';
 
   @override
   String get backupData => 'Daten-Backup';
 
   @override
-  String get backupDataDesc => 'Das Daten-Backup enthält neben deiner twonly-Identität auch alle deine Mediendateien. Dieses Backup ist ebenfalls verschlüsselt, wird jedoch lokal gespeichert. Du musst es dann manuell auf deinen Laptop oder ein Gerät deiner Wahl kopieren.';
+  String get backupDataDesc =>
+      'Das Daten-Backup enthält neben deiner twonly-Identität auch alle deine Mediendateien. Dieses Backup ist ebenfalls verschlüsselt, wird jedoch lokal gespeichert. Du musst es dann manuell auf deinen Laptop oder ein Gerät deiner Wahl kopieren.';
 
   @override
   String get backupInsecurePassword => 'Unsicheres Passwort';
 
   @override
-  String get backupInsecurePasswordDesc => 'Das gewählte Passwort ist sehr unsicher und kann daher leicht von Angreifern erraten werden. Bitte wähle ein sicheres Passwort.';
+  String get backupInsecurePasswordDesc =>
+      'Das gewählte Passwort ist sehr unsicher und kann daher leicht von Angreifern erraten werden. Bitte wähle ein sicheres Passwort.';
 
   @override
   String get backupInsecurePasswordOk => 'Trotzdem fortfahren';
@@ -844,10 +915,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupInsecurePasswordCancel => 'Erneut versuchen';
 
   @override
-  String get backupTwonlySafeLongDesc => 'twonly hat keine zentralen Benutzerkonten. Ein Schlüsselpaar wird während der Installation erstellt, das aus einem öffentlichen und einem privaten Schlüssel besteht. Der private Schlüssel wird nur auf deinem Gerät gespeichert, um ihn vor unbefugtem Zugriff zu schützen. Der öffentliche Schlüssel wird auf den Server hochgeladen und mit deinem gewählten Benutzernamen verknüpft, damit andere dich finden können.\n\ntwonly Safe erstellt regelmäßig ein verschlüsseltes, anonymes Backup deines privaten Schlüssels zusammen mit deinen Kontakten und Einstellungen. Dein Benutzername und das gewählte Passwort reichen aus, um diese Daten auf einem anderen Gerät wiederherzustellen.';
+  String get backupTwonlySafeLongDesc =>
+      'twonly hat keine zentralen Benutzerkonten. Ein Schlüsselpaar wird während der Installation erstellt, das aus einem öffentlichen und einem privaten Schlüssel besteht. Der private Schlüssel wird nur auf deinem Gerät gespeichert, um ihn vor unbefugtem Zugriff zu schützen. Der öffentliche Schlüssel wird auf den Server hochgeladen und mit deinem gewählten Benutzernamen verknüpft, damit andere dich finden können.\n\ntwonly Safe erstellt regelmäßig ein verschlüsseltes, anonymes Backup deines privaten Schlüssels zusammen mit deinen Kontakten und Einstellungen. Dein Benutzername und das gewählte Passwort reichen aus, um diese Daten auf einem anderen Gerät wiederherzustellen.';
 
   @override
-  String get backupSelectStrongPassword => 'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein twonly Safe-Backup wiederherstellen möchtest.';
+  String get backupSelectStrongPassword =>
+      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein twonly Safe-Backup wiederherstellen möchtest.';
 
   @override
   String get password => 'Passwort';
@@ -859,7 +932,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get passwordRepeatedNotEqual => 'Passwörter stimmen nicht überein.';
 
   @override
-  String get backupPasswordRequirement => 'Das Passwort muss mindestens 8 Zeichen lang sein.';
+  String get backupPasswordRequirement =>
+      'Das Passwort muss mindestens 8 Zeichen lang sein.';
 
   @override
   String get backupExpertSettings => 'Experteneinstellungen';
@@ -868,7 +942,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupEnableBackup => 'Automatische Sicherung aktivieren';
 
   @override
-  String get backupOwnServerDesc => 'Speichere dein twonly Safe-Backups auf einem Server deiner Wahl.';
+  String get backupOwnServerDesc =>
+      'Speichere dein twonly Safe-Backups auf einem Server deiner Wahl.';
 
   @override
   String get backupUseOwnServer => 'Server verwenden';
