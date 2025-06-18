@@ -6,6 +6,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hashlib/hashlib.dart';
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
@@ -17,8 +18,23 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
 
+Future<String?> getTwonlySafeBackupUrl() async {
+  final user = await getUser();
+  if (user == null || user.twonlySafeBackup == null) return null;
+
+  String backupServerUrl = "https://safe.twonly.eu/";
+
+  if (user.backupServer != null) {
+    backupServerUrl = user.backupServer!.serverUrl;
+  }
+
+  String backupId =
+      uint8ListToHex(user.twonlySafeBackup!.backupId).toLowerCase();
+
+  return "${backupServerUrl}backups/$backupId";
+}
+
 Future performTwonlySafeBackup({bool force = false}) async {
-  Log.info("Starting new backup creation.");
   final user = await getUser();
 
   if (user == null || user.twonlySafeBackup == null) {
@@ -31,6 +47,15 @@ Future performTwonlySafeBackup({bool force = false}) async {
     Log.warn("Backup upload is already pending.");
     return;
   }
+
+  DateTime? lastUpdateTime = user.twonlySafeBackup!.lastBackupDone;
+  if (!force && lastUpdateTime != null) {
+    if (lastUpdateTime.isAfter(DateTime.now().subtract(Duration(days: 1)))) {
+      return;
+    }
+  }
+
+  Log.info("Starting new twonly Safe-Backup.");
 
   final baseDir = (await getApplicationSupportDirectory()).path;
 
@@ -133,11 +158,7 @@ Future performTwonlySafeBackup({bool force = false}) async {
   Log.info(
       "Create twonly Safe backup with a size of ${encryptedBackupBytes.length} bytes.");
 
-  String backupServerUrl = "https://safe.twonly.eu/";
-
   if (user.backupServer != null) {
-    backupServerUrl = user.backupServer!.serverUrl;
-
     if (encryptedBackupBytes.length > user.backupServer!.maxBackupBytes) {
       Log.error("Backup is to big for the alternative backup server.");
       await updateUserdata((user) {
@@ -148,14 +169,11 @@ Future performTwonlySafeBackup({bool force = false}) async {
     }
   }
 
-  String backupId =
-      uint8ListToHex(user.twonlySafeBackup!.backupId).toLowerCase();
-
   final task = UploadTask.fromFile(
     taskId: "backup",
     file: encryptedBackupBytesFile,
     httpRequestMethod: "PUT",
-    url: "${backupServerUrl}backups/$backupId",
+    url: (await getTwonlySafeBackupUrl())!,
     requiresWiFi: true,
     priority: 5,
     retries: 2,
@@ -218,19 +236,29 @@ Future enableTwonlySafe(String password) async {
     );
     return user;
   });
-  startTwonlySafeBackup();
-  performTwonlySafeBackup();
+  performTwonlySafeBackup(force: true);
 }
 
 Future disableTwonlySafe() async {
+  final serverUrl = await getTwonlySafeBackupUrl();
+  if (serverUrl != null) {
+    try {
+      final response = await http.delete(
+        Uri.parse(serverUrl),
+        headers: {
+          'Content-Type': 'application/json', // Set the content type if needed
+          // Add any other headers if required
+        },
+      );
+      Log.info("Download deleted with: ${response.statusCode}");
+    } catch (e) {
+      Log.error("Could not connect to the server.");
+    }
+  }
   await updateUserdata((user) {
     user.twonlySafeBackup = null;
     return user;
   });
-}
-
-Future startTwonlySafeBackup() async {
-  print("startTwonlySafeBackup");
 }
 
 Future<(Uint8List, Uint8List)> getMasterKey(

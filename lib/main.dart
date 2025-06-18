@@ -10,6 +10,7 @@ import 'package:twonly/src/services/api.service.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/services/backup.identitiy.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -47,6 +48,8 @@ void main() async {
   // purge media files in the background
   purgeReceivedMediaFiles();
   purgeSendMediaFiles();
+
+  performTwonlySafeBackup();
 
   await initFileDownloader();
 

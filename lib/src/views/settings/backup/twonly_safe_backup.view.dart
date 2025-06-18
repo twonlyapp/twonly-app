@@ -25,6 +25,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
       isLoading = true;
     });
 
+    await Future.delayed(Duration(milliseconds: 100));
     await enableTwonlySafe(passwordCtrl.text);
 
     if (!mounted) return;
