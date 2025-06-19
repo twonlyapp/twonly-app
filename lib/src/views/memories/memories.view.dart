@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:intl/intl.dart';
-import 'package:twonly/src/services/api/media_send.dart' as send;
+import 'package:twonly/src/services/api/media_upload.dart' as send;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';

@@ -2,7 +2,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/services/backup.identitiy.service.dart';
+import 'package:twonly/src/services/twonly_safe.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/backup/twonly_safe_server.view.dart';

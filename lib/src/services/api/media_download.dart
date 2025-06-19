@@ -9,7 +9,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/services/api/media_send.dart';
+import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/log.dart';

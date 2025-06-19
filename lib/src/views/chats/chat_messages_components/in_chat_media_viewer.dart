@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/services/api/media_send.dart' as send;
+import 'package:twonly/src/services/api/media_upload.dart' as send;
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/database/twonly_database.dart';

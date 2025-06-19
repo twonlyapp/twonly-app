@@ -1,6 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/services/api/media_received.dart';
+import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/utils/misc.dart';
 

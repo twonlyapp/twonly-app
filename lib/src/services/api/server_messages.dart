@@ -14,10 +14,10 @@ import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserve
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
-import 'package:twonly/src/services/api/media_send.dart';
+import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
-import 'package:twonly/src/services/api/media_received.dart';
+import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';

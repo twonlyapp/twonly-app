@@ -6,7 +6,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/media_received.dart' as received;
+import 'package:twonly/src/services/api/media_download.dart' as received;
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/model/memory_item.model.dart';

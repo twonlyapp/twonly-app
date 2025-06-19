@@ -21,8 +21,8 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
-import 'package:twonly/src/services/api/media_received.dart';
-import 'package:twonly/src/services/api/media_send.dart';
+import 'package:twonly/src/services/api/media_download.dart';
+import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';

@@ -13,7 +13,7 @@ import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/backup/backup.pb.dart';
-import 'package:twonly/src/services/api/media_send.dart';
+import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
@@ -37,7 +37,7 @@ Future<String?> getTwonlySafeBackupUrl() async {
 Future performTwonlySafeBackup({bool force = false}) async {
   final user = await getUser();
 
-  if (user == null || user.twonlySafeBackup == null) {
+  if (user == null || user.twonlySafeBackup == null || user.isDemoUser) {
     Log.warn("perform twonly safe backup was called while it is disabled");
     return;
   }

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/services/api/media_received.dart';
+import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/views/chats/chat_list_components/backup_notice.card.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/chats/chat_list_components/demo_user.card.dart';

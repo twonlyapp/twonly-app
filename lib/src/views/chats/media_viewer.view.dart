@@ -17,7 +17,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/media_received.dart';
+import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';

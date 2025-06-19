@@ -144,18 +144,18 @@ class _RegisterViewState extends State<RegisterView> {
                     context.lang.registerUsernameDecoration,
                   ),
                 ),
-                const SizedBox(height: 5),
-                Center(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 10, right: 10),
-                    child: Text(
-                      context.lang.registerUsernameLimits,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 9),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
+                // const SizedBox(height: 5),
+                // Center(
+                //   child: Padding(
+                //     padding: EdgeInsets.only(left: 10, right: 10),
+                //     child: Text(
+                //       context.lang.registerUsernameLimits,
+                //       textAlign: TextAlign.center,
+                //       style: TextStyle(fontSize: 9),
+                //     ),
+                //   ),
+                // ),
+                const SizedBox(height: 30),
                 Center(
                   child: Text(
                     context.lang.registerTwonlyCodeText,
