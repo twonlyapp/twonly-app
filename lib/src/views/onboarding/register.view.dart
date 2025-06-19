@@ -218,7 +218,7 @@ class _RegisterViewState extends State<RegisterView> {
                             },
                           ));
                         },
-                        label: Text("Restore identity"),
+                        label: Text(context.lang.twonlySafeRecoverBtn),
                       ),
                     ],
                   ),

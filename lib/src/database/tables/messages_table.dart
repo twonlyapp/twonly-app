@@ -14,6 +14,7 @@ enum MessageKind {
   opened,
   ack,
   pushKey,
+  requestPushKey,
   receiveMediaError,
   signalDecryptError
 }

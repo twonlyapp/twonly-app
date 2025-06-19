@@ -62,6 +62,14 @@ class UserData {
 
   DateTime? signalLastSignedPreKeyUpdated;
 
+  //  -- Custom DATA --
+
+  @JsonKey(defaultValue: 100_000)
+  int currentPreKeyIndexStart = 100_000;
+
+  @JsonKey(defaultValue: 100_000)
+  int currentSignedPreKeyIndexStart = 100_000;
+
   // --- BACKUP ---
 
   DateTime? nextTimeToShowBackupNotice;

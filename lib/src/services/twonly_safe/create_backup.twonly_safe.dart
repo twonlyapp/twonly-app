@@ -21,7 +21,7 @@ Future performTwonlySafeBackup({bool force = false}) async {
   final user = await getUser();
 
   if (user == null || user.twonlySafeBackup == null || user.isDemoUser) {
-    // Log.warn("perform twonly safe backup was called while it is disabled");
+    Log.warn("perform twonly safe backup was called while it is disabled");
     return;
   }
 
@@ -38,7 +38,7 @@ Future performTwonlySafeBackup({bool force = false}) async {
     }
   }
 
-  Log.info("Starting new twonly Safe-Backup.");
+  Log.info("Starting new twonly Safe-Backup!");
 
   final baseDir = (await getApplicationSupportDirectory()).path;
 
@@ -47,6 +47,9 @@ Future performTwonlySafeBackup({bool force = false}) async {
 
   final backupDatabaseFile =
       File(join(backupDir.path, "twonly_database.backup.sqlite"));
+
+  final backupDatabaseFileCleaned =
+      File(join(backupDir.path, "twonly_database.backup.cleaned.sqlite"));
 
   // copy database
   final originalDatabase = File(join(baseDir, "twonly_database.sqlite"));
@@ -65,6 +68,10 @@ Future performTwonlySafeBackup({bool force = false}) async {
   );
 
   await backupDB.deleteDataForTwonlySafe();
+
+  await backupDB
+      .customStatement('VACUUM INTO ?', [backupDatabaseFileCleaned.path]);
+  backupDB.close();
 
   var secureStorageBackup = {};
   final storage = FlutterSecureStorage();
@@ -87,8 +94,11 @@ Future performTwonlySafeBackup({bool force = false}) async {
 
   // Compress and convert backup data
 
-  final twonlyDatabaseBytes = await backupDatabaseFile.readAsBytes();
+  final twonlyDatabaseBytes = await backupDatabaseFileCleaned.readAsBytes();
   await backupDatabaseFile.delete();
+  await backupDatabaseFileCleaned.delete();
+
+  print("twonlyDatabaseBytes = ${twonlyDatabaseBytes.lengthInBytes}");
 
   final backupProto = TwonlySafeBackupContent(
     secureStorageJson: jsonEncode(secureStorageBackup),
@@ -163,8 +173,8 @@ Future performTwonlySafeBackup({bool force = false}) async {
     httpRequestMethod: "PUT",
     url: (await getTwonlySafeBackupUrl())!,
     requiresWiFi: true,
-    post: 'binary',
     priority: 5,
+    post: 'binary',
     retries: 2,
     headers: {
       "Content-Type": "application/octet-stream",

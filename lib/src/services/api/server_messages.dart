@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -14,13 +13,13 @@ import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserve
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
-import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -36,9 +35,6 @@ Future handleServerMessage(server.ServerToClient msg) async {
       } else if (msg.v0.hasNewMessage()) {
         Uint8List body = Uint8List.fromList(msg.v0.newMessage.body);
         int fromUserId = msg.v0.newMessage.fromUserId.toInt();
-        var hash = uint8ListToHex(Uint8List.fromList(
-            (await Sha256().hash(msg.v0.newMessage.body)).bytes));
-        Log.info("Got new message from server: ${hash.substring(0, 10)}");
         response = await handleNewMessage(fromUserId, body);
       } else {
         Log.error("Got a new message from the server: $msg");
@@ -56,9 +52,24 @@ Future handleServerMessage(server.ServerToClient msg) async {
   });
 }
 
+DateTime lastSignalDecryptMessage = DateTime.now().subtract(Duration(hours: 1));
+DateTime lastPushKeyRequest = DateTime.now().subtract(Duration(hours: 1));
+
 Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
   MessageJson? message = await signalDecryptMessage(fromUserId, body);
   if (message == null) {
+    await encryptAndSendMessageAsync(
+      null,
+      fromUserId,
+      MessageJson(
+        kind: MessageKind.signalDecryptError,
+        content: MessageContent(),
+        timestamp: DateTime.now(),
+      ),
+    );
+
+    Log.error("Could not decrypt others message!");
+
     // Message is not valid, so server can delete it
     var ok = client.Response_Ok()..none = true;
     return client.Response()..ok = ok;
@@ -66,7 +77,58 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
 
   Log.info("Got: ${message.kind}");
 
+  if (message.kind != MessageKind.ack && message.retransId != null) {
+    Log.info("Sending ACK for ${message.kind}");
+
+    /// ACK every message
+    await encryptAndSendMessageAsync(
+      null,
+      fromUserId,
+      MessageJson(
+        kind: MessageKind.ack,
+        messageId: null,
+        content: AckContent(
+            messageIdToAck: message.messageId,
+            retransIdToAck: message.retransId!),
+        timestamp: DateTime.now(),
+      ),
+      willNotGetACKByUser: true,
+    );
+  }
+
   switch (message.kind) {
+    case MessageKind.ack:
+      final content = message.content;
+      if (content is AckContent) {
+        if (content.messageIdToAck != null) {
+          final update = MessagesCompanion(
+            acknowledgeByUser: Value(true),
+            errorWhileSending: Value(false),
+          );
+          await twonlyDB.messagesDao.updateMessageByOtherUser(
+            fromUserId,
+            content.messageIdToAck!,
+            update,
+          );
+        }
+
+        await twonlyDB.messageRetransmissionDao
+            .deleteRetransmissionById(content.retransIdToAck);
+      }
+      break;
+    case MessageKind.signalDecryptError:
+      if (lastSignalDecryptMessage
+          .isBefore(DateTime.now().subtract(Duration(seconds: 60)))) {
+        Log.error(
+            "Got signal decrypt error from other user! Sending all non ACK messages again.");
+        lastSignalDecryptMessage = DateTime.now();
+        await twonlyDB.signalDao.deleteAllPreKeysByContactId(fromUserId);
+        await requestNewPrekeysForContact(fromUserId);
+        await twonlyDB.messageRetransmissionDao.resetAckStatusForAllMessages();
+        tryTransmitMessages();
+      }
+
+      break;
     case MessageKind.contactRequest:
       return handleContactRequest(fromUserId, message);
 
@@ -148,21 +210,12 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       }
       break;
 
-    case MessageKind.ack:
-      final update = MessagesCompanion(
-        acknowledgeByUser: Value(true),
-        errorWhileSending: Value(false),
-      );
-      await twonlyDB.messagesDao.updateMessageByOtherUser(
-        fromUserId,
-        message.messageId!,
-        update,
-      );
-
-      // search for older messages, that where not yet ack by the other party
-      DirtyResending.gotAckFromUser(fromUserId);
-
-      break;
+    case MessageKind.requestPushKey:
+      if (lastPushKeyRequest
+          .isBefore(DateTime.now().subtract(Duration(seconds: 60)))) {
+        lastPushKeyRequest = DateTime.now();
+        setupNotificationWithUsers(force: true);
+      }
 
     case MessageKind.pushKey:
       if (message.content != null) {
@@ -276,17 +329,6 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             }
           }
         }
-
-        await encryptAndSendMessageAsync(
-          null,
-          fromUserId,
-          MessageJson(
-            kind: MessageKind.ack,
-            messageId: message.messageId!,
-            content: MessageContent(),
-            timestamp: DateTime.now(),
-          ),
-        );
 
         // unarchive contact when receiving a new message
         await twonlyDB.contactsDao.updateContact(

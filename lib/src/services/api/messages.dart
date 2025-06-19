@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -9,60 +8,23 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-class DirtyResendingItem {
-  DirtyResendingItem({required this.gotLastAck});
-  DateTime gotLastAck;
-  Timer? timer;
-}
-
-class DirtyResending {
-  static final Map<int, DirtyResendingItem> _gotLastAck = {};
-
-  static Future gotAckFromUser(int contactID) async {
-    _gotLastAck[contactID]?.timer?.cancel();
-
-    _gotLastAck[contactID] = DirtyResendingItem(gotLastAck: DateTime.now());
-    _gotLastAck[contactID]?.timer = Timer(Duration(seconds: 10), () async {
-      _gotLastAck.remove(contactID);
-      _handleNonACKMessagesForUser(contactID);
-    });
-  }
-
-  static Future _handleNonACKMessagesForUser(int contactID) async {
-    final List<Message> toResendMessages =
-        await twonlyDB.messagesDao.getAllNonACKMessagesFromUser();
-
-    for (final Message message in toResendMessages) {
-      Log.info("Got newer ACKs from user ${message.messageId}");
-      await twonlyDB.messagesDao.updateMessageByMessageId(
-        message.messageId,
-        MessagesCompanion(
-          errorWhileSending: Value(true),
-        ),
-      );
-    }
-  }
-}
-
-Future handleOlderNonAckMessages() async {}
-
 Future tryTransmitMessages() async {
   final retransIds =
       await twonlyDB.messageRetransmissionDao.getRetransmitAbleMessages();
 
-  if (retransIds.isEmpty) return;
-
   Log.info("Retransmitting ${retransIds.length} text messages");
+
+  if (retransIds.isEmpty) return;
 
   for (final retransId in retransIds) {
     sendRetransmitMessage(retransId);
+    //twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
   }
 }
 
@@ -99,10 +61,6 @@ Future sendRetransmitMessage(int retransId) async {
     Log.error("Could not encrypt the message. Aborting and trying again.");
     return;
   }
-
-  var hash = uint8ListToHex(
-      Uint8List.fromList((await Sha256().hash(encryptedBytes)).bytes));
-  Log.info("Sending message: ${hash.substring(0, 10)}");
 
   Result resp = await apiService.sendTextMessage(
     retrans.contactId,
@@ -142,13 +100,23 @@ Future sendRetransmitMessage(int retransId) async {
   }
 
   if (!retry) {
-    await twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
+    if (retrans.willNotGetACKByUser) {
+      await twonlyDB.messageRetransmissionDao
+          .deleteRetransmissionById(retransId);
+    } else {
+      await twonlyDB.messageRetransmissionDao.updateRetransmission(
+        retransId,
+        MessageRetransmissionsCompanion(
+          acknowledgeByServerAt: Value(DateTime.now()),
+        ),
+      );
+    }
   }
 }
 
 // encrypts and stores the message and then sends it in the background
 Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
-    {PushKind? pushKind}) async {
+    {PushKind? pushKind, bool willNotGetACKByUser = false}) async {
   if (gIsDemoUser) {
     return;
   }
@@ -158,15 +126,13 @@ Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
     pushData = await getPushData(userId, pushKind);
   }
 
-  Uint8List plaintextContent =
-      Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson()))));
-
   int? retransId = await twonlyDB.messageRetransmissionDao.insertRetransmission(
     MessageRetransmissionsCompanion(
       contactId: Value(userId),
       messageId: Value(messageId),
-      plaintextContent: Value(plaintextContent),
+      plaintextContent: Value(Uint8List(0)),
       pushData: Value(pushData),
+      willNotGetACKByUser: Value(willNotGetACKByUser),
     ),
   );
 
@@ -174,6 +140,16 @@ Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
     Log.error("Could not insert the message into the retransmission database");
     return;
   }
+
+  msg.retransId = retransId;
+
+  Uint8List plaintextContent =
+      Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson()))));
+
+  await twonlyDB.messageRetransmissionDao.updateRetransmission(
+      retransId,
+      MessageRetransmissionsCompanion(
+          plaintextContent: Value(plaintextContent)));
 
   // this can now be done in the background...
   sendRetransmitMessage(retransId);

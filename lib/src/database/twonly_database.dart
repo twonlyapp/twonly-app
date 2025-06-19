@@ -53,7 +53,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -121,6 +121,10 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         from10To11: (m, schema) async {
           m.createTable(messageRetransmissions);
         },
+        from11To12: (m, schema) async {
+          m.addColumn(schema.messageRetransmissions,
+              schema.messageRetransmissions.willNotGetACKByUser);
+        },
       ),
     );
   }
@@ -135,6 +139,12 @@ class TwonlyDatabase extends _$TwonlyDatabase {
     await delete(messageRetransmissions).go();
     await delete(mediaDownloads).go();
     await delete(mediaUploads).go();
+    await update(contacts).write(
+      ContactsCompanion(
+        avatarSvg: Value(null),
+        myAvatarCounter: Value(0),
+      ),
+    );
     await delete(signalContactPreKeys).go();
     await delete(signalContactSignedPreKeys).go();
   }

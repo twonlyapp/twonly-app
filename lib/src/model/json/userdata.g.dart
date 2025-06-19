@@ -48,6 +48,10 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           json['signalLastSignedPreKeyUpdated'] == null
               ? null
               : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
+      ..currentPreKeyIndexStart =
+          (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
+      ..currentSignedPreKeyIndexStart =
+          (json['currentSignedPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..nextTimeToShowBackupNotice = json['nextTimeToShowBackupNotice'] == null
           ? null
           : DateTime.parse(json['nextTimeToShowBackupNotice'] as String)
@@ -83,6 +87,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'myBestFriendContactId': instance.myBestFriendContactId,
       'signalLastSignedPreKeyUpdated':
           instance.signalLastSignedPreKeyUpdated?.toIso8601String(),
+      'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
+      'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
       'nextTimeToShowBackupNotice':
           instance.nextTimeToShowBackupNotice?.toIso8601String(),
       'backupServer': instance.backupServer,

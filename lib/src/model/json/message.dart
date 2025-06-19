@@ -37,11 +37,13 @@ class MessageJson {
   final MessageKind kind;
   final MessageContent? content;
   final int? messageId;
+  int? retransId;
   DateTime timestamp;
 
   MessageJson({
     required this.kind,
     this.messageId,
+    this.retransId,
     required this.content,
     required this.timestamp,
   });
@@ -57,6 +59,7 @@ class MessageJson {
     return MessageJson(
       kind: kind,
       messageId: (json['messageId'] as num?)?.toInt(),
+      retransId: (json['retransId'] as num?)?.toInt(),
       content: MessageContent.fromJson(
           kind, json['content'] as Map<String, dynamic>),
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp']),
@@ -67,6 +70,7 @@ class MessageJson {
         'kind': kind.name,
         'content': content?.toJson(),
         'messageId': messageId,
+        'retransId': retransId,
         'timestamp': timestamp.toUtc().millisecondsSinceEpoch,
       };
 }
@@ -90,6 +94,8 @@ class MessageContent {
         return ReopenedMediaFileContent.fromJson(json);
       case MessageKind.flameSync:
         return FlameSyncContent.fromJson(json);
+      case MessageKind.ack:
+        return AckContent.fromJson(json);
       default:
         return null;
     }
@@ -213,6 +219,27 @@ class ReopenedMediaFileContent extends MessageContent {
   @override
   Map toJson() {
     return {'messageId': messageId};
+  }
+}
+
+class AckContent extends MessageContent {
+  int? messageIdToAck;
+  int retransIdToAck;
+  AckContent({required this.messageIdToAck, required this.retransIdToAck});
+
+  static AckContent fromJson(Map json) {
+    return AckContent(
+      messageIdToAck: json['messageIdToAck'],
+      retransIdToAck: json['retransIdToAck'],
+    );
+  }
+
+  @override
+  Map toJson() {
+    return {
+      'messageIdToAck': messageIdToAck,
+      'retransIdToAck': retransIdToAck,
+    };
   }
 }
 

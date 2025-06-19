@@ -36,9 +36,34 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
       ..where((t) => t.retransmissionId.equals(retransmissionId));
   }
 
+  Future updateRetransmission(
+    int retransmissionId,
+    MessageRetransmissionsCompanion updatedValues,
+  ) {
+    return (update(messageRetransmissions)
+          ..where((c) => c.retransmissionId.equals(retransmissionId)))
+        .write(updatedValues);
+  }
+
+  Future resetAckStatusForAllMessages() {
+    return ((update(messageRetransmissions))
+          ..where((m) => m.willNotGetACKByUser.equals(false)))
+        .write(
+      MessageRetransmissionsCompanion(
+        acknowledgeByServerAt: Value(null),
+      ),
+    );
+  }
+
   Future deleteRetransmissionById(int retransmissionId) {
     return (delete(messageRetransmissions)
           ..where((t) => t.retransmissionId.equals(retransmissionId)))
+        .go();
+  }
+
+  Future deleteRetransmissionByMessageId(int messageId) {
+    return (delete(messageRetransmissions)
+          ..where((t) => t.messageId.equals(messageId)))
         .go();
   }
 }

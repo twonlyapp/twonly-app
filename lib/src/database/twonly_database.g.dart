@@ -4225,6 +4225,16 @@ class $MessageRetransmissionsTable extends MessageRetransmissions
   late final GeneratedColumn<Uint8List> pushData = GeneratedColumn<Uint8List>(
       'push_data', aliasedName, true,
       type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _willNotGetACKByUserMeta =
+      const VerificationMeta('willNotGetACKByUser');
+  @override
+  late final GeneratedColumn<bool> willNotGetACKByUser = GeneratedColumn<bool>(
+      'will_not_get_a_c_k_by_user', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("will_not_get_a_c_k_by_user" IN (0, 1))'),
+      defaultValue: Constant(false));
   static const VerificationMeta _acknowledgeByServerAtMeta =
       const VerificationMeta('acknowledgeByServerAt');
   @override
@@ -4238,6 +4248,7 @@ class $MessageRetransmissionsTable extends MessageRetransmissions
         messageId,
         plaintextContent,
         pushData,
+        willNotGetACKByUser,
         acknowledgeByServerAt
       ];
   @override
@@ -4279,6 +4290,12 @@ class $MessageRetransmissionsTable extends MessageRetransmissions
       context.handle(_pushDataMeta,
           pushData.isAcceptableOrUnknown(data['push_data']!, _pushDataMeta));
     }
+    if (data.containsKey('will_not_get_a_c_k_by_user')) {
+      context.handle(
+          _willNotGetACKByUserMeta,
+          willNotGetACKByUser.isAcceptableOrUnknown(
+              data['will_not_get_a_c_k_by_user']!, _willNotGetACKByUserMeta));
+    }
     if (data.containsKey('acknowledge_by_server_at')) {
       context.handle(
           _acknowledgeByServerAtMeta,
@@ -4304,6 +4321,8 @@ class $MessageRetransmissionsTable extends MessageRetransmissions
           DriftSqlType.blob, data['${effectivePrefix}plaintext_content'])!,
       pushData: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}push_data']),
+      willNotGetACKByUser: attachedDatabase.typeMapping.read(DriftSqlType.bool,
+          data['${effectivePrefix}will_not_get_a_c_k_by_user'])!,
       acknowledgeByServerAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}acknowledge_by_server_at']),
@@ -4323,6 +4342,7 @@ class MessageRetransmission extends DataClass
   final int? messageId;
   final Uint8List plaintextContent;
   final Uint8List? pushData;
+  final bool willNotGetACKByUser;
   final DateTime? acknowledgeByServerAt;
   const MessageRetransmission(
       {required this.retransmissionId,
@@ -4330,6 +4350,7 @@ class MessageRetransmission extends DataClass
       this.messageId,
       required this.plaintextContent,
       this.pushData,
+      required this.willNotGetACKByUser,
       this.acknowledgeByServerAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4343,6 +4364,7 @@ class MessageRetransmission extends DataClass
     if (!nullToAbsent || pushData != null) {
       map['push_data'] = Variable<Uint8List>(pushData);
     }
+    map['will_not_get_a_c_k_by_user'] = Variable<bool>(willNotGetACKByUser);
     if (!nullToAbsent || acknowledgeByServerAt != null) {
       map['acknowledge_by_server_at'] =
           Variable<DateTime>(acknowledgeByServerAt);
@@ -4361,6 +4383,7 @@ class MessageRetransmission extends DataClass
       pushData: pushData == null && nullToAbsent
           ? const Value.absent()
           : Value(pushData),
+      willNotGetACKByUser: Value(willNotGetACKByUser),
       acknowledgeByServerAt: acknowledgeByServerAt == null && nullToAbsent
           ? const Value.absent()
           : Value(acknowledgeByServerAt),
@@ -4377,6 +4400,8 @@ class MessageRetransmission extends DataClass
       plaintextContent:
           serializer.fromJson<Uint8List>(json['plaintextContent']),
       pushData: serializer.fromJson<Uint8List?>(json['pushData']),
+      willNotGetACKByUser:
+          serializer.fromJson<bool>(json['willNotGetACKByUser']),
       acknowledgeByServerAt:
           serializer.fromJson<DateTime?>(json['acknowledgeByServerAt']),
     );
@@ -4390,6 +4415,7 @@ class MessageRetransmission extends DataClass
       'messageId': serializer.toJson<int?>(messageId),
       'plaintextContent': serializer.toJson<Uint8List>(plaintextContent),
       'pushData': serializer.toJson<Uint8List?>(pushData),
+      'willNotGetACKByUser': serializer.toJson<bool>(willNotGetACKByUser),
       'acknowledgeByServerAt':
           serializer.toJson<DateTime?>(acknowledgeByServerAt),
     };
@@ -4401,6 +4427,7 @@ class MessageRetransmission extends DataClass
           Value<int?> messageId = const Value.absent(),
           Uint8List? plaintextContent,
           Value<Uint8List?> pushData = const Value.absent(),
+          bool? willNotGetACKByUser,
           Value<DateTime?> acknowledgeByServerAt = const Value.absent()}) =>
       MessageRetransmission(
         retransmissionId: retransmissionId ?? this.retransmissionId,
@@ -4408,6 +4435,7 @@ class MessageRetransmission extends DataClass
         messageId: messageId.present ? messageId.value : this.messageId,
         plaintextContent: plaintextContent ?? this.plaintextContent,
         pushData: pushData.present ? pushData.value : this.pushData,
+        willNotGetACKByUser: willNotGetACKByUser ?? this.willNotGetACKByUser,
         acknowledgeByServerAt: acknowledgeByServerAt.present
             ? acknowledgeByServerAt.value
             : this.acknowledgeByServerAt,
@@ -4424,6 +4452,9 @@ class MessageRetransmission extends DataClass
           ? data.plaintextContent.value
           : this.plaintextContent,
       pushData: data.pushData.present ? data.pushData.value : this.pushData,
+      willNotGetACKByUser: data.willNotGetACKByUser.present
+          ? data.willNotGetACKByUser.value
+          : this.willNotGetACKByUser,
       acknowledgeByServerAt: data.acknowledgeByServerAt.present
           ? data.acknowledgeByServerAt.value
           : this.acknowledgeByServerAt,
@@ -4438,6 +4469,7 @@ class MessageRetransmission extends DataClass
           ..write('messageId: $messageId, ')
           ..write('plaintextContent: $plaintextContent, ')
           ..write('pushData: $pushData, ')
+          ..write('willNotGetACKByUser: $willNotGetACKByUser, ')
           ..write('acknowledgeByServerAt: $acknowledgeByServerAt')
           ..write(')'))
         .toString();
@@ -4450,6 +4482,7 @@ class MessageRetransmission extends DataClass
       messageId,
       $driftBlobEquality.hash(plaintextContent),
       $driftBlobEquality.hash(pushData),
+      willNotGetACKByUser,
       acknowledgeByServerAt);
   @override
   bool operator ==(Object other) =>
@@ -4461,6 +4494,7 @@ class MessageRetransmission extends DataClass
           $driftBlobEquality.equals(
               other.plaintextContent, this.plaintextContent) &&
           $driftBlobEquality.equals(other.pushData, this.pushData) &&
+          other.willNotGetACKByUser == this.willNotGetACKByUser &&
           other.acknowledgeByServerAt == this.acknowledgeByServerAt);
 }
 
@@ -4471,6 +4505,7 @@ class MessageRetransmissionsCompanion
   final Value<int?> messageId;
   final Value<Uint8List> plaintextContent;
   final Value<Uint8List?> pushData;
+  final Value<bool> willNotGetACKByUser;
   final Value<DateTime?> acknowledgeByServerAt;
   const MessageRetransmissionsCompanion({
     this.retransmissionId = const Value.absent(),
@@ -4478,6 +4513,7 @@ class MessageRetransmissionsCompanion
     this.messageId = const Value.absent(),
     this.plaintextContent = const Value.absent(),
     this.pushData = const Value.absent(),
+    this.willNotGetACKByUser = const Value.absent(),
     this.acknowledgeByServerAt = const Value.absent(),
   });
   MessageRetransmissionsCompanion.insert({
@@ -4486,6 +4522,7 @@ class MessageRetransmissionsCompanion
     this.messageId = const Value.absent(),
     required Uint8List plaintextContent,
     this.pushData = const Value.absent(),
+    this.willNotGetACKByUser = const Value.absent(),
     this.acknowledgeByServerAt = const Value.absent(),
   })  : contactId = Value(contactId),
         plaintextContent = Value(plaintextContent);
@@ -4495,6 +4532,7 @@ class MessageRetransmissionsCompanion
     Expression<int>? messageId,
     Expression<Uint8List>? plaintextContent,
     Expression<Uint8List>? pushData,
+    Expression<bool>? willNotGetACKByUser,
     Expression<DateTime>? acknowledgeByServerAt,
   }) {
     return RawValuesInsertable({
@@ -4503,6 +4541,8 @@ class MessageRetransmissionsCompanion
       if (messageId != null) 'message_id': messageId,
       if (plaintextContent != null) 'plaintext_content': plaintextContent,
       if (pushData != null) 'push_data': pushData,
+      if (willNotGetACKByUser != null)
+        'will_not_get_a_c_k_by_user': willNotGetACKByUser,
       if (acknowledgeByServerAt != null)
         'acknowledge_by_server_at': acknowledgeByServerAt,
     });
@@ -4514,6 +4554,7 @@ class MessageRetransmissionsCompanion
       Value<int?>? messageId,
       Value<Uint8List>? plaintextContent,
       Value<Uint8List?>? pushData,
+      Value<bool>? willNotGetACKByUser,
       Value<DateTime?>? acknowledgeByServerAt}) {
     return MessageRetransmissionsCompanion(
       retransmissionId: retransmissionId ?? this.retransmissionId,
@@ -4521,6 +4562,7 @@ class MessageRetransmissionsCompanion
       messageId: messageId ?? this.messageId,
       plaintextContent: plaintextContent ?? this.plaintextContent,
       pushData: pushData ?? this.pushData,
+      willNotGetACKByUser: willNotGetACKByUser ?? this.willNotGetACKByUser,
       acknowledgeByServerAt:
           acknowledgeByServerAt ?? this.acknowledgeByServerAt,
     );
@@ -4544,6 +4586,10 @@ class MessageRetransmissionsCompanion
     if (pushData.present) {
       map['push_data'] = Variable<Uint8List>(pushData.value);
     }
+    if (willNotGetACKByUser.present) {
+      map['will_not_get_a_c_k_by_user'] =
+          Variable<bool>(willNotGetACKByUser.value);
+    }
     if (acknowledgeByServerAt.present) {
       map['acknowledge_by_server_at'] =
           Variable<DateTime>(acknowledgeByServerAt.value);
@@ -4559,6 +4605,7 @@ class MessageRetransmissionsCompanion
           ..write('messageId: $messageId, ')
           ..write('plaintextContent: $plaintextContent, ')
           ..write('pushData: $pushData, ')
+          ..write('willNotGetACKByUser: $willNotGetACKByUser, ')
           ..write('acknowledgeByServerAt: $acknowledgeByServerAt')
           ..write(')'))
         .toString();
@@ -7107,6 +7154,7 @@ typedef $$MessageRetransmissionsTableCreateCompanionBuilder
   Value<int?> messageId,
   required Uint8List plaintextContent,
   Value<Uint8List?> pushData,
+  Value<bool> willNotGetACKByUser,
   Value<DateTime?> acknowledgeByServerAt,
 });
 typedef $$MessageRetransmissionsTableUpdateCompanionBuilder
@@ -7116,6 +7164,7 @@ typedef $$MessageRetransmissionsTableUpdateCompanionBuilder
   Value<int?> messageId,
   Value<Uint8List> plaintextContent,
   Value<Uint8List?> pushData,
+  Value<bool> willNotGetACKByUser,
   Value<DateTime?> acknowledgeByServerAt,
 });
 
@@ -7174,6 +7223,10 @@ class $$MessageRetransmissionsTableFilterComposer
 
   ColumnFilters<Uint8List> get pushData => $composableBuilder(
       column: $table.pushData, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get willNotGetACKByUser => $composableBuilder(
+      column: $table.willNotGetACKByUser,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get acknowledgeByServerAt => $composableBuilder(
       column: $table.acknowledgeByServerAt,
@@ -7240,6 +7293,10 @@ class $$MessageRetransmissionsTableOrderingComposer
   ColumnOrderings<Uint8List> get pushData => $composableBuilder(
       column: $table.pushData, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get willNotGetACKByUser => $composableBuilder(
+      column: $table.willNotGetACKByUser,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get acknowledgeByServerAt => $composableBuilder(
       column: $table.acknowledgeByServerAt,
       builder: (column) => ColumnOrderings(column));
@@ -7302,6 +7359,9 @@ class $$MessageRetransmissionsTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get pushData =>
       $composableBuilder(column: $table.pushData, builder: (column) => column);
+
+  GeneratedColumn<bool> get willNotGetACKByUser => $composableBuilder(
+      column: $table.willNotGetACKByUser, builder: (column) => column);
 
   GeneratedColumn<DateTime> get acknowledgeByServerAt => $composableBuilder(
       column: $table.acknowledgeByServerAt, builder: (column) => column);
@@ -7379,6 +7439,7 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
             Value<int?> messageId = const Value.absent(),
             Value<Uint8List> plaintextContent = const Value.absent(),
             Value<Uint8List?> pushData = const Value.absent(),
+            Value<bool> willNotGetACKByUser = const Value.absent(),
             Value<DateTime?> acknowledgeByServerAt = const Value.absent(),
           }) =>
               MessageRetransmissionsCompanion(
@@ -7387,6 +7448,7 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
             messageId: messageId,
             plaintextContent: plaintextContent,
             pushData: pushData,
+            willNotGetACKByUser: willNotGetACKByUser,
             acknowledgeByServerAt: acknowledgeByServerAt,
           ),
           createCompanionCallback: ({
@@ -7395,6 +7457,7 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
             Value<int?> messageId = const Value.absent(),
             required Uint8List plaintextContent,
             Value<Uint8List?> pushData = const Value.absent(),
+            Value<bool> willNotGetACKByUser = const Value.absent(),
             Value<DateTime?> acknowledgeByServerAt = const Value.absent(),
           }) =>
               MessageRetransmissionsCompanion.insert(
@@ -7403,6 +7466,7 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
             messageId: messageId,
             plaintextContent: plaintextContent,
             pushData: pushData,
+            willNotGetACKByUser: willNotGetACKByUser,
             acknowledgeByServerAt: acknowledgeByServerAt,
           ),
           withReferenceMapper: (p0) => p0

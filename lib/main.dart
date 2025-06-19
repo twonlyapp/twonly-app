@@ -44,6 +44,7 @@ void main() async {
   twonlyDB = TwonlyDatabase();
   await twonlyDB.messagesDao.resetPendingDownloadState();
   await twonlyDB.messagesDao.handleMediaFilesOlderThan7Days();
+  await twonlyDB.signalDao.purgeOutDatedPreKeys();
 
   // purge media files in the background
   purgeReceivedMediaFiles();

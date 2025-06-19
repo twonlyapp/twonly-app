@@ -59,7 +59,7 @@ class _BackupViewState extends State<BackupView> {
   String backupStatus(LastBackupUploadState status) {
     switch (status) {
       case LastBackupUploadState.none:
-        return '';
+        return context.lang.backupPending;
       case LastBackupUploadState.pending:
         return context.lang.backupPending;
       case LastBackupUploadState.failed:

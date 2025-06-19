@@ -254,6 +254,15 @@ Future<Uint8List?> getPushData(int toUserId, PushKind kind) async {
       // this will be enforced after every app uses this system... :/
       // return null;
       Log.error("Using insecure key as the receiver does not send a push key!");
+      await encryptAndSendMessageAsync(
+        null,
+        toUserId,
+        my.MessageJson(
+          kind: MessageKind.requestPushKey,
+          content: my.MessageContent(),
+          timestamp: DateTime.now(),
+        ),
+      );
     }
   } else {
     try {

@@ -22,24 +22,6 @@ class ConnectSignedPreKeyStore extends SignedPreKeyStore {
     return store;
   }
 
-  Future<int> getNextKeyId() async {
-    final storage = FlutterSecureStorage();
-    final storeSerialized = await storage.read(
-      key: SecureStorageKeys.signalSignedPreKey,
-    );
-    if (storeSerialized == null) {
-      return 0;
-    }
-    final storeHashMap = json.decode(storeSerialized);
-    var maxKeyId = 0;
-    for (final item in storeHashMap) {
-      if (maxKeyId < item[0]) {
-        maxKeyId = item[0];
-      }
-    }
-    return maxKeyId + 1;
-  }
-
   Future safeStore(HashMap<int, Uint8List> store) async {
     final storage = FlutterSecureStorage();
     var storeHashMap = [];

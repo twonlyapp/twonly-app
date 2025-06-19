@@ -32,25 +32,6 @@ class ConnectPreKeyStore extends PreKeyStore {
         .go();
   }
 
-  static Future<int?> getNextPreKeyId() async {
-    try {
-      String tableName = twonlyDB.signalPreKeyStores.actualTableName;
-      String columnName = twonlyDB.signalPreKeyStores.preKeyId.name;
-
-      final result = await twonlyDB
-          .customSelect('SELECT MAX($columnName) AS max_id FROM $tableName')
-          .get();
-      int? count = result.first.read<int?>('max_id');
-      if (count == null) {
-        return 0;
-      }
-      return count + 1;
-    } catch (e) {
-      Log.error("$e");
-    }
-    return null;
-  }
-
   @override
   Future<void> storePreKey(int preKeyId, PreKeyRecord record) async {
     final preKeyCompanion = SignalPreKeyStoresCompanion(

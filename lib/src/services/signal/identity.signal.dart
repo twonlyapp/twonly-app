@@ -3,7 +3,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/signal/connect_pre_key_store.dart';
 import 'package:twonly/src/model/json/signal_identity.dart';
 import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
 import 'package:twonly/src/model/json/userdata.dart';
@@ -59,9 +58,14 @@ Future signalHandleNewServerConnection() async {
 }
 
 Future<List<PreKeyRecord>> signalGetPreKeys() async {
-  int? start = await ConnectPreKeyStore.getNextPreKeyId();
-  if (start == null) return [];
-  print(start);
+  final user = await getUser();
+  if (user == null) return [];
+
+  int start = user.currentPreKeyIndexStart;
+  await updateUserdata((user) {
+    user.currentPreKeyIndexStart += 200;
+    return user;
+  });
   final preKeys = generatePreKeys(start, 200);
   final signalStore = await getSignalStore();
   if (signalStore == null) return [];
@@ -123,11 +127,17 @@ Future createIfNotExistsSignalIdentity() async {
 
 Future<SignedPreKeyRecord?> _getNewSignalSignedPreKey() async {
   var identityKeyPair = await getSignalIdentityKeyPair();
-  if (identityKeyPair == null) return null;
+  final user = await getUser();
   final signalStore = await getSignalStore();
-  if (signalStore == null) return null;
+  if (identityKeyPair == null || signalStore == null || user == null) {
+    return null;
+  }
 
-  int signedPreKeyId = await signalStore.signedPreKeyStore.getNextKeyId();
+  int signedPreKeyId = user.currentSignedPreKeyIndexStart;
+  await updateUserdata((user) {
+    user.currentSignedPreKeyIndexStart += 1;
+    return user;
+  });
 
   final SignedPreKeyRecord signedPreKey = generateSignedPreKey(
     identityKeyPair,

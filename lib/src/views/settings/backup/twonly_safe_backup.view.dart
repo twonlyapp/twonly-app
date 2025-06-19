@@ -22,7 +22,9 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
   final TextEditingController repeatedPasswordCtrl = TextEditingController();
 
   Future onPressedEnableTwonlySafe() async {
-    if (!mounted) return;
+    setState(() {
+      isLoading = true;
+    });
     if (!await isSecurePassword(passwordCtrl.text)) {
       if (!mounted) return;
       bool ignore = await showAlertDialog(
@@ -33,6 +35,11 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
         customOk: context.lang.backupInsecurePasswordCancel,
       );
       if (ignore) {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
         return;
       }
     }
@@ -119,6 +126,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               child: Text(
                 context.lang.backupPasswordRequirement,
                 style: TextStyle(
+                    fontSize: 13,
                     color: ((passwordCtrl.text.length < 8 &&
                             passwordCtrl.text.isNotEmpty))
                         ? Colors.red
@@ -143,6 +151,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               child: Text(
                 context.lang.passwordRepeatedNotEqual,
                 style: TextStyle(
+                    fontSize: 13,
                     color: (passwordCtrl.text != repeatedPasswordCtrl.text &&
                             repeatedPasswordCtrl.text.isNotEmpty)
                         ? Colors.red

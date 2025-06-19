@@ -1,11 +1,16 @@
 import 'package:drift/drift.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/signal_contact_prekey_table.dart';
 import 'package:twonly/src/database/tables/signal_contact_signed_prekey_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/utils/log.dart';
 
 part 'signal_dao.g.dart';
 
-@DriftAccessor(tables: [SignalContactPreKeys, SignalContactSignedPreKeys])
+@DriftAccessor(tables: [
+  SignalContactPreKeys,
+  SignalContactSignedPreKeys,
+])
 class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -15,6 +20,12 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
           ..where((t) => t.contactId.equals(contactId)))
         .go();
     await (delete(signalContactSignedPreKeys)
+          ..where((t) => t.contactId.equals(contactId)))
+        .go();
+  }
+
+  Future deleteAllPreKeysByContactId(int contactId) async {
+    await (delete(signalContactPreKeys)
           ..where((t) => t.contactId.equals(contactId)))
         .go();
   }
@@ -49,9 +60,13 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
   // 3: Insert multiple pre-keys
   Future<void> insertPreKeys(
       List<SignalContactPreKeysCompanion> preKeys) async {
-    await batch((batch) {
-      batch.insertAll(signalContactPreKeys, preKeys);
-    });
+    for (final preKey in preKeys) {
+      try {
+        into(signalContactPreKeys).insert(preKey);
+      } catch (e) {
+        Log.error("$e");
+      }
+    }
   }
 
   // 4: Get signed pre-key by contact ID
@@ -64,12 +79,28 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
   // 5: Insert or update signed pre-key by contact ID
   Future<void> insertOrUpdateSignedPreKeyByContactId(
       SignalContactSignedPreKeysCompanion signedPreKey) async {
-    final existingKey =
-        await getSignedPreKeyByContactId(signedPreKey.contactId.value);
-    if (existingKey != null) {
-      await update(signalContactSignedPreKeys).replace(signedPreKey);
-    } else {
-      await into(signalContactSignedPreKeys).insert(signedPreKey);
-    }
+    await (delete(signalContactSignedPreKeys)
+          ..where((t) => t.contactId.equals(signedPreKey.contactId.value)))
+        .go();
+    await into(signalContactSignedPreKeys).insert(signedPreKey);
+  }
+
+  Future<void> purgeOutDatedPreKeys() async {
+    // other pre keys are valid 25 days
+    await (delete(signalContactSignedPreKeys)
+          ..where((t) => (t.createdAt.isSmallerThanValue(
+                DateTime.now().subtract(
+                  Duration(days: 25),
+                ),
+              ))))
+        .go();
+    // own pre keys are valid for 40 days
+    await (delete(twonlyDB.signalPreKeyStores)
+          ..where((t) => (t.createdAt.isSmallerThanValue(
+                DateTime.now().subtract(
+                  Duration(days: 40),
+                ),
+              ))))
+        .go();
   }
 }

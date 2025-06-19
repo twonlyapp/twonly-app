@@ -15,5 +15,8 @@ class MessageRetransmissions extends Table {
   BlobColumn get plaintextContent => blob()();
   BlobColumn get pushData => blob().nullable()();
 
+  BoolColumn get willNotGetACKByUser =>
+      boolean().withDefault(Constant(false))();
+
   DateTimeColumn get acknowledgeByServerAt => dateTime().nullable()();
 }

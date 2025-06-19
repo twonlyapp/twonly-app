@@ -288,7 +288,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     TextMessageContent? content = TextMessageContent.fromJson(
                         jsonDecode(messages[index].contentJson!));
                     if (EmojiAnimation.supported(content.text)) {
-                      size = 95;
+                      size = 99;
                     } else {
                       size = 11 +
                           calculateNumberOfLines(content.text,
