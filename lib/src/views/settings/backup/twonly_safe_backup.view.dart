@@ -2,7 +2,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/services/twonly_safe/common.service.dart';
+import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/backup/twonly_safe_server.view.dart';
@@ -60,8 +60,11 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
         actions: [
           IconButton(
             onPressed: () {
-              showAlertDialog(context, "twonly Safe",
-                  context.lang.backupTwonlySafeLongDesc);
+              showAlertDialog(
+                context,
+                "twonly Safe",
+                context.lang.backupTwonlySafeLongDesc,
+              );
             },
             icon: FaIcon(FontAwesomeIcons.circleInfo),
             iconSize: 18,

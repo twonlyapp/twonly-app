@@ -9,3 +9,13 @@ late TwonlyDatabase twonlyDB;
 
 List<CameraDescription> gCameras = <CameraDescription>[];
 bool gIsDemoUser = false;
+
+// The following global function can be called from anywhere to update
+// the UI when something changed. The callbacks will be set by
+// App widget.
+
+// This callback called by the apiProvider
+Function(bool) globalCallbackConnectionState = (a) {};
+
+bool globalIsAppInBackground = true;
+int globalBestFriendUserId = -1;

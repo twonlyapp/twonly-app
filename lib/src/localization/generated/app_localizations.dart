@@ -1795,6 +1795,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save now'**
   String get backupTwonlySaveNow;
+
+  /// No description provided for @twonlySafeRecoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery'**
+  String get twonlySafeRecoverTitle;
+
+  /// No description provided for @twonlySafeRecoverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'If you have created a backup with twonly Safe, you can restore it here.'**
+  String get twonlySafeRecoverDesc;
+
+  /// No description provided for @twonlySafeRecoverBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore backup'**
+  String get twonlySafeRecoverBtn;
 }
 
 class _AppLocalizationsDelegate

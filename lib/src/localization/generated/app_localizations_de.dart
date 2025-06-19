@@ -916,7 +916,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupTwonlySafeLongDesc =>
-      'twonly hat keine zentralen Benutzerkonten. Ein Schlüsselpaar wird während der Installation erstellt, das aus einem öffentlichen und einem privaten Schlüssel besteht. Der private Schlüssel wird nur auf deinem Gerät gespeichert, um ihn vor unbefugtem Zugriff zu schützen. Der öffentliche Schlüssel wird auf den Server hochgeladen und mit deinem gewählten Benutzernamen verknüpft, damit andere dich finden können.\n\ntwonly Safe erstellt regelmäßig ein verschlüsseltes, anonymes Backup deines privaten Schlüssels zusammen mit deinen Kontakten und Einstellungen. Dein Benutzername und das gewählte Passwort reichen aus, um diese Daten auf einem anderen Gerät wiederherzustellen.';
+      'twonly hat keine zentralen Benutzerkonten. Während der Installation wird ein Schlüsselpaar erstellt, das aus einem öffentlichen und einem privaten Schlüssel besteht. Der private Schlüssel wird nur auf deinem Gerät gespeichert, um ihn vor unbefugtem Zugriff zu schützen. Der öffentliche Schlüssel wird auf den Server hochgeladen und mit deinem gewählten Benutzernamen verknüpft, damit andere dich finden können.\n\ntwonly Safe erstellt regelmäßig ein verschlüsseltes, anonymes Backup deines privaten Schlüssels zusammen mit deinen Kontakten und Einstellungen. Dein Benutzername und das gewählte Passwort reichen aus, um diese Daten auf einem anderen Gerät wiederherzustellen.';
 
   @override
   String get backupSelectStrongPassword =>
@@ -953,4 +953,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupTwonlySaveNow => 'Jetzt speichern';
+
+  @override
+  String get twonlySafeRecoverTitle => 'Recovery';
+
+  @override
+  String get twonlySafeRecoverDesc =>
+      'If you have created a backup with twonly Safe, you can restore it here.';
+
+  @override
+  String get twonlySafeRecoverBtn => 'Restore backup';
 }

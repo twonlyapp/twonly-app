@@ -15,6 +15,7 @@ enum MessageKind {
   ack,
   pushKey,
   receiveMediaError,
+  signalDecryptError
 }
 
 enum DownloadState {

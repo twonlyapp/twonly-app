@@ -947,4 +947,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupTwonlySaveNow => 'Save now';
+
+  @override
+  String get twonlySafeRecoverTitle => 'Recovery';
+
+  @override
+  String get twonlySafeRecoverDesc =>
+      'If you have created a backup with twonly Safe, you can restore it here.';
+
+  @override
+  String get twonlySafeRecoverBtn => 'Restore backup';
 }

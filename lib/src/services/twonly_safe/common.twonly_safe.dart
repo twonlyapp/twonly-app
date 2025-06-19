@@ -4,25 +4,9 @@ import 'package:hashlib/hashlib.dart';
 import 'package:http/http.dart' as http;
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
-import 'package:twonly/src/services/twonly_safe/create_backup.service.dart';
+import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
-
-Future<String?> getTwonlySafeBackupUrl() async {
-  final user = await getUser();
-  if (user == null || user.twonlySafeBackup == null) return null;
-
-  String backupServerUrl = "https://safe.twonly.eu/";
-
-  if (user.backupServer != null) {
-    backupServerUrl = user.backupServer!.serverUrl;
-  }
-
-  String backupId =
-      uint8ListToHex(user.twonlySafeBackup!.backupId).toLowerCase();
-
-  return "${backupServerUrl}backups/$backupId";
-}
 
 Future enableTwonlySafe(String password) async {
   final user = await getUser();
@@ -69,9 +53,9 @@ Future<(Uint8List, Uint8List)> getMasterKey(
   List<int> passwordBytes = utf8.encode(password);
   List<int> saltBytes = utf8.encode(username);
 
-  // Parameters for scrypt
+  // Values are derived from the Threema Whitepaper
+  // https://threema.com/assets/documents/cryptography_whitepaper.pdf
 
-  // Create an instance of Scrypt
   final scrypt = Scrypt(
     cost: 65536,
     blockSize: 8,
@@ -80,8 +64,30 @@ Future<(Uint8List, Uint8List)> getMasterKey(
     salt: saltBytes,
   );
 
-  // Derive the key
-  // final key = (await compute(scrypt.convert, passwordBytes)).bytes;
   final key = (scrypt.convert(passwordBytes)).bytes;
   return (key.sublist(0, 32), key.sublist(32, 64));
+}
+
+Future<String?> getTwonlySafeBackupUrl() async {
+  final user = await getUser();
+  if (user == null || user.twonlySafeBackup == null) return null;
+  return getTwonlySafeBackupUrlFromServer(
+    user.twonlySafeBackup!.backupId,
+    user.backupServer,
+  );
+}
+
+Future<String?> getTwonlySafeBackupUrlFromServer(
+  List<int> backupId,
+  BackupServer? backupServer,
+) async {
+  String backupServerUrl = "https://safe.twonly.eu/";
+
+  if (backupServer != null) {
+    backupServerUrl = backupServer.serverUrl;
+  }
+
+  String backupIdHex = uint8ListToHex(backupId).toLowerCase();
+
+  return "${backupServerUrl}backups/$backupIdHex";
 }

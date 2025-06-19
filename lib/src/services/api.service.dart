@@ -11,7 +11,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/app.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';

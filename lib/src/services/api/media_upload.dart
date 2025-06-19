@@ -23,7 +23,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
-import 'package:twonly/src/services/twonly_safe/create_backup.service.dart';
+import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';

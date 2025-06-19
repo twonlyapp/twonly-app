@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
@@ -6,21 +7,12 @@ import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/onboarding.view.dart';
+import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/home.view.dart';
-import 'package:twonly/src/views/register.view.dart';
+import 'package:twonly/src/views/onboarding/register.view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
-
-// these global function can be called from anywhere to update
-// the ui when something changed. The callbacks will be set by
-// App widget.
-
-// this callback is called by the apiProvider
-Function(bool) globalCallbackConnectionState = (a) {};
-bool globalIsAppInBackground = true;
-int globalBestFriendUserId = -1;
 
 // these two callbacks are called on updated to the corresponding database
 
@@ -161,7 +153,7 @@ class AppMainWidget extends StatefulWidget {
 
 class _AppMainWidgetState extends State<AppMainWidget> {
   Future<bool> userCreated = isUserCreated();
-  bool showOnboarding = true;
+  bool showOnboarding = kReleaseMode;
 
   @override
   Widget build(BuildContext context) {

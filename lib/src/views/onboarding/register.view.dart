@@ -12,6 +12,7 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/onboarding/recover.view.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key, required this.callbackOnSuccess});
@@ -26,6 +27,7 @@ class _RegisterViewState extends State<RegisterView> {
   final TextEditingController inviteCodeController = TextEditingController();
 
   bool _isTryingToRegister = false;
+  bool _isValidUserName = false;
 
   Future createNewUser({bool isDemoAccount = false}) async {
     String username = (isDemoAccount) ? "<demo>" : usernameController.text;
@@ -134,6 +136,9 @@ class _RegisterViewState extends State<RegisterView> {
                     usernameController.selection = TextSelection.fromPosition(
                       TextPosition(offset: usernameController.text.length),
                     );
+                    setState(() {
+                      _isValidUserName = usernameController.text.length >= 3;
+                    });
                   },
                   inputFormatters: [
                     LengthLimitingTextInputFormatter(12),
@@ -181,9 +186,7 @@ class _RegisterViewState extends State<RegisterView> {
                             ),
                           )
                         : Icon(Icons.group),
-                    onPressed: () async {
-                      createNewUser();
-                    },
+                    onPressed: _isValidUserName ? createNewUser : null,
                     style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(
                           EdgeInsets.symmetric(vertical: 10, horizontal: 30),
@@ -209,8 +212,11 @@ class _RegisterViewState extends State<RegisterView> {
                       ),
                       OutlinedButton.icon(
                         onPressed: () {
-                          showAlertDialog(context, "Coming soon",
-                              "This feature is not yet implemented! Just create a new account :/");
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (context) {
+                              return BackupRecoveryView();
+                            },
+                          ));
                         },
                         label: Text("Restore identity"),
                       ),

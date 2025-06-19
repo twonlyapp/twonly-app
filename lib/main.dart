@@ -12,7 +12,7 @@ import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/notification.service.dart';
-import 'package:twonly/src/services/twonly_safe/create_backup.service.dart';
+import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'app.dart';

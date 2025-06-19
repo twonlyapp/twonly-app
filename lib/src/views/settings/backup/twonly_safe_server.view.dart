@@ -72,14 +72,15 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
         final data = jsonDecode(response.body);
 
         final backupServer = BackupServer(
-            serverUrl: serverUrl,
-            retentionDays: data["retentionDays"]!,
-            maxBackupBytes: data["maxBackupBytes"]!);
+          serverUrl: serverUrl,
+          retentionDays: data["retentionDays"]!,
+          maxBackupBytes: data["maxBackupBytes"]!,
+        );
         await updateUserdata((user) {
           user.backupServer = backupServer;
           return user;
         });
-        if (mounted) Navigator.pop(context);
+        if (mounted) Navigator.pop(context, backupServer);
       } else {
         // If the server did not return a 200 OK response, throw an exception.
         throw Exception(

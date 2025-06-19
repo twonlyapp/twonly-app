@@ -449,5 +449,8 @@
   "backupOwnServerDesc": "Save your twonly safe backups at twonly or on any server of your choice.",
   "backupUseOwnServer": "Use server",
   "backupResetServer": "Use standard server",
-  "backupTwonlySaveNow": "Save now"
+  "backupTwonlySaveNow": "Save now",
+  "twonlySafeRecoverTitle": "Recovery",
+  "twonlySafeRecoverDesc": "If you have created a backup with twonly Safe, you can restore it here.",
+  "twonlySafeRecoverBtn": "Restore backup"
 }

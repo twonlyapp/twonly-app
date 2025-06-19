@@ -21,7 +21,7 @@ Future performTwonlySafeBackup({bool force = false}) async {
   final user = await getUser();
 
   if (user == null || user.twonlySafeBackup == null || user.isDemoUser) {
-    Log.warn("perform twonly safe backup was called while it is disabled");
+    // Log.warn("perform twonly safe backup was called while it is disabled");
     return;
   }
 
@@ -163,6 +163,7 @@ Future performTwonlySafeBackup({bool force = false}) async {
     httpRequestMethod: "PUT",
     url: (await getTwonlySafeBackupUrl())!,
     requiresWiFi: true,
+    post: 'binary',
     priority: 5,
     retries: 2,
     headers: {

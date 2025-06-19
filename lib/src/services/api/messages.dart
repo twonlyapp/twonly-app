@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -8,6 +9,7 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/notification.service.dart';
@@ -97,6 +99,10 @@ Future sendRetransmitMessage(int retransId) async {
     Log.error("Could not encrypt the message. Aborting and trying again.");
     return;
   }
+
+  var hash = uint8ListToHex(
+      Uint8List.fromList((await Sha256().hash(encryptedBytes)).bytes));
+  Log.info("Sending message: ${hash.substring(0, 10)}");
 
   Result resp = await apiService.sendTextMessage(
     retrans.contactId,
