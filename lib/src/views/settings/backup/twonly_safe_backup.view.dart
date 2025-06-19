@@ -174,7 +174,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                 child: FilledButton.icon(
               onPressed: (!isLoading &&
                       (passwordCtrl.text == repeatedPasswordCtrl.text &&
-                              passwordCtrl.text.length >= 10 ||
+                              passwordCtrl.text.length >= 8 ||
                           kDebugMode))
                   ? onPressedEnableTwonlySafe
                   : null,
