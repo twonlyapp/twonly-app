@@ -5,7 +5,8 @@ import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
 
 void initLogger() {
-  Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
+  // Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
+  Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
     await _writeLogToFile(record);
     if (kDebugMode) {
