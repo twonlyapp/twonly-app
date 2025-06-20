@@ -21,7 +21,6 @@ Future performTwonlySafeBackup({bool force = false}) async {
   final user = await getUser();
 
   if (user == null || user.twonlySafeBackup == null || user.isDemoUser) {
-    Log.warn("perform twonly safe backup was called while it is disabled");
     return;
   }
 

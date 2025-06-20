@@ -12,6 +12,7 @@ enum UploadState {
 
   pending,
   readyToUpload,
+  uploadTaskStarted,
   receiverNotified,
   // after all users notified all media files that are not storable by the other person will be deleted
 }

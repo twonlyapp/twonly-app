@@ -357,13 +357,14 @@ Future finalizeUpload(int mediaUploadId, List<int> contactIds,
 
 final lockingHandleNextMediaUploadStep = Mutex();
 Future handleNextMediaUploadSteps(int mediaUploadId) async {
-  bool rerun = await lockingHandleNextMediaUploadStep.protect<bool>(() async {
+  await lockingHandleNextMediaUploadStep.protect(() async {
     var mediaUpload = await twonlyDB.mediaUploadsDao
         .getMediaUploadById(mediaUploadId)
         .getSingleOrNull();
 
     if (mediaUpload == null) return false;
-    if (mediaUpload.state == UploadState.receiverNotified) {
+    if (mediaUpload.state == UploadState.receiverNotified ||
+        mediaUpload.state == UploadState.uploadTaskStarted) {
       /// Upload done and all users are notified :)
       Log.info("$mediaUploadId is already done");
       return false;
@@ -380,16 +381,13 @@ Future handleNextMediaUploadSteps(int mediaUploadId) async {
         return false;
       }
 
-      return await handleMediaUpload(mediaUpload);
+      await handleMediaUpload(mediaUpload);
     } catch (e) {
       Log.error("Non recoverable error while sending media file: $e");
       await handleUploadError(mediaUpload);
     }
     return false;
   });
-  if (rerun) {
-    handleNextMediaUploadSteps(mediaUploadId);
-  }
 }
 
 ///
@@ -401,6 +399,8 @@ Future handleNextMediaUploadSteps(int mediaUploadId) async {
 Future handleUploadStatusUpdate(TaskStatusUpdate update) async {
   bool failed = false;
   int mediaUploadId = int.parse(update.task.taskId.replaceAll("upload_", ""));
+
+  Log.info("Upload $mediaUploadId done.");
 
   MediaUpload? media = await twonlyDB.mediaUploadsDao
       .getMediaUploadById(mediaUploadId)
@@ -478,11 +478,11 @@ Future handleUploadError(MediaUpload mediaUpload) async {
   await twonlyDB.mediaUploadsDao.deleteMediaUpload(mediaUpload.mediaUploadId);
 }
 
-Future<bool> handleMediaUpload(MediaUpload media) async {
+Future handleMediaUpload(MediaUpload media) async {
   Uint8List bytesToUpload =
       await readSendMediaFile(media.mediaUploadId, "encrypted");
 
-  if (media.messageIds == null) return false;
+  if (media.messageIds == null) return;
 
   List<Uint8List> downloadTokens =
       createDownloadTokens(media.messageIds!.length);
@@ -571,7 +571,7 @@ Future<bool> handleMediaUpload(MediaUpload media) async {
       await FlutterSecureStorage().read(key: SecureStorageKeys.apiAuthToken);
   if (apiAuthToken == null) {
     Log.error("api auth token not defined.");
-    return false;
+    return;
   }
 
   File uploadRequestFile = await writeSendMediaFile(
@@ -600,11 +600,17 @@ Future<bool> handleMediaUpload(MediaUpload media) async {
 
     final result = await FileDownloader().enqueue(task);
 
-    return result;
+    if (result) {
+      await twonlyDB.mediaUploadsDao.updateMediaUpload(
+        media.mediaUploadId,
+        MediaUploadsCompanion(
+          state: Value(UploadState.uploadTaskStarted),
+        ),
+      );
+    }
   } catch (e) {
     Log.error("Exception during upload: $e");
   }
-  return false;
 }
 
 Future<bool> compressVideoIfExists(int mediaUploadId) async {

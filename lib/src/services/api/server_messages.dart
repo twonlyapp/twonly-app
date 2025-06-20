@@ -206,8 +206,9 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           avatarSvg: Value(content.avatarSvg),
           displayName: Value(content.displayName),
         );
-        twonlyDB.contactsDao.updateContact(fromUserId, update);
+        await twonlyDB.contactsDao.updateContact(fromUserId, update);
       }
+      createPushAvatars();
       break;
 
     case MessageKind.requestPushKey:
