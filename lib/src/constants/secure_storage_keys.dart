@@ -5,4 +5,7 @@ class SecureStorageKeys {
   static const String googleFcm = "google_fcm";
   static const String userData = "userData";
   static const String twonlySafeLastBackupHash = "twonly_safe_last_backup_hash";
+
+  static const String receivingPushKeys = "receiving_pus_keys";
+  static const String sendingPushKeys = "sending_pus_keys";
 }

@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:twonly/src/database/tables/contacts_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 
 part 'contacts_dao.g.dart';
 
@@ -113,7 +113,11 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 
   Future newMessageExchange(int userId) {
     return updateContact(
-        userId, ContactsCompanion(lastMessageExchange: Value(DateTime.now())));
+      userId,
+      ContactsCompanion(
+        lastMessageExchange: Value(DateTime.now()),
+      ),
+    );
   }
 
   Stream<List<Contact>> watchNotAcceptedContacts() {

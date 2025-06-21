@@ -23,6 +23,7 @@ import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
@@ -92,6 +93,7 @@ class ApiService {
       notifyContactsAboutProfileChange();
       twonlyDB.markUpdated();
       syncFlameCounters();
+      setupNotificationWithUsers();
       signalHandleNewServerConnection();
     }
   }

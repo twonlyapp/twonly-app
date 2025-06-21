@@ -5,7 +5,9 @@ import 'dart:math';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -24,7 +26,9 @@ Future customLocalPushNotification(String title, String msg) async {
   const DarwinNotificationDetails darwinNotificationDetails =
       DarwinNotificationDetails();
   const NotificationDetails notificationDetails = NotificationDetails(
-      android: androidNotificationDetails, iOS: darwinNotificationDetails);
+    android: androidNotificationDetails,
+    iOS: darwinNotificationDetails,
+  );
 
   await flutterLocalNotificationsPlugin.show(
     999999 + Random.secure().nextInt(9999),
@@ -34,67 +38,79 @@ Future customLocalPushNotification(String title, String msg) async {
   );
 }
 
-Future handlePushData(String pushDataJson) async {
+Future handlePushData(String pushDataB64) async {
   try {
-    String jsonString = utf8.decode(base64.decode(pushDataJson));
-    final pushData = PushNotification.fromJson(jsonDecode(jsonString));
+    final pushData =
+        EncryptedPushNotification.fromBuffer(base64.decode(pushDataB64));
 
-    PushKind? pushKind;
-    PushUser? pushUser;
-    int? fromUserId;
+    PushNotification? pushNotification;
+    PushUser? foundPushUser;
 
     if (pushData.keyId == 0) {
       List<int> key = "InsecureOnlyUsedForAddingContact".codeUnits;
-      pushKind = await tryDecryptMessage(key, pushData);
+      pushNotification = await tryDecryptMessage(key, pushData);
     } else {
-      var pushKeys = await getPushKeys("receivingPushKeys");
-      for (final userId in pushKeys.keys) {
-        for (final key in pushKeys[userId]!.keys) {
+      final pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
+      for (final pushUser in pushUsers) {
+        for (final key in pushUser.pushKeys) {
           if (key.id == pushData.keyId) {
-            pushKind = await tryDecryptMessage(key.key, pushData);
-            if (pushKind != null) {
-              pushUser = pushKeys[userId]!;
-              fromUserId = userId;
+            pushNotification = await tryDecryptMessage(key.key, pushData);
+            if (pushNotification != null) {
+              foundPushUser = pushUser;
               break;
             }
           }
         }
         // found correct key and user
-        if (pushUser != null) break;
+        if (foundPushUser != null) break;
       }
     }
 
-    if (pushKind != null) {
-      if (pushKind == PushKind.testNotification) {
+    if (pushNotification != null) {
+      if (pushNotification.kind == PushKind.testNotification) {
         await customLocalPushNotification(
-            "Test notification", "This is a test notification.");
-      } else if (pushUser != null && fromUserId != null) {
-        await showLocalPushNotification(pushUser, fromUserId, pushKind);
+          "Test notification",
+          "This is a test notification.",
+        );
+      } else if (foundPushUser != null) {
+        if (pushNotification.hasMessageId()) {
+          if (pushNotification.messageId <= foundPushUser.lastMessageId) {
+            Log.info(
+              "Got a push notification for a message which was already opened.",
+            );
+            return;
+          }
+        }
+
+        await showLocalPushNotification(foundPushUser, pushNotification);
       } else {
-        await showLocalPushNotificationWithoutUserId(pushKind);
+        await showLocalPushNotificationWithoutUserId(pushNotification);
       }
     }
   } catch (e) {
+    await customLocalPushNotification(
+      "Du hast eine neue Nachricht.",
+      "Öffne twonly um mehr zu erfahren.",
+    );
     Log.error(e);
   }
 }
 
-Future<PushKind?> tryDecryptMessage(
-    List<int> key, PushNotification noti) async {
+Future<PushNotification?> tryDecryptMessage(
+    List<int> key, EncryptedPushNotification push) async {
   try {
     final chacha20 = Chacha20.poly1305Aead();
     SecretKeyData secretKeyData = SecretKeyData(key);
 
     SecretBox secretBox = SecretBox(
-      noti.cipherText,
-      nonce: noti.nonce,
-      mac: Mac(noti.mac),
+      push.ciphertext,
+      nonce: push.nonce,
+      mac: Mac(push.mac),
     );
 
     final plaintext =
         await chacha20.decrypt(secretBox, secretKey: secretKeyData);
-    final plaintextString = utf8.decode(plaintext);
-    return PushKindExtension.fromString(plaintextString);
+    return PushNotification.fromBuffer(plaintext);
   } catch (e) {
     // this error is allowed to happen...
     return null;
@@ -103,8 +119,7 @@ Future<PushKind?> tryDecryptMessage(
 
 Future showLocalPushNotification(
   PushUser pushUser,
-  int fromUserId,
-  PushKind pushKind,
+  PushNotification pushNotification,
 ) async {
   String? title;
   String? body;
@@ -116,56 +131,64 @@ Future showLocalPushNotification(
   }
 
   title = pushUser.displayName;
-  body = getPushNotificationText(pushKind);
+  body = getPushNotificationText(pushNotification);
   if (body == "") {
     Log.error("No push notification type defined!");
   }
 
   FilePathAndroidBitmap? styleInformation;
-  String? avatarPath = await getAvatarIcon(fromUserId);
+  String? avatarPath = await getAvatarIcon(pushUser.userId.toInt());
   if (avatarPath != null) {
     styleInformation = FilePathAndroidBitmap(avatarPath);
   }
 
   AndroidNotificationDetails androidNotificationDetails =
-      AndroidNotificationDetails('0', 'Messages',
-          channelDescription: 'Messages from other users.',
-          importance: Importance.max,
-          priority: Priority.max,
-          ticker: 'You got a new message.',
-          largeIcon: styleInformation);
+      AndroidNotificationDetails(
+    '0',
+    'Messages',
+    channelDescription: 'Messages from other users.',
+    importance: Importance.max,
+    priority: Priority.max,
+    ticker: 'You got a new message.',
+    largeIcon: styleInformation,
+  );
 
   const DarwinNotificationDetails darwinNotificationDetails =
       DarwinNotificationDetails();
   NotificationDetails notificationDetails = NotificationDetails(
-      android: androidNotificationDetails, iOS: darwinNotificationDetails);
+    android: androidNotificationDetails,
+    iOS: darwinNotificationDetails,
+  );
 
   await flutterLocalNotificationsPlugin.show(
-    fromUserId,
+    pushUser.userId.toInt(),
     title,
     body,
     notificationDetails,
-    payload: pushKind.name,
+    payload: pushNotification.kind.name,
   );
 }
 
 Future showLocalPushNotificationWithoutUserId(
-  PushKind pushKind,
+  PushNotification pushNotification,
 ) async {
   String? title;
   String? body;
 
-  body = getPushNotificationTextWithoutUserId(pushKind);
+  body = getPushNotificationTextWithoutUserId(pushNotification.kind);
   if (body == "") {
     Log.error("No push notification type defined!");
   }
 
   AndroidNotificationDetails androidNotificationDetails =
-      AndroidNotificationDetails('0', 'Messages',
-          channelDescription: 'Messages from other users.',
-          importance: Importance.max,
-          priority: Priority.max,
-          ticker: 'You got a new message.');
+      AndroidNotificationDetails(
+    '0',
+    'Messages',
+    channelDescription: 'Messages from other users.',
+    importance: Importance.max,
+    priority: Priority.max,
+    ticker: 'You got a new message.',
+  );
 
   const DarwinNotificationDetails darwinNotificationDetails =
       DarwinNotificationDetails();
@@ -177,7 +200,7 @@ Future showLocalPushNotificationWithoutUserId(
     title,
     body,
     notificationDetails,
-    payload: pushKind.name,
+    payload: pushNotification.kind.name,
   );
 }
 
@@ -240,7 +263,7 @@ String getPushNotificationTextWithoutUserId(PushKind pushKind) {
   return pushNotificationText[pushKind.name] ?? "";
 }
 
-String getPushNotificationText(PushKind pushKind) {
+String getPushNotificationText(PushNotification pushNotification) {
   String systemLanguage = Platform.localeName;
 
   Map<String, String> pushNotificationText;
@@ -256,9 +279,12 @@ String getPushNotificationText(PushKind pushKind) {
       PushKind.storedMediaFile.name: "hat dein Bild gespeichert.",
       PushKind.reaction.name: "hat auf dein Bild reagiert.",
       PushKind.reopenedMedia.name: "hat dein Bild erneut geöffnet.",
-      PushKind.reactionToVideo.name: "hat auf dein Video reagiert.",
-      PushKind.reactionToText.name: "hat auf deinen Text reagiert.",
-      PushKind.reactionToImage.name: "hat auf dein Bild reagiert.",
+      PushKind.reactionToVideo.name:
+          "hat mit {{reaction}} auf dein Video reagiert.",
+      PushKind.reactionToText.name:
+          "hat mit {{reaction}} auf deine Nachricht reagiert.",
+      PushKind.reactionToImage.name:
+          "hat mit {{reaction}} auf dein Bild reagiert.",
       PushKind.response.name: "hat dir geantwortet.",
     };
   } else {
@@ -272,11 +298,19 @@ String getPushNotificationText(PushKind pushKind) {
       PushKind.storedMediaFile.name: "has stored your image.",
       PushKind.reaction.name: "has reacted to your image.",
       PushKind.reopenedMedia.name: "has reopened your image.",
-      PushKind.reactionToVideo.name: "has reacted to your video.",
-      PushKind.reactionToText.name: "has reacted to your text.",
-      PushKind.reactionToImage.name: "has reacted to your image.",
+      PushKind.reactionToVideo.name:
+          "has reacted with {{reaction}} to your video.",
+      PushKind.reactionToText.name:
+          "has reacted with {{reaction}} to your message.",
+      PushKind.reactionToImage.name:
+          "has reacted with {{reaction}} to your image.",
       PushKind.response.name: "has responded.",
     };
   }
-  return pushNotificationText[pushKind.name] ?? "";
+  var contentText = pushNotificationText[pushNotification.kind.name] ?? "";
+  if (pushNotification.hasReactionContent()) {
+    contentText = contentText.replaceAll(
+        "{{reaction}}", pushNotification.reactionContent);
+  }
+  return contentText;
 }

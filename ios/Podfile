@@ -33,6 +33,7 @@ pod 'FirebaseMessaging', :modular_headers => true
 pod 'FirebaseCoreInternal', :modular_headers => true
 pod 'GoogleUtilities', :modular_headers => true
 pod 'FirebaseCore', :modular_headers => true
+pod 'SwiftProtobuf'
 # pod 'sqlite3', :modular_headers => true
 
 

@@ -20,8 +20,9 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
 import 'package:twonly/src/services/api/media_download.dart';
-import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -539,17 +540,24 @@ Future handleMediaUpload(MediaUpload media) async {
     );
 
     if (encryptedBytes == null) continue;
+
+    var messageOnSuccess = TextMessage()
+      ..body = encryptedBytes
+      ..userId = Int64(message.contactId);
+
     final pushKind = (media.metadata!.isRealTwonly)
         ? PushKind.twonly
         : (media.metadata!.isVideo)
             ? PushKind.video
             : PushKind.image;
 
-    var messageOnSuccess = TextMessage()
-      ..body = encryptedBytes
-      ..userId = Int64(message.contactId);
-
-    var pushData = await getPushData(message.contactId, pushKind);
+    final pushData = await getPushData(
+      message.contactId,
+      PushNotification(
+        messageId: Int64(message.messageId),
+        kind: pushKind,
+      ),
+    );
     if (pushData != null) {
       messageOnSuccess.pushData = pushData.toList();
     }

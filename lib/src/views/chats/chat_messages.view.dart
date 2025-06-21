@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
+import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
@@ -14,7 +16,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/notification.service.dart';
+
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
@@ -174,6 +176,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   Future _sendMessage() async {
     if (newMessageController.text == "") return;
+
     await sendTextMessage(
       user.userId,
       TextMessageContent(
@@ -181,7 +184,16 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         responseToMessageId: responseToMessage?.messageOtherId,
         responseToOtherMessageId: responseToMessage?.messageId,
       ),
-      (responseToMessage == null) ? PushKind.text : PushKind.response,
+      PushNotification(
+        kind: (responseToMessage == null)
+            ? PushKind.text
+            : (isEmoji(newMessageController.text))
+                ? PushKind.reaction
+                : PushKind.response,
+        reactionContent: (isEmoji(newMessageController.text))
+            ? newMessageController.text
+            : null,
+      ),
     );
     newMessageController.clear();
     currentInputText = "";

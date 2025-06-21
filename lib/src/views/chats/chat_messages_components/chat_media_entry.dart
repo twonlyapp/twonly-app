@@ -1,13 +1,14 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/in_chat_media_viewer.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/media_download.dart' as received;
-import 'package:twonly/src/services/notification.service.dart';
+
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
@@ -80,7 +81,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
               ),
               timestamp: DateTime.now(),
             ),
-            pushKind: PushKind.reopenedMedia,
+            pushNotification: PushNotification(
+              kind: PushKind.reopenedMedia,
+            ),
           );
           await twonlyDB.messagesDao.updateMessageByMessageId(
             widget.message.messageId,

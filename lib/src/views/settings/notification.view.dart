@@ -1,13 +1,15 @@
 import 'dart:io';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/services/fcm.service.dart';
-import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -50,7 +52,10 @@ class NotificationView extends StatelessWidget {
                   if (user != null) {
                     final pushData = await getPushData(
                       user.userId,
-                      PushKind.testNotification,
+                      PushNotification(
+                        messageId: Int64(0),
+                        kind: PushKind.testNotification,
+                      ),
                     );
                     await apiService.sendTextMessage(
                       user.userId,

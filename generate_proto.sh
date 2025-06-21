@@ -4,6 +4,8 @@
 
 protoc --proto_path="./lib/src/model/protobuf/backup/" --dart_out="./lib/src/model/protobuf/backup/" "backup.proto"
 
+protoc --proto_path="./lib/src/model/protobuf/push_notification/" --dart_out="./lib/src/model/protobuf/push_notification/" "push_notification.proto"
+protoc --proto_path="./lib/src/model/protobuf/push_notification/" --swift_out="./ios/NotificationService/" "push_notification.proto"
 
 
 SRC_DIR="../twonly-server/twonly/src/"

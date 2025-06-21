@@ -6,6 +6,7 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 
 enum MessageSendState {
   received,
@@ -89,11 +90,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
       MessageSendState state = messageSendStateFromMessage(message);
       late Color color;
+      MessageContent? content;
 
       if (message.contentJson == null) {
         color = getMessageColorFromType(TextMessageContent(text: ""), context);
       } else {
-        MessageContent? content = MessageContent.fromJson(
+        content = MessageContent.fromJson(
           message.kind,
           jsonDecode(message.contentJson!),
         );
@@ -106,6 +108,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       switch (state) {
         case MessageSendState.receivedOpened:
           icon = Icon(Icons.crop_square, size: 14, color: color);
+          if (content is TextMessageContent) {
+            if (isEmoji(content.text)) {
+              icon = Text(content.text, style: TextStyle(fontSize: 12));
+            }
+          }
           text = context.lang.messageSendState_Received;
           break;
         case MessageSendState.sendOpened:

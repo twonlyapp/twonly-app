@@ -3,7 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/services/notification.background.service.dart';
+import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'dart:io' show Platform;
 import '../../firebase_options.dart';

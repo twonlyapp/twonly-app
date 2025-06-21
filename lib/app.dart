@@ -5,7 +5,6 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
-import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/home.view.dart';
@@ -36,7 +35,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     globalCallbackConnectionState = (update) {
       context.read<CustomChangeProvider>().updateConnectionState(update);
       setUserPlan();
-      setupNotificationWithUsers();
     };
 
     initAsync();

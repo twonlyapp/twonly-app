@@ -2,15 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:drift/drift.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
 import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
-import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -116,14 +118,15 @@ Future sendRetransmitMessage(int retransId) async {
 
 // encrypts and stores the message and then sends it in the background
 Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
-    {PushKind? pushKind, bool willNotGetACKByUser = false}) async {
+    {PushNotification? pushNotification,
+    bool willNotGetACKByUser = false}) async {
   if (gIsDemoUser) {
     return;
   }
 
   Uint8List? pushData;
-  if (pushKind != null) {
-    pushData = await getPushData(userId, pushKind);
+  if (pushNotification != null) {
+    pushData = await getPushData(userId, pushNotification);
   }
 
   int? retransId = await twonlyDB.messageRetransmissionDao.insertRetransmission(
@@ -158,7 +161,7 @@ Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
 Future sendTextMessage(
   int target,
   TextMessageContent content,
-  PushKind? pushKind,
+  PushNotification? pushNotification,
 ) async {
   DateTime messageSendAt = DateTime.now();
 
@@ -178,6 +181,10 @@ Future sendTextMessage(
 
   if (messageId == null) return;
 
+  if (pushNotification != null && !pushNotification.hasReactionContent()) {
+    pushNotification.messageId = Int64(messageId);
+  }
+
   MessageJson msg = MessageJson(
     kind: MessageKind.textMessage,
     messageId: messageId,
@@ -185,14 +192,22 @@ Future sendTextMessage(
     timestamp: messageSendAt,
   );
 
-  await encryptAndSendMessageAsync(messageId, target, msg, pushKind: pushKind);
+  await encryptAndSendMessageAsync(
+    messageId,
+    target,
+    msg,
+    pushNotification: pushNotification,
+  );
 }
 
 Future notifyContactAboutOpeningMessage(
   int fromUserId,
   List<int> messageOtherIds,
 ) async {
+  int biggestMessageId = messageOtherIds.first;
+
   for (final messageOtherId in messageOtherIds) {
+    if (messageOtherId > biggestMessageId) biggestMessageId = messageOtherId;
     await encryptAndSendMessageAsync(
       null,
       fromUserId,
@@ -204,6 +219,7 @@ Future notifyContactAboutOpeningMessage(
       ),
     );
   }
+  await updateLastMessageId(fromUserId, biggestMessageId);
 }
 
 Future notifyContactsAboutProfileChange() async {
@@ -216,8 +232,12 @@ Future notifyContactsAboutProfileChange() async {
 
   for (Contact contact in contacts) {
     if (contact.myAvatarCounter < user.avatarCounter) {
-      twonlyDB.contactsDao.updateContact(contact.userId,
-          ContactsCompanion(myAvatarCounter: Value(user.avatarCounter)));
+      twonlyDB.contactsDao.updateContact(
+        contact.userId,
+        ContactsCompanion(
+          myAvatarCounter: Value(user.avatarCounter),
+        ),
+      );
       await encryptAndSendMessageAsync(
         null,
         contact.userId,

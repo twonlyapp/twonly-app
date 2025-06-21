@@ -8,7 +8,9 @@ import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
 import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
@@ -18,7 +20,6 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/media_download.dart';
-import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
@@ -314,7 +315,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         ),
         timestamp: DateTime.now(),
       ),
-      pushKind: PushKind.storedMediaFile,
+      pushNotification: PushNotification(kind: PushKind.acceptRequest),
     );
     setState(() {
       imageSaved = true;
@@ -640,7 +641,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                                 responseToMessageId:
                                     allMediaFiles.first.messageOtherId,
                               ),
-                              PushKind.reaction,
+                              PushNotification(
+                                kind: PushKind.response,
+                              ),
                             );
                             textMessageController.clear();
                           }
@@ -817,14 +820,18 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
       child: GestureDetector(
         onTap: () {
           sendTextMessage(
-              widget.userId,
-              TextMessageContent(
-                text: widget.emoji,
-                responseToMessageId: widget.responseToMessageId,
-              ),
-              widget.isVideo
+            widget.userId,
+            TextMessageContent(
+              text: widget.emoji,
+              responseToMessageId: widget.responseToMessageId,
+            ),
+            PushNotification(
+              kind: widget.isVideo
                   ? PushKind.reactionToVideo
-                  : PushKind.reactionToImage);
+                  : PushKind.reactionToImage,
+              reactionContent: widget.emoji,
+            ),
+          );
           setState(() {
             selectedShortReaction = 0; // Assuming index is 0 for this example
           });

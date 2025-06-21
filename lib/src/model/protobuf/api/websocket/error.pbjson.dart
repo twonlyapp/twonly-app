@@ -49,6 +49,7 @@ const ErrorCode$json = {
     {'1': 'InvalidSignedPreKey', '2': 1027},
     {'1': 'UserIdNotFound', '2': 1028},
     {'1': 'UserIdAlreadyTaken', '2': 1029},
+    {'1': 'AppVersionOutdated', '2': 1030},
   ],
 };
 
@@ -68,5 +69,5 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'dlZBD+BxIVChBQbGFuTGltaXRSZWFjaGVkEP8HEhQKD05vdEVub3VnaENyZWRpdBCACBISCg1Q'
     'bGFuRG93bmdyYWRlEIEIEhkKFFBsYW5VcGdyYWRlTm90WWVhcmx5EIIIEhgKE0ludmFsaWRTaW'
     'duZWRQcmVLZXkQgwgSEwoOVXNlcklkTm90Rm91bmQQhAgSFwoSVXNlcklkQWxyZWFkeVRha2Vu'
-    'EIUI');
+    'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCA==');
 

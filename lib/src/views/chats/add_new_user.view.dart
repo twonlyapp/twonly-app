@@ -4,14 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/services/notification.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/views/components/headline.dart';
@@ -103,7 +104,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
               timestamp: DateTime.now(),
               content: MessageContent(),
             ),
-            pushKind: PushKind.contactRequest,
+            pushNotification: PushNotification(kind: PushKind.contactRequest),
           );
         }
       }
@@ -281,7 +282,7 @@ class _ContactsListViewState extends State<ContactsListView> {
               timestamp: DateTime.now(),
               content: MessageContent(),
             ),
-            pushKind: PushKind.acceptRequest,
+            pushNotification: PushNotification(kind: PushKind.acceptRequest),
           );
           notifyContactsAboutProfileChange();
         },

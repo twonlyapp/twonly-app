@@ -9,19 +9,21 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
     as client;
-import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_download.dart';
-import 'package:twonly/src/services/notification.service.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
+import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 
 final lockHandleServerMessage = Mutex();
 
@@ -272,6 +274,14 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           if (content is TextMessageContent) {
             responseToMessageId = content.responseToMessageId;
             responseToOtherMessageId = content.responseToOtherMessageId;
+
+            if (responseToMessageId != null ||
+                responseToOtherMessageId != null) {
+              // reactions are shown in the notification directly...
+              if (isEmoji(content.text)) {
+                openedAt = DateTime.now();
+              }
+            }
           }
           if (content is ReopenedMediaFileContent) {
             responseToMessageId = content.messageId;
