@@ -400,8 +400,6 @@ Future handleUploadStatusUpdate(TaskStatusUpdate update) async {
   bool failed = false;
   int mediaUploadId = int.parse(update.task.taskId.replaceAll("upload_", ""));
 
-  Log.info("Upload $mediaUploadId done.");
-
   MediaUpload? media = await twonlyDB.mediaUploadsDao
       .getMediaUploadById(mediaUploadId)
       .getSingleOrNull();
