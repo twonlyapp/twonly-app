@@ -13,9 +13,13 @@ class ContactUsView extends StatefulWidget {
 
 class _ContactUsState extends State<ContactUsView> {
   final TextEditingController _controller = TextEditingController();
+  bool isLoading = false;
 
   Future<void> _submitFeedback() async {
     final String feedback = _controller.text;
+    setState(() {
+      isLoading = true;
+    });
 
     if (feedback.isEmpty) {
       // Show a message if the text field is empty
@@ -40,6 +44,9 @@ class _ContactUsState extends State<ContactUsView> {
       },
     );
     if (!mounted) return;
+    setState(() {
+      isLoading = false;
+    });
 
     if (response.statusCode == 200) {
       // Handle successful response
@@ -90,7 +97,7 @@ class _ContactUsState extends State<ContactUsView> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: _submitFeedback,
+                    onPressed: (isLoading) ? null : _submitFeedback,
                     child: Text('Submit'),
                   ),
                 ],
