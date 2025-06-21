@@ -164,6 +164,11 @@ Future sendTextMessage(
   PushNotification? pushNotification,
 ) async {
   DateTime messageSendAt = DateTime.now();
+  DateTime? openedAt;
+
+  if (pushNotification != null && pushNotification.hasReactionContent()) {
+    openedAt = DateTime.now();
+  }
 
   int? messageId = await twonlyDB.messagesDao.insertMessage(
     MessagesCompanion(
@@ -173,6 +178,7 @@ Future sendTextMessage(
       responseToOtherMessageId: Value(content.responseToMessageId),
       responseToMessageId: Value(content.responseToOtherMessageId),
       downloadState: Value(DownloadState.downloaded),
+      openedAt: Value(openedAt),
       contentJson: Value(
         jsonEncode(content.toJson()),
       ),
