@@ -14,6 +14,7 @@ import 'package:twonly/src/views/settings/notification.view.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/help/help.view.dart';
 import 'package:twonly/src/views/settings/privacy.view.dart';
+import 'package:twonly/src/views/settings/share_with_friends.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class SettingsMainView extends StatefulWidget {
@@ -191,6 +192,17 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     Navigator.push(context, MaterialPageRoute(
                       builder: (context) {
                         return HelpView();
+                      },
+                    ));
+                  },
+                ),
+                BetterListTile(
+                  icon: FontAwesomeIcons.shareFromSquare,
+                  text: context.lang.inviteFriends,
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return ShareWithFriendsView();
                       },
                     ));
                   },

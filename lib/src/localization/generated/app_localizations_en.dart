@@ -957,4 +957,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get twonlySafeRecoverBtn => 'Restore backup';
+
+  @override
+  String get inviteFriends => 'Invite your friends';
+
+  @override
+  String get inviteFriendsShareBtn => 'Share';
+
+  @override
+  String inviteFriendsShareText(Object url) {
+    return 'Let\'s switch to twonly: $url';
+  }
 }

@@ -1813,6 +1813,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore backup'**
   String get twonlySafeRecoverBtn;
+
+  /// No description provided for @inviteFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite your friends'**
+  String get inviteFriends;
+
+  /// No description provided for @inviteFriendsShareBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get inviteFriendsShareBtn;
+
+  /// No description provided for @inviteFriendsShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s switch to twonly: {url}'**
+  String inviteFriendsShareText(Object url);
 }
 
 class _AppLocalizationsDelegate

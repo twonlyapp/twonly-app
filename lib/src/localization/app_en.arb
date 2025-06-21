@@ -452,5 +452,8 @@
   "backupTwonlySaveNow": "Save now",
   "twonlySafeRecoverTitle": "Recovery",
   "twonlySafeRecoverDesc": "If you have created a backup with twonly Safe, you can restore it here.",
-  "twonlySafeRecoverBtn": "Restore backup"
+  "twonlySafeRecoverBtn": "Restore backup",
+  "inviteFriends": "Invite your friends",
+  "inviteFriendsShareBtn": "Share",
+  "inviteFriendsShareText": "Let's switch to twonly: {url}"
 }

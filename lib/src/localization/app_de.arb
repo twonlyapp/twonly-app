@@ -295,5 +295,8 @@
     "backupOwnServerDesc": "Speichere dein twonly Safe-Backups auf einem Server deiner Wahl.",
     "backupUseOwnServer": "Server verwenden",
     "backupResetServer": "Standardserver verwenden",
-    "backupTwonlySaveNow": "Jetzt speichern"
+    "backupTwonlySaveNow": "Jetzt speichern",
+    "inviteFriends": "Freunde einladen",
+    "inviteFriendsShareBtn": "Teilen",
+    "inviteFriendsShareText": "Wechseln wir zu twonly: {url}"
 }
