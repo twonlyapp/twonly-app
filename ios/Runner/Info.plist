@@ -30,14 +30,16 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>To create photos that can be shared.</string>
+	<string>twonly uses your camera to create photos or videos.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>To protect others twonlies!</string>
+	<string>twonly Screen Lock for real twonlies uses FACE ID.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>To create videos that can be securely shared.</string>
+	<string>twonly uses your microphone to create videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Store photos in the gallery or send from the gallery.</string>
+	<string>twonly will save photos or videos to your library.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
