@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
@@ -5,6 +6,7 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/home.view.dart';
@@ -12,6 +14,7 @@ import 'package:twonly/src/views/onboarding/register.view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:async';
+import 'package:url_launcher/url_launcher.dart';
 
 // these two callbacks are called on updated to the corresponding database
 
@@ -24,6 +27,7 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> with WidgetsBindingObserver {
   bool wasPaused = false;
+  bool appIsOutdated = false;
 
   @override
   void initState() {
@@ -62,6 +66,12 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future initAsync() async {
     setUserPlan();
+    globalCallbackAppIsOutdated = () async {
+      context.read<CustomChangeProvider>().updateConnectionState(false);
+      setState(() {
+        appIsOutdated = true;
+      });
+    };
     await apiService.connect(force: true);
     apiService.listenToNetworkChanges();
     // call this function so invalid media files are get purged
@@ -87,6 +97,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     globalCallbackConnectionState = (a) {};
+    globalCallbackAppIsOutdated = () {};
     super.dispose();
   }
 
@@ -133,8 +144,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           themeMode: context.watch<SettingsChangeProvider>().themeMode,
           initialRoute: '/',
           routes: {
-            "/": (context) => AppMainWidget(initialPage: 1),
-            "/chats": (context) => AppMainWidget(initialPage: 0)
+            "/": (context) =>
+                AppMainWidget(initialPage: 1, appIsOutdated: appIsOutdated),
+            "/chats": (context) =>
+                AppMainWidget(initialPage: 0, appIsOutdated: appIsOutdated)
           },
         );
       },
@@ -143,8 +156,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 }
 
 class AppMainWidget extends StatefulWidget {
-  const AppMainWidget({super.key, required this.initialPage});
+  const AppMainWidget(
+      {super.key, required this.initialPage, required this.appIsOutdated});
   final int initialPage;
+  final bool appIsOutdated;
   @override
   State<AppMainWidget> createState() => _AppMainWidgetState();
 }
@@ -187,6 +202,55 @@ class _AppMainWidgetState extends State<AppMainWidget> {
                   );
           },
         ),
+        if (widget.appIsOutdated)
+          Positioned(
+            top: 60,
+            left: 30,
+            right: 30,
+            child: SafeArea(
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                      context.lang.appOutdated,
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.white, fontSize: 16),
+                    ),
+                    if (Platform.isAndroid) SizedBox(height: 5),
+                    if (Platform.isAndroid)
+                      ElevatedButton(
+                        onPressed: () {
+                          launchUrl(Uri.parse(
+                              "https://play.google.com/store/apps/details?id=eu.twonly"));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          context.lang.appOutdatedBtn,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

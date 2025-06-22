@@ -974,4 +974,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String inviteFriendsShareText(Object url) {
     return 'Wechseln wir zu twonly: $url';
   }
+
+  @override
+  String get appOutdated => 'Deine Version von twonly ist veraltet.';
+
+  @override
+  String get appOutdatedBtn => 'Jetzt aktualisieren.';
 }

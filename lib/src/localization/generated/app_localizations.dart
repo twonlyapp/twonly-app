@@ -1831,6 +1831,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Let\'s switch to twonly: {url}'**
   String inviteFriendsShareText(Object url);
+
+  /// No description provided for @appOutdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your version of twonly is out of date.'**
+  String get appOutdated;
+
+  /// No description provided for @appOutdatedBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get appOutdatedBtn;
 }
 
 class _AppLocalizationsDelegate

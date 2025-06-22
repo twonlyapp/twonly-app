@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart'
     show ErrorCode;
 import 'package:twonly/src/services/api/media_upload.dart';
@@ -56,7 +55,6 @@ class ShareImageEditorView extends StatefulWidget {
 class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool _isRealTwonly = false;
   int maxShowTime = gMediaShowInfinite;
-  String? sendNextMediaToUserName;
   double tabDownPosition = 0;
   bool sendingOrLoadingImage = true;
   bool loadingImage = true;
@@ -136,15 +134,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       selectedUserIds.remove(userId);
     }
     setState(() {});
-  }
-
-  Future updateAsync(int userId) async {
-    if (sendNextMediaToUserName != null) return;
-    Contact? contact =
-        await twonlyDB.contactsDao.getContactByUserId(userId).getSingleOrNull();
-    if (contact != null) {
-      sendNextMediaToUserName = getContactDisplayName(contact);
-    }
   }
 
   List<Widget> get actionsAtTheRight {
@@ -449,10 +438,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
-    if (widget.sendTo != null) {
-      sendNextMediaToUserName = getContactDisplayName(widget.sendTo!);
-    }
-
     return Scaffold(
       backgroundColor:
           widget.sharedFromGallery ? null : Colors.white.withAlpha(0),
@@ -553,11 +538,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   getMergedImage: getMergedImage,
                   mediaUploadId: mediaUploadId,
                   videoFilePath: widget.videoFilePath,
-                  sendNextMediaToUserName: sendNextMediaToUserName,
+                  displayButtonLabel: widget.sendTo == null,
                   isLoading: loadingImage,
                 ),
-                if (sendNextMediaToUserName != null) SizedBox(width: 10),
-                if (sendNextMediaToUserName != null)
+                if (widget.sendTo != null) SizedBox(width: 10),
+                if (widget.sendTo != null)
                   OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       iconColor: Theme.of(context).colorScheme.primary,
@@ -566,7 +551,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     onPressed: pushShareImageView,
                     child: FaIcon(FontAwesomeIcons.userPlus),
                   ),
-                SizedBox(width: sendNextMediaToUserName == null ? 20 : 10),
+                SizedBox(width: widget.sendTo == null ? 20 : 10),
                 FilledButton.icon(
                   icon: sendingOrLoadingImage
                       ? SizedBox(
@@ -589,9 +574,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                     ),
                   ),
                   label: Text(
-                    (sendNextMediaToUserName == null)
+                    (widget.sendTo == null)
                         ? context.lang.shareImagedEditorShareWith
-                        : sendNextMediaToUserName!,
+                        : getContactDisplayName(widget.sendTo!),
                     style: TextStyle(fontSize: 17),
                   ),
                 ),

@@ -16,6 +16,7 @@ bool gIsDemoUser = false;
 
 // This callback called by the apiProvider
 Function(bool) globalCallbackConnectionState = (a) {};
+Function() globalCallbackAppIsOutdated = () {};
 
 bool globalIsAppInBackground = true;
 int globalBestFriendUserId = -1;

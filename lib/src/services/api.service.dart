@@ -48,6 +48,7 @@ class ApiService {
   final String apiHost = (kDebugMode) ? "10.99.0.140:3030" : "api.twonly.eu";
   final String apiSecure = (kDebugMode) ? "" : "s";
 
+  bool appIsOutdated = false;
   bool isAuthenticated = false;
   ApiService();
 
@@ -60,6 +61,7 @@ class ApiService {
   StreamSubscription<List<ConnectivityResult>>? connectivitySubscription;
 
   Future<bool> _connectTo(String apiUrl) async {
+    if (appIsOutdated) return false;
     try {
       var channel = IOWebSocketChannel.connect(
         Uri.parse(apiUrl),
@@ -303,6 +305,13 @@ class ApiService {
     Result res = asResult(await _waitForResponse(seq));
     if (res.isError) {
       Log.error("got error from server: ${res.error}");
+      if (res.error == ErrorCode.AppVersionOutdated) {
+        globalCallbackAppIsOutdated();
+        Log.error("App Version is OUTDATED.");
+        appIsOutdated = true;
+        await close(() {});
+        return Result.error(ErrorCode.InternalError);
+      }
       if (res.error == ErrorCode.SessionNotAuthenticated) {
         isAuthenticated = false;
         if (authenticated) {

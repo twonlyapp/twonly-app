@@ -968,4 +968,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String inviteFriendsShareText(Object url) {
     return 'Let\'s switch to twonly: $url';
   }
+
+  @override
+  String get appOutdated => 'Your version of twonly is out of date.';
+
+  @override
+  String get appOutdatedBtn => 'Update Now';
 }

@@ -11,7 +11,7 @@ import 'package:twonly/src/utils/storage.dart';
 
 class SaveToGalleryButton extends StatefulWidget {
   final Future<Uint8List?> Function() getMergedImage;
-  final String? sendNextMediaToUserName;
+  final bool displayButtonLabel;
   final File? videoFilePath;
   final int? mediaUploadId;
   final bool isLoading;
@@ -20,7 +20,7 @@ class SaveToGalleryButton extends StatefulWidget {
     super.key,
     required this.getMergedImage,
     required this.isLoading,
-    this.sendNextMediaToUserName,
+    required this.displayButtonLabel,
     this.mediaUploadId,
     this.videoFilePath,
   });
@@ -107,8 +107,8 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
               : _imageSaved
                   ? Icon(Icons.check)
                   : FaIcon(FontAwesomeIcons.floppyDisk),
-          if (widget.sendNextMediaToUserName == null) SizedBox(width: 10),
-          if (widget.sendNextMediaToUserName == null)
+          if (widget.displayButtonLabel) SizedBox(width: 10),
+          if (widget.displayButtonLabel)
             Text(_imageSaved
                 ? context.lang.shareImagedEditorSavedImage
                 : context.lang.shareImagedEditorSaveImage)

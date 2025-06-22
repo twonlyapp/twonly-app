@@ -455,5 +455,7 @@
   "twonlySafeRecoverBtn": "Restore backup",
   "inviteFriends": "Invite your friends",
   "inviteFriendsShareBtn": "Share",
-  "inviteFriendsShareText": "Let's switch to twonly: {url}"
+  "inviteFriendsShareText": "Let's switch to twonly: {url}",
+  "appOutdated": "Your version of twonly is out of date.",
+  "appOutdatedBtn": "Update Now"
 }

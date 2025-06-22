@@ -298,5 +298,7 @@
     "backupTwonlySaveNow": "Jetzt speichern",
     "inviteFriends": "Freunde einladen",
     "inviteFriendsShareBtn": "Teilen",
-    "inviteFriendsShareText": "Wechseln wir zu twonly: {url}"
+    "inviteFriendsShareText": "Wechseln wir zu twonly: {url}",
+    "appOutdated": "Deine Version von twonly ist veraltet.",
+    "appOutdatedBtn": "Jetzt aktualisieren."
 }
