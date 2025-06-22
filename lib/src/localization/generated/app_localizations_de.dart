@@ -982,5 +982,5 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appOutdatedBtn => 'Jetzt aktualisieren.';
 
   @override
-  String get doubleClickToReopen => 'Double-click\nto open again';
+  String get doubleClickToReopen => 'Doppelklicken zum\nerneuten Öffnen.';
 }
