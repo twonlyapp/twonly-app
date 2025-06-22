@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:video_player/video_player.dart';
 
 class MemoriesItemThumbnail extends StatefulWidget {
   const MemoriesItemThumbnail({
@@ -17,23 +17,13 @@ class MemoriesItemThumbnail extends StatefulWidget {
 }
 
 class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
-  VideoPlayerController? _controller;
-
   @override
   void initState() {
     super.initState();
-
-    if (widget.galleryItem.videoPath != null) {
-      _controller = VideoPlayerController.file(widget.galleryItem.videoPath!)
-        ..initialize().then((_) {
-          setState(() {});
-        });
-    }
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
     super.dispose();
   }
 
@@ -49,31 +39,16 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
     return GestureDetector(
       onTap: widget.onTap,
       child: Hero(
-        tag: widget.galleryItem.id,
-        child: (widget.galleryItem.imagePath != null)
-            ? Image.file(widget.galleryItem.imagePath!)
-            : Stack(
-                children: [
-                  if (_controller != null && _controller!.value.isInitialized)
-                    Positioned.fill(
-                        child: AspectRatio(
-                      aspectRatio: _controller!.value.aspectRatio,
-                      child: VideoPlayer(_controller!),
-                    )),
-                  if (_controller != null && _controller!.value.isInitialized)
-                    Positioned(
-                      bottom: 5,
-                      right: 5,
-                      child: Text(
-                        _controller!.value.isInitialized
-                            ? formatDuration(_controller!.value.duration)
-                            : '...',
-                        style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.bold),
-                      ),
-                    )
-                ],
-              ),
+        tag: widget.galleryItem.id.toString(),
+        child: Stack(
+          children: [
+            Image.file(widget.galleryItem.thumbnailPath),
+            if (widget.galleryItem.videoPath != null)
+              Center(
+                child: FaIcon(FontAwesomeIcons.circlePlay),
+              )
+          ],
+        ),
       ),
     );
   }

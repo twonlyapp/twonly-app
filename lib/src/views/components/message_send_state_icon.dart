@@ -49,9 +49,14 @@ MessageSendState messageSendStateFromMessage(Message msg) {
 class MessageSendStateIcon extends StatefulWidget {
   final List<Message> messages;
   final MainAxisAlignment mainAxisAlignment;
+  final bool canBeReopened;
 
-  const MessageSendStateIcon(this.messages,
-      {super.key, this.mainAxisAlignment = MainAxisAlignment.end});
+  const MessageSendStateIcon(
+    this.messages, {
+    super.key,
+    this.canBeReopened = false,
+    this.mainAxisAlignment = MainAxisAlignment.end,
+  });
 
   @override
   State<MessageSendStateIcon> createState() => _MessageSendStateIconState();
@@ -82,6 +87,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     String text = "";
 
     HashSet<MessageKind> kindsAlreadyShown = HashSet();
+    Widget? textWidget;
 
     for (final message in widget.messages) {
       if (icons.length == 2) break;
@@ -104,6 +110,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       }
 
       Widget icon = Placeholder();
+      textWidget = null;
 
       switch (state) {
         case MessageSendState.receivedOpened:
@@ -114,6 +121,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             }
           }
           text = context.lang.messageSendState_Received;
+          if (widget.canBeReopened) {
+            textWidget = Text(
+              context.lang.doubleClickToReopen,
+              style: TextStyle(fontSize: 9),
+            );
+          }
           break;
         case MessageSendState.sendOpened:
           icon = FaIcon(FontAwesomeIcons.paperPlane, size: 12, color: color);
@@ -198,10 +211,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       children: [
         icon,
         const SizedBox(width: 3),
-        Text(
-          text,
-          style: TextStyle(fontSize: 12),
-        ),
+        (textWidget != null)
+            ? textWidget
+            : Text(
+                text,
+                style: TextStyle(fontSize: 12),
+              ),
         const SizedBox(width: 5),
       ],
     );

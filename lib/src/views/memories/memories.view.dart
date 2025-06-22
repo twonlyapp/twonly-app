@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/thumbnail.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
@@ -49,19 +50,32 @@ class MemoriesViewState extends State<MemoriesView> {
           final fileName = file.uri.pathSegments.last;
           File? imagePath;
           File? videoPath;
+          late File thumbnailFile;
+          if (fileName.contains(".thumbnail.")) {
+            continue;
+          }
           if (fileName.contains(".png")) {
             imagePath = file;
+            thumbnailFile = getThumbnailPath(imagePath);
+            if (!await thumbnailFile.exists()) {
+              await createThumbnailsForImage(imagePath);
+            }
           } else if (fileName.contains(".mp4")) {
             videoPath = file;
+            thumbnailFile = getThumbnailPath(videoPath);
+            if (!await thumbnailFile.exists()) {
+              await createThumbnailsForVideo(videoPath);
+            }
           } else {
             break;
           }
           final creationDate = await file.lastModified();
           items.add(MemoryItem(
-            id: fileName,
+            id: int.parse(fileName.split(".")[0]),
             messages: [],
             date: creationDate,
             mirrorVideo: false,
+            thumbnailPath: thumbnailFile,
             imagePath: imagePath,
             videoPath: videoPath,
           ));
@@ -83,6 +97,10 @@ class MemoriesViewState extends State<MemoriesView> {
       months = [];
       String lastMonth = "";
       galleryItems = await loadMemoriesDirectory();
+      for (final item in galleryItems) {
+        items.remove(item
+            .id); // prefer the stored one and not the saved on in the chat....
+      }
       galleryItems += items.values.toList();
       galleryItems.sort((a, b) => b.date.compareTo(a.date));
       for (var i = 0; i < galleryItems.length; i++) {

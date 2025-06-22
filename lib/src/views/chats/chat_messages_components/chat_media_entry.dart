@@ -33,6 +33,7 @@ class ChatMediaEntry extends StatefulWidget {
 
 class _ChatMediaEntryState extends State<ChatMediaEntry> {
   GlobalKey reopenMediaFile = GlobalKey();
+  bool canBeReopened = false;
 
   @override
   void initState() {
@@ -47,6 +48,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       return;
     }
     if (await received.existsMediaFile(widget.message.messageId, "png")) {
+      setState(() {
+        canBeReopened = true;
+      });
       Future.delayed(Duration(seconds: 1), () {
         if (!mounted) return;
         showReopenMediaFilesTutorial(context, reopenMediaFile);
@@ -119,6 +123,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
               contact: widget.contact,
               color: color,
               galleryItems: widget.galleryItems,
+              canBeReopened: canBeReopened,
             ),
           ),
         ),

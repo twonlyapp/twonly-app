@@ -242,4 +242,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
       ..where((t) =>
           t.messageOtherId.equals(messageId) & t.contactId.equals(fromUserId));
   }
+
+  SingleOrNullSelectable<Message> getMessageByIdAndContactId(
+      int fromUserId, int messageId) {
+    return select(messages)
+      ..where((t) =>
+          t.messageId.equals(messageId) & t.contactId.equals(fromUserId));
+  }
 }

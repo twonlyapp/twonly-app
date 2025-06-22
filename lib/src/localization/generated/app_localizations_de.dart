@@ -980,4 +980,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get appOutdatedBtn => 'Jetzt aktualisieren.';
+
+  @override
+  String get doubleClickToReopen => 'Double-click\nto open again';
 }

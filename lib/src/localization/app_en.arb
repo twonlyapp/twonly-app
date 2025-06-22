@@ -457,5 +457,6 @@
   "inviteFriendsShareBtn": "Share",
   "inviteFriendsShareText": "Let's switch to twonly: {url}",
   "appOutdated": "Your version of twonly is out of date.",
-  "appOutdatedBtn": "Update Now"
+  "appOutdatedBtn": "Update Now",
+  "doubleClickToReopen": "Double-click\nto open again"
 }

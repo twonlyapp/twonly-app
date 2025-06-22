@@ -20,12 +20,14 @@ class InChatMediaViewer extends StatefulWidget {
     required this.contact,
     required this.color,
     required this.galleryItems,
+    required this.canBeReopened,
   });
 
   final Message message;
   final Contact contact;
   final List<MemoryItem> galleryItems;
   final Color color;
+  final bool canBeReopened;
 
   @override
   State<InChatMediaViewer> createState() => _InChatMediaViewerState();
@@ -121,35 +123,20 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
           galleryItems: widget.galleryItems,
           initialIndex: widget.galleryItems.indexWhere((x) =>
               x.id ==
-              (widget.message.mediaUploadId ?? widget.message.messageId)
-                  .toString()),
+              (widget.message.mediaUploadId ?? widget.message.messageId)),
           scrollDirection: Axis.horizontal,
         ),
       ),
     );
-    // bool? removed = await Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) {
-    //     return ChatMediaViewerFullScreen(
-    //       message: widget.message,
-    //       contact: widget.contact,
-    //       color: widget.color,
-    //     );
-    //   }),
-    // );
-
-    // if (removed != null && removed) {
-    //   image = null;
-    //   videoController?.dispose();
-    //   videoController = null;
-    //   if (isMounted) setState(() {});
-    // }
   }
 
   @override
   Widget build(BuildContext context) {
     if (image == null && video == null) {
       return Container(
+        constraints: BoxConstraints(
+          minHeight: 39,
+        ),
         decoration: BoxDecoration(
           border: Border.all(
             color: widget.color,
@@ -158,10 +145,12 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
           borderRadius: BorderRadius.circular(12.0),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(10.0),
+          padding: EdgeInsets.symmetric(
+              vertical: (widget.canBeReopened) ? 5 : 10.0, horizontal: 4),
           child: MessageSendStateIcon(
             [widget.message],
             mainAxisAlignment: MainAxisAlignment.center,
+            canBeReopened: widget.canBeReopened,
           ),
         ),
       );

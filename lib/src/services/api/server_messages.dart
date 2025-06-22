@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -13,6 +14,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
+import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_download.dart';
@@ -21,6 +23,7 @@ import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
+import 'package:twonly/src/services/thumbnail.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
@@ -249,6 +252,18 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
               errorWhileSending: Value(false),
             ),
           );
+          final message = await twonlyDB.messagesDao
+              .getMessageByIdAndContactId(fromUserId, content.messageId)
+              .getSingleOrNull();
+          if (message != null && message.mediaUploadId != null) {
+            final filePath =
+                await getMediaFilePath(message.mediaUploadId, "send");
+            if (filePath.contains("mp4")) {
+              createThumbnailsForVideo(File(filePath));
+            } else {
+              createThumbnailsForImage(File(filePath));
+            }
+          }
         } else {
           // when a message is received doubled ignore it...
           if ((await twonlyDB.messagesDao

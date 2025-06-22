@@ -300,5 +300,6 @@
     "inviteFriendsShareBtn": "Teilen",
     "inviteFriendsShareText": "Wechseln wir zu twonly: {url}",
     "appOutdated": "Deine Version von twonly ist veraltet.",
-    "appOutdatedBtn": "Jetzt aktualisieren."
+    "appOutdatedBtn": "Jetzt aktualisieren.",
+    "doubleClickToReopen2": "Doppelklicken zum\nerneuten Öffnen."
 }

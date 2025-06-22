@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/thumbnail.service.dart';
 import 'dart:typed_data';
 
 import 'package:twonly/src/utils/misc.dart';
@@ -69,6 +70,7 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
               if (widget.videoFilePath != null) {
                 memoryPath += ".mp4";
                 await File(widget.videoFilePath!.path).copy(memoryPath);
+                createThumbnailsForVideo(File(memoryPath));
                 if (storeToGallery) {
                   res = await saveVideoToGallery(widget.videoFilePath!.path);
                 }
@@ -77,6 +79,7 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                 Uint8List? imageBytes = await widget.getMergedImage();
                 if (imageBytes == null || !mounted) return;
                 await File(memoryPath).writeAsBytes(imageBytes);
+                createThumbnailsForImage(File(memoryPath));
                 if (storeToGallery) {
                   res = await saveImageToGallery(imageBytes);
                 }

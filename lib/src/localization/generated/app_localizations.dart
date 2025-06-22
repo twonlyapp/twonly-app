@@ -1843,6 +1843,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update Now'**
   String get appOutdatedBtn;
+
+  /// No description provided for @doubleClickToReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Double-click\nto open again'**
+  String get doubleClickToReopen;
 }
 
 class _AppLocalizationsDelegate
