@@ -50,7 +50,7 @@ class _LocationFilterState extends State<LocationFilter> {
         // Check if the item matches the normalized city
         if (item.imageSrc.endsWith('$normalizedCity.png')) {
           if (item.imageSrc.startsWith("/api/")) {
-            _imageUrl = "https://twonly.eu/$item";
+            _imageUrl = "https://twonly.eu/${item.imageSrc}";
             if (mounted) setState(() {});
           }
           return;
@@ -64,7 +64,7 @@ class _LocationFilterState extends State<LocationFilter> {
         if (item.imageSrc.contains('/countries/') &&
             item.imageSrc.contains(normalizedCountry)) {
           if (item.imageSrc.startsWith("/api/")) {
-            _imageUrl = "https://twonly.eu/$item";
+            _imageUrl = "https://twonly.eu/${item.imageSrc}";
             if (mounted) setState(() {});
           }
           break;
