@@ -80,9 +80,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
     return client.Response()..ok = ok;
   }
 
-  Log.info("Got: ${message.kind}");
+  Log.info("Got: ${message.kind} from $fromUserId");
 
-  if (message.kind != MessageKind.ack && message.retransId != null) {
+  if (message.kind != MessageKind.ack &&
+      message.kind != MessageKind.pushKey &&
+      message.retransId != null) {
     Log.info("Sending ACK for ${message.kind}");
 
     /// ACK every message

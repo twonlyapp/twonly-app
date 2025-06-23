@@ -20,6 +20,20 @@ import 'package:twonly/src/utils/log.dart';
 Future setupNotificationWithUsers({bool force = false}) async {
   var pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
+  // HotFIX: Search for user with id 0 if not there remove all
+  // and create new push keys with all users.
+  PushUser? pushUser = pushUsers.firstWhereOrNull((x) => x.userId == 0);
+  if (pushUser == null) {
+    Log.info("Clearing push keys");
+    await setPushKeys(SecureStorageKeys.receivingPushKeys, []);
+    pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
+    pushUsers.add(PushUser(
+      userId: Int64(0),
+      displayName: "NoUser",
+      pushKeys: [],
+    ));
+  }
+
   var wasChanged = false;
 
   final random = Random.secure();
@@ -49,8 +63,12 @@ Future setupNotificationWithUsers({bool force = false}) async {
         pushUser.pushKeys.add(lastKey);
         pushUser.pushKeys.add(pushKey);
         wasChanged = true;
+        Log.info("Creating new pushkey for ${contact.userId}");
       }
     } else {
+      Log.info(
+        "User ${contact.userId} not yet in pushkeys. Creating a new user.",
+      );
       wasChanged = true;
 
       /// Insert a new push user
@@ -61,6 +79,7 @@ Future setupNotificationWithUsers({bool force = false}) async {
       );
       await sendNewPushKey(contact.userId, pushKey);
       pushUsers.add(PushUser(
+        userId: Int64(contact.userId),
         displayName: getContactDisplayName(contact),
         blocked: contact.blocked,
         pushKeys: [pushKey],
@@ -88,6 +107,7 @@ Future sendNewPushKey(int userId, PushKey pushKey) async {
         pushKey.createdAtUnixTimestamp.toInt(),
       ),
     ),
+    willNotGetACKByUser: true, // hot fix, this can be removed later...
   );
 }
 
@@ -99,6 +119,7 @@ Future updatePushUser(Contact contact) async {
 
   if (pushUser == null) {
     pushKeys.add(PushUser(
+      userId: Int64(contact.userId),
       displayName: getContactDisplayName(contact),
       pushKeys: [],
       blocked: contact.blocked,

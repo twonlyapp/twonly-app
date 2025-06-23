@@ -40,6 +40,20 @@ Future sendRetransmitMessage(int retransId) async {
     return;
   }
 
+  MessageJson json = MessageJson.fromJson(
+    jsonDecode(
+      utf8.decode(
+        gzip.decode(retrans.plaintextContent),
+      ),
+    ),
+  );
+  Log.info("Retransmitting: ${json.kind} to ${retrans.contactId}");
+  // if (json.kind
+  //     .contains(MessageKind.pushKey.name)) {
+  // await twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
+  // return;
+  // }
+
   Contact? contact = await twonlyDB.contactsDao
       .getContactByUserId(retrans.contactId)
       .getSingleOrNull();

@@ -26,9 +26,9 @@ DateTime lastSignedPreKeyRequest = DateTime.now().subtract(Duration(hours: 1));
 Future requestNewPrekeysForContact(int contactId) async {
   if (lastPreKeyRequest
       .isAfter(DateTime.now().subtract(Duration(seconds: 60)))) {
-    Log.info("last pre request was 60s before");
     return;
   }
+  Log.info("Requesting new PREKEYS for $contactId");
   lastPreKeyRequest = DateTime.now();
   requestNewKeys.protect(() async {
     final otherKeys = await apiService.getPreKeysByUserId(contactId);
@@ -54,7 +54,6 @@ Future requestNewPrekeysForContact(int contactId) async {
 Future<SignalContactPreKey?> getPreKeyByContactId(int contactId) async {
   int count = await twonlyDB.signalDao.countPreKeysByContactId(contactId);
   if (count < 10) {
-    Log.info("Requesting new prekeys: $count < 10");
     requestNewPrekeysForContact(contactId);
   }
   return twonlyDB.signalDao.popPreKeyByContactId(contactId);
