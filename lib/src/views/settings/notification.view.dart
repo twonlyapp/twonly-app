@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/services/fcm.service.dart';
@@ -27,6 +29,13 @@ class NotificationView extends StatelessWidget {
           ListTile(
             title: Text(context.lang.settingsNotifyTroubleshooting),
             subtitle: Text(context.lang.settingsNotifyTroubleshootingDesc),
+            onLongPress: (kDebugMode)
+                ? () async {
+                    await twonlyDB.messageRetransmissionDao
+                        .resetAckStatusForAllMessages(537506372);
+                    tryTransmitMessages();
+                  }
+                : null,
             onTap: () async {
               await initFCMAfterAuthenticated();
               String? storedToken = await FlutterSecureStorage()

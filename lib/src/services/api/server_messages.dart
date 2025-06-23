@@ -131,7 +131,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
         lastSignalDecryptMessage = DateTime.now();
         await twonlyDB.signalDao.deleteAllPreKeysByContactId(fromUserId);
         await requestNewPrekeysForContact(fromUserId);
-        await twonlyDB.messageRetransmissionDao.resetAckStatusForAllMessages();
+        await twonlyDB.messageRetransmissionDao
+            .resetAckStatusForAllMessages(fromUserId);
         tryTransmitMessages();
       }
 

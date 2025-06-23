@@ -24,13 +24,20 @@ Future tryTransmitMessages() async {
 
   if (retransIds.isEmpty) return;
 
+  bool filterPreKeys = false;
+
+  if (retransIds.length > 100) {
+    filterPreKeys = true; // just a workaround until I can fix the real issue :/
+  }
+
   for (final retransId in retransIds) {
-    sendRetransmitMessage(retransId);
+    sendRetransmitMessage(retransId, filterPreKeys: filterPreKeys);
     //twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
   }
 }
 
-Future sendRetransmitMessage(int retransId) async {
+Future sendRetransmitMessage(int retransId,
+    {bool filterPreKeys = false}) async {
   MessageRetransmission? retrans = await twonlyDB.messageRetransmissionDao
       .getRetransmissionById(retransId)
       .getSingleOrNull();
@@ -47,6 +54,14 @@ Future sendRetransmitMessage(int retransId) async {
       ),
     ),
   );
+  if (filterPreKeys && json.kind == MessageKind.pushKey) {
+    if (!retrans.willNotGetACKByUser) {
+      Log.error("Why is willNotGetACKByUser false????");
+    }
+    Log.info("Filtering preKeys: ${json.kind} to ${retrans.contactId}");
+    await twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
+    return;
+  }
   Log.info("Retransmitting: ${json.kind} to ${retrans.contactId}");
   // if (json.kind
   //     .contains(MessageKind.pushKey.name)) {
@@ -87,6 +102,7 @@ Future sendRetransmitMessage(int retransId) async {
   bool retry = true;
 
   if (resp.isError) {
+    Log.error("Could not retransmit message.");
     if (resp.error == ErrorCode.UserIdNotFound) {
       retry = false;
       if (retrans.messageId != null) {
@@ -116,7 +132,12 @@ Future sendRetransmitMessage(int retransId) async {
   }
 
   if (!retry) {
-    if (retrans.willNotGetACKByUser) {
+    if (!retrans.willNotGetACKByUser && json.kind == MessageKind.pushKey) {
+      Log.error("Why is willNotGetACKByUser false????");
+    }
+    if (retrans.willNotGetACKByUser ||
+        json.kind == MessageKind.pushKey ||
+        json.kind == MessageKind.ack) {
       await twonlyDB.messageRetransmissionDao
           .deleteRetransmissionById(retransId);
     } else {
