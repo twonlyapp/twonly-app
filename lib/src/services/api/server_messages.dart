@@ -222,7 +222,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       if (lastPushKeyRequest
           .isBefore(DateTime.now().subtract(Duration(seconds: 60)))) {
         lastPushKeyRequest = DateTime.now();
-        setupNotificationWithUsers(force: true);
+        setupNotificationWithUsers(forceContact: fromUserId);
       }
 
     case MessageKind.pushKey:

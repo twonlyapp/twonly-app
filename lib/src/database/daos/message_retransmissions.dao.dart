@@ -45,7 +45,15 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updatedValues);
   }
 
-  Future resetAckStatusForAllMessages() {
+  Future resetAckStatusForAllMessages() async {
+    final deletedCount = await (delete(messageRetransmissions)
+          ..where((m) =>
+              m.willNotGetACKByUser.equals(true) &
+              m.acknowledgeByServerAt.isNotNull()))
+        .go();
+    if (deletedCount > 0) {
+      Log.info('$deletedCount faulty retransmission messages where deleted.');
+    }
     return ((update(messageRetransmissions))
           ..where((m) => m.willNotGetACKByUser.equals(false)))
         .write(

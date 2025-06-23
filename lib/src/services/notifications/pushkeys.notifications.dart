@@ -17,7 +17,8 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// This function must be called after the database is setup
-Future setupNotificationWithUsers({bool force = false}) async {
+Future setupNotificationWithUsers(
+    {bool force = false, int? forceContact}) async {
   var pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
   // HotFIX: Search for user with id 0 if not there remove all
@@ -51,7 +52,9 @@ Future setupNotificationWithUsers({bool force = false}) async {
       final createdAt = DateTime.fromMillisecondsSinceEpoch(
           lastKey.createdAtUnixTimestamp.toInt());
 
-      if (force || createdAt.isBefore(timeBefore)) {
+      if (force ||
+          (forceContact == contact.userId) ||
+          createdAt.isBefore(timeBefore)) {
         final pushKey = PushKey(
           id: lastKey.id + random.nextInt(5),
           key: List<int>.generate(32, (index) => random.nextInt(256)),

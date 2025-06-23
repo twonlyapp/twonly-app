@@ -95,7 +95,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
       if (added > 0) {
         if (await createNewSignalSession(res.value.userdata)) {
           // before notifying the other party, add
-          await setupNotificationWithUsers();
+          await setupNotificationWithUsers(
+            forceContact: res.value.userdata.userId.toInt(),
+          );
           await encryptAndSendMessageAsync(
             null,
             res.value.userdata.userId.toInt(),
