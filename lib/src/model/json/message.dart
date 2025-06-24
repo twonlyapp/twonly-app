@@ -96,6 +96,8 @@ class MessageContent {
         return FlameSyncContent.fromJson(json);
       case MessageKind.ack:
         return AckContent.fromJson(json);
+      case MessageKind.signalDecryptError:
+        return SignalDecryptErrorContent.fromJson(json);
       default:
         return null;
     }
@@ -219,6 +221,24 @@ class ReopenedMediaFileContent extends MessageContent {
   @override
   Map toJson() {
     return {'messageId': messageId};
+  }
+}
+
+class SignalDecryptErrorContent extends MessageContent {
+  List<int> encryptedHash;
+  SignalDecryptErrorContent({required this.encryptedHash});
+
+  static SignalDecryptErrorContent fromJson(Map json) {
+    return SignalDecryptErrorContent(
+      encryptedHash: List<int>.from(json['encryptedHash']),
+    );
+  }
+
+  @override
+  Map toJson() {
+    return {
+      'encryptedHash': encryptedHash,
+    };
   }
 }
 

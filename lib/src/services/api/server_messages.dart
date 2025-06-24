@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -22,7 +23,6 @@ import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
-import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/thumbnail.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -60,15 +60,20 @@ Future handleServerMessage(server.ServerToClient msg) async {
 DateTime lastSignalDecryptMessage = DateTime.now().subtract(Duration(hours: 1));
 DateTime lastPushKeyRequest = DateTime.now().subtract(Duration(hours: 1));
 
+bool messageGetsAck(MessageKind kind) {
+  return kind != MessageKind.pushKey && kind != MessageKind.ack;
+}
+
 Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
   MessageJson? message = await signalDecryptMessage(fromUserId, body);
   if (message == null) {
+    final encryptedHash = (await Sha256().hash(body)).bytes;
     await encryptAndSendMessageAsync(
       null,
       fromUserId,
       MessageJson(
         kind: MessageKind.signalDecryptError,
-        content: MessageContent(),
+        content: SignalDecryptErrorContent(encryptedHash: encryptedHash),
         timestamp: DateTime.now(),
       ),
     );
@@ -82,9 +87,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
 
   Log.info("Got: ${message.kind} from $fromUserId");
 
-  if (message.kind != MessageKind.ack &&
-      message.kind != MessageKind.pushKey &&
-      message.retransId != null) {
+  if (messageGetsAck(message.kind) && message.retransId != null) {
     Log.info("Sending ACK for ${message.kind}");
 
     /// ACK every message
@@ -99,7 +102,6 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             retransIdToAck: message.retransId!),
         timestamp: DateTime.now(),
       ),
-      willNotGetACKByUser: true,
     );
   }
 
@@ -124,15 +126,15 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       }
       break;
     case MessageKind.signalDecryptError:
-      if (lastSignalDecryptMessage
-          .isBefore(DateTime.now().subtract(Duration(seconds: 60)))) {
-        Log.error(
-            "Got signal decrypt error from other user! Sending all non ACK messages again.");
-        lastSignalDecryptMessage = DateTime.now();
-        await twonlyDB.signalDao.deleteAllPreKeysByContactId(fromUserId);
-        await requestNewPrekeysForContact(fromUserId);
-        await twonlyDB.messageRetransmissionDao
-            .resetAckStatusForAllMessages(fromUserId);
+      Log.error(
+          "Got signal decrypt error from other user! Sending all non ACK messages again.");
+
+      final content = message.content;
+      if (content is SignalDecryptErrorContent) {
+        await twonlyDB.messageRetransmissionDao.resetAckStatusFor(
+          fromUserId,
+          Uint8List.fromList(content.encryptedHash),
+        );
         tryTransmitMessages();
       }
 

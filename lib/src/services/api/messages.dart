@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:twonly/globals.dart';
@@ -10,6 +11,8 @@ import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
+import 'package:twonly/src/services/api/server_messages.dart'
+    show messageGetsAck;
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
@@ -24,137 +27,138 @@ Future tryTransmitMessages() async {
 
   if (retransIds.isEmpty) return;
 
-  bool filterPreKeys = false;
-
-  if (retransIds.length > 100) {
-    filterPreKeys = true; // just a workaround until I can fix the real issue :/
-  }
-
   for (final retransId in retransIds) {
-    sendRetransmitMessage(retransId, filterPreKeys: filterPreKeys);
+    sendRetransmitMessage(retransId, fromRetransmissionDb: true);
     //twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
   }
 }
 
 Future sendRetransmitMessage(int retransId,
-    {bool filterPreKeys = false}) async {
-  MessageRetransmission? retrans = await twonlyDB.messageRetransmissionDao
-      .getRetransmissionById(retransId)
-      .getSingleOrNull();
+    {bool fromRetransmissionDb = false}) async {
+  try {
+    MessageRetransmission? retrans = await twonlyDB.messageRetransmissionDao
+        .getRetransmissionById(retransId)
+        .getSingleOrNull();
 
-  if (retrans == null) {
-    Log.error("$retransId not found in database");
-    return;
-  }
+    if (retrans == null) {
+      Log.error("$retransId not found in database");
+      return;
+    }
 
-  MessageJson json = MessageJson.fromJson(
-    jsonDecode(
-      utf8.decode(
-        gzip.decode(retrans.plaintextContent),
+    MessageJson json = MessageJson.fromJson(
+      jsonDecode(
+        utf8.decode(
+          gzip.decode(retrans.plaintextContent),
+        ),
       ),
-    ),
-  );
-  if (filterPreKeys && json.kind == MessageKind.pushKey) {
-    if (!retrans.willNotGetACKByUser) {
-      Log.error("Why is willNotGetACKByUser false????");
+    );
+    DateTime timestampToCheck = DateTime.parse("2025-06-24T12:00:00");
+    if (json.timestamp.isBefore(timestampToCheck)) {
+      Log.info("Deleting retransmission because it is before the update...");
+      await twonlyDB.messageRetransmissionDao
+          .deleteRetransmissionById(retransId);
+      return;
     }
-    Log.info("Filtering preKeys: ${json.kind} to ${retrans.contactId}");
-    await twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
-    return;
-  }
-  Log.info("Retransmitting: ${json.kind} to ${retrans.contactId}");
-  // if (json.kind
-  //     .contains(MessageKind.pushKey.name)) {
-  // await twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
-  // return;
-  // }
 
-  Contact? contact = await twonlyDB.contactsDao
-      .getContactByUserId(retrans.contactId)
-      .getSingleOrNull();
-  if (contact == null || contact.deleted) {
-    Log.warn("Contact deleted $retransId or not found in database.");
-    if (retrans.messageId != null) {
-      await twonlyDB.messagesDao.updateMessageByMessageId(
-        retrans.messageId!,
-        MessagesCompanion(errorWhileSending: Value(true)),
-      );
-    }
-    return;
-  }
+    Log.info("Retransmitting: ${json.kind} to ${retrans.contactId}");
 
-  Uint8List? encryptedBytes = await signalEncryptMessage(
-    retrans.contactId,
-    retrans.plaintextContent,
-  );
-
-  if (encryptedBytes == null) {
-    Log.error("Could not encrypt the message. Aborting and trying again.");
-    return;
-  }
-
-  Result resp = await apiService.sendTextMessage(
-    retrans.contactId,
-    encryptedBytes,
-    retrans.pushData,
-  );
-
-  bool retry = true;
-
-  if (resp.isError) {
-    Log.error("Could not retransmit message.");
-    if (resp.error == ErrorCode.UserIdNotFound) {
-      retry = false;
+    Contact? contact = await twonlyDB.contactsDao
+        .getContactByUserId(retrans.contactId)
+        .getSingleOrNull();
+    if (contact == null || contact.deleted) {
+      Log.warn("Contact deleted $retransId or not found in database.");
       if (retrans.messageId != null) {
         await twonlyDB.messagesDao.updateMessageByMessageId(
           retrans.messageId!,
           MessagesCompanion(errorWhileSending: Value(true)),
         );
       }
-      await twonlyDB.contactsDao.updateContact(
-        retrans.contactId,
-        ContactsCompanion(deleted: Value(true)),
-      );
+      return;
     }
-  }
 
-  if (resp.isSuccess) {
-    retry = false;
-    if (retrans.messageId != null) {
-      await twonlyDB.messagesDao.updateMessageByMessageId(
-        retrans.messageId!,
-        MessagesCompanion(
-          acknowledgeByServer: Value(true),
-          errorWhileSending: Value(false),
-        ),
-      );
-    }
-  }
+    Uint8List? encryptedBytes = await signalEncryptMessage(
+      retrans.contactId,
+      retrans.plaintextContent,
+    );
 
-  if (!retry) {
-    if (!retrans.willNotGetACKByUser && json.kind == MessageKind.pushKey) {
-      Log.error("Why is willNotGetACKByUser false????");
+    if (encryptedBytes == null) {
+      Log.error("Could not encrypt the message. Aborting and trying again.");
+      return;
     }
-    if (retrans.willNotGetACKByUser ||
-        json.kind == MessageKind.pushKey ||
-        json.kind == MessageKind.ack) {
-      await twonlyDB.messageRetransmissionDao
-          .deleteRetransmissionById(retransId);
-    } else {
-      await twonlyDB.messageRetransmissionDao.updateRetransmission(
-        retransId,
-        MessageRetransmissionsCompanion(
-          acknowledgeByServerAt: Value(DateTime.now()),
-        ),
-      );
+
+    final encryptedHash = (await Sha256().hash(encryptedBytes)).bytes;
+
+    await twonlyDB.messageRetransmissionDao.updateRetransmission(
+      retransId,
+      MessageRetransmissionsCompanion(
+        encryptedHash: Value(Uint8List.fromList(encryptedHash)),
+      ),
+    );
+
+    Result resp = await apiService.sendTextMessage(
+      retrans.contactId,
+      encryptedBytes,
+      retrans.pushData,
+    );
+
+    bool retry = true;
+
+    if (resp.isError) {
+      Log.error("Could not retransmit message.");
+      if (resp.error == ErrorCode.UserIdNotFound) {
+        retry = false;
+        if (retrans.messageId != null) {
+          await twonlyDB.messagesDao.updateMessageByMessageId(
+            retrans.messageId!,
+            MessagesCompanion(errorWhileSending: Value(true)),
+          );
+        }
+        await twonlyDB.contactsDao.updateContact(
+          retrans.contactId,
+          ContactsCompanion(deleted: Value(true)),
+        );
+      }
     }
+
+    if (resp.isSuccess) {
+      retry = false;
+      if (retrans.messageId != null) {
+        await twonlyDB.messagesDao.updateMessageByMessageId(
+          retrans.messageId!,
+          MessagesCompanion(
+            acknowledgeByServer: Value(true),
+            errorWhileSending: Value(false),
+          ),
+        );
+      }
+    }
+
+    if (!retry) {
+      if (!messageGetsAck(json.kind)) {
+        await twonlyDB.messageRetransmissionDao
+            .deleteRetransmissionById(retransId);
+      } else {
+        await twonlyDB.messageRetransmissionDao.updateRetransmission(
+          retransId,
+          MessageRetransmissionsCompanion(
+            acknowledgeByServerAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    }
+  } catch (e) {
+    Log.error("error resending message: $e");
+    await twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
   }
 }
 
 // encrypts and stores the message and then sends it in the background
-Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
-    {PushNotification? pushNotification,
-    bool willNotGetACKByUser = false}) async {
+Future encryptAndSendMessageAsync(
+  int? messageId,
+  int userId,
+  MessageJson msg, {
+  PushNotification? pushNotification,
+}) async {
   if (gIsDemoUser) {
     return;
   }
@@ -170,7 +174,6 @@ Future encryptAndSendMessageAsync(int? messageId, int userId, MessageJson msg,
       messageId: Value(messageId),
       plaintextContent: Value(Uint8List(0)),
       pushData: Value(pushData),
-      willNotGetACKByUser: Value(willNotGetACKByUser),
     ),
   );
 

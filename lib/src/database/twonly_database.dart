@@ -53,7 +53,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 14;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -124,6 +124,14 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         from11To12: (m, schema) async {
           m.addColumn(schema.messageRetransmissions,
               schema.messageRetransmissions.willNotGetACKByUser);
+        },
+        from12To13: (m, schema) async {
+          m.dropColumn(
+              schema.messageRetransmissions, "will_not_get_a_c_k_by_user");
+        },
+        from13To14: (m, schema) async {
+          m.addColumn(schema.messageRetransmissions,
+              schema.messageRetransmissions.encryptedHash);
         },
       ),
     );

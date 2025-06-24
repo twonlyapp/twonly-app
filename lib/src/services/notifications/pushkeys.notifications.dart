@@ -110,7 +110,6 @@ Future sendNewPushKey(int userId, PushKey pushKey) async {
         pushKey.createdAtUnixTimestamp.toInt(),
       ),
     ),
-    willNotGetACKByUser: true, // hot fix, this can be removed later...
   );
 }
 
