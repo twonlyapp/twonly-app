@@ -339,13 +339,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
-      if (await pushMediaEditor(
+      await pushMediaEditor(
         imageFile.readAsBytes(),
         null,
         sharedFromGallery: true,
-      )) {
-        return;
-      }
+      );
     }
     setState(() {
       galleryLoadedImageIsShown = false;
