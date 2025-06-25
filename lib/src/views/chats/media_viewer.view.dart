@@ -315,7 +315,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         ),
         timestamp: DateTime.now(),
       ),
-      pushNotification: PushNotification(kind: PushKind.acceptRequest),
+      pushNotification: PushNotification(kind: PushKind.storedMediaFile),
     );
     setState(() {
       imageSaved = true;
