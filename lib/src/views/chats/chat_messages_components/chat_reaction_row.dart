@@ -6,8 +6,11 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
 
 class ReactionRow extends StatefulWidget {
-  const ReactionRow(
-      {super.key, required this.otherReactions, required this.message});
+  const ReactionRow({
+    super.key,
+    required this.otherReactions,
+    required this.message,
+  });
 
   final List<Message> otherReactions;
   final Message message;

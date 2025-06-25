@@ -140,14 +140,16 @@ class MessageContextMenu extends StatelessWidget {
                   responseToOtherMessageId: (message.messageOtherId == null)
                       ? message.messageId
                       : null),
-              PushNotification(
-                kind: (message.kind == MessageKind.textMessage)
-                    ? PushKind.reactionToText
-                    : (getMediaContent(message)!.isVideo)
-                        ? PushKind.reactionToVideo
-                        : PushKind.reactionToText,
-                reactionContent: layer.text,
-              ),
+              (message.messageOtherId != null)
+                  ? PushNotification(
+                      kind: (message.kind == MessageKind.textMessage)
+                          ? PushKind.reactionToText
+                          : (getMediaContent(message)!.isVideo)
+                              ? PushKind.reactionToVideo
+                              : PushKind.reactionToImage,
+                      reactionContent: layer.text,
+                    )
+                  : null,
             );
           },
           child: const FaIcon(FontAwesomeIcons.faceLaugh),
