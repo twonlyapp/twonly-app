@@ -1,5 +1,5 @@
 {
     "files.exclude": {
-        "dependencies": true
+        "dependencies": false
     }
 }

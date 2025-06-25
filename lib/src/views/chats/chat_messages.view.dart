@@ -4,12 +4,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
+import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
@@ -285,150 +287,157 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: messages.length + 1,
-                reverse: true,
-                itemExtentBuilder: (index, dimensions) {
-                  if (index == 0) return 10; // empty padding
-                  index -= 1;
-                  double size = 44;
-                  if (messages[index].kind == MessageKind.textMessage) {
-                    TextMessageContent? content = TextMessageContent.fromJson(
-                        jsonDecode(messages[index].contentJson!));
-                    if (EmojiAnimation.supported(content.text)) {
-                      size = 99;
-                    } else {
-                      size = 11 +
-                          calculateNumberOfLines(content.text,
-                                  MediaQuery.of(context).size.width * 0.8, 17) *
-                              27;
-                    }
-                  }
-                  if (messages[index].mediaStored) {
-                    size = 271;
-                  }
-                  final reactions =
-                      textReactionsToMessageId[messages[index].messageId];
-                  if (reactions != null && reactions.isNotEmpty) {
-                    for (final reaction in reactions) {
-                      if (reaction.kind == MessageKind.textMessage) {
-                        TextMessageContent? content =
-                            TextMessageContent.fromJson(
-                                jsonDecode(reaction.contentJson!));
-                        size += calculateNumberOfLines(content.text,
-                                MediaQuery.of(context).size.width * 0.5, 14) *
-                            27;
+      body: PieCanvas(
+        theme: getPieCanvasTheme(context),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  itemCount: messages.length + 1,
+                  reverse: true,
+                  itemExtentBuilder: (index, dimensions) {
+                    if (index == 0) return 10; // empty padding
+                    index -= 1;
+                    double size = 44;
+                    if (messages[index].kind == MessageKind.textMessage) {
+                      TextMessageContent? content = TextMessageContent.fromJson(
+                          jsonDecode(messages[index].contentJson!));
+                      if (EmojiAnimation.supported(content.text)) {
+                        size = 99;
+                      } else {
+                        size = 11 +
+                            calculateNumberOfLines(
+                                    content.text,
+                                    MediaQuery.of(context).size.width * 0.8,
+                                    17) *
+                                27;
                       }
                     }
-                  }
+                    if (messages[index].mediaStored) {
+                      size = 271;
+                    }
+                    final reactions =
+                        textReactionsToMessageId[messages[index].messageId];
+                    if (reactions != null && reactions.isNotEmpty) {
+                      for (final reaction in reactions) {
+                        if (reaction.kind == MessageKind.textMessage) {
+                          TextMessageContent? content =
+                              TextMessageContent.fromJson(
+                                  jsonDecode(reaction.contentJson!));
+                          size += calculateNumberOfLines(content.text,
+                                  MediaQuery.of(context).size.width * 0.5, 14) *
+                              27;
+                        }
+                      }
+                    }
 
-                  if (!isLastMessageFromSameUser(messages, index)) {
-                    size += 20;
-                  }
-                  return size;
-                },
-                itemBuilder: (context, i) {
-                  if (i == 0) {
-                    return Container(); // just a padding
-                  }
-                  i -= 1;
-                  return ChatListEntry(
-                    key: Key(messages[i].messageId.toString()),
-                    messages[i],
-                    user,
-                    galleryItems,
-                    isLastMessageFromSameUser(messages, i),
-                    textReactionsToMessageId[messages[i].messageId] ?? [],
-                    emojiReactionsToMessageId[messages[i].messageId] ?? [],
-                    onResponseTriggered: (message) {
-                      setState(() {
-                        responseToMessage = message;
-                      });
-                      textFieldFocus.requestFocus();
-                    },
-                  );
-                },
+                    if (!isLastMessageFromSameUser(messages, index)) {
+                      size += 20;
+                    }
+                    return size;
+                  },
+                  itemBuilder: (context, i) {
+                    if (i == 0) {
+                      return Container(); // just a padding
+                    }
+                    i -= 1;
+                    return ChatListEntry(
+                      key: Key(messages[i].messageId.toString()),
+                      messages[i],
+                      user,
+                      galleryItems,
+                      isLastMessageFromSameUser(messages, i),
+                      textReactionsToMessageId[messages[i].messageId] ?? [],
+                      emojiReactionsToMessageId[messages[i].messageId] ?? [],
+                      onResponseTriggered: (message) {
+                        setState(() {
+                          responseToMessage = message;
+                        });
+                        textFieldFocus.requestFocus();
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-            if (responseToMessage != null && !user.deleted)
-              Container(
+              if (responseToMessage != null && !user.deleted)
+                Container(
+                  padding: const EdgeInsets.only(
+                    bottom: 00,
+                    left: 20,
+                    right: 20,
+                    top: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: getResponsePreview(responseToMessage!)),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            responseToMessage = null;
+                          });
+                        },
+                        icon: FaIcon(
+                          FontAwesomeIcons.xmark,
+                          size: 16,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              Padding(
                 padding: const EdgeInsets.only(
-                  bottom: 00,
+                  bottom: 30,
                   left: 20,
                   right: 20,
                   top: 10,
                 ),
                 child: Row(
-                  children: [
-                    Expanded(child: getResponsePreview(responseToMessage!)),
-                    IconButton(
-                      onPressed: () {
-                        setState(() {
-                          responseToMessage = null;
-                        });
-                      },
-                      icon: FaIcon(
-                        FontAwesomeIcons.xmark,
-                        size: 16,
-                      ),
-                    )
-                  ],
+                  children: (user.deleted)
+                      ? []
+                      : [
+                          Expanded(
+                            child: TextField(
+                              controller: newMessageController,
+                              focusNode: textFieldFocus,
+                              onChanged: (value) {
+                                currentInputText = value;
+                                setState(() {});
+                              },
+                              onSubmitted: (_) {
+                                _sendMessage();
+                              },
+                              decoration: inputTextMessageDeco(context),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          (currentInputText != "")
+                              ? IconButton(
+                                  icon:
+                                      FaIcon(FontAwesomeIcons.solidPaperPlane),
+                                  onPressed: () {
+                                    _sendMessage();
+                                  },
+                                )
+                              : IconButton(
+                                  icon: FaIcon(FontAwesomeIcons.camera),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) {
+                                          return CameraSendToView(
+                                              widget.contact);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                )
+                        ],
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.only(
-                bottom: 30,
-                left: 20,
-                right: 20,
-                top: 10,
-              ),
-              child: Row(
-                children: (user.deleted)
-                    ? []
-                    : [
-                        Expanded(
-                          child: TextField(
-                            controller: newMessageController,
-                            focusNode: textFieldFocus,
-                            onChanged: (value) {
-                              currentInputText = value;
-                              setState(() {});
-                            },
-                            onSubmitted: (_) {
-                              _sendMessage();
-                            },
-                            decoration: inputTextMessageDeco(context),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        (currentInputText != "")
-                            ? IconButton(
-                                icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-                                onPressed: () {
-                                  _sendMessage();
-                                },
-                              )
-                            : IconButton(
-                                icon: FaIcon(FontAwesomeIcons.camera),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) {
-                                        return CameraSendToView(widget.contact);
-                                      },
-                                    ),
-                                  );
-                                },
-                              )
-                      ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -458,6 +467,6 @@ double calculateNumberOfLines(String text, double width, double fontSize) {
     ),
     textDirection: TextDirection.ltr,
   );
-  textPainter.layout(maxWidth: (width - 30));
+  textPainter.layout(maxWidth: (width - 32));
   return textPainter.computeLineMetrics().length.toDouble();
 }

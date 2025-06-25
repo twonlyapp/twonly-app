@@ -91,6 +91,7 @@ class _VoucherCardState extends State<VoucherCard> {
   void _copyVoucherId() {
     if (!widget.voucher.redeemed) {
       Clipboard.setData(ClipboardData(text: widget.voucher.voucherId));
+      HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("${widget.voucher.voucherId} copied.")),
       );

@@ -1286,10 +1286,9 @@ packages:
   pie_menu:
     dependency: "direct main"
     description:
-      name: pie_menu
-      sha256: "47e29f43fbe896ec47513b155762a661f6cd243317cd8e91ed5303ad0b9f6141"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/flutter-pie-menu"
+      relative: true
+    source: path
     version: "3.3.0"
   platform:
     dependency: transitive

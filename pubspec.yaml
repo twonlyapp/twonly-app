@@ -27,6 +27,9 @@ dependencies:
     path: ./dependencies/flutter_secure_storage/flutter_secure_storage
   flutter_zxing:
     path: ./dependencies/flutter_zxing
+  # pie_menu: ^3.2.7
+  pie_menu:
+    path: ./dependencies/flutter-pie-menu
   font_awesome_flutter: ^10.8.0
   gal: ^2.3.1
   hand_signature: ^3.0.3
@@ -43,7 +46,6 @@ dependencies:
   path: ^1.9.0
   path_provider: ^2.1.5
   permission_handler: ^12.0.0+1
-  pie_menu: ^3.2.7
   protobuf: ^4.0.0
   cryptography_plus: ^2.7.0
   provider: ^6.1.2

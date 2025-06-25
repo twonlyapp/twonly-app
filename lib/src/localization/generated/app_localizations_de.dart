@@ -478,6 +478,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cancel => 'Abbrechen';
 
   @override
+  String get react => 'Reagieren';
+
+  @override
+  String get reply => 'Antworten';
+
+  @override
+  String get copy => 'Kopieren';
+
+  @override
+  String get delete => 'Löschen';
+
+  @override
+  String get info => 'Info';
+
+  @override
   String get ok => 'Ok';
 
   @override
@@ -833,6 +848,12 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get memoriesEmpty =>
       'Sobald du Bilder oder Videos speicherst, landen sie hier in deinen Erinnerungen.';
+
+  @override
+  String get deleteTitle => 'Bist du dir sicher?';
+
+  @override
+  String get deleteOkBtn => 'Für mich löschen';
 
   @override
   String get deleteImageTitle => 'Bist du dir sicher?';

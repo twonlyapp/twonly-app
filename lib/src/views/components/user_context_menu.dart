@@ -181,8 +181,7 @@ PieTheme getPieCanvasTheme(BuildContext context) {
       iconColor: Theme.of(context).colorScheme.surfaceBright,
     ),
     tooltipPadding: EdgeInsets.all(20),
-    overlayColor: const Color.fromARGB(41, 0, 0, 0),
-
+    overlayColor: const Color.fromARGB(69, 0, 0, 0),
     // spacing: 0,
     tooltipTextStyle: TextStyle(
       fontSize: 32,

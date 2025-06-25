@@ -944,6 +944,36 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
+  /// No description provided for @react.
+  ///
+  /// In en, this message translates to:
+  /// **'React'**
+  String get react;
+
+  /// No description provided for @reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get reply;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @info.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get info;
+
   /// No description provided for @ok.
   ///
   /// In en, this message translates to:
@@ -1573,6 +1603,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'As soon as you save pictures or videos, they end up here in your memories.'**
   String get memoriesEmpty;
+
+  /// No description provided for @deleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure?'**
+  String get deleteTitle;
+
+  /// No description provided for @deleteOkBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for me'**
+  String get deleteOkBtn;
 
   /// No description provided for @deleteImageTitle.
   ///

@@ -18,6 +18,7 @@ import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
+import 'package:twonly/src/utils/log.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
@@ -412,4 +413,24 @@ String formatBytes(int bytes, {int decimalPlaces = 2}) {
   final int unitIndex = (log(bytes) / log(1000)).floor();
   final double formattedSize = bytes / pow(1000, unitIndex);
   return "${formattedSize.toStringAsFixed(decimalPlaces)} ${units[unitIndex]}";
+}
+
+String getMessageText(Message message) {
+  try {
+    if (message.contentJson == null) return "";
+    return TextMessageContent.fromJson(jsonDecode(message.contentJson!)).text;
+  } catch (e) {
+    Log.error(e);
+    return "";
+  }
+}
+
+MediaMessageContent? getMediaContent(Message message) {
+  try {
+    if (message.contentJson == null) return null;
+    return MediaMessageContent.fromJson(jsonDecode(message.contentJson!));
+  } catch (e) {
+    Log.error(e);
+    return null;
+  }
 }

@@ -222,6 +222,7 @@ class AdditionalUserInvite extends StatefulWidget {
 class _AdditionalUserInviteState extends State<AdditionalUserInvite> {
   void _copyVoucherId() {
     Clipboard.setData(ClipboardData(text: widget.invite.inviteCode));
+    HapticFeedback.heavyImpact();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("${widget.invite.inviteCode} copied.")),
     );

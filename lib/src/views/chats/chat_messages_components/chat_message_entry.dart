@@ -4,7 +4,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/chat_media_entry
 import 'package:twonly/src/views/chats/chat_messages_components/chat_reaction_row.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_text_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_text_response_columns.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/sliding_response.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/message_actions.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
@@ -66,14 +66,17 @@ class _ChatListEntryState extends State<ChatListEntry> {
               crossAxisAlignment:
                   right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                SlidingResponse(
+                MessageActions(
+                  message: widget.message,
                   child: Stack(
                     alignment:
                         right ? Alignment.centerRight : Alignment.centerLeft,
                     children: [
                       (textMessage != null)
                           ? ChatTextEntry(
-                              message: widget.message, text: textMessage!)
+                              message: widget.message,
+                              text: textMessage!,
+                            )
                           : ChatMediaEntry(
                               message: widget.message,
                               contact: widget.contact,

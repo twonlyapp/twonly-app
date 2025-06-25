@@ -6,7 +6,7 @@ import 'package:twonly/src/utils/misc.dart';
 Future<bool> showAlertDialog(
   BuildContext context,
   String title,
-  String content, {
+  String? content, {
   String? customOk,
   String? customCancel,
 }) async {
@@ -31,7 +31,7 @@ Future<bool> showAlertDialog(
   // set up the AlertDialog
   AlertDialog alert = AlertDialog(
     title: Text(title),
-    content: Text(content),
+    content: (content == null) ? null : Text(content),
     actions: [
       cancelButton,
       okButton,

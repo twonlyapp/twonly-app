@@ -210,6 +210,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .go();
   }
 
+  Future deleteMessagesByMessageId(int messageId) {
+    return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
+  }
+
   Future deleteAllMessagesByContactId(int contactId) {
     return (delete(messages)..where((t) => t.contactId.equals(contactId))).go();
   }

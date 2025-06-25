@@ -473,6 +473,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get react => 'React';
+
+  @override
+  String get reply => 'Reply';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get info => 'Info';
+
+  @override
   String get ok => 'Ok';
 
   @override
@@ -827,6 +842,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get memoriesEmpty =>
       'As soon as you save pictures or videos, they end up here in your memories.';
+
+  @override
+  String get deleteTitle => 'Are you sure?';
+
+  @override
+  String get deleteOkBtn => 'Delete for me';
 
   @override
   String get deleteImageTitle => 'Are you sure?';

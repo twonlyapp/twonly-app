@@ -50,7 +50,7 @@ class BetterText extends StatelessWidget {
       spans.add(TextSpan(text: text.substring(lastMatchEnd)));
     }
 
-    return SelectableText.rich(
+    return Text.rich(
       TextSpan(
         children: spans,
       ),
