@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SlidingResponse extends StatefulWidget {
@@ -17,19 +18,27 @@ class SlidingResponse extends StatefulWidget {
 
 class _SlidingResponseWidgetState extends State<SlidingResponse> {
   double _offset = 0.0;
+  bool gotFeedback = false;
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     setState(() {
       _offset += details.delta.dx;
-      if (_offset > 50) {
-        _offset = 50;
+      if (_offset > 40) {
+        _offset = 40;
+        if (!gotFeedback) {
+          HapticFeedback.heavyImpact();
+          gotFeedback = true;
+        }
       }
-      if (_offset < 0) _offset = 0;
+      if (_offset < 30) {
+        gotFeedback = false;
+      }
+      if (_offset <= 0) _offset = 0;
     });
   }
 
   void _onHorizontalDragEnd(DragEndDetails details) {
-    if (_offset >= 50) {
+    if (_offset >= 40) {
       widget.onResponseTriggered();
     }
     setState(() {
@@ -49,7 +58,7 @@ class _SlidingResponseWidgetState extends State<SlidingResponse> {
             child: widget.child,
           ),
         ),
-        if (_offset >= 50)
+        if (_offset >= 40)
           Positioned(
             left: 20,
             top: 0,

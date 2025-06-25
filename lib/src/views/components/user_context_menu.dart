@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
@@ -28,6 +29,11 @@ class _UserContextMenuState extends State<UserContextMenu> {
   Widget build(BuildContext context) {
     return PieMenu(
       onPressed: () => (),
+      onToggle: (menuOpen) {
+        if (menuOpen) {
+          HapticFeedback.heavyImpact();
+        }
+      },
       actions: [
         if (!widget.contact.archived)
           PieAction(
