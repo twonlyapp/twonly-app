@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
@@ -162,6 +163,9 @@ class _TextViewState extends State<TextLayer> {
                   _widgetKey.currentContext!.findRenderObject() as RenderBox;
 
               if (widget.layerData.offset.dy > renderBox.size.height - 80) {
+                if (!deleteLayer) {
+                  HapticFeedback.heavyImpact();
+                }
                 deleteLayer = true;
               } else {
                 deleteLayer = false;

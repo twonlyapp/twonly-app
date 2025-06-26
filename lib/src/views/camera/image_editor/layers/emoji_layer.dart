@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
@@ -110,6 +111,9 @@ class _EmojiLayerState extends State<EmojiLayer> {
                         (widget.layerData.offset.dx + emojiBox.size.width / 2);
 
                 if (isAtTheBottom && isInTheCenter) {
+                  if (!deleteLayer) {
+                    HapticFeedback.heavyImpact();
+                  }
                   deleteLayer = true;
                 } else {
                   deleteLayer = false;
