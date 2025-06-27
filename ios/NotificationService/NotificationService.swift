@@ -55,7 +55,7 @@ class NotificationService: UNNotificationServiceExtension {
 func getPushNotificationData(pushData: String) -> (
     title: String, body: String, notificationId: Int64
 )? {
-    
+
     guard let data = Data(base64Encoded: pushData) else {
         NSLog("Failed to decode base64 string")
         return nil
@@ -63,7 +63,6 @@ func getPushNotificationData(pushData: String) -> (
 
     do {
         let pushData = try EncryptedPushNotification(serializedBytes: data)
-
 
         var pushNotification: PushNotification?
         var pushUser: PushUser?
@@ -78,12 +77,13 @@ func getPushNotificationData(pushData: String) -> (
                 for tryPushUser in pushUsers! {
                     for pushKey in tryPushUser.pushKeys {
                         if pushKey.id == pushData.keyID {
-                            pushNotification = tryDecryptMessage(key: pushKey.key, pushData: pushData)
+                            pushNotification = tryDecryptMessage(
+                                key: pushKey.key, pushData: pushData)
                             if pushNotification != nil {
-                                if (pushNotification!.messageID <= pushUser!.lastMessageID) {
+                                pushUser = tryPushUser
+                                if pushNotification!.messageID <= pushUser!.lastMessageID {
                                     return ("blocked", "blocked", 0)
                                 }
-                                pushUser = tryPushUser
                                 break
                             }
                         }
@@ -94,7 +94,7 @@ func getPushNotificationData(pushData: String) -> (
                 NSLog("pushKeys are empty")
             }
         }
-        
+
         if pushUser?.blocked == true {
             return ("blocked", "blocked", 0)
         }
@@ -105,9 +105,14 @@ func getPushNotificationData(pushData: String) -> (
             if pushNotification.kind == .testNotification {
                 return ("Test Notification", "This is a test notification.", 0)
             } else if pushUser != nil {
-                return (pushUser!.displayName, getPushNotificationText(pushNotification: pushNotification), pushUser!.userID)
+                return (
+                    pushUser!.displayName,
+                    getPushNotificationText(pushNotification: pushNotification), pushUser!.userID
+                )
             } else {
-                return ("", getPushNotificationTextWithoutUserId(pushKind: pushNotification.kind), 1)
+                return (
+                    "", getPushNotificationTextWithoutUserId(pushKind: pushNotification.kind), 1
+                )
             }
 
         } else {
@@ -136,7 +141,7 @@ func tryDecryptMessage(key: Data, pushData: EncryptedPushNotification) -> PushNo
         // Decrypt the data using the key
         let decryptedData = try ChaChaPoly.open(sealedBox, using: SymmetricKey(data: key))
 
-            // Here you can determine the PushKind based on the decrypted message
+        // Here you can determine the PushKind based on the decrypted message
         return try PushNotification(serializedBytes: decryptedData)
     } catch {
         NSLog("Decryption failed: \(error)")
@@ -228,10 +233,10 @@ func getPushNotificationText(pushNotification: PushNotification) -> String {
             .response: "has responded.",
         ]
     }
-    
-    var content = pushNotificationText[pushNotification.kind] ?? "";
-    
-    if (pushNotification.hasReactionContent) {
+
+    var content = pushNotificationText[pushNotification.kind] ?? ""
+
+    if pushNotification.hasReactionContent {
         content.replace("{{reaction}}", with: pushNotification.reactionContent)
     }
 
