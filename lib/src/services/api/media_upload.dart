@@ -447,6 +447,8 @@ Future handleUploadStatusUpdate(TaskStatusUpdate update) async {
 
 Future handleUploadSuccess(MediaUpload media) async {
   Log.info("Upload of ${media.mediaUploadId} success!");
+  currentUploadTasks.remove(media.mediaUploadId);
+
   await twonlyDB.mediaUploadsDao.updateMediaUpload(
     media.mediaUploadId,
     MediaUploadsCompanion(
@@ -596,32 +598,60 @@ Future handleMediaUpload(MediaUpload media) async {
   try {
     Log.info("Starting upload from ${media.mediaUploadId}");
 
+    final task = UploadTask.fromFile(
+      taskId: "upload_${media.mediaUploadId}",
+      displayName: (media.metadata?.isVideo ?? false) ? "image" : "video",
+      file: uploadRequestFile,
+      url: apiUrl,
+      priority: 0,
+      retries: 10,
+      headers: {
+        'x-twonly-auth-token': apiAuthToken,
+      },
+    );
+
+    currentUploadTasks[media.mediaUploadId] = task;
+
     try {
       await uploadFileFast(media, uploadRequestBytes, apiUrl, apiAuthToken);
     } catch (e) {
-      Log.error("Fast upload failed: $e. Using slow method.");
-      final task = UploadTask.fromFile(
-        taskId: "upload_${media.mediaUploadId}",
-        displayName: (media.metadata?.isVideo ?? false) ? "image" : "video",
-        file: uploadRequestFile,
-        url: apiUrl,
-        priority: 0,
-        retries: 10,
-        headers: {
-          'x-twonly-auth-token': apiAuthToken,
-        },
-      );
-      await FileDownloader().enqueue(task);
+      Log.error("Fast upload failed: $e. Using slow method directly.");
+      enqueueUploadTask(media.mediaUploadId);
     }
-
-    await twonlyDB.mediaUploadsDao.updateMediaUpload(
-      media.mediaUploadId,
-      MediaUploadsCompanion(
-        state: Value(UploadState.uploadTaskStarted),
-      ),
-    );
   } catch (e) {
     Log.error("Exception during upload: $e");
+  }
+}
+
+Map<int, UploadTask> currentUploadTasks = {};
+
+Future enqueueUploadTask(int mediaUploadId) async {
+  if (currentUploadTasks[mediaUploadId] == null) {
+    Log.info("could not enqueue upload task: $mediaUploadId");
+    return;
+  }
+
+  Log.info("Enqueue upload task: $mediaUploadId");
+
+  await FileDownloader().enqueue(currentUploadTasks[mediaUploadId]!);
+  currentUploadTasks.remove(mediaUploadId);
+
+  await twonlyDB.mediaUploadsDao.updateMediaUpload(
+    mediaUploadId,
+    MediaUploadsCompanion(
+      state: Value(UploadState.uploadTaskStarted),
+    ),
+  );
+}
+
+Future handleUploadWhenAppGoesBackground() async {
+  if (currentUploadTasks.keys.isEmpty) {
+    return;
+  }
+  Log.info("App goes into background. Enqueue uploads to the background.");
+  final keys = currentUploadTasks.keys.toList();
+  for (final key in keys) {
+    enqueueUploadTask(key);
   }
 }
 
@@ -643,7 +673,7 @@ Future uploadFileFast(
     filename: "upload",
   ));
 
-  final response = await requestMultipart.send().timeout(Duration(seconds: 3));
+  final response = await requestMultipart.send();
   if (response.statusCode == 200) {
     Log.info('Upload successful!');
     await handleUploadSuccess(media);

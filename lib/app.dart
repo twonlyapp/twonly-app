@@ -90,6 +90,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;
       globalIsAppInBackground = true;
+      handleUploadWhenAppGoesBackground();
     }
   }
 
