@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
@@ -75,30 +76,39 @@ Future<bool> isAllowedToDownload(bool isVideo) async {
 }
 
 Future handleDownloadStatusUpdate(TaskStatusUpdate update) async {
-  bool failed = false;
   int messageId = int.parse(update.task.taskId.replaceAll("download_", ""));
+  bool failed = false;
 
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
-    Log.error("Download failed: ${update.status}");
     failed = true;
   } else if (update.status == TaskStatus.complete) {
     if (update.responseStatusCode == 200) {
-      Log.info("Download was successfully for $messageId");
-      await handleEncryptedFile(messageId);
+      failed = false;
     } else {
+      failed = true;
       Log.error(
           "Got invalid response status code: ${update.responseStatusCode}");
     }
+  } else {
+    Log.info("Got $update for $messageId");
+    return;
   }
+  await handleDownloadStatusUpdateInternal(messageId, failed);
+}
 
+Future handleDownloadStatusUpdateInternal(int messageId, bool failed) async {
   if (failed) {
+    Log.error("Download failed for $messageId");
     Message? message = await twonlyDB.messagesDao
         .getMessageByMessageId(messageId)
         .getSingleOrNull();
     if (message != null) {
       await handleMediaError(message);
     }
+  } else {
+    Log.info("Download was successfully for $messageId");
+    await handleEncryptedFile(messageId);
   }
 }
 
@@ -151,11 +161,6 @@ Future startDownloadMedia(Message message, bool force,
     );
   }
 
-  // int offset = 0;
-  // Uint8List? bytes = await readMediaFile(media.messageId, "encrypted");
-  // if (bytes != null && bytes.isNotEmpty) {
-  //   offset = bytes.length;
-
   downloadStartedForMediaReceived[message.messageId] = DateTime.now();
 
   String downloadToken = uint8ListToHex(content.downloadToken!);
@@ -175,13 +180,51 @@ Future startDownloadMedia(Message message, bool force,
     );
 
     Log.info(
-        "Got media file. Starting download: ${downloadToken.substring(0, 10)}");
+      "Got media file. Starting download: ${downloadToken.substring(0, 10)}",
+    );
 
-    final result = await FileDownloader().enqueue(task);
-
-    return result;
+    try {
+      await downloadFileFast(media.messageId, apiUrl);
+      return;
+    } catch (e) {
+      Log.error("Fast download failed: $e");
+      final result = await FileDownloader().enqueue(task);
+      return result;
+    }
   } catch (e) {
-    Log.error("Exception during upload: $e");
+    Log.error("Exception during download: $e");
+  }
+}
+
+Future<void> downloadFileFast(
+  int messageId,
+  String apiUrl,
+) async {
+  final String directoryPath =
+      "${(await getApplicationSupportDirectory()).path}/media/received/";
+  final String filename = "$messageId.encrypted";
+
+  final Directory directory = Directory(directoryPath);
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
+
+  final String filePath = "${directory.path}/$filename";
+
+  final response =
+      await http.get(Uri.parse(apiUrl)).timeout(Duration(seconds: 6));
+
+  if (response.statusCode == 200) {
+    await File(filePath).writeAsBytes(response.bodyBytes);
+    Log.info('Download successful: $filePath');
+    await handleDownloadStatusUpdateInternal(messageId, false);
+    return;
+  } else {
+    if (response.statusCode == 404) {
+      await handleDownloadStatusUpdateInternal(messageId, true);
+      return;
+    }
+    throw Exception("Fast upload failed with status: ${response.statusCode}");
   }
 }
 

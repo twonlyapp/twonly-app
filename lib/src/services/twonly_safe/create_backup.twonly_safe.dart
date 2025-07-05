@@ -97,7 +97,8 @@ Future performTwonlySafeBackup({bool force = false}) async {
   await backupDatabaseFile.delete();
   await backupDatabaseFileCleaned.delete();
 
-  print("twonlyDatabaseBytes = ${twonlyDatabaseBytes.lengthInBytes}");
+  Log.info("twonlyDatabaseBytes = ${twonlyDatabaseBytes.lengthInBytes}");
+  Log.info("secureStorageBytes = ${jsonEncode(secureStorageBackup)}");
 
   final backupProto = TwonlySafeBackupContent(
     secureStorageJson: jsonEncode(secureStorageBackup),
@@ -171,7 +172,7 @@ Future performTwonlySafeBackup({bool force = false}) async {
     file: encryptedBackupBytesFile,
     httpRequestMethod: "PUT",
     url: (await getTwonlySafeBackupUrl())!,
-    requiresWiFi: true,
+    // requiresWiFi: true,
     priority: 5,
     post: 'binary',
     retries: 2,

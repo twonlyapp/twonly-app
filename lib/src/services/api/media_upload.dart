@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -410,31 +411,13 @@ Future handleUploadStatusUpdate(TaskStatusUpdate update) async {
     );
     return;
   }
-
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
     Log.error("Upload failed: ${update.status}");
     failed = true;
   } else if (update.status == TaskStatus.complete) {
     if (update.responseStatusCode == 200) {
-      Log.info("Upload of $mediaUploadId success!");
-
-      await twonlyDB.mediaUploadsDao.updateMediaUpload(
-        mediaUploadId,
-        MediaUploadsCompanion(
-          state: Value(UploadState.receiverNotified),
-        ),
-      );
-
-      for (final messageId in media.messageIds!) {
-        await twonlyDB.messagesDao.updateMessageByMessageId(
-          messageId,
-          MessagesCompanion(
-            acknowledgeByServer: Value(true),
-            errorWhileSending: Value(false),
-          ),
-        );
-      }
+      await handleUploadSuccess(media);
       return;
     } else if (update.responseStatusCode != null) {
       if (update.responseStatusCode! >= 400 &&
@@ -460,6 +443,26 @@ Future handleUploadStatusUpdate(TaskStatusUpdate update) async {
   }
   Log.info(
       'Status update for ${update.task.taskId} with status ${update.status}');
+}
+
+Future handleUploadSuccess(MediaUpload media) async {
+  Log.info("Upload of ${media.mediaUploadId} success!");
+  await twonlyDB.mediaUploadsDao.updateMediaUpload(
+    media.mediaUploadId,
+    MediaUploadsCompanion(
+      state: Value(UploadState.receiverNotified),
+    ),
+  );
+
+  for (final messageId in media.messageIds!) {
+    await twonlyDB.messagesDao.updateMessageByMessageId(
+      messageId,
+      MessagesCompanion(
+        acknowledgeByServer: Value(true),
+        errorWhileSending: Value(false),
+      ),
+    );
+  }
 }
 
 Future handleUploadError(MediaUpload mediaUpload) async {
@@ -573,12 +576,13 @@ Future handleMediaUpload(MediaUpload media) async {
 
   final uploadRequestBytes = uploadRequest.writeToBuffer();
 
-  String? apiAuthToken =
+  String? apiAuthTokenRaw =
       await FlutterSecureStorage().read(key: SecureStorageKeys.apiAuthToken);
-  if (apiAuthToken == null) {
+  if (apiAuthTokenRaw == null) {
     Log.error("api auth token not defined.");
     return;
   }
+  String apiAuthToken = uint8ListToHex(base64Decode(apiAuthTokenRaw));
 
   File uploadRequestFile = await writeSendMediaFile(
     media.mediaUploadId,
@@ -590,32 +594,62 @@ Future handleMediaUpload(MediaUpload media) async {
       "http${apiService.apiSecure}://${apiService.apiHost}/api/upload";
 
   try {
-    final task = UploadTask.fromFile(
-      taskId: "upload_${media.mediaUploadId}",
-      displayName: (media.metadata?.isVideo ?? false) ? "image" : "video",
-      file: uploadRequestFile,
-      url: apiUrl,
-      priority: 0,
-      retries: 10,
-      headers: {
-        'x-twonly-auth-token': uint8ListToHex(base64Decode(apiAuthToken))
-      },
-    );
-
     Log.info("Starting upload from ${media.mediaUploadId}");
 
-    final result = await FileDownloader().enqueue(task);
-
-    if (result) {
-      await twonlyDB.mediaUploadsDao.updateMediaUpload(
-        media.mediaUploadId,
-        MediaUploadsCompanion(
-          state: Value(UploadState.uploadTaskStarted),
-        ),
+    try {
+      await uploadFileFast(media, uploadRequestBytes, apiUrl, apiAuthToken);
+    } catch (e) {
+      Log.error("Fast upload failed: $e. Using slow method.");
+      final task = UploadTask.fromFile(
+        taskId: "upload_${media.mediaUploadId}",
+        displayName: (media.metadata?.isVideo ?? false) ? "image" : "video",
+        file: uploadRequestFile,
+        url: apiUrl,
+        priority: 0,
+        retries: 10,
+        headers: {
+          'x-twonly-auth-token': apiAuthToken,
+        },
       );
+      await FileDownloader().enqueue(task);
     }
+
+    await twonlyDB.mediaUploadsDao.updateMediaUpload(
+      media.mediaUploadId,
+      MediaUploadsCompanion(
+        state: Value(UploadState.uploadTaskStarted),
+      ),
+    );
   } catch (e) {
     Log.error("Exception during upload: $e");
+  }
+}
+
+Future uploadFileFast(
+  MediaUpload media,
+  Uint8List uploadRequestFile,
+  String apiUrl,
+  String apiAuthToken,
+) async {
+  var requestMultipart = http.MultipartRequest(
+    "POST",
+    Uri.parse(apiUrl),
+  );
+  requestMultipart.headers['x-twonly-auth-token'] = apiAuthToken;
+
+  requestMultipart.files.add(http.MultipartFile.fromBytes(
+    "file",
+    uploadRequestFile,
+    filename: "upload",
+  ));
+
+  final response = await requestMultipart.send().timeout(Duration(seconds: 3));
+  if (response.statusCode == 200) {
+    Log.info('Upload successful!');
+    await handleUploadSuccess(media);
+    return;
+  } else {
+    Log.info('Upload failed with status: ${response.statusCode}');
   }
 }
 

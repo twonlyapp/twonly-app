@@ -45,7 +45,7 @@ final lockRetransStore = Mutex();
 /// It handles errors and does automatically tries to reconnect on
 /// errors or network changes.
 class ApiService {
-  final String apiHost = (kDebugMode) ? "10.99.0.140:3030" : "api.twonly.eu";
+  final String apiHost = (kDebugMode) ? "192.168.178.89:3030" : "api.twonly.eu";
   final String apiSecure = (kDebugMode) ? "" : "s";
 
   bool appIsOutdated = false;
