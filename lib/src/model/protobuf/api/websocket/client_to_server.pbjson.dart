@@ -17,7 +17,15 @@ import 'dart:typed_data' as $typed_data;
 const ClientToServer$json = {
   '1': 'ClientToServer',
   '2': [
-    {'1': 'V0', '3': 1, '4': 1, '5': 11, '6': '.client_to_server.V0', '9': 0, '10': 'V0'},
+    {
+      '1': 'V0',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.V0',
+      '9': 0,
+      '10': 'V0'
+    },
   ],
   '8': [
     {'1': 'v'},
@@ -34,9 +42,33 @@ const V0$json = {
   '1': 'V0',
   '2': [
     {'1': 'seq', '3': 1, '4': 1, '5': 4, '10': 'seq'},
-    {'1': 'handshake', '3': 2, '4': 1, '5': 11, '6': '.client_to_server.Handshake', '9': 0, '10': 'handshake'},
-    {'1': 'applicationdata', '3': 3, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData', '9': 0, '10': 'applicationdata'},
-    {'1': 'response', '3': 4, '4': 1, '5': 11, '6': '.client_to_server.Response', '9': 0, '10': 'response'},
+    {
+      '1': 'handshake',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake',
+      '9': 0,
+      '10': 'handshake'
+    },
+    {
+      '1': 'applicationdata',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData',
+      '9': 0,
+      '10': 'applicationdata'
+    },
+    {
+      '1': 'response',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Response',
+      '9': 0,
+      '10': 'response'
+    },
   ],
   '8': [
     {'1': 'Kind'},
@@ -55,12 +87,49 @@ final $typed_data.Uint8List v0Descriptor = $convert.base64Decode(
 const Handshake$json = {
   '1': 'Handshake',
   '2': [
-    {'1': 'register', '3': 1, '4': 1, '5': 11, '6': '.client_to_server.Handshake.Register', '9': 0, '10': 'register'},
-    {'1': 'getauthchallenge', '3': 2, '4': 1, '5': 11, '6': '.client_to_server.Handshake.GetAuthChallenge', '9': 0, '10': 'getauthchallenge'},
-    {'1': 'getauthtoken', '3': 3, '4': 1, '5': 11, '6': '.client_to_server.Handshake.GetAuthToken', '9': 0, '10': 'getauthtoken'},
-    {'1': 'authenticate', '3': 4, '4': 1, '5': 11, '6': '.client_to_server.Handshake.Authenticate', '9': 0, '10': 'authenticate'},
+    {
+      '1': 'register',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake.Register',
+      '9': 0,
+      '10': 'register'
+    },
+    {
+      '1': 'getauthchallenge',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake.GetAuthChallenge',
+      '9': 0,
+      '10': 'getauthchallenge'
+    },
+    {
+      '1': 'getauthtoken',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake.GetAuthToken',
+      '9': 0,
+      '10': 'getauthtoken'
+    },
+    {
+      '1': 'authenticate',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Handshake.Authenticate',
+      '9': 0,
+      '10': 'authenticate'
+    },
   ],
-  '3': [Handshake_Register$json, Handshake_GetAuthChallenge$json, Handshake_GetAuthToken$json, Handshake_Authenticate$json],
+  '3': [
+    Handshake_Register$json,
+    Handshake_GetAuthChallenge$json,
+    Handshake_GetAuthToken$json,
+    Handshake_Authenticate$json
+  ],
   '8': [
     {'1': 'Handshake'},
   ],
@@ -71,10 +140,30 @@ const Handshake_Register$json = {
   '1': 'Register',
   '2': [
     {'1': 'username', '3': 1, '4': 1, '5': 9, '10': 'username'},
-    {'1': 'invite_code', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'inviteCode', '17': true},
-    {'1': 'public_identity_key', '3': 3, '4': 1, '5': 12, '10': 'publicIdentityKey'},
+    {
+      '1': 'invite_code',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'inviteCode',
+      '17': true
+    },
+    {
+      '1': 'public_identity_key',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '10': 'publicIdentityKey'
+    },
     {'1': 'signed_prekey', '3': 4, '4': 1, '5': 12, '10': 'signedPrekey'},
-    {'1': 'signed_prekey_signature', '3': 5, '4': 1, '5': 12, '10': 'signedPrekeySignature'},
+    {
+      '1': 'signed_prekey_signature',
+      '3': 5,
+      '4': 1,
+      '5': 12,
+      '10': 'signedPrekeySignature'
+    },
     {'1': 'signed_prekey_id', '3': 6, '4': 1, '5': 3, '10': 'signedPrekeyId'},
     {'1': 'registration_id', '3': 7, '4': 1, '5': 3, '10': 'registrationId'},
     {'1': 'is_ios', '3': 8, '4': 1, '5': 8, '9': 1, '10': 'isIos', '17': true},
@@ -105,7 +194,15 @@ const Handshake_Authenticate$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'auth_token', '3': 2, '4': 1, '5': 12, '10': 'authToken'},
-    {'1': 'app_version', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'appVersion', '17': true},
+    {
+      '1': 'app_version',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'appVersion',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_app_version'},
@@ -136,28 +233,209 @@ final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
 const ApplicationData$json = {
   '1': 'ApplicationData',
   '2': [
-    {'1': 'textmessage', '3': 1, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.TextMessage', '9': 0, '10': 'textmessage'},
-    {'1': 'getuserbyusername', '3': 2, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetUserByUsername', '9': 0, '10': 'getuserbyusername'},
-    {'1': 'getprekeysbyuserid', '3': 3, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetPrekeysByUserId', '9': 0, '10': 'getprekeysbyuserid'},
-    {'1': 'getuserbyid', '3': 6, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetUserById', '9': 0, '10': 'getuserbyid'},
-    {'1': 'updategooglefcmtoken', '3': 8, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.UpdateGoogleFcmToken', '9': 0, '10': 'updategooglefcmtoken'},
-    {'1': 'getlocation', '3': 9, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetLocation', '9': 0, '10': 'getlocation'},
-    {'1': 'getcurrentplaninfos', '3': 10, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetCurrentPlanInfos', '9': 0, '10': 'getcurrentplaninfos'},
-    {'1': 'redeemvoucher', '3': 11, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.RedeemVoucher', '9': 0, '10': 'redeemvoucher'},
-    {'1': 'getavailableplans', '3': 12, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetAvailablePlans', '9': 0, '10': 'getavailableplans'},
-    {'1': 'createvoucher', '3': 13, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.CreateVoucher', '9': 0, '10': 'createvoucher'},
-    {'1': 'getvouchers', '3': 14, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetVouchers', '9': 0, '10': 'getvouchers'},
-    {'1': 'Switchtopayedplan', '3': 15, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.SwitchToPayedPlan', '9': 0, '10': 'Switchtopayedplan'},
-    {'1': 'getaddaccountsinvites', '3': 16, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetAddAccountsInvites', '9': 0, '10': 'getaddaccountsinvites'},
-    {'1': 'redeemadditionalcode', '3': 17, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.RedeemAdditionalCode', '9': 0, '10': 'redeemadditionalcode'},
-    {'1': 'removeadditionaluser', '3': 18, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.RemoveAdditionalUser', '9': 0, '10': 'removeadditionaluser'},
-    {'1': 'updateplanoptions', '3': 19, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.UpdatePlanOptions', '9': 0, '10': 'updateplanoptions'},
-    {'1': 'downloaddone', '3': 20, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.DownloadDone', '9': 0, '10': 'downloaddone'},
-    {'1': 'getsignedprekeybyuserid', '3': 22, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.GetSignedPreKeyByUserId', '9': 0, '10': 'getsignedprekeybyuserid'},
-    {'1': 'updatesignedprekey', '3': 23, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.UpdateSignedPreKey', '9': 0, '10': 'updatesignedprekey'},
-    {'1': 'deleteaccount', '3': 24, '4': 1, '5': 11, '6': '.client_to_server.ApplicationData.DeleteAccount', '9': 0, '10': 'deleteaccount'},
+    {
+      '1': 'textmessage',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.TextMessage',
+      '9': 0,
+      '10': 'textmessage'
+    },
+    {
+      '1': 'getuserbyusername',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetUserByUsername',
+      '9': 0,
+      '10': 'getuserbyusername'
+    },
+    {
+      '1': 'getprekeysbyuserid',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetPrekeysByUserId',
+      '9': 0,
+      '10': 'getprekeysbyuserid'
+    },
+    {
+      '1': 'getuserbyid',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetUserById',
+      '9': 0,
+      '10': 'getuserbyid'
+    },
+    {
+      '1': 'updategooglefcmtoken',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.UpdateGoogleFcmToken',
+      '9': 0,
+      '10': 'updategooglefcmtoken'
+    },
+    {
+      '1': 'getlocation',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetLocation',
+      '9': 0,
+      '10': 'getlocation'
+    },
+    {
+      '1': 'getcurrentplaninfos',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetCurrentPlanInfos',
+      '9': 0,
+      '10': 'getcurrentplaninfos'
+    },
+    {
+      '1': 'redeemvoucher',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.RedeemVoucher',
+      '9': 0,
+      '10': 'redeemvoucher'
+    },
+    {
+      '1': 'getavailableplans',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetAvailablePlans',
+      '9': 0,
+      '10': 'getavailableplans'
+    },
+    {
+      '1': 'createvoucher',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.CreateVoucher',
+      '9': 0,
+      '10': 'createvoucher'
+    },
+    {
+      '1': 'getvouchers',
+      '3': 14,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetVouchers',
+      '9': 0,
+      '10': 'getvouchers'
+    },
+    {
+      '1': 'Switchtopayedplan',
+      '3': 15,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.SwitchToPayedPlan',
+      '9': 0,
+      '10': 'Switchtopayedplan'
+    },
+    {
+      '1': 'getaddaccountsinvites',
+      '3': 16,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetAddAccountsInvites',
+      '9': 0,
+      '10': 'getaddaccountsinvites'
+    },
+    {
+      '1': 'redeemadditionalcode',
+      '3': 17,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.RedeemAdditionalCode',
+      '9': 0,
+      '10': 'redeemadditionalcode'
+    },
+    {
+      '1': 'removeadditionaluser',
+      '3': 18,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.RemoveAdditionalUser',
+      '9': 0,
+      '10': 'removeadditionaluser'
+    },
+    {
+      '1': 'updateplanoptions',
+      '3': 19,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.UpdatePlanOptions',
+      '9': 0,
+      '10': 'updateplanoptions'
+    },
+    {
+      '1': 'downloaddone',
+      '3': 20,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.DownloadDone',
+      '9': 0,
+      '10': 'downloaddone'
+    },
+    {
+      '1': 'getsignedprekeybyuserid',
+      '3': 22,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.GetSignedPreKeyByUserId',
+      '9': 0,
+      '10': 'getsignedprekeybyuserid'
+    },
+    {
+      '1': 'updatesignedprekey',
+      '3': 23,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.UpdateSignedPreKey',
+      '9': 0,
+      '10': 'updatesignedprekey'
+    },
+    {
+      '1': 'deleteaccount',
+      '3': 24,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.DeleteAccount',
+      '9': 0,
+      '10': 'deleteaccount'
+    },
   ],
-  '3': [ApplicationData_TextMessage$json, ApplicationData_GetUserByUsername$json, ApplicationData_UpdateGoogleFcmToken$json, ApplicationData_GetUserById$json, ApplicationData_RedeemVoucher$json, ApplicationData_SwitchToPayedPlan$json, ApplicationData_UpdatePlanOptions$json, ApplicationData_CreateVoucher$json, ApplicationData_GetLocation$json, ApplicationData_GetVouchers$json, ApplicationData_GetAvailablePlans$json, ApplicationData_GetAddAccountsInvites$json, ApplicationData_GetCurrentPlanInfos$json, ApplicationData_RedeemAdditionalCode$json, ApplicationData_RemoveAdditionalUser$json, ApplicationData_GetPrekeysByUserId$json, ApplicationData_GetSignedPreKeyByUserId$json, ApplicationData_UpdateSignedPreKey$json, ApplicationData_DownloadDone$json, ApplicationData_DeleteAccount$json],
+  '3': [
+    ApplicationData_TextMessage$json,
+    ApplicationData_GetUserByUsername$json,
+    ApplicationData_UpdateGoogleFcmToken$json,
+    ApplicationData_GetUserById$json,
+    ApplicationData_RedeemVoucher$json,
+    ApplicationData_SwitchToPayedPlan$json,
+    ApplicationData_UpdatePlanOptions$json,
+    ApplicationData_CreateVoucher$json,
+    ApplicationData_GetLocation$json,
+    ApplicationData_GetVouchers$json,
+    ApplicationData_GetAvailablePlans$json,
+    ApplicationData_GetAddAccountsInvites$json,
+    ApplicationData_GetCurrentPlanInfos$json,
+    ApplicationData_RedeemAdditionalCode$json,
+    ApplicationData_RemoveAdditionalUser$json,
+    ApplicationData_GetPrekeysByUserId$json,
+    ApplicationData_GetSignedPreKeyByUserId$json,
+    ApplicationData_UpdateSignedPreKey$json,
+    ApplicationData_DownloadDone$json,
+    ApplicationData_DeleteAccount$json
+  ],
   '8': [
     {'1': 'ApplicationData'},
   ],
@@ -169,7 +447,15 @@ const ApplicationData_TextMessage$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'body', '3': 3, '4': 1, '5': 12, '10': 'body'},
-    {'1': 'push_data', '3': 4, '4': 1, '5': 12, '9': 0, '10': 'pushData', '17': true},
+    {
+      '1': 'push_data',
+      '3': 4,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'pushData',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_push_data'},
@@ -297,7 +583,13 @@ const ApplicationData_UpdateSignedPreKey$json = {
   '2': [
     {'1': 'signed_prekey_id', '3': 1, '4': 1, '5': 3, '10': 'signedPrekeyId'},
     {'1': 'signed_prekey', '3': 2, '4': 1, '5': 12, '10': 'signedPrekey'},
-    {'1': 'signed_prekey_signature', '3': 3, '4': 1, '5': 12, '10': 'signedPrekeySignature'},
+    {
+      '1': 'signed_prekey_signature',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '10': 'signedPrekeySignature'
+    },
   ],
 };
 
@@ -376,8 +668,24 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
 const Response$json = {
   '1': 'Response',
   '2': [
-    {'1': 'ok', '3': 1, '4': 1, '5': 11, '6': '.client_to_server.Response.Ok', '9': 0, '10': 'ok'},
-    {'1': 'error', '3': 2, '4': 1, '5': 14, '6': '.error.ErrorCode', '9': 0, '10': 'error'},
+    {
+      '1': 'ok',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Response.Ok',
+      '9': 0,
+      '10': 'ok'
+    },
+    {
+      '1': 'error',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.error.ErrorCode',
+      '9': 0,
+      '10': 'error'
+    },
   ],
   '3': [Response_PreKey$json, Response_Prekeys$json, Response_Ok$json],
   '8': [
@@ -398,7 +706,14 @@ const Response_PreKey$json = {
 const Response_Prekeys$json = {
   '1': 'Prekeys',
   '2': [
-    {'1': 'prekeys', '3': 1, '4': 3, '5': 11, '6': '.client_to_server.Response.PreKey', '10': 'prekeys'},
+    {
+      '1': 'prekeys',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.client_to_server.Response.PreKey',
+      '10': 'prekeys'
+    },
   ],
 };
 
@@ -407,7 +722,15 @@ const Response_Ok$json = {
   '1': 'Ok',
   '2': [
     {'1': 'None', '3': 1, '4': 1, '5': 8, '9': 0, '10': 'None'},
-    {'1': 'prekeys', '3': 2, '4': 1, '5': 11, '6': '.client_to_server.Response.Prekeys', '9': 0, '10': 'prekeys'},
+    {
+      '1': 'prekeys',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.Response.Prekeys',
+      '9': 0,
+      '10': 'prekeys'
+    },
   ],
   '8': [
     {'1': 'Ok'},
@@ -422,4 +745,3 @@ final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     'ByZWtleXMYASADKAsyIS5jbGllbnRfdG9fc2VydmVyLlJlc3BvbnNlLlByZUtleVIHcHJla2V5'
     'cxpgCgJPaxIUCgROb25lGAEgASgISABSBE5vbmUSPgoHcHJla2V5cxgCIAEoCzIiLmNsaWVudF'
     '90b19zZXJ2ZXIuUmVzcG9uc2UuUHJla2V5c0gAUgdwcmVrZXlzQgQKAk9rQgoKCFJlc3BvbnNl');
-
