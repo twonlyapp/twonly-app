@@ -170,9 +170,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           .reversed
           .toList();
       final items = await MemoryItem.convertFromMessages(filteredMediaFiles);
-      setState(() {
-        galleryItems = items.values.toList();
-      });
+      galleryItems = items.values.toList();
+      setState(() {});
     });
   }
 

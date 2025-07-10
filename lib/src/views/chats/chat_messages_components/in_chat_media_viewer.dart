@@ -1,17 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/services/api/media_upload.dart' as send;
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
-import 'package:video_player/video_player.dart';
 
 class InChatMediaViewer extends StatefulWidget {
   const InChatMediaViewer({
@@ -34,26 +28,48 @@ class InChatMediaViewer extends StatefulWidget {
 }
 
 class _InChatMediaViewerState extends State<InChatMediaViewer> {
-  File? image;
-  File? video;
-  bool isMounted = true;
   bool mirrorVideo = false;
-  VideoPlayerController? videoController;
+  int? galleryItemIndex;
   StreamSubscription<Message?>? messageStream;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    initAsync(widget.message);
+    loadIndexAsync();
     initStream();
+  }
+
+  Future loadIndexAsync() async {
+    if (!widget.message.mediaStored) return;
+    _timer = Timer.periodic(Duration(milliseconds: 10), (timer) {
+      /// when the galleryItems are updated this widget is not reloaded
+      /// so using this timer as a workaround
+      if (loadIndex()) {
+        timer.cancel();
+        setState(() {});
+      }
+    });
+  }
+
+  bool loadIndex() {
+    if (widget.message.mediaStored) {
+      final index = widget.galleryItems.indexWhere((x) =>
+          x.id == (widget.message.mediaUploadId ?? widget.message.messageId));
+      if (index != -1) {
+        galleryItemIndex = index;
+        return true;
+      }
+    }
+    return false;
   }
 
   @override
   void dispose() {
     super.dispose();
-    isMounted = false;
     messageStream?.cancel();
-    videoController?.dispose();
+    _timer?.cancel();
+    // videoController?.dispose();
   }
 
   Future initStream() async {
@@ -70,60 +86,20 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
       if (updated != null) {
         if (updated.mediaStored) {
           messageStream?.cancel();
-          initAsync(updated);
+          loadIndexAsync();
         }
       }
     });
   }
 
-  Future initAsync(Message message) async {
-    if (!message.mediaStored) return;
-    bool isSend = message.messageOtherId == null;
-    final basePath = await send.getMediaFilePath(
-      isSend ? message.mediaUploadId! : message.messageId,
-      isSend ? "send" : "received",
-    );
-    if (!isMounted) return;
-    final videoPath = File("$basePath.mp4");
-    final imagePath = File("$basePath.png");
-    if (videoPath.existsSync() && message.contentJson != null) {
-      MessageContent? content = MessageContent.fromJson(
-          MessageKind.media, jsonDecode(message.contentJson!));
-      if (content is MediaMessageContent) {
-        mirrorVideo = content.mirrorVideo;
-      }
-      videoController = VideoPlayerController.file(
-        videoPath,
-        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-      );
-      videoController?.initialize().then((_) {
-        videoController!.setVolume(0);
-        videoController!.play();
-        videoController!.setLooping(true);
-      });
-
-      setState(() {
-        image = imagePath;
-      });
-    }
-    if (imagePath.existsSync()) {
-      setState(() {
-        image = imagePath;
-      });
-    } else {
-      Log.error("file not found: $imagePath");
-    }
-  }
-
   Future onTap() async {
+    if (galleryItemIndex == null) return;
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => MemoriesPhotoSliderView(
           galleryItems: widget.galleryItems,
-          initialIndex: widget.galleryItems.indexWhere((x) =>
-              x.id ==
-              (widget.message.mediaUploadId ?? widget.message.messageId)),
+          initialIndex: galleryItemIndex!,
           scrollDirection: Axis.horizontal,
         ),
       ),
@@ -132,7 +108,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (image == null && video == null) {
+    if (galleryItemIndex == null) {
       return Container(
         constraints: BoxConstraints(
           minHeight: 39,
@@ -164,20 +140,9 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(12.0),
       ),
-      child: GestureDetector(
-        onTap: ((image == null && videoController == null)) ? null : onTap,
-        child: Stack(
-          children: [
-            if (image != null) Image.file(image!),
-            if (videoController != null)
-              Positioned.fill(
-                child: Transform.flip(
-                  flipX: mirrorVideo,
-                  child: VideoPlayer(videoController!),
-                ),
-              ),
-          ],
-        ),
+      child: MemoriesItemThumbnail(
+        galleryItem: widget.galleryItems[galleryItemIndex!],
+        onTap: onTap,
       ),
     );
   }

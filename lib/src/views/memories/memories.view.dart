@@ -56,10 +56,10 @@ class MemoriesViewState extends State<MemoriesView> {
           }
           if (fileName.contains(".png")) {
             imagePath = file;
-            thumbnailFile = getThumbnailPath(imagePath);
-            if (!await thumbnailFile.exists()) {
-              await createThumbnailsForImage(imagePath);
-            }
+            thumbnailFile = file;
+            // if (!await thumbnailFile.exists()) {
+            //   await createThumbnailsForImage(imagePath);
+            // }
           } else if (fileName.contains(".mp4")) {
             videoPath = file;
             thumbnailFile = getThumbnailPath(videoPath);

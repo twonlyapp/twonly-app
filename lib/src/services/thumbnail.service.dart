@@ -75,14 +75,13 @@ Future createThumbnailsForVideo(File file) async {
   }
 
   try {
-    String? thumbnailFile = await VideoThumbnail.thumbnailFile(
+    await VideoThumbnail.thumbnailFile(
       video: file.path,
       imageFormat: ImageFormat.PNG,
+      thumbnailPath: getThumbnailPath(file).path,
       maxWidth: 450,
       quality: 75,
     );
-
-    File(thumbnailFile!).rename(getThumbnailPath(file).path);
   } catch (e) {
     Log.error("Could not create the video thumbnail: $e");
   }
@@ -92,6 +91,10 @@ File getThumbnailPath(File file) {
   String originalFileName = file.uri.pathSegments.last;
   String fileNameWithoutExtension = originalFileName.split('.').first;
   String fileExtension = originalFileName.split('.').last;
+  if (fileExtension == "mp4") {
+    fileExtension = "png";
+  }
   String newFileName = '$fileNameWithoutExtension.thumbnail.$fileExtension';
+  Directory(file.parent.path).createSync();
   return File(join(file.parent.path, newFileName));
 }

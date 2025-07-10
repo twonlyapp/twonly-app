@@ -52,59 +52,58 @@ class _ChatListEntryState extends State<ChatListEntry> {
     if (content == null) return Container();
     bool right = widget.message.messageOtherId == null;
 
-    return Hero(
-        tag: "${widget.message.mediaUploadId ?? widget.message.messageId}",
+    return Container(
+        // tag: "${widget.message.mediaUploadId ?? widget.message.messageId}",
         child: Align(
-          alignment: right ? Alignment.centerRight : Alignment.centerLeft,
-          child: Padding(
-            padding: widget.lastMessageFromSameUser
-                ? EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10)
-                : EdgeInsets.only(top: 5, bottom: 20, right: 10, left: 10),
-            child: Column(
-              mainAxisAlignment:
-                  right ? MainAxisAlignment.end : MainAxisAlignment.start,
-              crossAxisAlignment:
-                  right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                MessageActions(
-                  message: widget.message,
-                  child: Stack(
-                    alignment:
-                        right ? Alignment.centerRight : Alignment.centerLeft,
-                    children: [
-                      (textMessage != null)
-                          ? ChatTextEntry(
-                              message: widget.message,
-                              text: textMessage!,
-                            )
-                          : ChatMediaEntry(
-                              message: widget.message,
-                              contact: widget.contact,
-                              galleryItems: widget.galleryItems,
-                              content: content!,
-                            ),
-                      Positioned(
-                        bottom: 5,
-                        left: 5,
-                        right: 5,
-                        child: ReactionRow(
-                          otherReactions: widget.otherReactions,
+      alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+      child: Padding(
+        padding: widget.lastMessageFromSameUser
+            ? EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10)
+            : EdgeInsets.only(top: 5, bottom: 20, right: 10, left: 10),
+        child: Column(
+          mainAxisAlignment:
+              right ? MainAxisAlignment.end : MainAxisAlignment.start,
+          crossAxisAlignment:
+              right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            MessageActions(
+              message: widget.message,
+              child: Stack(
+                alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+                children: [
+                  (textMessage != null)
+                      ? ChatTextEntry(
                           message: widget.message,
+                          text: textMessage!,
+                        )
+                      : ChatMediaEntry(
+                          message: widget.message,
+                          contact: widget.contact,
+                          galleryItems: widget.galleryItems,
+                          content: content!,
                         ),
-                      ),
-                    ],
+                  Positioned(
+                    bottom: 5,
+                    left: 5,
+                    right: 5,
+                    child: ReactionRow(
+                      otherReactions: widget.otherReactions,
+                      message: widget.message,
+                    ),
                   ),
-                  onResponseTriggered: () {
-                    widget.onResponseTriggered(widget.message);
-                  },
-                ),
-                ChatTextResponseColumns(
-                  textReactions: widget.textReactions,
-                  right: right,
-                )
-              ],
+                ],
+              ),
+              onResponseTriggered: () {
+                widget.onResponseTriggered(widget.message);
+              },
             ),
-          ),
-        ));
+            ChatTextResponseColumns(
+              textReactions: widget.textReactions,
+              right: right,
+            )
+          ],
+        ),
+      ),
+    ));
   }
 }

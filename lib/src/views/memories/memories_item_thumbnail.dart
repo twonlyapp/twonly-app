@@ -44,9 +44,11 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
           children: [
             Image.file(widget.galleryItem.thumbnailPath),
             if (widget.galleryItem.videoPath != null)
-              Center(
-                child: FaIcon(FontAwesomeIcons.circlePlay),
-              )
+              Positioned.fill(
+                child: Center(
+                  child: FaIcon(FontAwesomeIcons.circlePlay),
+                ),
+              ),
           ],
         ),
       ),

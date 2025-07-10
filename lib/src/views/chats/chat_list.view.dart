@@ -54,7 +54,6 @@ class _ChatListViewState extends State<ChatListView> {
         _contacts = contacts.where((x) => !x.pinned).toList();
         _pinnedContacts = contacts.where((x) => x.pinned).toList();
       });
-      ;
     });
 
     tutorial = Timer(Duration(seconds: 1), () async {

@@ -48,9 +48,11 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       return;
     }
     if (await received.existsMediaFile(widget.message.messageId, "png")) {
-      setState(() {
-        canBeReopened = true;
-      });
+      if (mounted) {
+        setState(() {
+          canBeReopened = true;
+        });
+      }
       Future.delayed(Duration(seconds: 1), () {
         if (!mounted) return;
         showReopenMediaFilesTutorial(context, reopenMediaFile);

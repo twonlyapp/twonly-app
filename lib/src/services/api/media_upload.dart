@@ -200,17 +200,25 @@ Future<bool> addVideoToUpload(int mediaUploadId, File videoFilePath) async {
 Future<Uint8List> addOrModifyImageToUpload(
     int mediaUploadId, Uint8List imageBytes) async {
   Uint8List imageBytesCompressed;
+
+  Stopwatch stopwatch = Stopwatch();
+  stopwatch.start();
+
+  Log.info("Raw images size in bytes: ${imageBytes.length}");
+
   try {
     imageBytesCompressed = await FlutterImageCompress.compressWithList(
-      format: CompressFormat.png,
+      format: CompressFormat.webp,
+      // minHeight: 0,
+      // minWidth: 0,
       imageBytes,
       quality: 90,
     );
 
-    if (imageBytesCompressed.length >= 2 * 1000 * 1000) {
+    if (imageBytesCompressed.length >= 1 * 1000 * 1000) {
       // if the media file is over 2MB compress it with 60%
       imageBytesCompressed = await FlutterImageCompress.compressWithList(
-        format: CompressFormat.png,
+        format: CompressFormat.webp,
         imageBytes,
         quality: 60,
       );
@@ -222,6 +230,26 @@ Future<Uint8List> addOrModifyImageToUpload(
     await writeSendMediaFile(mediaUploadId, "png", imageBytes);
     imageBytesCompressed = imageBytes;
   }
+
+  stopwatch.stop();
+
+  Log.info(
+      'Compression the image took: ${stopwatch.elapsedMilliseconds} milliseconds');
+  Log.info("Raw images size in bytes: ${imageBytesCompressed.length}");
+
+  // stopwatch.reset();
+  // stopwatch.start();
+
+  // // var helper = MediaUploadHelper();
+  // try {
+  //   final webpBytes =
+  //       await convertAndCompressImage(pngRawImageBytes: imageBytes);
+  //   Log.info(
+  //       'Compression the image in rust took: ${stopwatch.elapsedMilliseconds} milliseconds');
+  //   Log.info("Raw images size in bytes using webp: ${webpBytes.length}");
+  // } catch (e) {
+  //   Log.error("$e");
+  // }
 
   /// in case the media file was already encrypted of even uploaded
   /// remove the data so it will be done again.

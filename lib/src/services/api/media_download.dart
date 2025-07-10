@@ -299,7 +299,7 @@ Future<File?> getVideoPath(int mediaId) async {
 Future<Uint8List?> readMediaFile(int mediaId, String type) async {
   String basePath = await getMediaFilePath(mediaId, "received");
   File file = File("$basePath.$type");
-  Log.info("Reading: ${file}");
+  Log.info("Reading: $file");
   if (!await file.exists()) {
     return null;
   }
