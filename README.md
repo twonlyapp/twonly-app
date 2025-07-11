@@ -14,7 +14,7 @@ This repository contains the complete source code of the [twonly](https://twonly
 ## In work
 
 - We plan to implement a Sealed Sender feature to minimize metadata
-- We currently evaluating 
+- We currently evaluating to switch from the Signal Protocol to [MLS](https://openmls.tech/).
 
 
 ## Security Issues
