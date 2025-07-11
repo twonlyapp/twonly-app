@@ -399,6 +399,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                             child: TextField(
                               controller: newMessageController,
                               focusNode: textFieldFocus,
+                              keyboardType: TextInputType.multiline,
+                              maxLines: 4,
+                              minLines: 1,
                               onChanged: (value) {
                                 currentInputText = value;
                                 setState(() {});
@@ -409,9 +412,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                               decoration: inputTextMessageDeco(context),
                             ),
                           ),
-                          SizedBox(width: 8),
                           (currentInputText != "")
                               ? IconButton(
+                                  padding: EdgeInsets.all(15),
                                   icon:
                                       FaIcon(FontAwesomeIcons.solidPaperPlane),
                                   onPressed: () {
@@ -420,6 +423,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                                 )
                               : IconButton(
                                   icon: FaIcon(FontAwesomeIcons.camera),
+                                  padding: EdgeInsets.all(15),
                                   onPressed: () {
                                     Navigator.push(
                                       context,
