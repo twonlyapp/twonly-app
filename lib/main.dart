@@ -46,7 +46,7 @@ void main() async {
   await twonlyDB.messagesDao.handleMediaFilesOlderThan7Days();
   await twonlyDB.signalDao.purgeOutDatedPreKeys();
 
-  // purge media files in the background
+  // Purge media files in the background
   purgeReceivedMediaFiles();
   purgeSendMediaFiles();
 

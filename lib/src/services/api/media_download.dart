@@ -20,7 +20,7 @@ import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 Map<int, DateTime> downloadStartedForMediaReceived = {};
 
 Future tryDownloadAllMediaFiles({bool force = false}) async {
-  // this is called when websocket is newly connected, so allow all downloads to be restarted.
+  // This is called when WebSocket is newly connected, so allow all downloads to be restarted.
   downloadStartedForMediaReceived = {};
   List<Message> messages =
       await twonlyDB.messagesDao.getAllMessagesPendingDownloading();
@@ -378,17 +378,19 @@ Future<void> purgeMediaFiles(Directory directory) async {
                   }
                 }
                 if (message.acknowledgeByServer) {
-                  // preserve images which can be stored by the other person...
+                  // Preserve images which can be stored by the other person...
                   if (content.maxShowTime != gMediaShowInfinite) {
                     canBeDeleted = true;
                   }
-                  // encrypted or upload data can be removed when acknowledgedByServer
+                  // Encrypted or upload data can be removed when acknowledgeByServer
                   if (file.path.contains(".upload") ||
                       file.path.contains(".encrypted")) {
                     canBeDeleted = true;
                   }
                 }
-              } catch (e) {}
+              } catch (e) {
+                Log.error(e);
+              }
             }
             if (canBeDeleted) {
               Log.info("purged media file ${file.path} ");
