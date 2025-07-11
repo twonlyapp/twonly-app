@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
+import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/services.dart';
@@ -230,7 +231,7 @@ Future<Uint8List?> getPushData(int toUserId, PushNotification content) async {
     }
   }
 
-  final chacha20 = Chacha20.poly1305Aead();
+  final chacha20 = FlutterChacha20.poly1305Aead();
   final nonce = chacha20.newNonce();
   final secretBox = await chacha20.encrypt(
     content.writeToBuffer(),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
@@ -99,7 +100,7 @@ Future handlePushData(String pushDataB64) async {
 Future<PushNotification?> tryDecryptMessage(
     List<int> key, EncryptedPushNotification push) async {
   try {
-    final chacha20 = Chacha20.poly1305Aead();
+    final chacha20 = FlutterChacha20.poly1305Aead();
     SecretKeyData secretKeyData = SecretKeyData(key);
 
     SecretBox secretBox = SecretBox(

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:background_downloader/background_downloader.dart';
+import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -295,13 +296,13 @@ Future encryptMediaFiles(
 
   var state = MediaEncryptionData();
 
-  final xchacha20 = Xchacha20.poly1305Aead();
-  SecretKeyData secretKey = await (await xchacha20.newSecretKey()).extract();
+  final chacha20 = FlutterChacha20.poly1305Aead();
+  SecretKeyData secretKey = await (await chacha20.newSecretKey()).extract();
 
   state.encryptionKey = secretKey.bytes;
-  state.encryptionNonce = xchacha20.newNonce();
+  state.encryptionNonce = chacha20.newNonce();
 
-  final secretBox = await xchacha20.encrypt(
+  final secretBox = await chacha20.encrypt(
     dataToEncrypt,
     secretKey: secretKey,
     nonce: state.encryptionNonce,

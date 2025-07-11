@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
+import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
@@ -134,10 +135,10 @@ Future performTwonlySafeBackup({bool force = false}) async {
 
   // Encrypt backup data
 
-  final xchacha20 = Xchacha20.poly1305Aead();
-  final nonce = xchacha20.newNonce();
+  final chacha20 = FlutterChacha20.poly1305Aead();
+  final nonce = chacha20.newNonce();
 
-  final secretBox = await xchacha20.encrypt(
+  final secretBox = await chacha20.encrypt(
     backupBytes,
     secretKey: SecretKey(user.twonlySafeBackup!.encryptionKey),
     nonce: nonce,

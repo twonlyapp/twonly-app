@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -72,7 +73,7 @@ Future handleBackupData(
     mac: Mac(encryptedBackup.mac),
   );
 
-  final compressedBytes = await Xchacha20.poly1305Aead().decrypt(
+  final compressedBytes = await FlutterChacha20.poly1305Aead().decrypt(
     secretBox,
     secretKey: SecretKeyData(encryptionKey),
   );

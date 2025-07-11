@@ -89,12 +89,11 @@ class ModifyAvatar extends StatelessWidget {
                     IconButton(
                       icon: FaIcon(FontAwesomeIcons.floppyDisk),
                       onPressed: () async {
-                        final avatarmakerController =
+                        final avatarMakerController =
                             Get.find<AvatarMakerController>();
-                        await avatarmakerController.saveAvatarSVG();
-                        final json =
-                            await AvatarMakerController.getJsonOptions();
-                        final svg = await AvatarMakerController.getAvatarSVG();
+                        await avatarMakerController.saveAvatarSVG();
+                        final json = avatarMakerController.getJsonOptionsSync();
+                        final svg = avatarMakerController.getAvatarSVGSync();
                         await updateUserAvatar(json, svg);
                         if (context.mounted) {
                           Navigator.pop(context);

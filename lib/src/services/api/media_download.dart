@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
@@ -247,7 +248,7 @@ Future handleEncryptedFile(int messageId) async {
   MediaMessageContent content =
       MediaMessageContent.fromJson(jsonDecode(msg.contentJson!));
 
-  final xchacha20 = Xchacha20.poly1305Aead();
+  final chacha20 = FlutterChacha20.poly1305Aead();
   SecretKeyData secretKeyData = SecretKeyData(content.encryptionKey!);
 
   SecretBox secretBox = SecretBox(
@@ -258,7 +259,7 @@ Future handleEncryptedFile(int messageId) async {
 
   try {
     final plaintextBytes =
-        await xchacha20.decrypt(secretBox, secretKey: secretKeyData);
+        await chacha20.decrypt(secretBox, secretKey: secretKeyData);
     var imageBytes = Uint8List.fromList(plaintextBytes);
 
     if (content.isVideo) {
