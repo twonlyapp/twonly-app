@@ -155,5 +155,12 @@ class TwonlyDatabase extends _$TwonlyDatabase {
     );
     await delete(signalContactPreKeys).go();
     await delete(signalContactSignedPreKeys).go();
+    await (delete(signalPreKeyStores)
+          ..where((t) => (t.createdAt.isSmallerThanValue(
+                DateTime.now().subtract(
+                  Duration(days: 25),
+                ),
+              ))))
+        .go();
   }
 }

@@ -3,7 +3,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/misc.dart';
 
 class DiagnosticsView extends StatefulWidget {
   const DiagnosticsView({super.key});

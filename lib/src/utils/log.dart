@@ -43,6 +43,13 @@ Future<String> loadLogFile() async {
   }
 }
 
+Future cleanLogFile() async {
+  final str = await loadLogFile();
+  if (str.contains("secureStorageBytes")) {
+    deleteLogFile();
+  }
+}
+
 Future<void> _writeLogToFile(LogRecord record) async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
@@ -55,6 +62,17 @@ Future<void> _writeLogToFile(LogRecord record) async {
     // Append the log message to the file
     await logFile.writeAsString(logMessage, mode: FileMode.append);
   });
+}
+
+Future<bool> deleteLogFile() async {
+  final directory = await getApplicationSupportDirectory();
+  final logFile = File('${directory.path}/app.log');
+
+  if (await logFile.exists()) {
+    await logFile.delete();
+    return true;
+  }
+  return false;
 }
 
 String _getCallerSourceCodeFilename() {

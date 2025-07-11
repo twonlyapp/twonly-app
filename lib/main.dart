@@ -54,6 +54,8 @@ void main() async {
 
   await initFileDownloader();
 
+  cleanLogFile();
+
   runApp(
     MultiProvider(
       providers: [

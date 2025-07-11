@@ -97,8 +97,8 @@ Future performTwonlySafeBackup({bool force = false}) async {
   await backupDatabaseFile.delete();
   await backupDatabaseFileCleaned.delete();
 
-  Log.info("twonlyDatabaseBytes = ${twonlyDatabaseBytes.lengthInBytes}");
-  Log.info("secureStorageBytes = ${jsonEncode(secureStorageBackup)}");
+  Log.info("twonlyDatabaseLength = ${twonlyDatabaseBytes.lengthInBytes}");
+  Log.info("secureStorageLength = ${jsonEncode(secureStorageBackup).length}");
 
   final backupProto = TwonlySafeBackupContent(
     secureStorageJson: jsonEncode(secureStorageBackup),

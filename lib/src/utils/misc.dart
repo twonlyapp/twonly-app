@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
@@ -9,7 +8,6 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -24,17 +22,6 @@ extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
   TwonlyDatabase get db => Provider.of<TwonlyDatabase>(this);
   ColorScheme get color => Theme.of(this).colorScheme;
-}
-
-Future<bool> deleteLogFile() async {
-  final directory = await getApplicationSupportDirectory();
-  final logFile = File('${directory.path}/app.log');
-
-  if (await logFile.exists()) {
-    await logFile.delete();
-    return true;
-  }
-  return false;
 }
 
 Future<String?> saveImageToGallery(Uint8List imageBytes) async {
