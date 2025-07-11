@@ -497,7 +497,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
-                      strokeWidth: 1, color: context.color.primary),
+                    strokeWidth: 1,
+                    color: context.color.primary,
+                  ),
                 ),
               ),
             if (!sharePreviewIsShown &&

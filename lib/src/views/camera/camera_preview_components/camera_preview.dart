@@ -22,8 +22,6 @@ class _HomeViewCameraPreviewState extends State<HomeViewCameraPreview> {
         !HomeViewState.cameraController!.value.isInitialized) {
       return Container();
     }
-    bool isFront = HomeViewState.cameraController?.description.lensDirection ==
-        CameraLensDirection.front;
     return Positioned.fill(
       child: MediaViewSizing(
         child: Screenshot(
@@ -38,12 +36,7 @@ class _HomeViewCameraPreviewState extends State<HomeViewCameraPreview> {
                       HomeViewState.cameraController!.value.previewSize!.height,
                   height:
                       HomeViewState.cameraController!.value.previewSize!.width,
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.rotationY(
-                        (isFront && Platform.isAndroid) ? 3.14 : 0),
-                    child: CameraPreview(HomeViewState.cameraController!),
-                  ),
+                  child: CameraPreview(HomeViewState.cameraController!),
                 ),
               ),
             ),

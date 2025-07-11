@@ -727,6 +727,9 @@ Future<bool> compressVideoIfExists(int mediaUploadId) async {
     return false;
   }
 
+  Stopwatch stopwatch = Stopwatch();
+  stopwatch.start();
+
   MediaInfo? mediaInfo;
   try {
     mediaInfo = await VideoCompress.compressVideo(
@@ -737,7 +740,9 @@ Future<bool> compressVideoIfExists(int mediaUploadId) async {
           true, // https://github.com/jonataslaw/VideoCompress/issues/184
     );
 
-    if (mediaInfo!.filesize! >= 30 * 1000 * 1000) {
+    Log.info("Video has now size of ${mediaInfo!.filesize} bytes.");
+
+    if (mediaInfo.filesize! >= 30 * 1000 * 1000) {
       // if the media file is over 20MB compress it with low quality
       mediaInfo = await VideoCompress.compressVideo(
         videoOriginalFile.path,
@@ -749,6 +754,8 @@ Future<bool> compressVideoIfExists(int mediaUploadId) async {
   } catch (e) {
     Log.error("during video compression: $e");
   }
+  stopwatch.stop();
+  Log.info("It took ${stopwatch.elapsedMilliseconds}ms to compress the video");
 
   if (mediaInfo == null) {
     Log.error("could not compress video.");
