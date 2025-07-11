@@ -136,11 +136,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     String? formattedBalance;
     DateTime? nextPayment;
     String currentPlan = context.read<CustomChangeProvider>().plan;
+    bool isAdditionalUser = currentPlan == "Free" || currentPlan == "Plus";
 
     if (ballance != null) {
       DateTime lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
           ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000);
-      if (currentPlan == "Pro" || currentPlan == "Family") {
+      if (!isAdditionalUser) {
         nextPayment = lastPaymentDateTime
             .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
       }
@@ -318,7 +319,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               }));
             },
           ),
-          if (currentPlan == "Family" || currentPlan == "Pro")
+          if (!isAdditionalUser)
             BetterListTile(
               icon: FontAwesomeIcons.userPlus,
               text: context.lang.manageAdditionalUsers,
@@ -387,6 +388,7 @@ class PlanCard extends StatelessWidget {
       case "Plus":
         features = [context.lang.plusFeature1];
         break;
+      case "Tester":
       case "Pro":
         features = [
           context.lang.proFeature1,

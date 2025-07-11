@@ -30,12 +30,12 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
     if (ballance != null) {
       autoRenewal = ballance!.autoRenewal;
     }
-    initAsync(false);
+    initAsync(true);
   }
 
   Future initAsync(bool force) async {
     if (force) {
-      ballance = await loadPlanBalance();
+      ballance = await loadPlanBalance(useCache: false);
       if (ballance != null) {
         autoRenewal = ballance!.autoRenewal;
       }

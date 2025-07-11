@@ -102,12 +102,16 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
                 style: TextStyle(fontSize: 13),
               ),
             ),
-          GridView.count(
-            crossAxisCount: 2,
-            physics: NeverScrollableScrollPhysics(),
-            childAspectRatio: 16 / 5,
-            shrinkWrap: true,
-            children: plusInvites.map((x) => AdditionalUserInvite(x)).toList(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: GridView.count(
+              crossAxisCount: 2,
+              physics: NeverScrollableScrollPhysics(),
+              childAspectRatio: 16 / 5,
+              shrinkWrap: true,
+              children:
+                  plusInvites.map((x) => AdditionalUserInvite(x)).toList(),
+            ),
           ),
           if (freeInvites.isNotEmpty)
             ListTile(
@@ -116,12 +120,16 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
                 style: TextStyle(fontSize: 13),
               ),
             ),
-          GridView.count(
-            crossAxisCount: 2,
-            physics: NeverScrollableScrollPhysics(),
-            childAspectRatio: 16 / 5,
-            shrinkWrap: true,
-            children: freeInvites.map((x) => AdditionalUserInvite(x)).toList(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: GridView.count(
+              crossAxisCount: 2,
+              physics: NeverScrollableScrollPhysics(),
+              childAspectRatio: 16 / 5,
+              shrinkWrap: true,
+              children:
+                  freeInvites.map((x) => AdditionalUserInvite(x)).toList(),
+            ),
           ),
         ],
       ),
@@ -163,7 +171,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
