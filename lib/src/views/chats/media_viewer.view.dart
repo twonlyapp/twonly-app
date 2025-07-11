@@ -164,7 +164,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       showSendTextMessageInput = false;
     });
 
-    flutterLocalNotificationsPlugin.cancel(allMediaFiles.first.contactId);
+    if (Platform.isAndroid) {
+      flutterLocalNotificationsPlugin.cancel(allMediaFiles.first.contactId);
+    } else {
+      flutterLocalNotificationsPlugin.cancelAll();
+    }
 
     if (allMediaFiles.first.downloadState != DownloadState.downloaded) {
       setState(() {
