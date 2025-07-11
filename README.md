@@ -1,6 +1,6 @@
 # twonly
 
-![twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing.](docs/header.webp "twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing.")
+<a href="https://twonly.eu" rel="some text"><img src="docs/header.webp" alt="twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing." /></a>
 
 This repository contains the complete source code of the [twonly](https://twonly.eu) apps.
 
