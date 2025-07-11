@@ -4,11 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
-import "package:get/get.dart";
 import 'package:twonly/src/utils/storage.dart';
 
-class ModifyAvatar extends StatelessWidget {
+class ModifyAvatar extends StatefulWidget {
   const ModifyAvatar({super.key});
+
+  @override
+  State<ModifyAvatar> createState() => _ModifyAvatarState();
+}
+
+class _ModifyAvatarState extends State<ModifyAvatar> {
+  final AvatarMakerController _avatarMakerController =
+      PersistentAvatarMakerController(customizedPropertyCategories: []);
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   Future updateUserAvatar(String json, String svg) async {
     await updateUserdata((user) {
@@ -80,6 +92,7 @@ class ModifyAvatar extends StatelessWidget {
                 child: AvatarMakerAvatar(
                   radius: 130,
                   backgroundColor: Colors.transparent,
+                  controller: _avatarMakerController,
                 ),
               ),
               SizedBox(
@@ -89,11 +102,10 @@ class ModifyAvatar extends StatelessWidget {
                     IconButton(
                       icon: FaIcon(FontAwesomeIcons.floppyDisk),
                       onPressed: () async {
-                        final avatarMakerController =
-                            Get.find<AvatarMakerController>();
-                        await avatarMakerController.saveAvatarSVG();
-                        final json = avatarMakerController.getJsonOptionsSync();
-                        final svg = avatarMakerController.getAvatarSVGSync();
+                        await _avatarMakerController.saveAvatarSVG();
+                        final json =
+                            _avatarMakerController.getJsonOptionsSync();
+                        final svg = _avatarMakerController.getAvatarSVGSync();
                         await updateUserAvatar(json, svg);
                         if (context.mounted) {
                           Navigator.pop(context);
@@ -103,17 +115,13 @@ class ModifyAvatar extends StatelessWidget {
                     IconButton(
                       icon: FaIcon(FontAwesomeIcons.shuffle),
                       onPressed: () {
-                        final avatarmakerController =
-                            Get.find<AvatarMakerController>();
-                        avatarmakerController.randomizedSelectedOptions();
+                        _avatarMakerController.randomizedSelectedOptions();
                       },
                     ),
                     IconButton(
                       icon: Icon(FontAwesomeIcons.rotateLeft),
                       onPressed: () {
-                        final avatarMakerController =
-                            Get.find<AvatarMakerController>();
-                        avatarMakerController.restoreState();
+                        _avatarMakerController.restoreState();
                       },
                     ),
                   ],
@@ -127,6 +135,7 @@ class ModifyAvatar extends StatelessWidget {
                       min(600, MediaQuery.of(context).size.width * 0.85),
                   autosave: false,
                   theme: getAvatarMakerTheme(context),
+                  controller: _avatarMakerController,
                 ),
               ),
             ],

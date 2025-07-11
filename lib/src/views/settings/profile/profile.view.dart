@@ -17,6 +17,8 @@ class ProfileView extends StatefulWidget {
 
 class _ProfileViewState extends State<ProfileView> {
   UserData? user;
+  final AvatarMakerController _avatarMakerController =
+      PersistentAvatarMakerController(customizedPropertyCategories: []);
 
   @override
   void initState() {
@@ -53,21 +55,25 @@ class _ProfileViewState extends State<ProfileView> {
           AvatarMakerAvatar(
             backgroundColor: Colors.transparent,
             radius: 80,
+            controller: _avatarMakerController,
           ),
           SizedBox(height: 10),
           Center(
             child: SizedBox(
               height: 35,
               child: ElevatedButton.icon(
-                icon: Icon(Icons.edit),
-                label: Text(context.lang.settingsProfileCustomizeAvatar),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ModifyAvatar(),
-                  ),
-                ),
-              ),
+                  icon: Icon(Icons.edit),
+                  label: Text(context.lang.settingsProfileCustomizeAvatar),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ModifyAvatar(),
+                      ),
+                    );
+                    _avatarMakerController.performRestore();
+                    setState(() {});
+                  }),
             ),
           ),
           SizedBox(height: 20),
