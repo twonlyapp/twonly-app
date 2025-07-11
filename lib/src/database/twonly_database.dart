@@ -20,6 +20,7 @@ import 'package:twonly/src/database/tables/signal_pre_key_store_table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store_table.dart';
 import 'package:twonly/src/database/tables/signal_session_store_table.dart';
 import 'package:twonly/src/database/twonly_database.steps.dart';
+import 'package:twonly/src/utils/log.dart';
 
 part 'twonly_database.g.dart';
 
@@ -140,6 +141,18 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   void markUpdated() {
     notifyUpdates({TableUpdate.onTable(messages, kind: UpdateKind.update)});
     notifyUpdates({TableUpdate.onTable(contacts, kind: UpdateKind.update)});
+  }
+
+  Future<void> printTableSizes() async {
+    final result = await customSelect(
+            'SELECT name, SUM(pgsize) as size FROM dbstat GROUP BY name')
+        .get();
+
+    for (final row in result) {
+      final tableName = row.read<String>('name');
+      final tableSize = row.read<String>('size');
+      Log.info('Table: $tableName, Size: $tableSize bytes');
+    }
   }
 
   Future deleteDataForTwonlySafe() async {

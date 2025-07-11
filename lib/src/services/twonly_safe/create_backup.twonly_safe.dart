@@ -70,6 +70,9 @@ Future performTwonlySafeBackup({bool force = false}) async {
 
   await backupDB
       .customStatement('VACUUM INTO ?', [backupDatabaseFileCleaned.path]);
+
+  await backupDB.printTableSizes();
+
   backupDB.close();
 
   var secureStorageBackup = {};
