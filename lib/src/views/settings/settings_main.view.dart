@@ -62,7 +62,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                             initAsync();
                           },
                           child: Container(
-                            color: context.color.surface,
+                            color: context.color.surface.withAlpha(0),
                             child: Row(
                               children: [
                                 ContactAvatar(
