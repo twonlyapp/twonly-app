@@ -65,6 +65,8 @@ class _TextViewState extends State<TextLayer> {
           child: TextField(
             controller: textController,
             autofocus: true,
+            maxLines: null,
+            minLines: 1,
             onEditingComplete: () {
               setState(() {
                 widget.layerData.isDeleted = textController.text == "";
