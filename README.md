@@ -1,8 +1,29 @@
 # twonly
 
-run-as eu.twonly.testing ls /data/user/0/eu.twonly.testing/
+![twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing.](docs/header.webp "twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing.")
+
+This repository contains the complete source code of the [twonly](https://twonly.eu) apps.
+
+## Features
+
+- Offer a Snapchat™ like experience
+- End-to-End encryption using the [Signal Protocol](https://de.wikipedia.org/wiki/Signal-Protokoll)
+- No email or phone number required to register
+- Privacy friendly - Everything is stored on the device
+
+## In work
+
+- We plan to implement a Sealed Sender feature to minimize metadata
+- We currently evaluating 
 
 
+## Security Issues
+If you discover a security issue in twonly, please adhere to the coordinated vulnerability disclosure model. Please send us your report to security@twonly.eu. We also offer for critical security issues a small bug bounties, but we can not guarantee a bounty currently :/
+
+## Development
+
+<details>
+<summary>Setup Instructions (macOS)</summary>
 
 ## Building
 
@@ -19,3 +40,14 @@ git submodule update --init --recursive
 ./scripts/update_ios_macos_src.s
 ```
 
+## Debugging files
+
+```bash
+run-as eu.twonly.testing ls /data/user/0/eu.twonly.testing/
+```
+
+</details>
+
+
+## License
+This project is licensed under the [GNU AGPL 3.0](LICENSE) license.
