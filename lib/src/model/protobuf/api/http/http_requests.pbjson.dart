@@ -19,15 +19,7 @@ const TextMessage$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'body', '3': 2, '4': 1, '5': 12, '10': 'body'},
-    {
-      '1': 'push_data',
-      '3': 3,
-      '4': 1,
-      '5': 12,
-      '9': 0,
-      '10': 'pushData',
-      '17': true
-    },
+    {'1': 'push_data', '3': 3, '4': 1, '5': 12, '9': 0, '10': 'pushData', '17': true},
   ],
   '8': [
     {'1': '_push_data'},
@@ -45,14 +37,7 @@ const UploadRequest$json = {
   '2': [
     {'1': 'encrypted_data', '3': 1, '4': 1, '5': 12, '10': 'encryptedData'},
     {'1': 'download_tokens', '3': 2, '4': 3, '5': 12, '10': 'downloadTokens'},
-    {
-      '1': 'messages_on_success',
-      '3': 3,
-      '4': 3,
-      '5': 11,
-      '6': '.http_requests.TextMessage',
-      '10': 'messagesOnSuccess'
-    },
+    {'1': 'messages_on_success', '3': 3, '4': 3, '5': 11, '6': '.http_requests.TextMessage', '10': 'messagesOnSuccess'},
   ],
 };
 
@@ -62,3 +47,4 @@ final $typed_data.Uint8List uploadRequestDescriptor = $convert.base64Decode(
     'cKD2Rvd25sb2FkX3Rva2VucxgCIAMoDFIOZG93bmxvYWRUb2tlbnMSSgoTbWVzc2FnZXNfb25f'
     'c3VjY2VzcxgDIAMoCzIaLmh0dHBfcmVxdWVzdHMuVGV4dE1lc3NhZ2VSEW1lc3NhZ2VzT25TdW'
     'NjZXNz');
+

@@ -33,34 +33,26 @@ class TextMessage extends $pb.GeneratedMessage {
     return $result;
   }
   TextMessage._() : super();
-  factory TextMessage.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory TextMessage.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory TextMessage.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory TextMessage.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'TextMessage',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'TextMessage', package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'pushData', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false;
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'pushData', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   TextMessage clone() => TextMessage()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  TextMessage copyWith(void Function(TextMessage) updates) =>
-      super.copyWith((message) => updates(message as TextMessage))
-          as TextMessage;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  TextMessage copyWith(void Function(TextMessage) updates) => super.copyWith((message) => updates(message as TextMessage)) as TextMessage;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -69,17 +61,13 @@ class TextMessage extends $pb.GeneratedMessage {
   TextMessage createEmptyInstance() => create();
   static $pb.PbList<TextMessage> createRepeated() => $pb.PbList<TextMessage>();
   @$core.pragma('dart2js:noInline')
-  static TextMessage getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<TextMessage>(create);
+  static TextMessage getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<TextMessage>(create);
   static TextMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -88,10 +76,7 @@ class TextMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get body => $_getN(1);
   @$pb.TagNumber(2)
-  set body($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set body($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasBody() => $_has(1);
   @$pb.TagNumber(2)
@@ -100,10 +85,7 @@ class TextMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.List<$core.int> get pushData => $_getN(2);
   @$pb.TagNumber(3)
-  set pushData($core.List<$core.int> v) {
-    $_setBytes(2, v);
-  }
-
+  set pushData($core.List<$core.int> v) { $_setBytes(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasPushData() => $_has(2);
   @$pb.TagNumber(3)
@@ -129,56 +111,41 @@ class UploadRequest extends $pb.GeneratedMessage {
     return $result;
   }
   UploadRequest._() : super();
-  factory UploadRequest.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory UploadRequest.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory UploadRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory UploadRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'UploadRequest',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'),
-      createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'encryptedData', $pb.PbFieldType.OY)
-    ..p<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'downloadTokens', $pb.PbFieldType.PY)
-    ..pc<TextMessage>(
-        3, _omitFieldNames ? '' : 'messagesOnSuccess', $pb.PbFieldType.PM,
-        subBuilder: TextMessage.create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UploadRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'encryptedData', $pb.PbFieldType.OY)
+    ..p<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'downloadTokens', $pb.PbFieldType.PY)
+    ..pc<TextMessage>(3, _omitFieldNames ? '' : 'messagesOnSuccess', $pb.PbFieldType.PM, subBuilder: TextMessage.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   UploadRequest clone() => UploadRequest()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  UploadRequest copyWith(void Function(UploadRequest) updates) =>
-      super.copyWith((message) => updates(message as UploadRequest))
-          as UploadRequest;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  UploadRequest copyWith(void Function(UploadRequest) updates) => super.copyWith((message) => updates(message as UploadRequest)) as UploadRequest;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static UploadRequest create() => UploadRequest._();
   UploadRequest createEmptyInstance() => create();
-  static $pb.PbList<UploadRequest> createRepeated() =>
-      $pb.PbList<UploadRequest>();
+  static $pb.PbList<UploadRequest> createRepeated() => $pb.PbList<UploadRequest>();
   @$core.pragma('dart2js:noInline')
-  static UploadRequest getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<UploadRequest>(create);
+  static UploadRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<UploadRequest>(create);
   static UploadRequest? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.List<$core.int> get encryptedData => $_getN(0);
   @$pb.TagNumber(1)
-  set encryptedData($core.List<$core.int> v) {
-    $_setBytes(0, v);
-  }
-
+  set encryptedData($core.List<$core.int> v) { $_setBytes(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasEncryptedData() => $_has(0);
   @$pb.TagNumber(1)
@@ -191,6 +158,6 @@ class UploadRequest extends $pb.GeneratedMessage {
   $core.List<TextMessage> get messagesOnSuccess => $_getList(2);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

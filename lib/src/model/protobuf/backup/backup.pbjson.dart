@@ -17,13 +17,7 @@ import 'dart:typed_data' as $typed_data;
 const TwonlySafeBackupContent$json = {
   '1': 'TwonlySafeBackupContent',
   '2': [
-    {
-      '1': 'secureStorageJson',
-      '3': 1,
-      '4': 1,
-      '5': 9,
-      '10': 'secureStorageJson'
-    },
+    {'1': 'secureStorageJson', '3': 1, '4': 1, '5': 9, '10': 'secureStorageJson'},
     {'1': 'twonlyDatabase', '3': 2, '4': 1, '5': 12, '10': 'twonlyDatabase'},
   ],
 };
@@ -44,7 +38,7 @@ const TwonlySafeBackupEncrypted$json = {
 };
 
 /// Descriptor for `TwonlySafeBackupEncrypted`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List twonlySafeBackupEncryptedDescriptor =
-    $convert.base64Decode(
-        'ChlUd29ubHlTYWZlQmFja3VwRW5jcnlwdGVkEhAKA21hYxgBIAEoDFIDbWFjEhQKBW5vbmNlGA'
-        'IgASgMUgVub25jZRIeCgpjaXBoZXJUZXh0GAMgASgMUgpjaXBoZXJUZXh0');
+final $typed_data.Uint8List twonlySafeBackupEncryptedDescriptor = $convert.base64Decode(
+    'ChlUd29ubHlTYWZlQmFja3VwRW5jcnlwdGVkEhAKA21hYxgBIAEoDFIDbWFjEhQKBW5vbmNlGA'
+    'IgASgMUgVub25jZRIeCgpjaXBoZXJUZXh0GAMgASgMUgpjaXBoZXJUZXh0');
+

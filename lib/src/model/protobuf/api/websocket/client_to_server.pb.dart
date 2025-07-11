@@ -16,7 +16,10 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 import 'error.pbenum.dart' as $0;
 
-enum ClientToServer_V { v0, notSet }
+enum ClientToServer_V {
+  v0, 
+  notSet
+}
 
 class ClientToServer extends $pb.GeneratedMessage {
   factory ClientToServer({
@@ -29,48 +32,38 @@ class ClientToServer extends $pb.GeneratedMessage {
     return $result;
   }
   ClientToServer._() : super();
-  factory ClientToServer.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ClientToServer.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ClientToServer.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ClientToServer.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static const $core.Map<$core.int, ClientToServer_V> _ClientToServer_VByTag = {
-    1: ClientToServer_V.v0,
-    0: ClientToServer_V.notSet
+    1 : ClientToServer_V.v0,
+    0 : ClientToServer_V.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ClientToServer',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ClientToServer', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..oo(0, [1])
-    ..aOM<V0>(1, _omitFieldNames ? '' : 'V0',
-        protoName: 'V0', subBuilder: V0.create)
-    ..hasRequiredFields = false;
+    ..aOM<V0>(1, _omitFieldNames ? '' : 'V0', protoName: 'V0', subBuilder: V0.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   ClientToServer clone() => ClientToServer()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ClientToServer copyWith(void Function(ClientToServer) updates) =>
-      super.copyWith((message) => updates(message as ClientToServer))
-          as ClientToServer;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ClientToServer copyWith(void Function(ClientToServer) updates) => super.copyWith((message) => updates(message as ClientToServer)) as ClientToServer;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static ClientToServer create() => ClientToServer._();
   ClientToServer createEmptyInstance() => create();
-  static $pb.PbList<ClientToServer> createRepeated() =>
-      $pb.PbList<ClientToServer>();
+  static $pb.PbList<ClientToServer> createRepeated() => $pb.PbList<ClientToServer>();
   @$core.pragma('dart2js:noInline')
-  static ClientToServer getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ClientToServer>(create);
+  static ClientToServer getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ClientToServer>(create);
   static ClientToServer? _defaultInstance;
 
   ClientToServer_V whichV() => _ClientToServer_VByTag[$_whichOneof(0)]!;
@@ -79,10 +72,7 @@ class ClientToServer extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   V0 get v0 => $_getN(0);
   @$pb.TagNumber(1)
-  set v0(V0 v) {
-    setField(1, v);
-  }
-
+  set v0(V0 v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasV0() => $_has(0);
   @$pb.TagNumber(1)
@@ -91,7 +81,12 @@ class ClientToServer extends $pb.GeneratedMessage {
   V0 ensureV0() => $_ensure(0);
 }
 
-enum V0_Kind { handshake, applicationdata, response, notSet }
+enum V0_Kind {
+  handshake, 
+  applicationdata, 
+  response, 
+  notSet
+}
 
 class V0 extends $pb.GeneratedMessage {
   factory V0({
@@ -116,44 +111,34 @@ class V0 extends $pb.GeneratedMessage {
     return $result;
   }
   V0._() : super();
-  factory V0.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory V0.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory V0.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory V0.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static const $core.Map<$core.int, V0_Kind> _V0_KindByTag = {
-    2: V0_Kind.handshake,
-    3: V0_Kind.applicationdata,
-    4: V0_Kind.response,
-    0: V0_Kind.notSet
+    2 : V0_Kind.handshake,
+    3 : V0_Kind.applicationdata,
+    4 : V0_Kind.response,
+    0 : V0_Kind.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'V0',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'V0', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..oo(0, [2, 3, 4])
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'seq', $pb.PbFieldType.OU6,
-        defaultOrMaker: $fixnum.Int64.ZERO)
-    ..aOM<Handshake>(2, _omitFieldNames ? '' : 'handshake',
-        subBuilder: Handshake.create)
-    ..aOM<ApplicationData>(3, _omitFieldNames ? '' : 'applicationdata',
-        subBuilder: ApplicationData.create)
-    ..aOM<Response>(4, _omitFieldNames ? '' : 'response',
-        subBuilder: Response.create)
-    ..hasRequiredFields = false;
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'seq', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..aOM<Handshake>(2, _omitFieldNames ? '' : 'handshake', subBuilder: Handshake.create)
+    ..aOM<ApplicationData>(3, _omitFieldNames ? '' : 'applicationdata', subBuilder: ApplicationData.create)
+    ..aOM<Response>(4, _omitFieldNames ? '' : 'response', subBuilder: Response.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   V0 clone() => V0()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  V0 copyWith(void Function(V0) updates) =>
-      super.copyWith((message) => updates(message as V0)) as V0;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  V0 copyWith(void Function(V0) updates) => super.copyWith((message) => updates(message as V0)) as V0;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -162,8 +147,7 @@ class V0 extends $pb.GeneratedMessage {
   V0 createEmptyInstance() => create();
   static $pb.PbList<V0> createRepeated() => $pb.PbList<V0>();
   @$core.pragma('dart2js:noInline')
-  static V0 getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<V0>(create);
+  static V0 getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<V0>(create);
   static V0? _defaultInstance;
 
   V0_Kind whichKind() => _V0_KindByTag[$_whichOneof(0)]!;
@@ -172,10 +156,7 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $fixnum.Int64 get seq => $_getI64(0);
   @$pb.TagNumber(1)
-  set seq($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set seq($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasSeq() => $_has(0);
   @$pb.TagNumber(1)
@@ -184,10 +165,7 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   Handshake get handshake => $_getN(1);
   @$pb.TagNumber(2)
-  set handshake(Handshake v) {
-    setField(2, v);
-  }
-
+  set handshake(Handshake v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasHandshake() => $_has(1);
   @$pb.TagNumber(2)
@@ -198,10 +176,7 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   ApplicationData get applicationdata => $_getN(2);
   @$pb.TagNumber(3)
-  set applicationdata(ApplicationData v) {
-    setField(3, v);
-  }
-
+  set applicationdata(ApplicationData v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasApplicationdata() => $_has(2);
   @$pb.TagNumber(3)
@@ -212,10 +187,7 @@ class V0 extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   Response get response => $_getN(3);
   @$pb.TagNumber(4)
-  set response(Response v) {
-    setField(4, v);
-  }
-
+  set response(Response v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasResponse() => $_has(3);
   @$pb.TagNumber(4)
@@ -263,61 +235,46 @@ class Handshake_Register extends $pb.GeneratedMessage {
     return $result;
   }
   Handshake_Register._() : super();
-  factory Handshake_Register.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Handshake_Register.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Handshake_Register.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake_Register.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Handshake.Register',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.Register', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'username')
     ..aOS(2, _omitFieldNames ? '' : 'inviteCode')
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'publicIdentityKey', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        4, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        5, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'publicIdentityKey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
     ..aInt64(6, _omitFieldNames ? '' : 'signedPrekeyId')
     ..aInt64(7, _omitFieldNames ? '' : 'registrationId')
     ..aOB(8, _omitFieldNames ? '' : 'isIos')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Handshake_Register clone() => Handshake_Register()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Handshake_Register copyWith(void Function(Handshake_Register) updates) =>
-      super.copyWith((message) => updates(message as Handshake_Register))
-          as Handshake_Register;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Handshake_Register copyWith(void Function(Handshake_Register) updates) => super.copyWith((message) => updates(message as Handshake_Register)) as Handshake_Register;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static Handshake_Register create() => Handshake_Register._();
   Handshake_Register createEmptyInstance() => create();
-  static $pb.PbList<Handshake_Register> createRepeated() =>
-      $pb.PbList<Handshake_Register>();
+  static $pb.PbList<Handshake_Register> createRepeated() => $pb.PbList<Handshake_Register>();
   @$core.pragma('dart2js:noInline')
-  static Handshake_Register getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Handshake_Register>(create);
+  static Handshake_Register getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_Register>(create);
   static Handshake_Register? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get username => $_getSZ(0);
   @$pb.TagNumber(1)
-  set username($core.String v) {
-    $_setString(0, v);
-  }
-
+  set username($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUsername() => $_has(0);
   @$pb.TagNumber(1)
@@ -326,10 +283,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.String get inviteCode => $_getSZ(1);
   @$pb.TagNumber(2)
-  set inviteCode($core.String v) {
-    $_setString(1, v);
-  }
-
+  set inviteCode($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasInviteCode() => $_has(1);
   @$pb.TagNumber(2)
@@ -338,10 +292,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.List<$core.int> get publicIdentityKey => $_getN(2);
   @$pb.TagNumber(3)
-  set publicIdentityKey($core.List<$core.int> v) {
-    $_setBytes(2, v);
-  }
-
+  set publicIdentityKey($core.List<$core.int> v) { $_setBytes(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasPublicIdentityKey() => $_has(2);
   @$pb.TagNumber(3)
@@ -350,10 +301,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.List<$core.int> get signedPrekey => $_getN(3);
   @$pb.TagNumber(4)
-  set signedPrekey($core.List<$core.int> v) {
-    $_setBytes(3, v);
-  }
-
+  set signedPrekey($core.List<$core.int> v) { $_setBytes(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasSignedPrekey() => $_has(3);
   @$pb.TagNumber(4)
@@ -362,10 +310,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   $core.List<$core.int> get signedPrekeySignature => $_getN(4);
   @$pb.TagNumber(5)
-  set signedPrekeySignature($core.List<$core.int> v) {
-    $_setBytes(4, v);
-  }
-
+  set signedPrekeySignature($core.List<$core.int> v) { $_setBytes(4, v); }
   @$pb.TagNumber(5)
   $core.bool hasSignedPrekeySignature() => $_has(4);
   @$pb.TagNumber(5)
@@ -374,10 +319,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   $fixnum.Int64 get signedPrekeyId => $_getI64(5);
   @$pb.TagNumber(6)
-  set signedPrekeyId($fixnum.Int64 v) {
-    $_setInt64(5, v);
-  }
-
+  set signedPrekeyId($fixnum.Int64 v) { $_setInt64(5, v); }
   @$pb.TagNumber(6)
   $core.bool hasSignedPrekeyId() => $_has(5);
   @$pb.TagNumber(6)
@@ -386,10 +328,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
   @$pb.TagNumber(7)
   $fixnum.Int64 get registrationId => $_getI64(6);
   @$pb.TagNumber(7)
-  set registrationId($fixnum.Int64 v) {
-    $_setInt64(6, v);
-  }
-
+  set registrationId($fixnum.Int64 v) { $_setInt64(6, v); }
   @$pb.TagNumber(7)
   $core.bool hasRegistrationId() => $_has(6);
   @$pb.TagNumber(7)
@@ -398,10 +337,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   $core.bool get isIos => $_getBF(7);
   @$pb.TagNumber(8)
-  set isIos($core.bool v) {
-    $_setBool(7, v);
-  }
-
+  set isIos($core.bool v) { $_setBool(7, v); }
   @$pb.TagNumber(8)
   $core.bool hasIsIos() => $_has(7);
   @$pb.TagNumber(8)
@@ -411,44 +347,32 @@ class Handshake_Register extends $pb.GeneratedMessage {
 class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
   factory Handshake_GetAuthChallenge() => create();
   Handshake_GetAuthChallenge._() : super();
-  factory Handshake_GetAuthChallenge.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Handshake_GetAuthChallenge.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Handshake_GetAuthChallenge.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake_GetAuthChallenge.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Handshake.GetAuthChallenge',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.GetAuthChallenge', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  Handshake_GetAuthChallenge clone() =>
-      Handshake_GetAuthChallenge()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Handshake_GetAuthChallenge copyWith(
-          void Function(Handshake_GetAuthChallenge) updates) =>
-      super.copyWith(
-              (message) => updates(message as Handshake_GetAuthChallenge))
-          as Handshake_GetAuthChallenge;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Handshake_GetAuthChallenge clone() => Handshake_GetAuthChallenge()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Handshake_GetAuthChallenge copyWith(void Function(Handshake_GetAuthChallenge) updates) => super.copyWith((message) => updates(message as Handshake_GetAuthChallenge)) as Handshake_GetAuthChallenge;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static Handshake_GetAuthChallenge create() => Handshake_GetAuthChallenge._();
   Handshake_GetAuthChallenge createEmptyInstance() => create();
-  static $pb.PbList<Handshake_GetAuthChallenge> createRepeated() =>
-      $pb.PbList<Handshake_GetAuthChallenge>();
+  static $pb.PbList<Handshake_GetAuthChallenge> createRepeated() => $pb.PbList<Handshake_GetAuthChallenge>();
   @$core.pragma('dart2js:noInline')
-  static Handshake_GetAuthChallenge getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthChallenge>(create);
+  static Handshake_GetAuthChallenge getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthChallenge>(create);
   static Handshake_GetAuthChallenge? _defaultInstance;
 }
 
@@ -467,55 +391,40 @@ class Handshake_GetAuthToken extends $pb.GeneratedMessage {
     return $result;
   }
   Handshake_GetAuthToken._() : super();
-  factory Handshake_GetAuthToken.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Handshake_GetAuthToken.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Handshake_GetAuthToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake_GetAuthToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Handshake.GetAuthToken',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.GetAuthToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'response', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false;
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'response', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  Handshake_GetAuthToken clone() =>
-      Handshake_GetAuthToken()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Handshake_GetAuthToken copyWith(
-          void Function(Handshake_GetAuthToken) updates) =>
-      super.copyWith((message) => updates(message as Handshake_GetAuthToken))
-          as Handshake_GetAuthToken;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Handshake_GetAuthToken clone() => Handshake_GetAuthToken()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Handshake_GetAuthToken copyWith(void Function(Handshake_GetAuthToken) updates) => super.copyWith((message) => updates(message as Handshake_GetAuthToken)) as Handshake_GetAuthToken;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static Handshake_GetAuthToken create() => Handshake_GetAuthToken._();
   Handshake_GetAuthToken createEmptyInstance() => create();
-  static $pb.PbList<Handshake_GetAuthToken> createRepeated() =>
-      $pb.PbList<Handshake_GetAuthToken>();
+  static $pb.PbList<Handshake_GetAuthToken> createRepeated() => $pb.PbList<Handshake_GetAuthToken>();
   @$core.pragma('dart2js:noInline')
-  static Handshake_GetAuthToken getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthToken>(create);
+  static Handshake_GetAuthToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_GetAuthToken>(create);
   static Handshake_GetAuthToken? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -524,10 +433,7 @@ class Handshake_GetAuthToken extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get response => $_getN(1);
   @$pb.TagNumber(2)
-  set response($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set response($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasResponse() => $_has(1);
   @$pb.TagNumber(2)
@@ -553,56 +459,41 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     return $result;
   }
   Handshake_Authenticate._() : super();
-  factory Handshake_Authenticate.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Handshake_Authenticate.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Handshake_Authenticate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake_Authenticate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Handshake.Authenticate',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.Authenticate', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'authToken', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'authToken', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'appVersion')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  Handshake_Authenticate clone() =>
-      Handshake_Authenticate()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Handshake_Authenticate copyWith(
-          void Function(Handshake_Authenticate) updates) =>
-      super.copyWith((message) => updates(message as Handshake_Authenticate))
-          as Handshake_Authenticate;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Handshake_Authenticate clone() => Handshake_Authenticate()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Handshake_Authenticate copyWith(void Function(Handshake_Authenticate) updates) => super.copyWith((message) => updates(message as Handshake_Authenticate)) as Handshake_Authenticate;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static Handshake_Authenticate create() => Handshake_Authenticate._();
   Handshake_Authenticate createEmptyInstance() => create();
-  static $pb.PbList<Handshake_Authenticate> createRepeated() =>
-      $pb.PbList<Handshake_Authenticate>();
+  static $pb.PbList<Handshake_Authenticate> createRepeated() => $pb.PbList<Handshake_Authenticate>();
   @$core.pragma('dart2js:noInline')
-  static Handshake_Authenticate getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Handshake_Authenticate>(create);
+  static Handshake_Authenticate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_Authenticate>(create);
   static Handshake_Authenticate? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -611,10 +502,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get authToken => $_getN(1);
   @$pb.TagNumber(2)
-  set authToken($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set authToken($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasAuthToken() => $_has(1);
   @$pb.TagNumber(2)
@@ -623,10 +511,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.String get appVersion => $_getSZ(2);
   @$pb.TagNumber(3)
-  set appVersion($core.String v) {
-    $_setString(2, v);
-  }
-
+  set appVersion($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasAppVersion() => $_has(2);
   @$pb.TagNumber(3)
@@ -634,10 +519,10 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
 }
 
 enum Handshake_Handshake {
-  register,
-  getauthchallenge,
-  getauthtoken,
-  authenticate,
+  register, 
+  getauthchallenge, 
+  getauthtoken, 
+  authenticate, 
   notSet
 }
 
@@ -664,47 +549,35 @@ class Handshake extends $pb.GeneratedMessage {
     return $result;
   }
   Handshake._() : super();
-  factory Handshake.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Handshake.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Handshake.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static const $core.Map<$core.int, Handshake_Handshake>
-      _Handshake_HandshakeByTag = {
-    1: Handshake_Handshake.register,
-    2: Handshake_Handshake.getauthchallenge,
-    3: Handshake_Handshake.getauthtoken,
-    4: Handshake_Handshake.authenticate,
-    0: Handshake_Handshake.notSet
+  static const $core.Map<$core.int, Handshake_Handshake> _Handshake_HandshakeByTag = {
+    1 : Handshake_Handshake.register,
+    2 : Handshake_Handshake.getauthchallenge,
+    3 : Handshake_Handshake.getauthtoken,
+    4 : Handshake_Handshake.authenticate,
+    0 : Handshake_Handshake.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Handshake',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..oo(0, [1, 2, 3, 4])
-    ..aOM<Handshake_Register>(1, _omitFieldNames ? '' : 'register',
-        subBuilder: Handshake_Register.create)
-    ..aOM<Handshake_GetAuthChallenge>(
-        2, _omitFieldNames ? '' : 'getauthchallenge',
-        subBuilder: Handshake_GetAuthChallenge.create)
-    ..aOM<Handshake_GetAuthToken>(3, _omitFieldNames ? '' : 'getauthtoken',
-        subBuilder: Handshake_GetAuthToken.create)
-    ..aOM<Handshake_Authenticate>(4, _omitFieldNames ? '' : 'authenticate',
-        subBuilder: Handshake_Authenticate.create)
-    ..hasRequiredFields = false;
+    ..aOM<Handshake_Register>(1, _omitFieldNames ? '' : 'register', subBuilder: Handshake_Register.create)
+    ..aOM<Handshake_GetAuthChallenge>(2, _omitFieldNames ? '' : 'getauthchallenge', subBuilder: Handshake_GetAuthChallenge.create)
+    ..aOM<Handshake_GetAuthToken>(3, _omitFieldNames ? '' : 'getauthtoken', subBuilder: Handshake_GetAuthToken.create)
+    ..aOM<Handshake_Authenticate>(4, _omitFieldNames ? '' : 'authenticate', subBuilder: Handshake_Authenticate.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Handshake clone() => Handshake()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Handshake copyWith(void Function(Handshake) updates) =>
-      super.copyWith((message) => updates(message as Handshake)) as Handshake;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Handshake copyWith(void Function(Handshake) updates) => super.copyWith((message) => updates(message as Handshake)) as Handshake;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -713,21 +586,16 @@ class Handshake extends $pb.GeneratedMessage {
   Handshake createEmptyInstance() => create();
   static $pb.PbList<Handshake> createRepeated() => $pb.PbList<Handshake>();
   @$core.pragma('dart2js:noInline')
-  static Handshake getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake>(create);
+  static Handshake getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake>(create);
   static Handshake? _defaultInstance;
 
-  Handshake_Handshake whichHandshake() =>
-      _Handshake_HandshakeByTag[$_whichOneof(0)]!;
+  Handshake_Handshake whichHandshake() => _Handshake_HandshakeByTag[$_whichOneof(0)]!;
   void clearHandshake() => clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   Handshake_Register get register => $_getN(0);
   @$pb.TagNumber(1)
-  set register(Handshake_Register v) {
-    setField(1, v);
-  }
-
+  set register(Handshake_Register v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasRegister() => $_has(0);
   @$pb.TagNumber(1)
@@ -738,10 +606,7 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   Handshake_GetAuthChallenge get getauthchallenge => $_getN(1);
   @$pb.TagNumber(2)
-  set getauthchallenge(Handshake_GetAuthChallenge v) {
-    setField(2, v);
-  }
-
+  set getauthchallenge(Handshake_GetAuthChallenge v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasGetauthchallenge() => $_has(1);
   @$pb.TagNumber(2)
@@ -752,10 +617,7 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   Handshake_GetAuthToken get getauthtoken => $_getN(2);
   @$pb.TagNumber(3)
-  set getauthtoken(Handshake_GetAuthToken v) {
-    setField(3, v);
-  }
-
+  set getauthtoken(Handshake_GetAuthToken v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasGetauthtoken() => $_has(2);
   @$pb.TagNumber(3)
@@ -766,10 +628,7 @@ class Handshake extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   Handshake_Authenticate get authenticate => $_getN(3);
   @$pb.TagNumber(4)
-  set authenticate(Handshake_Authenticate v) {
-    setField(4, v);
-  }
-
+  set authenticate(Handshake_Authenticate v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasAuthenticate() => $_has(3);
   @$pb.TagNumber(4)
@@ -797,59 +656,41 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_TextMessage._() : super();
-  factory ApplicationData_TextMessage.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_TextMessage.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_TextMessage.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_TextMessage.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.TextMessage',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.TextMessage', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        4, _omitFieldNames ? '' : 'pushData', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false;
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'body', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'pushData', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_TextMessage clone() =>
-      ApplicationData_TextMessage()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_TextMessage copyWith(
-          void Function(ApplicationData_TextMessage) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_TextMessage))
-          as ApplicationData_TextMessage;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_TextMessage clone() => ApplicationData_TextMessage()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_TextMessage copyWith(void Function(ApplicationData_TextMessage) updates) => super.copyWith((message) => updates(message as ApplicationData_TextMessage)) as ApplicationData_TextMessage;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_TextMessage create() =>
-      ApplicationData_TextMessage._();
+  static ApplicationData_TextMessage create() => ApplicationData_TextMessage._();
   ApplicationData_TextMessage createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_TextMessage> createRepeated() =>
-      $pb.PbList<ApplicationData_TextMessage>();
+  static $pb.PbList<ApplicationData_TextMessage> createRepeated() => $pb.PbList<ApplicationData_TextMessage>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_TextMessage getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_TextMessage>(create);
+  static ApplicationData_TextMessage getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_TextMessage>(create);
   static ApplicationData_TextMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -858,10 +699,7 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.List<$core.int> get body => $_getN(1);
   @$pb.TagNumber(3)
-  set body($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set body($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(3)
   $core.bool hasBody() => $_has(1);
   @$pb.TagNumber(3)
@@ -870,10 +708,7 @@ class ApplicationData_TextMessage extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.List<$core.int> get pushData => $_getN(2);
   @$pb.TagNumber(4)
-  set pushData($core.List<$core.int> v) {
-    $_setBytes(2, v);
-  }
-
+  set pushData($core.List<$core.int> v) { $_setBytes(2, v); }
   @$pb.TagNumber(4)
   $core.bool hasPushData() => $_has(2);
   @$pb.TagNumber(4)
@@ -891,56 +726,39 @@ class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_GetUserByUsername._() : super();
-  factory ApplicationData_GetUserByUsername.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetUserByUsername.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetUserByUsername.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetUserByUsername.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetUserByUsername',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetUserByUsername', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'username')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetUserByUsername clone() =>
-      ApplicationData_GetUserByUsername()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetUserByUsername copyWith(
-          void Function(ApplicationData_GetUserByUsername) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_GetUserByUsername))
-          as ApplicationData_GetUserByUsername;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetUserByUsername clone() => ApplicationData_GetUserByUsername()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetUserByUsername copyWith(void Function(ApplicationData_GetUserByUsername) updates) => super.copyWith((message) => updates(message as ApplicationData_GetUserByUsername)) as ApplicationData_GetUserByUsername;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetUserByUsername create() =>
-      ApplicationData_GetUserByUsername._();
+  static ApplicationData_GetUserByUsername create() => ApplicationData_GetUserByUsername._();
   ApplicationData_GetUserByUsername createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetUserByUsername> createRepeated() =>
-      $pb.PbList<ApplicationData_GetUserByUsername>();
+  static $pb.PbList<ApplicationData_GetUserByUsername> createRepeated() => $pb.PbList<ApplicationData_GetUserByUsername>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetUserByUsername getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUserByUsername>(
-          create);
+  static ApplicationData_GetUserByUsername getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUserByUsername>(create);
   static ApplicationData_GetUserByUsername? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get username => $_getSZ(0);
   @$pb.TagNumber(1)
-  set username($core.String v) {
-    $_setString(0, v);
-  }
-
+  set username($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUsername() => $_has(0);
   @$pb.TagNumber(1)
@@ -958,57 +776,39 @@ class ApplicationData_UpdateGoogleFcmToken extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_UpdateGoogleFcmToken._() : super();
-  factory ApplicationData_UpdateGoogleFcmToken.fromBuffer(
-          $core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_UpdateGoogleFcmToken.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_UpdateGoogleFcmToken.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_UpdateGoogleFcmToken.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.UpdateGoogleFcmToken',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UpdateGoogleFcmToken', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'googleFcm')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_UpdateGoogleFcmToken clone() =>
-      ApplicationData_UpdateGoogleFcmToken()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_UpdateGoogleFcmToken copyWith(
-          void Function(ApplicationData_UpdateGoogleFcmToken) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_UpdateGoogleFcmToken))
-          as ApplicationData_UpdateGoogleFcmToken;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdateGoogleFcmToken clone() => ApplicationData_UpdateGoogleFcmToken()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdateGoogleFcmToken copyWith(void Function(ApplicationData_UpdateGoogleFcmToken) updates) => super.copyWith((message) => updates(message as ApplicationData_UpdateGoogleFcmToken)) as ApplicationData_UpdateGoogleFcmToken;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdateGoogleFcmToken create() =>
-      ApplicationData_UpdateGoogleFcmToken._();
+  static ApplicationData_UpdateGoogleFcmToken create() => ApplicationData_UpdateGoogleFcmToken._();
   ApplicationData_UpdateGoogleFcmToken createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_UpdateGoogleFcmToken> createRepeated() =>
-      $pb.PbList<ApplicationData_UpdateGoogleFcmToken>();
+  static $pb.PbList<ApplicationData_UpdateGoogleFcmToken> createRepeated() => $pb.PbList<ApplicationData_UpdateGoogleFcmToken>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdateGoogleFcmToken getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          ApplicationData_UpdateGoogleFcmToken>(create);
+  static ApplicationData_UpdateGoogleFcmToken getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdateGoogleFcmToken>(create);
   static ApplicationData_UpdateGoogleFcmToken? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get googleFcm => $_getSZ(0);
   @$pb.TagNumber(1)
-  set googleFcm($core.String v) {
-    $_setString(0, v);
-  }
-
+  set googleFcm($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasGoogleFcm() => $_has(0);
   @$pb.TagNumber(1)
@@ -1026,55 +826,39 @@ class ApplicationData_GetUserById extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_GetUserById._() : super();
-  factory ApplicationData_GetUserById.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetUserById.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetUserById.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetUserById.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetUserById',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetUserById', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetUserById clone() =>
-      ApplicationData_GetUserById()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetUserById copyWith(
-          void Function(ApplicationData_GetUserById) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_GetUserById))
-          as ApplicationData_GetUserById;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetUserById clone() => ApplicationData_GetUserById()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetUserById copyWith(void Function(ApplicationData_GetUserById) updates) => super.copyWith((message) => updates(message as ApplicationData_GetUserById)) as ApplicationData_GetUserById;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetUserById create() =>
-      ApplicationData_GetUserById._();
+  static ApplicationData_GetUserById create() => ApplicationData_GetUserById._();
   ApplicationData_GetUserById createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetUserById> createRepeated() =>
-      $pb.PbList<ApplicationData_GetUserById>();
+  static $pb.PbList<ApplicationData_GetUserById> createRepeated() => $pb.PbList<ApplicationData_GetUserById>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetUserById getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUserById>(create);
+  static ApplicationData_GetUserById getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetUserById>(create);
   static ApplicationData_GetUserById? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -1092,55 +876,39 @@ class ApplicationData_RedeemVoucher extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_RedeemVoucher._() : super();
-  factory ApplicationData_RedeemVoucher.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_RedeemVoucher.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_RedeemVoucher.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_RedeemVoucher.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.RedeemVoucher',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.RedeemVoucher', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'voucher')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_RedeemVoucher clone() =>
-      ApplicationData_RedeemVoucher()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_RedeemVoucher copyWith(
-          void Function(ApplicationData_RedeemVoucher) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_RedeemVoucher))
-          as ApplicationData_RedeemVoucher;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_RedeemVoucher clone() => ApplicationData_RedeemVoucher()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_RedeemVoucher copyWith(void Function(ApplicationData_RedeemVoucher) updates) => super.copyWith((message) => updates(message as ApplicationData_RedeemVoucher)) as ApplicationData_RedeemVoucher;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_RedeemVoucher create() =>
-      ApplicationData_RedeemVoucher._();
+  static ApplicationData_RedeemVoucher create() => ApplicationData_RedeemVoucher._();
   ApplicationData_RedeemVoucher createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_RedeemVoucher> createRepeated() =>
-      $pb.PbList<ApplicationData_RedeemVoucher>();
+  static $pb.PbList<ApplicationData_RedeemVoucher> createRepeated() => $pb.PbList<ApplicationData_RedeemVoucher>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_RedeemVoucher getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_RedeemVoucher>(create);
+  static ApplicationData_RedeemVoucher getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_RedeemVoucher>(create);
   static ApplicationData_RedeemVoucher? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get voucher => $_getSZ(0);
   @$pb.TagNumber(1)
-  set voucher($core.String v) {
-    $_setString(0, v);
-  }
-
+  set voucher($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasVoucher() => $_has(0);
   @$pb.TagNumber(1)
@@ -1166,58 +934,41 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_SwitchToPayedPlan._() : super();
-  factory ApplicationData_SwitchToPayedPlan.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_SwitchToPayedPlan.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_SwitchToPayedPlan.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_SwitchToPayedPlan.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.SwitchToPayedPlan',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.SwitchToPayedPlan', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'planId')
     ..aOB(2, _omitFieldNames ? '' : 'payMonthly')
     ..aOB(3, _omitFieldNames ? '' : 'autoRenewal')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_SwitchToPayedPlan clone() =>
-      ApplicationData_SwitchToPayedPlan()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_SwitchToPayedPlan copyWith(
-          void Function(ApplicationData_SwitchToPayedPlan) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_SwitchToPayedPlan))
-          as ApplicationData_SwitchToPayedPlan;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_SwitchToPayedPlan clone() => ApplicationData_SwitchToPayedPlan()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_SwitchToPayedPlan copyWith(void Function(ApplicationData_SwitchToPayedPlan) updates) => super.copyWith((message) => updates(message as ApplicationData_SwitchToPayedPlan)) as ApplicationData_SwitchToPayedPlan;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_SwitchToPayedPlan create() =>
-      ApplicationData_SwitchToPayedPlan._();
+  static ApplicationData_SwitchToPayedPlan create() => ApplicationData_SwitchToPayedPlan._();
   ApplicationData_SwitchToPayedPlan createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_SwitchToPayedPlan> createRepeated() =>
-      $pb.PbList<ApplicationData_SwitchToPayedPlan>();
+  static $pb.PbList<ApplicationData_SwitchToPayedPlan> createRepeated() => $pb.PbList<ApplicationData_SwitchToPayedPlan>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_SwitchToPayedPlan getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_SwitchToPayedPlan>(
-          create);
+  static ApplicationData_SwitchToPayedPlan getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_SwitchToPayedPlan>(create);
   static ApplicationData_SwitchToPayedPlan? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.String get planId => $_getSZ(0);
   @$pb.TagNumber(1)
-  set planId($core.String v) {
-    $_setString(0, v);
-  }
-
+  set planId($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasPlanId() => $_has(0);
   @$pb.TagNumber(1)
@@ -1226,10 +977,7 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.bool get payMonthly => $_getBF(1);
   @$pb.TagNumber(2)
-  set payMonthly($core.bool v) {
-    $_setBool(1, v);
-  }
-
+  set payMonthly($core.bool v) { $_setBool(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasPayMonthly() => $_has(1);
   @$pb.TagNumber(2)
@@ -1238,10 +986,7 @@ class ApplicationData_SwitchToPayedPlan extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool get autoRenewal => $_getBF(2);
   @$pb.TagNumber(3)
-  set autoRenewal($core.bool v) {
-    $_setBool(2, v);
-  }
-
+  set autoRenewal($core.bool v) { $_setBool(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasAutoRenewal() => $_has(2);
   @$pb.TagNumber(3)
@@ -1259,56 +1004,39 @@ class ApplicationData_UpdatePlanOptions extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_UpdatePlanOptions._() : super();
-  factory ApplicationData_UpdatePlanOptions.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_UpdatePlanOptions.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_UpdatePlanOptions.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_UpdatePlanOptions.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.UpdatePlanOptions',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UpdatePlanOptions', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aOB(1, _omitFieldNames ? '' : 'autoRenewal')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_UpdatePlanOptions clone() =>
-      ApplicationData_UpdatePlanOptions()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_UpdatePlanOptions copyWith(
-          void Function(ApplicationData_UpdatePlanOptions) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_UpdatePlanOptions))
-          as ApplicationData_UpdatePlanOptions;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdatePlanOptions clone() => ApplicationData_UpdatePlanOptions()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdatePlanOptions copyWith(void Function(ApplicationData_UpdatePlanOptions) updates) => super.copyWith((message) => updates(message as ApplicationData_UpdatePlanOptions)) as ApplicationData_UpdatePlanOptions;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdatePlanOptions create() =>
-      ApplicationData_UpdatePlanOptions._();
+  static ApplicationData_UpdatePlanOptions create() => ApplicationData_UpdatePlanOptions._();
   ApplicationData_UpdatePlanOptions createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_UpdatePlanOptions> createRepeated() =>
-      $pb.PbList<ApplicationData_UpdatePlanOptions>();
+  static $pb.PbList<ApplicationData_UpdatePlanOptions> createRepeated() => $pb.PbList<ApplicationData_UpdatePlanOptions>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdatePlanOptions getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdatePlanOptions>(
-          create);
+  static ApplicationData_UpdatePlanOptions getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdatePlanOptions>(create);
   static ApplicationData_UpdatePlanOptions? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.bool get autoRenewal => $_getBF(0);
   @$pb.TagNumber(1)
-  set autoRenewal($core.bool v) {
-    $_setBool(0, v);
-  }
-
+  set autoRenewal($core.bool v) { $_setBool(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasAutoRenewal() => $_has(0);
   @$pb.TagNumber(1)
@@ -1326,55 +1054,39 @@ class ApplicationData_CreateVoucher extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_CreateVoucher._() : super();
-  factory ApplicationData_CreateVoucher.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_CreateVoucher.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_CreateVoucher.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_CreateVoucher.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.CreateVoucher',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.CreateVoucher', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..a<$core.int>(1, _omitFieldNames ? '' : 'valueCents', $pb.PbFieldType.OU3)
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_CreateVoucher clone() =>
-      ApplicationData_CreateVoucher()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_CreateVoucher copyWith(
-          void Function(ApplicationData_CreateVoucher) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_CreateVoucher))
-          as ApplicationData_CreateVoucher;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_CreateVoucher clone() => ApplicationData_CreateVoucher()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_CreateVoucher copyWith(void Function(ApplicationData_CreateVoucher) updates) => super.copyWith((message) => updates(message as ApplicationData_CreateVoucher)) as ApplicationData_CreateVoucher;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_CreateVoucher create() =>
-      ApplicationData_CreateVoucher._();
+  static ApplicationData_CreateVoucher create() => ApplicationData_CreateVoucher._();
   ApplicationData_CreateVoucher createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_CreateVoucher> createRepeated() =>
-      $pb.PbList<ApplicationData_CreateVoucher>();
+  static $pb.PbList<ApplicationData_CreateVoucher> createRepeated() => $pb.PbList<ApplicationData_CreateVoucher>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_CreateVoucher getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_CreateVoucher>(create);
+  static ApplicationData_CreateVoucher getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_CreateVoucher>(create);
   static ApplicationData_CreateVoucher? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.int get valueCents => $_getIZ(0);
   @$pb.TagNumber(1)
-  set valueCents($core.int v) {
-    $_setUnsignedInt32(0, v);
-  }
-
+  set valueCents($core.int v) { $_setUnsignedInt32(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasValueCents() => $_has(0);
   @$pb.TagNumber(1)
@@ -1384,230 +1096,160 @@ class ApplicationData_CreateVoucher extends $pb.GeneratedMessage {
 class ApplicationData_GetLocation extends $pb.GeneratedMessage {
   factory ApplicationData_GetLocation() => create();
   ApplicationData_GetLocation._() : super();
-  factory ApplicationData_GetLocation.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetLocation.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetLocation.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetLocation.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetLocation',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetLocation', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetLocation clone() =>
-      ApplicationData_GetLocation()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetLocation copyWith(
-          void Function(ApplicationData_GetLocation) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_GetLocation))
-          as ApplicationData_GetLocation;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetLocation clone() => ApplicationData_GetLocation()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetLocation copyWith(void Function(ApplicationData_GetLocation) updates) => super.copyWith((message) => updates(message as ApplicationData_GetLocation)) as ApplicationData_GetLocation;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetLocation create() =>
-      ApplicationData_GetLocation._();
+  static ApplicationData_GetLocation create() => ApplicationData_GetLocation._();
   ApplicationData_GetLocation createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetLocation> createRepeated() =>
-      $pb.PbList<ApplicationData_GetLocation>();
+  static $pb.PbList<ApplicationData_GetLocation> createRepeated() => $pb.PbList<ApplicationData_GetLocation>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetLocation getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetLocation>(create);
+  static ApplicationData_GetLocation getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetLocation>(create);
   static ApplicationData_GetLocation? _defaultInstance;
 }
 
 class ApplicationData_GetVouchers extends $pb.GeneratedMessage {
   factory ApplicationData_GetVouchers() => create();
   ApplicationData_GetVouchers._() : super();
-  factory ApplicationData_GetVouchers.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetVouchers.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetVouchers.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetVouchers.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetVouchers',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetVouchers', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetVouchers clone() =>
-      ApplicationData_GetVouchers()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetVouchers copyWith(
-          void Function(ApplicationData_GetVouchers) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_GetVouchers))
-          as ApplicationData_GetVouchers;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetVouchers clone() => ApplicationData_GetVouchers()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetVouchers copyWith(void Function(ApplicationData_GetVouchers) updates) => super.copyWith((message) => updates(message as ApplicationData_GetVouchers)) as ApplicationData_GetVouchers;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetVouchers create() =>
-      ApplicationData_GetVouchers._();
+  static ApplicationData_GetVouchers create() => ApplicationData_GetVouchers._();
   ApplicationData_GetVouchers createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetVouchers> createRepeated() =>
-      $pb.PbList<ApplicationData_GetVouchers>();
+  static $pb.PbList<ApplicationData_GetVouchers> createRepeated() => $pb.PbList<ApplicationData_GetVouchers>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetVouchers getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetVouchers>(create);
+  static ApplicationData_GetVouchers getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetVouchers>(create);
   static ApplicationData_GetVouchers? _defaultInstance;
 }
 
 class ApplicationData_GetAvailablePlans extends $pb.GeneratedMessage {
   factory ApplicationData_GetAvailablePlans() => create();
   ApplicationData_GetAvailablePlans._() : super();
-  factory ApplicationData_GetAvailablePlans.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetAvailablePlans.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetAvailablePlans.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetAvailablePlans.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetAvailablePlans',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetAvailablePlans', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetAvailablePlans clone() =>
-      ApplicationData_GetAvailablePlans()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetAvailablePlans copyWith(
-          void Function(ApplicationData_GetAvailablePlans) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_GetAvailablePlans))
-          as ApplicationData_GetAvailablePlans;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetAvailablePlans clone() => ApplicationData_GetAvailablePlans()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetAvailablePlans copyWith(void Function(ApplicationData_GetAvailablePlans) updates) => super.copyWith((message) => updates(message as ApplicationData_GetAvailablePlans)) as ApplicationData_GetAvailablePlans;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetAvailablePlans create() =>
-      ApplicationData_GetAvailablePlans._();
+  static ApplicationData_GetAvailablePlans create() => ApplicationData_GetAvailablePlans._();
   ApplicationData_GetAvailablePlans createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetAvailablePlans> createRepeated() =>
-      $pb.PbList<ApplicationData_GetAvailablePlans>();
+  static $pb.PbList<ApplicationData_GetAvailablePlans> createRepeated() => $pb.PbList<ApplicationData_GetAvailablePlans>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetAvailablePlans getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetAvailablePlans>(
-          create);
+  static ApplicationData_GetAvailablePlans getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetAvailablePlans>(create);
   static ApplicationData_GetAvailablePlans? _defaultInstance;
 }
 
 class ApplicationData_GetAddAccountsInvites extends $pb.GeneratedMessage {
   factory ApplicationData_GetAddAccountsInvites() => create();
   ApplicationData_GetAddAccountsInvites._() : super();
-  factory ApplicationData_GetAddAccountsInvites.fromBuffer(
-          $core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetAddAccountsInvites.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetAddAccountsInvites.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetAddAccountsInvites.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetAddAccountsInvites',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetAddAccountsInvites', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetAddAccountsInvites clone() =>
-      ApplicationData_GetAddAccountsInvites()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetAddAccountsInvites copyWith(
-          void Function(ApplicationData_GetAddAccountsInvites) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_GetAddAccountsInvites))
-          as ApplicationData_GetAddAccountsInvites;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetAddAccountsInvites clone() => ApplicationData_GetAddAccountsInvites()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetAddAccountsInvites copyWith(void Function(ApplicationData_GetAddAccountsInvites) updates) => super.copyWith((message) => updates(message as ApplicationData_GetAddAccountsInvites)) as ApplicationData_GetAddAccountsInvites;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetAddAccountsInvites create() =>
-      ApplicationData_GetAddAccountsInvites._();
+  static ApplicationData_GetAddAccountsInvites create() => ApplicationData_GetAddAccountsInvites._();
   ApplicationData_GetAddAccountsInvites createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetAddAccountsInvites> createRepeated() =>
-      $pb.PbList<ApplicationData_GetAddAccountsInvites>();
+  static $pb.PbList<ApplicationData_GetAddAccountsInvites> createRepeated() => $pb.PbList<ApplicationData_GetAddAccountsInvites>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetAddAccountsInvites getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          ApplicationData_GetAddAccountsInvites>(create);
+  static ApplicationData_GetAddAccountsInvites getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetAddAccountsInvites>(create);
   static ApplicationData_GetAddAccountsInvites? _defaultInstance;
 }
 
 class ApplicationData_GetCurrentPlanInfos extends $pb.GeneratedMessage {
   factory ApplicationData_GetCurrentPlanInfos() => create();
   ApplicationData_GetCurrentPlanInfos._() : super();
-  factory ApplicationData_GetCurrentPlanInfos.fromBuffer(
-          $core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetCurrentPlanInfos.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetCurrentPlanInfos.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetCurrentPlanInfos.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetCurrentPlanInfos',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetCurrentPlanInfos', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetCurrentPlanInfos clone() =>
-      ApplicationData_GetCurrentPlanInfos()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetCurrentPlanInfos copyWith(
-          void Function(ApplicationData_GetCurrentPlanInfos) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_GetCurrentPlanInfos))
-          as ApplicationData_GetCurrentPlanInfos;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetCurrentPlanInfos clone() => ApplicationData_GetCurrentPlanInfos()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetCurrentPlanInfos copyWith(void Function(ApplicationData_GetCurrentPlanInfos) updates) => super.copyWith((message) => updates(message as ApplicationData_GetCurrentPlanInfos)) as ApplicationData_GetCurrentPlanInfos;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetCurrentPlanInfos create() =>
-      ApplicationData_GetCurrentPlanInfos._();
+  static ApplicationData_GetCurrentPlanInfos create() => ApplicationData_GetCurrentPlanInfos._();
   ApplicationData_GetCurrentPlanInfos createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetCurrentPlanInfos> createRepeated() =>
-      $pb.PbList<ApplicationData_GetCurrentPlanInfos>();
+  static $pb.PbList<ApplicationData_GetCurrentPlanInfos> createRepeated() => $pb.PbList<ApplicationData_GetCurrentPlanInfos>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetCurrentPlanInfos getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          ApplicationData_GetCurrentPlanInfos>(create);
+  static ApplicationData_GetCurrentPlanInfos getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetCurrentPlanInfos>(create);
   static ApplicationData_GetCurrentPlanInfos? _defaultInstance;
 }
 
@@ -1622,57 +1264,39 @@ class ApplicationData_RedeemAdditionalCode extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_RedeemAdditionalCode._() : super();
-  factory ApplicationData_RedeemAdditionalCode.fromBuffer(
-          $core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_RedeemAdditionalCode.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_RedeemAdditionalCode.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_RedeemAdditionalCode.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.RedeemAdditionalCode',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.RedeemAdditionalCode', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aOS(2, _omitFieldNames ? '' : 'inviteCode')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_RedeemAdditionalCode clone() =>
-      ApplicationData_RedeemAdditionalCode()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_RedeemAdditionalCode copyWith(
-          void Function(ApplicationData_RedeemAdditionalCode) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_RedeemAdditionalCode))
-          as ApplicationData_RedeemAdditionalCode;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_RedeemAdditionalCode clone() => ApplicationData_RedeemAdditionalCode()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_RedeemAdditionalCode copyWith(void Function(ApplicationData_RedeemAdditionalCode) updates) => super.copyWith((message) => updates(message as ApplicationData_RedeemAdditionalCode)) as ApplicationData_RedeemAdditionalCode;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_RedeemAdditionalCode create() =>
-      ApplicationData_RedeemAdditionalCode._();
+  static ApplicationData_RedeemAdditionalCode create() => ApplicationData_RedeemAdditionalCode._();
   ApplicationData_RedeemAdditionalCode createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_RedeemAdditionalCode> createRepeated() =>
-      $pb.PbList<ApplicationData_RedeemAdditionalCode>();
+  static $pb.PbList<ApplicationData_RedeemAdditionalCode> createRepeated() => $pb.PbList<ApplicationData_RedeemAdditionalCode>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_RedeemAdditionalCode getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          ApplicationData_RedeemAdditionalCode>(create);
+  static ApplicationData_RedeemAdditionalCode getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_RedeemAdditionalCode>(create);
   static ApplicationData_RedeemAdditionalCode? _defaultInstance;
 
   @$pb.TagNumber(2)
   $core.String get inviteCode => $_getSZ(0);
   @$pb.TagNumber(2)
-  set inviteCode($core.String v) {
-    $_setString(0, v);
-  }
-
+  set inviteCode($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(2)
   $core.bool hasInviteCode() => $_has(0);
   @$pb.TagNumber(2)
@@ -1690,57 +1314,39 @@ class ApplicationData_RemoveAdditionalUser extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_RemoveAdditionalUser._() : super();
-  factory ApplicationData_RemoveAdditionalUser.fromBuffer(
-          $core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_RemoveAdditionalUser.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_RemoveAdditionalUser.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_RemoveAdditionalUser.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.RemoveAdditionalUser',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.RemoveAdditionalUser', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_RemoveAdditionalUser clone() =>
-      ApplicationData_RemoveAdditionalUser()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_RemoveAdditionalUser copyWith(
-          void Function(ApplicationData_RemoveAdditionalUser) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_RemoveAdditionalUser))
-          as ApplicationData_RemoveAdditionalUser;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_RemoveAdditionalUser clone() => ApplicationData_RemoveAdditionalUser()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_RemoveAdditionalUser copyWith(void Function(ApplicationData_RemoveAdditionalUser) updates) => super.copyWith((message) => updates(message as ApplicationData_RemoveAdditionalUser)) as ApplicationData_RemoveAdditionalUser;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_RemoveAdditionalUser create() =>
-      ApplicationData_RemoveAdditionalUser._();
+  static ApplicationData_RemoveAdditionalUser create() => ApplicationData_RemoveAdditionalUser._();
   ApplicationData_RemoveAdditionalUser createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_RemoveAdditionalUser> createRepeated() =>
-      $pb.PbList<ApplicationData_RemoveAdditionalUser>();
+  static $pb.PbList<ApplicationData_RemoveAdditionalUser> createRepeated() => $pb.PbList<ApplicationData_RemoveAdditionalUser>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_RemoveAdditionalUser getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          ApplicationData_RemoveAdditionalUser>(create);
+  static ApplicationData_RemoveAdditionalUser getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_RemoveAdditionalUser>(create);
   static ApplicationData_RemoveAdditionalUser? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -1758,56 +1364,39 @@ class ApplicationData_GetPrekeysByUserId extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_GetPrekeysByUserId._() : super();
-  factory ApplicationData_GetPrekeysByUserId.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetPrekeysByUserId.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetPrekeysByUserId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetPrekeysByUserId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetPrekeysByUserId',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetPrekeysByUserId', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetPrekeysByUserId clone() =>
-      ApplicationData_GetPrekeysByUserId()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetPrekeysByUserId copyWith(
-          void Function(ApplicationData_GetPrekeysByUserId) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_GetPrekeysByUserId))
-          as ApplicationData_GetPrekeysByUserId;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetPrekeysByUserId clone() => ApplicationData_GetPrekeysByUserId()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetPrekeysByUserId copyWith(void Function(ApplicationData_GetPrekeysByUserId) updates) => super.copyWith((message) => updates(message as ApplicationData_GetPrekeysByUserId)) as ApplicationData_GetPrekeysByUserId;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetPrekeysByUserId create() =>
-      ApplicationData_GetPrekeysByUserId._();
+  static ApplicationData_GetPrekeysByUserId create() => ApplicationData_GetPrekeysByUserId._();
   ApplicationData_GetPrekeysByUserId createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetPrekeysByUserId> createRepeated() =>
-      $pb.PbList<ApplicationData_GetPrekeysByUserId>();
+  static $pb.PbList<ApplicationData_GetPrekeysByUserId> createRepeated() => $pb.PbList<ApplicationData_GetPrekeysByUserId>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetPrekeysByUserId getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetPrekeysByUserId>(
-          create);
+  static ApplicationData_GetPrekeysByUserId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetPrekeysByUserId>(create);
   static ApplicationData_GetPrekeysByUserId? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -1825,57 +1414,39 @@ class ApplicationData_GetSignedPreKeyByUserId extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_GetSignedPreKeyByUserId._() : super();
-  factory ApplicationData_GetSignedPreKeyByUserId.fromBuffer(
-          $core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_GetSignedPreKeyByUserId.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_GetSignedPreKeyByUserId.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_GetSignedPreKeyByUserId.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.GetSignedPreKeyByUserId',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.GetSignedPreKeyByUserId', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
-    ..hasRequiredFields = false;
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetSignedPreKeyByUserId clone() =>
-      ApplicationData_GetSignedPreKeyByUserId()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_GetSignedPreKeyByUserId copyWith(
-          void Function(ApplicationData_GetSignedPreKeyByUserId) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_GetSignedPreKeyByUserId))
-          as ApplicationData_GetSignedPreKeyByUserId;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetSignedPreKeyByUserId clone() => ApplicationData_GetSignedPreKeyByUserId()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_GetSignedPreKeyByUserId copyWith(void Function(ApplicationData_GetSignedPreKeyByUserId) updates) => super.copyWith((message) => updates(message as ApplicationData_GetSignedPreKeyByUserId)) as ApplicationData_GetSignedPreKeyByUserId;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetSignedPreKeyByUserId create() =>
-      ApplicationData_GetSignedPreKeyByUserId._();
+  static ApplicationData_GetSignedPreKeyByUserId create() => ApplicationData_GetSignedPreKeyByUserId._();
   ApplicationData_GetSignedPreKeyByUserId createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_GetSignedPreKeyByUserId> createRepeated() =>
-      $pb.PbList<ApplicationData_GetSignedPreKeyByUserId>();
+  static $pb.PbList<ApplicationData_GetSignedPreKeyByUserId> createRepeated() => $pb.PbList<ApplicationData_GetSignedPreKeyByUserId>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_GetSignedPreKeyByUserId getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
-          ApplicationData_GetSignedPreKeyByUserId>(create);
+  static ApplicationData_GetSignedPreKeyByUserId getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_GetSignedPreKeyByUserId>(create);
   static ApplicationData_GetSignedPreKeyByUserId? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -1901,60 +1472,41 @@ class ApplicationData_UpdateSignedPreKey extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_UpdateSignedPreKey._() : super();
-  factory ApplicationData_UpdateSignedPreKey.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_UpdateSignedPreKey.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_UpdateSignedPreKey.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_UpdateSignedPreKey.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.UpdateSignedPreKey',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.UpdateSignedPreKey', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'signedPrekeyId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false;
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'signedPrekey', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'signedPrekeySignature', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_UpdateSignedPreKey clone() =>
-      ApplicationData_UpdateSignedPreKey()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_UpdateSignedPreKey copyWith(
-          void Function(ApplicationData_UpdateSignedPreKey) updates) =>
-      super.copyWith((message) =>
-              updates(message as ApplicationData_UpdateSignedPreKey))
-          as ApplicationData_UpdateSignedPreKey;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdateSignedPreKey clone() => ApplicationData_UpdateSignedPreKey()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_UpdateSignedPreKey copyWith(void Function(ApplicationData_UpdateSignedPreKey) updates) => super.copyWith((message) => updates(message as ApplicationData_UpdateSignedPreKey)) as ApplicationData_UpdateSignedPreKey;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdateSignedPreKey create() =>
-      ApplicationData_UpdateSignedPreKey._();
+  static ApplicationData_UpdateSignedPreKey create() => ApplicationData_UpdateSignedPreKey._();
   ApplicationData_UpdateSignedPreKey createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_UpdateSignedPreKey> createRepeated() =>
-      $pb.PbList<ApplicationData_UpdateSignedPreKey>();
+  static $pb.PbList<ApplicationData_UpdateSignedPreKey> createRepeated() => $pb.PbList<ApplicationData_UpdateSignedPreKey>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_UpdateSignedPreKey getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdateSignedPreKey>(
-          create);
+  static ApplicationData_UpdateSignedPreKey getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_UpdateSignedPreKey>(create);
   static ApplicationData_UpdateSignedPreKey? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get signedPrekeyId => $_getI64(0);
   @$pb.TagNumber(1)
-  set signedPrekeyId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set signedPrekeyId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasSignedPrekeyId() => $_has(0);
   @$pb.TagNumber(1)
@@ -1963,10 +1515,7 @@ class ApplicationData_UpdateSignedPreKey extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get signedPrekey => $_getN(1);
   @$pb.TagNumber(2)
-  set signedPrekey($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set signedPrekey($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasSignedPrekey() => $_has(1);
   @$pb.TagNumber(2)
@@ -1975,10 +1524,7 @@ class ApplicationData_UpdateSignedPreKey extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.List<$core.int> get signedPrekeySignature => $_getN(2);
   @$pb.TagNumber(3)
-  set signedPrekeySignature($core.List<$core.int> v) {
-    $_setBytes(2, v);
-  }
-
+  set signedPrekeySignature($core.List<$core.int> v) { $_setBytes(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasSignedPrekeySignature() => $_has(2);
   @$pb.TagNumber(3)
@@ -1996,56 +1542,39 @@ class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData_DownloadDone._() : super();
-  factory ApplicationData_DownloadDone.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_DownloadDone.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_DownloadDone.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_DownloadDone.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.DownloadDone',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(
-        1, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.DownloadDone', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_DownloadDone clone() =>
-      ApplicationData_DownloadDone()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_DownloadDone copyWith(
-          void Function(ApplicationData_DownloadDone) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_DownloadDone))
-          as ApplicationData_DownloadDone;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DownloadDone clone() => ApplicationData_DownloadDone()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DownloadDone copyWith(void Function(ApplicationData_DownloadDone) updates) => super.copyWith((message) => updates(message as ApplicationData_DownloadDone)) as ApplicationData_DownloadDone;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_DownloadDone create() =>
-      ApplicationData_DownloadDone._();
+  static ApplicationData_DownloadDone create() => ApplicationData_DownloadDone._();
   ApplicationData_DownloadDone createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_DownloadDone> createRepeated() =>
-      $pb.PbList<ApplicationData_DownloadDone>();
+  static $pb.PbList<ApplicationData_DownloadDone> createRepeated() => $pb.PbList<ApplicationData_DownloadDone>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_DownloadDone getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_DownloadDone>(create);
+  static ApplicationData_DownloadDone getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_DownloadDone>(create);
   static ApplicationData_DownloadDone? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.List<$core.int> get downloadToken => $_getN(0);
   @$pb.TagNumber(1)
-  set downloadToken($core.List<$core.int> v) {
-    $_setBytes(0, v);
-  }
-
+  set downloadToken($core.List<$core.int> v) { $_setBytes(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasDownloadToken() => $_has(0);
   @$pb.TagNumber(1)
@@ -2055,69 +1584,56 @@ class ApplicationData_DownloadDone extends $pb.GeneratedMessage {
 class ApplicationData_DeleteAccount extends $pb.GeneratedMessage {
   factory ApplicationData_DeleteAccount() => create();
   ApplicationData_DeleteAccount._() : super();
-  factory ApplicationData_DeleteAccount.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData_DeleteAccount.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData_DeleteAccount.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_DeleteAccount.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData.DeleteAccount',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.DeleteAccount', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ApplicationData_DeleteAccount clone() =>
-      ApplicationData_DeleteAccount()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData_DeleteAccount copyWith(
-          void Function(ApplicationData_DeleteAccount) updates) =>
-      super.copyWith(
-              (message) => updates(message as ApplicationData_DeleteAccount))
-          as ApplicationData_DeleteAccount;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DeleteAccount clone() => ApplicationData_DeleteAccount()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_DeleteAccount copyWith(void Function(ApplicationData_DeleteAccount) updates) => super.copyWith((message) => updates(message as ApplicationData_DeleteAccount)) as ApplicationData_DeleteAccount;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_DeleteAccount create() =>
-      ApplicationData_DeleteAccount._();
+  static ApplicationData_DeleteAccount create() => ApplicationData_DeleteAccount._();
   ApplicationData_DeleteAccount createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData_DeleteAccount> createRepeated() =>
-      $pb.PbList<ApplicationData_DeleteAccount>();
+  static $pb.PbList<ApplicationData_DeleteAccount> createRepeated() => $pb.PbList<ApplicationData_DeleteAccount>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData_DeleteAccount getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData_DeleteAccount>(create);
+  static ApplicationData_DeleteAccount getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_DeleteAccount>(create);
   static ApplicationData_DeleteAccount? _defaultInstance;
 }
 
 enum ApplicationData_ApplicationData {
-  textmessage,
-  getuserbyusername,
-  getprekeysbyuserid,
-  getuserbyid,
-  updategooglefcmtoken,
-  getlocation,
-  getcurrentplaninfos,
-  redeemvoucher,
-  getavailableplans,
-  createvoucher,
-  getvouchers,
-  switchtopayedplan,
-  getaddaccountsinvites,
-  redeemadditionalcode,
-  removeadditionaluser,
-  updateplanoptions,
-  downloaddone,
-  getsignedprekeybyuserid,
-  updatesignedprekey,
-  deleteaccount,
+  textmessage, 
+  getuserbyusername, 
+  getprekeysbyuserid, 
+  getuserbyid, 
+  updategooglefcmtoken, 
+  getlocation, 
+  getcurrentplaninfos, 
+  redeemvoucher, 
+  getavailableplans, 
+  createvoucher, 
+  getvouchers, 
+  switchtopayedplan, 
+  getaddaccountsinvites, 
+  redeemadditionalcode, 
+  removeadditionaluser, 
+  updateplanoptions, 
+  downloaddone, 
+  getsignedprekeybyuserid, 
+  updatesignedprekey, 
+  deleteaccount, 
   notSet
 }
 
@@ -2208,157 +1724,85 @@ class ApplicationData extends $pb.GeneratedMessage {
     return $result;
   }
   ApplicationData._() : super();
-  factory ApplicationData.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ApplicationData.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory ApplicationData.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static const $core.Map<$core.int, ApplicationData_ApplicationData>
-      _ApplicationData_ApplicationDataByTag = {
-    1: ApplicationData_ApplicationData.textmessage,
-    2: ApplicationData_ApplicationData.getuserbyusername,
-    3: ApplicationData_ApplicationData.getprekeysbyuserid,
-    6: ApplicationData_ApplicationData.getuserbyid,
-    8: ApplicationData_ApplicationData.updategooglefcmtoken,
-    9: ApplicationData_ApplicationData.getlocation,
-    10: ApplicationData_ApplicationData.getcurrentplaninfos,
-    11: ApplicationData_ApplicationData.redeemvoucher,
-    12: ApplicationData_ApplicationData.getavailableplans,
-    13: ApplicationData_ApplicationData.createvoucher,
-    14: ApplicationData_ApplicationData.getvouchers,
-    15: ApplicationData_ApplicationData.switchtopayedplan,
-    16: ApplicationData_ApplicationData.getaddaccountsinvites,
-    17: ApplicationData_ApplicationData.redeemadditionalcode,
-    18: ApplicationData_ApplicationData.removeadditionaluser,
-    19: ApplicationData_ApplicationData.updateplanoptions,
-    20: ApplicationData_ApplicationData.downloaddone,
-    22: ApplicationData_ApplicationData.getsignedprekeybyuserid,
-    23: ApplicationData_ApplicationData.updatesignedprekey,
-    24: ApplicationData_ApplicationData.deleteaccount,
-    0: ApplicationData_ApplicationData.notSet
+  static const $core.Map<$core.int, ApplicationData_ApplicationData> _ApplicationData_ApplicationDataByTag = {
+    1 : ApplicationData_ApplicationData.textmessage,
+    2 : ApplicationData_ApplicationData.getuserbyusername,
+    3 : ApplicationData_ApplicationData.getprekeysbyuserid,
+    6 : ApplicationData_ApplicationData.getuserbyid,
+    8 : ApplicationData_ApplicationData.updategooglefcmtoken,
+    9 : ApplicationData_ApplicationData.getlocation,
+    10 : ApplicationData_ApplicationData.getcurrentplaninfos,
+    11 : ApplicationData_ApplicationData.redeemvoucher,
+    12 : ApplicationData_ApplicationData.getavailableplans,
+    13 : ApplicationData_ApplicationData.createvoucher,
+    14 : ApplicationData_ApplicationData.getvouchers,
+    15 : ApplicationData_ApplicationData.switchtopayedplan,
+    16 : ApplicationData_ApplicationData.getaddaccountsinvites,
+    17 : ApplicationData_ApplicationData.redeemadditionalcode,
+    18 : ApplicationData_ApplicationData.removeadditionaluser,
+    19 : ApplicationData_ApplicationData.updateplanoptions,
+    20 : ApplicationData_ApplicationData.downloaddone,
+    22 : ApplicationData_ApplicationData.getsignedprekeybyuserid,
+    23 : ApplicationData_ApplicationData.updatesignedprekey,
+    24 : ApplicationData_ApplicationData.deleteaccount,
+    0 : ApplicationData_ApplicationData.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ApplicationData',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..oo(0, [
-      1,
-      2,
-      3,
-      6,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
-      20,
-      22,
-      23,
-      24
-    ])
-    ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage',
-        subBuilder: ApplicationData_TextMessage.create)
-    ..aOM<ApplicationData_GetUserByUsername>(
-        2, _omitFieldNames ? '' : 'getuserbyusername',
-        subBuilder: ApplicationData_GetUserByUsername.create)
-    ..aOM<ApplicationData_GetPrekeysByUserId>(
-        3, _omitFieldNames ? '' : 'getprekeysbyuserid',
-        subBuilder: ApplicationData_GetPrekeysByUserId.create)
-    ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getuserbyid',
-        subBuilder: ApplicationData_GetUserById.create)
-    ..aOM<ApplicationData_UpdateGoogleFcmToken>(
-        8, _omitFieldNames ? '' : 'updategooglefcmtoken',
-        subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
-    ..aOM<ApplicationData_GetLocation>(9, _omitFieldNames ? '' : 'getlocation',
-        subBuilder: ApplicationData_GetLocation.create)
-    ..aOM<ApplicationData_GetCurrentPlanInfos>(
-        10, _omitFieldNames ? '' : 'getcurrentplaninfos',
-        subBuilder: ApplicationData_GetCurrentPlanInfos.create)
-    ..aOM<ApplicationData_RedeemVoucher>(
-        11, _omitFieldNames ? '' : 'redeemvoucher',
-        subBuilder: ApplicationData_RedeemVoucher.create)
-    ..aOM<ApplicationData_GetAvailablePlans>(
-        12, _omitFieldNames ? '' : 'getavailableplans',
-        subBuilder: ApplicationData_GetAvailablePlans.create)
-    ..aOM<ApplicationData_CreateVoucher>(
-        13, _omitFieldNames ? '' : 'createvoucher',
-        subBuilder: ApplicationData_CreateVoucher.create)
-    ..aOM<ApplicationData_GetVouchers>(14, _omitFieldNames ? '' : 'getvouchers',
-        subBuilder: ApplicationData_GetVouchers.create)
-    ..aOM<ApplicationData_SwitchToPayedPlan>(
-        15, _omitFieldNames ? '' : 'Switchtopayedplan',
-        protoName: 'Switchtopayedplan',
-        subBuilder: ApplicationData_SwitchToPayedPlan.create)
-    ..aOM<ApplicationData_GetAddAccountsInvites>(
-        16, _omitFieldNames ? '' : 'getaddaccountsinvites',
-        subBuilder: ApplicationData_GetAddAccountsInvites.create)
-    ..aOM<ApplicationData_RedeemAdditionalCode>(
-        17, _omitFieldNames ? '' : 'redeemadditionalcode',
-        subBuilder: ApplicationData_RedeemAdditionalCode.create)
-    ..aOM<ApplicationData_RemoveAdditionalUser>(
-        18, _omitFieldNames ? '' : 'removeadditionaluser',
-        subBuilder: ApplicationData_RemoveAdditionalUser.create)
-    ..aOM<ApplicationData_UpdatePlanOptions>(
-        19, _omitFieldNames ? '' : 'updateplanoptions',
-        subBuilder: ApplicationData_UpdatePlanOptions.create)
-    ..aOM<ApplicationData_DownloadDone>(
-        20, _omitFieldNames ? '' : 'downloaddone',
-        subBuilder: ApplicationData_DownloadDone.create)
-    ..aOM<ApplicationData_GetSignedPreKeyByUserId>(
-        22, _omitFieldNames ? '' : 'getsignedprekeybyuserid',
-        subBuilder: ApplicationData_GetSignedPreKeyByUserId.create)
-    ..aOM<ApplicationData_UpdateSignedPreKey>(
-        23, _omitFieldNames ? '' : 'updatesignedprekey',
-        subBuilder: ApplicationData_UpdateSignedPreKey.create)
-    ..aOM<ApplicationData_DeleteAccount>(
-        24, _omitFieldNames ? '' : 'deleteaccount',
-        subBuilder: ApplicationData_DeleteAccount.create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..oo(0, [1, 2, 3, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24])
+    ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
+    ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
+    ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
+    ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getuserbyid', subBuilder: ApplicationData_GetUserById.create)
+    ..aOM<ApplicationData_UpdateGoogleFcmToken>(8, _omitFieldNames ? '' : 'updategooglefcmtoken', subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
+    ..aOM<ApplicationData_GetLocation>(9, _omitFieldNames ? '' : 'getlocation', subBuilder: ApplicationData_GetLocation.create)
+    ..aOM<ApplicationData_GetCurrentPlanInfos>(10, _omitFieldNames ? '' : 'getcurrentplaninfos', subBuilder: ApplicationData_GetCurrentPlanInfos.create)
+    ..aOM<ApplicationData_RedeemVoucher>(11, _omitFieldNames ? '' : 'redeemvoucher', subBuilder: ApplicationData_RedeemVoucher.create)
+    ..aOM<ApplicationData_GetAvailablePlans>(12, _omitFieldNames ? '' : 'getavailableplans', subBuilder: ApplicationData_GetAvailablePlans.create)
+    ..aOM<ApplicationData_CreateVoucher>(13, _omitFieldNames ? '' : 'createvoucher', subBuilder: ApplicationData_CreateVoucher.create)
+    ..aOM<ApplicationData_GetVouchers>(14, _omitFieldNames ? '' : 'getvouchers', subBuilder: ApplicationData_GetVouchers.create)
+    ..aOM<ApplicationData_SwitchToPayedPlan>(15, _omitFieldNames ? '' : 'Switchtopayedplan', protoName: 'Switchtopayedplan', subBuilder: ApplicationData_SwitchToPayedPlan.create)
+    ..aOM<ApplicationData_GetAddAccountsInvites>(16, _omitFieldNames ? '' : 'getaddaccountsinvites', subBuilder: ApplicationData_GetAddAccountsInvites.create)
+    ..aOM<ApplicationData_RedeemAdditionalCode>(17, _omitFieldNames ? '' : 'redeemadditionalcode', subBuilder: ApplicationData_RedeemAdditionalCode.create)
+    ..aOM<ApplicationData_RemoveAdditionalUser>(18, _omitFieldNames ? '' : 'removeadditionaluser', subBuilder: ApplicationData_RemoveAdditionalUser.create)
+    ..aOM<ApplicationData_UpdatePlanOptions>(19, _omitFieldNames ? '' : 'updateplanoptions', subBuilder: ApplicationData_UpdatePlanOptions.create)
+    ..aOM<ApplicationData_DownloadDone>(20, _omitFieldNames ? '' : 'downloaddone', subBuilder: ApplicationData_DownloadDone.create)
+    ..aOM<ApplicationData_GetSignedPreKeyByUserId>(22, _omitFieldNames ? '' : 'getsignedprekeybyuserid', subBuilder: ApplicationData_GetSignedPreKeyByUserId.create)
+    ..aOM<ApplicationData_UpdateSignedPreKey>(23, _omitFieldNames ? '' : 'updatesignedprekey', subBuilder: ApplicationData_UpdateSignedPreKey.create)
+    ..aOM<ApplicationData_DeleteAccount>(24, _omitFieldNames ? '' : 'deleteaccount', subBuilder: ApplicationData_DeleteAccount.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   ApplicationData clone() => ApplicationData()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ApplicationData copyWith(void Function(ApplicationData) updates) =>
-      super.copyWith((message) => updates(message as ApplicationData))
-          as ApplicationData;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData copyWith(void Function(ApplicationData) updates) => super.copyWith((message) => updates(message as ApplicationData)) as ApplicationData;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static ApplicationData create() => ApplicationData._();
   ApplicationData createEmptyInstance() => create();
-  static $pb.PbList<ApplicationData> createRepeated() =>
-      $pb.PbList<ApplicationData>();
+  static $pb.PbList<ApplicationData> createRepeated() => $pb.PbList<ApplicationData>();
   @$core.pragma('dart2js:noInline')
-  static ApplicationData getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ApplicationData>(create);
+  static ApplicationData getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData>(create);
   static ApplicationData? _defaultInstance;
 
-  ApplicationData_ApplicationData whichApplicationData() =>
-      _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
+  ApplicationData_ApplicationData whichApplicationData() => _ApplicationData_ApplicationDataByTag[$_whichOneof(0)]!;
   void clearApplicationData() => clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   ApplicationData_TextMessage get textmessage => $_getN(0);
   @$pb.TagNumber(1)
-  set textmessage(ApplicationData_TextMessage v) {
-    setField(1, v);
-  }
-
+  set textmessage(ApplicationData_TextMessage v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasTextmessage() => $_has(0);
   @$pb.TagNumber(1)
@@ -2369,10 +1813,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   ApplicationData_GetUserByUsername get getuserbyusername => $_getN(1);
   @$pb.TagNumber(2)
-  set getuserbyusername(ApplicationData_GetUserByUsername v) {
-    setField(2, v);
-  }
-
+  set getuserbyusername(ApplicationData_GetUserByUsername v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasGetuserbyusername() => $_has(1);
   @$pb.TagNumber(2)
@@ -2383,10 +1824,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   ApplicationData_GetPrekeysByUserId get getprekeysbyuserid => $_getN(2);
   @$pb.TagNumber(3)
-  set getprekeysbyuserid(ApplicationData_GetPrekeysByUserId v) {
-    setField(3, v);
-  }
-
+  set getprekeysbyuserid(ApplicationData_GetPrekeysByUserId v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasGetprekeysbyuserid() => $_has(2);
   @$pb.TagNumber(3)
@@ -2397,10 +1835,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(6)
   ApplicationData_GetUserById get getuserbyid => $_getN(3);
   @$pb.TagNumber(6)
-  set getuserbyid(ApplicationData_GetUserById v) {
-    setField(6, v);
-  }
-
+  set getuserbyid(ApplicationData_GetUserById v) { setField(6, v); }
   @$pb.TagNumber(6)
   $core.bool hasGetuserbyid() => $_has(3);
   @$pb.TagNumber(6)
@@ -2411,25 +1846,18 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(8)
   ApplicationData_UpdateGoogleFcmToken get updategooglefcmtoken => $_getN(4);
   @$pb.TagNumber(8)
-  set updategooglefcmtoken(ApplicationData_UpdateGoogleFcmToken v) {
-    setField(8, v);
-  }
-
+  set updategooglefcmtoken(ApplicationData_UpdateGoogleFcmToken v) { setField(8, v); }
   @$pb.TagNumber(8)
   $core.bool hasUpdategooglefcmtoken() => $_has(4);
   @$pb.TagNumber(8)
   void clearUpdategooglefcmtoken() => clearField(8);
   @$pb.TagNumber(8)
-  ApplicationData_UpdateGoogleFcmToken ensureUpdategooglefcmtoken() =>
-      $_ensure(4);
+  ApplicationData_UpdateGoogleFcmToken ensureUpdategooglefcmtoken() => $_ensure(4);
 
   @$pb.TagNumber(9)
   ApplicationData_GetLocation get getlocation => $_getN(5);
   @$pb.TagNumber(9)
-  set getlocation(ApplicationData_GetLocation v) {
-    setField(9, v);
-  }
-
+  set getlocation(ApplicationData_GetLocation v) { setField(9, v); }
   @$pb.TagNumber(9)
   $core.bool hasGetlocation() => $_has(5);
   @$pb.TagNumber(9)
@@ -2440,25 +1868,18 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(10)
   ApplicationData_GetCurrentPlanInfos get getcurrentplaninfos => $_getN(6);
   @$pb.TagNumber(10)
-  set getcurrentplaninfos(ApplicationData_GetCurrentPlanInfos v) {
-    setField(10, v);
-  }
-
+  set getcurrentplaninfos(ApplicationData_GetCurrentPlanInfos v) { setField(10, v); }
   @$pb.TagNumber(10)
   $core.bool hasGetcurrentplaninfos() => $_has(6);
   @$pb.TagNumber(10)
   void clearGetcurrentplaninfos() => clearField(10);
   @$pb.TagNumber(10)
-  ApplicationData_GetCurrentPlanInfos ensureGetcurrentplaninfos() =>
-      $_ensure(6);
+  ApplicationData_GetCurrentPlanInfos ensureGetcurrentplaninfos() => $_ensure(6);
 
   @$pb.TagNumber(11)
   ApplicationData_RedeemVoucher get redeemvoucher => $_getN(7);
   @$pb.TagNumber(11)
-  set redeemvoucher(ApplicationData_RedeemVoucher v) {
-    setField(11, v);
-  }
-
+  set redeemvoucher(ApplicationData_RedeemVoucher v) { setField(11, v); }
   @$pb.TagNumber(11)
   $core.bool hasRedeemvoucher() => $_has(7);
   @$pb.TagNumber(11)
@@ -2469,10 +1890,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(12)
   ApplicationData_GetAvailablePlans get getavailableplans => $_getN(8);
   @$pb.TagNumber(12)
-  set getavailableplans(ApplicationData_GetAvailablePlans v) {
-    setField(12, v);
-  }
-
+  set getavailableplans(ApplicationData_GetAvailablePlans v) { setField(12, v); }
   @$pb.TagNumber(12)
   $core.bool hasGetavailableplans() => $_has(8);
   @$pb.TagNumber(12)
@@ -2483,10 +1901,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(13)
   ApplicationData_CreateVoucher get createvoucher => $_getN(9);
   @$pb.TagNumber(13)
-  set createvoucher(ApplicationData_CreateVoucher v) {
-    setField(13, v);
-  }
-
+  set createvoucher(ApplicationData_CreateVoucher v) { setField(13, v); }
   @$pb.TagNumber(13)
   $core.bool hasCreatevoucher() => $_has(9);
   @$pb.TagNumber(13)
@@ -2497,10 +1912,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(14)
   ApplicationData_GetVouchers get getvouchers => $_getN(10);
   @$pb.TagNumber(14)
-  set getvouchers(ApplicationData_GetVouchers v) {
-    setField(14, v);
-  }
-
+  set getvouchers(ApplicationData_GetVouchers v) { setField(14, v); }
   @$pb.TagNumber(14)
   $core.bool hasGetvouchers() => $_has(10);
   @$pb.TagNumber(14)
@@ -2511,10 +1923,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(15)
   ApplicationData_SwitchToPayedPlan get switchtopayedplan => $_getN(11);
   @$pb.TagNumber(15)
-  set switchtopayedplan(ApplicationData_SwitchToPayedPlan v) {
-    setField(15, v);
-  }
-
+  set switchtopayedplan(ApplicationData_SwitchToPayedPlan v) { setField(15, v); }
   @$pb.TagNumber(15)
   $core.bool hasSwitchtopayedplan() => $_has(11);
   @$pb.TagNumber(15)
@@ -2525,55 +1934,40 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(16)
   ApplicationData_GetAddAccountsInvites get getaddaccountsinvites => $_getN(12);
   @$pb.TagNumber(16)
-  set getaddaccountsinvites(ApplicationData_GetAddAccountsInvites v) {
-    setField(16, v);
-  }
-
+  set getaddaccountsinvites(ApplicationData_GetAddAccountsInvites v) { setField(16, v); }
   @$pb.TagNumber(16)
   $core.bool hasGetaddaccountsinvites() => $_has(12);
   @$pb.TagNumber(16)
   void clearGetaddaccountsinvites() => clearField(16);
   @$pb.TagNumber(16)
-  ApplicationData_GetAddAccountsInvites ensureGetaddaccountsinvites() =>
-      $_ensure(12);
+  ApplicationData_GetAddAccountsInvites ensureGetaddaccountsinvites() => $_ensure(12);
 
   @$pb.TagNumber(17)
   ApplicationData_RedeemAdditionalCode get redeemadditionalcode => $_getN(13);
   @$pb.TagNumber(17)
-  set redeemadditionalcode(ApplicationData_RedeemAdditionalCode v) {
-    setField(17, v);
-  }
-
+  set redeemadditionalcode(ApplicationData_RedeemAdditionalCode v) { setField(17, v); }
   @$pb.TagNumber(17)
   $core.bool hasRedeemadditionalcode() => $_has(13);
   @$pb.TagNumber(17)
   void clearRedeemadditionalcode() => clearField(17);
   @$pb.TagNumber(17)
-  ApplicationData_RedeemAdditionalCode ensureRedeemadditionalcode() =>
-      $_ensure(13);
+  ApplicationData_RedeemAdditionalCode ensureRedeemadditionalcode() => $_ensure(13);
 
   @$pb.TagNumber(18)
   ApplicationData_RemoveAdditionalUser get removeadditionaluser => $_getN(14);
   @$pb.TagNumber(18)
-  set removeadditionaluser(ApplicationData_RemoveAdditionalUser v) {
-    setField(18, v);
-  }
-
+  set removeadditionaluser(ApplicationData_RemoveAdditionalUser v) { setField(18, v); }
   @$pb.TagNumber(18)
   $core.bool hasRemoveadditionaluser() => $_has(14);
   @$pb.TagNumber(18)
   void clearRemoveadditionaluser() => clearField(18);
   @$pb.TagNumber(18)
-  ApplicationData_RemoveAdditionalUser ensureRemoveadditionaluser() =>
-      $_ensure(14);
+  ApplicationData_RemoveAdditionalUser ensureRemoveadditionaluser() => $_ensure(14);
 
   @$pb.TagNumber(19)
   ApplicationData_UpdatePlanOptions get updateplanoptions => $_getN(15);
   @$pb.TagNumber(19)
-  set updateplanoptions(ApplicationData_UpdatePlanOptions v) {
-    setField(19, v);
-  }
-
+  set updateplanoptions(ApplicationData_UpdatePlanOptions v) { setField(19, v); }
   @$pb.TagNumber(19)
   $core.bool hasUpdateplanoptions() => $_has(15);
   @$pb.TagNumber(19)
@@ -2584,10 +1978,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(20)
   ApplicationData_DownloadDone get downloaddone => $_getN(16);
   @$pb.TagNumber(20)
-  set downloaddone(ApplicationData_DownloadDone v) {
-    setField(20, v);
-  }
-
+  set downloaddone(ApplicationData_DownloadDone v) { setField(20, v); }
   @$pb.TagNumber(20)
   $core.bool hasDownloaddone() => $_has(16);
   @$pb.TagNumber(20)
@@ -2596,28 +1987,20 @@ class ApplicationData extends $pb.GeneratedMessage {
   ApplicationData_DownloadDone ensureDownloaddone() => $_ensure(16);
 
   @$pb.TagNumber(22)
-  ApplicationData_GetSignedPreKeyByUserId get getsignedprekeybyuserid =>
-      $_getN(17);
+  ApplicationData_GetSignedPreKeyByUserId get getsignedprekeybyuserid => $_getN(17);
   @$pb.TagNumber(22)
-  set getsignedprekeybyuserid(ApplicationData_GetSignedPreKeyByUserId v) {
-    setField(22, v);
-  }
-
+  set getsignedprekeybyuserid(ApplicationData_GetSignedPreKeyByUserId v) { setField(22, v); }
   @$pb.TagNumber(22)
   $core.bool hasGetsignedprekeybyuserid() => $_has(17);
   @$pb.TagNumber(22)
   void clearGetsignedprekeybyuserid() => clearField(22);
   @$pb.TagNumber(22)
-  ApplicationData_GetSignedPreKeyByUserId ensureGetsignedprekeybyuserid() =>
-      $_ensure(17);
+  ApplicationData_GetSignedPreKeyByUserId ensureGetsignedprekeybyuserid() => $_ensure(17);
 
   @$pb.TagNumber(23)
   ApplicationData_UpdateSignedPreKey get updatesignedprekey => $_getN(18);
   @$pb.TagNumber(23)
-  set updatesignedprekey(ApplicationData_UpdateSignedPreKey v) {
-    setField(23, v);
-  }
-
+  set updatesignedprekey(ApplicationData_UpdateSignedPreKey v) { setField(23, v); }
   @$pb.TagNumber(23)
   $core.bool hasUpdatesignedprekey() => $_has(18);
   @$pb.TagNumber(23)
@@ -2628,10 +2011,7 @@ class ApplicationData extends $pb.GeneratedMessage {
   @$pb.TagNumber(24)
   ApplicationData_DeleteAccount get deleteaccount => $_getN(19);
   @$pb.TagNumber(24)
-  set deleteaccount(ApplicationData_DeleteAccount v) {
-    setField(24, v);
-  }
-
+  set deleteaccount(ApplicationData_DeleteAccount v) { setField(24, v); }
   @$pb.TagNumber(24)
   $core.bool hasDeleteaccount() => $_has(19);
   @$pb.TagNumber(24)
@@ -2655,53 +2035,40 @@ class Response_PreKey extends $pb.GeneratedMessage {
     return $result;
   }
   Response_PreKey._() : super();
-  factory Response_PreKey.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Response_PreKey.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Response_PreKey.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_PreKey.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.PreKey',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.PreKey', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'id')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'prekey', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false;
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'prekey', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Response_PreKey clone() => Response_PreKey()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Response_PreKey copyWith(void Function(Response_PreKey) updates) =>
-      super.copyWith((message) => updates(message as Response_PreKey))
-          as Response_PreKey;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_PreKey copyWith(void Function(Response_PreKey) updates) => super.copyWith((message) => updates(message as Response_PreKey)) as Response_PreKey;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static Response_PreKey create() => Response_PreKey._();
   Response_PreKey createEmptyInstance() => create();
-  static $pb.PbList<Response_PreKey> createRepeated() =>
-      $pb.PbList<Response_PreKey>();
+  static $pb.PbList<Response_PreKey> createRepeated() => $pb.PbList<Response_PreKey>();
   @$core.pragma('dart2js:noInline')
-  static Response_PreKey getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Response_PreKey>(create);
+  static Response_PreKey getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_PreKey>(create);
   static Response_PreKey? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get id => $_getI64(0);
   @$pb.TagNumber(1)
-  set id($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set id($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasId() => $_has(0);
   @$pb.TagNumber(1)
@@ -2710,10 +2077,7 @@ class Response_PreKey extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get prekey => $_getN(1);
   @$pb.TagNumber(2)
-  set prekey($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set prekey($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasPrekey() => $_has(1);
   @$pb.TagNumber(2)
@@ -2731,51 +2095,44 @@ class Response_Prekeys extends $pb.GeneratedMessage {
     return $result;
   }
   Response_Prekeys._() : super();
-  factory Response_Prekeys.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Response_Prekeys.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Response_Prekeys.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_Prekeys.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.Prekeys',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
-    ..pc<Response_PreKey>(
-        1, _omitFieldNames ? '' : 'prekeys', $pb.PbFieldType.PM,
-        subBuilder: Response_PreKey.create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Prekeys', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..pc<Response_PreKey>(1, _omitFieldNames ? '' : 'prekeys', $pb.PbFieldType.PM, subBuilder: Response_PreKey.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Response_Prekeys clone() => Response_Prekeys()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Response_Prekeys copyWith(void Function(Response_Prekeys) updates) =>
-      super.copyWith((message) => updates(message as Response_Prekeys))
-          as Response_Prekeys;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_Prekeys copyWith(void Function(Response_Prekeys) updates) => super.copyWith((message) => updates(message as Response_Prekeys)) as Response_Prekeys;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static Response_Prekeys create() => Response_Prekeys._();
   Response_Prekeys createEmptyInstance() => create();
-  static $pb.PbList<Response_Prekeys> createRepeated() =>
-      $pb.PbList<Response_Prekeys>();
+  static $pb.PbList<Response_Prekeys> createRepeated() => $pb.PbList<Response_Prekeys>();
   @$core.pragma('dart2js:noInline')
-  static Response_Prekeys getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Response_Prekeys>(create);
+  static Response_Prekeys getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_Prekeys>(create);
   static Response_Prekeys? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.List<Response_PreKey> get prekeys => $_getList(0);
 }
 
-enum Response_Ok_Ok { none, prekeys, notSet }
+enum Response_Ok_Ok {
+  none, 
+  prekeys, 
+  notSet
+}
 
 class Response_Ok extends $pb.GeneratedMessage {
   factory Response_Ok({
@@ -2792,39 +2149,31 @@ class Response_Ok extends $pb.GeneratedMessage {
     return $result;
   }
   Response_Ok._() : super();
-  factory Response_Ok.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Response_Ok.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Response_Ok.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_Ok.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static const $core.Map<$core.int, Response_Ok_Ok> _Response_Ok_OkByTag = {
-    1: Response_Ok_Ok.none,
-    2: Response_Ok_Ok.prekeys,
-    0: Response_Ok_Ok.notSet
+    1 : Response_Ok_Ok.none,
+    2 : Response_Ok_Ok.prekeys,
+    0 : Response_Ok_Ok.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response.Ok',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Ok', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..oo(0, [1, 2])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
-    ..aOM<Response_Prekeys>(2, _omitFieldNames ? '' : 'prekeys',
-        subBuilder: Response_Prekeys.create)
-    ..hasRequiredFields = false;
+    ..aOM<Response_Prekeys>(2, _omitFieldNames ? '' : 'prekeys', subBuilder: Response_Prekeys.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Response_Ok clone() => Response_Ok()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Response_Ok copyWith(void Function(Response_Ok) updates) =>
-      super.copyWith((message) => updates(message as Response_Ok))
-          as Response_Ok;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_Ok copyWith(void Function(Response_Ok) updates) => super.copyWith((message) => updates(message as Response_Ok)) as Response_Ok;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -2833,8 +2182,7 @@ class Response_Ok extends $pb.GeneratedMessage {
   Response_Ok createEmptyInstance() => create();
   static $pb.PbList<Response_Ok> createRepeated() => $pb.PbList<Response_Ok>();
   @$core.pragma('dart2js:noInline')
-  static Response_Ok getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<Response_Ok>(create);
+  static Response_Ok getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_Ok>(create);
   static Response_Ok? _defaultInstance;
 
   Response_Ok_Ok whichOk() => _Response_Ok_OkByTag[$_whichOneof(0)]!;
@@ -2843,10 +2191,7 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   $core.bool get none => $_getBF(0);
   @$pb.TagNumber(1)
-  set none($core.bool v) {
-    $_setBool(0, v);
-  }
-
+  set none($core.bool v) { $_setBool(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasNone() => $_has(0);
   @$pb.TagNumber(1)
@@ -2855,10 +2200,7 @@ class Response_Ok extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   Response_Prekeys get prekeys => $_getN(1);
   @$pb.TagNumber(2)
-  set prekeys(Response_Prekeys v) {
-    setField(2, v);
-  }
-
+  set prekeys(Response_Prekeys v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasPrekeys() => $_has(1);
   @$pb.TagNumber(2)
@@ -2867,7 +2209,11 @@ class Response_Ok extends $pb.GeneratedMessage {
   Response_Prekeys ensurePrekeys() => $_ensure(1);
 }
 
-enum Response_Response { ok, error, notSet }
+enum Response_Response {
+  ok, 
+  error, 
+  notSet
+}
 
 class Response extends $pb.GeneratedMessage {
   factory Response({
@@ -2884,42 +2230,31 @@ class Response extends $pb.GeneratedMessage {
     return $result;
   }
   Response._() : super();
-  factory Response.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory Response.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static const $core.Map<$core.int, Response_Response> _Response_ResponseByTag =
-      {
-    1: Response_Response.ok,
-    2: Response_Response.error,
-    0: Response_Response.notSet
+  static const $core.Map<$core.int, Response_Response> _Response_ResponseByTag = {
+    1 : Response_Response.ok,
+    2 : Response_Response.error,
+    0 : Response_Response.notSet
   };
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'Response',
-      package:
-          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
     ..oo(0, [1, 2])
-    ..aOM<Response_Ok>(1, _omitFieldNames ? '' : 'ok',
-        subBuilder: Response_Ok.create)
-    ..e<$0.ErrorCode>(2, _omitFieldNames ? '' : 'error', $pb.PbFieldType.OE,
-        defaultOrMaker: $0.ErrorCode.Unknown,
-        valueOf: $0.ErrorCode.valueOf,
-        enumValues: $0.ErrorCode.values)
-    ..hasRequiredFields = false;
+    ..aOM<Response_Ok>(1, _omitFieldNames ? '' : 'ok', subBuilder: Response_Ok.create)
+    ..e<$0.ErrorCode>(2, _omitFieldNames ? '' : 'error', $pb.PbFieldType.OE, defaultOrMaker: $0.ErrorCode.Unknown, valueOf: $0.ErrorCode.valueOf, enumValues: $0.ErrorCode.values)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   Response clone() => Response()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  Response copyWith(void Function(Response) updates) =>
-      super.copyWith((message) => updates(message as Response)) as Response;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response copyWith(void Function(Response) updates) => super.copyWith((message) => updates(message as Response)) as Response;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -2928,21 +2263,16 @@ class Response extends $pb.GeneratedMessage {
   Response createEmptyInstance() => create();
   static $pb.PbList<Response> createRepeated() => $pb.PbList<Response>();
   @$core.pragma('dart2js:noInline')
-  static Response getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response>(create);
+  static Response getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response>(create);
   static Response? _defaultInstance;
 
-  Response_Response whichResponse() =>
-      _Response_ResponseByTag[$_whichOneof(0)]!;
+  Response_Response whichResponse() => _Response_ResponseByTag[$_whichOneof(0)]!;
   void clearResponse() => clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
   Response_Ok get ok => $_getN(0);
   @$pb.TagNumber(1)
-  set ok(Response_Ok v) {
-    setField(1, v);
-  }
-
+  set ok(Response_Ok v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasOk() => $_has(0);
   @$pb.TagNumber(1)
@@ -2953,16 +2283,13 @@ class Response extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $0.ErrorCode get error => $_getN(1);
   @$pb.TagNumber(2)
-  set error($0.ErrorCode v) {
-    setField(2, v);
-  }
-
+  set error($0.ErrorCode v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasError() => $_has(1);
   @$pb.TagNumber(2)
   void clearError() => clearField(2);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

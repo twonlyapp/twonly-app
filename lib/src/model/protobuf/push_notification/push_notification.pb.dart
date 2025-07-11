@@ -41,57 +41,42 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
     return $result;
   }
   EncryptedPushNotification._() : super();
-  factory EncryptedPushNotification.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory EncryptedPushNotification.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory EncryptedPushNotification.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory EncryptedPushNotification.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'EncryptedPushNotification',
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedPushNotification', createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'keyId', protoName: 'keyId')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        3, _omitFieldNames ? '' : 'ciphertext', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(
-        4, _omitFieldNames ? '' : 'mac', $pb.PbFieldType.OY)
-    ..hasRequiredFields = false;
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'ciphertext', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'mac', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  EncryptedPushNotification clone() =>
-      EncryptedPushNotification()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  EncryptedPushNotification copyWith(
-          void Function(EncryptedPushNotification) updates) =>
-      super.copyWith((message) => updates(message as EncryptedPushNotification))
-          as EncryptedPushNotification;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  EncryptedPushNotification clone() => EncryptedPushNotification()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  EncryptedPushNotification copyWith(void Function(EncryptedPushNotification) updates) => super.copyWith((message) => updates(message as EncryptedPushNotification)) as EncryptedPushNotification;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static EncryptedPushNotification create() => EncryptedPushNotification._();
   EncryptedPushNotification createEmptyInstance() => create();
-  static $pb.PbList<EncryptedPushNotification> createRepeated() =>
-      $pb.PbList<EncryptedPushNotification>();
+  static $pb.PbList<EncryptedPushNotification> createRepeated() => $pb.PbList<EncryptedPushNotification>();
   @$core.pragma('dart2js:noInline')
-  static EncryptedPushNotification getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<EncryptedPushNotification>(create);
+  static EncryptedPushNotification getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EncryptedPushNotification>(create);
   static EncryptedPushNotification? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get keyId => $_getI64(0);
   @$pb.TagNumber(1)
-  set keyId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set keyId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasKeyId() => $_has(0);
   @$pb.TagNumber(1)
@@ -100,10 +85,7 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get nonce => $_getN(1);
   @$pb.TagNumber(2)
-  set nonce($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set nonce($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasNonce() => $_has(1);
   @$pb.TagNumber(2)
@@ -112,10 +94,7 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.List<$core.int> get ciphertext => $_getN(2);
   @$pb.TagNumber(3)
-  set ciphertext($core.List<$core.int> v) {
-    $_setBytes(2, v);
-  }
-
+  set ciphertext($core.List<$core.int> v) { $_setBytes(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasCiphertext() => $_has(2);
   @$pb.TagNumber(3)
@@ -124,10 +103,7 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $core.List<$core.int> get mac => $_getN(3);
   @$pb.TagNumber(4)
-  set mac($core.List<$core.int> v) {
-    $_setBytes(3, v);
-  }
-
+  set mac($core.List<$core.int> v) { $_setBytes(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasMac() => $_has(3);
   @$pb.TagNumber(4)
@@ -153,55 +129,41 @@ class PushNotification extends $pb.GeneratedMessage {
     return $result;
   }
   PushNotification._() : super();
-  factory PushNotification.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory PushNotification.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory PushNotification.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PushNotification.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PushNotification',
-      createEmptyInstance: create)
-    ..e<PushKind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE,
-        defaultOrMaker: PushKind.reaction,
-        valueOf: PushKind.valueOf,
-        enumValues: PushKind.values)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PushNotification', createEmptyInstance: create)
+    ..e<PushKind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE, defaultOrMaker: PushKind.reaction, valueOf: PushKind.valueOf, enumValues: PushKind.values)
     ..aInt64(2, _omitFieldNames ? '' : 'messageId', protoName: 'messageId')
-    ..aOS(3, _omitFieldNames ? '' : 'reactionContent',
-        protoName: 'reactionContent')
-    ..hasRequiredFields = false;
+    ..aOS(3, _omitFieldNames ? '' : 'reactionContent', protoName: 'reactionContent')
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   PushNotification clone() => PushNotification()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  PushNotification copyWith(void Function(PushNotification) updates) =>
-      super.copyWith((message) => updates(message as PushNotification))
-          as PushNotification;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PushNotification copyWith(void Function(PushNotification) updates) => super.copyWith((message) => updates(message as PushNotification)) as PushNotification;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static PushNotification create() => PushNotification._();
   PushNotification createEmptyInstance() => create();
-  static $pb.PbList<PushNotification> createRepeated() =>
-      $pb.PbList<PushNotification>();
+  static $pb.PbList<PushNotification> createRepeated() => $pb.PbList<PushNotification>();
   @$core.pragma('dart2js:noInline')
-  static PushNotification getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<PushNotification>(create);
+  static PushNotification getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushNotification>(create);
   static PushNotification? _defaultInstance;
 
   @$pb.TagNumber(1)
   PushKind get kind => $_getN(0);
   @$pb.TagNumber(1)
-  set kind(PushKind v) {
-    setField(1, v);
-  }
-
+  set kind(PushKind v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasKind() => $_has(0);
   @$pb.TagNumber(1)
@@ -210,10 +172,7 @@ class PushNotification extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $fixnum.Int64 get messageId => $_getI64(1);
   @$pb.TagNumber(2)
-  set messageId($fixnum.Int64 v) {
-    $_setInt64(1, v);
-  }
-
+  set messageId($fixnum.Int64 v) { $_setInt64(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasMessageId() => $_has(1);
   @$pb.TagNumber(2)
@@ -222,10 +181,7 @@ class PushNotification extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.String get reactionContent => $_getSZ(2);
   @$pb.TagNumber(3)
-  set reactionContent($core.String v) {
-    $_setString(2, v);
-  }
-
+  set reactionContent($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasReactionContent() => $_has(2);
   @$pb.TagNumber(3)
@@ -243,29 +199,24 @@ class PushUsers extends $pb.GeneratedMessage {
     return $result;
   }
   PushUsers._() : super();
-  factory PushUsers.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory PushUsers.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory PushUsers.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PushUsers.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PushUsers',
-      createEmptyInstance: create)
-    ..pc<PushUser>(1, _omitFieldNames ? '' : 'users', $pb.PbFieldType.PM,
-        subBuilder: PushUser.create)
-    ..hasRequiredFields = false;
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PushUsers', createEmptyInstance: create)
+    ..pc<PushUser>(1, _omitFieldNames ? '' : 'users', $pb.PbFieldType.PM, subBuilder: PushUser.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   PushUsers clone() => PushUsers()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  PushUsers copyWith(void Function(PushUsers) updates) =>
-      super.copyWith((message) => updates(message as PushUsers)) as PushUsers;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PushUsers copyWith(void Function(PushUsers) updates) => super.copyWith((message) => updates(message as PushUsers)) as PushUsers;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -274,8 +225,7 @@ class PushUsers extends $pb.GeneratedMessage {
   PushUsers createEmptyInstance() => create();
   static $pb.PbList<PushUsers> createRepeated() => $pb.PbList<PushUsers>();
   @$core.pragma('dart2js:noInline')
-  static PushUsers getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushUsers>(create);
+  static PushUsers getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushUsers>(create);
   static PushUsers? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -309,34 +259,28 @@ class PushUser extends $pb.GeneratedMessage {
     return $result;
   }
   PushUser._() : super();
-  factory PushUser.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory PushUser.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory PushUser.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PushUser.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PushUser',
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PushUser', createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'userId', protoName: 'userId')
     ..aOS(2, _omitFieldNames ? '' : 'displayName', protoName: 'displayName')
     ..aOB(3, _omitFieldNames ? '' : 'blocked')
-    ..aInt64(4, _omitFieldNames ? '' : 'lastMessageId',
-        protoName: 'lastMessageId')
-    ..pc<PushKey>(5, _omitFieldNames ? '' : 'pushKeys', $pb.PbFieldType.PM,
-        protoName: 'pushKeys', subBuilder: PushKey.create)
-    ..hasRequiredFields = false;
+    ..aInt64(4, _omitFieldNames ? '' : 'lastMessageId', protoName: 'lastMessageId')
+    ..pc<PushKey>(5, _omitFieldNames ? '' : 'pushKeys', $pb.PbFieldType.PM, protoName: 'pushKeys', subBuilder: PushKey.create)
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   PushUser clone() => PushUser()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  PushUser copyWith(void Function(PushUser) updates) =>
-      super.copyWith((message) => updates(message as PushUser)) as PushUser;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PushUser copyWith(void Function(PushUser) updates) => super.copyWith((message) => updates(message as PushUser)) as PushUser;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -345,17 +289,13 @@ class PushUser extends $pb.GeneratedMessage {
   PushUser createEmptyInstance() => create();
   static $pb.PbList<PushUser> createRepeated() => $pb.PbList<PushUser>();
   @$core.pragma('dart2js:noInline')
-  static PushUser getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushUser>(create);
+  static PushUser getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushUser>(create);
   static PushUser? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get userId => $_getI64(0);
   @$pb.TagNumber(1)
-  set userId($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set userId($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasUserId() => $_has(0);
   @$pb.TagNumber(1)
@@ -364,10 +304,7 @@ class PushUser extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.String get displayName => $_getSZ(1);
   @$pb.TagNumber(2)
-  set displayName($core.String v) {
-    $_setString(1, v);
-  }
-
+  set displayName($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasDisplayName() => $_has(1);
   @$pb.TagNumber(2)
@@ -376,10 +313,7 @@ class PushUser extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $core.bool get blocked => $_getBF(2);
   @$pb.TagNumber(3)
-  set blocked($core.bool v) {
-    $_setBool(2, v);
-  }
-
+  set blocked($core.bool v) { $_setBool(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasBlocked() => $_has(2);
   @$pb.TagNumber(3)
@@ -388,10 +322,7 @@ class PushUser extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   $fixnum.Int64 get lastMessageId => $_getI64(3);
   @$pb.TagNumber(4)
-  set lastMessageId($fixnum.Int64 v) {
-    $_setInt64(3, v);
-  }
-
+  set lastMessageId($fixnum.Int64 v) { $_setInt64(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasLastMessageId() => $_has(3);
   @$pb.TagNumber(4)
@@ -420,32 +351,26 @@ class PushKey extends $pb.GeneratedMessage {
     return $result;
   }
   PushKey._() : super();
-  factory PushKey.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory PushKey.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
+  factory PushKey.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PushKey.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'PushKey',
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PushKey', createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'id')
-    ..a<$core.List<$core.int>>(
-        2, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
-    ..aInt64(3, _omitFieldNames ? '' : 'createdAtUnixTimestamp',
-        protoName: 'createdAtUnixTimestamp')
-    ..hasRequiredFields = false;
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..aInt64(3, _omitFieldNames ? '' : 'createdAtUnixTimestamp', protoName: 'createdAtUnixTimestamp')
+    ..hasRequiredFields = false
+  ;
 
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
   PushKey clone() => PushKey()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  PushKey copyWith(void Function(PushKey) updates) =>
-      super.copyWith((message) => updates(message as PushKey)) as PushKey;
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PushKey copyWith(void Function(PushKey) updates) => super.copyWith((message) => updates(message as PushKey)) as PushKey;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -454,17 +379,13 @@ class PushKey extends $pb.GeneratedMessage {
   PushKey createEmptyInstance() => create();
   static $pb.PbList<PushKey> createRepeated() => $pb.PbList<PushKey>();
   @$core.pragma('dart2js:noInline')
-  static PushKey getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushKey>(create);
+  static PushKey getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PushKey>(create);
   static PushKey? _defaultInstance;
 
   @$pb.TagNumber(1)
   $fixnum.Int64 get id => $_getI64(0);
   @$pb.TagNumber(1)
-  set id($fixnum.Int64 v) {
-    $_setInt64(0, v);
-  }
-
+  set id($fixnum.Int64 v) { $_setInt64(0, v); }
   @$pb.TagNumber(1)
   $core.bool hasId() => $_has(0);
   @$pb.TagNumber(1)
@@ -473,10 +394,7 @@ class PushKey extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   $core.List<$core.int> get key => $_getN(1);
   @$pb.TagNumber(2)
-  set key($core.List<$core.int> v) {
-    $_setBytes(1, v);
-  }
-
+  set key($core.List<$core.int> v) { $_setBytes(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasKey() => $_has(1);
   @$pb.TagNumber(2)
@@ -485,16 +403,13 @@ class PushKey extends $pb.GeneratedMessage {
   @$pb.TagNumber(3)
   $fixnum.Int64 get createdAtUnixTimestamp => $_getI64(2);
   @$pb.TagNumber(3)
-  set createdAtUnixTimestamp($fixnum.Int64 v) {
-    $_setInt64(2, v);
-  }
-
+  set createdAtUnixTimestamp($fixnum.Int64 v) { $_setInt64(2, v); }
   @$pb.TagNumber(3)
   $core.bool hasCreatedAtUnixTimestamp() => $_has(2);
   @$pb.TagNumber(3)
   void clearCreatedAtUnixTimestamp() => clearField(3);
 }
 
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
