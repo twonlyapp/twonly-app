@@ -734,6 +734,12 @@ abstract class AppLocalizations {
   /// **'FAQ'**
   String get settingsHelpFAQ;
 
+  /// No description provided for @feedbackTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Give Feedback to improve twonly.'**
+  String get feedbackTooltip;
+
   /// No description provided for @settingsHelpContactUs.
   ///
   /// In en, this message translates to:
@@ -763,6 +769,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Imprint & Privacy Policy'**
   String get settingsHelpImprint;
+
+  /// No description provided for @contactUsFaq.
+  ///
+  /// In en, this message translates to:
+  /// **'Have you read our FAQ yet?'**
+  String get contactUsFaq;
+
+  /// No description provided for @contactUsEmojis.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you feel? (optional)'**
+  String get contactUsEmojis;
+
+  /// No description provided for @contactUsSelectOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select an option'**
+  String get contactUsSelectOption;
+
+  /// No description provided for @contactUsReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us why you\'re reaching out'**
+  String get contactUsReason;
+
+  /// No description provided for @contactUsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'If you want to receive an answer, please add your e-mail address so we can contact you.'**
+  String get contactUsMessage;
+
+  /// No description provided for @contactUsYourMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your message'**
+  String get contactUsYourMessage;
+
+  /// No description provided for @contactUsMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us what\'s going on'**
+  String get contactUsMessageTitle;
+
+  /// No description provided for @contactUsReasonNotWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Something\'s not working'**
+  String get contactUsReasonNotWorking;
+
+  /// No description provided for @contactUsReasonFeatureRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature request'**
+  String get contactUsReasonFeatureRequest;
+
+  /// No description provided for @contactUsReasonQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get contactUsReasonQuestion;
+
+  /// No description provided for @contactUsReasonFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback'**
+  String get contactUsReasonFeedback;
+
+  /// No description provided for @contactUsReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get contactUsReasonOther;
+
+  /// No description provided for @contactUsIncludeLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Include debug log'**
+  String get contactUsIncludeLog;
+
+  /// No description provided for @contactUsWhatsThat.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s that?'**
+  String get contactUsWhatsThat;
+
+  /// No description provided for @contactUsLastWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This are the information\'s which will be send to us. Please verify them and then press submit.'**
+  String get contactUsLastWarning;
+
+  /// No description provided for @contactUsSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback submitted successfully!'**
+  String get contactUsSuccess;
+
+  /// No description provided for @contactUsShortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Feedback Icon'**
+  String get contactUsShortcut;
 
   /// No description provided for @settingsHelpTerms.
   ///
@@ -919,6 +1027,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next'**
   String get next;
+
+  /// No description provided for @submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get submit;
 
   /// No description provided for @close.
   ///

@@ -358,6 +358,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsHelpFAQ => 'FAQ';
 
   @override
+  String get feedbackTooltip => 'Feedback zur Verbesserung von twonly geben.';
+
+  @override
   String get settingsHelpContactUs => 'Kontaktiere uns';
 
   @override
@@ -371,6 +374,59 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsHelpImprint => 'Impressum & Datenschutzrichtlinie';
+
+  @override
+  String get contactUsFaq => 'FAQ schon gelesen?';
+
+  @override
+  String get contactUsEmojis => 'Wie fühlst du dich? (optional)';
+
+  @override
+  String get contactUsSelectOption => 'Bitte wähle eine Option';
+
+  @override
+  String get contactUsReason => 'Sag uns, warum du uns kontaktierst';
+
+  @override
+  String get contactUsMessage =>
+      'Wenn du eine Antwort erhalten möchtest, füge bitte deine E-Mail-Adresse hinzu, damit wir dich kontaktieren können.';
+
+  @override
+  String get contactUsYourMessage => 'Deine Nachricht';
+
+  @override
+  String get contactUsMessageTitle => 'Erzähl uns, was los ist';
+
+  @override
+  String get contactUsReasonNotWorking => 'Etwas funktioniert nicht';
+
+  @override
+  String get contactUsReasonFeatureRequest => 'Funktionsanfrage';
+
+  @override
+  String get contactUsReasonQuestion => 'Frage';
+
+  @override
+  String get contactUsReasonFeedback => 'Feedback';
+
+  @override
+  String get contactUsReasonOther => 'Sonstiges';
+
+  @override
+  String get contactUsIncludeLog => 'Debug-Protokoll anhängen.';
+
+  @override
+  String get contactUsWhatsThat => 'Was ist das?';
+
+  @override
+  String get contactUsLastWarning =>
+      'Dies sind die Informationen, die an uns gesendet werden. Bitte prüfen Sie sie und klicke dann auf „Abschicken“.';
+
+  @override
+  String get contactUsSuccess => 'Feedback erfolgreich übermittelt!';
+
+  @override
+  String get contactUsShortcut => 'Feedback-Symbol ausblenden';
 
   @override
   String get settingsHelpTerms => 'Nutzungsbedingungen';
@@ -464,6 +520,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get next => 'Weiter';
+
+  @override
+  String get submit => 'Abschicken';
 
   @override
   String get close => 'Schließen';

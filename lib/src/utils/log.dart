@@ -32,6 +32,17 @@ class Log {
 
 Mutex writeToLogGuard = Mutex();
 
+Future<String> loadLogFile() async {
+  final directory = await getApplicationSupportDirectory();
+  final logFile = File('${directory.path}/app.log');
+
+  if (await logFile.exists()) {
+    return await logFile.readAsString();
+  } else {
+    return 'Log file does not exist.';
+  }
+}
+
 Future<void> _writeLogToFile(LogRecord record) async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');

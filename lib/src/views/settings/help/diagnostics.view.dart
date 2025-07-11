@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class DiagnosticsView extends StatefulWidget {
@@ -29,7 +29,7 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
     return Scaffold(
       appBar: AppBar(title: const Text('Diagnostics')),
       body: FutureBuilder<String>(
-        future: _loadLogFile(),
+        future: loadLogFile(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -108,16 +108,5 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
         },
       ),
     );
-  }
-
-  Future<String> _loadLogFile() async {
-    final directory = await getApplicationSupportDirectory();
-    final logFile = File('${directory.path}/app.log');
-
-    if (await logFile.exists()) {
-      return await logFile.readAsString();
-    } else {
-      return 'Log file does not exist.';
-    }
   }
 }

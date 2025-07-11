@@ -353,6 +353,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHelpFAQ => 'FAQ';
 
   @override
+  String get feedbackTooltip => 'Give Feedback to improve twonly.';
+
+  @override
   String get settingsHelpContactUs => 'Contact us';
 
   @override
@@ -366,6 +369,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHelpImprint => 'Imprint & Privacy Policy';
+
+  @override
+  String get contactUsFaq => 'Have you read our FAQ yet?';
+
+  @override
+  String get contactUsEmojis => 'How do you feel? (optional)';
+
+  @override
+  String get contactUsSelectOption => 'Please select an option';
+
+  @override
+  String get contactUsReason => 'Tell us why you\'re reaching out';
+
+  @override
+  String get contactUsMessage =>
+      'If you want to receive an answer, please add your e-mail address so we can contact you.';
+
+  @override
+  String get contactUsYourMessage => 'Your message';
+
+  @override
+  String get contactUsMessageTitle => 'Tell us what\'s going on';
+
+  @override
+  String get contactUsReasonNotWorking => 'Something\'s not working';
+
+  @override
+  String get contactUsReasonFeatureRequest => 'Feature request';
+
+  @override
+  String get contactUsReasonQuestion => 'Question';
+
+  @override
+  String get contactUsReasonFeedback => 'Feedback';
+
+  @override
+  String get contactUsReasonOther => 'Other';
+
+  @override
+  String get contactUsIncludeLog => 'Include debug log';
+
+  @override
+  String get contactUsWhatsThat => 'What\'s that?';
+
+  @override
+  String get contactUsLastWarning =>
+      'This are the information\'s which will be send to us. Please verify them and then press submit.';
+
+  @override
+  String get contactUsSuccess => 'Feedback submitted successfully!';
+
+  @override
+  String get contactUsShortcut => 'Hide Feedback Icon';
 
   @override
   String get settingsHelpTerms => 'Terms of Service';
@@ -459,6 +515,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get next => 'Next';
+
+  @override
+  String get submit => 'Submit';
 
   @override
   String get close => 'Close';

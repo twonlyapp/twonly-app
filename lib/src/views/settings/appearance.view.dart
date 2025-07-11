@@ -1,11 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/radio_button.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-class AppearanceView extends StatelessWidget {
+class AppearanceView extends StatefulWidget {
   const AppearanceView({super.key});
+
+  @override
+  State<AppearanceView> createState() => _AppearanceViewState();
+}
+
+class _AppearanceViewState extends State<AppearanceView> {
+  bool showFeedbackShortcut = false;
+
+  @override
+  void initState() {
+    super.initState();
+    initAsync();
+  }
+
+  Future initAsync() async {
+    final user = await getUser();
+    if (user == null) return;
+    setState(() {
+      showFeedbackShortcut = user.showFeedbackShortcut;
+    });
+  }
 
   void _showSelectThemeMode(BuildContext context) async {
     ThemeMode? selectedValue = context.read<SettingsChangeProvider>().themeMode;
@@ -55,6 +77,14 @@ class AppearanceView extends StatelessWidget {
     }
   }
 
+  void toggleShowFeedbackIcon() async {
+    await updateUserdata((u) {
+      u.showFeedbackShortcut = !u.showFeedbackShortcut;
+      return u;
+    });
+    initAsync();
+  }
+
   @override
   Widget build(BuildContext context) {
     ThemeMode? selectedTheme =
@@ -72,6 +102,14 @@ class AppearanceView extends StatelessWidget {
             onTap: () {
               _showSelectThemeMode(context);
             },
+          ),
+          ListTile(
+            title: Text(context.lang.contactUsShortcut),
+            onTap: toggleShowFeedbackIcon,
+            trailing: Checkbox(
+              value: !showFeedbackShortcut,
+              onChanged: (a) => toggleShowFeedbackIcon(),
+            ),
           ),
         ],
       ),

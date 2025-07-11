@@ -25,6 +25,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
               ThemeMode.system
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
       ..useHighQuality = json['useHighQuality'] as bool? ?? true
+      ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
       ..preSelectedEmojies = (json['preSelectedEmojies'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList()
@@ -77,6 +78,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
       'defaultShowTime': instance.defaultShowTime,
       'useHighQuality': instance.useHighQuality,
+      'showFeedbackShortcut': instance.showFeedbackShortcut,
       'preSelectedEmojies': instance.preSelectedEmojies,
       'autoDownloadOptions': instance.autoDownloadOptions,
       'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,

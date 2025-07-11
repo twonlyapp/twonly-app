@@ -44,6 +44,9 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool useHighQuality = true;
 
+  @JsonKey(defaultValue: true)
+  bool showFeedbackShortcut = true;
+
   List<String>? preSelectedEmojies;
 
   Map<String, List<String>>? autoDownloadOptions;

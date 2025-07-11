@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/api/media_download.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/chats/chat_list_components/backup_notice.card.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/chats/chat_list_components/demo_user.card.dart';
@@ -20,6 +21,7 @@ import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/views/chats/start_new_chat.view.dart';
+import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +42,7 @@ class _ChatListViewState extends State<ChatListView> {
   GlobalKey firstUserListItemKey = GlobalKey();
   GlobalKey searchForOtherUsers = GlobalKey();
   Timer? tutorial;
+  bool showFeedbackShortcut = false;
 
   @override
   void initState() {
@@ -65,6 +68,13 @@ class _ChatListViewState extends State<ChatListView> {
         await showChatListTutorialContextMenu(context, firstUserListItemKey);
       }
     });
+
+    final user = await getUser();
+    if (user != null) {
+      setState(() {
+        showFeedbackShortcut = user.showFeedbackShortcut;
+      });
+    }
   }
 
   @override
@@ -105,6 +115,20 @@ class _ChatListViewState extends State<ChatListView> {
           ),
         ]),
         actions: [
+          if (showFeedbackShortcut)
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ContactUsView(),
+                  ),
+                );
+              },
+              color: Colors.grey,
+              tooltip: context.lang.feedbackTooltip,
+              icon: FaIcon(FontAwesomeIcons.commentDots, size: 19),
+            ),
           StreamBuilder(
             stream: twonlyDB.contactsDao.watchContactsRequested(),
             builder: (context, snapshot) {

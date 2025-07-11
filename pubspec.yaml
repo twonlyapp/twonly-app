@@ -70,6 +70,7 @@ dependencies:
   background_downloader: ^9.2.2
   hashlib: ^2.0.0
   video_thumbnail: ^0.5.6
+  device_info_plus: ^11.5.0
 
 dev_dependencies:
   flutter_test:
