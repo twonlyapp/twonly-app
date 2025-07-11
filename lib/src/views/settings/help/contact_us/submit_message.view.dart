@@ -86,17 +86,17 @@ class _ContactUsState extends State<SubmitMessage> {
               minLines: 5,
               maxLines: 20,
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.symmetric(vertical: 40, horizontal: 40),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: (isLoading) ? null : _submitFeedback,
-              child: Text(context.lang.submit),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 40, horizontal: 40),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: (isLoading) ? null : _submitFeedback,
+                    child: Text(context.lang.submit),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

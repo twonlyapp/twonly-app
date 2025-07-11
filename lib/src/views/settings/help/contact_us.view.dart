@@ -217,44 +217,44 @@ $debugLogToken
                 });
               },
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: EdgeInsets.symmetric(vertical: 40, horizontal: 40),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            GestureDetector(
-              onTap: () {
-                launchUrl(Uri.parse("https://twonly.eu/en/faq/"));
-              },
-              child: Text(
-                context.lang.contactUsFaq,
-                style: TextStyle(
-                  color: Colors.blue,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: (isLoading)
-                  ? null
-                  : () async {
-                      final fullMessage = await _getFeedbackText();
-                      if (!context.mounted) return;
-
-                      bool? feedbackSend = await Navigator.push(context,
-                          MaterialPageRoute(builder: (context) {
-                        return SubmitMessage(
-                          fullMessage: fullMessage,
-                        );
-                      }));
-
-                      if (feedbackSend == true && context.mounted) {
-                        Navigator.pop(context);
-                      }
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 40, horizontal: 40),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      launchUrl(Uri.parse("https://twonly.eu/en/faq/"));
                     },
-              child: Text(context.lang.next),
+                    child: Text(
+                      context.lang.contactUsFaq,
+                      style: TextStyle(
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: (isLoading)
+                        ? null
+                        : () async {
+                            final fullMessage = await _getFeedbackText();
+                            if (!context.mounted) return;
+
+                            bool? feedbackSend = await Navigator.push(context,
+                                MaterialPageRoute(builder: (context) {
+                              return SubmitMessage(
+                                fullMessage: fullMessage,
+                              );
+                            }));
+
+                            if (feedbackSend == true && context.mounted) {
+                              Navigator.pop(context);
+                            }
+                          },
+                    child: Text(context.lang.next),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
