@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
@@ -63,9 +62,6 @@ class _SendToCameraPreviewState extends State<SendToCameraPreview> {
         !CameraSendToViewState.cameraController!.value.isInitialized) {
       return Container();
     }
-    bool isFront =
-        CameraSendToViewState.cameraController?.description.lensDirection ==
-            CameraLensDirection.front;
     return Positioned.fill(
       child: MediaViewSizing(
         child: Screenshot(
@@ -80,13 +76,7 @@ class _SendToCameraPreviewState extends State<SendToCameraPreview> {
                       .cameraController!.value.previewSize!.height,
                   height: CameraSendToViewState
                       .cameraController!.value.previewSize!.width,
-                  child: Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.rotationY(
-                        (isFront && Platform.isAndroid) ? 3.14 : 0),
-                    child:
-                        CameraPreview(CameraSendToViewState.cameraController!),
-                  ),
+                  child: CameraPreview(CameraSendToViewState.cameraController!),
                 ),
               ),
             ),
