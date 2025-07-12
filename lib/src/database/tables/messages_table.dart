@@ -25,6 +25,12 @@ enum DownloadState {
   downloaded,
 }
 
+enum MediaRetransmitting {
+  none,
+  requested,
+  retransmitted,
+}
+
 @DataClassName('Message')
 class Messages extends Table {
   IntColumn get contactId => integer().references(Contacts, #userId)();
@@ -48,6 +54,8 @@ class Messages extends Table {
       boolean().withDefault(Constant(false))();
 
   BoolColumn get errorWhileSending => boolean().withDefault(Constant(false))();
+  TextColumn get mediaRetransmissionState => textEnum<MediaRetransmitting>()
+      .withDefault(Constant(MediaRetransmitting.none.name))();
 
   TextColumn get kind => textEnum<MessageKind>()();
   TextColumn get contentJson => text().nullable()();

@@ -231,7 +231,7 @@ Future sendTextMessage(
 
   MessageJson msg = MessageJson(
     kind: MessageKind.textMessage,
-    messageId: messageId,
+    messageSenderId: messageId,
     content: content,
     timestamp: messageSendAt,
   );
@@ -257,7 +257,7 @@ Future notifyContactAboutOpeningMessage(
       fromUserId,
       MessageJson(
         kind: MessageKind.opened,
-        messageId: messageOtherId,
+        messageReceiverId: messageOtherId,
         content: MessageContent(),
         timestamp: DateTime.now(),
       ),

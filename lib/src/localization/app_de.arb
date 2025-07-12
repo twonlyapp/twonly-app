@@ -327,5 +327,6 @@
     "inviteFriendsShareText": "Wechseln wir zu twonly: {url}",
     "appOutdated": "Deine Version von twonly ist veraltet.",
     "appOutdatedBtn": "Jetzt aktualisieren.",
-    "doubleClickToReopen": "Doppelklicken zum\nerneuten Öffnen."
+    "doubleClickToReopen": "Doppelklicken zum\nerneuten Öffnen.",
+    "retransmissionRequested": "Wird erneut versucht."
 }

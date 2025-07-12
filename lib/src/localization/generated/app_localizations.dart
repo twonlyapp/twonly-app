@@ -2005,6 +2005,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Double-click\nto open again'**
   String get doubleClickToReopen;
+
+  /// No description provided for @retransmissionRequested.
+  ///
+  /// In en, this message translates to:
+  /// **'Retransmission requested'**
+  String get retransmissionRequested;
 }
 
 class _AppLocalizationsDelegate

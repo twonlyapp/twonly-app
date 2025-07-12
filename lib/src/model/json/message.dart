@@ -5,7 +5,7 @@ import 'package:twonly/src/utils/misc.dart';
 Color getMessageColorFromType(MessageContent content, BuildContext context) {
   Color color;
 
-  if (content is TextMessageContent || content is StoredMediaFileContent) {
+  if (content is TextMessageContent) {
     color = Colors.blueAccent;
   } else {
     if (content is MediaMessageContent) {
@@ -36,13 +36,15 @@ extension MessageKindExtension on MessageKind {
 class MessageJson {
   final MessageKind kind;
   final MessageContent? content;
-  final int? messageId;
+  final int? messageReceiverId;
+  final int? messageSenderId;
   int? retransId;
   DateTime timestamp;
 
   MessageJson({
     required this.kind,
-    this.messageId,
+    this.messageReceiverId,
+    this.messageSenderId,
     this.retransId,
     required this.content,
     required this.timestamp,
@@ -58,7 +60,8 @@ class MessageJson {
 
     return MessageJson(
       kind: kind,
-      messageId: (json['messageId'] as num?)?.toInt(),
+      messageReceiverId: (json['messageReceiverId'] as num?)?.toInt(),
+      messageSenderId: (json['messageSenderId'] as num?)?.toInt(),
       retransId: (json['retransId'] as num?)?.toInt(),
       content: MessageContent.fromJson(
           kind, json['content'] as Map<String, dynamic>),
@@ -69,7 +72,8 @@ class MessageJson {
   Map<String, dynamic> toJson() => <String, dynamic>{
         'kind': kind.name,
         'content': content?.toJson(),
-        'messageId': messageId,
+        'messageReceiverId': messageReceiverId,
+        'messageSenderId': messageSenderId,
         'retransId': retransId,
         'timestamp': timestamp.toUtc().millisecondsSinceEpoch,
       };
@@ -86,8 +90,6 @@ class MessageContent {
         return TextMessageContent.fromJson(json);
       case MessageKind.profileChange:
         return ProfileContent.fromJson(json);
-      case MessageKind.storedMediaFile:
-        return StoredMediaFileContent.fromJson(json);
       case MessageKind.pushKey:
         return PushKeyContent.fromJson(json);
       case MessageKind.reopenedMedia:
@@ -193,20 +195,6 @@ class TextMessageContent extends MessageContent {
       'responseToMessageId': responseToMessageId,
       'responseToOtherMessageId': responseToOtherMessageId,
     };
-  }
-}
-
-class StoredMediaFileContent extends MessageContent {
-  int messageId;
-  StoredMediaFileContent({required this.messageId});
-
-  static StoredMediaFileContent fromJson(Map json) {
-    return StoredMediaFileContent(messageId: json['messageId']);
-  }
-
-  @override
-  Map toJson() {
-    return {'messageId': messageId};
   }
 }
 

@@ -74,6 +74,9 @@ Future handleMediaError(Message message) async {
     message.messageId,
     MessagesCompanion(
       errorWhileSending: Value(true),
+      mediaRetransmissionState: Value(
+        MediaRetransmitting.requested,
+      ),
     ),
   );
   if (message.messageOtherId != null) {
@@ -81,10 +84,11 @@ Future handleMediaError(Message message) async {
       null,
       message.contactId,
       MessageJson(
-          kind: MessageKind.receiveMediaError,
-          timestamp: DateTime.now(),
-          content: MessageContent(),
-          messageId: message.messageOtherId),
+        kind: MessageKind.receiveMediaError,
+        timestamp: DateTime.now(),
+        content: MessageContent(),
+        messageReceiverId: message.messageOtherId,
+      ),
     );
   }
 }

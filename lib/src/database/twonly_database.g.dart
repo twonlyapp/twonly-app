@@ -1199,6 +1199,15 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           'CHECK ("error_while_sending" IN (0, 1))'),
       defaultValue: Constant(false));
   @override
+  late final GeneratedColumnWithTypeConverter<MediaRetransmitting, String>
+      mediaRetransmissionState = GeneratedColumn<String>(
+              'media_retransmission_state', aliasedName, false,
+              type: DriftSqlType.string,
+              requiredDuringInsert: false,
+              defaultValue: Constant(MediaRetransmitting.none.name))
+          .withConverter<MediaRetransmitting>(
+              $MessagesTable.$convertermediaRetransmissionState);
+  @override
   late final GeneratedColumnWithTypeConverter<MessageKind, String> kind =
       GeneratedColumn<String>('kind', aliasedName, false,
               type: DriftSqlType.string, requiredDuringInsert: true)
@@ -1244,6 +1253,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         downloadState,
         acknowledgeByServer,
         errorWhileSending,
+        mediaRetransmissionState,
         kind,
         contentJson,
         openedAt,
@@ -1378,6 +1388,10 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           DriftSqlType.bool, data['${effectivePrefix}acknowledge_by_server'])!,
       errorWhileSending: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}error_while_sending'])!,
+      mediaRetransmissionState: $MessagesTable
+          .$convertermediaRetransmissionState
+          .fromSql(attachedDatabase.typeMapping.read(DriftSqlType.string,
+              data['${effectivePrefix}media_retransmission_state'])!),
       kind: $MessagesTable.$converterkind.fromSql(attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}kind'])!),
       contentJson: attachedDatabase.typeMapping
@@ -1398,6 +1412,9 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
 
   static JsonTypeConverter2<DownloadState, int, int> $converterdownloadState =
       const EnumIndexConverter<DownloadState>(DownloadState.values);
+  static JsonTypeConverter2<MediaRetransmitting, String, String>
+      $convertermediaRetransmissionState =
+      const EnumNameConverter<MediaRetransmitting>(MediaRetransmitting.values);
   static JsonTypeConverter2<MessageKind, String, String> $converterkind =
       const EnumNameConverter<MessageKind>(MessageKind.values);
 }
@@ -1415,6 +1432,7 @@ class Message extends DataClass implements Insertable<Message> {
   final DownloadState downloadState;
   final bool acknowledgeByServer;
   final bool errorWhileSending;
+  final MediaRetransmitting mediaRetransmissionState;
   final MessageKind kind;
   final String? contentJson;
   final DateTime? openedAt;
@@ -1433,6 +1451,7 @@ class Message extends DataClass implements Insertable<Message> {
       required this.downloadState,
       required this.acknowledgeByServer,
       required this.errorWhileSending,
+      required this.mediaRetransmissionState,
       required this.kind,
       this.contentJson,
       this.openedAt,
@@ -1467,6 +1486,11 @@ class Message extends DataClass implements Insertable<Message> {
     }
     map['acknowledge_by_server'] = Variable<bool>(acknowledgeByServer);
     map['error_while_sending'] = Variable<bool>(errorWhileSending);
+    {
+      map['media_retransmission_state'] = Variable<String>($MessagesTable
+          .$convertermediaRetransmissionState
+          .toSql(mediaRetransmissionState));
+    }
     {
       map['kind'] = Variable<String>($MessagesTable.$converterkind.toSql(kind));
     }
@@ -1505,6 +1529,7 @@ class Message extends DataClass implements Insertable<Message> {
       downloadState: Value(downloadState),
       acknowledgeByServer: Value(acknowledgeByServer),
       errorWhileSending: Value(errorWhileSending),
+      mediaRetransmissionState: Value(mediaRetransmissionState),
       kind: Value(kind),
       contentJson: contentJson == null && nullToAbsent
           ? const Value.absent()
@@ -1537,6 +1562,9 @@ class Message extends DataClass implements Insertable<Message> {
       acknowledgeByServer:
           serializer.fromJson<bool>(json['acknowledgeByServer']),
       errorWhileSending: serializer.fromJson<bool>(json['errorWhileSending']),
+      mediaRetransmissionState:
+          $MessagesTable.$convertermediaRetransmissionState.fromJson(
+              serializer.fromJson<String>(json['mediaRetransmissionState'])),
       kind: $MessagesTable.$converterkind
           .fromJson(serializer.fromJson<String>(json['kind'])),
       contentJson: serializer.fromJson<String?>(json['contentJson']),
@@ -1563,6 +1591,9 @@ class Message extends DataClass implements Insertable<Message> {
           $MessagesTable.$converterdownloadState.toJson(downloadState)),
       'acknowledgeByServer': serializer.toJson<bool>(acknowledgeByServer),
       'errorWhileSending': serializer.toJson<bool>(errorWhileSending),
+      'mediaRetransmissionState': serializer.toJson<String>($MessagesTable
+          .$convertermediaRetransmissionState
+          .toJson(mediaRetransmissionState)),
       'kind':
           serializer.toJson<String>($MessagesTable.$converterkind.toJson(kind)),
       'contentJson': serializer.toJson<String?>(contentJson),
@@ -1585,6 +1616,7 @@ class Message extends DataClass implements Insertable<Message> {
           DownloadState? downloadState,
           bool? acknowledgeByServer,
           bool? errorWhileSending,
+          MediaRetransmitting? mediaRetransmissionState,
           MessageKind? kind,
           Value<String?> contentJson = const Value.absent(),
           Value<DateTime?> openedAt = const Value.absent(),
@@ -1611,6 +1643,8 @@ class Message extends DataClass implements Insertable<Message> {
         downloadState: downloadState ?? this.downloadState,
         acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
         errorWhileSending: errorWhileSending ?? this.errorWhileSending,
+        mediaRetransmissionState:
+            mediaRetransmissionState ?? this.mediaRetransmissionState,
         kind: kind ?? this.kind,
         contentJson: contentJson.present ? contentJson.value : this.contentJson,
         openedAt: openedAt.present ? openedAt.value : this.openedAt,
@@ -1650,6 +1684,9 @@ class Message extends DataClass implements Insertable<Message> {
       errorWhileSending: data.errorWhileSending.present
           ? data.errorWhileSending.value
           : this.errorWhileSending,
+      mediaRetransmissionState: data.mediaRetransmissionState.present
+          ? data.mediaRetransmissionState.value
+          : this.mediaRetransmissionState,
       kind: data.kind.present ? data.kind.value : this.kind,
       contentJson:
           data.contentJson.present ? data.contentJson.value : this.contentJson,
@@ -1674,6 +1711,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('downloadState: $downloadState, ')
           ..write('acknowledgeByServer: $acknowledgeByServer, ')
           ..write('errorWhileSending: $errorWhileSending, ')
+          ..write('mediaRetransmissionState: $mediaRetransmissionState, ')
           ..write('kind: $kind, ')
           ..write('contentJson: $contentJson, ')
           ..write('openedAt: $openedAt, ')
@@ -1697,6 +1735,7 @@ class Message extends DataClass implements Insertable<Message> {
       downloadState,
       acknowledgeByServer,
       errorWhileSending,
+      mediaRetransmissionState,
       kind,
       contentJson,
       openedAt,
@@ -1718,6 +1757,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.downloadState == this.downloadState &&
           other.acknowledgeByServer == this.acknowledgeByServer &&
           other.errorWhileSending == this.errorWhileSending &&
+          other.mediaRetransmissionState == this.mediaRetransmissionState &&
           other.kind == this.kind &&
           other.contentJson == this.contentJson &&
           other.openedAt == this.openedAt &&
@@ -1738,6 +1778,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<DownloadState> downloadState;
   final Value<bool> acknowledgeByServer;
   final Value<bool> errorWhileSending;
+  final Value<MediaRetransmitting> mediaRetransmissionState;
   final Value<MessageKind> kind;
   final Value<String?> contentJson;
   final Value<DateTime?> openedAt;
@@ -1756,6 +1797,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
     this.errorWhileSending = const Value.absent(),
+    this.mediaRetransmissionState = const Value.absent(),
     this.kind = const Value.absent(),
     this.contentJson = const Value.absent(),
     this.openedAt = const Value.absent(),
@@ -1775,6 +1817,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
     this.errorWhileSending = const Value.absent(),
+    this.mediaRetransmissionState = const Value.absent(),
     required MessageKind kind,
     this.contentJson = const Value.absent(),
     this.openedAt = const Value.absent(),
@@ -1795,6 +1838,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<int>? downloadState,
     Expression<bool>? acknowledgeByServer,
     Expression<bool>? errorWhileSending,
+    Expression<String>? mediaRetransmissionState,
     Expression<String>? kind,
     Expression<String>? contentJson,
     Expression<DateTime>? openedAt,
@@ -1817,6 +1861,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (acknowledgeByServer != null)
         'acknowledge_by_server': acknowledgeByServer,
       if (errorWhileSending != null) 'error_while_sending': errorWhileSending,
+      if (mediaRetransmissionState != null)
+        'media_retransmission_state': mediaRetransmissionState,
       if (kind != null) 'kind': kind,
       if (contentJson != null) 'content_json': contentJson,
       if (openedAt != null) 'opened_at': openedAt,
@@ -1838,6 +1884,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<DownloadState>? downloadState,
       Value<bool>? acknowledgeByServer,
       Value<bool>? errorWhileSending,
+      Value<MediaRetransmitting>? mediaRetransmissionState,
       Value<MessageKind>? kind,
       Value<String?>? contentJson,
       Value<DateTime?>? openedAt,
@@ -1857,6 +1904,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       downloadState: downloadState ?? this.downloadState,
       acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
       errorWhileSending: errorWhileSending ?? this.errorWhileSending,
+      mediaRetransmissionState:
+          mediaRetransmissionState ?? this.mediaRetransmissionState,
       kind: kind ?? this.kind,
       contentJson: contentJson ?? this.contentJson,
       openedAt: openedAt ?? this.openedAt,
@@ -1906,6 +1955,11 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (errorWhileSending.present) {
       map['error_while_sending'] = Variable<bool>(errorWhileSending.value);
     }
+    if (mediaRetransmissionState.present) {
+      map['media_retransmission_state'] = Variable<String>($MessagesTable
+          .$convertermediaRetransmissionState
+          .toSql(mediaRetransmissionState.value));
+    }
     if (kind.present) {
       map['kind'] =
           Variable<String>($MessagesTable.$converterkind.toSql(kind.value));
@@ -1940,6 +1994,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('downloadState: $downloadState, ')
           ..write('acknowledgeByServer: $acknowledgeByServer, ')
           ..write('errorWhileSending: $errorWhileSending, ')
+          ..write('mediaRetransmissionState: $mediaRetransmissionState, ')
           ..write('kind: $kind, ')
           ..write('contentJson: $contentJson, ')
           ..write('openedAt: $openedAt, ')
@@ -1992,30 +2047,8 @@ class $MediaUploadsTable extends MediaUploads
           .withConverter<MediaEncryptionData?>(
               $MediaUploadsTable.$converterencryptionDatan);
   @override
-  late final GeneratedColumnWithTypeConverter<MediaUploadTokens?, String>
-      uploadTokens = GeneratedColumn<String>('upload_tokens', aliasedName, true,
-              type: DriftSqlType.string, requiredDuringInsert: false)
-          .withConverter<MediaUploadTokens?>(
-              $MediaUploadsTable.$converteruploadTokensn);
-  @override
-  late final GeneratedColumnWithTypeConverter<List<int>, String>
-      alreadyNotified = GeneratedColumn<String>(
-              'already_notified', aliasedName, false,
-              type: DriftSqlType.string,
-              requiredDuringInsert: false,
-              defaultValue: Constant("[]"))
-          .withConverter<List<int>>(
-              $MediaUploadsTable.$converteralreadyNotified);
-  @override
-  List<GeneratedColumn> get $columns => [
-        mediaUploadId,
-        state,
-        metadata,
-        messageIds,
-        encryptionData,
-        uploadTokens,
-        alreadyNotified
-      ];
+  List<GeneratedColumn> get $columns =>
+      [mediaUploadId, state, metadata, messageIds, encryptionData];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2055,12 +2088,6 @@ class $MediaUploadsTable extends MediaUploads
       encryptionData: $MediaUploadsTable.$converterencryptionDatan.fromSql(
           attachedDatabase.typeMapping.read(
               DriftSqlType.string, data['${effectivePrefix}encryption_data'])),
-      uploadTokens: $MediaUploadsTable.$converteruploadTokensn.fromSql(
-          attachedDatabase.typeMapping.read(
-              DriftSqlType.string, data['${effectivePrefix}upload_tokens'])),
-      alreadyNotified: $MediaUploadsTable.$converteralreadyNotified.fromSql(
-          attachedDatabase.typeMapping.read(DriftSqlType.string,
-              data['${effectivePrefix}already_notified'])!),
     );
   }
 
@@ -2085,13 +2112,6 @@ class $MediaUploadsTable extends MediaUploads
   static JsonTypeConverter2<MediaEncryptionData?, String?,
           Map<String, Object?>?> $converterencryptionDatan =
       JsonTypeConverter2.asNullable($converterencryptionData);
-  static JsonTypeConverter2<MediaUploadTokens, String, Map<String, Object?>>
-      $converteruploadTokens = MediaUploadTokensConverter();
-  static JsonTypeConverter2<MediaUploadTokens?, String?, Map<String, Object?>?>
-      $converteruploadTokensn =
-      JsonTypeConverter2.asNullable($converteruploadTokens);
-  static TypeConverter<List<int>, String> $converteralreadyNotified =
-      IntListTypeConverter();
 }
 
 class MediaUpload extends DataClass implements Insertable<MediaUpload> {
@@ -2101,23 +2121,13 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
 
   /// exists in UploadState.addedToMessagesDb
   final List<int>? messageIds;
-
-  /// exsists in UploadState.isEncrypted
   final MediaEncryptionData? encryptionData;
-
-  /// exsists in UploadState.hasUploadToken
-  final MediaUploadTokens? uploadTokens;
-
-  /// exists in UploadState.addedToMessagesDb
-  final List<int> alreadyNotified;
   const MediaUpload(
       {required this.mediaUploadId,
       required this.state,
       this.metadata,
       this.messageIds,
-      this.encryptionData,
-      this.uploadTokens,
-      required this.alreadyNotified});
+      this.encryptionData});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2138,14 +2148,6 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       map['encryption_data'] = Variable<String>(
           $MediaUploadsTable.$converterencryptionDatan.toSql(encryptionData));
     }
-    if (!nullToAbsent || uploadTokens != null) {
-      map['upload_tokens'] = Variable<String>(
-          $MediaUploadsTable.$converteruploadTokensn.toSql(uploadTokens));
-    }
-    {
-      map['already_notified'] = Variable<String>(
-          $MediaUploadsTable.$converteralreadyNotified.toSql(alreadyNotified));
-    }
     return map;
   }
 
@@ -2162,10 +2164,6 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       encryptionData: encryptionData == null && nullToAbsent
           ? const Value.absent()
           : Value(encryptionData),
-      uploadTokens: uploadTokens == null && nullToAbsent
-          ? const Value.absent()
-          : Value(uploadTokens),
-      alreadyNotified: Value(alreadyNotified),
     );
   }
 
@@ -2181,9 +2179,6 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       messageIds: serializer.fromJson<List<int>?>(json['messageIds']),
       encryptionData: $MediaUploadsTable.$converterencryptionDatan.fromJson(
           serializer.fromJson<Map<String, Object?>?>(json['encryptionData'])),
-      uploadTokens: $MediaUploadsTable.$converteruploadTokensn.fromJson(
-          serializer.fromJson<Map<String, Object?>?>(json['uploadTokens'])),
-      alreadyNotified: serializer.fromJson<List<int>>(json['alreadyNotified']),
     );
   }
   @override
@@ -2198,9 +2193,6 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       'messageIds': serializer.toJson<List<int>?>(messageIds),
       'encryptionData': serializer.toJson<Map<String, Object?>?>(
           $MediaUploadsTable.$converterencryptionDatan.toJson(encryptionData)),
-      'uploadTokens': serializer.toJson<Map<String, Object?>?>(
-          $MediaUploadsTable.$converteruploadTokensn.toJson(uploadTokens)),
-      'alreadyNotified': serializer.toJson<List<int>>(alreadyNotified),
     };
   }
 
@@ -2209,9 +2201,7 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
           UploadState? state,
           Value<MediaUploadMetadata?> metadata = const Value.absent(),
           Value<List<int>?> messageIds = const Value.absent(),
-          Value<MediaEncryptionData?> encryptionData = const Value.absent(),
-          Value<MediaUploadTokens?> uploadTokens = const Value.absent(),
-          List<int>? alreadyNotified}) =>
+          Value<MediaEncryptionData?> encryptionData = const Value.absent()}) =>
       MediaUpload(
         mediaUploadId: mediaUploadId ?? this.mediaUploadId,
         state: state ?? this.state,
@@ -2219,9 +2209,6 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
         messageIds: messageIds.present ? messageIds.value : this.messageIds,
         encryptionData:
             encryptionData.present ? encryptionData.value : this.encryptionData,
-        uploadTokens:
-            uploadTokens.present ? uploadTokens.value : this.uploadTokens,
-        alreadyNotified: alreadyNotified ?? this.alreadyNotified,
       );
   MediaUpload copyWithCompanion(MediaUploadsCompanion data) {
     return MediaUpload(
@@ -2235,12 +2222,6 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
       encryptionData: data.encryptionData.present
           ? data.encryptionData.value
           : this.encryptionData,
-      uploadTokens: data.uploadTokens.present
-          ? data.uploadTokens.value
-          : this.uploadTokens,
-      alreadyNotified: data.alreadyNotified.present
-          ? data.alreadyNotified.value
-          : this.alreadyNotified,
     );
   }
 
@@ -2251,16 +2232,14 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
           ..write('state: $state, ')
           ..write('metadata: $metadata, ')
           ..write('messageIds: $messageIds, ')
-          ..write('encryptionData: $encryptionData, ')
-          ..write('uploadTokens: $uploadTokens, ')
-          ..write('alreadyNotified: $alreadyNotified')
+          ..write('encryptionData: $encryptionData')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(mediaUploadId, state, metadata, messageIds,
-      encryptionData, uploadTokens, alreadyNotified);
+  int get hashCode =>
+      Object.hash(mediaUploadId, state, metadata, messageIds, encryptionData);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2269,9 +2248,7 @@ class MediaUpload extends DataClass implements Insertable<MediaUpload> {
           other.state == this.state &&
           other.metadata == this.metadata &&
           other.messageIds == this.messageIds &&
-          other.encryptionData == this.encryptionData &&
-          other.uploadTokens == this.uploadTokens &&
-          other.alreadyNotified == this.alreadyNotified);
+          other.encryptionData == this.encryptionData);
 }
 
 class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
@@ -2280,16 +2257,12 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
   final Value<MediaUploadMetadata?> metadata;
   final Value<List<int>?> messageIds;
   final Value<MediaEncryptionData?> encryptionData;
-  final Value<MediaUploadTokens?> uploadTokens;
-  final Value<List<int>> alreadyNotified;
   const MediaUploadsCompanion({
     this.mediaUploadId = const Value.absent(),
     this.state = const Value.absent(),
     this.metadata = const Value.absent(),
     this.messageIds = const Value.absent(),
     this.encryptionData = const Value.absent(),
-    this.uploadTokens = const Value.absent(),
-    this.alreadyNotified = const Value.absent(),
   });
   MediaUploadsCompanion.insert({
     this.mediaUploadId = const Value.absent(),
@@ -2297,8 +2270,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
     this.metadata = const Value.absent(),
     this.messageIds = const Value.absent(),
     this.encryptionData = const Value.absent(),
-    this.uploadTokens = const Value.absent(),
-    this.alreadyNotified = const Value.absent(),
   });
   static Insertable<MediaUpload> custom({
     Expression<int>? mediaUploadId,
@@ -2306,8 +2277,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
     Expression<String>? metadata,
     Expression<String>? messageIds,
     Expression<String>? encryptionData,
-    Expression<String>? uploadTokens,
-    Expression<String>? alreadyNotified,
   }) {
     return RawValuesInsertable({
       if (mediaUploadId != null) 'media_upload_id': mediaUploadId,
@@ -2315,8 +2284,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
       if (metadata != null) 'metadata': metadata,
       if (messageIds != null) 'message_ids': messageIds,
       if (encryptionData != null) 'encryption_data': encryptionData,
-      if (uploadTokens != null) 'upload_tokens': uploadTokens,
-      if (alreadyNotified != null) 'already_notified': alreadyNotified,
     });
   }
 
@@ -2325,17 +2292,13 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
       Value<UploadState>? state,
       Value<MediaUploadMetadata?>? metadata,
       Value<List<int>?>? messageIds,
-      Value<MediaEncryptionData?>? encryptionData,
-      Value<MediaUploadTokens?>? uploadTokens,
-      Value<List<int>>? alreadyNotified}) {
+      Value<MediaEncryptionData?>? encryptionData}) {
     return MediaUploadsCompanion(
       mediaUploadId: mediaUploadId ?? this.mediaUploadId,
       state: state ?? this.state,
       metadata: metadata ?? this.metadata,
       messageIds: messageIds ?? this.messageIds,
       encryptionData: encryptionData ?? this.encryptionData,
-      uploadTokens: uploadTokens ?? this.uploadTokens,
-      alreadyNotified: alreadyNotified ?? this.alreadyNotified,
     );
   }
 
@@ -2362,15 +2325,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
           .$converterencryptionDatan
           .toSql(encryptionData.value));
     }
-    if (uploadTokens.present) {
-      map['upload_tokens'] = Variable<String>(
-          $MediaUploadsTable.$converteruploadTokensn.toSql(uploadTokens.value));
-    }
-    if (alreadyNotified.present) {
-      map['already_notified'] = Variable<String>($MediaUploadsTable
-          .$converteralreadyNotified
-          .toSql(alreadyNotified.value));
-    }
     return map;
   }
 
@@ -2381,9 +2335,7 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
           ..write('state: $state, ')
           ..write('metadata: $metadata, ')
           ..write('messageIds: $messageIds, ')
-          ..write('encryptionData: $encryptionData, ')
-          ..write('uploadTokens: $uploadTokens, ')
-          ..write('alreadyNotified: $alreadyNotified')
+          ..write('encryptionData: $encryptionData')
           ..write(')'))
         .toString();
   }
@@ -5308,6 +5260,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<DownloadState> downloadState,
   Value<bool> acknowledgeByServer,
   Value<bool> errorWhileSending,
+  Value<MediaRetransmitting> mediaRetransmissionState,
   required MessageKind kind,
   Value<String?> contentJson,
   Value<DateTime?> openedAt,
@@ -5327,6 +5280,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<DownloadState> downloadState,
   Value<bool> acknowledgeByServer,
   Value<bool> errorWhileSending,
+  Value<MediaRetransmitting> mediaRetransmissionState,
   Value<MessageKind> kind,
   Value<String?> contentJson,
   Value<DateTime?> openedAt,
@@ -5424,6 +5378,12 @@ class $$MessagesTableFilterComposer
   ColumnFilters<bool> get errorWhileSending => $composableBuilder(
       column: $table.errorWhileSending,
       builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<MediaRetransmitting, MediaRetransmitting,
+          String>
+      get mediaRetransmissionState => $composableBuilder(
+          column: $table.mediaRetransmissionState,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnWithTypeConverterFilters<MessageKind, MessageKind, String> get kind =>
       $composableBuilder(
@@ -5537,6 +5497,10 @@ class $$MessagesTableOrderingComposer
       column: $table.errorWhileSending,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get mediaRetransmissionState => $composableBuilder(
+      column: $table.mediaRetransmissionState,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get kind => $composableBuilder(
       column: $table.kind, builder: (column) => ColumnOrderings(column));
 
@@ -5615,6 +5579,10 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<bool> get errorWhileSending => $composableBuilder(
       column: $table.errorWhileSending, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<MediaRetransmitting, String>
+      get mediaRetransmissionState => $composableBuilder(
+          column: $table.mediaRetransmissionState, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<MessageKind, String> get kind =>
       $composableBuilder(column: $table.kind, builder: (column) => column);
@@ -5710,6 +5678,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<DownloadState> downloadState = const Value.absent(),
             Value<bool> acknowledgeByServer = const Value.absent(),
             Value<bool> errorWhileSending = const Value.absent(),
+            Value<MediaRetransmitting> mediaRetransmissionState =
+                const Value.absent(),
             Value<MessageKind> kind = const Value.absent(),
             Value<String?> contentJson = const Value.absent(),
             Value<DateTime?> openedAt = const Value.absent(),
@@ -5729,6 +5699,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             downloadState: downloadState,
             acknowledgeByServer: acknowledgeByServer,
             errorWhileSending: errorWhileSending,
+            mediaRetransmissionState: mediaRetransmissionState,
             kind: kind,
             contentJson: contentJson,
             openedAt: openedAt,
@@ -5748,6 +5719,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<DownloadState> downloadState = const Value.absent(),
             Value<bool> acknowledgeByServer = const Value.absent(),
             Value<bool> errorWhileSending = const Value.absent(),
+            Value<MediaRetransmitting> mediaRetransmissionState =
+                const Value.absent(),
             required MessageKind kind,
             Value<String?> contentJson = const Value.absent(),
             Value<DateTime?> openedAt = const Value.absent(),
@@ -5767,6 +5740,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             downloadState: downloadState,
             acknowledgeByServer: acknowledgeByServer,
             errorWhileSending: errorWhileSending,
+            mediaRetransmissionState: mediaRetransmissionState,
             kind: kind,
             contentJson: contentJson,
             openedAt: openedAt,
@@ -5851,8 +5825,6 @@ typedef $$MediaUploadsTableCreateCompanionBuilder = MediaUploadsCompanion
   Value<MediaUploadMetadata?> metadata,
   Value<List<int>?> messageIds,
   Value<MediaEncryptionData?> encryptionData,
-  Value<MediaUploadTokens?> uploadTokens,
-  Value<List<int>> alreadyNotified,
 });
 typedef $$MediaUploadsTableUpdateCompanionBuilder = MediaUploadsCompanion
     Function({
@@ -5861,8 +5833,6 @@ typedef $$MediaUploadsTableUpdateCompanionBuilder = MediaUploadsCompanion
   Value<MediaUploadMetadata?> metadata,
   Value<List<int>?> messageIds,
   Value<MediaEncryptionData?> encryptionData,
-  Value<MediaUploadTokens?> uploadTokens,
-  Value<List<int>> alreadyNotified,
 });
 
 class $$MediaUploadsTableFilterComposer
@@ -5898,16 +5868,6 @@ class $$MediaUploadsTableFilterComposer
       get encryptionData => $composableBuilder(
           column: $table.encryptionData,
           builder: (column) => ColumnWithTypeConverterFilters(column));
-
-  ColumnWithTypeConverterFilters<MediaUploadTokens?, MediaUploadTokens, String>
-      get uploadTokens => $composableBuilder(
-          column: $table.uploadTokens,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
-
-  ColumnWithTypeConverterFilters<List<int>, List<int>, String>
-      get alreadyNotified => $composableBuilder(
-          column: $table.alreadyNotified,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
 }
 
 class $$MediaUploadsTableOrderingComposer
@@ -5934,14 +5894,6 @@ class $$MediaUploadsTableOrderingComposer
 
   ColumnOrderings<String> get encryptionData => $composableBuilder(
       column: $table.encryptionData,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get uploadTokens => $composableBuilder(
-      column: $table.uploadTokens,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get alreadyNotified => $composableBuilder(
-      column: $table.alreadyNotified,
       builder: (column) => ColumnOrderings(column));
 }
 
@@ -5970,14 +5922,6 @@ class $$MediaUploadsTableAnnotationComposer
   GeneratedColumnWithTypeConverter<MediaEncryptionData?, String>
       get encryptionData => $composableBuilder(
           column: $table.encryptionData, builder: (column) => column);
-
-  GeneratedColumnWithTypeConverter<MediaUploadTokens?, String>
-      get uploadTokens => $composableBuilder(
-          column: $table.uploadTokens, builder: (column) => column);
-
-  GeneratedColumnWithTypeConverter<List<int>, String> get alreadyNotified =>
-      $composableBuilder(
-          column: $table.alreadyNotified, builder: (column) => column);
 }
 
 class $$MediaUploadsTableTableManager extends RootTableManager<
@@ -6011,8 +5955,6 @@ class $$MediaUploadsTableTableManager extends RootTableManager<
             Value<MediaUploadMetadata?> metadata = const Value.absent(),
             Value<List<int>?> messageIds = const Value.absent(),
             Value<MediaEncryptionData?> encryptionData = const Value.absent(),
-            Value<MediaUploadTokens?> uploadTokens = const Value.absent(),
-            Value<List<int>> alreadyNotified = const Value.absent(),
           }) =>
               MediaUploadsCompanion(
             mediaUploadId: mediaUploadId,
@@ -6020,8 +5962,6 @@ class $$MediaUploadsTableTableManager extends RootTableManager<
             metadata: metadata,
             messageIds: messageIds,
             encryptionData: encryptionData,
-            uploadTokens: uploadTokens,
-            alreadyNotified: alreadyNotified,
           ),
           createCompanionCallback: ({
             Value<int> mediaUploadId = const Value.absent(),
@@ -6029,8 +5969,6 @@ class $$MediaUploadsTableTableManager extends RootTableManager<
             Value<MediaUploadMetadata?> metadata = const Value.absent(),
             Value<List<int>?> messageIds = const Value.absent(),
             Value<MediaEncryptionData?> encryptionData = const Value.absent(),
-            Value<MediaUploadTokens?> uploadTokens = const Value.absent(),
-            Value<List<int>> alreadyNotified = const Value.absent(),
           }) =>
               MediaUploadsCompanion.insert(
             mediaUploadId: mediaUploadId,
@@ -6038,8 +5976,6 @@ class $$MediaUploadsTableTableManager extends RootTableManager<
             metadata: metadata,
             messageIds: messageIds,
             encryptionData: encryptionData,
-            uploadTokens: uploadTokens,
-            alreadyNotified: alreadyNotified,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -974,6 +974,11 @@ class Messages extends Table with TableInfo<Messages, MessagesData> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("error_while_sending" IN (0, 1))'),
       defaultValue: const CustomExpression('0'));
+  late final GeneratedColumn<String> mediaRetransmissionState =
+      GeneratedColumn<String>('media_retransmission_state', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const CustomExpression('\'none\''));
   late final GeneratedColumn<String> kind = GeneratedColumn<String>(
       'kind', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
@@ -1009,6 +1014,7 @@ class Messages extends Table with TableInfo<Messages, MessagesData> {
         downloadState,
         acknowledgeByServer,
         errorWhileSending,
+        mediaRetransmissionState,
         kind,
         contentJson,
         openedAt,
@@ -1051,6 +1057,9 @@ class Messages extends Table with TableInfo<Messages, MessagesData> {
           DriftSqlType.bool, data['${effectivePrefix}acknowledge_by_server'])!,
       errorWhileSending: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}error_while_sending'])!,
+      mediaRetransmissionState: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}media_retransmission_state'])!,
       kind: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
       contentJson: attachedDatabase.typeMapping
@@ -1083,6 +1092,7 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
   final int downloadState;
   final bool acknowledgeByServer;
   final bool errorWhileSending;
+  final String mediaRetransmissionState;
   final String kind;
   final String? contentJson;
   final DateTime? openedAt;
@@ -1101,6 +1111,7 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       required this.downloadState,
       required this.acknowledgeByServer,
       required this.errorWhileSending,
+      required this.mediaRetransmissionState,
       required this.kind,
       this.contentJson,
       this.openedAt,
@@ -1132,6 +1143,8 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
     map['download_state'] = Variable<int>(downloadState);
     map['acknowledge_by_server'] = Variable<bool>(acknowledgeByServer);
     map['error_while_sending'] = Variable<bool>(errorWhileSending);
+    map['media_retransmission_state'] =
+        Variable<String>(mediaRetransmissionState);
     map['kind'] = Variable<String>(kind);
     if (!nullToAbsent || contentJson != null) {
       map['content_json'] = Variable<String>(contentJson);
@@ -1168,6 +1181,7 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       downloadState: Value(downloadState),
       acknowledgeByServer: Value(acknowledgeByServer),
       errorWhileSending: Value(errorWhileSending),
+      mediaRetransmissionState: Value(mediaRetransmissionState),
       kind: Value(kind),
       contentJson: contentJson == null && nullToAbsent
           ? const Value.absent()
@@ -1199,6 +1213,8 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       acknowledgeByServer:
           serializer.fromJson<bool>(json['acknowledgeByServer']),
       errorWhileSending: serializer.fromJson<bool>(json['errorWhileSending']),
+      mediaRetransmissionState:
+          serializer.fromJson<String>(json['mediaRetransmissionState']),
       kind: serializer.fromJson<String>(json['kind']),
       contentJson: serializer.fromJson<String?>(json['contentJson']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
@@ -1223,6 +1239,8 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       'downloadState': serializer.toJson<int>(downloadState),
       'acknowledgeByServer': serializer.toJson<bool>(acknowledgeByServer),
       'errorWhileSending': serializer.toJson<bool>(errorWhileSending),
+      'mediaRetransmissionState':
+          serializer.toJson<String>(mediaRetransmissionState),
       'kind': serializer.toJson<String>(kind),
       'contentJson': serializer.toJson<String?>(contentJson),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
@@ -1244,6 +1262,7 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
           int? downloadState,
           bool? acknowledgeByServer,
           bool? errorWhileSending,
+          String? mediaRetransmissionState,
           String? kind,
           Value<String?> contentJson = const Value.absent(),
           Value<DateTime?> openedAt = const Value.absent(),
@@ -1270,6 +1289,8 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
         downloadState: downloadState ?? this.downloadState,
         acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
         errorWhileSending: errorWhileSending ?? this.errorWhileSending,
+        mediaRetransmissionState:
+            mediaRetransmissionState ?? this.mediaRetransmissionState,
         kind: kind ?? this.kind,
         contentJson: contentJson.present ? contentJson.value : this.contentJson,
         openedAt: openedAt.present ? openedAt.value : this.openedAt,
@@ -1309,6 +1330,9 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       errorWhileSending: data.errorWhileSending.present
           ? data.errorWhileSending.value
           : this.errorWhileSending,
+      mediaRetransmissionState: data.mediaRetransmissionState.present
+          ? data.mediaRetransmissionState.value
+          : this.mediaRetransmissionState,
       kind: data.kind.present ? data.kind.value : this.kind,
       contentJson:
           data.contentJson.present ? data.contentJson.value : this.contentJson,
@@ -1333,6 +1357,7 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
           ..write('downloadState: $downloadState, ')
           ..write('acknowledgeByServer: $acknowledgeByServer, ')
           ..write('errorWhileSending: $errorWhileSending, ')
+          ..write('mediaRetransmissionState: $mediaRetransmissionState, ')
           ..write('kind: $kind, ')
           ..write('contentJson: $contentJson, ')
           ..write('openedAt: $openedAt, ')
@@ -1356,6 +1381,7 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       downloadState,
       acknowledgeByServer,
       errorWhileSending,
+      mediaRetransmissionState,
       kind,
       contentJson,
       openedAt,
@@ -1377,6 +1403,7 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
           other.downloadState == this.downloadState &&
           other.acknowledgeByServer == this.acknowledgeByServer &&
           other.errorWhileSending == this.errorWhileSending &&
+          other.mediaRetransmissionState == this.mediaRetransmissionState &&
           other.kind == this.kind &&
           other.contentJson == this.contentJson &&
           other.openedAt == this.openedAt &&
@@ -1397,6 +1424,7 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
   final Value<int> downloadState;
   final Value<bool> acknowledgeByServer;
   final Value<bool> errorWhileSending;
+  final Value<String> mediaRetransmissionState;
   final Value<String> kind;
   final Value<String?> contentJson;
   final Value<DateTime?> openedAt;
@@ -1415,6 +1443,7 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
     this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
     this.errorWhileSending = const Value.absent(),
+    this.mediaRetransmissionState = const Value.absent(),
     this.kind = const Value.absent(),
     this.contentJson = const Value.absent(),
     this.openedAt = const Value.absent(),
@@ -1434,6 +1463,7 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
     this.downloadState = const Value.absent(),
     this.acknowledgeByServer = const Value.absent(),
     this.errorWhileSending = const Value.absent(),
+    this.mediaRetransmissionState = const Value.absent(),
     required String kind,
     this.contentJson = const Value.absent(),
     this.openedAt = const Value.absent(),
@@ -1454,6 +1484,7 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
     Expression<int>? downloadState,
     Expression<bool>? acknowledgeByServer,
     Expression<bool>? errorWhileSending,
+    Expression<String>? mediaRetransmissionState,
     Expression<String>? kind,
     Expression<String>? contentJson,
     Expression<DateTime>? openedAt,
@@ -1476,6 +1507,8 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
       if (acknowledgeByServer != null)
         'acknowledge_by_server': acknowledgeByServer,
       if (errorWhileSending != null) 'error_while_sending': errorWhileSending,
+      if (mediaRetransmissionState != null)
+        'media_retransmission_state': mediaRetransmissionState,
       if (kind != null) 'kind': kind,
       if (contentJson != null) 'content_json': contentJson,
       if (openedAt != null) 'opened_at': openedAt,
@@ -1497,6 +1530,7 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
       Value<int>? downloadState,
       Value<bool>? acknowledgeByServer,
       Value<bool>? errorWhileSending,
+      Value<String>? mediaRetransmissionState,
       Value<String>? kind,
       Value<String?>? contentJson,
       Value<DateTime?>? openedAt,
@@ -1516,6 +1550,8 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
       downloadState: downloadState ?? this.downloadState,
       acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
       errorWhileSending: errorWhileSending ?? this.errorWhileSending,
+      mediaRetransmissionState:
+          mediaRetransmissionState ?? this.mediaRetransmissionState,
       kind: kind ?? this.kind,
       contentJson: contentJson ?? this.contentJson,
       openedAt: openedAt ?? this.openedAt,
@@ -1564,6 +1600,10 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
     if (errorWhileSending.present) {
       map['error_while_sending'] = Variable<bool>(errorWhileSending.value);
     }
+    if (mediaRetransmissionState.present) {
+      map['media_retransmission_state'] =
+          Variable<String>(mediaRetransmissionState.value);
+    }
     if (kind.present) {
       map['kind'] = Variable<String>(kind.value);
     }
@@ -1597,6 +1637,7 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
           ..write('downloadState: $downloadState, ')
           ..write('acknowledgeByServer: $acknowledgeByServer, ')
           ..write('errorWhileSending: $errorWhileSending, ')
+          ..write('mediaRetransmissionState: $mediaRetransmissionState, ')
           ..write('kind: $kind, ')
           ..write('contentJson: $contentJson, ')
           ..write('openedAt: $openedAt, ')
@@ -1634,24 +1675,9 @@ class MediaUploads extends Table
   late final GeneratedColumn<String> encryptionData = GeneratedColumn<String>(
       'encryption_data', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
-  late final GeneratedColumn<String> uploadTokens = GeneratedColumn<String>(
-      'upload_tokens', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  late final GeneratedColumn<String> alreadyNotified = GeneratedColumn<String>(
-      'already_notified', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const CustomExpression('\'[]\''));
   @override
-  List<GeneratedColumn> get $columns => [
-        mediaUploadId,
-        state,
-        metadata,
-        messageIds,
-        encryptionData,
-        uploadTokens,
-        alreadyNotified
-      ];
+  List<GeneratedColumn> get $columns =>
+      [mediaUploadId, state, metadata, messageIds, encryptionData];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1673,10 +1699,6 @@ class MediaUploads extends Table
           .read(DriftSqlType.string, data['${effectivePrefix}message_ids']),
       encryptionData: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}encryption_data']),
-      uploadTokens: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}upload_tokens']),
-      alreadyNotified: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}already_notified'])!,
     );
   }
 
@@ -1693,16 +1715,12 @@ class MediaUploadsData extends DataClass
   final String? metadata;
   final String? messageIds;
   final String? encryptionData;
-  final String? uploadTokens;
-  final String alreadyNotified;
   const MediaUploadsData(
       {required this.mediaUploadId,
       required this.state,
       this.metadata,
       this.messageIds,
-      this.encryptionData,
-      this.uploadTokens,
-      required this.alreadyNotified});
+      this.encryptionData});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1717,10 +1735,6 @@ class MediaUploadsData extends DataClass
     if (!nullToAbsent || encryptionData != null) {
       map['encryption_data'] = Variable<String>(encryptionData);
     }
-    if (!nullToAbsent || uploadTokens != null) {
-      map['upload_tokens'] = Variable<String>(uploadTokens);
-    }
-    map['already_notified'] = Variable<String>(alreadyNotified);
     return map;
   }
 
@@ -1737,10 +1751,6 @@ class MediaUploadsData extends DataClass
       encryptionData: encryptionData == null && nullToAbsent
           ? const Value.absent()
           : Value(encryptionData),
-      uploadTokens: uploadTokens == null && nullToAbsent
-          ? const Value.absent()
-          : Value(uploadTokens),
-      alreadyNotified: Value(alreadyNotified),
     );
   }
 
@@ -1753,8 +1763,6 @@ class MediaUploadsData extends DataClass
       metadata: serializer.fromJson<String?>(json['metadata']),
       messageIds: serializer.fromJson<String?>(json['messageIds']),
       encryptionData: serializer.fromJson<String?>(json['encryptionData']),
-      uploadTokens: serializer.fromJson<String?>(json['uploadTokens']),
-      alreadyNotified: serializer.fromJson<String>(json['alreadyNotified']),
     );
   }
   @override
@@ -1766,8 +1774,6 @@ class MediaUploadsData extends DataClass
       'metadata': serializer.toJson<String?>(metadata),
       'messageIds': serializer.toJson<String?>(messageIds),
       'encryptionData': serializer.toJson<String?>(encryptionData),
-      'uploadTokens': serializer.toJson<String?>(uploadTokens),
-      'alreadyNotified': serializer.toJson<String>(alreadyNotified),
     };
   }
 
@@ -1776,9 +1782,7 @@ class MediaUploadsData extends DataClass
           String? state,
           Value<String?> metadata = const Value.absent(),
           Value<String?> messageIds = const Value.absent(),
-          Value<String?> encryptionData = const Value.absent(),
-          Value<String?> uploadTokens = const Value.absent(),
-          String? alreadyNotified}) =>
+          Value<String?> encryptionData = const Value.absent()}) =>
       MediaUploadsData(
         mediaUploadId: mediaUploadId ?? this.mediaUploadId,
         state: state ?? this.state,
@@ -1786,9 +1790,6 @@ class MediaUploadsData extends DataClass
         messageIds: messageIds.present ? messageIds.value : this.messageIds,
         encryptionData:
             encryptionData.present ? encryptionData.value : this.encryptionData,
-        uploadTokens:
-            uploadTokens.present ? uploadTokens.value : this.uploadTokens,
-        alreadyNotified: alreadyNotified ?? this.alreadyNotified,
       );
   MediaUploadsData copyWithCompanion(MediaUploadsCompanion data) {
     return MediaUploadsData(
@@ -1802,12 +1803,6 @@ class MediaUploadsData extends DataClass
       encryptionData: data.encryptionData.present
           ? data.encryptionData.value
           : this.encryptionData,
-      uploadTokens: data.uploadTokens.present
-          ? data.uploadTokens.value
-          : this.uploadTokens,
-      alreadyNotified: data.alreadyNotified.present
-          ? data.alreadyNotified.value
-          : this.alreadyNotified,
     );
   }
 
@@ -1818,16 +1813,14 @@ class MediaUploadsData extends DataClass
           ..write('state: $state, ')
           ..write('metadata: $metadata, ')
           ..write('messageIds: $messageIds, ')
-          ..write('encryptionData: $encryptionData, ')
-          ..write('uploadTokens: $uploadTokens, ')
-          ..write('alreadyNotified: $alreadyNotified')
+          ..write('encryptionData: $encryptionData')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(mediaUploadId, state, metadata, messageIds,
-      encryptionData, uploadTokens, alreadyNotified);
+  int get hashCode =>
+      Object.hash(mediaUploadId, state, metadata, messageIds, encryptionData);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1836,9 +1829,7 @@ class MediaUploadsData extends DataClass
           other.state == this.state &&
           other.metadata == this.metadata &&
           other.messageIds == this.messageIds &&
-          other.encryptionData == this.encryptionData &&
-          other.uploadTokens == this.uploadTokens &&
-          other.alreadyNotified == this.alreadyNotified);
+          other.encryptionData == this.encryptionData);
 }
 
 class MediaUploadsCompanion extends UpdateCompanion<MediaUploadsData> {
@@ -1847,16 +1838,12 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUploadsData> {
   final Value<String?> metadata;
   final Value<String?> messageIds;
   final Value<String?> encryptionData;
-  final Value<String?> uploadTokens;
-  final Value<String> alreadyNotified;
   const MediaUploadsCompanion({
     this.mediaUploadId = const Value.absent(),
     this.state = const Value.absent(),
     this.metadata = const Value.absent(),
     this.messageIds = const Value.absent(),
     this.encryptionData = const Value.absent(),
-    this.uploadTokens = const Value.absent(),
-    this.alreadyNotified = const Value.absent(),
   });
   MediaUploadsCompanion.insert({
     this.mediaUploadId = const Value.absent(),
@@ -1864,8 +1851,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUploadsData> {
     this.metadata = const Value.absent(),
     this.messageIds = const Value.absent(),
     this.encryptionData = const Value.absent(),
-    this.uploadTokens = const Value.absent(),
-    this.alreadyNotified = const Value.absent(),
   });
   static Insertable<MediaUploadsData> custom({
     Expression<int>? mediaUploadId,
@@ -1873,8 +1858,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUploadsData> {
     Expression<String>? metadata,
     Expression<String>? messageIds,
     Expression<String>? encryptionData,
-    Expression<String>? uploadTokens,
-    Expression<String>? alreadyNotified,
   }) {
     return RawValuesInsertable({
       if (mediaUploadId != null) 'media_upload_id': mediaUploadId,
@@ -1882,8 +1865,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUploadsData> {
       if (metadata != null) 'metadata': metadata,
       if (messageIds != null) 'message_ids': messageIds,
       if (encryptionData != null) 'encryption_data': encryptionData,
-      if (uploadTokens != null) 'upload_tokens': uploadTokens,
-      if (alreadyNotified != null) 'already_notified': alreadyNotified,
     });
   }
 
@@ -1892,17 +1873,13 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUploadsData> {
       Value<String>? state,
       Value<String?>? metadata,
       Value<String?>? messageIds,
-      Value<String?>? encryptionData,
-      Value<String?>? uploadTokens,
-      Value<String>? alreadyNotified}) {
+      Value<String?>? encryptionData}) {
     return MediaUploadsCompanion(
       mediaUploadId: mediaUploadId ?? this.mediaUploadId,
       state: state ?? this.state,
       metadata: metadata ?? this.metadata,
       messageIds: messageIds ?? this.messageIds,
       encryptionData: encryptionData ?? this.encryptionData,
-      uploadTokens: uploadTokens ?? this.uploadTokens,
-      alreadyNotified: alreadyNotified ?? this.alreadyNotified,
     );
   }
 
@@ -1924,12 +1901,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUploadsData> {
     if (encryptionData.present) {
       map['encryption_data'] = Variable<String>(encryptionData.value);
     }
-    if (uploadTokens.present) {
-      map['upload_tokens'] = Variable<String>(uploadTokens.value);
-    }
-    if (alreadyNotified.present) {
-      map['already_notified'] = Variable<String>(alreadyNotified.value);
-    }
     return map;
   }
 
@@ -1940,9 +1911,7 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUploadsData> {
           ..write('state: $state, ')
           ..write('metadata: $metadata, ')
           ..write('messageIds: $messageIds, ')
-          ..write('encryptionData: $encryptionData, ')
-          ..write('uploadTokens: $uploadTokens, ')
-          ..write('alreadyNotified: $alreadyNotified')
+          ..write('encryptionData: $encryptionData')
           ..write(')'))
         .toString();
   }
@@ -3842,8 +3811,8 @@ class MessageRetransmissionsCompanion
   }
 }
 
-class DatabaseAtV14 extends GeneratedDatabase {
-  DatabaseAtV14(QueryExecutor e) : super(e);
+class DatabaseAtV15 extends GeneratedDatabase {
+  DatabaseAtV15(QueryExecutor e) : super(e);
   late final Contacts contacts = Contacts(this);
   late final Messages messages = Messages(this);
   late final MediaUploads mediaUploads = MediaUploads(this);
@@ -3879,5 +3848,5 @@ class DatabaseAtV14 extends GeneratedDatabase {
         messageRetransmissions
       ];
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 }

@@ -54,7 +54,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -81,7 +81,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
               schema.contacts, schema.contacts.deleteMessagesAfterXMinutes);
         },
         from3To4: (m, schema) async {
-          m.createTable(mediaUploads);
+          m.createTable(schema.mediaUploads);
           await m.alterTable(TableMigration(
             schema.mediaUploads,
             columnTransformer: {
@@ -115,12 +115,12 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           ));
         },
         from9To10: (m, schema) async {
-          m.createTable(signalContactPreKeys);
-          m.createTable(signalContactSignedPreKeys);
+          m.createTable(schema.signalContactPreKeys);
+          m.createTable(schema.signalContactSignedPreKeys);
           m.addColumn(schema.contacts, schema.contacts.deleted);
         },
         from10To11: (m, schema) async {
-          m.createTable(messageRetransmissions);
+          m.createTable(schema.messageRetransmissions);
         },
         from11To12: (m, schema) async {
           m.addColumn(schema.messageRetransmissions,
@@ -133,6 +133,12 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         from13To14: (m, schema) async {
           m.addColumn(schema.messageRetransmissions,
               schema.messageRetransmissions.encryptedHash);
+        },
+        from14To15: (m, schema) async {
+          m.dropColumn(schema.mediaUploads, "upload_tokens");
+          m.dropColumn(schema.mediaUploads, "already_notified");
+          m.addColumn(
+              schema.messages, schema.messages.mediaRetransmissionState);
         },
       ),
     );

@@ -1,4 +1,5 @@
 // dart format width=80
+import 'dart:typed_data' as i2;
 // GENERATED CODE, DO NOT EDIT BY HAND.
 // ignore_for_file: type=lint
 import 'package:drift/drift.dart';
@@ -1297,8 +1298,8 @@ class SignalIdentityKeyStores extends Table
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  late final GeneratedColumn<Uint8List> identityKey =
-      GeneratedColumn<Uint8List>('identity_key', aliasedName, false,
+  late final GeneratedColumn<i2.Uint8List> identityKey =
+      GeneratedColumn<i2.Uint8List>('identity_key', aliasedName, false,
           type: DriftSqlType.blob, requiredDuringInsert: true);
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
@@ -1342,7 +1343,7 @@ class SignalIdentityKeyStoresData extends DataClass
     implements Insertable<SignalIdentityKeyStoresData> {
   final int deviceId;
   final String name;
-  final Uint8List identityKey;
+  final i2.Uint8List identityKey;
   final DateTime createdAt;
   const SignalIdentityKeyStoresData(
       {required this.deviceId,
@@ -1354,7 +1355,7 @@ class SignalIdentityKeyStoresData extends DataClass
     final map = <String, Expression>{};
     map['device_id'] = Variable<int>(deviceId);
     map['name'] = Variable<String>(name);
-    map['identity_key'] = Variable<Uint8List>(identityKey);
+    map['identity_key'] = Variable<i2.Uint8List>(identityKey);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1374,7 +1375,7 @@ class SignalIdentityKeyStoresData extends DataClass
     return SignalIdentityKeyStoresData(
       deviceId: serializer.fromJson<int>(json['deviceId']),
       name: serializer.fromJson<String>(json['name']),
-      identityKey: serializer.fromJson<Uint8List>(json['identityKey']),
+      identityKey: serializer.fromJson<i2.Uint8List>(json['identityKey']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1384,7 +1385,7 @@ class SignalIdentityKeyStoresData extends DataClass
     return <String, dynamic>{
       'deviceId': serializer.toJson<int>(deviceId),
       'name': serializer.toJson<String>(name),
-      'identityKey': serializer.toJson<Uint8List>(identityKey),
+      'identityKey': serializer.toJson<i2.Uint8List>(identityKey),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1392,7 +1393,7 @@ class SignalIdentityKeyStoresData extends DataClass
   SignalIdentityKeyStoresData copyWith(
           {int? deviceId,
           String? name,
-          Uint8List? identityKey,
+          i2.Uint8List? identityKey,
           DateTime? createdAt}) =>
       SignalIdentityKeyStoresData(
         deviceId: deviceId ?? this.deviceId,
@@ -1439,7 +1440,7 @@ class SignalIdentityKeyStoresCompanion
     extends UpdateCompanion<SignalIdentityKeyStoresData> {
   final Value<int> deviceId;
   final Value<String> name;
-  final Value<Uint8List> identityKey;
+  final Value<i2.Uint8List> identityKey;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const SignalIdentityKeyStoresCompanion({
@@ -1452,7 +1453,7 @@ class SignalIdentityKeyStoresCompanion
   SignalIdentityKeyStoresCompanion.insert({
     required int deviceId,
     required String name,
-    required Uint8List identityKey,
+    required i2.Uint8List identityKey,
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : deviceId = Value(deviceId),
@@ -1461,7 +1462,7 @@ class SignalIdentityKeyStoresCompanion
   static Insertable<SignalIdentityKeyStoresData> custom({
     Expression<int>? deviceId,
     Expression<String>? name,
-    Expression<Uint8List>? identityKey,
+    Expression<i2.Uint8List>? identityKey,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -1477,7 +1478,7 @@ class SignalIdentityKeyStoresCompanion
   SignalIdentityKeyStoresCompanion copyWith(
       {Value<int>? deviceId,
       Value<String>? name,
-      Value<Uint8List>? identityKey,
+      Value<i2.Uint8List>? identityKey,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
     return SignalIdentityKeyStoresCompanion(
@@ -1499,7 +1500,7 @@ class SignalIdentityKeyStoresCompanion
       map['name'] = Variable<String>(name.value);
     }
     if (identityKey.present) {
-      map['identity_key'] = Variable<Uint8List>(identityKey.value);
+      map['identity_key'] = Variable<i2.Uint8List>(identityKey.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1532,9 +1533,9 @@ class SignalPreKeyStores extends Table
   late final GeneratedColumn<int> preKeyId = GeneratedColumn<int>(
       'pre_key_id', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: false);
-  late final GeneratedColumn<Uint8List> preKey = GeneratedColumn<Uint8List>(
-      'pre_key', aliasedName, false,
-      type: DriftSqlType.blob, requiredDuringInsert: true);
+  late final GeneratedColumn<i2.Uint8List> preKey =
+      GeneratedColumn<i2.Uint8List>('pre_key', aliasedName, false,
+          type: DriftSqlType.blob, requiredDuringInsert: true);
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
       type: DriftSqlType.dateTime,
@@ -1572,7 +1573,7 @@ class SignalPreKeyStores extends Table
 class SignalPreKeyStoresData extends DataClass
     implements Insertable<SignalPreKeyStoresData> {
   final int preKeyId;
-  final Uint8List preKey;
+  final i2.Uint8List preKey;
   final DateTime createdAt;
   const SignalPreKeyStoresData(
       {required this.preKeyId, required this.preKey, required this.createdAt});
@@ -1580,7 +1581,7 @@ class SignalPreKeyStoresData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['pre_key_id'] = Variable<int>(preKeyId);
-    map['pre_key'] = Variable<Uint8List>(preKey);
+    map['pre_key'] = Variable<i2.Uint8List>(preKey);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1598,7 +1599,7 @@ class SignalPreKeyStoresData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalPreKeyStoresData(
       preKeyId: serializer.fromJson<int>(json['preKeyId']),
-      preKey: serializer.fromJson<Uint8List>(json['preKey']),
+      preKey: serializer.fromJson<i2.Uint8List>(json['preKey']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1607,13 +1608,13 @@ class SignalPreKeyStoresData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'preKeyId': serializer.toJson<int>(preKeyId),
-      'preKey': serializer.toJson<Uint8List>(preKey),
+      'preKey': serializer.toJson<i2.Uint8List>(preKey),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
   SignalPreKeyStoresData copyWith(
-          {int? preKeyId, Uint8List? preKey, DateTime? createdAt}) =>
+          {int? preKeyId, i2.Uint8List? preKey, DateTime? createdAt}) =>
       SignalPreKeyStoresData(
         preKeyId: preKeyId ?? this.preKeyId,
         preKey: preKey ?? this.preKey,
@@ -1652,7 +1653,7 @@ class SignalPreKeyStoresData extends DataClass
 class SignalPreKeyStoresCompanion
     extends UpdateCompanion<SignalPreKeyStoresData> {
   final Value<int> preKeyId;
-  final Value<Uint8List> preKey;
+  final Value<i2.Uint8List> preKey;
   final Value<DateTime> createdAt;
   const SignalPreKeyStoresCompanion({
     this.preKeyId = const Value.absent(),
@@ -1661,12 +1662,12 @@ class SignalPreKeyStoresCompanion
   });
   SignalPreKeyStoresCompanion.insert({
     this.preKeyId = const Value.absent(),
-    required Uint8List preKey,
+    required i2.Uint8List preKey,
     this.createdAt = const Value.absent(),
   }) : preKey = Value(preKey);
   static Insertable<SignalPreKeyStoresData> custom({
     Expression<int>? preKeyId,
-    Expression<Uint8List>? preKey,
+    Expression<i2.Uint8List>? preKey,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -1678,7 +1679,7 @@ class SignalPreKeyStoresCompanion
 
   SignalPreKeyStoresCompanion copyWith(
       {Value<int>? preKeyId,
-      Value<Uint8List>? preKey,
+      Value<i2.Uint8List>? preKey,
       Value<DateTime>? createdAt}) {
     return SignalPreKeyStoresCompanion(
       preKeyId: preKeyId ?? this.preKeyId,
@@ -1694,7 +1695,7 @@ class SignalPreKeyStoresCompanion
       map['pre_key_id'] = Variable<int>(preKeyId.value);
     }
     if (preKey.present) {
-      map['pre_key'] = Variable<Uint8List>(preKey.value);
+      map['pre_key'] = Variable<i2.Uint8List>(preKey.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1722,9 +1723,9 @@ class SignalSenderKeyStores extends Table
   late final GeneratedColumn<String> senderKeyName = GeneratedColumn<String>(
       'sender_key_name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  late final GeneratedColumn<Uint8List> senderKey = GeneratedColumn<Uint8List>(
-      'sender_key', aliasedName, false,
-      type: DriftSqlType.blob, requiredDuringInsert: true);
+  late final GeneratedColumn<i2.Uint8List> senderKey =
+      GeneratedColumn<i2.Uint8List>('sender_key', aliasedName, false,
+          type: DriftSqlType.blob, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [senderKeyName, senderKey];
   @override
@@ -1755,14 +1756,14 @@ class SignalSenderKeyStores extends Table
 class SignalSenderKeyStoresData extends DataClass
     implements Insertable<SignalSenderKeyStoresData> {
   final String senderKeyName;
-  final Uint8List senderKey;
+  final i2.Uint8List senderKey;
   const SignalSenderKeyStoresData(
       {required this.senderKeyName, required this.senderKey});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['sender_key_name'] = Variable<String>(senderKeyName);
-    map['sender_key'] = Variable<Uint8List>(senderKey);
+    map['sender_key'] = Variable<i2.Uint8List>(senderKey);
     return map;
   }
 
@@ -1778,7 +1779,7 @@ class SignalSenderKeyStoresData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalSenderKeyStoresData(
       senderKeyName: serializer.fromJson<String>(json['senderKeyName']),
-      senderKey: serializer.fromJson<Uint8List>(json['senderKey']),
+      senderKey: serializer.fromJson<i2.Uint8List>(json['senderKey']),
     );
   }
   @override
@@ -1786,12 +1787,12 @@ class SignalSenderKeyStoresData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'senderKeyName': serializer.toJson<String>(senderKeyName),
-      'senderKey': serializer.toJson<Uint8List>(senderKey),
+      'senderKey': serializer.toJson<i2.Uint8List>(senderKey),
     };
   }
 
   SignalSenderKeyStoresData copyWith(
-          {String? senderKeyName, Uint8List? senderKey}) =>
+          {String? senderKeyName, i2.Uint8List? senderKey}) =>
       SignalSenderKeyStoresData(
         senderKeyName: senderKeyName ?? this.senderKeyName,
         senderKey: senderKey ?? this.senderKey,
@@ -1829,7 +1830,7 @@ class SignalSenderKeyStoresData extends DataClass
 class SignalSenderKeyStoresCompanion
     extends UpdateCompanion<SignalSenderKeyStoresData> {
   final Value<String> senderKeyName;
-  final Value<Uint8List> senderKey;
+  final Value<i2.Uint8List> senderKey;
   final Value<int> rowid;
   const SignalSenderKeyStoresCompanion({
     this.senderKeyName = const Value.absent(),
@@ -1838,13 +1839,13 @@ class SignalSenderKeyStoresCompanion
   });
   SignalSenderKeyStoresCompanion.insert({
     required String senderKeyName,
-    required Uint8List senderKey,
+    required i2.Uint8List senderKey,
     this.rowid = const Value.absent(),
   })  : senderKeyName = Value(senderKeyName),
         senderKey = Value(senderKey);
   static Insertable<SignalSenderKeyStoresData> custom({
     Expression<String>? senderKeyName,
-    Expression<Uint8List>? senderKey,
+    Expression<i2.Uint8List>? senderKey,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1856,7 +1857,7 @@ class SignalSenderKeyStoresCompanion
 
   SignalSenderKeyStoresCompanion copyWith(
       {Value<String>? senderKeyName,
-      Value<Uint8List>? senderKey,
+      Value<i2.Uint8List>? senderKey,
       Value<int>? rowid}) {
     return SignalSenderKeyStoresCompanion(
       senderKeyName: senderKeyName ?? this.senderKeyName,
@@ -1872,7 +1873,7 @@ class SignalSenderKeyStoresCompanion
       map['sender_key_name'] = Variable<String>(senderKeyName.value);
     }
     if (senderKey.present) {
-      map['sender_key'] = Variable<Uint8List>(senderKey.value);
+      map['sender_key'] = Variable<i2.Uint8List>(senderKey.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1903,8 +1904,8 @@ class SignalSessionStores extends Table
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  late final GeneratedColumn<Uint8List> sessionRecord =
-      GeneratedColumn<Uint8List>('session_record', aliasedName, false,
+  late final GeneratedColumn<i2.Uint8List> sessionRecord =
+      GeneratedColumn<i2.Uint8List>('session_record', aliasedName, false,
           type: DriftSqlType.blob, requiredDuringInsert: true);
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
@@ -1948,7 +1949,7 @@ class SignalSessionStoresData extends DataClass
     implements Insertable<SignalSessionStoresData> {
   final int deviceId;
   final String name;
-  final Uint8List sessionRecord;
+  final i2.Uint8List sessionRecord;
   final DateTime createdAt;
   const SignalSessionStoresData(
       {required this.deviceId,
@@ -1960,7 +1961,7 @@ class SignalSessionStoresData extends DataClass
     final map = <String, Expression>{};
     map['device_id'] = Variable<int>(deviceId);
     map['name'] = Variable<String>(name);
-    map['session_record'] = Variable<Uint8List>(sessionRecord);
+    map['session_record'] = Variable<i2.Uint8List>(sessionRecord);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1980,7 +1981,7 @@ class SignalSessionStoresData extends DataClass
     return SignalSessionStoresData(
       deviceId: serializer.fromJson<int>(json['deviceId']),
       name: serializer.fromJson<String>(json['name']),
-      sessionRecord: serializer.fromJson<Uint8List>(json['sessionRecord']),
+      sessionRecord: serializer.fromJson<i2.Uint8List>(json['sessionRecord']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1990,7 +1991,7 @@ class SignalSessionStoresData extends DataClass
     return <String, dynamic>{
       'deviceId': serializer.toJson<int>(deviceId),
       'name': serializer.toJson<String>(name),
-      'sessionRecord': serializer.toJson<Uint8List>(sessionRecord),
+      'sessionRecord': serializer.toJson<i2.Uint8List>(sessionRecord),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1998,7 +1999,7 @@ class SignalSessionStoresData extends DataClass
   SignalSessionStoresData copyWith(
           {int? deviceId,
           String? name,
-          Uint8List? sessionRecord,
+          i2.Uint8List? sessionRecord,
           DateTime? createdAt}) =>
       SignalSessionStoresData(
         deviceId: deviceId ?? this.deviceId,
@@ -2045,7 +2046,7 @@ class SignalSessionStoresCompanion
     extends UpdateCompanion<SignalSessionStoresData> {
   final Value<int> deviceId;
   final Value<String> name;
-  final Value<Uint8List> sessionRecord;
+  final Value<i2.Uint8List> sessionRecord;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const SignalSessionStoresCompanion({
@@ -2058,7 +2059,7 @@ class SignalSessionStoresCompanion
   SignalSessionStoresCompanion.insert({
     required int deviceId,
     required String name,
-    required Uint8List sessionRecord,
+    required i2.Uint8List sessionRecord,
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : deviceId = Value(deviceId),
@@ -2067,7 +2068,7 @@ class SignalSessionStoresCompanion
   static Insertable<SignalSessionStoresData> custom({
     Expression<int>? deviceId,
     Expression<String>? name,
-    Expression<Uint8List>? sessionRecord,
+    Expression<i2.Uint8List>? sessionRecord,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -2083,7 +2084,7 @@ class SignalSessionStoresCompanion
   SignalSessionStoresCompanion copyWith(
       {Value<int>? deviceId,
       Value<String>? name,
-      Value<Uint8List>? sessionRecord,
+      Value<i2.Uint8List>? sessionRecord,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
     return SignalSessionStoresCompanion(
@@ -2105,7 +2106,7 @@ class SignalSessionStoresCompanion
       map['name'] = Variable<String>(name.value);
     }
     if (sessionRecord.present) {
-      map['session_record'] = Variable<Uint8List>(sessionRecord.value);
+      map['session_record'] = Variable<i2.Uint8List>(sessionRecord.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);

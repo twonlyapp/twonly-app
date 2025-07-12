@@ -10,7 +10,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/services/api/media_upload.dart'
-    show createDownloadTokens, uint8ListToHex;
+    show uint8ListToHex, createDownloadToken;
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/help/contact_us/submit_message.view.dart';
@@ -33,7 +33,7 @@ class _ContactUsState extends State<ContactUsView> {
 
   Future<String?> uploadDebugLog() async {
     if (debugLogDownloadToken != null) return debugLogDownloadToken;
-    Uint8List downloadToken = createDownloadTokens(1)[0];
+    Uint8List downloadToken = createDownloadToken();
 
     String debugLog = await loadLogFile();
 

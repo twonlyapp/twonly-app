@@ -81,7 +81,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
             widget.contact.userId,
             MessageJson(
               kind: MessageKind.reopenedMedia,
-              messageId: widget.message.messageId,
+              messageSenderId: widget.message.messageId,
               content: ReopenedMediaFileContent(
                 messageId: widget.message.messageOtherId!,
               ),

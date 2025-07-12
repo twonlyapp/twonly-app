@@ -1057,4 +1057,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get doubleClickToReopen => 'Double-click\nto open again';
+
+  @override
+  String get retransmissionRequested => 'Retransmission requested';
 }

@@ -517,17 +517,30 @@ Future handleMediaUpload(MediaUpload media) async {
 
   if (media.messageIds == null) return;
 
-  List<Uint8List> downloadTokens =
-      createDownloadTokens(media.messageIds!.length);
+  List<int> messageIds = media.messageIds!;
+
+  List<Uint8List> downloadTokens = [];
 
   List<TextMessage> messagesOnSuccess = [];
 
-  for (var i = 0; i < media.messageIds!.length; i++) {
+  for (var i = 0; i < messageIds.length; i++) {
+    Message? message = await twonlyDB.messagesDao
+        .getMessageByMessageId(messageIds[i])
+        .getSingleOrNull();
+    if (message == null) continue;
+
+    if (message.downloadState == DownloadState.downloaded) {
+      // only upload message which are not yet uploaded (or in case of an error re-uploaded)
+      continue;
+    }
+
+    final downloadToken = createDownloadToken();
+
     MessageJson msg = MessageJson(
       kind: MessageKind.media,
-      messageId: media.messageIds![i],
+      messageSenderId: messageIds[i],
       content: MediaMessageContent(
-        downloadToken: downloadTokens[i],
+        downloadToken: downloadToken,
         maxShowTime: media.metadata!.maxShowTime,
         isRealTwonly: media.metadata!.isRealTwonly,
         isVideo: media.metadata!.isVideo,
@@ -541,12 +554,6 @@ Future handleMediaUpload(MediaUpload media) async {
 
     Uint8List plaintextContent =
         Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson()))));
-
-    Message? message = await twonlyDB.messagesDao
-        .getMessageByMessageId(media.messageIds![i])
-        .getSingleOrNull();
-
-    if (message == null) continue;
 
     Contact? contact = await twonlyDB.contactsDao
         .getContactByUserId(message.contactId)
@@ -597,6 +604,7 @@ Future handleMediaUpload(MediaUpload media) async {
     }
 
     messagesOnSuccess.add(messageOnSuccess);
+    downloadTokens.add(downloadToken);
   }
 
   final uploadRequest = UploadRequest(
@@ -849,17 +857,12 @@ Uint8List hexToUint8List(String hex) => Uint8List.fromList(List<int>.generate(
     hex.length ~/ 2,
     (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16)));
 
-List<Uint8List> createDownloadTokens(int n) {
+Uint8List createDownloadToken() {
   final Random random = Random();
-  List<Uint8List> tokens = [];
 
-  for (int i = 0; i < n; i++) {
-    Uint8List token = Uint8List(32);
-    for (int j = 0; j < 32; j++) {
-      token[j] = random.nextInt(256); // Generate a random byte (0-255)
-    }
-    tokens.add(token);
+  Uint8List token = Uint8List(32);
+  for (int j = 0; j < 32; j++) {
+    token[j] = random.nextInt(256); // Generate a random byte (0-255)
   }
-
-  return tokens;
+  return token;
 }

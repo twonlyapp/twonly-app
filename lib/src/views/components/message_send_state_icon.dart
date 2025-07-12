@@ -175,6 +175,14 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         text = "Error";
       }
 
+      if (message.mediaRetransmissionState == MediaRetransmitting.requested) {
+        icon = FaIcon(FontAwesomeIcons.clockRotateLeft, size: 12, color: color);
+        textWidget = Text(
+          context.lang.retransmissionRequested,
+          style: TextStyle(fontSize: 9),
+        );
+      }
+
       if (message.kind == MessageKind.media) {
         icons.insert(0, icon);
       } else {

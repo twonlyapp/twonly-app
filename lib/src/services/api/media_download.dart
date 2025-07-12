@@ -81,7 +81,8 @@ Future handleDownloadStatusUpdate(TaskStatusUpdate update) async {
   bool failed = false;
 
   if (update.status == TaskStatus.failed ||
-      update.status == TaskStatus.canceled) {
+      update.status == TaskStatus.canceled ||
+      update.status == TaskStatus.notFound) {
     failed = true;
   } else if (update.status == TaskStatus.complete) {
     if (update.responseStatusCode == 200) {
@@ -89,10 +90,11 @@ Future handleDownloadStatusUpdate(TaskStatusUpdate update) async {
     } else {
       failed = true;
       Log.error(
-          "Got invalid response status code: ${update.responseStatusCode}");
+        "Got invalid response status code: ${update.responseStatusCode}",
+      );
     }
   } else {
-    Log.info("Got $update for $messageId");
+    Log.info("Got ${update.status} for $messageId");
     return;
   }
   await handleDownloadStatusUpdateInternal(messageId, failed);
@@ -213,19 +215,20 @@ Future<void> downloadFileFast(
   final String filePath = "${directory.path}/$filename";
 
   final response =
-      await http.get(Uri.parse(apiUrl)).timeout(Duration(seconds: 6));
+      await http.get(Uri.parse(apiUrl)).timeout(Duration(seconds: 10));
 
   if (response.statusCode == 200) {
     await File(filePath).writeAsBytes(response.bodyBytes);
-    Log.info('Download successful: $filePath');
+    Log.info('Fast Download successful: $filePath');
     await handleDownloadStatusUpdateInternal(messageId, false);
     return;
   } else {
-    if (response.statusCode == 404) {
+    if (response.statusCode == 404 || response.statusCode == 403) {
       await handleDownloadStatusUpdateInternal(messageId, true);
       return;
     }
-    throw Exception("Fast upload failed with status: ${response.statusCode}");
+    // can be tried again
+    throw Exception("Fast download failed with status: ${response.statusCode}");
   }
 }
 
@@ -248,16 +251,17 @@ Future handleEncryptedFile(int messageId) async {
   MediaMessageContent content =
       MediaMessageContent.fromJson(jsonDecode(msg.contentJson!));
 
-  final chacha20 = FlutterChacha20.poly1305Aead();
-  SecretKeyData secretKeyData = SecretKeyData(content.encryptionKey!);
-
-  SecretBox secretBox = SecretBox(
-    encryptedBytes,
-    nonce: content.encryptionNonce!,
-    mac: Mac(content.encryptionMac!),
-  );
-
   try {
+    final chacha20 = FlutterChacha20.poly1305Aead();
+    SecretKeyData secretKeyData = SecretKeyData(content.encryptionKey!);
+
+    SecretBox secretBox = SecretBox(
+      encryptedBytes,
+      nonce: content.encryptionNonce!,
+      mac: Mac(content.encryptionMac!),
+    );
+
+    // try {
     final plaintextBytes =
         await chacha20.decrypt(secretBox, secretKey: secretKeyData);
     var imageBytes = Uint8List.fromList(plaintextBytes);
@@ -269,17 +273,51 @@ Future handleEncryptedFile(int messageId) async {
     }
 
     await writeMediaFile(msg.messageId, "png", imageBytes);
+    // } catch (e) {
+    //   Log.error(
+    //       "could not decrypt the media file in the second try. reporting error to user: $e");
+    //   handleMediaError(msg);
+    //   return;
+    // }
   } catch (e) {
-    Log.error(
-        "could not decrypt the media file in the second try. reporting error to user: $e");
-    handleMediaError(msg);
-    return;
+    Log.error("$e");
+
+    /// legacy support
+    final chacha20 = Xchacha20.poly1305Aead();
+    SecretKeyData secretKeyData = SecretKeyData(content.encryptionKey!);
+
+    SecretBox secretBox = SecretBox(
+      encryptedBytes,
+      nonce: content.encryptionNonce!,
+      mac: Mac(content.encryptionMac!),
+    );
+
+    try {
+      final plaintextBytes =
+          await chacha20.decrypt(secretBox, secretKey: secretKeyData);
+      var imageBytes = Uint8List.fromList(plaintextBytes);
+
+      if (content.isVideo) {
+        final extractedBytes = extractUint8Lists(imageBytes);
+        imageBytes = extractedBytes[0];
+        await writeMediaFile(msg.messageId, "mp4", extractedBytes[1]);
+      }
+
+      await writeMediaFile(msg.messageId, "png", imageBytes);
+    } catch (e) {
+      Log.error(
+          "could not decrypt the media file in the second try. reporting error to user: $e");
+      handleMediaError(msg);
+      return;
+    }
   }
 
   await twonlyDB.messagesDao.updateMessageByMessageId(
     msg.messageId,
     MessagesCompanion(downloadState: Value(DownloadState.downloaded)),
   );
+
+  Log.info("Download and decryption of ${msg.messageId} was successful");
 
   await deleteMediaFile(msg.messageId, "encrypted");
 
@@ -367,6 +405,8 @@ Future<void> purgeMediaFiles(Directory directory) async {
                 );
 
                 DateTime oneDayAgo = DateTime.now().subtract(Duration(days: 1));
+                DateTime twoDaysAgo =
+                    DateTime.now().subtract(Duration(days: 1));
 
                 if (((message.openedAt == null ||
                         oneDayAgo.isBefore(message.openedAt!)) &&
@@ -378,7 +418,12 @@ Future<void> purgeMediaFiles(Directory directory) async {
                     canBeDeleted = false;
                   }
                 }
-                if (message.acknowledgeByServer) {
+
+                /// In case the image is not yet opened but successfully uploaded
+                /// to the server preserve the image for two days in case of an receiving error will happen
+                ///  and then delete them as well.
+                if (message.acknowledgeByServer &&
+                    twoDaysAgo.isAfter(message.sendAt)) {
                   // Preserve images which can be stored by the other person...
                   if (content.maxShowTime != gMediaShowInfinite) {
                     canBeDeleted = true;

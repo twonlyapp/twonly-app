@@ -313,10 +313,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       widget.contact.userId,
       MessageJson(
         kind: MessageKind.storedMediaFile,
-        messageId: allMediaFiles.first.messageId,
-        content: StoredMediaFileContent(
-          messageId: allMediaFiles.first.messageOtherId!,
-        ),
+        messageSenderId: allMediaFiles.first.messageId,
+        messageReceiverId: allMediaFiles.first.messageOtherId!,
+        content: MessageContent(),
         timestamp: DateTime.now(),
       ),
       pushNotification: PushNotification(kind: PushKind.storedMediaFile),

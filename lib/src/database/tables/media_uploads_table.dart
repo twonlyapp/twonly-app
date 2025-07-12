@@ -2,14 +2,6 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 
 enum UploadState {
-  // legacy
-  addedToMessagesDb,
-  isCompressed,
-  isEncrypted,
-  hasUploadToken,
-  isUploaded,
-  // ^^ legacy  ^^
-
   pending,
   readyToUpload,
   uploadTaskStarted,
@@ -29,17 +21,8 @@ class MediaUploads extends Table {
   /// exists in UploadState.addedToMessagesDb
   TextColumn get messageIds => text().map(IntListTypeConverter()).nullable()();
 
-  /// exsists in UploadState.isEncrypted
   TextColumn get encryptionData =>
       text().map(MediaEncryptionDataConverter()).nullable()();
-
-  /// exsists in UploadState.hasUploadToken
-  TextColumn get uploadTokens =>
-      text().map(MediaUploadTokensConverter()).nullable()();
-
-  /// exists in UploadState.addedToMessagesDb
-  TextColumn get alreadyNotified =>
-      text().map(IntListTypeConverter()).withDefault(Constant("[]"))();
 }
 
 // --- state ----
@@ -101,29 +84,6 @@ class MediaEncryptionData {
     state.encryptionKey = List<int>.from(json['encryptionKey']);
     state.encryptionMac = List<int>.from(json['encryptionMac']);
     state.encryptionNonce = List<int>.from(json['encryptionNonce']);
-    return state;
-  }
-}
-
-class MediaUploadTokens {
-  late List<int> uploadToken;
-  late List<List<int>> downloadTokens;
-
-  MediaUploadTokens();
-
-  Map<String, dynamic> toJson() {
-    return {
-      'uploadToken': uploadToken,
-      'downloadTokens': downloadTokens,
-    };
-  }
-
-  factory MediaUploadTokens.fromJson(Map<String, dynamic> json) {
-    MediaUploadTokens state = MediaUploadTokens();
-    state.uploadToken = List<int>.from(json['uploadToken']);
-    state.downloadTokens = List<List<int>>.from(
-      json['downloadTokens'].map((token) => List<int>.from(token)),
-    );
     return state;
   }
 }
@@ -190,32 +150,6 @@ class MediaEncryptionDataConverter
 
   @override
   Map<String, Object?> toJson(MediaEncryptionData value) {
-    return value.toJson();
-  }
-}
-
-class MediaUploadTokensConverter
-    extends TypeConverter<MediaUploadTokens, String>
-    with JsonTypeConverter2<MediaUploadTokens, String, Map<String, Object?>> {
-  const MediaUploadTokensConverter();
-
-  @override
-  MediaUploadTokens fromSql(String fromDb) {
-    return fromJson(json.decode(fromDb) as Map<String, dynamic>);
-  }
-
-  @override
-  String toSql(MediaUploadTokens value) {
-    return json.encode(toJson(value));
-  }
-
-  @override
-  MediaUploadTokens fromJson(Map<String, Object?> json) {
-    return MediaUploadTokens.fromJson(json);
-  }
-
-  @override
-  Map<String, Object?> toJson(MediaUploadTokens value) {
     return value.toJson();
   }
 }

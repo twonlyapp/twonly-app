@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/media_uploads_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/model/json/message.dart';
@@ -96,10 +98,10 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       fromUserId,
       MessageJson(
         kind: MessageKind.ack,
-        messageId: null,
         content: AckContent(
-            messageIdToAck: message.messageId,
-            retransIdToAck: message.retransId!),
+          messageIdToAck: message.messageSenderId,
+          retransIdToAck: message.retransId!,
+        ),
         timestamp: DateTime.now(),
       ),
     );
@@ -166,29 +168,69 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       }
 
     case MessageKind.receiveMediaError:
-      if (message.messageId != null) {
-        await twonlyDB.messagesDao.updateMessageByOtherUser(
-          fromUserId,
-          message.messageId!,
-          MessagesCompanion(
-            errorWhileSending: Value(true),
-          ),
-        );
+      if (message.messageReceiverId != null) {
+        final openedMessage = await twonlyDB.messagesDao
+            .getMessageByIdAndContactId(fromUserId, message.messageReceiverId!)
+            .getSingleOrNull();
+
+        if (openedMessage != null) {
+          /// message found
+
+          /// checks if
+          ///   1. this was a media upload
+          ///   2. the media was not already retransmitted
+          ///   3. the media was send in the last two days
+          if (openedMessage.mediaUploadId != null &&
+              openedMessage.mediaRetransmissionState ==
+                  MediaRetransmitting.none &&
+              openedMessage.sendAt
+                  .isAfter(DateTime.now().subtract(Duration(days: 2)))) {
+            // reset the media upload state to pending,
+            // this will cause the media to be re-encrypted again
+            twonlyDB.mediaUploadsDao.updateMediaUpload(
+              openedMessage.mediaUploadId!,
+              MediaUploadsCompanion(
+                state: Value(
+                  UploadState.pending,
+                ),
+              ),
+            );
+            // reset the message upload so the upload will be done again
+            await twonlyDB.messagesDao.updateMessageByOtherUser(
+              fromUserId,
+              message.messageReceiverId!,
+              MessagesCompanion(
+                downloadState: Value(DownloadState.pending),
+                mediaRetransmissionState:
+                    Value(MediaRetransmitting.retransmitted),
+              ),
+            );
+            retryMediaUpload(false);
+          } else {
+            await twonlyDB.messagesDao.updateMessageByOtherUser(
+              fromUserId,
+              message.messageReceiverId!,
+              MessagesCompanion(
+                errorWhileSending: Value(true),
+              ),
+            );
+          }
+        }
       }
 
     case MessageKind.opened:
-      if (message.messageId != null) {
+      if (message.messageReceiverId != null) {
         final update = MessagesCompanion(
           openedAt: Value(message.timestamp),
           errorWhileSending: Value(false),
         );
         await twonlyDB.messagesDao.updateMessageByOtherUser(
           fromUserId,
-          message.messageId!,
+          message.messageReceiverId!,
           update,
         );
         final openedMessage = await twonlyDB.messagesDao
-            .getMessageByMessageId(message.messageId!)
+            .getMessageByMessageId(message.messageReceiverId!)
             .getSingleOrNull();
         if (openedMessage != null &&
             openedMessage.kind == MessageKind.textMessage) {
@@ -242,41 +284,52 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           message.kind != MessageKind.storedMediaFile &&
           message.kind != MessageKind.reopenedMedia) {
         Log.error("Got unknown MessageKind $message");
-      } else if (message.content == null || message.messageId == null) {
-        Log.error("Content or messageid not defined $message");
+      } else if (message.messageSenderId == null) {
+        Log.error("Messageid not defined $message");
       } else {
-        final content = message.content!;
-
-        if (content is StoredMediaFileContent) {
-          /// stored media file just updates the message
-          await twonlyDB.messagesDao.updateMessageByOtherUser(
-            fromUserId,
-            content.messageId,
-            MessagesCompanion(
-              mediaStored: Value(true),
-              errorWhileSending: Value(false),
-            ),
-          );
-          final message = await twonlyDB.messagesDao
-              .getMessageByIdAndContactId(fromUserId, content.messageId)
-              .getSingleOrNull();
-          if (message != null && message.mediaUploadId != null) {
-            final filePath =
-                await getMediaFilePath(message.mediaUploadId, "send");
-            if (filePath.contains("mp4")) {
-              createThumbnailsForVideo(File(filePath));
-            } else {
-              createThumbnailsForImage(File(filePath));
+        if (message.kind == MessageKind.storedMediaFile) {
+          if (message.messageReceiverId != null) {
+            /// stored media file just updates the message
+            await twonlyDB.messagesDao.updateMessageByOtherUser(
+              fromUserId,
+              message.messageReceiverId!,
+              MessagesCompanion(
+                mediaStored: Value(true),
+                errorWhileSending: Value(false),
+              ),
+            );
+            final msg = await twonlyDB.messagesDao
+                .getMessageByIdAndContactId(
+                    fromUserId, message.messageReceiverId!)
+                .getSingleOrNull();
+            if (msg != null && msg.mediaUploadId != null) {
+              final filePath =
+                  await getMediaFilePath(msg.mediaUploadId, "send");
+              if (filePath.contains("mp4")) {
+                createThumbnailsForVideo(File(filePath));
+              } else {
+                createThumbnailsForImage(File(filePath));
+              }
             }
           }
-        } else {
+        } else if (message.content != null) {
+          final content = message.content!;
           // when a message is received doubled ignore it...
-          if ((await twonlyDB.messagesDao
-              .containsOtherMessageId(fromUserId, message.messageId!))) {
-            Log.error(
-                "Got a duplicated message from other user: ${message.messageId!}");
-            var ok = client.Response_Ok()..none = true;
-            return client.Response()..ok = ok;
+
+          final openedMessage = await twonlyDB.messagesDao
+              .getMessageByOtherMessageId(fromUserId, message.messageSenderId!)
+              .getSingleOrNull();
+
+          if (openedMessage != null) {
+            if (openedMessage.errorWhileSending) {
+              await twonlyDB.messagesDao
+                  .deleteMessagesByMessageId(openedMessage.messageId);
+            } else {
+              Log.error(
+                  "Got a duplicated message from other user: ${message.messageSenderId!}");
+              var ok = client.Response_Ok()..none = true;
+              return client.Response()..ok = ok;
+            }
           }
 
           int? responseToMessageId;
@@ -324,7 +377,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           final update = MessagesCompanion(
             contactId: Value(fromUserId),
             kind: Value(message.kind),
-            messageOtherId: Value(message.messageId),
+            messageOtherId: Value(message.messageSenderId),
             contentJson: Value(contentJson),
             acknowledgeByServer: Value(true),
             acknowledgeByUser: Value(acknowledgeByUser),
@@ -359,6 +412,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
               startDownloadMedia(msg, false);
             }
           }
+        } else {
+          Log.error("Content is not defined $message");
         }
 
         // unarchive contact when receiving a new message
