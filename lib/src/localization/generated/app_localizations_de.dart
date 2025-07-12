@@ -1066,4 +1066,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get retransmissionRequested => 'Wird erneut versucht.';
+
+  @override
+  String get testPaymentMethode =>
+      'twonly befindet sich derzeit in einer Testphase und kann nur mit einem Einladungscode vollständig genutzt werden. Es gibt derzeit keine Zahlungsmethode, um Ihr twonly-Guthaben aufzuladen!';
+
+  @override
+  String get testingAccountTitle => 'Tester-Zugang';
+
+  @override
+  String get testingAccountBody =>
+      'Danke für dein Interesse! Wir werden deine Anfrage prüfen und den Plan so schnell wie möglich aktivieren. Da wir uns jedoch noch in einer Testphase befinden, ist die Anzahl der Tester-Konten begrenzt. Wir werden dich jedoch benachrichtigen, sobald dir ein Platz zugewiesen wurde.';
 }

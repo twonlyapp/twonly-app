@@ -86,6 +86,20 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  context.lang.testPaymentMethode,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
             Expanded(
               child: ListView(
                 children: [

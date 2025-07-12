@@ -65,6 +65,9 @@ class UserData {
 
   DateTime? signalLastSignedPreKeyUpdated;
 
+  @JsonKey(defaultValue: false)
+  bool requestedTesterAccount = false;
+
   //  -- Custom DATA --
 
   @JsonKey(defaultValue: 100_000)

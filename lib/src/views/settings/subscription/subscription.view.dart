@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
@@ -12,6 +13,7 @@ import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/settings/subscription/additional_users.view.dart';
 import 'package:twonly/src/views/settings/subscription/checkout.view.dart';
@@ -105,6 +107,7 @@ class SubscriptionView extends StatefulWidget {
 
 class _SubscriptionViewState extends State<SubscriptionView> {
   bool loaded = false;
+  bool testerRequested = true;
   Response_PlanBallance? ballance;
   String? additionalOwnerName;
 
@@ -127,7 +130,45 @@ class _SubscriptionViewState extends State<SubscriptionView> {
         additionalOwnerName = ownerId.toString();
       }
     }
+    final user = await getUser();
+    if (user != null) {
+      testerRequested = user.requestedTesterAccount;
+      // if (kDebugMode) {
+      //   testerRequested = false;
+      // }
+    }
     setState(() {});
+  }
+
+  Future<void> _submitTesterRequest() async {
+    final user = await getUser();
+    if (user == null) return;
+    final response = await http.post(
+      Uri.parse('https://twonly.theconnectapp.de/subscribe.twonly.php'),
+      headers: <String, String>{
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: {
+        'feedback': "[TESTER REQUEST] ${user.username} ${user.userId}",
+      },
+    );
+    if (!mounted) return;
+    if (response.statusCode == 200) {
+      // Handle successful response
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Your request has been submitted.")),
+      );
+      await updateUserdata((u) {
+        u.requestedTesterAccount = true;
+        return u;
+      });
+      initAsync();
+    } else {
+      // Handle error response
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit your request.')),
+      );
+    }
   }
 
   @override
@@ -221,6 +262,20 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   style: TextStyle(fontSize: 18),
                 ),
               ),
+            ),
+          if (currentPlan != "Tester" && !testerRequested)
+            PlanCard(
+              planId: "Tester",
+              onTap: () async {
+                bool activate = await showAlertDialog(
+                  context,
+                  context.lang.testingAccountTitle,
+                  context.lang.testingAccountBody,
+                );
+                if (activate) {
+                  _submitTesterRequest();
+                }
+              },
             ),
           if (currentPlan != "Family" && currentPlan != "Pro")
             PlanCard(

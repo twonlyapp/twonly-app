@@ -328,5 +328,8 @@
     "appOutdated": "Deine Version von twonly ist veraltet.",
     "appOutdatedBtn": "Jetzt aktualisieren.",
     "doubleClickToReopen": "Doppelklicken zum\nerneuten Öffnen.",
-    "retransmissionRequested": "Wird erneut versucht."
+    "retransmissionRequested": "Wird erneut versucht.",
+    "testPaymentMethode": "twonly befindet sich derzeit in einer Testphase und kann nur mit einem Einladungscode vollständig genutzt werden. Es gibt derzeit keine Zahlungsmethode, um Ihr twonly-Guthaben aufzuladen!",
+    "testingAccountTitle": "Tester-Zugang",
+    "testingAccountBody": "Danke für dein Interesse! Wir werden deine Anfrage prüfen und den Plan so schnell wie möglich aktivieren. Da wir uns jedoch noch in einer Testphase befinden, ist die Anzahl der Tester-Konten begrenzt. Wir werden dich jedoch benachrichtigen, sobald dir ein Platz zugewiesen wurde."
 }
