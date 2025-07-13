@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:flutter/foundation.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -19,18 +20,22 @@ import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
+final lockRetransmission = Mutex();
+
 Future tryTransmitMessages() async {
-  final retransIds =
-      await twonlyDB.messageRetransmissionDao.getRetransmitAbleMessages();
+  return await lockRetransmission.protect(() async {
+    final retransIds =
+        await twonlyDB.messageRetransmissionDao.getRetransmitAbleMessages();
 
-  Log.info("Retransmitting ${retransIds.length} text messages");
+    Log.info("Retransmitting ${retransIds.length} text messages");
 
-  if (retransIds.isEmpty) return;
+    if (retransIds.isEmpty) return;
 
-  for (final retransId in retransIds) {
-    sendRetransmitMessage(retransId, fromRetransmissionDb: true);
-    //twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
-  }
+    for (final retransId in retransIds) {
+      sendRetransmitMessage(retransId, fromRetransmissionDb: true);
+      //twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
+    }
+  });
 }
 
 Future sendRetransmitMessage(int retransId,
@@ -45,6 +50,11 @@ Future sendRetransmitMessage(int retransId,
       return;
     }
 
+    if (retrans.acknowledgeByServerAt != null) {
+      Log.error("$retransId message already retransmitted");
+      return;
+    }
+
     MessageJson json = MessageJson.fromJson(
       jsonDecode(
         utf8.decode(
@@ -52,15 +62,16 @@ Future sendRetransmitMessage(int retransId,
         ),
       ),
     );
-    DateTime timestampToCheck = DateTime.parse("2025-06-24T12:00:00");
+
+    DateTime timestampToCheck = DateTime.parse("2025-07-14T00:36:00");
     if (json.timestamp.isBefore(timestampToCheck)) {
-      Log.info("Deleting retransmission because it is before the update...");
+      Log.info("Ignoring retransmission because it is before the update...");
       await twonlyDB.messageRetransmissionDao
           .deleteRetransmissionById(retransId);
       return;
     }
 
-    Log.info("Retransmitting: ${json.kind} to ${retrans.contactId}");
+    Log.info("Retransmitting $retransId: ${json.kind} to ${retrans.contactId}");
 
     Contact? contact = await twonlyDB.contactsDao
         .getContactByUserId(retrans.contactId)
