@@ -66,6 +66,15 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
     );
   }
 
+  Future<MessageRetransmission?> getRetransmissionFromHash(
+      int fromUserId, Uint8List encryptedHash) async {
+    return ((select(messageRetransmissions))
+          ..where((m) =>
+              m.contactId.equals(fromUserId) &
+              m.encryptedHash.equals(encryptedHash)))
+        .getSingleOrNull();
+  }
+
   Future deleteRetransmissionById(int retransmissionId) {
     return (delete(messageRetransmissions)
           ..where((t) => t.retransmissionId.equals(retransmissionId)))

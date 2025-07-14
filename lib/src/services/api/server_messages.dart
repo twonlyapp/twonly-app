@@ -132,11 +132,16 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
 
       final content = message.content;
       if (content is SignalDecryptErrorContent) {
+        final hash = Uint8List.fromList(content.encryptedHash);
         await twonlyDB.messageRetransmissionDao.resetAckStatusFor(
           fromUserId,
-          Uint8List.fromList(content.encryptedHash),
+          hash,
         );
-        tryTransmitMessages();
+        final message = await twonlyDB.messageRetransmissionDao
+            .getRetransmissionFromHash(fromUserId, hash);
+        if (message != null) {
+          sendRetransmitMessage(message.retransmissionId);
+        }
       }
 
       break;

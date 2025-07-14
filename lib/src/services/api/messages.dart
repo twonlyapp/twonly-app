@@ -32,14 +32,12 @@ Future tryTransmitMessages() async {
     if (retransIds.isEmpty) return;
 
     for (final retransId in retransIds) {
-      sendRetransmitMessage(retransId, fromRetransmissionDb: true);
-      //twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
+      await sendRetransmitMessage(retransId);
     }
   });
 }
 
-Future sendRetransmitMessage(int retransId,
-    {bool fromRetransmissionDb = false}) async {
+Future sendRetransmitMessage(int retransId) async {
   try {
     MessageRetransmission? retrans = await twonlyDB.messageRetransmissionDao
         .getRetransmissionById(retransId)
@@ -62,14 +60,6 @@ Future sendRetransmitMessage(int retransId,
         ),
       ),
     );
-
-    DateTime timestampToCheck = DateTime.parse("2025-07-14T00:36:00");
-    if (json.timestamp.isBefore(timestampToCheck)) {
-      Log.info("Ignoring retransmission because it is before the update...");
-      await twonlyDB.messageRetransmissionDao
-          .deleteRetransmissionById(retransId);
-      return;
-    }
 
     Log.info("Retransmitting $retransId: ${json.kind} to ${retrans.contactId}");
 

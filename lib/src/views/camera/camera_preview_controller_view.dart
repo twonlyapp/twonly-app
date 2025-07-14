@@ -19,7 +19,6 @@ import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/home.view.dart';
 
@@ -143,7 +142,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   double basePanY = 0;
   double baseScaleFactor = 0;
   bool cameraLoaded = false;
-  bool useHighQuality = false;
   bool isVideoRecording = false;
   bool hasAudioPermission = true;
   bool videoWithAudio = true;
@@ -174,9 +172,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       : CameraSendToViewState.screenshotController;
 
   void initAsync() async {
-    final user = await getUser();
-    if (user == null) return;
-    useHighQuality = user.useHighQuality;
     hasAudioPermission = await Permission.microphone.isGranted;
     if (!mounted) return;
     setState(() {});
@@ -258,8 +253,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     cameraController?.setFlashMode(
         selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off);
     imageBytes = screenshotController.capture(
-        pixelRatio:
-            (useHighQuality) ? MediaQuery.of(context).devicePixelRatio : 1);
+        pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
     if (await pushMediaEditor(imageBytes, null)) {
       return;
@@ -279,7 +273,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           sharedFromGallery: sharedFromGallery,
           sendTo: widget.sendTo,
           mirrorVideo: isFront && Platform.isAndroid,
-          useHighQuality: useHighQuality,
+          useHighQuality: true,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;
@@ -546,22 +540,22 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             setState(() {});
                           },
                         ),
-                        if (!isFront)
-                          ActionButton(
-                            Icons.hd_rounded,
-                            tooltipText: context.lang.toggleHighQuality,
-                            color: useHighQuality
-                                ? Colors.white
-                                : Colors.white.withAlpha(160),
-                            onPressed: () async {
-                              useHighQuality = !useHighQuality;
-                              setState(() {});
-                              await updateUserdata((user) {
-                                user.useHighQuality = useHighQuality;
-                                return user;
-                              });
-                            },
-                          ),
+                        // if (!isFront)
+                        //   ActionButton(
+                        //     Icons.hd_rounded,
+                        //     tooltipText: context.lang.toggleHighQuality,
+                        //     color: useHighQuality
+                        //         ? Colors.white
+                        //         : Colors.white.withAlpha(160),
+                        //     onPressed: () async {
+                        //       useHighQuality = !useHighQuality;
+                        //       setState(() {});
+                        //       await updateUserdata((user) {
+                        //         user.useHighQuality = useHighQuality;
+                        //         return user;
+                        //       });
+                        //     },
+                        //   ),
                         if (!hasAudioPermission)
                           ActionButton(
                             Icons.mic_off_rounded,
