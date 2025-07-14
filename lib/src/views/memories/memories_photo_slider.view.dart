@@ -1,10 +1,11 @@
 import 'package:drift/drift.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/api/media_download.dart' as received;
 import 'package:twonly/src/services/api/media_upload.dart' as send;
 import 'package:twonly/src/utils/misc.dart';
@@ -12,17 +13,16 @@ import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/video_player_wrapper.dart';
-import 'package:twonly/src/model/memory_item.model.dart';
 
 class MemoriesPhotoSliderView extends StatefulWidget {
   MemoriesPhotoSliderView({
+    required this.galleryItems,
     super.key,
     this.loadingBuilder,
     this.backgroundDecoration,
     this.minScale,
     this.maxScale,
     this.initialIndex = 0,
-    required this.galleryItems,
     this.scrollDirection = Axis.horizontal,
   }) : pageController = PageController(initialPage: initialIndex);
 
@@ -50,9 +50,9 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
     });
   }
 
-  Future deleteFile() async {
-    List<Message> messages = widget.galleryItems[currentIndex].messages;
-    bool confirmed = await showAlertDialog(
+  Future<void> deleteFile() async {
+    final messages = widget.galleryItems[currentIndex].messages;
+    final confirmed = await showAlertDialog(
       context,
       context.lang.deleteImageTitle,
       context.lang.deleteImageBody,
@@ -65,7 +65,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
     for (final message in messages) {
       await twonlyDB.messagesDao.updateMessageByMessageId(
         message.messageId,
-        MessagesCompanion(mediaStored: Value(false)),
+        const MessagesCompanion(mediaStored: Value(false)),
       );
     }
 
@@ -78,7 +78,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
     }
   }
 
-  Future exportFile() async {
+  Future<void> exportFile() async {
     final item = widget.galleryItems[currentIndex];
 
     try {
@@ -113,12 +113,11 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
           children: <Widget>[
             MediaViewSizing(
               bottomNavigation: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   FilledButton.icon(
-                    icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
-                    onPressed: () async {
+                    icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                    onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -137,14 +136,15 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                     },
                     style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                          const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 30),
                         ),
                         backgroundColor: WidgetStateProperty.all<Color>(
                           Theme.of(context).colorScheme.primary,
                         )),
                     label: Text(
                       context.lang.shareImagedEditorSendImage,
-                      style: TextStyle(fontSize: 17),
+                      style: const TextStyle(fontSize: 17),
                     ),
                   ),
                 ],
@@ -165,10 +165,10 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                     right: 5,
                     child: PopupMenuButton<String>(
                       onSelected: (String result) {
-                        if (result == "delete") {
+                        if (result == 'delete') {
                           deleteFile();
                         }
-                        if (result == "export") {
+                        if (result == 'export') {
                           exportFile();
                         }
                       },
@@ -199,7 +199,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
   }
 
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
-    final MemoryItem item = widget.galleryItems[index];
+    final item = widget.galleryItems[index];
     return item.videoPath != null
         ? PhotoViewGalleryPageOptions.customChild(
             child: VideoPlayerWrapper(

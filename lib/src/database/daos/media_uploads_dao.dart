@@ -33,7 +33,7 @@ class MediaUploadsDao extends DatabaseAccessor<TwonlyDatabase>
     }
   }
 
-  Future deleteMediaUpload(int mediaUploadId) {
+  Future<void> deleteMediaUpload(int mediaUploadId) {
     return (delete(mediaUploads)
           ..where((t) => t.mediaUploadId.equals(mediaUploadId)))
         .go();

@@ -1,30 +1,31 @@
 import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/services/api/media_download.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/camera/camera_send_to_view.dart';
+import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_list_components/backup_notice.card.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/chats/chat_list_components/demo_user.card.dart';
+import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/chats/media_viewer.view.dart';
+import 'package:twonly/src/views/chats/start_new_chat.view.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
-import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
-import 'package:twonly/src/views/chats/chat_messages.view.dart';
-import 'package:twonly/src/views/chats/media_viewer.view.dart';
-import 'package:twonly/src/views/chats/start_new_chat.view.dart';
 import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
-import 'package:twonly/src/views/chats/add_new_user.view.dart';
-import 'package:flutter/material.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
 
@@ -50,7 +51,7 @@ class _ChatListViewState extends State<ChatListView> {
     super.initState();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final stream = twonlyDB.contactsDao.watchContactsForChatList();
     _contactsSub = stream.listen((contacts) {
       setState(() {
@@ -59,7 +60,7 @@ class _ChatListViewState extends State<ChatListView> {
       });
     });
 
-    tutorial = Timer(Duration(seconds: 1), () async {
+    tutorial = Timer(const Duration(seconds: 1), () async {
       tutorial = null;
       if (!mounted) return;
       await showChatListTutorialSearchOtherUsers(context, searchForOtherUsers);
@@ -86,15 +87,15 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   Widget build(BuildContext context) {
-    bool isConnected = context.watch<CustomChangeProvider>().isConnected;
+    final isConnected = context.watch<CustomChangeProvider>().isConnected;
     return Scaffold(
       appBar: AppBar(
         title: Row(children: [
-          Text("twonly "),
+          const Text('twonly '),
           GestureDetector(
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return SubscriptionView();
+                return const SubscriptionView();
               }));
             },
             child: Container(
@@ -102,7 +103,7 @@ class _ChatListViewState extends State<ChatListView> {
                 color: context.color.primary,
                 borderRadius: BorderRadius.circular(15),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
               child: Text(
                 context.watch<CustomChangeProvider>().plan,
                 style: TextStyle(
@@ -121,13 +122,13 @@ class _ChatListViewState extends State<ChatListView> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ContactUsView(),
+                    builder: (context) => const ContactUsView(),
                   ),
                 );
               },
               color: Colors.grey,
               tooltip: context.lang.feedbackTooltip,
-              icon: FaIcon(FontAwesomeIcons.commentDots, size: 19),
+              icon: const FaIcon(FontAwesomeIcons.commentDots, size: 19),
             ),
           StreamBuilder(
             stream: twonlyDB.contactsDao.watchContactsRequested(),
@@ -140,12 +141,12 @@ class _ChatListViewState extends State<ChatListView> {
                 count: count.toString(),
                 child: IconButton(
                   key: searchForOtherUsers,
-                  icon: FaIcon(FontAwesomeIcons.userPlus, size: 18),
+                  icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => AddNewUserView(),
+                        builder: (context) => const AddNewUserView(),
                       ),
                     );
                   },
@@ -158,11 +159,11 @@ class _ChatListViewState extends State<ChatListView> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => SettingsMainView(),
+                  builder: (context) => const SettingsMainView(),
                 ),
               );
             },
-            icon: FaIcon(FontAwesomeIcons.gear, size: 19),
+            icon: const FaIcon(FontAwesomeIcons.gear, size: 19),
           )
         ],
       ),
@@ -172,7 +173,7 @@ class _ChatListViewState extends State<ChatListView> {
             top: 0,
             left: 0,
             right: 0,
-            child: isConnected ? Container() : ConnectionInfo(),
+            child: isConnected ? Container() : const ConnectionInfo(),
           ),
           Positioned.fill(
             child: (_contacts.isEmpty && _pinnedContacts.isEmpty)
@@ -180,12 +181,12 @@ class _ChatListViewState extends State<ChatListView> {
                     child: Padding(
                       padding: const EdgeInsets.all(10),
                       child: OutlinedButton.icon(
-                          icon: Icon(Icons.person_add),
+                          icon: const Icon(Icons.person_add),
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AddNewUserView(),
+                                builder: (context) => const AddNewUserView(),
                               ),
                             );
                           },
@@ -197,7 +198,7 @@ class _ChatListViewState extends State<ChatListView> {
                     onRefresh: () async {
                       await apiService.close(() {});
                       await apiService.connect(force: true);
-                      await Future.delayed(Duration(seconds: 1));
+                      await Future.delayed(const Duration(seconds: 1));
                     },
                     child: ListView.builder(
                       itemCount: _pinnedContacts.length +
@@ -207,12 +208,12 @@ class _ChatListViewState extends State<ChatListView> {
                           1,
                       itemBuilder: (context, index) {
                         if (index == 0) {
-                          return BackupNoticeCard();
+                          return const BackupNoticeCard();
                         }
                         index -= 1;
                         if (gIsDemoUser) {
                           if (index == 0) {
-                            return DemoUserCard();
+                            return const DemoUserCard();
                           }
                           index -= 1;
                         }
@@ -230,9 +231,9 @@ class _ChatListViewState extends State<ChatListView> {
                         }
 
                         // If there are pinned users, account for the Divider
-                        int adjustedIndex = index - _pinnedContacts.length;
+                        var adjustedIndex = index - _pinnedContacts.length;
                         if (_pinnedContacts.isNotEmpty && adjustedIndex == 0) {
-                          return Divider();
+                          return const Divider();
                         }
 
                         // Adjust the index for the contacts list
@@ -255,18 +256,18 @@ class _ChatListViewState extends State<ChatListView> {
         ],
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 30.0),
+        padding: const EdgeInsets.only(bottom: 30),
         child: FloatingActionButton(
           foregroundColor: Colors.white,
           onPressed: () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) {
-                return StartNewChatView();
+                return const StartNewChatView();
               }),
             );
           },
-          child: FaIcon(FontAwesomeIcons.penToSquare),
+          child: const FaIcon(FontAwesomeIcons.penToSquare),
         ),
       ),
     );
@@ -274,11 +275,10 @@ class _ChatListViewState extends State<ChatListView> {
 }
 
 class UserListItem extends StatefulWidget {
+  const UserListItem(
+      {required this.user, required this.firstUserListItemKey, super.key});
   final Contact user;
   final GlobalKey? firstUserListItemKey;
-
-  const UserListItem(
-      {super.key, required this.user, required this.firstUserListItemKey});
 
   @override
   State<UserListItem> createState() => _UserListItem();
@@ -363,11 +363,11 @@ class _UserListItem extends State<UserListItem> {
 
   void lastUpdateTime() {
     // Change the color every 200 milliseconds
-    updateTime = Timer.periodic(Duration(milliseconds: 200), (timer) {
+    updateTime = Timer.periodic(const Duration(milliseconds: 200), (timer) {
       setState(() {
         if (currentMessage != null) {
           lastMessageInSeconds =
-              (DateTime.now().difference(currentMessage!.sendAt)).inSeconds;
+              DateTime.now().difference(currentMessage!.sendAt).inSeconds;
           if (lastMessageInSeconds < 0) {
             lastMessageInSeconds = 0;
           }
@@ -378,7 +378,7 @@ class _UserListItem extends State<UserListItem> {
 
   @override
   Widget build(BuildContext context) {
-    int flameCounter = getFlameCounterFromContact(widget.user);
+    final flameCounter = getFlameCounterFromContact(widget.user);
 
     return Stack(
       children: [
@@ -405,11 +405,11 @@ class _UserListItem extends State<UserListItem> {
                     : Row(
                         children: [
                           MessageSendStateIcon(previewMessages),
-                          Text("•"),
+                          const Text('•'),
                           const SizedBox(width: 5),
                           Text(
                             formatDuration(lastMessageInSeconds),
-                            style: TextStyle(fontSize: 12),
+                            style: const TextStyle(fontSize: 12),
                           ),
                           if (flameCounter > 0)
                             FlameCounterWidget(
@@ -442,7 +442,7 @@ class _UserListItem extends State<UserListItem> {
                 ));
                 return;
               }
-              List<Message> msgs = previewMessages
+              final msgs = previewMessages
                   .where((x) => x.kind == MessageKind.media)
                   .toList();
               if (msgs.isNotEmpty &&
@@ -452,6 +452,7 @@ class _UserListItem extends State<UserListItem> {
                 switch (msgs.first.downloadState) {
                   case DownloadState.pending:
                     startDownloadMedia(msgs.first, true);
+                    return;
                   case DownloadState.downloaded:
                     Navigator.push(
                       context,
@@ -459,9 +460,10 @@ class _UserListItem extends State<UserListItem> {
                         return MediaViewerView(widget.user);
                       }),
                     );
-                  default:
+                    return;
+                  case DownloadState.downloading:
+                    return;
                 }
-                return;
               }
               Navigator.push(
                 context,

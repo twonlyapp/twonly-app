@@ -26,12 +26,12 @@ class _ProfileViewState extends State<ProfileView> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     user = await getUser();
     setState(() {});
   }
 
-  Future updateUserDisplayName(String displayName) async {
+  Future<void> updateUserDisplayName(String displayName) async {
     await updateUserdata((user) {
       user.displayName = displayName;
       user.avatarCounter = user.avatarCounter + 1;

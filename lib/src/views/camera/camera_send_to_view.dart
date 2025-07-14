@@ -31,7 +31,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
     super.dispose();
   }
 
-  Future selectCamera(int sCameraId, bool init, bool enableAudio) async {
+  Future<void> selectCamera(int sCameraId, bool init, bool enableAudio) async {
     final opts = await initializeCameraController(
         selectedCameraDetails, sCameraId, init, enableAudio);
     if (opts != null) {
@@ -41,7 +41,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
     setState(() {});
   }
 
-  Future toggleSelectedCamera() async {
+  Future<void> toggleSelectedCamera() async {
     await cameraController?.dispose();
     cameraController = null;
     selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);

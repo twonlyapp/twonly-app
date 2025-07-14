@@ -1,3 +1,5 @@
+// ignore_for_file: strict_raw_type, prefer_constructors_over_static_methods
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -34,6 +36,14 @@ extension MessageKindExtension on MessageKind {
 }
 
 class MessageJson {
+  MessageJson({
+    required this.kind,
+    required this.content,
+    required this.timestamp,
+    this.messageReceiverId,
+    this.messageSenderId,
+    this.retransId,
+  });
   final MessageKind kind;
   final MessageContent? content;
   final int? messageReceiverId;
@@ -41,22 +51,13 @@ class MessageJson {
   int? retransId;
   DateTime timestamp;
 
-  MessageJson({
-    required this.kind,
-    this.messageReceiverId,
-    this.messageSenderId,
-    this.retransId,
-    required this.content,
-    required this.timestamp,
-  });
-
   @override
   String toString() {
     return 'Message(kind: $kind, content: $content, timestamp: $timestamp)';
   }
 
   static MessageJson fromJson(Map<String, dynamic> json) {
-    final kind = MessageKindExtension.fromString(json["kind"]);
+    final kind = MessageKindExtension.fromString(json['kind'] as String);
 
     return MessageJson(
       kind: kind,
@@ -65,7 +66,7 @@ class MessageJson {
       retransId: (json['retransId'] as num?)?.toInt(),
       content: MessageContent.fromJson(
           kind, json['content'] as Map<String, dynamic>),
-      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp']),
+      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
     );
   }
 
@@ -100,9 +101,15 @@ class MessageContent {
         return AckContent.fromJson(json);
       case MessageKind.signalDecryptError:
         return SignalDecryptErrorContent.fromJson(json);
-      default:
-        return null;
+      case MessageKind.storedMediaFile:
+      case MessageKind.contactRequest:
+      case MessageKind.rejectRequest:
+      case MessageKind.acceptRequest:
+      case MessageKind.opened:
+      case MessageKind.requestPushKey:
+      case MessageKind.receiveMediaError:
     }
+    return null;
   }
 
   Map toJson() {
@@ -111,15 +118,6 @@ class MessageContent {
 }
 
 class MediaMessageContent extends MessageContent {
-  final int maxShowTime;
-  final bool isRealTwonly;
-  final bool isVideo;
-  final bool mirrorVideo;
-  final List<int>? downloadToken;
-  final List<int>? encryptionKey;
-  final List<int>? encryptionMac;
-  final List<int>? encryptionNonce;
-
   MediaMessageContent({
     required this.maxShowTime,
     required this.isRealTwonly,
@@ -130,25 +128,33 @@ class MediaMessageContent extends MessageContent {
     this.encryptionMac,
     this.encryptionNonce,
   });
+  final int maxShowTime;
+  final bool isRealTwonly;
+  final bool isVideo;
+  final bool mirrorVideo;
+  final List<int>? downloadToken;
+  final List<int>? encryptionKey;
+  final List<int>? encryptionMac;
+  final List<int>? encryptionNonce;
 
   static MediaMessageContent fromJson(Map json) {
     return MediaMessageContent(
       downloadToken: json['downloadToken'] == null
           ? null
-          : List<int>.from(json['downloadToken']),
+          : List<int>.from(json['downloadToken'] as List),
       encryptionKey: json['encryptionKey'] == null
           ? null
-          : List<int>.from(json['encryptionKey']),
+          : List<int>.from(json['encryptionKey'] as List),
       encryptionMac: json['encryptionMac'] == null
           ? null
-          : List<int>.from(json['encryptionMac']),
+          : List<int>.from(json['encryptionMac'] as List),
       encryptionNonce: json['encryptionNonce'] == null
           ? null
-          : List<int>.from(json['encryptionNonce']),
-      maxShowTime: json['maxShowTime'],
-      isRealTwonly: json['isRealTwonly'],
-      isVideo: json['isVideo'] ?? false,
-      mirrorVideo: json['mirrorVideo'] ?? false,
+          : List<int>.from(json['encryptionNonce'] as List),
+      maxShowTime: json['maxShowTime'] as int,
+      isRealTwonly: json['isRealTwonly'] as bool,
+      isVideo: json['isVideo'] as bool? ?? false,
+      mirrorVideo: json['mirrorVideo'] as bool? ?? false,
     );
   }
 
@@ -168,23 +174,23 @@ class MediaMessageContent extends MessageContent {
 }
 
 class TextMessageContent extends MessageContent {
-  String text;
-  int? responseToMessageId;
-  int? responseToOtherMessageId;
   TextMessageContent({
     required this.text,
     this.responseToMessageId,
     this.responseToOtherMessageId,
   });
+  String text;
+  int? responseToMessageId;
+  int? responseToOtherMessageId;
 
   static TextMessageContent fromJson(Map json) {
     return TextMessageContent(
-        text: json['text'],
+        text: json['text'] as String,
         responseToOtherMessageId: json.containsKey('responseToOtherMessageId')
-            ? json['responseToOtherMessageId']
+            ? json['responseToOtherMessageId'] as int?
             : null,
         responseToMessageId: json.containsKey('responseToMessageId')
-            ? json['responseToMessageId']
+            ? json['responseToMessageId'] as int?
             : null);
   }
 
@@ -199,11 +205,11 @@ class TextMessageContent extends MessageContent {
 }
 
 class ReopenedMediaFileContent extends MessageContent {
-  int messageId;
   ReopenedMediaFileContent({required this.messageId});
+  int messageId;
 
   static ReopenedMediaFileContent fromJson(Map json) {
-    return ReopenedMediaFileContent(messageId: json['messageId']);
+    return ReopenedMediaFileContent(messageId: json['messageId'] as int);
   }
 
   @override
@@ -213,12 +219,12 @@ class ReopenedMediaFileContent extends MessageContent {
 }
 
 class SignalDecryptErrorContent extends MessageContent {
-  List<int> encryptedHash;
   SignalDecryptErrorContent({required this.encryptedHash});
+  List<int> encryptedHash;
 
   static SignalDecryptErrorContent fromJson(Map json) {
     return SignalDecryptErrorContent(
-      encryptedHash: List<int>.from(json['encryptedHash']),
+      encryptedHash: List<int>.from(json['encryptedHash'] as List),
     );
   }
 
@@ -231,14 +237,14 @@ class SignalDecryptErrorContent extends MessageContent {
 }
 
 class AckContent extends MessageContent {
+  AckContent({required this.messageIdToAck, required this.retransIdToAck});
   int? messageIdToAck;
   int retransIdToAck;
-  AckContent({required this.messageIdToAck, required this.retransIdToAck});
 
   static AckContent fromJson(Map json) {
     return AckContent(
-      messageIdToAck: json['messageIdToAck'],
-      retransIdToAck: json['retransIdToAck'],
+      messageIdToAck: json['messageIdToAck'] as int,
+      retransIdToAck: json['retransIdToAck'] as int,
     );
   }
 
@@ -252,14 +258,14 @@ class AckContent extends MessageContent {
 }
 
 class ProfileContent extends MessageContent {
+  ProfileContent({required this.avatarSvg, required this.displayName});
   String avatarSvg;
   String displayName;
-  ProfileContent({required this.avatarSvg, required this.displayName});
 
   static ProfileContent fromJson(Map json) {
     return ProfileContent(
-      avatarSvg: json['avatarSvg'],
-      displayName: json['displayName'],
+      avatarSvg: json['avatarSvg'] as String,
+      displayName: json['displayName'] as String,
     );
   }
 
@@ -270,14 +276,14 @@ class ProfileContent extends MessageContent {
 }
 
 class PushKeyContent extends MessageContent {
+  PushKeyContent({required this.keyId, required this.key});
   int keyId;
   List<int> key;
-  PushKeyContent({required this.keyId, required this.key});
 
   static PushKeyContent fromJson(Map json) {
     return PushKeyContent(
-      keyId: json['keyId'],
-      key: List<int>.from(json['key']),
+      keyId: json['keyId'] as int,
+      key: List<int>.from(json['key'] as List),
     );
   }
 
@@ -291,21 +297,20 @@ class PushKeyContent extends MessageContent {
 }
 
 class FlameSyncContent extends MessageContent {
-  int flameCounter;
-  DateTime lastFlameCounterChange;
-  bool bestFriend;
-
   FlameSyncContent(
       {required this.flameCounter,
       required this.bestFriend,
       required this.lastFlameCounterChange});
+  int flameCounter;
+  DateTime lastFlameCounterChange;
+  bool bestFriend;
 
   static FlameSyncContent fromJson(Map json) {
     return FlameSyncContent(
-      flameCounter: json['flameCounter'],
-      bestFriend: json['bestFriend'],
-      lastFlameCounterChange:
-          DateTime.fromMillisecondsSinceEpoch(json['lastFlameCounterChange']),
+      flameCounter: json['flameCounter'] as int,
+      bestFriend: json['bestFriend'] as bool,
+      lastFlameCounterChange: DateTime.fromMillisecondsSinceEpoch(
+          json['lastFlameCounterChange'] as int),
     );
   }
 

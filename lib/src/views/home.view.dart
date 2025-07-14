@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
@@ -7,18 +8,17 @@ import 'package:screenshot/screenshot.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
+import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/chats/chat_list.view.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
-import 'camera/camera_preview_controller_view.dart';
-import 'chats/chat_list.view.dart';
-import 'package:flutter/material.dart';
 
-Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
+void Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
 
 class HomeView extends StatefulWidget {
   const HomeView({
-    super.key,
     required this.initialPage,
+    super.key,
   });
   final int initialPage;
 
@@ -27,7 +27,7 @@ class HomeView extends StatefulWidget {
 }
 
 class Shade extends StatelessWidget {
-  const Shade({super.key, required this.opacity});
+  const Shade({required this.opacity, super.key});
   final double opacity;
 
   @override
@@ -46,12 +46,11 @@ class Shade extends StatelessWidget {
 class HomeViewState extends State<HomeView> {
   int activePageIdx = 0;
 
-  final PageController homeViewPageController =
-      PageController(keepPage: true, initialPage: 1);
+  final PageController homeViewPageController = PageController(initialPage: 1);
 
-  double buttonDiameter = 100.0;
-  double offsetRatio = 0.0;
-  double offsetFromOne = 0.0;
+  double buttonDiameter = 100;
+  double offsetRatio = 0;
+  double offsetFromOne = 0;
 
   Timer? disableCameraTimer;
   bool initCameraStarted = true;
@@ -73,7 +72,7 @@ class HomeViewState extends State<HomeView> {
       selectCamera(selectedCameraDetails.cameraId, false, false);
     }
     if (offsetRatio == 1) {
-      disableCameraTimer = Timer(Duration(milliseconds: 500), () {
+      disableCameraTimer = Timer(const Duration(milliseconds: 500), () {
         cameraController?.dispose();
         cameraController = null;
         selectedCameraDetails = SelectedCameraDetails();
@@ -109,7 +108,7 @@ class HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
-  Future selectCamera(int sCameraId, bool init, bool enableAudio) async {
+  Future<void> selectCamera(int sCameraId, bool init, bool enableAudio) async {
     final opts = await initializeCameraController(
         selectedCameraDetails, sCameraId, init, enableAudio);
     if (opts != null) {
@@ -120,14 +119,14 @@ class HomeViewState extends State<HomeView> {
     setState(() {});
   }
 
-  Future toggleSelectedCamera() async {
+  Future<void> toggleSelectedCamera() async {
     await cameraController?.dispose();
     cameraController = null;
-    selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
+    await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
   }
 
-  Future initAsync() async {
-    var notificationAppLaunchDetails =
+  Future<void> initAsync() async {
+    final notificationAppLaunchDetails =
         await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
 
     if (notificationAppLaunchDetails != null) {
@@ -146,7 +145,7 @@ class HomeViewState extends State<HomeView> {
           onDoubleTap: offsetRatio == 0 ? toggleSelectedCamera : null,
           child: Stack(
             children: <Widget>[
-              HomeViewCameraPreview(),
+              const HomeViewCameraPreview(),
               Shade(
                 opacity: offsetRatio,
               ),
@@ -161,9 +160,9 @@ class HomeViewState extends State<HomeView> {
                       });
                     },
                     children: [
-                      ChatListView(),
+                      const ChatListView(),
                       Container(),
-                      MemoriesView(),
+                      const MemoriesView(),
                     ],
                   ),
                 ),
@@ -176,7 +175,7 @@ class HomeViewState extends State<HomeView> {
                       ? MediaQuery.sizeOf(context).height * 2
                       : 0,
                   child: Opacity(
-                    opacity: (1 - (offsetRatio * 4) % 1),
+                    opacity: 1 - (offsetRatio * 4) % 1,
                     child: CameraPreviewControllerView(
                       selectCamera: selectCamera,
                       isHomeView: true,
@@ -193,18 +192,18 @@ class HomeViewState extends State<HomeView> {
                   Theme.of(context).colorScheme.inverseSurface.withAlpha(150)),
           selectedIconTheme: IconThemeData(
               color: Theme.of(context).colorScheme.inverseSurface),
-          items: [
+          items: const [
             BottomNavigationBarItem(
               icon: FaIcon(FontAwesomeIcons.solidComments),
-              label: "",
+              label: '',
             ),
             BottomNavigationBarItem(
               icon: FaIcon(FontAwesomeIcons.camera),
-              label: "",
+              label: '',
             ),
             BottomNavigationBarItem(
               icon: FaIcon(FontAwesomeIcons.photoFilm),
-              label: "",
+              label: '',
             ),
           ],
           onTap: (int index) {

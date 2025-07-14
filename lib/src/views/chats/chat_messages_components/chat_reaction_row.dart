@@ -1,15 +1,16 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 
 class ReactionRow extends StatefulWidget {
   const ReactionRow({
-    super.key,
     required this.otherReactions,
     required this.message,
+    super.key,
   });
 
   final List<Message> otherReactions;
@@ -22,18 +23,18 @@ class ReactionRow extends StatefulWidget {
 class _ReactionRowState extends State<ReactionRow> {
   @override
   Widget build(BuildContext context) {
-    List<Widget> children = [];
-    bool hasOneTextReaction = false;
-    bool hasOneReopened = false;
+    final children = <Widget>[];
+    var hasOneTextReaction = false;
+    var hasOneReopened = false;
     for (final reaction in widget.otherReactions) {
-      MessageContent? content = MessageContent.fromJson(
-          reaction.kind, jsonDecode(reaction.contentJson!));
+      final content = MessageContent.fromJson(
+          reaction.kind, jsonDecode(reaction.contentJson!) as Map);
 
       if (content is ReopenedMediaFileContent) {
         if (hasOneReopened) continue;
         hasOneReopened = true;
         children.add(
-          Expanded(
+          const Expanded(
             child: Align(
               alignment: Alignment.bottomRight,
               child: Padding(
@@ -61,12 +62,12 @@ class _ReactionRowState extends State<ReactionRow> {
             child: EmojiAnimation(emoji: content.text),
           );
         } else {
-          child = Text(content.text, style: TextStyle(fontSize: 14));
+          child = Text(content.text, style: const TextStyle(fontSize: 14));
         }
         children.insert(
           0,
           Padding(
-            padding: EdgeInsets.only(left: 3),
+            padding: const EdgeInsets.only(left: 3),
             child: child,
           ),
         );

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +13,9 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -51,10 +52,10 @@ Future<String?> saveVideoToGallery(String videoPath) async {
 }
 
 Uint8List getRandomUint8List(int length) {
-  final Random random = Random.secure();
-  final Uint8List randomBytes = Uint8List(length);
+  final random = Random.secure();
+  final randomBytes = Uint8List(length);
 
-  for (int i = 0; i < length; i++) {
+  for (var i = 0; i < length; i++) {
     randomBytes[i] = random.nextInt(256); // Generate a random byte (0-255)
   }
 
@@ -62,6 +63,7 @@ Uint8List getRandomUint8List(int length) {
 }
 
 String errorCodeToText(BuildContext context, ErrorCode code) {
+  // ignore: exhaustive_cases
   switch (code) {
     case ErrorCode.InternalError:
       return context.lang.errorInternalError;
@@ -81,22 +83,21 @@ String errorCodeToText(BuildContext context, ErrorCode code) {
       return context.lang.errorVoucherInvalid;
     case ErrorCode.PlanUpgradeNotYearly:
       return context.lang.errorPlanUpgradeNotYearly;
-    default:
-      return code.toString(); // Fallback for unrecognized keys
   }
+  return code.toString(); // Fallback for unrecognized keys
 }
 
 String formatDuration(int seconds) {
   if (seconds < 60) {
     return '$seconds Sec.';
   } else if (seconds < 3600) {
-    int minutes = seconds ~/ 60;
+    final minutes = seconds ~/ 60;
     return '$minutes Min.';
   } else if (seconds < 86400) {
-    int hours = seconds ~/ 3600;
+    final hours = seconds ~/ 3600;
     return '$hours Hrs.'; // Assuming "Stu." is for hours
   } else {
-    int days = seconds ~/ 86400;
+    final days = seconds ~/ 86400;
     return '$days Days';
   }
 }
@@ -107,20 +108,19 @@ InputDecoration getInputDecoration(BuildContext context, String hintText) {
   return InputDecoration(
     hintText: hintText,
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(9.0),
-      borderSide: BorderSide(color: primaryColor, width: 1.0),
+      borderRadius: BorderRadius.circular(9),
+      borderSide: BorderSide(color: primaryColor),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0),
-      borderSide:
-          BorderSide(color: Theme.of(context).colorScheme.outline, width: 1.0),
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
     ),
-    contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+    contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
   );
 }
 
 Future<Uint8List?> getCompressedImage(Uint8List imageBytes) async {
-  var result = await FlutterImageCompress.compressWithList(
+  final result = await FlutterImageCompress.compressWithList(
     imageBytes,
     quality: 90,
   );
@@ -130,8 +130,8 @@ Future<Uint8List?> getCompressedImage(Uint8List imageBytes) async {
 Future<bool> authenticateUser(String localizedReason,
     {bool force = true}) async {
   try {
-    final LocalAuthentication auth = LocalAuthentication();
-    bool didAuthenticate = await auth.authenticate(
+    final auth = LocalAuthentication();
+    final didAuthenticate = await auth.authenticate(
         localizedReason: localizedReason,
         options: const AuthenticationOptions(useErrorDialogs: false));
     if (didAuthenticate) {
@@ -147,31 +147,30 @@ Future<bool> authenticateUser(String localizedReason,
 }
 
 Uint8List intToBytes(int value) {
-  final byteData = ByteData(4);
-  byteData.setInt32(0, value, Endian.big);
+  final byteData = ByteData(4)..setInt32(0, value);
   return byteData.buffer.asUint8List();
 }
 
 int bytesToInt(Uint8List bytes) {
   final byteData = ByteData.sublistView(bytes);
-  return byteData.getInt32(0, Endian.big);
+  return byteData.getInt32(0);
 }
 
 List<Uint8List>? removeLastXBytes(Uint8List original, int count) {
   if (original.length < count) {
     return null;
   }
-  final newList = Uint8List(original.length - count);
-  newList.setAll(0, original.sublist(0, original.length - count));
+  final newList = Uint8List(original.length - count)
+    ..setAll(0, original.sublist(0, original.length - count));
 
   final lastXBytes = original.sublist(original.length - count);
   return [newList, lastXBytes];
 }
 
 bool isDarkMode(BuildContext context) {
-  ThemeMode? selectedTheme = context.read<SettingsChangeProvider>().themeMode;
+  final selectedTheme = context.read<SettingsChangeProvider>().themeMode;
 
-  bool isDarkMode =
+  final isDarkMode =
       MediaQuery.of(context).platformBrightness == Brightness.dark;
 
   return selectedTheme == ThemeMode.dark ||
@@ -188,20 +187,20 @@ bool isToday(DateTime lastImageSend) {
 InputDecoration inputTextMessageDeco(BuildContext context) {
   return InputDecoration(
     hintText: context.lang.chatListDetailInput,
-    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(20),
       borderSide:
-          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20.0),
+      borderRadius: BorderRadius.circular(20),
       borderSide:
-          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2.0),
+          BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(20.0),
-      borderSide: BorderSide(color: Colors.grey, width: 2.0),
+      borderRadius: BorderRadius.circular(20),
+      borderSide: const BorderSide(color: Colors.grey, width: 2),
     ),
   );
 }
@@ -213,8 +212,8 @@ String truncateString(String input, {int maxLength = 20}) {
   return input;
 }
 
-Future insertDemoContacts() async {
-  List<String> commonUsernames = [
+Future<void> insertDemoContacts() async {
+  final commonUsernames = <String>[
     'James',
     'Mary',
     'John',
@@ -236,7 +235,7 @@ Future insertDemoContacts() async {
     'Thomas',
     'Karen',
   ];
-  final List<Map<String, dynamic>> contactConfigs = [
+  final contactConfigs = <Map<String, dynamic>>[
     {'count': 3, 'requested': true},
     {'count': 4, 'requested': false, 'accepted': true},
     {'count': 1, 'accepted': true, 'blocked': true},
@@ -245,43 +244,44 @@ Future insertDemoContacts() async {
     {'count': 1, 'requested': false},
   ];
 
-  int counter = 0;
+  var counter = 0;
 
-  for (var config in contactConfigs) {
-    for (int i = 0; i < config['count']; i++) {
+  for (final config in contactConfigs) {
+    for (var i = 0; i < (config['count'] as int); i++) {
       if (counter >= commonUsernames.length) {
         break;
       }
-      String username = commonUsernames[counter];
-      int userId = Random().nextInt(1000000);
+      final username = commonUsernames[counter];
+      final userId = Random().nextInt(1000000);
       await twonlyDB.contactsDao.insertContact(
         ContactsCompanion(
           username: Value(username),
           userId: Value(userId),
-          requested: Value(config['requested'] ?? false),
-          accepted: Value(config['accepted'] ?? false),
-          blocked: Value(config['blocked'] ?? false),
-          archived: Value(config['archived'] ?? false),
-          pinned: Value(config['pinned'] ?? false),
+          requested: Value(config['requested'] as bool? ?? false),
+          accepted: Value(config['accepted'] as bool? ?? false),
+          blocked: Value(config['blocked'] as bool? ?? false),
+          archived: Value(config['archived'] as bool? ?? false),
+          pinned: Value(config['pinned'] as bool? ?? false),
         ),
       );
-      if (config['accepted'] ?? false) {
+      if (config['accepted'] as bool? ?? false) {
         for (var i = 0; i < 20; i++) {
-          int chatId = Random().nextInt(chatMessages.length);
+          final chatId = Random().nextInt(chatMessages.length);
           await twonlyDB.messagesDao.insertMessage(
             MessagesCompanion(
               contactId: Value(userId),
-              kind: Value(MessageKind.textMessage),
-              sendAt: Value(chatMessages[chatId][1]),
-              acknowledgeByServer: Value(true),
-              acknowledgeByUser: Value(true),
+              kind: const Value(MessageKind.textMessage),
+              sendAt: Value(chatMessages[chatId][1] as DateTime),
+              acknowledgeByServer: const Value(true),
+              acknowledgeByUser: const Value(true),
               messageOtherId:
                   Value(Random().nextBool() ? Random().nextInt(10000) : null),
               // responseToOtherMessageId: Value(content.responseToMessageId),
               // responseToMessageId: Value(content.responseToOtherMessageId),
-              downloadState: Value(DownloadState.downloaded),
+              downloadState: const Value(DownloadState.downloaded),
               contentJson: Value(
-                jsonEncode(TextMessageContent(text: chatMessages[chatId][0])),
+                jsonEncode(TextMessageContent(
+                    text: chatMessages[chatId][0] as String)),
               ),
             ),
           );
@@ -292,91 +292,94 @@ Future insertDemoContacts() async {
   }
 }
 
-Future createFakeDemoData() async {
+Future<void> createFakeDemoData() async {
   await insertDemoContacts();
 }
 
 List<List<dynamic>> chatMessages = [
   [
-    "Lorem ipsum dolor sit amet.",
-    DateTime.now().subtract(Duration(minutes: 20))
+    'Lorem ipsum dolor sit amet.',
+    DateTime.now().subtract(const Duration(minutes: 20))
   ],
   [
-    "Consectetur adipiscing elit.",
-    DateTime.now().subtract(Duration(minutes: 19))
+    'Consectetur adipiscing elit.',
+    DateTime.now().subtract(const Duration(minutes: 19))
   ],
   [
-    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    DateTime.now().subtract(Duration(minutes: 18))
-  ],
-  ["Ut enim ad minim veniam.", DateTime.now().subtract(Duration(minutes: 17))],
-  [
-    "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    DateTime.now().subtract(Duration(minutes: 16))
+    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    DateTime.now().subtract(const Duration(minutes: 18))
   ],
   [
-    "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
-    DateTime.now().subtract(Duration(minutes: 15))
+    'Ut enim ad minim veniam.',
+    DateTime.now().subtract(const Duration(minutes: 17))
   ],
   [
-    "Excepteur sint occaecat cupidatat non proident.",
-    DateTime.now().subtract(Duration(minutes: 14))
+    'Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+    DateTime.now().subtract(const Duration(minutes: 16))
   ],
   [
-    "Sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    DateTime.now().subtract(Duration(minutes: 13))
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+    DateTime.now().subtract(const Duration(minutes: 15))
   ],
   [
-    "Curabitur pretium tincidunt lacus.",
-    DateTime.now().subtract(Duration(minutes: 12))
-  ],
-  ["Nulla facilisi.", DateTime.now().subtract(Duration(minutes: 11))],
-  [
-    "Aenean lacinia bibendum nulla sed consectetur.",
-    DateTime.now().subtract(Duration(minutes: 10))
+    'Excepteur sint occaecat cupidatat non proident.',
+    DateTime.now().subtract(const Duration(minutes: 14))
   ],
   [
-    "Sed posuere consectetur est at lobortis.",
-    DateTime.now().subtract(Duration(minutes: 9))
+    'Sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    DateTime.now().subtract(const Duration(minutes: 13))
   ],
   [
-    "Vestibulum id ligula porta felis euismod semper.",
-    DateTime.now().subtract(Duration(minutes: 8))
+    'Curabitur pretium tincidunt lacus.',
+    DateTime.now().subtract(const Duration(minutes: 12))
+  ],
+  ['Nulla facilisi.', DateTime.now().subtract(const Duration(minutes: 11))],
+  [
+    'Aenean lacinia bibendum nulla sed consectetur.',
+    DateTime.now().subtract(const Duration(minutes: 10))
   ],
   [
-    "Cras justo odio, dapibus ac facilisis in, egestas eget quam.",
-    DateTime.now().subtract(Duration(minutes: 7))
+    'Sed posuere consectetur est at lobortis.',
+    DateTime.now().subtract(const Duration(minutes: 9))
   ],
   [
-    "Morbi leo risus, porta ac consectetur ac, vestibulum at eros.",
-    DateTime.now().subtract(Duration(minutes: 6))
+    'Vestibulum id ligula porta felis euismod semper.',
+    DateTime.now().subtract(const Duration(minutes: 8))
   ],
   [
-    "Praesent commodo cursus magna, vel scelerisque nisl consectetur et.",
-    DateTime.now().subtract(Duration(minutes: 5))
+    'Cras justo odio, dapibus ac facilisis in, egestas eget quam.',
+    DateTime.now().subtract(const Duration(minutes: 7))
   ],
   [
-    "Donec ullamcorper nulla non metus auctor fringilla.",
-    DateTime.now().subtract(Duration(minutes: 4))
+    'Morbi leo risus, porta ac consectetur ac, vestibulum at eros.',
+    DateTime.now().subtract(const Duration(minutes: 6))
   ],
   [
-    "Etiam porta sem malesuada magna mollis euismod.",
-    DateTime.now().subtract(Duration(minutes: 3))
+    'Praesent commodo cursus magna, vel scelerisque nisl consectetur et.',
+    DateTime.now().subtract(const Duration(minutes: 5))
   ],
   [
-    "Aenean lacinia bibendum nulla sed consectetur.",
-    DateTime.now().subtract(Duration(minutes: 2))
+    'Donec ullamcorper nulla non metus auctor fringilla.',
+    DateTime.now().subtract(const Duration(minutes: 4))
   ],
   [
-    "Nullam quis risus eget urna mollis ornare vel eu leo.",
-    DateTime.now().subtract(Duration(minutes: 1))
+    'Etiam porta sem malesuada magna mollis euismod.',
+    DateTime.now().subtract(const Duration(minutes: 3))
   ],
-  ["Curabitur blandit tempus porttitor.", DateTime.now()],
+  [
+    'Aenean lacinia bibendum nulla sed consectetur.',
+    DateTime.now().subtract(const Duration(minutes: 2))
+  ],
+  [
+    'Nullam quis risus eget urna mollis ornare vel eu leo.',
+    DateTime.now().subtract(const Duration(minutes: 1))
+  ],
+  ['Curabitur blandit tempus porttitor.', DateTime.now()],
 ];
 
 String formatDateTime(BuildContext context, DateTime? dateTime) {
   if (dateTime == null) {
-    return "Never";
+    return 'Never';
   }
   final now = DateTime.now();
   final difference = now.difference(dateTime);
@@ -390,32 +393,34 @@ String formatDateTime(BuildContext context, DateTime? dateTime) {
   if (difference.inDays == 0) {
     return time;
   } else {
-    return "$time $date";
+    return '$time $date';
   }
 }
 
 String formatBytes(int bytes, {int decimalPlaces = 2}) {
-  if (bytes <= 0) return "0 Bytes";
-  const List<String> units = ["Bytes", "KB", "MB", "GB", "TB"];
-  final int unitIndex = (log(bytes) / log(1000)).floor();
-  final double formattedSize = bytes / pow(1000, unitIndex);
-  return "${formattedSize.toStringAsFixed(decimalPlaces)} ${units[unitIndex]}";
+  if (bytes <= 0) return '0 Bytes';
+  const units = <String>['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  final unitIndex = (log(bytes) / log(1000)).floor();
+  final formattedSize = bytes / pow(1000, unitIndex);
+  return '${formattedSize.toStringAsFixed(decimalPlaces)} ${units[unitIndex]}';
 }
 
 String getMessageText(Message message) {
   try {
-    if (message.contentJson == null) return "";
-    return TextMessageContent.fromJson(jsonDecode(message.contentJson!)).text;
+    if (message.contentJson == null) return '';
+    return TextMessageContent.fromJson(jsonDecode(message.contentJson!) as Map)
+        .text;
   } catch (e) {
     Log.error(e);
-    return "";
+    return '';
   }
 }
 
 MediaMessageContent? getMediaContent(Message message) {
   try {
     if (message.contentJson == null) return null;
-    return MediaMessageContent.fromJson(jsonDecode(message.contentJson!));
+    return MediaMessageContent.fromJson(
+        jsonDecode(message.contentJson!) as Map);
   } catch (e) {
     Log.error(e);
     return null;

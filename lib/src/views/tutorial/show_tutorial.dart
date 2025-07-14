@@ -4,29 +4,21 @@ import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-Future showTutorial(BuildContext context, List<TargetFocus> targets) async {
-  Completer completer = Completer();
+Future<void> showTutorial(
+  BuildContext context,
+  List<TargetFocus> targets,
+) async {
+  final completer = Completer<dynamic>();
   TutorialCoachMark(
     targets: targets,
     colorShadow: context.color.primary,
     textSkip: context.lang.ok,
     alignSkip: Alignment.bottomCenter,
-    textStyleSkip: TextStyle(
+    textStyleSkip: const TextStyle(
       color: Colors.black,
       fontWeight: FontWeight.bold,
       fontSize: 20,
     ),
-    onClickTarget: (target) {
-      print(target);
-    },
-    onClickTargetWithTapPosition: (target, tapDetails) {
-      print("target: $target");
-      print(
-          "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
-    },
-    onClickOverlay: (target) {
-      print(target);
-    },
     onSkip: () {
       completer.complete();
       return true;
@@ -58,10 +50,10 @@ Future<bool> checkIfTutorialAlreadyShown(String tutorialId) async {
 
 TargetFocus getTargetFocus(
     BuildContext context, GlobalKey key, String title, String body) {
-  RenderBox renderBox = key.currentContext?.findRenderObject() as RenderBox;
-  Offset position = renderBox.localToGlobal(Offset.zero);
-  double screenHeight = MediaQuery.of(context).size.height;
-  double centerY = screenHeight / 2;
+  final renderBox = key.currentContext!.findRenderObject()! as RenderBox;
+  final position = renderBox.localToGlobal(Offset.zero);
+  final screenHeight = MediaQuery.of(context).size.height;
+  final centerY = screenHeight / 2;
 
   double top = 0;
   double bottom = 0;
@@ -90,18 +82,18 @@ TargetFocus getTargetFocus(
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
-                fontSize: 20.0,
+                fontSize: 20,
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 10.0),
+              padding: const EdgeInsets.only(top: 10),
               child: Text(
                 body,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.black,
                   fontSize: 16,
                 ),

@@ -1,24 +1,25 @@
+// ignore_for_file: strict_raw_type
+
 import 'dart:async';
 import 'dart:collection';
 import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_components/best_friends_selector.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/headline.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView({
-    super.key,
     required this.imageBytesFuture,
     required this.isRealTwonly,
     required this.mirrorVideo,
@@ -27,6 +28,7 @@ class ShareImageView extends StatefulWidget {
     required this.updateStatus,
     required this.videoUploadHandler,
     required this.mediaUploadId,
+    super.key,
     this.enableVideoAudio,
   });
   final Future<Uint8List?> imageBytesFuture;
@@ -36,7 +38,7 @@ class ShareImageView extends StatefulWidget {
   final HashSet<int> selectedUserIds;
   final bool? enableVideoAudio;
   final int mediaUploadId;
-  final Function(int, bool) updateStatus;
+  final void Function(int, bool) updateStatus;
   final Future<bool>? videoUploadHandler;
 
   @override
@@ -60,8 +62,7 @@ class _ShareImageView extends State<ShareImageView> {
   void initState() {
     super.initState();
 
-    Stream<List<Contact>> allContacts =
-        twonlyDB.contactsDao.watchContactsForShareView();
+    final allContacts = twonlyDB.contactsDao.watchContactsForShareView();
 
     contactSub = allContacts.listen((allContacts) {
       setState(() {
@@ -73,13 +74,13 @@ class _ShareImageView extends State<ShareImageView> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     imageBytes = await widget.imageBytesFuture;
     if (imageBytes != null) {
       final imageHandler =
           addOrModifyImageToUpload(widget.mediaUploadId, imageBytes!);
       // start with the pre upload of the media file...
-      encryptMediaFiles(
+      await encryptMediaFiles(
           widget.mediaUploadId, imageHandler, widget.videoUploadHandler);
     }
     setState(() {});
@@ -91,12 +92,12 @@ class _ShareImageView extends State<ShareImageView> {
     contactSub.cancel();
   }
 
-  Future updateUsers(List<Contact> users) async {
+  Future<void> updateUsers(List<Contact> users) async {
     // Sort contacts by flameCounter and then by totalMediaCounter
     users.sort((a, b) {
       // First, compare by flameCounter
-      int flameComparison = (getFlameCounterFromContact(b))
-          .compareTo((getFlameCounterFromContact(a)));
+      final flameComparison = getFlameCounterFromContact(b)
+          .compareTo(getFlameCounterFromContact(a));
       if (flameComparison != 0) {
         return flameComparison; // Sort by flameCounter in descending order
       }
@@ -106,11 +107,11 @@ class _ShareImageView extends State<ShareImageView> {
     });
 
     // Separate best friends and other users
-    List<Contact> bestFriends = [];
-    List<Contact> otherUsers = [];
-    List<Contact> pinnedContacts = users.where((c) => c.pinned).toList();
+    final bestFriends = <Contact>[];
+    final otherUsers = <Contact>[];
+    final pinnedContacts = users.where((c) => c.pinned).toList();
 
-    for (var contact in users) {
+    for (final contact in users) {
       if (contact.pinned) continue;
       if (!contact.archived &&
           (getFlameCounterFromContact(contact)) > 0 &&
@@ -128,10 +129,10 @@ class _ShareImageView extends State<ShareImageView> {
     });
   }
 
-  Future _filterUsers(String query) async {
+  Future<void> _filterUsers(String query) async {
     lastQuery = query;
     if (query.isEmpty) {
-      updateUsers(contacts
+      await updateUsers(contacts
           .where((x) =>
               !x.archived ||
               !hideArchivedUsers ||
@@ -139,17 +140,17 @@ class _ShareImageView extends State<ShareImageView> {
           .toList());
       return;
     }
-    List<Contact> usersFiltered = contacts
+    final usersFiltered = contacts
         .where((user) => getContactDisplayName(user)
             .toLowerCase()
             .contains(query.toLowerCase()))
         .toList();
-    updateUsers(usersFiltered);
+    await updateUsers(usersFiltered);
   }
 
   void updateStatus(int userId, bool checked) {
     if (widget.isRealTwonly) {
-      Contact user = contacts.firstWhere((x) => x.userId == userId);
+      final user = contacts.firstWhere((x) => x.userId == userId);
       if (!user.verified) {
         showRealTwonlyWarning = true;
         setState(() {});
@@ -169,18 +170,19 @@ class _ShareImageView extends State<ShareImageView> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+          padding:
+              const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
           child: Column(
             children: [
               if (showRealTwonlyWarning)
                 Text(
                   context.lang.shareImageAllTwonlyWarning,
-                  style: TextStyle(color: Colors.orange, fontSize: 13),
+                  style: const TextStyle(color: Colors.orange, fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
               if (showRealTwonlyWarning) const SizedBox(height: 10),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: TextField(
                   onChanged: _filterUsers,
                   decoration: getInputDecoration(
@@ -216,7 +218,7 @@ class _ShareImageView extends State<ShareImageView> {
                         children: [
                           Text(
                             context.lang.shareImageShowArchived,
-                            style: TextStyle(fontSize: 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                           Transform.scale(
                             scale: 0.75,
@@ -225,10 +227,9 @@ class _ShareImageView extends State<ShareImageView> {
                               side: WidgetStateBorderSide.resolveWith(
                                 (Set states) {
                                   if (states.contains(WidgetState.selected)) {
-                                    return BorderSide(width: 0);
+                                    return const BorderSide(width: 0);
                                   }
                                   return BorderSide(
-                                      width: 1,
                                       color: Theme.of(context)
                                           .colorScheme
                                           .outline);
@@ -261,7 +262,7 @@ class _ShareImageView extends State<ShareImageView> {
       floatingActionButton: SizedBox(
         height: 120,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -275,13 +276,13 @@ class _ShareImageView extends State<ShareImageView> {
                           color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       )
-                    : FaIcon(FontAwesomeIcons.solidPaperPlane),
+                    : const FaIcon(FontAwesomeIcons.solidPaperPlane),
                 onPressed: () async {
                   if (imageBytes == null || widget.selectedUserIds.isEmpty) {
                     return;
                   }
 
-                  ErrorCode? err = await isAllowedToSend();
+                  final err = await isAllowedToSend();
                   if (!context.mounted) return;
 
                   if (err != null) {
@@ -306,7 +307,7 @@ class _ShareImageView extends State<ShareImageView> {
                     );
 
                     /// trigger the upload of the media file.
-                    handleNextMediaUploadSteps(widget.mediaUploadId);
+                    unawaited(handleNextMediaUploadSteps(widget.mediaUploadId));
 
                     if (context.mounted) {
                       Navigator.pop(context, true);
@@ -321,7 +322,7 @@ class _ShareImageView extends State<ShareImageView> {
                 },
                 style: ButtonStyle(
                     padding: WidgetStateProperty.all<EdgeInsets>(
-                      EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
                     ),
                     backgroundColor: WidgetStateProperty.all<Color>(
                       imageBytes == null || widget.selectedUserIds.isEmpty
@@ -330,7 +331,7 @@ class _ShareImageView extends State<ShareImageView> {
                     )),
                 label: Text(
                   context.lang.shareImagedEditorSendImage,
-                  style: TextStyle(fontSize: 17),
+                  style: const TextStyle(fontSize: 17),
                 ),
               ),
             ],
@@ -344,12 +345,12 @@ class _ShareImageView extends State<ShareImageView> {
 class UserList extends StatelessWidget {
   const UserList(
     this.users, {
-    super.key,
     required this.selectedUserIds,
     required this.updateStatus,
     required this.isRealTwonly,
+    super.key,
   });
-  final Function(int, bool) updateStatus;
+  final void Function(int, bool) updateStatus;
   final List<Contact> users;
   final bool isRealTwonly;
   final HashSet<int> selectedUserIds;
@@ -364,12 +365,10 @@ class UserList extends StatelessWidget {
       restorationId: 'new_message_users_list',
       itemCount: users.length,
       itemBuilder: (BuildContext context, int i) {
-        Contact user = users[i];
-        int flameCounter = getFlameCounterFromContact(user);
+        final user = users[i];
+        final flameCounter = getFlameCounterFromContact(user);
         return ListTile(
           title: Row(
-            mainAxisAlignment: MainAxisAlignment.start, // Center horizontally
-            crossAxisAlignment: CrossAxisAlignment.center, // Center vertically
             children: [
               if (isRealTwonly)
                 Padding(
@@ -394,10 +393,9 @@ class UserList extends StatelessWidget {
             side: WidgetStateBorderSide.resolveWith(
               (Set states) {
                 if (states.contains(WidgetState.selected)) {
-                  return BorderSide(width: 0);
+                  return const BorderSide(width: 0);
                 }
-                return BorderSide(
-                    width: 1, color: Theme.of(context).colorScheme.outline);
+                return BorderSide(color: Theme.of(context).colorScheme.outline);
               },
             ),
             onChanged: (bool? value) {

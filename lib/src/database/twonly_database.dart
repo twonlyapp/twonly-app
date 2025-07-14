@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart'
-    show driftDatabase, DriftNativeOptions;
+    show DriftNativeOptions, driftDatabase;
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/daos/media_downloads_dao.dart';
@@ -73,15 +73,15 @@ class TwonlyDatabase extends _$TwonlyDatabase {
       },
       onUpgrade: stepByStep(
         from1To2: (m, schema) async {
-          m.addColumn(schema.messages, schema.messages.errorWhileSending);
+          await m.addColumn(schema.messages, schema.messages.errorWhileSending);
         },
         from2To3: (m, schema) async {
-          m.addColumn(schema.contacts, schema.contacts.archived);
-          m.addColumn(
+          await m.addColumn(schema.contacts, schema.contacts.archived);
+          await m.addColumn(
               schema.contacts, schema.contacts.deleteMessagesAfterXMinutes);
         },
         from3To4: (m, schema) async {
-          m.createTable(schema.mediaUploads);
+          await m.createTable(schema.mediaUploads);
           await m.alterTable(TableMigration(
             schema.mediaUploads,
             columnTransformer: {
@@ -91,19 +91,19 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           ));
         },
         from4To5: (m, schema) async {
-          m.createTable(mediaDownloads);
-          m.addColumn(schema.messages, schema.messages.mediaDownloadId);
-          m.addColumn(schema.messages, schema.messages.mediaUploadId);
+          await m.createTable(mediaDownloads);
+          await m.addColumn(schema.messages, schema.messages.mediaDownloadId);
+          await m.addColumn(schema.messages, schema.messages.mediaUploadId);
         },
         from5To6: (m, schema) async {
-          m.addColumn(schema.messages, schema.messages.mediaStored);
+          await m.addColumn(schema.messages, schema.messages.mediaStored);
         },
         from6To7: (m, schema) async {
-          m.addColumn(schema.contacts, schema.contacts.pinned);
+          await m.addColumn(schema.contacts, schema.contacts.pinned);
         },
         from7To8: (m, schema) async {
-          m.addColumn(schema.contacts, schema.contacts.alsoBestFriend);
-          m.addColumn(schema.contacts, schema.contacts.lastFlameSync);
+          await m.addColumn(schema.contacts, schema.contacts.alsoBestFriend);
+          await m.addColumn(schema.contacts, schema.contacts.lastFlameSync);
         },
         from8To9: (m, schema) async {
           await m.alterTable(TableMigration(
@@ -115,29 +115,29 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           ));
         },
         from9To10: (m, schema) async {
-          m.createTable(schema.signalContactPreKeys);
-          m.createTable(schema.signalContactSignedPreKeys);
-          m.addColumn(schema.contacts, schema.contacts.deleted);
+          await m.createTable(schema.signalContactPreKeys);
+          await m.createTable(schema.signalContactSignedPreKeys);
+          await m.addColumn(schema.contacts, schema.contacts.deleted);
         },
         from10To11: (m, schema) async {
-          m.createTable(schema.messageRetransmissions);
+          await m.createTable(schema.messageRetransmissions);
         },
         from11To12: (m, schema) async {
-          m.addColumn(schema.messageRetransmissions,
+          await m.addColumn(schema.messageRetransmissions,
               schema.messageRetransmissions.willNotGetACKByUser);
         },
         from12To13: (m, schema) async {
-          m.dropColumn(
-              schema.messageRetransmissions, "will_not_get_a_c_k_by_user");
+          await m.dropColumn(
+              schema.messageRetransmissions, 'will_not_get_a_c_k_by_user');
         },
         from13To14: (m, schema) async {
-          m.addColumn(schema.messageRetransmissions,
+          await m.addColumn(schema.messageRetransmissions,
               schema.messageRetransmissions.encryptedHash);
         },
         from14To15: (m, schema) async {
-          m.dropColumn(schema.mediaUploads, "upload_tokens");
-          m.dropColumn(schema.mediaUploads, "already_notified");
-          m.addColumn(
+          await m.dropColumn(schema.mediaUploads, 'upload_tokens');
+          await m.dropColumn(schema.mediaUploads, 'already_notified');
+          await m.addColumn(
               schema.messages, schema.messages.mediaRetransmissionState);
         },
       ),
@@ -161,13 +161,13 @@ class TwonlyDatabase extends _$TwonlyDatabase {
     }
   }
 
-  Future deleteDataForTwonlySafe() async {
+  Future<void> deleteDataForTwonlySafe() async {
     await delete(messages).go();
     await delete(messageRetransmissions).go();
     await delete(mediaDownloads).go();
     await delete(mediaUploads).go();
     await update(contacts).write(
-      ContactsCompanion(
+      const ContactsCompanion(
         avatarSvg: Value(null),
         myAvatarCounter: Value(0),
       ),
@@ -177,7 +177,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
     await (delete(signalPreKeyStores)
           ..where((t) => (t.createdAt.isSmallerThanValue(
                 DateTime.now().subtract(
-                  Duration(days: 25),
+                  const Duration(days: 25),
                 ),
               ))))
         .go();

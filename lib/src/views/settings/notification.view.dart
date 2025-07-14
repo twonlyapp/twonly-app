@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,11 +8,11 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
-import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/services/fcm.service.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 
 class NotificationView extends StatelessWidget {
   const NotificationView({super.key});
@@ -29,17 +30,17 @@ class NotificationView extends StatelessWidget {
             subtitle: Text(context.lang.settingsNotifyTroubleshootingDesc),
             onTap: () async {
               await initFCMAfterAuthenticated();
-              String? storedToken = await FlutterSecureStorage()
-                  .read(key: SecureStorageKeys.googleFcm);
+              final storedToken = const FlutterSecureStorage()
+                  .read(key: SecureStorageKeys.googleFcm) as String?;
               await setupNotificationWithUsers(force: true);
               if (!context.mounted) return;
 
               if (storedToken == null) {
                 final platform = Platform.isAndroid ? "Google's" : "Apple's";
-                showAlertDialog(
+                await showAlertDialog(
                   context,
-                  "Problem detected",
-                  "twonly is not able to register your app to $platform push server infrastructure. For Android that can happen when you do not have the Google Play Services installed. If you theses installed and want to help us to fix the issue please send us your debug log in Settings > Help > Debug log.",
+                  'Problem detected',
+                  'twonly is not able to register your app to $platform push server infrastructure. For Android that can happen when you do not have the Google Play Services installed. If you theses installed and want to help us to fix the issue please send us your debug log in Settings > Help > Debug log.',
                 );
               } else {
                 final run = await showAlertDialog(

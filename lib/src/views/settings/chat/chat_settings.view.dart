@@ -28,7 +28,7 @@ class _ChatSettingsViewState extends State<ChatSettingsView> {
             onTap: () async {
               await Navigator.push(context,
                   MaterialPageRoute(builder: (context) {
-                return ChatReactionSelectionView();
+                return const ChatReactionSelectionView();
               }));
             },
           ),

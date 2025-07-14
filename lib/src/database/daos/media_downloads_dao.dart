@@ -11,7 +11,7 @@ class MediaDownloadsDao extends DatabaseAccessor<TwonlyDatabase>
     with _$MediaDownloadsDaoMixin {
   MediaDownloadsDao(super.db);
 
-  Future updateMediaDownload(
+  Future<void> updateMediaDownload(
       int messageId, MediaDownloadsCompanion updatedValues) {
     return (update(mediaDownloads)..where((c) => c.messageId.equals(messageId)))
         .write(updatedValues);
@@ -26,7 +26,7 @@ class MediaDownloadsDao extends DatabaseAccessor<TwonlyDatabase>
     }
   }
 
-  Future deleteMediaDownload(int messageId) {
+  Future<void> deleteMediaDownload(int messageId) {
     return (delete(mediaDownloads)..where((t) => t.messageId.equals(messageId)))
         .go();
   }

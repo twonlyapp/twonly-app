@@ -18,22 +18,22 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// This function must be called after the database is setup
-Future setupNotificationWithUsers(
+Future<void> setupNotificationWithUsers(
     {bool force = false, int? forceContact}) async {
   var pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
   // HotFIX: Search for user with id 0 if not there remove all
   // and create new push keys with all users.
-  PushUser? pushUser = pushUsers.firstWhereOrNull((x) => x.userId == 0);
+  final pushUser = pushUsers.firstWhereOrNull((x) => x.userId == 0);
   if (pushUser == null) {
-    Log.info("Clearing push keys");
+    Log.info('Clearing push keys');
     await setPushKeys(SecureStorageKeys.receivingPushKeys, []);
-    pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
-    pushUsers.add(PushUser(
-      userId: Int64(0),
-      displayName: "NoUser",
-      pushKeys: [],
-    ));
+    pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys)
+      ..add(PushUser(
+        userId: Int64(),
+        displayName: 'NoUser',
+        pushKeys: [],
+      ));
   }
 
   var wasChanged = false;
@@ -42,7 +42,7 @@ Future setupNotificationWithUsers(
 
   final contacts = await twonlyDB.contactsDao.getAllNotBlockedContacts();
   for (final contact in contacts) {
-    PushUser? pushUser =
+    final pushUser =
         pushUsers.firstWhereOrNull((x) => x.userId == contact.userId);
 
     if (pushUser != null) {
@@ -67,11 +67,11 @@ Future setupNotificationWithUsers(
         pushUser.pushKeys.add(lastKey);
         pushUser.pushKeys.add(pushKey);
         wasChanged = true;
-        Log.info("Creating new pushkey for ${contact.userId}");
+        Log.info('Creating new pushkey for ${contact.userId}');
       }
     } else {
       Log.info(
-        "User ${contact.userId} not yet in pushkeys. Creating a new user.",
+        'User ${contact.userId} not yet in pushkeys. Creating a new user.',
       );
       wasChanged = true;
 
@@ -87,7 +87,6 @@ Future setupNotificationWithUsers(
         displayName: getContactDisplayName(contact),
         blocked: contact.blocked,
         pushKeys: [pushKey],
-        lastMessageId: null,
       ));
     }
   }
@@ -97,7 +96,7 @@ Future setupNotificationWithUsers(
   }
 }
 
-Future sendNewPushKey(int userId, PushKey pushKey) async {
+Future<void> sendNewPushKey(int userId, PushKey pushKey) async {
   await encryptAndSendMessageAsync(
     null,
     userId,
@@ -114,11 +113,10 @@ Future sendNewPushKey(int userId, PushKey pushKey) async {
   );
 }
 
-Future updatePushUser(Contact contact) async {
-  var pushKeys = await getPushKeys(SecureStorageKeys.receivingPushKeys);
+Future<void> updatePushUser(Contact contact) async {
+  final pushKeys = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
-  PushUser? pushUser =
-      pushKeys.firstWhereOrNull((x) => x.userId == contact.userId);
+  final pushUser = pushKeys.firstWhereOrNull((x) => x.userId == contact.userId);
 
   if (pushUser == null) {
     pushKeys.add(PushUser(
@@ -126,20 +124,21 @@ Future updatePushUser(Contact contact) async {
       displayName: getContactDisplayName(contact),
       pushKeys: [],
       blocked: contact.blocked,
-      lastMessageId: Int64(0),
+      lastMessageId: Int64(),
     ));
   } else {
-    pushUser.displayName = getContactDisplayName(contact);
-    pushUser.blocked = contact.blocked;
+    pushUser
+      ..displayName = getContactDisplayName(contact)
+      ..blocked = contact.blocked;
   }
 
   await setPushKeys(SecureStorageKeys.receivingPushKeys, pushKeys);
 }
 
-Future handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
-  var pushKeys = await getPushKeys(SecureStorageKeys.sendingPushKeys);
+Future<void> handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
+  final pushKeys = await getPushKeys(SecureStorageKeys.sendingPushKeys);
 
-  PushUser? pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);
+  var pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);
 
   if (pushUser == null) {
     final contact = await twonlyDB.contactsDao
@@ -151,13 +150,13 @@ Future handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
       displayName: getContactDisplayName(contact),
       pushKeys: [],
       blocked: contact.blocked,
-      lastMessageId: Int64(0),
+      lastMessageId: Int64(),
     ));
     pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);
   }
 
   if (pushUser == null) {
-    Log.error("could not store new push key as no user was found");
+    Log.error('could not store new push key as no user was found');
   }
 
   // only store the newest key...
@@ -173,14 +172,12 @@ Future handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
   await setPushKeys(SecureStorageKeys.sendingPushKeys, pushKeys);
 }
 
-Future updateLastMessageId(int fromUserId, int messageId) async {
-  List<PushUser> pushUsers =
-      await getPushKeys(SecureStorageKeys.receivingPushKeys);
+Future<void> updateLastMessageId(int fromUserId, int messageId) async {
+  final pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
-  PushUser? pushUser =
-      pushUsers.firstWhereOrNull((x) => x.userId == fromUserId);
+  final pushUser = pushUsers.firstWhereOrNull((x) => x.userId == fromUserId);
   if (pushUser == null) {
-    setupNotificationWithUsers();
+    unawaited(setupNotificationWithUsers());
     return;
   }
 
@@ -193,13 +190,12 @@ Future updateLastMessageId(int fromUserId, int messageId) async {
 /// this will trigger a push notification
 /// push notification only containing the message kind and username
 Future<Uint8List?> getPushData(int toUserId, PushNotification content) async {
-  final List<PushUser> pushKeys =
-      await getPushKeys(SecureStorageKeys.sendingPushKeys);
+  final pushKeys = await getPushKeys(SecureStorageKeys.sendingPushKeys);
 
-  List<int> key = "InsecureOnlyUsedForAddingContact".codeUnits;
-  int keyId = 0;
+  var key = 'InsecureOnlyUsedForAddingContact'.codeUnits;
+  var keyId = 0;
 
-  PushUser? pushUser = pushKeys.firstWhereOrNull((x) => x.userId == toUserId);
+  final pushUser = pushKeys.firstWhereOrNull((x) => x.userId == toUserId);
 
   if (pushUser == null) {
     // user does not have send any push keys
@@ -210,7 +206,7 @@ Future<Uint8List?> getPushData(int toUserId, PushNotification content) async {
         content.kind != PushKind.testNotification) {
       // this will be enforced after every app uses this system... :/
       // return null;
-      Log.error("Using insecure key as the receiver does not send a push key!");
+      Log.error('Using insecure key as the receiver does not send a push key!');
       await encryptAndSendMessageAsync(
         null,
         toUserId,
@@ -226,7 +222,7 @@ Future<Uint8List?> getPushData(int toUserId, PushNotification content) async {
       key = pushUser.pushKeys.last.key;
       keyId = pushUser.pushKeys.last.id.toInt();
     } catch (e) {
-      Log.error("No push notification key found for user $toUserId");
+      Log.error('No push notification key found for user $toUserId');
       return null;
     }
   }
@@ -248,39 +244,36 @@ Future<Uint8List?> getPushData(int toUserId, PushNotification content) async {
 }
 
 Future<List<PushUser>> getPushKeys(String storageKey) async {
-  var storage = FlutterSecureStorage();
-  String? pushKeysProto = await storage.read(
+  const storage = FlutterSecureStorage();
+  final pushKeysProto = await storage.read(
     key: storageKey,
-    iOptions: IOSOptions(
-      groupId: "CN332ZUGRP.eu.twonly.shared",
-      synchronizable: false,
+    iOptions: const IOSOptions(
+      groupId: 'CN332ZUGRP.eu.twonly.shared',
       accessibility: KeychainAccessibility.first_unlock,
     ),
   );
   if (pushKeysProto == null) return [];
-  Uint8List pushKeysRaw = base64Decode(pushKeysProto);
+  final pushKeysRaw = base64Decode(pushKeysProto);
   return PushUsers.fromBuffer(pushKeysRaw).users;
 }
 
-Future setPushKeys(String storageKey, List<PushUser> pushKeys) async {
-  var storage = FlutterSecureStorage();
+Future<void> setPushKeys(String storageKey, List<PushUser> pushKeys) async {
+  const storage = FlutterSecureStorage();
 
   await storage.delete(
     key: storageKey,
-    iOptions: IOSOptions(
-      groupId: "CN332ZUGRP.eu.twonly.shared",
-      synchronizable: false,
+    iOptions: const IOSOptions(
+      groupId: 'CN332ZUGRP.eu.twonly.shared',
       accessibility: KeychainAccessibility.first_unlock,
     ),
   );
 
-  String jsonString = base64Encode(PushUsers(users: pushKeys).writeToBuffer());
+  final jsonString = base64Encode(PushUsers(users: pushKeys).writeToBuffer());
   await storage.write(
     key: storageKey,
     value: jsonString,
-    iOptions: IOSOptions(
-      groupId: "CN332ZUGRP.eu.twonly.shared",
-      synchronizable: false,
+    iOptions: const IOSOptions(
+      groupId: 'CN332ZUGRP.eu.twonly.shared',
       accessibility: KeychainAccessibility.first_unlock,
     ),
   );

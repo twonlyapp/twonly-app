@@ -1,17 +1,17 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
-import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -23,15 +23,15 @@ class ContactView extends StatefulWidget {
 }
 
 class _ContactViewState extends State<ContactView> {
-  Future handleUserRemoveRequest(Contact contact) async {
-    bool remove = await showAlertDialog(
+  Future<void> handleUserRemoveRequest(Contact contact) async {
+    final remove = await showAlertDialog(
       context,
       context.lang.contactRemoveTitle(getContactDisplayName(contact)),
       context.lang.contactRemoveBody,
     );
     if (remove) {
       // trigger deletion for the other user...
-      rejectUser(contact.userId);
+      await rejectUser(contact.userId);
       await deleteContact(contact.userId);
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
@@ -39,18 +39,18 @@ class _ContactViewState extends State<ContactView> {
     }
   }
 
-  Future handleUserBlockRequest(Contact contact) async {
-    bool block = await showAlertDialog(
+  Future<void> handleUserBlockRequest(Contact contact) async {
+    final block = await showAlertDialog(
       context,
       context.lang.contactBlockTitle(getContactDisplayName(contact)),
       context.lang.contactBlockBody,
     );
     if (block) {
-      final update = ContactsCompanion(blocked: Value(true));
+      const update = ContactsCompanion(blocked: Value(true));
       if (context.mounted) {
         await twonlyDB.contactsDao.updateContact(contact.userId, update);
       }
-      if (context.mounted) {
+      if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
     }
@@ -58,13 +58,13 @@ class _ContactViewState extends State<ContactView> {
 
   @override
   Widget build(BuildContext context) {
-    Stream<Contact?> contact = twonlyDB.contactsDao
+    final contact = twonlyDB.contactsDao
         .getContactByUserId(widget.userId)
         .watchSingleOrNull();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(""),
+        title: const Text(''),
       ),
       body: StreamBuilder(
         stream: contact,
@@ -73,7 +73,7 @@ class _ContactViewState extends State<ContactView> {
             return Container();
           }
           final contact = snapshot.data!;
-          int flameCounter = getFlameCounterFromContact(contact);
+          final flameCounter = getFlameCounterFromContact(contact);
           return ListView(
             children: [
               Padding(
@@ -84,11 +84,11 @@ class _ContactViewState extends State<ContactView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
-                      padding: EdgeInsets.only(right: 10),
+                      padding: const EdgeInsets.only(right: 10),
                       child: VerifiedShield(contact)),
                   Text(
                     getContactDisplayName(contact),
-                    style: TextStyle(fontSize: 20),
+                    style: const TextStyle(fontSize: 20),
                   ),
                   if (flameCounter > 0)
                     FlameCounterWidget(
@@ -99,18 +99,19 @@ class _ContactViewState extends State<ContactView> {
                 ],
               ),
               if (getContactDisplayName(contact) != contact.username)
-                Center(child: Text("(${contact.username})")),
-              SizedBox(height: 50),
+                Center(child: Text('(${contact.username})')),
+              const SizedBox(height: 50),
               BetterListTile(
                 icon: FontAwesomeIcons.pencil,
                 text: context.lang.contactNickname,
                 onTap: () async {
-                  String? nickName =
+                  final nickName =
                       await showNicknameChangeDialog(context, contact);
 
-                  if (context.mounted && nickName != null && nickName != "") {
+                  if (context.mounted && nickName != null && nickName != '') {
                     final update = ContactsCompanion(nickName: Value(nickName));
-                    twonlyDB.contactsDao.updateContact(contact.userId, update);
+                    await twonlyDB.contactsDao
+                        .updateContact(contact.userId, update);
                   }
                 },
               ),
@@ -131,7 +132,7 @@ class _ContactViewState extends State<ContactView> {
                 iconSize: 16,
                 text: context.lang.deleteAllContactMessages,
                 onTap: () async {
-                  bool block = await showAlertDialog(
+                  final block = await showAlertDialog(
                     context,
                     context.lang.deleteAllContactMessages,
                     context.lang.deleteAllContactMessagesBody(
@@ -168,7 +169,7 @@ class _ContactViewState extends State<ContactView> {
 
 Future<String?> showNicknameChangeDialog(
     BuildContext context, Contact contact) {
-  final TextEditingController controller =
+  final controller =
       TextEditingController(text: getContactDisplayName(contact));
 
   return showDialog<String>(

@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 
 class RadioButton<T> extends StatelessWidget {
-  final T value;
-  final T? groupValue;
-  final String label;
-  final ValueChanged<T?> onChanged;
-
   const RadioButton({
-    super.key,
     required this.value,
     required this.groupValue,
     required this.label,
     required this.onChanged,
+    super.key,
   });
+  final T value;
+  final T? groupValue;
+  final String label;
+  final ValueChanged<T?> onChanged;
 
   @override
   Widget build(BuildContext context) {

@@ -89,7 +89,7 @@
     "messageSendState_Sending": "Wird gesendet",
     "messageSendState_TapToLoad": "Tippe zum Laden",
     "messageSendState_Loading": "Herunterladen",
-    "messageStoredInGalery": "Gespeichert",
+    "messageStoredInGallery": "Gespeichert",
     "messageReopened": "Erneut geöffnet",
     "@messageReopened": {},
     "imageEditorDrawOk": "Zeichnung machen",
@@ -329,7 +329,7 @@
     "appOutdatedBtn": "Jetzt aktualisieren.",
     "doubleClickToReopen": "Doppelklicken zum\nerneuten Öffnen.",
     "retransmissionRequested": "Wird erneut versucht.",
-    "testPaymentMethode": "twonly befindet sich derzeit in einer Testphase und kann nur mit einem Einladungscode vollständig genutzt werden. Es gibt derzeit keine Zahlungsmethode, um Ihr twonly-Guthaben aufzuladen!",
+    "testPaymentMethod": "twonly befindet sich derzeit in einer Testphase und kann nur mit einem Einladungscode vollständig genutzt werden. Es gibt derzeit keine Zahlungsmethode, um Ihr twonly-Guthaben aufzuladen!",
     "testingAccountTitle": "Tester-Zugang",
     "testingAccountBody": "Danke für dein Interesse! Wir werden deine Anfrage prüfen und den Plan so schnell wie möglich aktivieren. Da wir uns jedoch noch in einer Testphase befinden, ist die Anzahl der Tester-Konten begrenzt. Wir werden dich jedoch benachrichtigen, sobald dir ein Platz zugewiesen wurde."
 }

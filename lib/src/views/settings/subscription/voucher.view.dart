@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -21,14 +22,11 @@ class _VoucherViewState extends State<VoucherView> {
     initAsync();
   }
 
-  Future initAsync() async {
-    Response_Vouchers? resVouchers = await apiService.getVoucherList();
-    if (resVouchers != null) {
-      setState(() {
-        vouchers = resVouchers.vouchers;
-      });
-      return;
-    }
+  Future<void> initAsync() async {
+    final resVouchers = await apiService.getVoucherList();
+    setState(() {
+      vouchers = resVouchers?.vouchers ?? [];
+    });
   }
 
   @override
@@ -45,22 +43,22 @@ class _VoucherViewState extends State<VoucherView> {
             title: Text(context.lang.redeemVoucher),
             onTap: () async {
               await redeemVoucher(context);
-              initAsync();
+              await initAsync();
             },
           ),
           ListTile(
             title: Text(context.lang.createVoucher),
             onTap: () async {
               await showBuyVoucher(context);
-              initAsync();
+              await initAsync();
             },
           ),
-          Divider(),
+          const Divider(),
           if (openVoucher.isNotEmpty)
             ListTile(
               title: Text(
                 context.lang.openVouchers,
-                style: TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           ...openVoucher.map((x) => VoucherCard(voucher: x)),
@@ -68,7 +66,7 @@ class _VoucherViewState extends State<VoucherView> {
             ListTile(
               title: Text(
                 context.lang.redeemedVouchers,
-                style: TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           ...redeemedVoucher.map((x) => VoucherCard(voucher: x)),
@@ -79,9 +77,8 @@ class _VoucherViewState extends State<VoucherView> {
 }
 
 class VoucherCard extends StatefulWidget {
+  const VoucherCard({required this.voucher, super.key});
   final Response_Voucher voucher;
-
-  const VoucherCard({super.key, required this.voucher});
 
   @override
   State<VoucherCard> createState() => _VoucherCardState();
@@ -93,17 +90,16 @@ class _VoucherCardState extends State<VoucherCard> {
       Clipboard.setData(ClipboardData(text: widget.voucher.voucherId));
       HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("${widget.voucher.voucherId} copied.")),
+        SnackBar(content: Text('${widget.voucher.voucherId} copied.')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isRedeemed = widget.voucher.redeemed || widget.voucher.requested;
-
-    Locale myLocale = Localizations.localeOf(context);
-    String formattedValue = NumberFormat.currency(
+    final isRedeemed = widget.voucher.redeemed || widget.voucher.requested;
+    final myLocale = Localizations.localeOf(context);
+    final formattedValue = NumberFormat.currency(
       locale: myLocale.toString(),
       symbol: '€',
       decimalDigits: 2,
@@ -127,8 +123,7 @@ class _VoucherCardState extends State<VoucherCard> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color:
-                          (isRedeemed) ? Colors.grey : context.color.onSurface,
+                      color: isRedeemed ? Colors.grey : context.color.onSurface,
                     ),
                   ),
                   Text(
@@ -136,8 +131,7 @@ class _VoucherCardState extends State<VoucherCard> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color:
-                          (isRedeemed) ? Colors.grey : context.color.onSurface,
+                      color: isRedeemed ? Colors.grey : context.color.onSurface,
                     ),
                   ),
                 ],
@@ -150,8 +144,10 @@ class _VoucherCardState extends State<VoucherCard> {
   }
 }
 
-Future redeemVoucher(BuildContext context) async {
-  String voucherCode = '';
+Future<void> redeemVoucher(BuildContext context) async {
+  var voucherCode = '';
+  //
+  // ignore: inference_failure_on_function_invocation
   await showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -174,7 +170,7 @@ Future redeemVoucher(BuildContext context) async {
                       },
                       decoration: InputDecoration(
                         labelText: context.lang.enterVoucherCode,
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                       // Set the text to be uppercase
                       textCapitalization: TextCapitalization.characters,
@@ -202,7 +198,14 @@ Future redeemVoucher(BuildContext context) async {
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(errorCodeToText(context, res.error))),
+                  SnackBar(
+                    content: Text(
+                      errorCodeToText(
+                        context,
+                        res.error as ErrorCode,
+                      ),
+                    ),
+                  ),
                 );
               }
               Navigator.of(context).pop();
@@ -215,9 +218,10 @@ Future redeemVoucher(BuildContext context) async {
   );
 }
 
-Future showBuyVoucher(BuildContext context) async {
-  int quantity = 1000;
-
+Future<void> showBuyVoucher(BuildContext context) async {
+  var quantity = 1000;
+  //
+  // ignore: inference_failure_on_function_invocation
   await showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -230,12 +234,12 @@ Future showBuyVoucher(BuildContext context) async {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(context.lang.createVoucherDesc),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.remove),
+                        icon: const Icon(Icons.remove),
                         onPressed: () {
                           if (quantity > 1) {
                             setState(() {
@@ -255,10 +259,10 @@ Future showBuyVoucher(BuildContext context) async {
                           symbol: '€',
                           decimalDigits: 2,
                         ).format(quantity / 100),
-                        style: TextStyle(fontSize: 24),
+                        style: const TextStyle(fontSize: 24),
                       ),
                       IconButton(
-                        icon: Icon(Icons.add),
+                        icon: const Icon(Icons.add),
                         onPressed: () {
                           setState(() {
                             if (quantity >= 1000) {
@@ -293,7 +297,14 @@ Future showBuyVoucher(BuildContext context) async {
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(errorCodeToText(context, res.error))),
+                  SnackBar(
+                    content: Text(
+                      errorCodeToText(
+                        context,
+                        res.error as ErrorCode,
+                      ),
+                    ),
+                  ),
                 );
               }
               Navigator.of(context).pop(); // Close the dialog

@@ -1,6 +1,6 @@
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -21,13 +21,13 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
   final TextEditingController passwordCtrl = TextEditingController();
   final TextEditingController repeatedPasswordCtrl = TextEditingController();
 
-  Future onPressedEnableTwonlySafe() async {
+  Future<void> onPressedEnableTwonlySafe() async {
     setState(() {
       isLoading = true;
     });
     if (!await isSecurePassword(passwordCtrl.text)) {
       if (!mounted) return;
-      bool ignore = await showAlertDialog(
+      final ignore = await showAlertDialog(
         context,
         context.lang.backupInsecurePassword,
         context.lang.backupInsecurePasswordDesc,
@@ -48,7 +48,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
       isLoading = true;
     });
 
-    await Future.delayed(Duration(milliseconds: 100));
+    await Future.delayed(const Duration(milliseconds: 100));
     await enableTwonlySafe(passwordCtrl.text);
 
     if (!mounted) return;
@@ -63,23 +63,24 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("twonly Safe"),
+        title: const Text('twonly Safe'),
         actions: [
           IconButton(
             onPressed: () {
               showAlertDialog(
                 context,
-                "twonly Safe",
+                'twonly Safe',
                 context.lang.backupTwonlySafeLongDesc,
               );
             },
-            icon: FaIcon(FontAwesomeIcons.circleInfo),
+            icon: const FaIcon(FontAwesomeIcons.circleInfo),
             iconSize: 18,
           )
         ],
       ),
       body: Padding(
-        padding: EdgeInsetsGeometry.symmetric(vertical: 40, horizontal: 40),
+        padding:
+            const EdgeInsetsGeometry.symmetric(vertical: 40, horizontal: 40),
         child: ListView(
           children: [
             Text(
@@ -94,7 +95,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                   onChanged: (value) {
                     setState(() {});
                   },
-                  style: TextStyle(fontSize: 17),
+                  style: const TextStyle(fontSize: 17),
                   obscureText: obscureText,
                   decoration: getInputDecoration(
                     context,
@@ -122,13 +123,13 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               ],
             ),
             Padding(
-              padding: EdgeInsetsGeometry.all(5),
+              padding: const EdgeInsetsGeometry.all(5),
               child: Text(
                 context.lang.backupPasswordRequirement,
                 style: TextStyle(
                     fontSize: 13,
-                    color: ((passwordCtrl.text.length < 8 &&
-                            passwordCtrl.text.isNotEmpty))
+                    color: (passwordCtrl.text.length < 8 &&
+                            passwordCtrl.text.isNotEmpty)
                         ? Colors.red
                         : Colors.transparent),
               ),
@@ -139,7 +140,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               onChanged: (value) {
                 setState(() {});
               },
-              style: TextStyle(fontSize: 17),
+              style: const TextStyle(fontSize: 17),
               obscureText: true,
               decoration: getInputDecoration(
                 context,
@@ -147,7 +148,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               ),
             ),
             Padding(
-              padding: EdgeInsetsGeometry.all(5),
+              padding: const EdgeInsetsGeometry.all(5),
               child: Text(
                 context.lang.passwordRepeatedNotEqual,
                 style: TextStyle(
@@ -158,18 +159,18 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                         : Colors.transparent),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Center(
               child: OutlinedButton(
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return TwonlySafeServerView();
+                    return const TwonlySafeServerView();
                   }));
                 },
                 child: Text(context.lang.backupExpertSettings),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Center(
                 child: FilledButton.icon(
               onPressed: (!isLoading &&
@@ -179,12 +180,12 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                   ? onPressedEnableTwonlySafe
                   : null,
               icon: isLoading
-                  ? SizedBox(
+                  ? const SizedBox(
                       height: 12,
                       width: 12,
                       child: CircularProgressIndicator(strokeWidth: 1),
                     )
-                  : Icon(Icons.lock_clock_rounded),
+                  : const Icon(Icons.lock_clock_rounded),
               label: Text(context.lang.backupEnableBackup),
             ))
           ],
@@ -195,14 +196,14 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
 }
 
 Future<bool> isSecurePassword(String password) async {
-  String badPasswordsStr =
+  final badPasswordsStr =
       await rootBundle.loadString('assets/passwords/bad_passwords.txt');
-  List<String> badPasswords = badPasswordsStr.split("\n");
+  final badPasswords = badPasswordsStr.split('\n');
   if (badPasswords.contains(password)) {
     return false;
   }
   // Check if the password meets all criteria
-  return RegExp(r'[A-Z]').hasMatch(password) &&
-      RegExp(r'[a-z]').hasMatch(password) &&
-      RegExp(r'[0-9]').hasMatch(password);
+  return RegExp('[A-Z]').hasMatch(password) &&
+      RegExp('[a-z]').hasMatch(password) &&
+      RegExp('[0-9]').hasMatch(password);
 }

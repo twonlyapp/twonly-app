@@ -1,8 +1,8 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/services/api/media_download.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 
 class DataAndStorageView extends StatefulWidget {
   const DataAndStorageView({super.key});
@@ -21,7 +21,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final user = await getUser();
     if (user == null) return;
     setState(() {
@@ -31,8 +31,9 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
     });
   }
 
-  void showAutoDownloadOptions(
+  Future<void> showAutoDownloadOptions(
       BuildContext context, ConnectivityResult connectionMode) async {
+    // ignore: inference_failure_on_function_invocation
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -47,12 +48,12 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
     );
   }
 
-  void toggleStoreInGallery() async {
+  Future<void> toggleStoreInGallery() async {
     await updateUserdata((u) {
       u.storeMediaFilesInGallery = !storeMediaFilesInGallery;
       return u;
     });
-    initAsync();
+    await initAsync();
   }
 
   @override
@@ -72,18 +73,18 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               onChanged: (a) => toggleStoreInGallery(),
             ),
           ),
-          Divider(),
+          const Divider(),
           ListTile(
             title: Text(
               context.lang.settingsStorageDataMediaAutoDownload,
-              style: TextStyle(fontSize: 13),
+              style: const TextStyle(fontSize: 13),
             ),
           ),
           ListTile(
             title: Text(context.lang.settingsStorageDataAutoDownMobile),
             subtitle: Text(
-              autoDownloadOptions[ConnectivityResult.mobile.name]!.join(", "),
-              style: TextStyle(color: Colors.grey),
+              autoDownloadOptions[ConnectivityResult.mobile.name]!.join(', '),
+              style: const TextStyle(color: Colors.grey),
             ),
             onTap: () {
               showAutoDownloadOptions(context, ConnectivityResult.mobile);
@@ -92,8 +93,8 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
           ListTile(
             title: Text(context.lang.settingsStorageDataAutoDownWifi),
             subtitle: Text(
-              autoDownloadOptions[ConnectivityResult.wifi.name]!.join(", "),
-              style: TextStyle(color: Colors.grey),
+              autoDownloadOptions[ConnectivityResult.wifi.name]!.join(', '),
+              style: const TextStyle(color: Colors.grey),
             ),
             onTap: () {
               showAutoDownloadOptions(context, ConnectivityResult.wifi);
@@ -106,16 +107,15 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
 }
 
 class AutoDownloadOptionsDialog extends StatefulWidget {
-  final Map<String, List<String>> autoDownloadOptions;
-  final ConnectivityResult connectionMode;
-  final Function() onUpdate;
-
   const AutoDownloadOptionsDialog({
-    super.key,
     required this.autoDownloadOptions,
     required this.connectionMode,
     required this.onUpdate,
+    super.key,
   });
+  final Map<String, List<String>> autoDownloadOptions;
+  final ConnectivityResult connectionMode;
+  final void Function() onUpdate;
 
   @override
   State<AutoDownloadOptionsDialog> createState() =>
@@ -139,7 +139,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           CheckboxListTile(
-            title: Text('Image'),
+            title: const Text('Image'),
             value: autoDownloadOptions[widget.connectionMode.name]!
                 .contains(DownloadMediaTypes.image.name),
             onChanged: (bool? value) async {
@@ -147,7 +147,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
             },
           ),
           CheckboxListTile(
-            title: Text('Video'),
+            title: const Text('Video'),
             value: autoDownloadOptions[widget.connectionMode.name]!
                 .contains(DownloadMediaTypes.video.name),
             onChanged: (bool? value) async {

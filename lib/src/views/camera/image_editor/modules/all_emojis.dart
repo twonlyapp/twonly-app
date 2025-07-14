@@ -19,7 +19,7 @@ class _EmojisState extends State<Emojis> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final user = await getUser();
     if (user == null) return;
     setState(() {
@@ -28,7 +28,7 @@ class _EmojisState extends State<Emojis> {
     });
   }
 
-  Future selectEmojis(String emoji) async {
+  Future<void> selectEmojis(String emoji) async {
     await updateUserdata((user) {
       if (user.lastUsedEditorEmojis == null) {
         user.lastUsedEditorEmojis = [emoji];

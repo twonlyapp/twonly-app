@@ -23,7 +23,7 @@ class HelpView extends StatelessWidget {
             title: Text(context.lang.settingsHelpFAQ),
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return FaqView();
+                return const FaqView();
               }));
             },
           ),
@@ -31,7 +31,7 @@ class HelpView extends StatelessWidget {
             title: Text(context.lang.settingsHelpContactUs),
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return ContactUsView();
+                return const ContactUsView();
               }));
             },
           ),
@@ -39,7 +39,7 @@ class HelpView extends StatelessWidget {
             title: Text(context.lang.settingsResetTutorials),
             subtitle: Text(context.lang.settingsResetTutorialsDesc),
             onTap: () async {
-              updateUserdata((user) {
+              await updateUserdata((user) {
                 user.tutorialDisplayed = [];
                 return user;
               });
@@ -47,12 +47,12 @@ class HelpView extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(context.lang.settingsResetTutorialsSuccess),
-                  duration: Duration(seconds: 3),
+                  duration: const Duration(seconds: 3),
                 ),
               );
             },
           ),
-          Divider(),
+          const Divider(),
           FutureBuilder(
             future: PackageInfo.fromPlatform(),
             builder: (context, snap) {
@@ -76,7 +76,7 @@ class HelpView extends StatelessWidget {
             title: Text(context.lang.settingsHelpCredits),
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return CreditsView();
+                return const CreditsView();
               }));
             },
           ),
@@ -85,27 +85,29 @@ class HelpView extends StatelessWidget {
             onTap: () async {
               await Navigator.push(context,
                   MaterialPageRoute(builder: (context) {
-                return DiagnosticsView();
+                return const DiagnosticsView();
               }));
             },
           ),
           ListTile(
             title: Text(context.lang.settingsHelpImprint),
             onTap: () {
-              launchUrl(Uri.parse("https://twonly.eu/de/legal/"));
+              launchUrl(Uri.parse('https://twonly.eu/de/legal/'));
             },
-            trailing: FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            trailing:
+                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpTerms),
             onTap: () {
-              launchUrl(Uri.parse("https://twonly.eu/de/legal/agb.html"));
+              launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html'));
             },
-            trailing: FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            trailing:
+                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
-          ListTile(
+          const ListTile(
             title: Text(
-              "Copyright twonly",
+              'Copyright twonly',
               style: TextStyle(color: Colors.grey, fontSize: 13),
             ),
           ),

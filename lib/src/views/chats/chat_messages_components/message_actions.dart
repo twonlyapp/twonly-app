@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_dynamic_calls, inference_failure_on_function_invocation
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -15,23 +17,22 @@ import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 
 class MessageActions extends StatefulWidget {
-  final Widget child;
-  final Message message;
-  final VoidCallback onResponseTriggered;
-
   const MessageActions({
-    super.key,
     required this.child,
     required this.message,
     required this.onResponseTriggered,
+    super.key,
   });
+  final Widget child;
+  final Message message;
+  final VoidCallback onResponseTriggered;
 
   @override
   State<MessageActions> createState() => _SlidingResponseWidgetState();
 }
 
 class _SlidingResponseWidgetState extends State<MessageActions> {
-  double _offsetX = 0.0;
+  double _offsetX = 0;
   bool gotFeedback = false;
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
@@ -77,7 +78,7 @@ class _SlidingResponseWidgetState extends State<MessageActions> {
           ),
         ),
         if (_offsetX >= 40)
-          Positioned(
+          const Positioned(
             left: 20,
             top: 0,
             bottom: 0,
@@ -98,16 +99,15 @@ class _SlidingResponseWidgetState extends State<MessageActions> {
 }
 
 class MessageContextMenu extends StatelessWidget {
-  final Widget child;
-  final Message message;
-  final VoidCallback onResponseTriggered;
-
   const MessageContextMenu({
-    super.key,
     required this.message,
     required this.child,
     required this.onResponseTriggered,
+    super.key,
   });
+  final Widget child;
+  final Message message;
+  final VoidCallback onResponseTriggered;
 
   @override
   Widget build(BuildContext context) {
@@ -122,17 +122,17 @@ class MessageContextMenu extends StatelessWidget {
         PieAction(
           tooltip: Text(context.lang.react),
           onSelect: () async {
-            EmojiLayerData? layer = await showModalBottomSheet(
+            final layer = await showModalBottomSheet(
               context: context,
               backgroundColor: Colors.black,
               builder: (BuildContext context) {
                 return const Emojis();
               },
-            );
+            ) as TextLayerData?;
             if (layer == null) return;
             Log.info(layer.text);
 
-            sendTextMessage(
+            await sendTextMessage(
               message.contactId,
               TextMessageContent(
                   text: layer.text,
@@ -171,7 +171,7 @@ class MessageContextMenu extends StatelessWidget {
         PieAction(
           tooltip: Text(context.lang.delete),
           onSelect: () async {
-            bool delete = await showAlertDialog(
+            final delete = await showAlertDialog(
               context,
               context.lang.deleteTitle,
               null,

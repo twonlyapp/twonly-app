@@ -43,13 +43,6 @@ Future<String> loadLogFile() async {
   }
 }
 
-Future cleanLogFile() async {
-  final str = await loadLogFile();
-  if (str.contains("secureStorageBytes")) {
-    deleteLogFile();
-  }
-}
-
 Future<void> _writeLogToFile(LogRecord record) async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');

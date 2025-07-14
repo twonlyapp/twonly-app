@@ -22,7 +22,7 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
     super.initState();
   }
 
-  Future updateUserAvatar(String json, String svg) async {
+  Future<void> updateUserAvatar(String json, String svg) async {
     await updateUserdata((user) {
       user.avatarJson = json;
       user.avatarSvg = svg;

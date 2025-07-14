@@ -15,9 +15,9 @@ class KeyValueStore {
       final file = File(filePath);
 
       // Check if the file exists
-      if (await file.exists()) {
+      if (file.existsSync()) {
         final contents = await file.readAsString();
-        return jsonDecode(contents);
+        return jsonDecode(contents) as Map<String, dynamic>;
       } else {
         return null; // File does not exist
       }

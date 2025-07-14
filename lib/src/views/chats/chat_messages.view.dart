@@ -2,33 +2,33 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
+import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/services/api/messages.dart';
-
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
-import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
-import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
 
 Color getMessageColor(Message message) {
   return (message.messageOtherId == null)
-      ? Color.fromARGB(255, 58, 136, 102)
-      : Color.fromARGB(83, 68, 137, 255);
+      ? const Color.fromARGB(255, 58, 136, 102)
+      : const Color.fromARGB(83, 68, 137, 255);
 }
 
 /// Displays detailed information about a SampleItem.
@@ -45,7 +45,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late Contact user;
-  String currentInputText = "";
+  String currentInputText = '';
   late StreamSubscription<Contact?> userSub;
   late StreamSubscription<List<Message>> messageSub;
   List<Message> messages = [];
@@ -64,7 +64,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     textFieldFocus = FocusNode();
     initStreams();
 
-    tutorial = Timer(Duration(seconds: 1), () async {
+    tutorial = Timer(const Duration(seconds: 1), () async {
       tutorial = null;
       if (!mounted) return;
       await showVerifyShieldTutorial(context, verifyShieldKey);
@@ -80,10 +80,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     textFieldFocus.dispose();
   }
 
-  Future initStreams() async {
+  Future<void> initStreams() async {
     await twonlyDB.messagesDao.removeOldMessages();
-    Stream<Contact?> contact =
-        twonlyDB.contactsDao.watchContact(widget.contact.userId);
+    final contact = twonlyDB.contactsDao.watchContact(widget.contact.userId);
     userSub = contact.listen((contact) {
       if (contact == null) return;
       setState(() {
@@ -91,46 +90,48 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       });
     });
 
-    Stream<List<Message>> msgStream =
+    final msgStream =
         twonlyDB.messagesDao.watchAllMessagesFrom(widget.contact.userId);
     messageSub = msgStream.listen((msgs) async {
       // if (!context.mounted) return;
       if (Platform.isAndroid) {
-        flutterLocalNotificationsPlugin.cancel(widget.contact.userId);
+        await flutterLocalNotificationsPlugin.cancel(widget.contact.userId);
       } else {
-        flutterLocalNotificationsPlugin.cancelAll();
+        await flutterLocalNotificationsPlugin.cancelAll();
       }
-      List<Message> displayedMessages = [];
+      final displayedMessages = <Message>[];
       // should be cleared
-      Map<int, List<Message>> tmpTextReactionsToMessageId = {};
-      Map<int, List<Message>> tmpEmojiReactionsToMessageId = {};
+      final tmpTextReactionsToMessageId = <int, List<Message>>{};
+      final tmpEmojiReactionsToMessageId = <int, List<Message>>{};
 
-      List<int> openedMessageOtherIds = [];
+      final openedMessageOtherIds = <int>[];
 
-      Map<int, int> messageOtherMessageIdToMyMessageId = {};
+      final messageOtherMessageIdToMyMessageId = <int, int>{};
 
       /// there is probably a better way...
-      for (Message msg in msgs) {
+      for (final msg in msgs) {
         if (msg.messageOtherId != null) {
           messageOtherMessageIdToMyMessageId[msg.messageOtherId!] =
               msg.messageId;
         }
       }
 
-      for (Message msg in msgs) {
+      for (final msg in msgs) {
         if (msg.kind == MessageKind.textMessage &&
             msg.messageOtherId != null &&
             msg.openedAt == null) {
           openedMessageOtherIds.add(msg.messageOtherId!);
         }
 
-        int? responseId = msg.responseToMessageId ??
+        final responseId = msg.responseToMessageId ??
             messageOtherMessageIdToMyMessageId[msg.responseToOtherMessageId];
 
         if (responseId != null) {
-          bool added = false;
-          MessageContent? content =
-              MessageContent.fromJson(msg.kind, jsonDecode(msg.contentJson!));
+          var added = false;
+          final content = MessageContent.fromJson(
+            msg.kind,
+            jsonDecode(msg.contentJson!) as Map,
+          );
           if (content is TextMessageContent) {
             if (content.text.isNotEmpty && !isEmoji(content.text)) {
               added = true;
@@ -175,8 +176,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     });
   }
 
-  Future _sendMessage() async {
-    if (newMessageController.text == "") return;
+  Future<void> _sendMessage() async {
+    if (newMessageController.text == '') return;
 
     await sendTextMessage(
       user.userId,
@@ -197,7 +198,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       ),
     );
     newMessageController.clear();
-    currentInputText = "";
+    currentInputText = '';
     responseToMessage = null;
     setState(() {});
   }
@@ -207,45 +208,44 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
     if (message.kind == MessageKind.textMessage) {
       if (message.contentJson != null) {
-        MessageContent? content = MessageContent.fromJson(
-            MessageKind.textMessage, jsonDecode(message.contentJson!));
+        final content = MessageContent.fromJson(
+            MessageKind.textMessage, jsonDecode(message.contentJson!) as Map);
         if (content is TextMessageContent) {
           subtitle = truncateString(content.text);
         }
       }
     }
     if (message.kind == MessageKind.media) {
-      MessageContent? content = MessageContent.fromJson(
-          MessageKind.media, jsonDecode(message.contentJson!));
+      final content = MessageContent.fromJson(
+          MessageKind.media, jsonDecode(message.contentJson!) as Map);
       if (content is MediaMessageContent) {
-        subtitle = content.isVideo ? "Video" : "Image";
+        subtitle = content.isVideo ? 'Video' : 'Image';
       }
     }
 
-    String username = "You";
+    var username = 'You';
     if (message.messageOtherId != null) {
       username = getContactDisplayName(widget.contact);
     }
 
-    Color color = getMessageColor(message);
+    final color = getMessageColor(message);
 
     return Container(
-      padding: EdgeInsets.only(left: 10),
+      padding: const EdgeInsets.only(left: 10),
       decoration: BoxDecoration(
         border: Border(
           left: BorderSide(
             color: color,
-            width: 2.0,
+            width: 2,
           ),
         ),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             username,
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           if (subtitle != null) Text(subtitle)
         ],
@@ -269,14 +269,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                 contact: user,
                 fontSize: 19,
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Expanded(
                 child: Container(
                   color: Colors.transparent,
                   child: Row(
                     children: [
                       Text(getContactDisplayName(user)),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       VerifiedShield(key: verifyShieldKey, user),
                     ],
                   ),
@@ -300,8 +300,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     index -= 1;
                     double size = 44;
                     if (messages[index].kind == MessageKind.textMessage) {
-                      TextMessageContent? content = TextMessageContent.fromJson(
-                          jsonDecode(messages[index].contentJson!));
+                      final content = TextMessageContent.fromJson(
+                          jsonDecode(messages[index].contentJson!) as Map);
                       if (EmojiAnimation.supported(content.text)) {
                         size = 99;
                       } else {
@@ -321,9 +321,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     if (reactions != null && reactions.isNotEmpty) {
                       for (final reaction in reactions) {
                         if (reaction.kind == MessageKind.textMessage) {
-                          TextMessageContent? content =
-                              TextMessageContent.fromJson(
-                                  jsonDecode(reaction.contentJson!));
+                          final content = TextMessageContent.fromJson(
+                              jsonDecode(reaction.contentJson!) as Map);
                           size += calculateNumberOfLines(content.text,
                                   MediaQuery.of(context).size.width * 0.5, 14) *
                               27;
@@ -362,7 +361,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
               if (responseToMessage != null && !user.deleted)
                 Container(
                   padding: const EdgeInsets.only(
-                    bottom: 00,
                     left: 20,
                     right: 20,
                     top: 10,
@@ -376,7 +374,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                             responseToMessage = null;
                           });
                         },
-                        icon: FaIcon(
+                        icon: const FaIcon(
                           FontAwesomeIcons.xmark,
                           size: 16,
                         ),
@@ -412,30 +410,28 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                               decoration: inputTextMessageDeco(context),
                             ),
                           ),
-                          (currentInputText != "")
-                              ? IconButton(
-                                  padding: EdgeInsets.all(15),
-                                  icon:
-                                      FaIcon(FontAwesomeIcons.solidPaperPlane),
-                                  onPressed: () {
-                                    _sendMessage();
-                                  },
-                                )
-                              : IconButton(
-                                  icon: FaIcon(FontAwesomeIcons.camera),
-                                  padding: EdgeInsets.all(15),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return CameraSendToView(
-                                              widget.contact);
-                                        },
-                                      ),
-                                    );
-                                  },
-                                )
+                          if (currentInputText != '')
+                            IconButton(
+                              padding: const EdgeInsets.all(15),
+                              icon: const FaIcon(
+                                  FontAwesomeIcons.solidPaperPlane),
+                              onPressed: _sendMessage,
+                            )
+                          else
+                            IconButton(
+                              icon: const FaIcon(FontAwesomeIcons.camera),
+                              padding: const EdgeInsets.all(15),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) {
+                                      return CameraSendToView(widget.contact);
+                                    },
+                                  ),
+                                );
+                              },
+                            )
                         ],
                 ),
               ),
@@ -469,7 +465,6 @@ double calculateNumberOfLines(String text, double width, double fontSize) {
       style: TextStyle(fontSize: fontSize),
     ),
     textDirection: TextDirection.ltr,
-  );
-  textPainter.layout(maxWidth: (width - 32));
+  )..layout(maxWidth: width - 32);
   return textPainter.computeLineMetrics().length.toDouble();
 }

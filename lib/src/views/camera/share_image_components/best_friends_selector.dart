@@ -1,28 +1,31 @@
+// ignore_for_file: strict_raw_type
+
 import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/headline.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
+import 'package:twonly/src/views/components/verified_shield.dart';
 
 class BestFriendsSelector extends StatelessWidget {
+  const BestFriendsSelector({
+    required this.users,
+    required this.isRealTwonly,
+    required this.updateStatus,
+    required this.selectedUserIds,
+    required this.title,
+    super.key,
+  });
   final List<Contact> users;
-  final Function(int, bool) updateStatus;
+  final void Function(int, bool) updateStatus;
   final HashSet<int> selectedUserIds;
   final bool isRealTwonly;
   final String title;
-
-  const BestFriendsSelector(
-      {super.key,
-      required this.users,
-      required this.isRealTwonly,
-      required this.updateStatus,
-      required this.selectedUserIds,
-      required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +48,11 @@ class BestFriendsSelector extends StatelessWidget {
                   }
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.outline.withAlpha(50),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         blurRadius: 10.9,
                         color: Color.fromRGBO(0, 0, 0, 0.1),
@@ -57,7 +61,7 @@ class BestFriendsSelector extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: Text(context.lang.shareImagedSelectAll,
-                      style: TextStyle(fontSize: 10)),
+                      style: const TextStyle(fontSize: 10)),
                 ),
               ),
           ],
@@ -81,19 +85,20 @@ class BestFriendsSelector extends StatelessWidget {
                       isRealTwonly: isRealTwonly,
                     ),
                   ),
-                  (secondUserIndex < users.length)
-                      ? Expanded(
-                          child: UserCheckbox(
-                            isChecked: selectedUserIds
-                                .contains(users[secondUserIndex].userId),
-                            user: users[secondUserIndex],
-                            onChanged: updateStatus,
-                            isRealTwonly: isRealTwonly,
-                          ),
-                        )
-                      : Expanded(
-                          child: Container(),
-                        ),
+                  if (secondUserIndex < users.length)
+                    Expanded(
+                      child: UserCheckbox(
+                        isChecked: selectedUserIds
+                            .contains(users[secondUserIndex].userId),
+                        user: users[secondUserIndex],
+                        onChanged: updateStatus,
+                        isRealTwonly: isRealTwonly,
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: Container(),
+                    ),
                 ],
               );
             },
@@ -105,35 +110,34 @@ class BestFriendsSelector extends StatelessWidget {
 }
 
 class UserCheckbox extends StatelessWidget {
-  final Contact user;
-  final Function(int, bool) onChanged;
-  final bool isChecked;
-  final bool isRealTwonly;
-
   const UserCheckbox({
-    super.key,
     required this.user,
     required this.onChanged,
     required this.isRealTwonly,
     required this.isChecked,
+    super.key,
   });
+  final Contact user;
+  final void Function(int, bool) onChanged;
+  final bool isChecked;
+  final bool isRealTwonly;
 
   @override
   Widget build(BuildContext context) {
-    String displayName = getContactDisplayName(user);
+    final displayName = getContactDisplayName(user);
 
     return Container(
-      padding:
-          EdgeInsets.symmetric(horizontal: 3), // Padding inside the container
+      padding: const EdgeInsets.symmetric(
+          horizontal: 3), // Padding inside the container
       child: GestureDetector(
         onTap: () {
           onChanged(user.userId, !isChecked);
         },
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.outline.withAlpha(50),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
                 blurRadius: 10.9,
                 color: Color.fromRGBO(0, 0, 0, 0.1),
@@ -147,16 +151,15 @@ class UserCheckbox extends StatelessWidget {
                 contact: user,
                 fontSize: 12,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Column(
-                mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       if (isRealTwonly)
                         Padding(
-                            padding: EdgeInsets.only(right: 2),
+                            padding: const EdgeInsets.only(right: 2),
                             child: VerifiedShield(
                               user,
                               size: 12,
@@ -186,10 +189,10 @@ class UserCheckbox extends StatelessWidget {
                 side: WidgetStateBorderSide.resolveWith(
                   (Set states) {
                     if (states.contains(WidgetState.selected)) {
-                      return BorderSide(width: 0);
+                      return const BorderSide(width: 0);
                     }
                     return BorderSide(
-                        width: 1, color: Theme.of(context).colorScheme.outline);
+                        color: Theme.of(context).colorScheme.outline);
                   },
                 ),
                 onChanged: (bool? value) {

@@ -1,17 +1,17 @@
-import 'package:introduction_screen/introduction_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:introduction_screen/introduction_screen.dart';
 import 'package:lottie/lottie.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class OnboardingView extends StatelessWidget {
-  const OnboardingView({super.key, required this.callbackOnSuccess});
-  final Function callbackOnSuccess;
+  const OnboardingView({required this.callbackOnSuccess, super.key});
+  final VoidCallback callbackOnSuccess;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IntroductionScreen(
-        bodyPadding: EdgeInsets.only(top: 75, left: 10, right: 10),
+        bodyPadding: const EdgeInsets.only(top: 75, left: 10, right: 10),
         pages: [
           PageViewModel(
             title: context.lang.onboardingWelcomeTitle,
@@ -81,7 +81,7 @@ class OnboardingView extends StatelessWidget {
                 Text(
                   context.lang.onboardingBuyOneGetTwoBody,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 18),
                 ),
               ],
             ),
@@ -98,15 +98,12 @@ class OnboardingView extends StatelessWidget {
                 Text(
                   context.lang.onboardingGetStartedBody,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 18),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 50, right: 50, top: 20),
                   child: FilledButton(
-                    onPressed: () {
-                      callbackOnSuccess();
-                      // On button pressed
-                    },
+                    onPressed: callbackOnSuccess,
                     child: Text(context.lang.onboardingTryForFree),
                   ),
                 ),
@@ -122,22 +119,18 @@ class OnboardingView extends StatelessWidget {
             ),
           ),
         ],
-        showNextButton: true,
-        done: Text(""),
+        done: const Text(''),
         next: Text(context.lang.next),
         // done: RegisterView(callbackOnSuccess: callbackOnSuccess),
-        onDone: () {
-          callbackOnSuccess();
-          // On button pressed
-        },
+        onDone: callbackOnSuccess,
         dotsDecorator: DotsDecorator(
-          size: const Size.square(8.0),
-          activeSize: const Size(20.0, 10.0),
+          size: const Size.square(8),
+          activeSize: const Size(20, 10),
           activeColor: Theme.of(context).colorScheme.primary,
           color: Theme.of(context).colorScheme.secondary,
-          spacing: const EdgeInsets.symmetric(horizontal: 3.0),
+          spacing: const EdgeInsets.symmetric(horizontal: 3),
           activeShape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         ),
       ),
     );

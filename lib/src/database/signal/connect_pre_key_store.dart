@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -21,7 +21,7 @@ class ConnectPreKeyStore extends PreKeyStore {
     if (preKeyRecord.isEmpty) {
       throw InvalidKeyIdException('No such preKey record! - $preKeyId');
     }
-    Uint8List preKey = preKeyRecord.first.preKey;
+    final preKey = preKeyRecord.first.preKey;
     return PreKeyRecord.fromBuffer(preKey);
   }
 
@@ -42,7 +42,7 @@ class ConnectPreKeyStore extends PreKeyStore {
     try {
       await twonlyDB.into(twonlyDB.signalPreKeyStores).insert(preKeyCompanion);
     } catch (e) {
-      Log.error("$e");
+      Log.error('$e');
     }
   }
 }

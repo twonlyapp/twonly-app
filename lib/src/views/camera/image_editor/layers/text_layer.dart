@@ -111,7 +111,7 @@ class _TextViewState extends State<TextLayer> {
               ),
             ),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
             ),
@@ -182,7 +182,7 @@ class _TextViewState extends State<TextLayer> {
               child: Text(
                 widget.layerData.text,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                 ),

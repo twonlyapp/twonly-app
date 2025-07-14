@@ -9,7 +9,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/model/json/message.dart' as my;
 
-Future syncFlameCounters() async {
+Future<void> syncFlameCounters() async {
   var user = await getUser();
   if (user == null) return;
 

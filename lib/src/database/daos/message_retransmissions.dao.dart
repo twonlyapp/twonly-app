@@ -45,7 +45,7 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
       ..where((t) => t.retransmissionId.equals(retransmissionId));
   }
 
-  Future updateRetransmission(
+  Future<void> updateRetransmission(
     int retransmissionId,
     MessageRetransmissionsCompanion updatedValues,
   ) {
@@ -54,13 +54,13 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updatedValues);
   }
 
-  Future resetAckStatusFor(int fromUserId, Uint8List encryptedHash) async {
+  Future<int> resetAckStatusFor(int fromUserId, Uint8List encryptedHash) async {
     return ((update(messageRetransmissions))
           ..where((m) =>
               m.contactId.equals(fromUserId) &
               m.encryptedHash.equals(encryptedHash)))
         .write(
-      MessageRetransmissionsCompanion(
+      const MessageRetransmissionsCompanion(
         acknowledgeByServerAt: Value(null),
       ),
     );
@@ -75,13 +75,13 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
         .getSingleOrNull();
   }
 
-  Future deleteRetransmissionById(int retransmissionId) {
+  Future<void> deleteRetransmissionById(int retransmissionId) {
     return (delete(messageRetransmissions)
           ..where((t) => t.retransmissionId.equals(retransmissionId)))
         .go();
   }
 
-  Future deleteRetransmissionByMessageId(int messageId) {
+  Future<void> deleteRetransmissionByMessageId(int messageId) {
     return (delete(messageRetransmissions)
           ..where((t) => t.messageId.equals(messageId)))
         .go();

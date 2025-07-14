@@ -1,12 +1,11 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
-import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -26,19 +25,17 @@ Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
   final user = await getUser();
   if (user != null && user.lastPlanBallance != null) {
     try {
-      List<String> decoded = jsonDecode(user.additionalUserInvites!);
-      return decoded
-          .map((x) => Response_AddAccountsInvite.fromJson(x))
-          .toList();
+      final decoded = jsonDecode(user.additionalUserInvites!) as List<String>;
+      return decoded.map(Response_AddAccountsInvite.fromJson).toList();
     } catch (e) {
-      Log.error("from json: $e");
+      Log.error('could not parse additional user json: $e');
     }
   }
   return null;
 }
 
 class AdditionalUsersView extends StatefulWidget {
-  const AdditionalUsersView({super.key, required this.ballance});
+  const AdditionalUsersView({required this.ballance, super.key});
 
   final Response_PlanBallance? ballance;
 
@@ -54,10 +51,10 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
   void initState() {
     super.initState();
     ballance = widget.ballance;
-    initAsync(false);
+    initAsync(force: false);
   }
 
-  Future initAsync(bool force) async {
+  Future<void> initAsync({required bool force}) async {
     additionalInvites = await loadAdditionalUserInvites();
     if (force) {
       ballance = await loadPlanBalance();
@@ -67,13 +64,13 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
 
   @override
   Widget build(BuildContext context) {
-    List<Response_AddAccountsInvite> plusInvites = [];
-    List<Response_AddAccountsInvite> freeInvites = [];
+    var plusInvites = <Response_AddAccountsInvite>[];
+    var freeInvites = <Response_AddAccountsInvite>[];
     if (additionalInvites != null) {
       plusInvites =
-          additionalInvites!.where((x) => x.planId == "Plus").toList();
+          additionalInvites!.where((x) => x.planId == 'Plus').toList();
       freeInvites =
-          additionalInvites!.where((x) => x.planId == "Free").toList();
+          additionalInvites!.where((x) => x.planId == 'Free').toList();
     }
     return Scaffold(
       appBar: AppBar(
@@ -85,50 +82,48 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
             ListTile(
               title: Text(
                 context.lang.additionalUsersList,
-                style: TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           if (ballance != null)
             ...ballance!.additionalAccounts.map((e) => AdditionalAccount(
                   account: e,
                   refresh: () {
-                    initAsync(true);
+                    initAsync(force: true);
                   },
                 )),
           if (plusInvites.isNotEmpty)
             ListTile(
               title: Text(
                 context.lang.additionalUsersPlusTokens,
-                style: TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: GridView.count(
               crossAxisCount: 2,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               childAspectRatio: 16 / 5,
               shrinkWrap: true,
-              children:
-                  plusInvites.map((x) => AdditionalUserInvite(x)).toList(),
+              children: plusInvites.map(AdditionalUserInvite.new).toList(),
             ),
           ),
           if (freeInvites.isNotEmpty)
             ListTile(
               title: Text(
                 context.lang.additionalUsersFreeTokens,
-                style: TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: GridView.count(
               crossAxisCount: 2,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               childAspectRatio: 16 / 5,
               shrinkWrap: true,
-              children:
-                  freeInvites.map((x) => AdditionalUserInvite(x)).toList(),
+              children: freeInvites.map(AdditionalUserInvite.new).toList(),
             ),
           ),
         ],
@@ -138,10 +133,13 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
 }
 
 class AdditionalAccount extends StatefulWidget {
-  const AdditionalAccount(
-      {super.key, required this.account, required this.refresh});
+  const AdditionalAccount({
+    required this.account,
+    required this.refresh,
+    super.key,
+  });
 
-  final Function() refresh;
+  final void Function() refresh;
   final Response_AdditionalAccount account;
   @override
   State<AdditionalAccount> createState() => _AdditionalAccountState();
@@ -157,7 +155,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final contact = await twonlyDB.contactsDao
         .getContactByUserId(widget.account.userId.toInt())
         .getSingleOrNull();
@@ -171,9 +169,9 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -182,24 +180,25 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
               children: [
                 Text(
                   username,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   widget.account.planId,
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
               ],
             ),
             IconButton(
-              icon: FaIcon(FontAwesomeIcons.userXmark, size: 16),
+              icon: const FaIcon(FontAwesomeIcons.userXmark, size: 16),
               onPressed: () async {
-                bool remove = await showAlertDialog(
+                final remove = await showAlertDialog(
                     context,
-                    "Remove this additional user",
-                    "The additional user will automatically be downgraded to the preview plan after removal and you will receive a new invitation code to give to another person.");
+                    'Remove this additional user',
+                    'The additional user will automatically be downgraded to the preview plan after removal and you will receive a new invitation code to give to another person.');
                 if (remove) {
-                  Result res = await apiService
+                  final res = await apiService
                       .removeAdditionalUser(widget.account.userId);
                   if (!context.mounted) return;
                   if (res.isSuccess) {
@@ -207,7 +206,10 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text(errorCodeToText(context, res.error))),
+                          content: Text(errorCodeToText(
+                        context,
+                        res.error as ErrorCode,
+                      ))),
                     );
                   }
                 }
@@ -221,8 +223,8 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
 }
 
 class AdditionalUserInvite extends StatefulWidget {
-  final Response_AddAccountsInvite invite;
   const AdditionalUserInvite(this.invite, {super.key});
+  final Response_AddAccountsInvite invite;
   @override
   State<AdditionalUserInvite> createState() => _AdditionalUserInviteState();
 }
@@ -232,7 +234,7 @@ class _AdditionalUserInviteState extends State<AdditionalUserInvite> {
     Clipboard.setData(ClipboardData(text: widget.invite.inviteCode));
     HapticFeedback.heavyImpact();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("${widget.invite.inviteCode} copied.")),
+      SnackBar(content: Text('${widget.invite.inviteCode} copied.')),
     );
   }
 
@@ -243,11 +245,11 @@ class _AdditionalUserInviteState extends State<AdditionalUserInvite> {
       child: Card(
         elevation: 5,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Center(
             child: Text(
               widget.invite.inviteCode.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),

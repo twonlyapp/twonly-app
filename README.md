@@ -13,12 +13,15 @@ This repository contains the complete source code of the [twonly](https://twonly
 
 ## In work
 
-- We plan to implement a Sealed Sender feature to minimize metadata
-- We currently evaluating to switch from the Signal Protocol to [MLS](https://openmls.tech/).
-
+- For Android: Using [UnifiedPush](https://unifiedpush.org/) instead of FCM 
+- For Android: Reproducible Builds + Publishing on Github/F-Droid
+- Implementing [Sealed Sender](https://signal.org/blog/sealed-sender/) to minimize metadata
+- Maybe: Switching from the Signal Protocol to [MLS](https://openmls.tech/).
 
 ## Security Issues
-If you discover a security issue in twonly, please adhere to the coordinated vulnerability disclosure model. Please send us your report to security@twonly.eu. We also offer for critical security issues a small bug bounties, but we can not guarantee a bounty currently :/
+If you discover a security issue in twonly, please adhere to the coordinated vulnerability disclosure model. Please send
+us your report to security@twonly.eu. We also offer for critical security issues a small bug bounties, but we can not
+guarantee a bounty currently :/
 
 ## Development
 

@@ -1,19 +1,19 @@
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/views/components/better_list_title.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/model/json/userdata.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/settings/account.view.dart';
 import 'package:twonly/src/views/settings/appearance.view.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
 import 'package:twonly/src/views/settings/chat/chat_settings.view.dart';
 import 'package:twonly/src/views/settings/data_and_storage.view.dart';
-import 'package:twonly/src/views/settings/notification.view.dart';
-import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/help/help.view.dart';
+import 'package:twonly/src/views/settings/notification.view.dart';
 import 'package:twonly/src/views/settings/privacy.view.dart';
+import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/share_with_friends.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
@@ -33,7 +33,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     userData = await getUser();
     setState(() {});
   }
@@ -55,13 +55,14 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                       Expanded(
                         child: GestureDetector(
                           onTap: () async {
-                            await Navigator.push(context,
-                                MaterialPageRoute(builder: (context) {
-                              return ProfileView();
-                            }));
-                            initAsync();
+                            await Navigator.push(context, MaterialPageRoute(
+                              builder: (context) {
+                                return const ProfileView();
+                              },
+                            ));
+                            await initAsync();
                           },
-                          child: Container(
+                          child: ColoredBox(
                             color: context.color.surface.withAlpha(0),
                             child: Row(
                               children: [
@@ -75,12 +76,12 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                                   children: [
                                     Text(
                                       userData!.displayName,
-                                      style: TextStyle(fontSize: 20),
+                                      style: const TextStyle(fontSize: 20),
                                       textAlign: TextAlign.left,
                                     ),
                                     Text(
                                       userData!.username,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 14,
                                       ),
                                       textAlign: TextAlign.left,
@@ -106,30 +107,33 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                   icon: FontAwesomeIcons.user,
                   text: context.lang.settingsAccount,
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return AccountView();
-                    }));
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const AccountView();
+                      },
+                    ));
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.shieldHeart,
                   text: context.lang.settingsSubscription,
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return SubscriptionView();
-                    }));
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const SubscriptionView();
+                      },
+                    ));
                   },
                 ),
                 BetterListTile(
                   icon: Icons.lock_clock_rounded,
                   text: context.lang.settingsBackup,
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return BackupView();
-                    }));
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const BackupView();
+                      },
+                    ));
                   },
                 ),
                 const Divider(),
@@ -137,51 +141,56 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                   icon: FontAwesomeIcons.sun,
                   text: context.lang.settingsAppearance,
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return AppearanceView();
-                    }));
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const AppearanceView();
+                      },
+                    ));
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.comment,
                   text: context.lang.settingsChats,
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return ChatSettingsView();
-                    }));
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const ChatSettingsView();
+                      },
+                    ));
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.lock,
                   text: context.lang.settingsPrivacy,
                   onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return PrivacyView();
-                    }));
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const PrivacyView();
+                      },
+                    ));
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.bell,
                   text: context.lang.settingsNotification,
-                  onTap: () async {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return NotificationView();
-                    }));
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const NotificationView();
+                      },
+                    ));
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.chartPie,
                   iconSize: 15,
                   text: context.lang.settingsStorageData,
-                  onTap: () async {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return DataAndStorageView();
-                    }));
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (context) {
+                        return const DataAndStorageView();
+                      },
+                    ));
                   },
                 ),
                 const Divider(),
@@ -202,7 +211,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(
                       builder: (context) {
-                        return ShareWithFriendsView();
+                        return const ShareWithFriendsView();
                       },
                     ));
                   },

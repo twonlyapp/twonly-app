@@ -27,7 +27,7 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
     loadAsync();
   }
 
-  Future loadAsync() async {
+  Future<void> loadAsync() async {
     setState(() {});
   }
 
@@ -93,7 +93,7 @@ class UserList extends StatelessWidget {
   const UserList(this.users, {super.key});
   final List<Contact> users;
 
-  Future block(BuildContext context, int userId, bool? value) async {
+  Future<void> block(BuildContext context, int userId, bool? value) async {
     if (value != null) {
       final update = ContactsCompanion(blocked: Value(value));
       await twonlyDB.contactsDao.updateContact(userId, update);

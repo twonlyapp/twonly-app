@@ -1,3 +1,4 @@
+// ignore_for_file: inference_failure_on_instance_creation
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -6,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
@@ -22,12 +22,11 @@ import 'package:twonly/src/views/settings/subscription/transaction.view.dart';
 import 'package:twonly/src/views/settings/subscription/voucher.view.dart';
 
 String localePrizing(BuildContext context, int cents) {
-  Locale myLocale = Localizations.localeOf(context);
-
-  double euros = cents / 100;
+  final myLocale = Localizations.localeOf(context);
+  final euros = cents / 100;
 
   if (euros == euros.toInt()) {
-    return "${euros.toInt()}€";
+    return '${euros.toInt()}€';
   }
 
   return NumberFormat.currency(
@@ -40,7 +39,7 @@ String localePrizing(BuildContext context, int cents) {
 Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
   final ballance = await apiService.getPlanBallance();
   if (ballance != null) {
-    updateUserdata((u) {
+    await updateUserdata((u) {
       u.lastPlanBallance = ballance.writeToJson();
       return u;
     });
@@ -53,7 +52,7 @@ Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
         user.lastPlanBallance!,
       );
     } catch (e) {
-      Log.error("from json: $e");
+      Log.error('from json: $e');
     }
   }
   return ballance;
@@ -65,7 +64,7 @@ const int MONTHLY_PAYMENT_DAYS = 30;
 const int YEARLY_PAYMENT_DAYS = 365;
 
 int calculateRefund(Response_PlanBallance current) {
-  int refund = getPlanPrice("Pro", true);
+  var refund = getPlanPrice('Pro', paidMonthly: true);
 
   if (current.paymentPeriodDays == YEARLY_PAYMENT_DAYS) {
     final elapsedDays = DateTime.now()
@@ -79,7 +78,7 @@ int calculateRefund(Response_PlanBallance current) {
       // => 5€
 
       refund = (((YEARLY_PAYMENT_DAYS - elapsedDays) / YEARLY_PAYMENT_DAYS) *
-                  getPlanPrice("Pro", false) /
+                  getPlanPrice('Pro', paidMonthly: false) /
                   100)
               .ceil() *
           100;
@@ -117,11 +116,11 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     ballance = await loadPlanBalance();
     if (ballance != null && ballance!.hasAdditionalAccountOwnerId()) {
       final ownerId = ballance!.additionalAccountOwnerId.toInt();
-      Contact? contact = await twonlyDB.contactsDao
+      final contact = await twonlyDB.contactsDao
           .getContactByUserId(ownerId)
           .getSingleOrNull();
       if (contact != null) {
@@ -149,44 +148,44 @@ class _SubscriptionViewState extends State<SubscriptionView> {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: {
-        'feedback': "[TESTER REQUEST] ${user.username} ${user.userId}",
+        'feedback': '[TESTER REQUEST] ${user.username} ${user.userId}',
       },
     );
     if (!mounted) return;
     if (response.statusCode == 200) {
       // Handle successful response
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Your request has been submitted.")),
+        const SnackBar(content: Text('Your request has been submitted.')),
       );
       await updateUserdata((u) {
         u.requestedTesterAccount = true;
         return u;
       });
-      initAsync();
+      await initAsync();
     } else {
       // Handle error response
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit your request.')),
+        const SnackBar(content: Text('Failed to submit your request.')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    Locale myLocale = Localizations.localeOf(context);
+    final myLocale = Localizations.localeOf(context);
     String? formattedBalance;
     DateTime? nextPayment;
-    String currentPlan = context.read<CustomChangeProvider>().plan;
-    bool isAdditionalUser = currentPlan == "Free" || currentPlan == "Plus";
+    final currentPlan = context.read<CustomChangeProvider>().plan;
+    final isAdditionalUser = currentPlan == 'Free' || currentPlan == 'Plus';
 
     if (ballance != null) {
-      DateTime lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
+      final lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
           ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000);
       if (!isAdditionalUser) {
         nextPayment = lastPaymentDateTime
             .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
       }
-      int ballanceInCents =
+      final ballanceInCents =
           ballance!.transactions.map((a) => a.depositCents.toInt()).sum;
       formattedBalance = NumberFormat.currency(
         locale: myLocale.toString(),
@@ -195,8 +194,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       ).format(ballanceInCents / 100);
     }
 
-    int refund = 0;
-    if (currentPlan == "Pro" && ballance != null) {
+    var refund = 0;
+    if (currentPlan == 'Pro' && ballance != null) {
       refund = calculateRefund(ballance!);
     }
 
@@ -210,7 +209,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             Center(
               child: Container(
                 padding: const EdgeInsets.all(16),
-                margin: EdgeInsets.all(16),
+                margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.orangeAccent,
                   borderRadius: BorderRadius.circular(15),
@@ -219,20 +218,20 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   (widget.redirectError == ErrorCode.PlanLimitReached)
                       ? context.lang.planLimitReached
                       : context.lang.planNotAllowed,
-                  style: TextStyle(color: Colors.black),
+                  style: const TextStyle(color: Colors.black),
                   textAlign: TextAlign.center,
                 ),
               ),
             ),
           Padding(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.all(32),
             child: Center(
               child: Container(
                 decoration: BoxDecoration(
                   color: context.color.primary,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 child: Text(
                   currentPlan,
                   style: TextStyle(
@@ -249,23 +248,23 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               child: Text(
                 context.lang.partOfPaidPlanOf(additionalOwnerName!),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.orange),
+                style: const TextStyle(color: Colors.orange),
               ),
             ),
-          if (currentPlan != "Family" && currentPlan != "Pro")
+          if (currentPlan != 'Family' && currentPlan != 'Pro')
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(18.0),
+                padding: const EdgeInsets.all(18),
                 child: Text(
                   context.lang.upgradeToPaidPlan,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             ),
-          if (currentPlan != "Tester" && !testerRequested)
+          if (currentPlan != 'Tester' && !testerRequested)
             PlanCard(
-              planId: "Tester",
+              planId: 'Tester',
               onTap: () async {
                 bool activate = await showAlertDialog(
                   context,
@@ -273,79 +272,79 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   context.lang.testingAccountBody,
                 );
                 if (activate) {
-                  _submitTesterRequest();
+                  await _submitTesterRequest();
                 }
               },
             ),
-          if (currentPlan != "Family" && currentPlan != "Pro")
+          if (currentPlan != 'Family' && currentPlan != 'Pro')
             PlanCard(
-              planId: "Pro",
+              planId: 'Pro',
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
-                  return CheckoutView(
-                    planId: "Pro",
+                  return const CheckoutView(
+                    planId: 'Pro',
                   );
                 }));
-                initAsync();
+                await initAsync();
               },
             ),
-          if (currentPlan != "Family")
+          if (currentPlan != 'Family')
             PlanCard(
-              planId: "Family",
+              planId: 'Family',
               refund: refund,
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
                   return CheckoutView(
-                    planId: "Family",
+                    planId: 'Family',
                     refund: (refund > 0) ? refund : null,
-                    disableMonthlyOption: (currentPlan == "Pro" &&
+                    disableMonthlyOption: currentPlan == 'Pro' &&
                         ballance!.paymentPeriodDays.toInt() ==
-                            YEARLY_PAYMENT_DAYS),
+                            YEARLY_PAYMENT_DAYS,
                   );
                 }));
-                initAsync();
+                await initAsync();
               },
             ),
-          if (currentPlan == "Preview" || currentPlan == "Free") ...[
-            SizedBox(height: 10),
+          if (currentPlan == 'Preview' || currentPlan == 'Free') ...[
+            const SizedBox(height: 10),
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(14.0),
+                padding: const EdgeInsets.all(14),
                 child: Text(
                   context.lang.redeemUserInviteCode,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             ),
-            SizedBox(height: 10),
-            if (currentPlan != "Free")
+            const SizedBox(height: 10),
+            if (currentPlan != 'Free')
               PlanCard(
-                planId: "Free",
+                planId: 'Free',
                 onTap: () async {
-                  await redeemUserInviteCode(context, "Free");
-                  initAsync();
+                  await redeemUserInviteCode(context, 'Free');
+                  await initAsync();
                 },
               ),
             PlanCard(
-              planId: "Plus",
+              planId: 'Plus',
               onTap: () async {
-                await redeemUserInviteCode(context, "Plus");
-                initAsync();
+                await redeemUserInviteCode(context, 'Plus');
+                await initAsync();
               },
             ),
           ],
-          SizedBox(height: 10),
-          if (currentPlan != "Family") Divider(),
-          if (currentPlan != "Preview")
+          const SizedBox(height: 10),
+          if (currentPlan != 'Family') const Divider(),
+          if (currentPlan != 'Preview')
             BetterListTile(
               icon: FontAwesomeIcons.gears,
               text: context.lang.manageSubscription,
               subtitle: (nextPayment != null)
                   ? Text(
-                      "${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}")
+                      '${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}')
                   : null,
               onTap: () async {
                 await Navigator.push(context,
@@ -355,14 +354,14 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                     nextPayment: nextPayment,
                   );
                 }));
-                initAsync();
+                await initAsync();
               },
             ),
           BetterListTile(
             icon: FontAwesomeIcons.moneyBillTransfer,
             text: context.lang.transactionHistory,
             subtitle: (formattedBalance != null)
-                ? Text("${context.lang.currentBalance}: $formattedBalance")
+                ? Text('${context.lang.currentBalance}: $formattedBalance')
                 : null,
             onTap: () {
               if (formattedBalance == null) return;
@@ -378,7 +377,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             BetterListTile(
               icon: FontAwesomeIcons.userPlus,
               text: context.lang.manageAdditionalUsers,
-              subtitle: (loaded) ? Text("${context.lang.open}: 3") : null,
+              subtitle: loaded ? Text('${context.lang.open}: 3') : null,
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
@@ -386,7 +385,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                     ballance: ballance,
                   );
                 }));
-                initAsync();
+                await initAsync();
               },
             ),
           BetterListTile(
@@ -395,69 +394,65 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             onTap: () async {
               await Navigator.push(context,
                   MaterialPageRoute(builder: (context) {
-                return VoucherView();
+                return const VoucherView();
               }));
-              initAsync();
+              await initAsync();
             },
           ),
-          SizedBox(height: 30)
+          const SizedBox(height: 30)
         ],
       ),
     );
   }
 }
 
-int getPlanPrice(String planId, bool paidMonthly) {
+int getPlanPrice(String planId, {required bool paidMonthly}) {
   switch (planId) {
-    case "Pro":
-      return (paidMonthly) ? 100 : 1000;
-    case "Family":
-      return (paidMonthly) ? 200 : 2000;
+    case 'Pro':
+      return paidMonthly ? 100 : 1000;
+    case 'Family':
+      return paidMonthly ? 200 : 2000;
   }
   return 0;
 }
 
 class PlanCard extends StatelessWidget {
+  const PlanCard({
+    required this.planId,
+    super.key,
+    this.refund,
+    this.onTap,
+    this.paidMonthly,
+  });
   final String planId;
-  final Function()? onTap;
+  final void Function()? onTap;
   final int? refund;
   final bool? paidMonthly;
 
-  const PlanCard(
-      {super.key,
-      required this.planId,
-      this.refund,
-      this.onTap,
-      this.paidMonthly});
-
   @override
   Widget build(BuildContext context) {
-    int yearlyPrice = getPlanPrice(planId, false);
-    int monthlyPrice = getPlanPrice(planId, true);
-    List<String> features = [];
+    final yearlyPrice = getPlanPrice(planId, paidMonthly: false);
+    final monthlyPrice = getPlanPrice(planId, paidMonthly: true);
+    var features = <String>[];
 
     switch (planId) {
-      case "Free":
+      case 'Free':
         features = [context.lang.freeFeature1];
-        break;
-      case "Plus":
+      case 'Plus':
         features = [context.lang.plusFeature1];
-        break;
-      case "Tester":
-      case "Pro":
+      case 'Tester':
+      case 'Pro':
         features = [
           context.lang.proFeature1,
           context.lang.proFeature2,
           context.lang.proFeature3
         ];
-        break;
-      case "Family":
+      case 'Family':
         features = [
           context.lang.familyFeature1,
           context.lang.familyFeature2,
           context.lang.familyFeature3
         ];
-        break;
       default:
     }
 
@@ -473,38 +468,36 @@ class PlanCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
                       planId,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (yearlyPrice != 0) SizedBox(height: 10),
+                    if (yearlyPrice != 0) const SizedBox(height: 10),
                     if (yearlyPrice != 0 && paidMonthly == null)
                       Column(
                         children: [
                           if (paidMonthly == null || paidMonthly!)
                             Text(
-                              "${localePrizing(context, yearlyPrice)}/${context.lang.year}",
+                              '${localePrizing(context, yearlyPrice)}/${context.lang.year}',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           if (paidMonthly == null || !paidMonthly!)
                             Text(
-                              "${localePrizing(context, monthlyPrice)}/${context.lang.month}",
+                              '${localePrizing(context, monthlyPrice)}/${context.lang.month}',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey,
                               ),
@@ -514,20 +507,20 @@ class PlanCard extends StatelessWidget {
                     if (paidMonthly != null)
                       Text(
                         (paidMonthly!)
-                            ? "${localePrizing(context, monthlyPrice)}/${context.lang.month}"
-                            : "${localePrizing(context, yearlyPrice)}/${context.lang.year}",
+                            ? '${localePrizing(context, monthlyPrice)}/${context.lang.month}'
+                            : '${localePrizing(context, yearlyPrice)}/${context.lang.year}',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                   ],
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 ...features.map(
                   (feature) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Text(
                       feature,
                       textAlign: TextAlign.center,
@@ -552,7 +545,7 @@ class PlanCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 10),
                     child: FilledButton.icon(
                       onPressed: onTap,
-                      label: (planId == "Free" || planId == "Plus")
+                      label: (planId == 'Free' || planId == 'Plus')
                           ? Text(context.lang.redeemUserInviteCodeTitle)
                           : Text(context.lang.upgradeToPaidPlanButton(planId)),
                     ),
@@ -566,8 +559,9 @@ class PlanCard extends StatelessWidget {
   }
 }
 
-Future redeemUserInviteCode(BuildContext context, String newPlan) async {
-  String inviteCode = '';
+Future<void> redeemUserInviteCode(BuildContext context, String newPlan) async {
+  var inviteCode = '';
+  // ignore: inference_failure_on_function_invocation
   await showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -580,19 +574,15 @@ Future redeemUserInviteCode(BuildContext context, String newPlan) async {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: TextField(
-                      onChanged: (value) {
-                        // Convert to uppercase
-                        setState(() {
-                          inviteCode = value.toUpperCase();
-                        });
-                      },
+                      onChanged: (value) => setState(() {
+                        inviteCode = value.toUpperCase();
+                      }),
                       decoration: InputDecoration(
                         labelText: context.lang.registerTwonlyCodeLabel,
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
-                      // Set the text to be uppercase
                       textCapitalization: TextCapitalization.characters,
                     ),
                   ),
@@ -623,9 +613,12 @@ Future redeemUserInviteCode(BuildContext context, String newPlan) async {
                 await apiService.connect(force: true);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(errorCodeToText(context, res.error))),
+                  SnackBar(
+                      content: Text(
+                          errorCodeToText(context, res.error as ErrorCode))),
                 );
               }
+              if (!context.mounted) return;
               Navigator.of(context).pop();
             },
             child: Text(context.lang.ok),

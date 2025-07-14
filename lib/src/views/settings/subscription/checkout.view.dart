@@ -4,11 +4,12 @@ import 'package:twonly/src/views/settings/subscription/select_payment.view.dart'
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class CheckoutView extends StatefulWidget {
-  const CheckoutView(
-      {super.key,
-      required this.planId,
-      this.refund,
-      this.disableMonthlyOption});
+  const CheckoutView({
+    required this.planId,
+    super.key,
+    this.refund,
+    this.disableMonthlyOption,
+  });
 
   final String planId;
   final int? refund;
@@ -26,11 +27,11 @@ class _CheckoutViewState extends State<CheckoutView> {
   @override
   void initState() {
     super.initState();
-    setCheckout(true);
+    setCheckout(init: true);
   }
 
-  void setCheckout(bool init) {
-    checkoutInCents = getPlanPrice(widget.planId, paidMonthly);
+  void setCheckout({bool init = false}) {
+    checkoutInCents = getPlanPrice(widget.planId, paidMonthly: paidMonthly);
     if (!init) {
       setState(() {});
     }
@@ -38,8 +39,8 @@ class _CheckoutViewState extends State<CheckoutView> {
 
   @override
   Widget build(BuildContext context) {
-    String totalPrice =
-        "${localePrizing(context, checkoutInCents)}/${(paidMonthly) ? context.lang.month : context.lang.year}";
+    final totalPrice =
+        '${localePrizing(context, checkoutInCents)}/${paidMonthly ? context.lang.month : context.lang.year}';
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.checkoutOptions),
@@ -55,18 +56,18 @@ class _CheckoutViewState extends State<CheckoutView> {
                   if (widget.disableMonthlyOption == null ||
                       !widget.disableMonthlyOption!)
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16),
                       child: ListTile(
                         title: Text(context.lang.checkoutPayYearly),
                         onTap: () {
                           paidMonthly = !paidMonthly;
-                          setCheckout(false);
+                          setCheckout();
                         },
                         trailing: Checkbox(
                           value: !paidMonthly,
                           onChanged: (a) {
                             paidMonthly = !paidMonthly;
-                            setCheckout(false);
+                            setCheckout();
                           },
                         ),
                       ),
@@ -76,19 +77,19 @@ class _CheckoutViewState extends State<CheckoutView> {
             ),
             if (widget.refund != null)
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Card(
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
                           context.lang.refund,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "+${localePrizing(context, widget.refund!)}",
+                          '+${localePrizing(context, widget.refund!)}',
                           textAlign: TextAlign.end,
                           style: TextStyle(color: context.color.primary),
                         ),
@@ -98,16 +99,16 @@ class _CheckoutViewState extends State<CheckoutView> {
                 ),
               ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Text(
                         context.lang.checkoutTotal,
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         totalPrice,
@@ -118,26 +119,26 @@ class _CheckoutViewState extends State<CheckoutView> {
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: FilledButton(
                   onPressed: () async {
-                    bool? success = await Navigator.push(context,
+                    final success = await Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
                       return SelectPaymentView(
                         planId: widget.planId,
                         payMonthly: paidMonthly,
                         refund: widget.refund,
                       );
-                    }));
+                    })) as bool?;
                     if (success != null && success && context.mounted) {
                       Navigator.pop(context);
                     }
                   },
                   child: Text(context.lang.selectPaymentMethod)),
             ),
-            SizedBox(height: 20)
+            const SizedBox(height: 20)
           ],
         ),
       ),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/components/radio_button.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/radio_button.dart';
 
 class AppearanceView extends StatefulWidget {
   const AppearanceView({super.key});
@@ -21,7 +21,7 @@ class _AppearanceViewState extends State<AppearanceView> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final user = await getUser();
     if (user == null) return;
     setState(() {
@@ -29,9 +29,10 @@ class _AppearanceViewState extends State<AppearanceView> {
     });
   }
 
-  void _showSelectThemeMode(BuildContext context) async {
+  Future<void> _showSelectThemeMode(BuildContext context) async {
     ThemeMode? selectedValue = context.read<SettingsChangeProvider>().themeMode;
 
+    // ignore: inference_failure_on_function_invocation
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -73,22 +74,23 @@ class _AppearanceViewState extends State<AppearanceView> {
       },
     );
     if (selectedValue != null && context.mounted) {
-      context.read<SettingsChangeProvider>().updateThemeMode(selectedValue);
+      await context
+          .read<SettingsChangeProvider>()
+          .updateThemeMode(selectedValue);
     }
   }
 
-  void toggleShowFeedbackIcon() async {
+  Future<void> toggleShowFeedbackIcon() async {
     await updateUserdata((u) {
       u.showFeedbackShortcut = !u.showFeedbackShortcut;
       return u;
     });
-    initAsync();
+    await initAsync();
   }
 
   @override
   Widget build(BuildContext context) {
-    ThemeMode? selectedTheme =
-        context.watch<SettingsChangeProvider>().themeMode;
+    final selectedTheme = context.watch<SettingsChangeProvider>().themeMode;
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsAppearance),
@@ -97,8 +99,8 @@ class _AppearanceViewState extends State<AppearanceView> {
         children: [
           ListTile(
             title: Text(context.lang.settingsAppearanceTheme),
-            subtitle:
-                Text(selectedTheme.name, style: TextStyle(color: Colors.grey)),
+            subtitle: Text(selectedTheme.name,
+                style: const TextStyle(color: Colors.grey)),
             onTap: () {
               _showSelectThemeMode(context);
             },

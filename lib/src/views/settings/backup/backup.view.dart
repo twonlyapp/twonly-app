@@ -8,7 +8,7 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
 
-Function() gUpdateBackupView = () {};
+void Function() gUpdateBackupView = () {};
 
 class BackupView extends StatefulWidget {
   const BackupView({super.key});
@@ -18,7 +18,7 @@ class BackupView extends StatefulWidget {
 }
 
 BackupServer defaultBackupServer = BackupServer(
-  serverUrl: "Default",
+  serverUrl: 'Default',
   retentionDays: 180,
   maxBackupBytes: 2097152,
 );
@@ -30,8 +30,7 @@ class _BackupViewState extends State<BackupView> {
 
   int activePageIdx = 0;
 
-  final PageController pageController =
-      PageController(keepPage: true, initialPage: 0);
+  final PageController pageController = PageController();
 
   @override
   void initState() {
@@ -46,7 +45,7 @@ class _BackupViewState extends State<BackupView> {
     super.dispose();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final user = await getUser();
     twonlySafeBackup = user?.twonlySafeBackup;
     backupServer = defaultBackupServer;
@@ -98,10 +97,10 @@ class _BackupViewState extends State<BackupView> {
                           ...[
                             (
                               context.lang.backupServer,
-                              (backupServer.serverUrl.contains("@"))
-                                  ? backupServer.serverUrl.split("@")[1]
+                              (backupServer.serverUrl.contains('@'))
+                                  ? backupServer.serverUrl.split('@')[1]
                                   : backupServer.serverUrl
-                                      .replaceAll("https://", "")
+                                      .replaceAll('https://', '')
                             ),
                             (
                               context.lang.backupMaxBackupSize,
@@ -109,7 +108,7 @@ class _BackupViewState extends State<BackupView> {
                             ),
                             (
                               context.lang.backupStorageRetention,
-                              "${backupServer.retentionDays} Days"
+                              '${backupServer.retentionDays} Days'
                             ),
                             (
                               context.lang.backupLastBackupDate,
@@ -133,7 +132,8 @@ class _BackupViewState extends State<BackupView> {
                                 ),
                                 TableCell(
                                   child: Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 4),
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 4),
                                     child: Text(
                                       pair.$2,
                                       textAlign: TextAlign.right,
@@ -145,9 +145,9 @@ class _BackupViewState extends State<BackupView> {
                           }),
                         ],
                       ),
-                      SizedBox(height: 10),
+                      const SizedBox(height: 10),
                       FilledButton(
-                        onPressed: (isLoading)
+                        onPressed: isLoading
                             ? null
                             : () async {
                                 setState(() {
@@ -164,7 +164,7 @@ class _BackupViewState extends State<BackupView> {
                   ),
             onTap: () async {
               if (twonlySafeBackup != null) {
-                bool disable = await showAlertDialog(
+                final disable = await showAlertDialog(
                     context,
                     context.lang.deleteBackupTitle,
                     context.lang.deleteBackupBody);
@@ -177,14 +177,14 @@ class _BackupViewState extends State<BackupView> {
                 });
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
-                  return TwonlyIdentityBackupView();
+                  return const TwonlyIdentityBackupView();
                 }));
               }
-              initAsync();
+              await initAsync();
             },
           ),
           BackupOption(
-            title: "${context.lang.backupData} (Coming Soon)",
+            title: '${context.lang.backupData} (Coming Soon)',
             description: context.lang.backupDataDesc,
             autoBackupEnabled: false,
             onTap: null,
@@ -199,12 +199,12 @@ class _BackupViewState extends State<BackupView> {
         selectedIconTheme:
             IconThemeData(color: Theme.of(context).colorScheme.inverseSurface),
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.vault, size: 17),
-            label: "twonly Safe",
+            label: 'twonly Safe',
           ),
           BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.boxArchive, size: 17),
+            icon: const FaIcon(FontAwesomeIcons.boxArchive, size: 17),
             label: context.lang.backupData,
           ),
         ],
@@ -226,43 +226,43 @@ class _BackupViewState extends State<BackupView> {
 }
 
 class BackupOption extends StatelessWidget {
-  final String title;
-  final String description;
-  final Widget? child;
-  final bool autoBackupEnabled;
-  final Function()? onTap;
-
   const BackupOption({
-    super.key,
     required this.title,
     required this.description,
     required this.autoBackupEnabled,
     required this.onTap,
+    super.key,
     this.child,
   });
+  final String title;
+  final String description;
+  final Widget? child;
+  final bool autoBackupEnabled;
+  final void Function()? onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (autoBackupEnabled) ? null : onTap,
+      onTap: autoBackupEnabled ? null : onTap,
       child: Card(
-        margin: EdgeInsets.all(16.0),
+        margin: const EdgeInsets.all(16),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 8.0),
+              const SizedBox(height: 8),
               Text(description),
-              SizedBox(height: 8.0),
-              (child != null) ? child! : Container(),
+              const SizedBox(height: 8),
+              if (child != null) child! else Container(),
               Expanded(child: Container()),
               Center(
-                child: (autoBackupEnabled)
+                child: autoBackupEnabled
                     ? OutlinedButton(
                         onPressed: onTap,
                         child: Text(context.lang.disable),

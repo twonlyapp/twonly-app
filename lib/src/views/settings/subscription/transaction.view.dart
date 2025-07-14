@@ -30,7 +30,7 @@ class _TransactionViewState extends State<TransactionView> {
                   color: context.color.primary,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 child: Text(
                   widget.formattedBalance,
                   style: TextStyle(
@@ -85,20 +85,20 @@ class _TransactionCardState extends State<TransactionCard> {
   @override
   Widget build(BuildContext context) {
     final myLocale = Localizations.localeOf(context);
-    String formattedValue = NumberFormat.currency(
+    final formattedValue = NumberFormat.currency(
       locale: myLocale.toString(),
       symbol: '€',
       decimalDigits: 2,
     ).format(widget.transaction.depositCents.toInt() / 100);
 
-    DateTime timestamp = DateTime.fromMillisecondsSinceEpoch(
+    final timestamp = DateTime.fromMillisecondsSinceEpoch(
         widget.transaction.createdAtUnixTimestamp.toInt() * 1000);
 
     return Card(
       margin: const EdgeInsets.all(10),
       elevation: 5,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -106,19 +106,18 @@ class _TransactionCardState extends State<TransactionCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       typeToText(widget.transaction.transactionType),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
                       DateFormat.yMMMMd(myLocale.toString()).format(timestamp),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),

@@ -15,7 +15,7 @@ class DemoUserCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            "This is a Demo-Preview.",
+            'This is a Demo-Preview.',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: !isDarkMode(context) ? Colors.white : Colors.black,
@@ -25,12 +25,12 @@ class DemoUserCard extends StatelessWidget {
           FilledButton(
             onPressed: () async {
               await deleteLocalUserData();
-              Restart.restartApp(
+              await Restart.restartApp(
                 notificationTitle: 'Demo-Mode exited.',
                 notificationBody: 'Click here to open the app again',
               );
             },
-            child: Text("Register"),
+            child: const Text('Register'),
           )
         ],
       ),

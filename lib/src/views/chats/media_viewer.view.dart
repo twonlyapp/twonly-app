@@ -1,6 +1,9 @@
+// ignore_for_file: inference_failure_on_collection_literal, avoid_dynamic_calls
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,28 +11,28 @@ import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
+import 'package:twonly/src/services/api/media_download.dart';
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
-import 'package:twonly/src/views/components/animate_icon.dart';
-import 'package:twonly/src/views/components/media_view_sizing.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
+import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:video_player/video_player.dart';
 
-final _noScreenshot = NoScreenshot.instance;
+final NoScreenshot _noScreenshot = NoScreenshot.instance;
 
 class MediaViewerView extends StatefulWidget {
-  final Contact contact;
   const MediaViewerView(this.contact, {super.key, this.initialMessage});
+  final Contact contact;
 
   final Message? initialMessage;
 
@@ -89,17 +92,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     super.dispose();
   }
 
-  Future asyncLoadNextMedia(bool firstRun) async {
-    Stream<List<Message>> messages =
+  Future<void> asyncLoadNextMedia(bool firstRun) async {
+    final messages =
         twonlyDB.messagesDao.watchMediaMessageNotOpened(widget.contact.userId);
 
     _subscription = messages.listen((messages) {
-      for (Message msg in messages) {
+      for (final msg in messages) {
         // if (!allMediaFiles.any((m) => m.messageId == msg.messageId)) {
         //   allMediaFiles.add(msg);
         // }
         // Find the index of the existing message with the same messageId
-        int index =
+        final index =
             allMediaFiles.indexWhere((m) => m.messageId == msg.messageId);
 
         if (index >= 1) {
@@ -114,24 +117,23 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       setState(() {});
       if (firstRun) {
         loadCurrentMediaFile();
-        firstRun = false;
       }
     });
   }
 
-  Future nextMediaOrExit() async {
+  Future<void> nextMediaOrExit() async {
     if (!mounted) return;
-    videoController?.dispose();
+    await videoController?.dispose();
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
     if (allMediaFiles.isNotEmpty) {
       try {
         if (!imageSaved && maxShowTime != gMediaShowInfinite) {
-          await deleteMediaFile(allMediaFiles.first.messageId, "mp4");
-          await deleteMediaFile(allMediaFiles.first.messageId, "png");
+          await deleteMediaFile(allMediaFiles.first.messageId, 'mp4');
+          await deleteMediaFile(allMediaFiles.first.messageId, 'png');
         }
       } catch (e) {
-        Log.error("$e");
+        Log.error('$e');
       }
     }
     if (allMediaFiles.isEmpty || allMediaFiles.length == 1) {
@@ -144,7 +146,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     }
   }
 
-  Future loadCurrentMediaFile({bool showTwonly = false}) async {
+  Future<void> loadCurrentMediaFile({bool showTwonly = false}) async {
     if (!mounted) return;
     if (!context.mounted || allMediaFiles.isEmpty) return nextMediaOrExit();
     await _noScreenshot.screenshotOff();
@@ -165,9 +167,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     });
 
     if (Platform.isAndroid) {
-      flutterLocalNotificationsPlugin.cancel(allMediaFiles.first.contactId);
+      await flutterLocalNotificationsPlugin
+          .cancel(allMediaFiles.first.contactId);
     } else {
-      flutterLocalNotificationsPlugin.cancelAll();
+      await flutterLocalNotificationsPlugin.cancelAll();
     }
 
     if (allMediaFiles.first.downloadState != DownloadState.downloaded) {
@@ -179,14 +182,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       final stream = twonlyDB.messagesDao
           .getMessageByMessageId(allMediaFiles.first.messageId)
           .watchSingleOrNull();
-      downloadStateListener?.cancel();
+      await downloadStateListener?.cancel();
       downloadStateListener = stream.listen((updated) async {
         if (updated != null) {
           if (updated.downloadState == DownloadState.downloaded) {
-            downloadStateListener?.cancel();
+            await downloadStateListener?.cancel();
             await handleNextDownloadedMedia(updated, showTwonly);
             // start downloading all the other possible missing media files.
-            tryDownloadAllMediaFiles(force: true);
+            await tryDownloadAllMediaFiles(force: true);
           }
         }
       });
@@ -195,9 +198,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     }
   }
 
-  Future handleNextDownloadedMedia(Message current, bool showTwonly) async {
-    final MediaMessageContent content =
-        MediaMessageContent.fromJson(jsonDecode(current.contentJson!));
+  Future<void> handleNextDownloadedMedia(
+      Message current, bool showTwonly) async {
+    final content =
+        MediaMessageContent.fromJson(jsonDecode(current.contentJson!) as Map);
 
     if (content.isRealTwonly) {
       setState(() {
@@ -205,12 +209,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       });
       if (!showTwonly) return;
 
-      bool isAuth = await authenticateUser(
+      final isAuth = await authenticateUser(
         context.lang.mediaViewerAuthReason,
         force: false,
       );
       if (!isAuth) {
-        nextMediaOrExit();
+        await nextMediaOrExit();
         return;
       }
     }
@@ -229,8 +233,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       final videoPathTmp = await getVideoPath(current.messageId);
       if (videoPathTmp != null) {
         videoController = VideoPlayerController.file(File(videoPathTmp.path));
-        videoController?.setLooping(content.maxShowTime == gMediaShowInfinite);
-        videoController?.initialize().then((_) {
+        await videoController
+            ?.setLooping(content.maxShowTime == gMediaShowInfinite);
+        await videoController?.initialize().then((_) {
           videoController!.play();
           videoController?.addListener(() {
             setState(() {
@@ -248,9 +253,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           setState(() {
             videoPath = videoPathTmp.path;
           });
-        }).catchError((Object error) {
-          Log.error(error);
-        });
+          // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler
+        }).catchError(Log.error);
       }
     }
 
@@ -258,7 +262,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     if ((imageBytes == null && !content.isVideo) ||
         (content.isVideo && videoController == null)) {
-      Log.error("media files are not found...");
+      Log.error('media files are not found...');
       // When the message should be downloaded but imageBytes are null then a error happened
       await handleMediaError(current);
       return nextMediaOrExit();
@@ -287,17 +291,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         nextMediaOrExit();
       }
     });
-    progressTimer = Timer.periodic(Duration(milliseconds: 10), (timer) {
+    progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       if (canBeSeenUntil != null) {
-        Duration difference = canBeSeenUntil!.difference(DateTime.now());
+        final difference = canBeSeenUntil!.difference(DateTime.now());
         // Calculate the progress as a value between 0.0 and 1.0
-        progress = (difference.inMilliseconds / (maxShowTime * 1000));
+        progress = difference.inMilliseconds / (maxShowTime * 1000);
         setState(() {});
       }
     });
   }
 
-  Future onPressedSaveToGallery() async {
+  Future<void> onPressedSaveToGallery() async {
     if (allMediaFiles.first.messageOtherId == null) {
       return; // should not be possible
     }
@@ -306,7 +310,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     });
     await twonlyDB.messagesDao.updateMessageByMessageId(
       allMediaFiles.first.messageId,
-      MessagesCompanion(mediaStored: Value(true)),
+      const MessagesCompanion(mediaStored: Value(true)),
     );
     await encryptAndSendMessageAsync(
       null,
@@ -314,7 +318,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       MessageJson(
         kind: MessageKind.storedMediaFile,
         messageSenderId: allMediaFiles.first.messageId,
-        messageReceiverId: allMediaFiles.first.messageOtherId!,
+        messageReceiverId: allMediaFiles.first.messageOtherId,
         content: MessageContent(),
         timestamp: DateTime.now(),
       ),
@@ -337,8 +341,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   void displayShortReactions() {
-    RenderBox renderBox =
-        mediaWidgetKey.currentContext?.findRenderObject() as RenderBox;
+    final renderBox =
+        mediaWidgetKey.currentContext!.findRenderObject()! as RenderBox;
     setState(() {
       showShortReactions = true;
       mediaViewerDistanceFromBottom = renderBox.size.height;
@@ -349,7 +353,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     return Row(
       key: mediaWidgetKey,
       mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (maxShowTime == gMediaShowInfinite)
           OutlinedButton(
@@ -364,18 +367,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             onPressed: onPressedSaveToGallery,
             child: Row(
               children: [
-                imageSaving
-                    ? SizedBox(
-                        width: 10,
-                        height: 10,
-                        child: CircularProgressIndicator(strokeWidth: 1))
-                    : imageSaved
-                        ? Icon(Icons.check)
-                        : FaIcon(FontAwesomeIcons.floppyDisk),
+                if (imageSaving)
+                  const SizedBox(
+                      width: 10,
+                      height: 10,
+                      child: CircularProgressIndicator(strokeWidth: 1))
+                else
+                  imageSaved
+                      ? const Icon(Icons.check)
+                      : const FaIcon(FontAwesomeIcons.floppyDisk),
               ],
             ),
           ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         IconButton(
           icon: SizedBox(
             width: 30,
@@ -410,13 +414,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           },
           style: ButtonStyle(
             padding: WidgetStateProperty.all<EdgeInsets>(
-              EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             ),
           ),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         IconButton.outlined(
-          icon: FaIcon(FontAwesomeIcons.message),
+          icon: const FaIcon(FontAwesomeIcons.message),
           onPressed: () async {
             displayShortReactions();
             setState(() {
@@ -425,31 +429,32 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           },
           style: ButtonStyle(
             padding: WidgetStateProperty.all<EdgeInsets>(
-              EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             ),
           ),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         IconButton.outlined(
-          icon: FaIcon(FontAwesomeIcons.camera),
+          icon: const FaIcon(FontAwesomeIcons.camera),
           onPressed: () async {
             nextMediaTimer?.cancel();
             progressTimer?.cancel();
-            videoController?.pause();
+            await videoController?.pause();
+            if (!mounted) return;
             await Navigator.push(context, MaterialPageRoute(
               builder: (context) {
                 return CameraSendToView(widget.contact);
               },
             ));
             if (mounted && maxShowTime != gMediaShowInfinite) {
-              nextMediaOrExit();
+              await nextMediaOrExit();
             } else {
-              videoController?.play();
+              await videoController?.play();
             }
           },
           style: ButtonStyle(
             padding: WidgetStateProperty.all<EdgeInsets>(
-              EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             ),
           ),
         ),
@@ -494,7 +499,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           child: Image.memory(
                             imageBytes!,
                             fit: BoxFit.contain,
-                            frameBuilder: ((context, child, frame,
+                            frameBuilder: (context, child, frame,
                                 wasSynchronouslyLoaded) {
                               if (wasSynchronouslyLoaded) return child;
                               return AnimatedSwitcher(
@@ -505,12 +510,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                                         height: 60,
                                         color: Colors.transparent,
                                         width: 60,
-                                        child: CircularProgressIndicator(
+                                        child: const CircularProgressIndicator(
                                           strokeWidth: 2,
                                         ),
                                       ),
                               );
-                            }),
+                            },
                           ),
                         ),
                     ],
@@ -531,7 +536,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.only(bottom: 200),
+                        padding: const EdgeInsets.only(bottom: 200),
                         child: Text(context.lang.mediaViewerTwonlyTapToOpen),
                       ),
                     ],
@@ -544,7 +549,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.close, size: 30),
+                    icon: const Icon(Icons.close, size: 30),
                     color: Colors.white,
                     onPressed: () async {
                       Navigator.pop(context);
@@ -554,7 +559,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               ),
             ),
             if (isDownloading)
-              Positioned.fill(
+              const Positioned.fill(
                 child: Center(
                   child: SizedBox(
                     height: 60,
@@ -574,7 +579,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                       height: 20,
                       child: CircularProgressIndicator(
                         value: progress,
-                        strokeWidth: 2.0,
+                        strokeWidth: 2,
                       ),
                     ),
                   ],
@@ -588,13 +593,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 child: Text(
                   getContactDisplayName(widget.contact),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     shadows: [
                       Shadow(
-                        color: const Color.fromARGB(122, 0, 0, 0),
-                        blurRadius: 5.0,
+                        color: Color.fromARGB(122, 0, 0, 0),
+                        blurRadius: 5,
                       )
                     ],
                   ),
@@ -612,7 +617,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: FaIcon(FontAwesomeIcons.xmark),
+                        icon: const FaIcon(FontAwesomeIcons.xmark),
                         onPressed: () {
                           setState(() {
                             showShortReactions = false;
@@ -634,7 +639,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         ),
                       ),
                       IconButton(
-                        icon: FaIcon(FontAwesomeIcons.solidPaperPlane),
+                        icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
                         onPressed: () {
                           if (textMessageController.text.isNotEmpty) {
                             sendTextMessage(
@@ -684,7 +689,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
 class ReactionButtons extends StatefulWidget {
   const ReactionButtons({
-    super.key,
     required this.show,
     required this.textInputFocused,
     required this.userId,
@@ -692,6 +696,7 @@ class ReactionButtons extends StatefulWidget {
     required this.responseToMessageId,
     required this.isVideo,
     required this.hide,
+    super.key,
   });
 
   final double mediaViewerDistanceFromBottom;
@@ -700,7 +705,7 @@ class ReactionButtons extends StatefulWidget {
   final bool textInputFocused;
   final int userId;
   final int responseToMessageId;
-  final Function() hide;
+  final void Function() hide;
 
   @override
   State<ReactionButtons> createState() => _ReactionButtonsState();
@@ -718,8 +723,8 @@ class _ReactionButtonsState extends State<ReactionButtons> {
     initAsync();
   }
 
-  Future initAsync() async {
-    var user = await getUser();
+  Future<void> initAsync() async {
+    final user = await getUser();
     if (user != null && user.preSelectedEmojies != null) {
       selectedEmojis = user.preSelectedEmojies!;
     }
@@ -733,7 +738,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
         selectedEmojis.length > 6 ? selectedEmojis.skip(6).toList() : [];
 
     return AnimatedPositioned(
-      duration: Duration(milliseconds: 200), // Animation duration
+      duration: const Duration(milliseconds: 200), // Animation duration
       bottom: widget.show
           ? (widget.textInputFocused
               ? 50
@@ -744,10 +749,11 @@ class _ReactionButtonsState extends State<ReactionButtons> {
       curve: Curves.linearToEaseOut,
       child: AnimatedOpacity(
         opacity: widget.show ? 1.0 : 0.0, // Fade in/out
-        duration: Duration(milliseconds: 150),
+        duration: const Duration(milliseconds: 150),
         child: Container(
           color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
-          padding: widget.show ? EdgeInsets.symmetric(vertical: 32) : null,
+          padding:
+              widget.show ? const EdgeInsets.symmetric(vertical: 32) : null,
           child: Column(
             children: [
               if (secondRowEmojis.isNotEmpty)
@@ -761,11 +767,11 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                             hide: widget.hide,
                             show: widget.show,
                             isVideo: widget.isVideo,
-                            emoji: emoji,
+                            emoji: emoji as String,
                           ))
                       .toList(),
                 ),
-              if (secondRowEmojis.isNotEmpty) SizedBox(height: 15),
+              if (secondRowEmojis.isNotEmpty) const SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -791,22 +797,21 @@ class _ReactionButtonsState extends State<ReactionButtons> {
 }
 
 class EmojiReactionWidget extends StatefulWidget {
-  final int userId;
-  final int responseToMessageId;
-  final Function hide;
-  final bool show;
-  final bool isVideo;
-  final String emoji;
-
   const EmojiReactionWidget({
-    super.key,
     required this.userId,
     required this.responseToMessageId,
     required this.hide,
     required this.isVideo,
     required this.show,
     required this.emoji,
+    super.key,
   });
+  final int userId;
+  final int responseToMessageId;
+  final Function hide;
+  final bool show;
+  final bool isVideo;
+  final String emoji;
 
   @override
   State<EmojiReactionWidget> createState() => _EmojiReactionWidgetState();
@@ -818,7 +823,7 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
   @override
   Widget build(BuildContext context) {
     return AnimatedSize(
-      duration: Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
       curve: Curves.linearToEaseOut,
       child: GestureDetector(
         onTap: () {
@@ -838,7 +843,7 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
           setState(() {
             selectedShortReaction = 0; // Assuming index is 0 for this example
           });
-          Future.delayed(Duration(milliseconds: 300), () {
+          Future.delayed(const Duration(milliseconds: 300), () {
             setState(() {
               widget.hide();
               selectedShortReaction = -1;
@@ -849,13 +854,13 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
                 0) // Assuming index is 0 for this example
             ? EmojiAnimationFlying(
                 emoji: widget.emoji,
-                duration: Duration(milliseconds: 300),
-                startPosition: 0.0,
+                duration: const Duration(milliseconds: 300),
+                startPosition: 0,
                 size: (widget.show) ? 40 : 10,
               )
             : AnimatedOpacity(
                 opacity: (selectedShortReaction == -1) ? 1 : 0, // Fade in/out
-                duration: Duration(milliseconds: 150),
+                duration: const Duration(milliseconds: 150),
                 child: SizedBox(
                   width: widget.show ? 40 : 10,
                   child: Center(

@@ -11,14 +11,13 @@ import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
 
 class UserContextMenu extends StatefulWidget {
-  final Widget child;
-  final Contact contact;
-
   const UserContextMenu({
-    super.key,
     required this.contact,
     required this.child,
+    super.key,
   });
+  final Widget child;
+  final Contact contact;
 
   @override
   State<UserContextMenu> createState() => _UserContextMenuState();
@@ -39,25 +38,25 @@ class _UserContextMenuState extends State<UserContextMenu> {
           PieAction(
             tooltip: Text(context.lang.contextMenuArchiveUser),
             onSelect: () async {
-              final update = ContactsCompanion(archived: Value(true));
+              const update = ContactsCompanion(archived: Value(true));
               if (context.mounted) {
                 await twonlyDB.contactsDao
                     .updateContact(widget.contact.userId, update);
               }
             },
-            child: FaIcon(FontAwesomeIcons.boxArchive),
+            child: const FaIcon(FontAwesomeIcons.boxArchive),
           ),
         if (widget.contact.archived)
           PieAction(
             tooltip: Text(context.lang.contextMenuUndoArchiveUser),
             onSelect: () async {
-              final update = ContactsCompanion(archived: Value(false));
+              const update = ContactsCompanion(archived: Value(false));
               if (context.mounted) {
                 await twonlyDB.contactsDao
                     .updateContact(widget.contact.userId, update);
               }
             },
-            child: FaIcon(FontAwesomeIcons.boxOpen),
+            child: const FaIcon(FontAwesomeIcons.boxOpen),
           ),
         if (!widget.contact.verified)
           PieAction(
@@ -107,14 +106,13 @@ class _UserContextMenuState extends State<UserContextMenu> {
 }
 
 class UserContextMenuBlocked extends StatefulWidget {
-  final Widget child;
-  final Contact contact;
-
   const UserContextMenuBlocked({
-    super.key,
     required this.contact,
     required this.child,
+    super.key,
   });
+  final Widget child;
+  final Contact contact;
 
   @override
   State<UserContextMenuBlocked> createState() => _UserContextMenuBlocked();
@@ -130,25 +128,25 @@ class _UserContextMenuBlocked extends State<UserContextMenuBlocked> {
           PieAction(
             tooltip: Text(context.lang.contextMenuArchiveUser),
             onSelect: () async {
-              final update = ContactsCompanion(archived: Value(true));
+              const update = ContactsCompanion(archived: Value(true));
               if (context.mounted) {
                 await twonlyDB.contactsDao
                     .updateContact(widget.contact.userId, update);
               }
             },
-            child: FaIcon(FontAwesomeIcons.boxArchive),
+            child: const FaIcon(FontAwesomeIcons.boxArchive),
           ),
         if (widget.contact.archived)
           PieAction(
             tooltip: Text(context.lang.contextMenuUndoArchiveUser),
             onSelect: () async {
-              final update = ContactsCompanion(archived: Value(false));
+              const update = ContactsCompanion(archived: Value(false));
               if (context.mounted) {
                 await twonlyDB.contactsDao
                     .updateContact(widget.contact.userId, update);
               }
             },
-            child: FaIcon(FontAwesomeIcons.boxOpen),
+            child: const FaIcon(FontAwesomeIcons.boxOpen),
           ),
         PieAction(
           tooltip: Text(context.lang.contextMenuUserProfile),
@@ -180,10 +178,10 @@ PieTheme getPieCanvasTheme(BuildContext context) {
       backgroundColor: Theme.of(context).colorScheme.primary,
       iconColor: Theme.of(context).colorScheme.surfaceBright,
     ),
-    tooltipPadding: EdgeInsets.all(20),
+    tooltipPadding: const EdgeInsets.all(20),
     overlayColor: const Color.fromARGB(69, 0, 0, 0),
     // spacing: 0,
-    tooltipTextStyle: TextStyle(
+    tooltipTextStyle: const TextStyle(
       fontSize: 32,
       fontWeight: FontWeight.w600,
     ),

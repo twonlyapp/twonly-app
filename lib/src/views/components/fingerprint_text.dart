@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
-class FormattedStringWidget extends StatelessWidget {
+class FingerprintText extends StatelessWidget {
+  const FingerprintText(this.longString, {super.key});
   final String longString;
 
-  const FormattedStringWidget(this.longString, {super.key});
-
   String formatString(String input) {
-    StringBuffer formattedString = StringBuffer();
-    int blockCount = 0;
+    final formattedString = StringBuffer();
+    var blockCount = 0;
 
-    for (int i = 0; i < input.length; i += 4) {
-      String block =
+    for (var i = 0; i < input.length; i += 4) {
+      final block =
           input.substring(i, i + 4 > input.length ? input.length : i + 4);
       formattedString.write(block);
       blockCount++;
@@ -30,7 +29,7 @@ class FormattedStringWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return SelectableText(
       formatString(longString),
-      style: TextStyle(fontSize: 16, color: Colors.black),
+      style: const TextStyle(fontSize: 16, color: Colors.black),
       textAlign: TextAlign.center,
     );
   }

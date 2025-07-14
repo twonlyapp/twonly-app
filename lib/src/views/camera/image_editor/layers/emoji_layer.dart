@@ -6,24 +6,23 @@ import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 
 /// Emoji layer
 class EmojiLayer extends StatefulWidget {
+  const EmojiLayer({
+    required this.layerData,
+    super.key,
+    this.onUpdate,
+  });
   final EmojiLayerData layerData;
   final VoidCallback? onUpdate;
 
-  const EmojiLayer({
-    super.key,
-    required this.layerData,
-    this.onUpdate,
-  });
-
   @override
-  createState() => _EmojiLayerState();
+  State<EmojiLayer> createState() => _EmojiLayerState();
 }
 
 class _EmojiLayerState extends State<EmojiLayer> {
   double initialRotation = 0;
   Offset initialOffset = Offset.zero;
   Offset initialFocalPoint = Offset.zero;
-  double initialScale = 1.0;
+  double initialScale = 1;
   bool deleteLayer = false;
   bool twoPointerWhereDown = false;
   final GlobalKey outlineKey = GlobalKey();
@@ -94,16 +93,16 @@ class _EmojiLayerState extends State<EmojiLayer> {
                 if (twoPointerWhereDown == true && details.pointerCount != 2) {
                   return;
                 }
-                final RenderBox outlineBox =
-                    outlineKey.currentContext!.findRenderObject() as RenderBox;
+                final outlineBox =
+                    outlineKey.currentContext!.findRenderObject()! as RenderBox;
 
-                final RenderBox emojiBox =
-                    emojiKey.currentContext!.findRenderObject() as RenderBox;
+                final emojiBox =
+                    emojiKey.currentContext!.findRenderObject()! as RenderBox;
 
-                bool isAtTheBottom =
+                final isAtTheBottom =
                     (widget.layerData.offset.dy + emojiBox.size.height / 2) >
                         outlineBox.size.height - 80;
-                bool isInTheCenter = MediaQuery.of(context).size.width / 2 -
+                final isInTheCenter = MediaQuery.of(context).size.width / 2 -
                             30 <
                         (widget.layerData.offset.dx +
                             emojiBox.size.width / 2) &&
@@ -125,9 +124,9 @@ class _EmojiLayerState extends State<EmojiLayer> {
                       initialRotation + details.rotation;
 
                   // Update the position based on the translation
-                  var dx = (initialOffset.dx) +
+                  final dx = (initialOffset.dx) +
                       (details.focalPoint.dx - initialFocalPoint.dx);
-                  var dy = (initialOffset.dy) +
+                  final dy = (initialOffset.dy) +
                       (details.focalPoint.dy - initialFocalPoint.dy);
                   widget.layerData.offset = Offset(dx, dy);
                 });

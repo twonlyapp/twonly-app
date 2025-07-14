@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_dynamic_calls, inference_failure_on_untyped_parameter
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -21,22 +23,22 @@ class _FaqViewState extends State<FaqView> {
   @override
   void initState() {
     super.initState();
-    domain = "https://twonly.eu";
+    domain = 'https://twonly.eu';
     _fetchFAQData();
   }
 
   Future<void> _fetchFAQData() async {
     try {
-      final response = await http.get(Uri.parse("$domain/faq.json"));
+      final response = await http.get(Uri.parse('$domain/faq.json'));
 
       if (response.statusCode == 200) {
         setState(() {
-          _faqData = json.decode(utf8.decode(response.bodyBytes));
+          _faqData = json.decode(utf8.decode(response.bodyBytes))
+              as Map<String, dynamic>?;
           noInternet = false;
         });
       } else {
-        Log.error("FAQ got ${response.statusCode}");
-        // throw Exception('Failed to load FAQ data');
+        Log.error('FAQ got ${response.statusCode}');
       }
     } catch (e) {
       Log.error(e);
@@ -53,8 +55,8 @@ class _FaqViewState extends State<FaqView> {
         appBar: AppBar(
           title: Text(context.lang.settingsHelpFAQ),
         ),
-        body: Center(
-          child: Text("Could not load the FAQ."),
+        body: const Center(
+          child: Text('Could not load the FAQ.'),
         ),
       );
     }
@@ -64,11 +66,11 @@ class _FaqViewState extends State<FaqView> {
         appBar: AppBar(
           title: Text(context.lang.settingsHelpFAQ),
         ),
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    final faq = _faqData![_locale ?? 'en'];
+    final faq = _faqData![_locale ?? 'en'] as Map;
 
     return Scaffold(
       appBar: AppBar(
@@ -77,19 +79,19 @@ class _FaqViewState extends State<FaqView> {
       body: ListView.builder(
         itemCount: faq.keys.length,
         itemBuilder: (context, index) {
-          String category = faq.keys.elementAt(index);
-          var categoryData = faq[category];
+          final category = faq.keys.elementAt(index);
+          final categoryData = faq[category];
 
           return Card(
             child: ExpansionTile(
-              title: Text(categoryData['meta']['title']),
-              subtitle: Text(categoryData['meta']['desc']),
+              title: Text(categoryData['meta']['title'] as String),
+              subtitle: Text(categoryData['meta']['desc'] as String),
               children: categoryData['questions'].map<Widget>((question) {
                 return ListTile(
-                  title: Text(question['title']),
-                  onTap: () => _launchURL(question['path']),
+                  title: Text(question['title'] as String),
+                  onTap: () => _launchURL(question['path'] as String),
                 );
-              }).toList(),
+              }).toList() as List<Widget>,
             ),
           );
         },
@@ -97,11 +99,11 @@ class _FaqViewState extends State<FaqView> {
     );
   }
 
-  void _launchURL(String path) async {
+  Future<void> _launchURL(String path) async {
     try {
-      await launchUrl(Uri.parse("$domain$path"));
+      await launchUrl(Uri.parse('$domain$path'));
     } catch (e) {
-      Log.error("Could not launch $e");
+      Log.error('Could not launch $e');
     }
   }
 }

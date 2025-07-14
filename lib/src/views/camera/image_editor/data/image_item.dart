@@ -12,7 +12,7 @@ class ImageItem {
     if (image != null) load(image);
   }
 
-  Future load(dynamic image) async {
+  Future<void> load(dynamic image) async {
     loader = Completer<bool>();
 
     if (image is ImageItem) {

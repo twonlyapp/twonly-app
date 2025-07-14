@@ -41,7 +41,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     checkIfTutorialCanBeShown();
   }
 
-  Future checkIfTutorialCanBeShown() async {
+  Future<void> checkIfTutorialCanBeShown() async {
     if (widget.message.openedAt == null &&
             widget.message.messageOtherId != null ||
         widget.message.mediaStored) {

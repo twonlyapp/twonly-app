@@ -7,24 +7,24 @@ import 'package:twonly/src/constants/secure_storage_keys.dart';
 
 class ConnectSignedPreKeyStore extends SignedPreKeyStore {
   Future<HashMap<int, Uint8List>> getStore() async {
-    final storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage();
     final storeSerialized = await storage.read(
       key: SecureStorageKeys.signalSignedPreKey,
     );
-    var store = HashMap<int, Uint8List>();
+    final store = HashMap<int, Uint8List>();
     if (storeSerialized == null) {
       return store;
     }
-    final storeHashMap = json.decode(storeSerialized);
+    final storeHashMap = json.decode(storeSerialized) as List<List<dynamic>>;
     for (final item in storeHashMap) {
-      store[item[0]] = base64Decode(item[1]);
+      store[item[0] as int] = base64Decode(item[1] as String);
     }
     return store;
   }
 
-  Future safeStore(HashMap<int, Uint8List> store) async {
-    final storage = FlutterSecureStorage();
-    var storeHashMap = [];
+  Future<void> safeStore(HashMap<int, Uint8List> store) async {
+    const storage = FlutterSecureStorage();
+    final storeHashMap = <List<dynamic>>[];
     for (final item in store.entries) {
       storeHashMap.add([item.key, base64Encode(item.value)]);
     }

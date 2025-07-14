@@ -20,30 +20,33 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     }
   }
 
-  Future incFlameCounter(
-      int contactId, bool received, DateTime timestamp) async {
-    Contact contact = (await (select(contacts)
+  Future<int> incFlameCounter(
+    int contactId,
+    bool received,
+    DateTime timestamp,
+  ) async {
+    final contact = (await (select(contacts)
               ..where((t) => t.userId.equals(contactId)))
             .get())
         .first;
 
-    int totalMediaCounter = contact.totalMediaCounter + 1;
-    int flameCounter = contact.flameCounter;
+    final totalMediaCounter = contact.totalMediaCounter + 1;
+    var flameCounter = contact.flameCounter;
 
     if (contact.lastMessageReceived != null &&
         contact.lastMessageSend != null) {
       final now = DateTime.now();
       final startOfToday = DateTime(now.year, now.month, now.day);
-      final twoDaysAgo = startOfToday.subtract(Duration(days: 2));
+      final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
       if (contact.lastMessageSend!.isBefore(twoDaysAgo) ||
           contact.lastMessageReceived!.isBefore(twoDaysAgo)) {
         flameCounter = 0;
       }
     }
 
-    Value<DateTime?> lastMessageSend = Value.absent();
-    Value<DateTime?> lastMessageReceived = Value.absent();
-    Value<DateTime?> lastFlameCounterChange = Value.absent();
+    var lastMessageSend = const Value<DateTime?>.absent();
+    var lastMessageReceived = const Value<DateTime?>.absent();
+    var lastFlameCounterChange = const Value<DateTime?>.absent();
 
     if (contact.lastFlameCounterChange != null) {
       final now = DateTime.now();
@@ -51,7 +54,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 
       if (contact.lastFlameCounterChange!.isBefore(startOfToday)) {
         // last flame update was yesterday. check if it can be updated.
-        bool updateFlame = false;
+        var updateFlame = false;
         if (received) {
           if (contact.lastMessageSend != null &&
               contact.lastMessageSend!.isAfter(startOfToday)) {
@@ -94,11 +97,12 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     return select(contacts)..where((t) => t.userId.equals(userId));
   }
 
-  Future deleteContactByUserId(int userId) {
+  Future<void> deleteContactByUserId(int userId) {
     return (delete(contacts)..where((t) => t.userId.equals(userId))).go();
   }
 
-  Future updateContact(int userId, ContactsCompanion updatedValues) async {
+  Future<void> updateContact(
+      int userId, ContactsCompanion updatedValues) async {
     await ((update(contacts)..where((c) => c.userId.equals(userId)))
         .write(updatedValues));
     if (updatedValues.blocked.present ||
@@ -111,7 +115,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     }
   }
 
-  Future newMessageExchange(int userId) {
+  Future<void> newMessageExchange(int userId) {
     return updateContact(
       userId,
       ContactsCompanion(

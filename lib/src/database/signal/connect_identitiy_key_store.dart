@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 
 class ConnectIdentityKeyStore extends IdentityKeyStore {
@@ -12,13 +12,11 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
 
   @override
   Future<IdentityKey?> getIdentity(SignalProtocolAddress address) async {
-    SignalIdentityKeyStore? identity =
-        await (twonlyDB.select(twonlyDB.signalIdentityKeyStores)
-              ..where((t) =>
-                  t.deviceId.equals(address.getDeviceId()) &
-                  t.name.equals(address.getName())))
-            .getSingleOrNull();
-
+    final identity = await (twonlyDB.select(twonlyDB.signalIdentityKeyStores)
+          ..where((t) =>
+              t.deviceId.equals(address.getDeviceId()) &
+              t.name.equals(address.getName())))
+        .getSingleOrNull();
     if (identity == null) return null;
     return IdentityKey.fromBytes(identity.identityKey, 0);
   }
@@ -37,7 +35,8 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
       return false;
     }
     return trusted == null ||
-        ListEquality().equals(trusted.serialize(), identityKey.serialize());
+        const ListEquality<dynamic>()
+            .equals(trusted.serialize(), identityKey.serialize());
   }
 
   @override

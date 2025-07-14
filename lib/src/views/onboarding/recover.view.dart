@@ -22,7 +22,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
   final TextEditingController usernameCtrl = TextEditingController();
   final TextEditingController passwordCtrl = TextEditingController();
 
-  Future _recoverTwonlySafe() async {
+  Future<void> _recoverTwonlySafe() async {
     setState(() {
       isLoading = true;
     });
@@ -89,7 +89,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
               onChanged: (value) {
                 setState(() {});
               },
-              style: TextStyle(fontSize: 17),
+              style: const TextStyle(fontSize: 17),
               decoration: getInputDecoration(
                 context,
                 context.lang.registerUsernameDecoration,
@@ -103,7 +103,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                   onChanged: (value) {
                     setState(() {});
                   },
-                  style: TextStyle(fontSize: 17),
+                  style: const TextStyle(fontSize: 17),
                   obscureText: obscureText,
                   decoration: getInputDecoration(
                     context,

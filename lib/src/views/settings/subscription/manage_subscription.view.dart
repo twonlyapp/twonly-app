@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
-import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class ManageSubscriptionView extends StatefulWidget {
-  const ManageSubscriptionView(
-      {super.key, required this.ballance, required this.nextPayment});
+  const ManageSubscriptionView({
+    required this.ballance,
+    required this.nextPayment,
+    super.key,
+  });
 
   final Response_PlanBallance? ballance;
   final DateTime? nextPayment;
@@ -33,7 +36,7 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
     initAsync(true);
   }
 
-  Future initAsync(bool force) async {
+  Future<void> initAsync(bool force) async {
     if (force) {
       ballance = await loadPlanBalance(useCache: false);
       if (ballance != null) {
@@ -43,12 +46,13 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
     setState(() {});
   }
 
-  Future toggleRenewalOption() async {
-    Result res = await apiService.updatePlanOptions(!autoRenewal!);
+  Future<void> toggleRenewalOption() async {
+    final res = await apiService.updatePlanOptions(!autoRenewal!);
     if (res.isError) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorCodeToText(context, res.error))),
+          SnackBar(
+              content: Text(errorCodeToText(context, res.error as ErrorCode))),
         );
       }
     }
@@ -57,10 +61,10 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
 
   @override
   Widget build(BuildContext context) {
-    String planId = context.read<CustomChangeProvider>().plan;
-    Locale myLocale = Localizations.localeOf(context);
-    bool? paidMonthly = ballance?.paymentPeriodDays == MONTHLY_PAYMENT_DAYS;
-    bool isAdditionalUser = planId == "Free" || planId == "Plus";
+    final planId = context.read<CustomChangeProvider>().plan;
+    final myLocale = Localizations.localeOf(context);
+    final paidMonthly = ballance?.paymentPeriodDays == MONTHLY_PAYMENT_DAYS;
+    final isAdditionalUser = planId == 'Free' || planId == 'Plus';
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.manageSubscription),
@@ -68,11 +72,11 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
       body: ListView(
         children: [
           PlanCard(planId: planId, paidMonthly: paidMonthly),
-          if (!isAdditionalUser) SizedBox(height: 20),
+          if (!isAdditionalUser) const SizedBox(height: 20),
           if (widget.nextPayment != null && !isAdditionalUser)
             ListTile(
               title: Text(
-                "${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(widget.nextPayment!)}",
+                '${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(widget.nextPayment!)}',
               ),
             ),
           if (autoRenewal != null && !isAdditionalUser)
@@ -80,7 +84,7 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
               title: Text(context.lang.autoRenewal),
               subtitle: Text(
                 context.lang.autoRenewalLongDesc,
-                style: TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 12),
               ),
               onTap: toggleRenewalOption,
               trailing: Checkbox(

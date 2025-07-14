@@ -1,13 +1,18 @@
+// ignore_for_file: avoid_dynamic_calls, strict_raw_type
+
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// ignore: implementation_imports
+import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
@@ -18,24 +23,22 @@ import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
+import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/fcm.service.dart';
+import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
-import 'package:twonly/src/services/fcm.service.dart';
-import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:web_socket_channel/io.dart';
-// ignore: implementation_imports
-import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 final lockConnecting = Mutex();
@@ -45,12 +48,12 @@ final lockRetransStore = Mutex();
 /// It handles errors and does automatically tries to reconnect on
 /// errors or network changes.
 class ApiService {
-  final String apiHost = (kDebugMode) ? "10.99.0.140:3030" : "api.twonly.eu";
-  final String apiSecure = (kDebugMode) ? "" : "s";
+  ApiService();
+  final String apiHost = kDebugMode ? '10.99.0.140:3030' : 'api.twonly.eu';
+  final String apiSecure = kDebugMode ? '' : 's';
 
   bool appIsOutdated = false;
   bool isAuthenticated = false;
-  ApiService();
 
   // reconnection params
   Timer? reconnectionTimer;
@@ -69,51 +72,51 @@ class ApiService {
       _channel = channel;
       _channel!.stream.listen(_onData, onDone: _onDone, onError: _onError);
       await _channel!.ready;
-      Log.info("websocket connected to $apiUrl");
+      Log.info('websocket connected to $apiUrl');
       return true;
     } on WebSocketChannelException catch (e) {
       if (!e.message
           .toString()
-          .contains("No address associated with hostname")) {
-        Log.error("could not connect to api got: $e");
+          .contains('No address associated with hostname')) {
+        Log.error('could not connect to api got: $e');
       }
       return false;
     }
   }
 
   // Function is called after the user is authenticated at the server
-  Future onAuthenticated() async {
+  Future<void> onAuthenticated() async {
     isAuthenticated = true;
-    initFCMAfterAuthenticated();
-    globalCallbackConnectionState(true);
+    await initFCMAfterAuthenticated();
+    globalCallbackConnectionState(isConnected: true);
 
     if (!globalIsAppInBackground) {
-      retransmitRawBytes();
-      tryTransmitMessages();
-      retryMediaUpload(false);
-      tryDownloadAllMediaFiles();
-      notifyContactsAboutProfileChange();
+      unawaited(retransmitRawBytes());
+      unawaited(tryTransmitMessages());
+      unawaited(retryMediaUpload(false));
+      unawaited(tryDownloadAllMediaFiles());
+      unawaited(notifyContactsAboutProfileChange());
       twonlyDB.markUpdated();
-      syncFlameCounters();
-      setupNotificationWithUsers();
-      signalHandleNewServerConnection();
+      unawaited(syncFlameCounters());
+      unawaited(setupNotificationWithUsers());
+      unawaited(signalHandleNewServerConnection());
     }
   }
 
-  Future onConnected() async {
+  Future<void> onConnected() async {
     await authenticate();
     _reconnectionDelay = 5;
-    globalCallbackConnectionState(true);
+    globalCallbackConnectionState(isConnected: true);
   }
 
-  Future onClosed() async {
+  Future<void> onClosed() async {
     _channel = null;
     isAuthenticated = false;
-    globalCallbackConnectionState(false);
+    globalCallbackConnectionState(isConnected: false);
     await twonlyDB.messagesDao.resetPendingDownloadState();
   }
 
-  Future startReconnectionTimer() async {
+  Future<void> startReconnectionTimer() async {
     reconnectionTimer?.cancel();
     reconnectionTimer ??= Timer(Duration(seconds: _reconnectionDelay), () {
       reconnectionTimer = null;
@@ -122,18 +125,18 @@ class ApiService {
     _reconnectionDelay += 5;
   }
 
-  Future close(Function callback) async {
-    Log.info("closing websocket connection");
+  Future<void> close(Function callback) async {
+    Log.info('closing websocket connection');
     if (_channel != null) {
       await _channel!.sink.close();
-      onClosed();
+      await onClosed();
       callback();
       return;
     }
     callback();
   }
 
-  Future listenToNetworkChanges() async {
+  Future<void> listenToNetworkChanges() async {
     if (connectivitySubscription != null) {
       return;
     }
@@ -155,7 +158,7 @@ class ApiService {
     reconnectionTimer = null;
     final user = await getUser();
     if (user != null && user.isDemoUser) {
-      globalCallbackConnectionState(true);
+      globalCallbackConnectionState(isConnected: true);
       return false;
     }
     return lockConnecting.protect<bool>(() async {
@@ -168,9 +171,9 @@ class ApiService {
 
       isAuthenticated = false;
 
-      String apiUrl = "ws$apiSecure://$apiHost/api/client";
+      final apiUrl = 'ws$apiSecure://$apiHost/api/client';
 
-      Log.info("connecting to $apiUrl");
+      Log.info('connecting to $apiUrl');
 
       if (await _connectTo(apiUrl)) {
         await onConnected();
@@ -183,18 +186,18 @@ class ApiService {
   bool get isConnected => _channel != null && _channel!.closeCode != null;
 
   void _onDone() {
-    Log.info("websocket closed without error");
+    Log.info('websocket closed without error');
     onClosed();
   }
 
   void _onError(dynamic e) {
-    Log.error("websocket error: $e");
+    Log.error('websocket error: $e');
     onClosed();
   }
 
   void _onData(dynamic msgBuffer) async {
     try {
-      final msg = server.ServerToClient.fromBuffer(msgBuffer);
+      final msg = server.ServerToClient.fromBuffer(msgBuffer as Uint8List);
       if (msg.v0.hasResponse()) {
         removeFromRetransmissionBuffer(msg.v0.seq);
         messagesV0[msg.v0.seq] = msg;
@@ -202,7 +205,7 @@ class ApiService {
         await handleServerMessage(msg);
       }
     } catch (e) {
-      Log.error("Error parsing the servers message: $e");
+      Log.error('Error parsing the servers message: $e');
     }
   }
 
@@ -218,57 +221,57 @@ class ApiService {
         return tmp;
       }
       if (DateTime.now().difference(startTime) > timeout) {
-        Log.error("Timeout for message $seq");
+        Log.error('Timeout for message $seq');
         return null;
       }
-      await Future.delayed(Duration(milliseconds: 10));
+      await Future.delayed(const Duration(milliseconds: 10));
     }
   }
 
-  Future sendResponse(ClientToServer response) async {
+  Future<void> sendResponse(ClientToServer response) async {
     if (_channel != null) {
       _channel!.sink.add(response.writeToBuffer());
     }
   }
 
   Future<Map<String, dynamic>> getRetransmission() async {
-    return await KeyValueStore.get("rawbytes-to-retransmit") ?? {};
+    return (await KeyValueStore.get('rawbytes-to-retransmit')) ?? {};
   }
 
-  Future retransmitRawBytes() async {
+  Future<void> retransmitRawBytes() async {
     await lockRetransStore.protect(() async {
-      var retransmit = await getRetransmission();
+      final retransmit = await getRetransmission();
       if (retransmit.keys.isEmpty) return;
-      Log.info("retransmitting ${retransmit.keys.length} raw bytes messages");
-      bool gotError = false;
+      Log.info('retransmitting ${retransmit.keys.length} raw bytes messages');
+      var gotError = false;
       for (final seq in retransmit.keys) {
         try {
-          _channel!.sink.add(base64Decode(retransmit[seq]));
+          _channel!.sink.add(base64Decode(retransmit[seq] as String));
         } catch (e) {
           gotError = true;
-          Log.error("$e");
+          Log.error('$e');
         }
       }
       if (!gotError) {
-        KeyValueStore.put("rawbytes-to-retransmit", {});
+        await KeyValueStore.put('rawbytes-to-retransmit', {});
       }
     });
   }
 
-  Future addToRetransmissionBuffer(Int64 seq, Uint8List bytes) async {
+  Future<void> addToRetransmissionBuffer(Int64 seq, Uint8List bytes) async {
     await lockRetransStore.protect(() async {
-      var retransmit = await getRetransmission();
+      final retransmit = await getRetransmission();
       retransmit[seq.toString()] = base64Encode(bytes);
-      KeyValueStore.put("rawbytes-to-retransmit", retransmit);
+      await KeyValueStore.put('rawbytes-to-retransmit', retransmit);
     });
   }
 
-  Future removeFromRetransmissionBuffer(Int64 seq) async {
+  Future<void> removeFromRetransmissionBuffer(Int64 seq) async {
     await lockRetransStore.protect(() async {
-      var retransmit = await getRetransmission();
+      final retransmit = await getRetransmission();
       if (retransmit.isEmpty) return;
       retransmit.remove(seq.toString());
-      KeyValueStore.put("rawbytes-to-retransmit", retransmit);
+      await KeyValueStore.put('rawbytes-to-retransmit', retransmit);
     });
   }
 
@@ -287,11 +290,11 @@ class ApiService {
     final requestBytes = request.writeToBuffer();
 
     if (ensureRetransmission) {
-      addToRetransmissionBuffer(seq, requestBytes);
+      await addToRetransmissionBuffer(seq, requestBytes);
     }
 
     if (_channel == null) {
-      Log.warn("sending request while api is not connected");
+      Log.warn('sending request while api is not connected');
       if (!await connect()) {
         return Result.error(ErrorCode.InternalError);
       }
@@ -302,12 +305,12 @@ class ApiService {
 
     _channel!.sink.add(requestBytes);
 
-    Result res = asResult(await _waitForResponse(seq));
+    final res = asResult(await _waitForResponse(seq));
     if (res.isError) {
-      Log.error("got error from server: ${res.error}");
+      Log.error('got error from server: ${res.error}');
       if (res.error == ErrorCode.AppVersionOutdated) {
         globalCallbackAppIsOutdated();
-        Log.error("App Version is OUTDATED.");
+        Log.error('App Version is OUTDATED.');
         appIsOutdated = true;
         await close(() {});
         return Result.error(ErrorCode.InternalError);
@@ -320,16 +323,16 @@ class ApiService {
             // this will send the request one more time.
             return sendRequestSync(request, authenticated: false);
           } else {
-            Log.error("session is not authenticated");
+            Log.error('session is not authenticated');
             return Result.error(ErrorCode.InternalError);
           }
         }
       }
       if (res.error == ErrorCode.UserIdNotFound && contactId != null) {
-        Log.error("Contact deleted their account $contactId.");
+        Log.error('Contact deleted their account $contactId.');
         await twonlyDB.contactsDao.updateContact(
           contactId,
-          ContactsCompanion(
+          const ContactsCompanion(
             deleted: Value(true),
           ),
         );
@@ -339,8 +342,8 @@ class ApiService {
   }
 
   Future<bool> tryAuthenticateWithToken(int userId) async {
-    final storage = FlutterSecureStorage();
-    String? apiAuthToken =
+    const storage = FlutterSecureStorage();
+    final apiAuthToken =
         await storage.read(key: SecureStorageKeys.apiAuthToken);
 
     if (apiAuthToken != null) {
@@ -355,21 +358,21 @@ class ApiService {
       final result = await sendRequestSync(req, authenticated: false);
 
       if (result.isSuccess) {
-        server.Response_Ok ok = result.value;
+        final ok = result.value as server.Response_Ok;
         if (ok.hasAuthenticated()) {
-          server.Response_Authenticated authenticated = ok.authenticated;
-          updateUserdata((user) {
+          final authenticated = ok.authenticated;
+          await updateUserdata((user) {
             user.subscriptionPlan = authenticated.plan;
             return user;
           });
         }
-        Log.info("websocket is authenticated");
-        onAuthenticated();
+        Log.info('websocket is authenticated');
+        unawaited(onAuthenticated());
         return true;
       }
       if (result.isError) {
         if (result.error != ErrorCode.AuthTokenNotValid) {
-          Log.error("got error while authenticating to the server", result);
+          Log.error('got error while authenticating to the server', result);
           return false;
         }
       }
@@ -377,7 +380,7 @@ class ApiService {
     return false;
   }
 
-  Future authenticate() async {
+  Future<void> authenticate() async {
     if (isAuthenticated) return;
     if (await getSignalIdentity() == null) {
       return;
@@ -392,11 +395,11 @@ class ApiService {
 
     var handshake = Handshake()
       ..getauthchallenge = Handshake_GetAuthChallenge();
-    var req = createClientToServerFromHandshake(handshake);
+    final req = createClientToServerFromHandshake(handshake);
 
     final result = await sendRequestSync(req, authenticated: false);
     if (result.isError) {
-      Log.error("could not request auth challenge", result);
+      Log.error('could not request auth challenge', result);
       return;
     }
 
@@ -405,7 +408,7 @@ class ApiService {
     var privKey = (await getSignalIdentityKeyPair())?.getPrivateKey();
     if (privKey == null) return;
     final random = getRandomUint8List(32);
-    final signature = sign(privKey.serialize(), challenge, random);
+    final signature = sign(privKey.serialize(), challenge as Uint8List, random);
     privKey = null;
 
     final getAuthToken = Handshake_GetAuthToken()
@@ -414,18 +417,18 @@ class ApiService {
 
     final getauthtoken = Handshake()..getauthtoken = getAuthToken;
 
-    var req2 = createClientToServerFromHandshake(getauthtoken);
+    final req2 = createClientToServerFromHandshake(getauthtoken);
 
     final result2 = await sendRequestSync(req2, authenticated: false);
     if (result2.isError) {
-      Log.error("could not send auth response: ${result2.error}");
+      Log.error('could not send auth response: ${result2.error}');
       return;
     }
 
-    Uint8List apiAuthToken = result2.value.authtoken;
-    String apiAuthTokenB64 = base64Encode(apiAuthToken);
+    final apiAuthToken = result2.value.authtoken as Uint8List;
+    final apiAuthTokenB64 = base64Encode(apiAuthToken);
 
-    final storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage();
     await storage.write(
         key: SecureStorageKeys.apiAuthToken, value: apiAuthTokenB64);
 
@@ -452,51 +455,51 @@ class ApiService {
       ..signedPrekeyId = Int64(signedPreKey.id)
       ..isIos = Platform.isIOS;
 
-    if (inviteCode != null && inviteCode != "") {
+    if (inviteCode != null && inviteCode != '') {
       register.inviteCode = inviteCode;
     }
 
-    var handshake = Handshake()..register = register;
-    var req = createClientToServerFromHandshake(handshake);
+    final handshake = Handshake()..register = register;
+    final req = createClientToServerFromHandshake(handshake);
 
-    return await sendRequestSync(req);
+    return sendRequestSync(req);
   }
 
   Future<Result> getUsername(int userId) async {
-    var get = ApplicationData_GetUserById()..userId = Int64(userId);
-    var appData = ApplicationData()..getuserbyid = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req, contactId: userId);
+    final get = ApplicationData_GetUserById()..userId = Int64(userId);
+    final appData = ApplicationData()..getuserbyid = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req, contactId: userId);
   }
 
   Future<Result> downloadDone(List<int> token) async {
-    var get = ApplicationData_DownloadDone()..downloadToken = token;
-    var appData = ApplicationData()..downloaddone = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req, ensureRetransmission: true);
+    final get = ApplicationData_DownloadDone()..downloadToken = token;
+    final appData = ApplicationData()..downloaddone = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req, ensureRetransmission: true);
   }
 
   Future<Result> getCurrentLocation() async {
-    var get = ApplicationData_GetLocation();
-    var appData = ApplicationData()..getlocation = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final get = ApplicationData_GetLocation();
+    final appData = ApplicationData()..getlocation = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Result> getUserData(String username) async {
-    var get = ApplicationData_GetUserByUsername()..username = username;
-    var appData = ApplicationData()..getuserbyusername = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final get = ApplicationData_GetUserByUsername()..username = username;
+    final appData = ApplicationData()..getuserbyusername = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Response_PlanBallance?> getPlanBallance() async {
-    var get = ApplicationData_GetCurrentPlanInfos();
-    var appData = ApplicationData()..getcurrentplaninfos = get;
-    var req = createClientToServerFromApplicationData(appData);
-    Result res = await sendRequestSync(req);
+    final get = ApplicationData_GetCurrentPlanInfos();
+    final appData = ApplicationData()..getcurrentplaninfos = get;
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
     if (res.isSuccess) {
-      server.Response_Ok ok = res.value;
+      final ok = res.value as server.Response_Ok;
       if (ok.hasPlanballance()) {
         return ok.planballance;
       }
@@ -505,12 +508,12 @@ class ApiService {
   }
 
   Future<Response_Vouchers?> getVoucherList() async {
-    var get = ApplicationData_GetVouchers();
-    var appData = ApplicationData()..getvouchers = get;
-    var req = createClientToServerFromApplicationData(appData);
-    Result res = await sendRequestSync(req);
+    final get = ApplicationData_GetVouchers();
+    final appData = ApplicationData()..getvouchers = get;
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
     if (res.isSuccess) {
-      server.Response_Ok ok = res.value;
+      final ok = res.value as server.Response_Ok;
       if (ok.hasVouchers()) {
         return ok.vouchers;
       }
@@ -519,12 +522,12 @@ class ApiService {
   }
 
   Future<List<Response_AddAccountsInvite>?> getAdditionalUserInvites() async {
-    var get = ApplicationData_GetAddAccountsInvites();
-    var appData = ApplicationData()..getaddaccountsinvites = get;
-    var req = createClientToServerFromApplicationData(appData);
-    Result res = await sendRequestSync(req);
+    final get = ApplicationData_GetAddAccountsInvites();
+    final appData = ApplicationData()..getaddaccountsinvites = get;
+    final req = createClientToServerFromApplicationData(appData);
+    final res = await sendRequestSync(req);
     if (res.isSuccess) {
-      server.Response_Ok ok = res.value;
+      final ok = res.value as server.Response_Ok;
       if (ok.hasAddaccountsinvites()) {
         return ok.addaccountsinvites.invites;
       }
@@ -533,63 +536,63 @@ class ApiService {
   }
 
   Future<Result> updatePlanOptions(bool autoRenewal) async {
-    var get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
-    var appData = ApplicationData()..updateplanoptions = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
+    final appData = ApplicationData()..updateplanoptions = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Result> removeAdditionalUser(Int64 userId) async {
-    var get = ApplicationData_RemoveAdditionalUser()..userId = userId;
-    var appData = ApplicationData()..removeadditionaluser = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req, contactId: userId.toInt());
+    final get = ApplicationData_RemoveAdditionalUser()..userId = userId;
+    final appData = ApplicationData()..removeadditionaluser = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req, contactId: userId.toInt());
   }
 
   Future<Result> buyVoucher(int valueInCents) async {
-    var get = ApplicationData_CreateVoucher()..valueCents = valueInCents;
-    var appData = ApplicationData()..createvoucher = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final get = ApplicationData_CreateVoucher()..valueCents = valueInCents;
+    final appData = ApplicationData()..createvoucher = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Result> switchToPayedPlan(
       String planId, bool payMonthly, bool autoRenewal) async {
-    var get = ApplicationData_SwitchToPayedPlan()
+    final get = ApplicationData_SwitchToPayedPlan()
       ..planId = planId
       ..payMonthly = payMonthly
       ..autoRenewal = autoRenewal;
-    var appData = ApplicationData()..switchtopayedplan = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final appData = ApplicationData()..switchtopayedplan = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Result> redeemVoucher(String voucher) async {
-    var get = ApplicationData_RedeemVoucher()..voucher = voucher;
-    var appData = ApplicationData()..redeemvoucher = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final get = ApplicationData_RedeemVoucher()..voucher = voucher;
+    final appData = ApplicationData()..redeemvoucher = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Result> deleteAccount() async {
-    var get = ApplicationData_DeleteAccount();
-    var appData = ApplicationData()..deleteaccount = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final get = ApplicationData_DeleteAccount();
+    final appData = ApplicationData()..deleteaccount = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Result> redeemUserInviteCode(String inviteCode) async {
-    var get = ApplicationData_RedeemAdditionalCode()..inviteCode = inviteCode;
-    var appData = ApplicationData()..redeemadditionalcode = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final get = ApplicationData_RedeemAdditionalCode()..inviteCode = inviteCode;
+    final appData = ApplicationData()..redeemadditionalcode = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Result> updateFCMToken(String googleFcm) async {
-    var get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
-    var appData = ApplicationData()..updategooglefcmtoken = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
+    final appData = ApplicationData()..updategooglefcmtoken = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Result> updateSignedPreKey(
@@ -597,22 +600,23 @@ class ApiService {
     Uint8List signedPreKey,
     Uint8List signedPreKeySignature,
   ) async {
-    var get = ApplicationData_UpdateSignedPreKey()
+    final get = ApplicationData_UpdateSignedPreKey()
       ..signedPrekeyId = Int64(signedPreKeyId)
       ..signedPrekey = signedPreKey
       ..signedPrekeySignature = signedPreKeySignature;
-    var appData = ApplicationData()..updatesignedprekey = get;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req);
+    final appData = ApplicationData()..updatesignedprekey = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
   }
 
   Future<Response_SignedPreKey?> getSignedKeyByUserId(int userId) async {
-    var get = ApplicationData_GetSignedPreKeyByUserId()..userId = Int64(userId);
-    var appData = ApplicationData()..getsignedprekeybyuserid = get;
-    var req = createClientToServerFromApplicationData(appData);
+    final get = ApplicationData_GetSignedPreKeyByUserId()
+      ..userId = Int64(userId);
+    final appData = ApplicationData()..getsignedprekeybyuserid = get;
+    final req = createClientToServerFromApplicationData(appData);
     Result res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
-      server.Response_Ok ok = res.value;
+      final ok = res.value as server.Response_Ok;
       if (ok.hasSignedprekey()) {
         return ok.signedprekey;
       }
@@ -621,12 +625,12 @@ class ApiService {
   }
 
   Future<OtherPreKeys?> getPreKeysByUserId(int userId) async {
-    var get = ApplicationData_GetPrekeysByUserId()..userId = Int64(userId);
-    var appData = ApplicationData()..getprekeysbyuserid = get;
-    var req = createClientToServerFromApplicationData(appData);
+    final get = ApplicationData_GetPrekeysByUserId()..userId = Int64(userId);
+    final appData = ApplicationData()..getprekeysbyuserid = get;
+    final req = createClientToServerFromApplicationData(appData);
     Result res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
-      server.Response_Ok ok = res.value;
+      final ok = res.value as server.Response_Ok;
       if (ok.hasUserdata()) {
         server.Response_UserData data = ok.userdata;
         if (data.hasSignedPrekey() &&
@@ -654,8 +658,8 @@ class ApiService {
       testMessage.pushData = pushData;
     }
 
-    var appData = ApplicationData()..textmessage = testMessage;
-    var req = createClientToServerFromApplicationData(appData);
-    return await sendRequestSync(req, contactId: target);
+    final appData = ApplicationData()..textmessage = testMessage;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req, contactId: target);
   }
 }

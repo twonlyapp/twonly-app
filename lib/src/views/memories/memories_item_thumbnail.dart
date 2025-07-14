@@ -4,9 +4,9 @@ import 'package:twonly/src/model/memory_item.model.dart';
 
 class MemoriesItemThumbnail extends StatefulWidget {
   const MemoriesItemThumbnail({
-    super.key,
     required this.galleryItem,
     required this.onTap,
+    super.key,
   });
 
   final MemoryItem galleryItem;
@@ -29,9 +29,9 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
 
   String formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$twoDigitMinutes:$twoDigitSeconds";
+    final twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    final twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$twoDigitMinutes:$twoDigitSeconds';
   }
 
   @override
@@ -44,7 +44,7 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
           children: [
             Image.file(widget.galleryItem.thumbnailPath),
             if (widget.galleryItem.videoPath != null)
-              Positioned.fill(
+              const Positioned.fill(
                 child: Center(
                   child: FaIcon(FontAwesomeIcons.circlePlay),
                 ),

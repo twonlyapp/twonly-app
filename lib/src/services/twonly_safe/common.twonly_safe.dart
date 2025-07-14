@@ -8,7 +8,7 @@ import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-Future enableTwonlySafe(String password) async {
+Future<void> enableTwonlySafe(String password) async {
   final user = await getUser();
   if (user == null) return;
 
@@ -24,7 +24,7 @@ Future enableTwonlySafe(String password) async {
   performTwonlySafeBackup(force: true);
 }
 
-Future disableTwonlySafe() async {
+Future<void> disableTwonlySafe() async {
   final serverUrl = await getTwonlySafeBackupUrl();
   if (serverUrl != null) {
     try {

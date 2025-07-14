@@ -1,17 +1,18 @@
 import 'dart:async';
+
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/views/components/flame.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
+import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/components/flame.dart';
+import 'package:twonly/src/views/components/initialsavatar.dart';
+import 'package:twonly/src/views/components/user_context_menu.dart';
 
 class StartNewChatView extends StatefulWidget {
   const StartNewChatView({super.key});
@@ -29,8 +30,7 @@ class _StartNewChatView extends State<StartNewChatView> {
   void initState() {
     super.initState();
 
-    Stream<List<Contact>> stream =
-        twonlyDB.contactsDao.watchContactsForStartNewChat();
+    final stream = twonlyDB.contactsDao.watchContactsForStartNewChat();
 
     contactSub = stream.listen((update) {
       update.sort((a, b) =>
@@ -48,14 +48,14 @@ class _StartNewChatView extends State<StartNewChatView> {
     contactSub.cancel();
   }
 
-  Future filterUsers() async {
+  Future<void> filterUsers() async {
     if (searchUserName.value.text.isEmpty) {
       setState(() {
         contacts = allContacts;
       });
       return;
     }
-    List<Contact> usersFiltered = allContacts
+    final usersFiltered = allContacts
         .where((user) => getContactDisplayName(user)
             .toLowerCase()
             .contains(searchUserName.value.text.toLowerCase()))
@@ -75,11 +75,12 @@ class _StartNewChatView extends State<StartNewChatView> {
         child: PieCanvas(
           theme: getPieCanvasTheme(context),
           child: Padding(
-            padding: EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+            padding:
+                const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
             child: Column(
               children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: TextField(
                     onChanged: (_) {
                       filterUsers();
@@ -121,9 +122,9 @@ class UserList extends StatelessWidget {
       itemBuilder: (BuildContext context, int i) {
         if (i == 0) {
           return ListTile(
-            key: Key("add_new_contact"),
+            key: const Key('add_new_contact'),
             title: Text(context.lang.startNewChatNewContact),
-            leading: CircleAvatar(
+            leading: const CircleAvatar(
               child: FaIcon(
                 FontAwesomeIcons.userPlus,
                 size: 13,
@@ -133,24 +134,22 @@ class UserList extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AddNewUserView(),
+                  builder: (context) => const AddNewUserView(),
                 ),
               );
             },
           );
         }
         if (i == 1) {
-          return Divider();
+          return const Divider();
         }
-        Contact user = users[i - 2];
-        int flameCounter = getFlameCounterFromContact(user);
+        final user = users[i - 2];
+        final flameCounter = getFlameCounterFromContact(user);
         return UserContextMenu(
           key: Key(user.userId.toString()),
           contact: user,
           child: ListTile(
             title: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(getContactDisplayName(user)),
                 if (flameCounter >= 1)
@@ -159,14 +158,14 @@ class UserList extends StatelessWidget {
                     flameCounter,
                     prefix: true,
                   ),
-                Spacer(),
+                const Spacer(),
                 IconButton(
                     icon: FaIcon(FontAwesomeIcons.boxOpen,
                         size: 13,
                         color: user.archived ? null : Colors.transparent),
                     onPressed: user.archived
                         ? () async {
-                            final update =
+                            const update =
                                 ContactsCompanion(archived: Value(false));
                             await twonlyDB.contactsDao
                                 .updateContact(user.userId, update);

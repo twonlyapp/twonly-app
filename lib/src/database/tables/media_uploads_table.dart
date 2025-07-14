@@ -6,7 +6,6 @@ enum UploadState {
   readyToUpload,
   uploadTaskStarted,
   receiverNotified,
-  // after all users notified all media files that are not storable by the other person will be deleted
 }
 
 @DataClassName('MediaUpload')
@@ -16,26 +15,36 @@ class MediaUploads extends Table {
       textEnum<UploadState>().withDefault(Constant(UploadState.pending.name))();
 
   TextColumn get metadata =>
-      text().map(MediaUploadMetadataConverter()).nullable()();
+      text().map(const MediaUploadMetadataConverter()).nullable()();
 
   /// exists in UploadState.addedToMessagesDb
   TextColumn get messageIds => text().map(IntListTypeConverter()).nullable()();
 
   TextColumn get encryptionData =>
-      text().map(MediaEncryptionDataConverter()).nullable()();
+      text().map(const MediaEncryptionDataConverter()).nullable()();
 }
 
 // --- state ----
 
 class MediaUploadMetadata {
+  MediaUploadMetadata();
+  factory MediaUploadMetadata.fromJson(Map<String, dynamic> json) {
+    return MediaUploadMetadata()
+      ..contactIds = List<int>.from(json['contactIds'] as Iterable<dynamic>)
+      ..isRealTwonly = json['isRealTwonly'] as bool
+      ..isVideo = json['isVideo'] as bool
+      ..mirrorVideo = json['mirrorVideo'] as bool
+      ..maxShowTime = json['maxShowTime'] as int
+      ..maxShowTime = json['maxShowTime'] as int
+      ..messageSendAt = DateTime.parse(json['messageSendAt'] as String);
+  }
+
   late List<int> contactIds;
   late bool isRealTwonly;
   late int maxShowTime;
   late DateTime messageSendAt;
   late bool isVideo;
   late bool mirrorVideo;
-
-  MediaUploadMetadata();
 
   Map<String, dynamic> toJson() {
     return {
@@ -47,27 +56,25 @@ class MediaUploadMetadata {
       'messageSendAt': messageSendAt.toIso8601String(),
     };
   }
-
-  factory MediaUploadMetadata.fromJson(Map<String, dynamic> json) {
-    MediaUploadMetadata state = MediaUploadMetadata();
-    state.contactIds = List<int>.from(json['contactIds']);
-    state.isRealTwonly = json['isRealTwonly'];
-    state.isVideo = json['isVideo'];
-    state.mirrorVideo = json['mirrorVideo'];
-    state.maxShowTime = json['maxShowTime'];
-    state.maxShowTime = json['maxShowTime'];
-    state.messageSendAt = DateTime.parse(json['messageSendAt']);
-    return state;
-  }
 }
 
 class MediaEncryptionData {
+  MediaEncryptionData();
+
+  factory MediaEncryptionData.fromJson(Map<String, dynamic> json) {
+    return MediaEncryptionData()
+      ..sha2Hash = List<int>.from(json['sha2Hash'] as Iterable<dynamic>)
+      ..encryptionKey =
+          List<int>.from(json['encryptionKey'] as Iterable<dynamic>)
+      ..encryptionMac =
+          List<int>.from(json['encryptionMac'] as Iterable<dynamic>)
+      ..encryptionNonce =
+          List<int>.from(json['encryptionNonce'] as Iterable<dynamic>);
+  }
   late List<int> sha2Hash;
   late List<int> encryptionKey;
   late List<int> encryptionMac;
   late List<int> encryptionNonce;
-
-  MediaEncryptionData();
 
   Map<String, dynamic> toJson() {
     return {
@@ -77,15 +84,6 @@ class MediaEncryptionData {
       'encryptionNonce': encryptionNonce,
     };
   }
-
-  factory MediaEncryptionData.fromJson(Map<String, dynamic> json) {
-    MediaEncryptionData state = MediaEncryptionData();
-    state.sha2Hash = List<int>.from(json['sha2Hash']);
-    state.encryptionKey = List<int>.from(json['encryptionKey']);
-    state.encryptionMac = List<int>.from(json['encryptionMac']);
-    state.encryptionNonce = List<int>.from(json['encryptionNonce']);
-    return state;
-  }
 }
 
 // --- converters ----
@@ -93,7 +91,7 @@ class MediaEncryptionData {
 class IntListTypeConverter extends TypeConverter<List<int>, String> {
   @override
   List<int> fromSql(String fromDb) {
-    return List<int>.from(jsonDecode(fromDb));
+    return List<int>.from(jsonDecode(fromDb) as Iterable<dynamic>);
   }
 
   @override

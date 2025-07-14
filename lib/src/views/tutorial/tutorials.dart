@@ -6,7 +6,7 @@ import 'package:twonly/src/views/tutorial/show_tutorial.dart';
 
 final lockDisplayTutorial = Mutex();
 
-Future showChatListTutorialSearchOtherUsers(
+Future<void> showChatListTutorialSearchOtherUsers(
   BuildContext context,
   GlobalKey searchForOtherUsers,
 ) async {
@@ -26,7 +26,7 @@ Future showChatListTutorialSearchOtherUsers(
   });
 }
 
-Future showChatListTutorialContextMenu(
+Future<void> showChatListTutorialContextMenu(
   BuildContext context,
   GlobalKey firstUserListItemKey,
 ) async {
@@ -46,7 +46,7 @@ Future showChatListTutorialContextMenu(
   });
 }
 
-Future showVerifyShieldTutorial(
+Future<void> showVerifyShieldTutorial(
   BuildContext context,
   GlobalKey firstUserListItemKey,
 ) async {
@@ -66,7 +66,7 @@ Future showVerifyShieldTutorial(
   });
 }
 
-Future showReopenMediaFilesTutorial(
+Future<void> showReopenMediaFilesTutorial(
   BuildContext context,
   GlobalKey firstUserListItemKey,
 ) async {

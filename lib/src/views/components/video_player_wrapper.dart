@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerWrapper extends StatefulWidget {
+  const VideoPlayerWrapper(
+      {required this.videoPath, required this.mirrorVideo, super.key});
   final File videoPath;
   final bool mirrorVideo;
-
-  const VideoPlayerWrapper(
-      {super.key, required this.videoPath, required this.mirrorVideo});
 
   @override
   State<VideoPlayerWrapper> createState() => _VideoPlayerWrapperState();
@@ -24,8 +23,9 @@ class _VideoPlayerWrapperState extends State<VideoPlayerWrapper> {
       ..initialize().then((_) {
         if (context.mounted) {
           setState(() {
-            _controller.setLooping(true);
-            _controller.play();
+            _controller
+              ..setLooping(true)
+              ..play();
           });
         }
       });
@@ -48,7 +48,7 @@ class _VideoPlayerWrapperState extends State<VideoPlayerWrapper> {
                 child: VideoPlayer(_controller),
               ),
             )
-          : CircularProgressIndicator(), // Show loading indicator while initializing
+          : const CircularProgressIndicator(), // Show loading indicator while initializing
     );
   }
 }

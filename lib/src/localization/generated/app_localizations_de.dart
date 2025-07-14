@@ -253,7 +253,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messageSendState_Loading => 'Herunterladen';
 
   @override
-  String get messageStoredInGalery => 'Gespeichert';
+  String get messageStoredInGallery => 'Gespeichert';
 
   @override
   String get messageReopened => 'Erneut geöffnet';
@@ -1068,7 +1068,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get retransmissionRequested => 'Wird erneut versucht.';
 
   @override
-  String get testPaymentMethode =>
+  String get testPaymentMethod =>
       'twonly befindet sich derzeit in einer Testphase und kann nur mit einem Einladungscode vollständig genutzt werden. Es gibt derzeit keine Zahlungsmethode, um Ihr twonly-Guthaben aufzuladen!';
 
   @override

@@ -49,7 +49,7 @@ class _CreditsViewState extends State<CreditsView> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     sticker = (await getStickerIndex()).where((x) => x.source != "").toList();
     setState(() {});
   }
@@ -86,7 +86,7 @@ class _CreditsViewState extends State<CreditsView> {
             title: Center(
                 child: Text(
               "Animations",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             )),
           ),
           UrlListTitle(
@@ -141,7 +141,7 @@ class _CreditsViewState extends State<CreditsView> {
               title: Center(
                   child: Text(
                 "Filters",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               )),
             ),
           ...sticker.map(

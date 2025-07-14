@@ -7,14 +7,14 @@ import 'package:twonly/src/views/camera/image_editor/layers/filters/location_fil
 
 /// Main layer
 class FilterLayer extends StatefulWidget {
-  final FilterLayerData layerData;
   // final VoidCallback? onUpdate;
 
   const FilterLayer({
-    super.key,
     required this.layerData,
+    super.key,
     // this.onUpdate,
   });
+  final FilterLayerData layerData;
 
   @override
   State<FilterLayer> createState() => _FilterLayerState();
@@ -26,7 +26,7 @@ class FilterSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ColoredBox(
       color: Colors.transparent,
       child: Stack(
         children: [
@@ -39,8 +39,12 @@ class FilterSkeleton extends StatelessWidget {
 }
 
 class FilterText extends StatelessWidget {
-  const FilterText(this.text,
-      {super.key, this.fontSize = 24, this.color = Colors.white});
+  const FilterText(
+    this.text, {
+    super.key,
+    this.fontSize = 24,
+    this.color = Colors.white,
+  });
   final String text;
   final double fontSize;
   final Color color;
@@ -53,9 +57,9 @@ class FilterText extends StatelessWidget {
       style: TextStyle(
         fontSize: fontSize,
         color: color,
-        shadows: [
+        shadows: const [
           Shadow(
-            color: const Color.fromARGB(122, 0, 0, 0),
+            color: Color.fromARGB(122, 0, 0, 0),
             blurRadius: 5.0,
           )
         ],
@@ -67,10 +71,10 @@ class FilterText extends StatelessWidget {
 class _FilterLayerState extends State<FilterLayer> {
   final PageController pageController = PageController();
   List<Widget> pages = [
-    FilterSkeleton(),
-    DateTimeFilter(),
-    LocationFilter(),
-    FilterSkeleton(),
+    const FilterSkeleton(),
+    const DateTimeFilter(),
+    const LocationFilter(),
+    const FilterSkeleton(),
   ];
 
   @override
@@ -82,11 +86,11 @@ class _FilterLayerState extends State<FilterLayer> {
     initAsync();
   }
 
-  Future initAsync() async {
-    var stickers = (await getStickerIndex())
-        .where((x) => x.imageSrc.contains("/imagefilter/"))
-        .toList();
-    stickers.sortBy((x) => x.imageSrc);
+  Future<void> initAsync() async {
+    final stickers = (await getStickerIndex())
+        .where((x) => x.imageSrc.contains('/imagefilter/'))
+        .toList()
+      ..sortBy((x) => x.imageSrc);
 
     for (final sticker in stickers) {
       pages.insert(pages.length - 1, ImageFilter(imagePath: sticker.imageSrc));

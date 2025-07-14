@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_dynamic_calls
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
@@ -15,19 +17,19 @@ import 'package:twonly/src/model/protobuf/backup/backup.pb.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 
-Future recoverTwonlySafe(
+Future<void> recoverTwonlySafe(
   String username,
   String password,
   BackupServer? server,
 ) async {
   final (backupId, encryptionKey) = await getMasterKey(password, username);
 
-  String? backupServerUrl =
+  final backupServerUrl =
       await getTwonlySafeBackupUrlFromServer(backupId, server);
 
   if (backupServerUrl == null) {
-    Log.error("Could not create backup url");
-    throw Exception("Could not create backup server url");
+    Log.error('Could not create backup url');
+    throw Exception('Could not create backup server url');
   }
 
   late Uint8List backupData;
@@ -39,7 +41,7 @@ Future recoverTwonlySafe(
     });
   } catch (e) {
     Log.error('Error fetching backup: $e');
-    throw Exception("Backup server could not be reached. ($e)");
+    throw Exception('Backup server could not be reached. ($e)');
   }
 
   switch (response.statusCode) {
@@ -55,19 +57,18 @@ Future recoverTwonlySafe(
       throw Exception('Unexpected error: ${response.statusCode}');
   }
 
-  return await handleBackupData(encryptionKey, backupData);
+  return handleBackupData(encryptionKey, backupData);
 }
 
-Future handleBackupData(
+Future<void> handleBackupData(
   Uint8List encryptionKey,
   Uint8List backupData,
 ) async {
-  TwonlySafeBackupEncrypted encryptedBackup =
-      TwonlySafeBackupEncrypted.fromBuffer(
+  final encryptedBackup = TwonlySafeBackupEncrypted.fromBuffer(
     backupData,
   );
 
-  SecretBox secretBox = SecretBox(
+  final secretBox = SecretBox(
     encryptedBackup.cipherText,
     nonce: encryptedBackup.nonce,
     mac: Mac(encryptedBackup.mac),
@@ -80,12 +81,12 @@ Future handleBackupData(
 
   final plaintextBytes = gzip.decode(compressedBytes);
 
-  TwonlySafeBackupContent backupContent = TwonlySafeBackupContent.fromBuffer(
+  final backupContent = TwonlySafeBackupContent.fromBuffer(
     plaintextBytes,
   );
 
   final baseDir = (await getApplicationSupportDirectory()).path;
-  final originalDatabase = File(join(baseDir, "twonly_database.sqlite"));
+  final originalDatabase = File(join(baseDir, 'twonly_database.sqlite'));
   await originalDatabase.writeAsBytes(backupContent.twonlyDatabase);
 
   /// When restoring the last message ID must be increased otherwise
@@ -106,33 +107,33 @@ Future handleBackupData(
 
   if (randomUserId != null) {
     // for each day add 400 message ids
-    var dummyMessagesCounter = (lastMessageSend + 1) * 400;
+    final dummyMessagesCounter = (lastMessageSend + 1) * 400;
     Log.info(
-        "Creating $dummyMessagesCounter dummy messages to increase message counter as last message was $lastMessageSend days ago.");
+        'Creating $dummyMessagesCounter dummy messages to increase message counter as last message was $lastMessageSend days ago.');
     for (var i = 0; i < dummyMessagesCounter; i++) {
       await database.messagesDao.insertMessage(
         MessagesCompanion(
           contactId: Value(randomUserId),
-          kind: Value(MessageKind.ack),
-          acknowledgeByServer: Value(true),
-          errorWhileSending: Value(true),
+          kind: const Value(MessageKind.ack),
+          acknowledgeByServer: const Value(true),
+          errorWhileSending: const Value(true),
         ),
       );
     }
     await database.messagesDao.deleteAllMessagesByContactId(randomUserId);
   }
 
-  final storage = FlutterSecureStorage();
+  const storage = FlutterSecureStorage();
 
   final secureStorage = jsonDecode(backupContent.secureStorageJson);
 
   await storage.write(
       key: SecureStorageKeys.signalIdentity,
-      value: secureStorage[SecureStorageKeys.signalIdentity]);
+      value: secureStorage[SecureStorageKeys.signalIdentity] as String);
   await storage.write(
       key: SecureStorageKeys.signalSignedPreKey,
-      value: secureStorage[SecureStorageKeys.signalSignedPreKey]);
+      value: secureStorage[SecureStorageKeys.signalSignedPreKey] as String);
   await storage.write(
       key: SecureStorageKeys.userData,
-      value: secureStorage[SecureStorageKeys.userData]);
+      value: secureStorage[SecureStorageKeys.userData] as String);
 }

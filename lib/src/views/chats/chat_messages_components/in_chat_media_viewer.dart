@@ -1,20 +1,21 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
 
 class InChatMediaViewer extends StatefulWidget {
   const InChatMediaViewer({
-    super.key,
     required this.message,
     required this.contact,
     required this.color,
     required this.galleryItems,
     required this.canBeReopened,
+    super.key,
   });
 
   final Message message;
@@ -40,9 +41,9 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     initStream();
   }
 
-  Future loadIndexAsync() async {
+  Future<void> loadIndexAsync() async {
     if (!widget.message.mediaStored) return;
-    _timer = Timer.periodic(Duration(milliseconds: 10), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       /// when the galleryItems are updated this widget is not reloaded
       /// so using this timer as a workaround
       if (loadIndex()) {
@@ -72,7 +73,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     // videoController?.dispose();
   }
 
-  Future initStream() async {
+  Future<void> initStream() async {
     /// When the image is opened from the chat and then stored the
     /// image is not loaded so this will trigger an initAsync when mediaStored is changed
 
@@ -85,22 +86,21 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     messageStream = stream.listen((updated) async {
       if (updated != null) {
         if (updated.mediaStored) {
-          messageStream?.cancel();
-          loadIndexAsync();
+          await messageStream?.cancel();
+          await loadIndexAsync();
         }
       }
     });
   }
 
-  Future onTap() async {
+  Future<void> onTap() async {
     if (galleryItemIndex == null) return;
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => MemoriesPhotoSliderView(
           galleryItems: widget.galleryItems,
           initialIndex: galleryItemIndex!,
-          scrollDirection: Axis.horizontal,
         ),
       ),
     );
@@ -110,15 +110,14 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   Widget build(BuildContext context) {
     if (galleryItemIndex == null) {
       return Container(
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           minHeight: 39,
         ),
         decoration: BoxDecoration(
           border: Border.all(
             color: widget.color,
-            width: 1.0,
           ),
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(
@@ -135,10 +134,9 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
       decoration: BoxDecoration(
         border: Border.all(
           color: Colors.transparent,
-          width: 1.0,
         ),
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: MemoriesItemThumbnail(
         galleryItem: widget.galleryItems[galleryItemIndex!],

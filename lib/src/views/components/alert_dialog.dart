@@ -10,9 +10,9 @@ Future<bool> showAlertDialog(
   String? customOk,
   String? customCancel,
 }) async {
-  Completer<bool> completer = Completer<bool>();
+  final completer = Completer<bool>();
 
-  Widget okButton = TextButton(
+  final Widget okButton = TextButton(
     child: Text(customOk ?? context.lang.ok),
     onPressed: () {
       completer.complete(true);
@@ -20,7 +20,7 @@ Future<bool> showAlertDialog(
     },
   );
 
-  Widget cancelButton = TextButton(
+  final Widget cancelButton = TextButton(
     child: Text(customCancel ?? context.lang.cancel),
     onPressed: () {
       completer.complete(false);
@@ -29,7 +29,7 @@ Future<bool> showAlertDialog(
   );
 
   // set up the AlertDialog
-  AlertDialog alert = AlertDialog(
+  final alert = AlertDialog(
     title: Text(title),
     content: (content == null) ? null : Text(content),
     actions: [
@@ -39,7 +39,8 @@ Future<bool> showAlertDialog(
   );
 
   // show the dialog
-  showDialog(
+  // ignore: inference_failure_on_function_invocation
+  await showDialog(
     context: context,
     builder: (BuildContext context) {
       return alert;

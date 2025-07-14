@@ -8,14 +8,13 @@ import 'package:twonly/src/views/camera/image_editor/layers/text_layer.dart';
 
 /// View stacked layers (unbounded height, width)
 class LayersViewer extends StatelessWidget {
-  final List<Layer> layers;
-  final Function()? onUpdate;
-
   const LayersViewer({
-    super.key,
     required this.layers,
+    super.key,
     this.onUpdate,
   });
+  final List<Layer> layers;
+  final void Function()? onUpdate;
 
   @override
   Widget build(BuildContext context) {

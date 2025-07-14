@@ -23,7 +23,7 @@ Mutex requestNewKeys = Mutex();
 DateTime lastPreKeyRequest = DateTime.now().subtract(Duration(hours: 1));
 DateTime lastSignedPreKeyRequest = DateTime.now().subtract(Duration(hours: 1));
 
-Future requestNewPrekeysForContact(int contactId) async {
+Future<void> requestNewPrekeysForContact(int contactId) async {
   if (lastPreKeyRequest
       .isAfter(DateTime.now().subtract(Duration(seconds: 60)))) {
     return;
@@ -59,7 +59,7 @@ Future<SignalContactPreKey?> getPreKeyByContactId(int contactId) async {
   return twonlyDB.signalDao.popPreKeyByContactId(contactId);
 }
 
-Future requestNewSignedPreKeyForContact(int contactId) async {
+Future<void> requestNewSignedPreKeyForContact(int contactId) async {
   if (lastSignedPreKeyRequest
       .isAfter(DateTime.now().subtract(Duration(seconds: 60)))) {
     Log.info("last signed pre request was 60s before");

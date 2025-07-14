@@ -58,7 +58,7 @@ Future<void> setupPushNotification() async {
   );
 }
 
-Future createPushAvatars() async {
+Future<void> createPushAvatars() async {
   if (!Platform.isAndroid) {
     return; // avatars currently only shown in Android...
   }

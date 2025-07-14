@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:restart_app/restart_app.dart';
-import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
-import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/account/refund_credits.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
@@ -28,20 +30,20 @@ class _AccountViewState extends State<AccountView> {
     super.initState();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final ballance = await loadPlanBalance(useCache: false);
     if (ballance == null || !mounted) return;
-    int ballanceInCents = ballance.transactions
+    var ballanceInCents = ballance.transactions
         .where((x) =>
-            (x.transactionType != Response_TransactionTypes.ThanksForTesting ||
-                kDebugMode))
+            x.transactionType != Response_TransactionTypes.ThanksForTesting ||
+            kDebugMode)
         .map((a) => a.depositCents.toInt())
         .sum;
     if (ballanceInCents < 0) {
       ballanceInCents = 0;
     }
-    hasRemainingBallance = (ballanceInCents > 0);
-    Locale myLocale = Localizations.localeOf(context);
+    hasRemainingBallance = ballanceInCents > 0;
+    final myLocale = Localizations.localeOf(context);
     formattedBallance = NumberFormat.currency(
       locale: myLocale.toString(),
       symbol: '€',
@@ -59,22 +61,22 @@ class _AccountViewState extends State<AccountView> {
       body: ListView(
         children: [
           ListTile(
-            title: Text("Transfer account"),
-            subtitle: Text("Coming soon"),
+            title: const Text('Transfer account'),
+            subtitle: const Text('Coming soon'),
             onTap: () async {
-              showAlertDialog(
+              await showAlertDialog(
                 context,
-                "Coming soon",
-                "This feature is not yet implemented!",
+                'Coming soon',
+                'This feature is not yet implemented!',
               );
             },
           ),
-          Divider(),
+          const Divider(),
           Container(
             alignment: Alignment.center,
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20),
-            child: Text(
-              "Danger Zone",
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+            child: const Text(
+              'Danger Zone',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20,
@@ -86,19 +88,19 @@ class _AccountViewState extends State<AccountView> {
           ListTile(
             title: Text(
               context.lang.settingsAccountDeleteAccount,
-              style: TextStyle(color: Colors.red),
+              style: const TextStyle(color: Colors.red),
             ),
             subtitle: (formattedBallance == null)
                 ? Text(context.lang.settingsAccountDeleteAccountNoInternet)
-                : (hasRemainingBallance)
+                : hasRemainingBallance
                     ? Text(context.lang
                         .settingsAccountDeleteAccountWithBallance(
                             formattedBallance!))
                     : Text(context.lang.settingsAccountDeleteAccountNoBallance),
-            onLongPress: (kDebugMode)
+            onLongPress: kDebugMode
                 ? () async {
                     await deleteLocalUserData();
-                    Restart.restartApp(
+                    await Restart.restartApp(
                       notificationTitle: 'Account successfully deleted',
                       notificationBody: 'Click here to open the app again',
                     );
@@ -108,17 +110,17 @@ class _AccountViewState extends State<AccountView> {
                 ? null
                 : () async {
                     if (hasRemainingBallance) {
-                      bool? canGoNext = await Navigator.push(context,
+                      final canGoNext = await Navigator.push(context,
                           MaterialPageRoute(builder: (context) {
                         return RefundCreditsView(
                           formattedBalance: formattedBallance!,
                         );
-                      }));
-                      initAsync();
+                      })) as bool?;
+                      unawaited(initAsync());
                       if (canGoNext == null || !canGoNext) return;
                     }
                     if (!context.mounted) return;
-                    bool ok = await showAlertDialog(
+                    final ok = await showAlertDialog(
                       context,
                       context.lang.settingsAccountDeleteModalTitle,
                       context.lang.settingsAccountDeleteModalBody,
@@ -128,9 +130,9 @@ class _AccountViewState extends State<AccountView> {
                       if (res.isError) {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
+                          const SnackBar(
                             content: Text(
-                              "Could not delete the account. Please ensure you have a internet connection!",
+                              'Could not delete the account. Please ensure you have a internet connection!',
                             ),
                             duration: Duration(seconds: 3),
                           ),
@@ -138,7 +140,7 @@ class _AccountViewState extends State<AccountView> {
                         return;
                       }
                       await deleteLocalUserData();
-                      Restart.restartApp(
+                      await Restart.restartApp(
                         notificationTitle: 'Account successfully deleted',
                         notificationBody: 'Click here to open the app again',
                       );

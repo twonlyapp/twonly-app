@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_dynamic_calls
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -21,17 +23,17 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
 
   @override
   void initState() {
-    _urlController.text = "https://";
+    _urlController.text = 'https://';
     super.initState();
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final user = await getUser();
     if (user?.backupServer != null) {
-      var uri = Uri.parse(user!.backupServer!.serverUrl);
+      final uri = Uri.parse(user!.backupServer!.serverUrl);
       // remove user auth data
-      Uri serverUrl = Uri(
+      final serverUrl = Uri(
         scheme: uri.scheme,
         host: uri.host,
         port: uri.port,
@@ -39,27 +41,27 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
         query: uri.query,
       );
       _urlController.text = serverUrl.toString();
-      _usernameController.text = serverUrl.userInfo.split(":")[0].toString();
+      _usernameController.text = serverUrl.userInfo.split(':')[0];
     }
     setState(() {});
   }
 
-  Future checkAndUpdateBackupServer() async {
-    String serverUrl = _urlController.text;
-    if (!serverUrl.endsWith("/")) {
-      serverUrl += "/";
+  Future<void> checkAndUpdateBackupServer() async {
+    var serverUrl = _urlController.text;
+    if (!serverUrl.endsWith('/')) {
+      serverUrl += '/';
     }
 
-    String username = _usernameController.text;
-    String password = _passwordController.text;
+    final username = _usernameController.text;
+    final password = _passwordController.text;
 
     if (username.isNotEmpty || password.isNotEmpty) {
-      serverUrl = serverUrl.replaceAll("https://", "");
-      serverUrl = "https://$username@$password$serverUrl";
+      serverUrl = serverUrl.replaceAll('https://', '');
+      serverUrl = 'https://$username@$password$serverUrl';
     }
 
     try {
-      final uri = Uri.parse("${serverUrl}config");
+      final uri = Uri.parse('${serverUrl}config');
       final response = await http.get(
         uri,
         headers: {
@@ -73,8 +75,8 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
 
         final backupServer = BackupServer(
           serverUrl: serverUrl,
-          retentionDays: data["retentionDays"]!,
-          maxBackupBytes: data["maxBackupBytes"]!,
+          retentionDays: data['retentionDays']! as int,
+          maxBackupBytes: data['maxBackupBytes']! as int,
         );
         await updateUserdata((user) {
           user.backupServer = backupServer;
@@ -87,12 +89,12 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
             'Got invalid status code ${response.statusCode} from server.');
       }
     } catch (e) {
-      Log.error("$e");
+      Log.error('$e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$e'),
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -103,10 +105,10 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('twonly Safe Server'),
+        title: const Text('twonly Safe Server'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(40.0),
+        padding: const EdgeInsets.all(40),
         child: ListView(
           children: [
             Text(
@@ -118,47 +120,47 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
               controller: _urlController,
               onChanged: (value) {
                 if (value.length < 8) {
-                  value = "";
+                  value = '';
                 }
-                value = value.replaceAll("https://", "");
-                value = value.replaceAll("http://", "");
-                value = "https://$value";
+                value = value.replaceAll('https://', '');
+                value = value.replaceAll('http://', '');
+                value = 'https://$value';
                 _urlController.text = value;
                 setState(() {});
               },
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Server URL',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16),
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Username (optional)',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Password (optional)',
                 border: OutlineInputBorder(),
               ),
               obscureText: true,
             ),
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20),
             Center(
               child: FilledButton.icon(
                 onPressed: (_urlController.text.length > 8)
                     ? checkAndUpdateBackupServer
                     : null,
-                icon: FaIcon(FontAwesomeIcons.server),
+                icon: const FaIcon(FontAwesomeIcons.server),
                 label: Text(context.lang.backupUseOwnServer),
               ),
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10),
             Center(
               child: OutlinedButton(
                 onPressed: () async {

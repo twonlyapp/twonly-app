@@ -14,16 +14,17 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 
 class Result<T, E> {
+  Result.error(this.error) : value = null;
+  Result.success(this.value) : error = null;
+
   final T? value;
   final E? error;
 
   bool get isSuccess => value != null;
   bool get isError => error != null;
-
-  Result.success(this.value) : error = null;
-  Result.error(this.error) : value = null;
 }
 
+// ignore: strict_raw_type
 Result asResult(server.ServerToClient? msg) {
   if (msg == null) {
     return Result.error(ErrorCode.InternalError);
@@ -44,20 +45,20 @@ ClientToServer createClientToServerFromHandshake(Handshake handshake) {
 
 ClientToServer createClientToServerFromApplicationData(
     ApplicationData applicationData) {
-  var v0 = client.V0()
+  final v0 = client.V0()
     ..seq = Int64(0)
     ..applicationdata = applicationData;
   return ClientToServer()..v0 = v0;
 }
 
-Future deleteContact(int contactId) async {
+Future<void> deleteContact(int contactId) async {
   await twonlyDB.messagesDao.deleteAllMessagesByContactId(contactId);
   await twonlyDB.signalDao.deleteAllByContactId(contactId);
   await deleteSessionWithTarget(contactId);
   await twonlyDB.contactsDao.deleteContactByUserId(contactId);
 }
 
-Future rejectUser(int contactId) async {
+Future<void> rejectUser(int contactId) async {
   await encryptAndSendMessageAsync(
     null,
     contactId,
@@ -69,10 +70,10 @@ Future rejectUser(int contactId) async {
   );
 }
 
-Future handleMediaError(Message message) async {
+Future<void> handleMediaError(Message message) async {
   await twonlyDB.messagesDao.updateMessageByMessageId(
     message.messageId,
-    MessagesCompanion(
+    const MessagesCompanion(
       errorWhileSending: Value(true),
       mediaRetransmissionState: Value(
         MediaRetransmitting.requested,
@@ -80,7 +81,7 @@ Future handleMediaError(Message message) async {
     ),
   );
   if (message.messageOtherId != null) {
-    encryptAndSendMessageAsync(
+    await encryptAndSendMessageAsync(
       null,
       message.contactId,
       MessageJson(

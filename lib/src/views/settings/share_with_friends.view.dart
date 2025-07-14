@@ -43,7 +43,7 @@ class _ShareWithFriendsView extends State<ShareWithFriendsView> {
           children: [
             TextField(
               controller: _controller,
-              style: TextStyle(fontSize: 14.0),
+              style: const TextStyle(fontSize: 14.0),
               decoration: InputDecoration(),
             ),
             SizedBox(height: 16.0),

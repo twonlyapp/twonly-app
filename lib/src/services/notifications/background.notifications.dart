@@ -14,9 +14,8 @@ import 'package:twonly/src/utils/log.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-Future customLocalPushNotification(String title, String msg) async {
-  const AndroidNotificationDetails androidNotificationDetails =
-      AndroidNotificationDetails(
+Future<void> customLocalPushNotification(String title, String msg) async {
+  const androidNotificationDetails = AndroidNotificationDetails(
     '1',
     'System',
     channelDescription: 'System messages.',
@@ -24,9 +23,8 @@ Future customLocalPushNotification(String title, String msg) async {
     priority: Priority.max,
   );
 
-  const DarwinNotificationDetails darwinNotificationDetails =
-      DarwinNotificationDetails();
-  const NotificationDetails notificationDetails = NotificationDetails(
+  const darwinNotificationDetails = DarwinNotificationDetails();
+  const notificationDetails = NotificationDetails(
     android: androidNotificationDetails,
     iOS: darwinNotificationDetails,
   );
@@ -39,7 +37,7 @@ Future customLocalPushNotification(String title, String msg) async {
   );
 }
 
-Future handlePushData(String pushDataB64) async {
+Future<void> handlePushData(String pushDataB64) async {
   try {
     final pushData =
         EncryptedPushNotification.fromBuffer(base64.decode(pushDataB64));
@@ -48,7 +46,7 @@ Future handlePushData(String pushDataB64) async {
     PushUser? foundPushUser;
 
     if (pushData.keyId == 0) {
-      List<int> key = "InsecureOnlyUsedForAddingContact".codeUnits;
+      final key = 'InsecureOnlyUsedForAddingContact'.codeUnits;
       pushNotification = await tryDecryptMessage(key, pushData);
     } else {
       final pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
@@ -70,14 +68,14 @@ Future handlePushData(String pushDataB64) async {
     if (pushNotification != null) {
       if (pushNotification.kind == PushKind.testNotification) {
         await customLocalPushNotification(
-          "Test notification",
-          "This is a test notification.",
+          'Test notification',
+          'This is a test notification.',
         );
       } else if (foundPushUser != null) {
         if (pushNotification.hasMessageId()) {
           if (pushNotification.messageId <= foundPushUser.lastMessageId) {
             Log.info(
-              "Got a push notification for a message which was already opened.",
+              'Got a push notification for a message which was already opened.',
             );
             return;
           }
@@ -90,8 +88,8 @@ Future handlePushData(String pushDataB64) async {
     }
   } catch (e) {
     await customLocalPushNotification(
-      "Du hast eine neue Nachricht.",
-      "Öffne twonly um mehr zu erfahren.",
+      'Du hast eine neue Nachricht.',
+      'Öffne twonly um mehr zu erfahren.',
     );
     Log.error(e);
   }
@@ -101,9 +99,9 @@ Future<PushNotification?> tryDecryptMessage(
     List<int> key, EncryptedPushNotification push) async {
   try {
     final chacha20 = FlutterChacha20.poly1305Aead();
-    SecretKeyData secretKeyData = SecretKeyData(key);
+    final secretKeyData = SecretKeyData(key);
 
-    SecretBox secretBox = SecretBox(
+    final secretBox = SecretBox(
       push.ciphertext,
       nonce: push.nonce,
       mac: Mac(push.mac),
@@ -118,7 +116,7 @@ Future<PushNotification?> tryDecryptMessage(
   }
 }
 
-Future showLocalPushNotification(
+Future<void> showLocalPushNotification(
   PushUser pushUser,
   PushNotification pushNotification,
 ) async {
@@ -127,24 +125,23 @@ Future showLocalPushNotification(
 
   // do not show notification for blocked users...
   if (pushUser.blocked) {
-    Log.info("Blocked a message from a blocked user!");
+    Log.info('Blocked a message from a blocked user!');
     return;
   }
 
   title = pushUser.displayName;
   body = getPushNotificationText(pushNotification);
-  if (body == "") {
-    Log.error("No push notification type defined!");
+  if (body == '') {
+    Log.error('No push notification type defined!');
   }
 
   FilePathAndroidBitmap? styleInformation;
-  String? avatarPath = await getAvatarIcon(pushUser.userId.toInt());
+  final avatarPath = await getAvatarIcon(pushUser.userId.toInt());
   if (avatarPath != null) {
     styleInformation = FilePathAndroidBitmap(avatarPath);
   }
 
-  AndroidNotificationDetails androidNotificationDetails =
-      AndroidNotificationDetails(
+  final androidNotificationDetails = AndroidNotificationDetails(
     '0',
     'Messages',
     channelDescription: 'Messages from other users.',
@@ -154,9 +151,8 @@ Future showLocalPushNotification(
     largeIcon: styleInformation,
   );
 
-  const DarwinNotificationDetails darwinNotificationDetails =
-      DarwinNotificationDetails();
-  NotificationDetails notificationDetails = NotificationDetails(
+  const darwinNotificationDetails = DarwinNotificationDetails();
+  final notificationDetails = NotificationDetails(
     android: androidNotificationDetails,
     iOS: darwinNotificationDetails,
   );
@@ -170,19 +166,18 @@ Future showLocalPushNotification(
   );
 }
 
-Future showLocalPushNotificationWithoutUserId(
+Future<void> showLocalPushNotificationWithoutUserId(
   PushNotification pushNotification,
 ) async {
   String? title;
   String? body;
 
   body = getPushNotificationTextWithoutUserId(pushNotification.kind);
-  if (body == "") {
-    Log.error("No push notification type defined!");
+  if (body == '') {
+    Log.error('No push notification type defined!');
   }
 
-  AndroidNotificationDetails androidNotificationDetails =
-      AndroidNotificationDetails(
+  const androidNotificationDetails = AndroidNotificationDetails(
     '0',
     'Messages',
     channelDescription: 'Messages from other users.',
@@ -191,9 +186,8 @@ Future showLocalPushNotificationWithoutUserId(
     ticker: 'You got a new message.',
   );
 
-  const DarwinNotificationDetails darwinNotificationDetails =
-      DarwinNotificationDetails();
-  NotificationDetails notificationDetails = NotificationDetails(
+  const darwinNotificationDetails = DarwinNotificationDetails();
+  const notificationDetails = NotificationDetails(
       android: androidNotificationDetails, iOS: darwinNotificationDetails);
 
   await flutterLocalNotificationsPlugin.show(
@@ -219,99 +213,99 @@ Future<String?> getAvatarIcon(int contactId) async {
 String getPushNotificationTextWithoutUserId(PushKind pushKind) {
   Map<String, String> pushNotificationText;
 
-  String systemLanguage = Platform.localeName;
+  final systemLanguage = Platform.localeName;
 
-  if (systemLanguage.contains("de")) {
+  if (systemLanguage.contains('de')) {
     pushNotificationText = {
-      PushKind.text.name: "Du hast eine neue Nachricht erhalten.",
-      PushKind.twonly.name: "Du hast ein neues twonly erhalten.",
-      PushKind.video.name: "Du hast ein neues Video erhalten.",
-      PushKind.image.name: "Du hast ein neues Bild erhalten.",
+      PushKind.text.name: 'Du hast eine neue Nachricht erhalten.',
+      PushKind.twonly.name: 'Du hast ein neues twonly erhalten.',
+      PushKind.video.name: 'Du hast ein neues Video erhalten.',
+      PushKind.image.name: 'Du hast ein neues Bild erhalten.',
       PushKind.contactRequest.name:
-          "Du hast eine neue Kontaktanfrage erhalten.",
-      PushKind.acceptRequest.name: "Deine Kontaktanfrage wurde angenommen.",
-      PushKind.storedMediaFile.name: "Dein Bild wurde gespeichert.",
-      PushKind.reaction.name: "Du hast eine Reaktion auf dein Bild erhalten.",
-      PushKind.reopenedMedia.name: "Dein Bild wurde erneut geöffnet.",
+          'Du hast eine neue Kontaktanfrage erhalten.',
+      PushKind.acceptRequest.name: 'Deine Kontaktanfrage wurde angenommen.',
+      PushKind.storedMediaFile.name: 'Dein Bild wurde gespeichert.',
+      PushKind.reaction.name: 'Du hast eine Reaktion auf dein Bild erhalten.',
+      PushKind.reopenedMedia.name: 'Dein Bild wurde erneut geöffnet.',
       PushKind.reactionToVideo.name:
-          "Du hast eine Reaktion auf dein Video erhalten.",
+          'Du hast eine Reaktion auf dein Video erhalten.',
       PushKind.reactionToText.name:
-          "Du hast eine Reaktion auf deinen Text erhalten.",
+          'Du hast eine Reaktion auf deinen Text erhalten.',
       PushKind.reactionToImage.name:
-          "Du hast eine Reaktion auf dein Bild erhalten.",
-      PushKind.response.name: "Du hast eine Antwort erhalten.",
+          'Du hast eine Reaktion auf dein Bild erhalten.',
+      PushKind.response.name: 'Du hast eine Antwort erhalten.',
     };
   } else {
     pushNotificationText = {
-      PushKind.text.name: "You have received a new message.",
-      PushKind.twonly.name: "You have received a new twonly.",
-      PushKind.video.name: "You have received a new video.",
-      PushKind.image.name: "You have received a new image.",
-      PushKind.contactRequest.name: "You have received a new contact request.",
-      PushKind.acceptRequest.name: "Your contact request has been accepted.",
-      PushKind.storedMediaFile.name: "Your image has been saved.",
-      PushKind.reaction.name: "You have received a reaction to your image.",
-      PushKind.reopenedMedia.name: "Your image has been reopened.",
+      PushKind.text.name: 'You have received a new message.',
+      PushKind.twonly.name: 'You have received a new twonly.',
+      PushKind.video.name: 'You have received a new video.',
+      PushKind.image.name: 'You have received a new image.',
+      PushKind.contactRequest.name: 'You have received a new contact request.',
+      PushKind.acceptRequest.name: 'Your contact request has been accepted.',
+      PushKind.storedMediaFile.name: 'Your image has been saved.',
+      PushKind.reaction.name: 'You have received a reaction to your image.',
+      PushKind.reopenedMedia.name: 'Your image has been reopened.',
       PushKind.reactionToVideo.name:
-          "You have received a reaction to your video.",
+          'You have received a reaction to your video.',
       PushKind.reactionToText.name:
-          "You have received a reaction to your text.",
+          'You have received a reaction to your text.',
       PushKind.reactionToImage.name:
-          "You have received a reaction to your image.",
-      PushKind.response.name: "You have received a response.",
+          'You have received a reaction to your image.',
+      PushKind.response.name: 'You have received a response.',
     };
   }
-  return pushNotificationText[pushKind.name] ?? "";
+  return pushNotificationText[pushKind.name] ?? '';
 }
 
 String getPushNotificationText(PushNotification pushNotification) {
-  String systemLanguage = Platform.localeName;
+  final systemLanguage = Platform.localeName;
 
   Map<String, String> pushNotificationText;
 
-  if (systemLanguage.contains("de")) {
+  if (systemLanguage.contains('de')) {
     pushNotificationText = {
-      PushKind.text.name: "hat dir eine Nachricht gesendet.",
-      PushKind.twonly.name: "hat dir ein twonly gesendet.",
-      PushKind.video.name: "hat dir ein Video gesendet.",
-      PushKind.image.name: "hat dir ein Bild gesendet.",
-      PushKind.contactRequest.name: "möchte sich mit dir vernetzen.",
-      PushKind.acceptRequest.name: "ist jetzt mit dir vernetzt.",
-      PushKind.storedMediaFile.name: "hat dein Bild gespeichert.",
-      PushKind.reaction.name: "hat auf dein Bild reagiert.",
-      PushKind.reopenedMedia.name: "hat dein Bild erneut geöffnet.",
+      PushKind.text.name: 'hat dir eine Nachricht gesendet.',
+      PushKind.twonly.name: 'hat dir ein twonly gesendet.',
+      PushKind.video.name: 'hat dir ein Video gesendet.',
+      PushKind.image.name: 'hat dir ein Bild gesendet.',
+      PushKind.contactRequest.name: 'möchte sich mit dir vernetzen.',
+      PushKind.acceptRequest.name: 'ist jetzt mit dir vernetzt.',
+      PushKind.storedMediaFile.name: 'hat dein Bild gespeichert.',
+      PushKind.reaction.name: 'hat auf dein Bild reagiert.',
+      PushKind.reopenedMedia.name: 'hat dein Bild erneut geöffnet.',
       PushKind.reactionToVideo.name:
-          "hat mit {{reaction}} auf dein Video reagiert.",
+          'hat mit {{reaction}} auf dein Video reagiert.',
       PushKind.reactionToText.name:
-          "hat mit {{reaction}} auf deine Nachricht reagiert.",
+          'hat mit {{reaction}} auf deine Nachricht reagiert.',
       PushKind.reactionToImage.name:
-          "hat mit {{reaction}} auf dein Bild reagiert.",
-      PushKind.response.name: "hat dir geantwortet.",
+          'hat mit {{reaction}} auf dein Bild reagiert.',
+      PushKind.response.name: 'hat dir geantwortet.',
     };
   } else {
     pushNotificationText = {
-      PushKind.text.name: "has sent you a message.",
-      PushKind.twonly.name: "has sent you a twonly.",
-      PushKind.video.name: "has sent you a video.",
-      PushKind.image.name: "has sent you an image.",
-      PushKind.contactRequest.name: "wants to connect with you.",
-      PushKind.acceptRequest.name: "is now connected with you.",
-      PushKind.storedMediaFile.name: "has stored your image.",
-      PushKind.reaction.name: "has reacted to your image.",
-      PushKind.reopenedMedia.name: "has reopened your image.",
+      PushKind.text.name: 'has sent you a message.',
+      PushKind.twonly.name: 'has sent you a twonly.',
+      PushKind.video.name: 'has sent you a video.',
+      PushKind.image.name: 'has sent you an image.',
+      PushKind.contactRequest.name: 'wants to connect with you.',
+      PushKind.acceptRequest.name: 'is now connected with you.',
+      PushKind.storedMediaFile.name: 'has stored your image.',
+      PushKind.reaction.name: 'has reacted to your image.',
+      PushKind.reopenedMedia.name: 'has reopened your image.',
       PushKind.reactionToVideo.name:
-          "has reacted with {{reaction}} to your video.",
+          'has reacted with {{reaction}} to your video.',
       PushKind.reactionToText.name:
-          "has reacted with {{reaction}} to your message.",
+          'has reacted with {{reaction}} to your message.',
       PushKind.reactionToImage.name:
-          "has reacted with {{reaction}} to your image.",
-      PushKind.response.name: "has responded.",
+          'has reacted with {{reaction}} to your image.',
+      PushKind.response.name: 'has responded.',
     };
   }
-  var contentText = pushNotificationText[pushNotification.kind.name] ?? "";
+  var contentText = pushNotificationText[pushNotification.kind.name] ?? '';
   if (pushNotification.hasReactionContent()) {
     contentText = contentText.replaceAll(
-        "{{reaction}}", pushNotification.reactionContent);
+        '{{reaction}}', pushNotification.reactionContent);
   }
   return contentText;
 }

@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
@@ -45,7 +46,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final balance = await loadPlanBalance();
     if (balance == null) {
       balanceInCents = 0;
@@ -60,7 +61,8 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
     if (widget.valueInCents != null && widget.valueInCents! > 0) {
       checkoutInCents = widget.valueInCents!;
     } else if (widget.planId != null) {
-      checkoutInCents = getPlanPrice(widget.planId!, widget.payMonthly!);
+      checkoutInCents =
+          getPlanPrice(widget.planId!, paidMonthly: widget.payMonthly!);
     } else {
       /// Nothing to checkout for...
       Navigator.pop(context);
@@ -73,11 +75,11 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
 
   @override
   Widget build(BuildContext context) {
-    String totalPrice = (widget.planId != null && widget.payMonthly != null)
-        ? "${localePrizing(context, checkoutInCents)}/${(widget.payMonthly!) ? context.lang.month : context.lang.year}"
+    final totalPrice = (widget.planId != null && widget.payMonthly != null)
+        ? '${localePrizing(context, checkoutInCents)}/${(widget.payMonthly!) ? context.lang.month : context.lang.year}'
         : localePrizing(context, checkoutInCents);
-    bool canPay = (paymentMethods == PaymentMethods.twonlyCredit &&
-        (balanceInCents == null || balanceInCents! >= checkoutInCents));
+    final canPay = paymentMethods == PaymentMethods.twonlyCredit &&
+        (balanceInCents == null || balanceInCents! >= checkoutInCents);
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.selectPaymentMethod),
@@ -87,15 +89,15 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.red,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Text(
-                  context.lang.testPaymentMethode,
+                  context.lang.testPaymentMethod,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -104,10 +106,10 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
               child: ListView(
                 children: [
                   Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     child: Card(
                       child: Padding(
-                        padding: EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -117,8 +119,8 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                                 Text(context.lang.twonlyCredit),
                                 if (balanceInCents != null)
                                   Text(
-                                    "${context.lang.currentBalance}: ${localePrizing(context, balanceInCents!)}",
-                                    style: TextStyle(fontSize: 10),
+                                    '${context.lang.currentBalance}: ${localePrizing(context, balanceInCents!)}',
+                                    style: const TextStyle(fontSize: 10),
                                   )
                               ],
                             ),
@@ -141,29 +143,29 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
             ),
             if (!canPay) ...[
               Padding(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Text(
                   context.lang.notEnoughCredit,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 12),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: FilledButton(
                   onPressed: () async {
                     await Navigator.push(context,
                         MaterialPageRoute(builder: (context) {
-                      return VoucherView();
+                      return const VoucherView();
                     }));
-                    initAsync();
+                    await initAsync();
                   },
                   child: Text(context.lang.chargeCredit),
                 ),
               ),
             ],
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: ListTile(
                 title: Text(context.lang.autoRenewal),
                 subtitle: Text(context.lang.autoRenewalDesc),
@@ -182,19 +184,19 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
             ),
             if (widget.refund != null)
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Card(
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Text(
                           context.lang.refund,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "+${localePrizing(context, widget.refund!)}",
+                          '+${localePrizing(context, widget.refund!)}',
                           textAlign: TextAlign.end,
                           style: TextStyle(color: context.color.primary),
                         ),
@@ -204,16 +206,16 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 ),
               ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Text(
                         context.lang.checkoutTotal,
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         totalPrice,
@@ -224,11 +226,11 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: FilledButton(
-                onPressed: (canPay)
+                onPressed: canPay
                     ? () async {
                         final res = await apiService.switchToPayedPlan(
                             widget.planId!, widget.payMonthly!, tryAutoRenewal);
@@ -246,7 +248,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                                 content: Text(
-                              errorCodeToText(context, res.error),
+                              errorCodeToText(context, res.error as ErrorCode),
                             )),
                           );
                         }
@@ -260,23 +262,23 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
               children: [
                 TextButton(
                   onPressed: () => launchUrl(Uri.parse(
-                      "https://twonly.eu/de/legal/#revocation-policy")),
-                  child: Text(
-                    "Widerrufsbelehrung",
+                      'https://twonly.eu/de/legal/#revocation-policy')),
+                  child: const Text(
+                    'Widerrufsbelehrung',
                     style: TextStyle(color: Colors.blue),
                   ),
                 ),
                 TextButton(
                   onPressed: () => launchUrl(
-                      Uri.parse("https://twonly.eu/de/legal/agb.html")),
-                  child: Text(
-                    "ABG",
+                      Uri.parse('https://twonly.eu/de/legal/agb.html')),
+                  child: const Text(
+                    'ABG',
                     style: TextStyle(color: Colors.blue),
                   ),
                 )
               ],
             ),
-            SizedBox(height: 20)
+            const SizedBox(height: 20)
           ],
         ),
       ),

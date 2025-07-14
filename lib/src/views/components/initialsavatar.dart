@@ -6,24 +6,23 @@ import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class ContactAvatar extends StatelessWidget {
-  final Contact? contact;
-  final UserData? userData;
-  final double? fontSize;
-
   const ContactAvatar({
     super.key,
     this.contact,
     this.userData,
     this.fontSize = 20,
   });
+  final Contact? contact;
+  final UserData? userData;
+  final double? fontSize;
 
   @override
   Widget build(BuildContext context) {
-    String displayName = "";
+    var displayName = '';
     String? avatarSvg;
 
     if (contact != null) {
-      displayName = getContactDisplayName(contact!).replaceAll("\u0336", "");
+      displayName = getContactDisplayName(contact!).replaceAll('\u0336', '');
       avatarSvg = contact!.avatarSvg;
     } else if (userData != null) {
       displayName = userData!.displayName;
@@ -32,7 +31,7 @@ class ContactAvatar extends StatelessWidget {
       return Container();
     }
 
-    double proSize = (fontSize == null) ? 40 : (fontSize! * 2);
+    final proSize = (fontSize == null) ? 40 : (fontSize! * 2);
 
     if (avatarSvg != null) {
       return Container(
@@ -44,15 +43,15 @@ class ContactAvatar extends StatelessWidget {
         ),
         child: Center(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(12),
             child: SizedBox(
-              height: proSize,
+              height: proSize as double,
               width: proSize,
               child: Center(
                 child: SvgPicture.string(
                   avatarSvg,
                   errorBuilder: (context, error, stackTrace) {
-                    Log.error("$error");
+                    Log.error('$error');
                     return Container();
                   },
                 ),
@@ -64,8 +63,8 @@ class ContactAvatar extends StatelessWidget {
     }
 
     // Extract initials from the displayName
-    List<String> nameParts = displayName.split(' ');
-    String initials = nameParts.map((part) => part[0]).join().toUpperCase();
+    final nameParts = displayName.split(' ');
+    var initials = nameParts.map((part) => part[0]).join().toUpperCase();
 
     if (initials.length > 2) {
       initials = initials[0] + initials[1];
@@ -76,10 +75,10 @@ class ContactAvatar extends StatelessWidget {
     initials = initials.toUpperCase();
 
     // Generate a color based on the initials (you can customize this logic)
-    Color avatarColor = _getColorFromUsername(
+    final avatarColor = _getColorFromUsername(
         displayName, Theme.of(context).brightness == Brightness.dark);
 
-    Widget child = Text(
+    final Widget child = Text(
       initials,
       style: TextStyle(
         color: _getTextColor(avatarColor),
@@ -88,50 +87,51 @@ class ContactAvatar extends StatelessWidget {
       ),
     );
 
-    bool isPro = initials[0] == "T";
+    final isPro = initials[0] == 'T';
 
-    return isPro
-        ? //or 15.0
-        Container(
-            constraints: BoxConstraints(
-              minHeight: 2 * (fontSize ?? 20),
-              minWidth: 2 * (fontSize ?? 20),
-              maxWidth: 2 * (fontSize ?? 20),
-              maxHeight: 2 * (fontSize ?? 20),
+    if (isPro) {
+      return Container(
+        constraints: BoxConstraints(
+          minHeight: 2 * (fontSize ?? 20),
+          minWidth: 2 * (fontSize ?? 20),
+          maxWidth: 2 * (fontSize ?? 20),
+          maxHeight: 2 * (fontSize ?? 20),
+        ),
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: proSize as double,
+              width: proSize,
+              //padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+              color: avatarColor,
+              child: Center(child: child),
             ),
-            child: Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12.0),
-                child: Container(
-                  height: proSize,
-                  width: proSize,
-                  //padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                  color: avatarColor,
-                  child: Center(child: child),
-                ),
-              ),
-            ),
-          )
-        : CircleAvatar(
-            backgroundColor: avatarColor,
-            radius: fontSize,
-            child: child,
-          );
+          ),
+        ),
+      );
+    } else {
+      return CircleAvatar(
+        backgroundColor: avatarColor,
+        radius: fontSize,
+        child: child,
+      );
+    }
   }
 
   Color _getTextColor(Color color) {
-    double value = 100.0;
+    const value = 100.0;
     // Ensure the value does not exceed the RGB limits
-    int newRed = ((color.r * 255) - value).clamp(0, 255).round();
-    int newGreen = (color.g * 255 - value).clamp(0, 255).round();
-    int newBlue = (color.b * 255 - value).clamp(0, 255).round();
+    final newRed = ((color.r * 255) - value).clamp(0, 255).round();
+    final newGreen = (color.g * 255 - value).clamp(0, 255).round();
+    final newBlue = (color.b * 255 - value).clamp(0, 255).round();
 
     return Color.fromARGB((color.a * 255).round(), newRed, newGreen, newBlue);
   }
 
   Color _getColorFromUsername(String displayName, bool isDarkMode) {
     // Define color lists for light and dark themes
-    List<Color> lightColors = [
+    final lightColors = <Color>[
       Colors.red,
       Colors.green,
       Colors.blue,
@@ -147,7 +147,7 @@ class ContactAvatar extends StatelessWidget {
       Colors.grey,
     ];
 
-    List<Color> darkColors = [
+    final darkColors = <Color>[
       const Color.fromARGB(255, 246, 227, 254), // Light Lavender
       const Color.fromARGB(255, 246, 216, 215), // Light Pink
       const Color.fromARGB(255, 226, 236, 235), // Light Teal
@@ -168,10 +168,11 @@ class ContactAvatar extends StatelessWidget {
     ];
 
     // Simple logic to generate a hash from initials
-    int hash = displayName.codeUnits.fold(0, (prev, element) => prev + element);
+    final hash =
+        displayName.codeUnits.fold(0, (prev, element) => prev + element);
 
     // Select the appropriate color list based on the current theme brightness
-    List<Color> colors = isDarkMode ? darkColors : lightColors;
+    final colors = isDarkMode ? darkColors : lightColors;
 
     // Use the hash to select a color from the list
     return colors[hash % colors.length];

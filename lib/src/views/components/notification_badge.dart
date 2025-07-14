@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
 class NotificationBadge extends StatelessWidget {
+  const NotificationBadge(
+      {required this.count, required this.child, super.key});
   final String count;
   final Widget child;
 
-  const NotificationBadge(
-      {super.key, required this.count, required this.child});
-
   @override
   Widget build(BuildContext context) {
-    if (count == "0") return child;
-    bool infinity = count == "∞";
+    if (count == '0') return child;
+    final infinity = count == '∞';
     return Stack(
       children: [
         child,
@@ -26,8 +25,8 @@ class NotificationBadge extends StatelessWidget {
                 child: Transform.rotate(
                   angle: infinity ? 90 * (3.141592653589793 / 180) : 0,
                   child: Text(
-                    infinity ? "8" : count,
-                    style: TextStyle(
+                    infinity ? '8' : count,
+                    style: const TextStyle(
                       color: Colors.white, // Text color
                       fontSize: 10,
                     ),

@@ -4,10 +4,9 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
 
 class VerifiedShield extends StatelessWidget {
+  const VerifiedShield(this.contact, {super.key, this.size = 18});
   final Contact contact;
   final double size;
-
-  const VerifiedShield(this.contact, {super.key, this.size = 18});
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +20,8 @@ class VerifiedShield extends StatelessWidget {
       },
       child: Tooltip(
         message: contact.verified
-            ? "You verified this contact"
-            : "You have not verifies this contact.",
+            ? 'You verified this contact'
+            : 'You have not verifies this contact.',
         child: FaIcon(
           contact.verified
               ? FontAwesomeIcons.shieldHeart

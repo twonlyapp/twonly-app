@@ -36,7 +36,7 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
     initAsync();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     showWideAngleZoom = (await widget.controller.getMinZoomLevel()) < 1;
     if (_isDisposed) return;
     setState(() {});

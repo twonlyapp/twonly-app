@@ -10,7 +10,7 @@ import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<bool> isUserCreated() async {
-  UserData? user = await getUser();
+  final user = await getUser();
   if (user == null) {
     return false;
   }
@@ -18,8 +18,8 @@ Future<bool> isUserCreated() async {
 }
 
 Future<UserData?> getUser() async {
-  String? userJson =
-      await FlutterSecureStorage().read(key: SecureStorageKeys.userData);
+  final userJson =
+      await const FlutterSecureStorage().read(key: SecureStorageKeys.userData);
   if (userJson == null) {
     return null;
   }
@@ -28,12 +28,12 @@ Future<UserData?> getUser() async {
     final user = UserData.fromJson(userMap);
     return user;
   } catch (e) {
-    Log.error("Error getting user: $e");
+    Log.error('Error getting user: $e');
     return null;
   }
 }
 
-Future updateUsersPlan(BuildContext context, String planId) async {
+Future<void> updateUsersPlan(BuildContext context, String planId) async {
   context.read<CustomChangeProvider>().plan = planId;
 
   await updateUserdata((user) {
@@ -42,17 +42,18 @@ Future updateUsersPlan(BuildContext context, String planId) async {
   });
 
   if (!context.mounted) return;
-  context.read<CustomChangeProvider>().updatePlan(planId);
+  await context.read<CustomChangeProvider>().updatePlan(planId);
 }
 
 Mutex updateProtection = Mutex();
 
-Future<UserData?> updateUserdata(Function(UserData userData) updateUser) async {
-  return await updateProtection.protect<UserData?>(() async {
+Future<UserData?> updateUserdata(
+    UserData Function(UserData userData) updateUser) async {
+  return updateProtection.protect<UserData?>(() async {
     final user = await getUser();
     if (user == null) return null;
-    UserData updated = updateUser(user);
-    FlutterSecureStorage()
+    final updated = updateUser(user);
+    await const FlutterSecureStorage()
         .write(key: SecureStorageKeys.userData, value: jsonEncode(updated));
     return user;
   });
@@ -63,6 +64,6 @@ Future<bool> deleteLocalUserData() async {
   if (appDir.existsSync()) {
     appDir.deleteSync(recursive: true);
   }
-  await FlutterSecureStorage().deleteAll();
+  await const FlutterSecureStorage().deleteAll();
   return true;
 }

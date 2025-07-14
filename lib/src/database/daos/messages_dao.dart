@@ -56,7 +56,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .watch();
   }
 
-  Future removeOldMessages() {
+  Future<void> removeOldMessages() {
     return (update(messages)
           ..where((t) =>
               (t.openedAt.isSmallerThanValue(
@@ -69,7 +69,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(MessagesCompanion(contentJson: Value(null)));
   }
 
-  Future handleMediaFilesOlderThan7Days() {
+  Future<void> handleMediaFilesOlderThan7Days() {
     /// media files will be deleted by the server after 7 days, so delete them here also
     return (update(messages)
           ..where(
@@ -130,7 +130,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .get();
   }
 
-  Future openedAllNonMediaMessages(int contactId) {
+  Future<void> openedAllNonMediaMessages(int contactId) {
     final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
     return (update(messages)
           ..where((t) =>
@@ -141,7 +141,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updates);
   }
 
-  Future resetPendingDownloadState() {
+  Future<void> resetPendingDownloadState() {
     // All media files in the downloading state are reseteded to the pending state
     // When the app is used in mobile network, they will not be downloaded at the start
     // if they are not yet downloaded...
@@ -155,7 +155,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updates);
   }
 
-  Future openedAllNonMediaMessagesFromOtherUser(int contactId) {
+  Future<void> openedAllNonMediaMessagesFromOtherUser(int contactId) {
     final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
     return (update(messages)
           ..where((t) =>
@@ -167,7 +167,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updates);
   }
 
-  Future updateMessageByOtherUser(
+  Future<void> updateMessageByOtherUser(
       int userId, int messageId, MessagesCompanion updatedValues) {
     return (update(messages)
           ..where((c) =>
@@ -175,7 +175,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updatedValues);
   }
 
-  Future updateMessageByOtherMessageId(
+  Future<void> updateMessageByOtherMessageId(
       int userId, int messageOtherId, MessagesCompanion updatedValues) {
     return (update(messages)
           ..where((c) =>
@@ -184,7 +184,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(updatedValues);
   }
 
-  Future updateMessageByMessageId(
+  Future<void> updateMessageByMessageId(
       int messageId, MessagesCompanion updatedValues) {
     return (update(messages)..where((c) => c.messageId.equals(messageId)))
         .write(updatedValues);
@@ -203,14 +203,14 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     }
   }
 
-  Future deleteMessagesByContactId(int contactId) {
+  Future<void> deleteMessagesByContactId(int contactId) {
     return (delete(messages)
           ..where((t) =>
               t.contactId.equals(contactId) & t.mediaStored.equals(false)))
         .go();
   }
 
-  Future deleteMessagesByContactIdAndOtherMessageId(
+  Future<void> deleteMessagesByContactIdAndOtherMessageId(
       int contactId, int messageOtherId) {
     return (delete(messages)
           ..where((t) =>
@@ -219,11 +219,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .go();
   }
 
-  Future deleteMessagesByMessageId(int messageId) {
+  Future<void> deleteMessagesByMessageId(int messageId) {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }
 
-  Future deleteAllMessagesByContactId(int contactId) {
+  Future<void> deleteAllMessagesByContactId(int contactId) {
     return (delete(messages)..where((t) => t.contactId.equals(contactId))).go();
   }
 

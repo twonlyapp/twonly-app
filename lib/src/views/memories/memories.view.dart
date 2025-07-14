@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:intl/intl.dart';
-import 'package:twonly/src/services/api/media_upload.dart' as send;
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/api/media_upload.dart' as send;
 import 'package:twonly/src/services/thumbnail.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
@@ -38,40 +39,40 @@ class MemoriesViewState extends State<MemoriesView> {
   }
 
   Future<List<MemoryItem>> loadMemoriesDirectory() async {
-    final directoryPath = await send.getMediaBaseFilePath("memories");
+    final directoryPath = await send.getMediaBaseFilePath('memories');
     final directory = Directory(directoryPath);
 
-    List<MemoryItem> items = [];
-    if (await directory.exists()) {
+    final items = <MemoryItem>[];
+    if (directory.existsSync()) {
       final files = directory.listSync();
 
-      for (var file in files) {
+      for (final file in files) {
         if (file is File) {
           final fileName = file.uri.pathSegments.last;
           File? imagePath;
           File? videoPath;
           late File thumbnailFile;
-          if (fileName.contains(".thumbnail.")) {
+          if (fileName.contains('.thumbnail.')) {
             continue;
           }
-          if (fileName.contains(".png")) {
+          if (fileName.contains('.png')) {
             imagePath = file;
             thumbnailFile = file;
             // if (!await thumbnailFile.exists()) {
             //   await createThumbnailsForImage(imagePath);
             // }
-          } else if (fileName.contains(".mp4")) {
+          } else if (fileName.contains('.mp4')) {
             videoPath = file;
             thumbnailFile = getThumbnailPath(videoPath);
-            if (!await thumbnailFile.exists()) {
+            if (!thumbnailFile.existsSync()) {
               await createThumbnailsForVideo(videoPath);
             }
           } else {
             break;
           }
-          final creationDate = await file.lastModified();
+          final creationDate = file.lastModifiedSync();
           items.add(MemoryItem(
-            id: int.parse(fileName.split(".")[0]),
+            id: int.parse(fileName.split('.')[0]),
             messages: [],
             date: creationDate,
             mirrorVideo: false,
@@ -85,17 +86,16 @@ class MemoriesViewState extends State<MemoriesView> {
     return items;
   }
 
-  Future initAsync() async {
-    messageSub?.cancel();
-    Stream<List<Message>> msgStream =
-        twonlyDB.messagesDao.getAllStoredMediaFiles();
+  Future<void> initAsync() async {
+    await messageSub?.cancel();
+    final msgStream = twonlyDB.messagesDao.getAllStoredMediaFiles();
 
     messageSub = msgStream.listen((msgs) async {
-      Map<int, MemoryItem> items = await MemoryItem.convertFromMessages(msgs);
+      final items = await MemoryItem.convertFromMessages(msgs);
       // Group items by month
       orderedByMonth = {};
       months = [];
-      String lastMonth = "";
+      var lastMonth = '';
       galleryItems = await loadMemoriesDirectory();
       for (final item in galleryItems) {
         items.remove(item
@@ -104,7 +104,7 @@ class MemoriesViewState extends State<MemoriesView> {
       galleryItems += items.values.toList();
       galleryItems.sort((a, b) => b.date.compareTo(a.date));
       for (var i = 0; i < galleryItems.length; i++) {
-        String month = DateFormat('MMMM yyyy').format(galleryItems[i].date);
+        final month = DateFormat('MMMM yyyy').format(galleryItems[i].date);
         if (lastMonth != month) {
           lastMonth = month;
           months.add(month);
@@ -120,7 +120,7 @@ class MemoriesViewState extends State<MemoriesView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Memories')),
+      appBar: AppBar(title: const Text('Memories')),
       body: Scrollbar(
         child: (galleryItems.isEmpty)
             ? Center(
@@ -129,26 +129,26 @@ class MemoriesViewState extends State<MemoriesView> {
                 textAlign: TextAlign.center,
               ))
             : ListView.builder(
-                itemCount: (months.length * 2),
+                itemCount: months.length * 2,
                 itemBuilder: (context, mIndex) {
-                  if (mIndex % 2 == 0) {
+                  if (mIndex.isEven) {
                     return Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.all(8),
                       child: Text(months[(mIndex / 2).toInt()]),
                     );
                   }
-                  int index = ((mIndex - 1) / 2).toInt();
+                  final index = ((mIndex - 1) / 2).toInt();
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const ClampingScrollPhysics(),
-                    scrollDirection: Axis.vertical,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 4,
                       childAspectRatio: 9 / 16,
                     ),
                     itemCount: orderedByMonth[months[index]]!.length,
                     itemBuilder: (context, gIndex) {
-                      int gaIndex = orderedByMonth[months[index]]![gIndex];
+                      final gaIndex = orderedByMonth[months[index]]![gIndex];
                       return MemoriesItemThumbnail(
                         galleryItem: galleryItems[gaIndex],
                         onTap: () {
@@ -163,7 +163,7 @@ class MemoriesViewState extends State<MemoriesView> {
     );
   }
 
-  void open(BuildContext context, final int index) async {
+  Future<void> open(BuildContext context, int index) async {
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -174,6 +174,6 @@ class MemoriesViewState extends State<MemoriesView> {
         ),
       ),
     );
-    initAsync();
+    await initAsync();
   }
 }

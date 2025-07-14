@@ -1,12 +1,11 @@
 import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/model/json/signal_identity.dart';
 import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
-import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/model/json/signal_identity.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -20,40 +19,41 @@ Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
 
 // This function runs after the clients authenticated with the server.
 // It then checks if it should update a new session key
-Future signalHandleNewServerConnection() async {
-  final UserData? user = await getUser();
+Future<void> signalHandleNewServerConnection() async {
+  final user = await getUser();
   if (user == null) return;
   if (user.signalLastSignedPreKeyUpdated != null) {
-    DateTime fortyEightHoursAgo = DateTime.now().subtract(Duration(hours: 48));
-    bool isYoungerThan48Hours =
+    final fortyEightHoursAgo =
+        DateTime.now().subtract(const Duration(hours: 48));
+    final isYoungerThan48Hours =
         (user.signalLastSignedPreKeyUpdated!).isAfter(fortyEightHoursAgo);
     if (isYoungerThan48Hours) {
       // The key does live for 48 hours then it expires and a new key is generated.
       return;
     }
   }
-  SignedPreKeyRecord? signedPreKey = await _getNewSignalSignedPreKey();
+  final signedPreKey = await _getNewSignalSignedPreKey();
   if (signedPreKey == null) {
-    Log.error("could not generate a new signed pre key!");
+    Log.error('could not generate a new signed pre key!');
     return;
   }
   await updateUserdata((user) {
     user.signalLastSignedPreKeyUpdated = DateTime.now();
     return user;
   });
-  Result res = await apiService.updateSignedPreKey(
+  final res = await apiService.updateSignedPreKey(
     signedPreKey.id,
     signedPreKey.getKeyPair().publicKey.serialize(),
     signedPreKey.signature,
   );
   if (res.isError) {
-    Log.error("could not update the signed pre key: ${res.error}");
+    Log.error('could not update the signed pre key: ${res.error}');
     await updateUserdata((user) {
       user.signalLastSignedPreKeyUpdated = null;
       return user;
     });
   } else {
-    Log.info("updated signed pre key");
+    Log.info('updated signed pre key');
   }
 }
 
@@ -61,7 +61,7 @@ Future<List<PreKeyRecord>> signalGetPreKeys() async {
   final user = await getUser();
   if (user == null) return [];
 
-  int start = user.currentPreKeyIndexStart;
+  final start = user.currentPreKeyIndexStart;
   await updateUserdata((user) {
     user.currentPreKeyIndexStart += 200;
     return user;
@@ -77,7 +77,7 @@ Future<List<PreKeyRecord>> signalGetPreKeys() async {
 
 Future<SignalIdentity?> getSignalIdentity() async {
   try {
-    final storage = FlutterSecureStorage();
+    const storage = FlutterSecureStorage();
     var signalIdentityJson =
         await storage.read(key: SecureStorageKeys.signalIdentity);
     if (signalIdentityJson == null) {
@@ -85,15 +85,15 @@ Future<SignalIdentity?> getSignalIdentity() async {
     }
     final decoded = jsonDecode(signalIdentityJson);
     signalIdentityJson = null;
-    return SignalIdentity.fromJson(decoded);
+    return SignalIdentity.fromJson(decoded as Map<String, dynamic>);
   } catch (e) {
-    Log.error("could not load signal identity: $e");
+    Log.error('could not load signal identity: $e');
     return null;
   }
 }
 
-Future createIfNotExistsSignalIdentity() async {
-  final storage = FlutterSecureStorage();
+Future<void> createIfNotExistsSignalIdentity() async {
+  const storage = FlutterSecureStorage();
 
   final signalIdentity = await storage.read(
     key: SecureStorageKeys.signalIdentity,
@@ -106,7 +106,7 @@ Future createIfNotExistsSignalIdentity() async {
   final identityKeyPair = generateIdentityKeyPair();
   final registrationId = generateRegistrationId(true);
 
-  ConnectSignalProtocolStore signalStore =
+  final signalStore =
       ConnectSignalProtocolStore(identityKeyPair, registrationId);
 
   final signedPreKey = generateSignedPreKey(identityKeyPair, defaultDeviceId);
@@ -133,13 +133,13 @@ Future<SignedPreKeyRecord?> _getNewSignalSignedPreKey() async {
     return null;
   }
 
-  int signedPreKeyId = user.currentSignedPreKeyIndexStart;
+  final signedPreKeyId = user.currentSignedPreKeyIndexStart;
   await updateUserdata((user) {
     user.currentSignedPreKeyIndexStart += 1;
     return user;
   });
 
-  final SignedPreKeyRecord signedPreKey = generateSignedPreKey(
+  final signedPreKey = generateSignedPreKey(
     identityKeyPair,
     signedPreKeyId,
   );

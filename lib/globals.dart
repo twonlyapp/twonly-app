@@ -15,8 +15,10 @@ bool gIsDemoUser = false;
 // App widget.
 
 // This callback called by the apiProvider
-Function(bool) globalCallbackConnectionState = (a) {};
-Function() globalCallbackAppIsOutdated = () {};
+void Function({required bool isConnected}) globalCallbackConnectionState = ({
+  required bool isConnected,
+}) {};
+void Function() globalCallbackAppIsOutdated = () {};
 
 bool globalIsAppInBackground = true;
 int globalBestFriendUserId = -1;

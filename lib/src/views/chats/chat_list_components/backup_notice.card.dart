@@ -20,7 +20,7 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
     super.initState();
   }
 
-  Future initAsync() async {
+  Future<void> initAsync() async {
     final user = await getUser();
     showBackupNotice = false;
     if (user != null &&
@@ -47,7 +47,7 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
           children: [
             Text(
               context.lang.backupNoticeTitle,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -55,7 +55,7 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
             SizedBox(height: 5),
             Text(
               context.lang.backupNoticeDesc,
-              style: TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

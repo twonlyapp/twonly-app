@@ -542,11 +542,11 @@ abstract class AppLocalizations {
   /// **'Downloading'**
   String get messageSendState_Loading;
 
-  /// No description provided for @messageStoredInGalery.
+  /// No description provided for @messageStoredInGallery.
   ///
   /// In en, this message translates to:
   /// **'Stored in gallery'**
-  String get messageStoredInGalery;
+  String get messageStoredInGallery;
 
   /// No description provided for @messageReopened.
   ///
@@ -2012,11 +2012,11 @@ abstract class AppLocalizations {
   /// **'Retransmission requested'**
   String get retransmissionRequested;
 
-  /// No description provided for @testPaymentMethode.
+  /// No description provided for @testPaymentMethod.
   ///
   /// In en, this message translates to:
   /// **'twonly is currently in a test phase and can only be used in full with an invitation code. There is currently no payment method to top up your twonly credit!'**
-  String get testPaymentMethode;
+  String get testPaymentMethod;
 
   /// No description provided for @testingAccountTitle.
   ///

@@ -250,7 +250,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageSendState_Loading => 'Downloading';
 
   @override
-  String get messageStoredInGalery => 'Stored in gallery';
+  String get messageStoredInGallery => 'Stored in gallery';
 
   @override
   String get messageReopened => 'Re-opened';
@@ -1062,7 +1062,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get retransmissionRequested => 'Retransmission requested';
 
   @override
-  String get testPaymentMethode =>
+  String get testPaymentMethod =>
       'twonly is currently in a test phase and can only be used in full with an invitation code. There is currently no payment method to top up your twonly credit!';
 
   @override

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 
 class ChatReactionSelectionView extends StatefulWidget {
   const ChatReactionSelectionView({super.key});
@@ -20,8 +20,8 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
     initAsync();
   }
 
-  Future initAsync() async {
-    var user = await getUser();
+  Future<void> initAsync() async {
+    final user = await getUser();
     if (user != null && user.preSelectedEmojies != null) {
       selectedEmojis = user.preSelectedEmojies!;
     } else {
@@ -30,7 +30,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
     setState(() {});
   }
 
-  void _onEmojiSelected(String emoji) async {
+  Future<void> _onEmojiSelected(String emoji) async {
     if (selectedEmojis.contains(emoji)) {
       selectedEmojis.remove(emoji);
     } else {
@@ -44,7 +44,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.lang.settingsPreSelectedReactionsError),
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -56,16 +56,15 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Reactions'),
+        title: const Text('Select Reactions'),
       ),
       body: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 4, // Number of columns
-          childAspectRatio: 1.0, // Aspect ratio of each item
         ),
         itemCount: EmojiAnimation.animatedIcons.keys.length,
         itemBuilder: (context, index) {
-          String emoji = EmojiAnimation.animatedIcons.keys.elementAt(index);
+          final emoji = EmojiAnimation.animatedIcons.keys.elementAt(index);
           return GestureDetector(
             onTap: () {
               _onEmojiSelected(emoji);
@@ -80,7 +79,6 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
                   height: 40,
                   child: EmojiAnimation(
                     emoji: emoji,
-                    repeat: true,
                     // repeat: selectedEmojis.contains(emoji),
                   ),
                 ),
@@ -90,7 +88,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
         },
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 30.0),
+        padding: const EdgeInsets.only(bottom: 30),
         child: FloatingActionButton(
           foregroundColor: Colors.white,
           onPressed: () async {
@@ -102,7 +100,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
               return user;
             });
           },
-          child: Icon(Icons.settings_backup_restore_rounded),
+          child: const Icon(Icons.settings_backup_restore_rounded),
         ),
       ),
     );
