@@ -3,14 +3,13 @@ import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 
 /// Main layer
 class BackgroundLayer extends StatefulWidget {
-  final BackgroundLayerData layerData;
-  final VoidCallback? onUpdate;
-
   const BackgroundLayer({
-    super.key,
     required this.layerData,
+    super.key,
     this.onUpdate,
   });
+  final BackgroundLayerData layerData;
+  final VoidCallback? onUpdate;
 
   @override
   State<BackgroundLayer> createState() => _BackgroundLayerState();

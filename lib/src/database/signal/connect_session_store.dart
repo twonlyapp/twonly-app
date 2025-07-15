@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/globals.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 
 class ConnectSessionStore extends SessionStore {
@@ -50,7 +50,7 @@ class ConnectSessionStore extends SessionStore {
     if (dbSession.isEmpty) {
       return SessionRecord();
     }
-    Uint8List session = dbSession.first.sessionRecord;
+    final session = dbSession.first.sessionRecord;
     return SessionRecord.fromSerialized(session);
   }
 

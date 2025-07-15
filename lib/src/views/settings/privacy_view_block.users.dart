@@ -2,10 +2,10 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
 
 class PrivacyViewBlockUsers extends StatefulWidget {
@@ -18,7 +18,7 @@ class PrivacyViewBlockUsers extends StatefulWidget {
 class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
   late Stream<List<Contact>> allUsers;
   List<Contact> filteredUsers = [];
-  String filter = "";
+  String filter = '';
 
   @override
   void initState() {
@@ -40,11 +40,12 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
       body: PieCanvas(
         theme: getPieCanvasTheme(context),
         child: Padding(
-          padding: EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
+          padding:
+              const EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
           child: Column(
             children: [
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: TextField(
                   onChanged: (value) => setState(() {
                     filter = value;
@@ -110,7 +111,7 @@ class UserList extends StatelessWidget {
       restorationId: 'new_message_users_list',
       itemCount: users.length,
       itemBuilder: (BuildContext context, int i) {
-        Contact user = users[i];
+        final user = users[i];
         return UserContextMenuBlocked(
           contact: user,
           child: ListTile(

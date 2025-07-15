@@ -8,24 +8,25 @@ class Contacts extends Table {
   TextColumn get nickName => text().nullable()();
   TextColumn get avatarSvg => text().nullable()();
 
-  IntColumn get myAvatarCounter => integer().withDefault(Constant(0))();
+  IntColumn get myAvatarCounter => integer().withDefault(const Constant(0))();
 
-  BoolColumn get accepted => boolean().withDefault(Constant(false))();
-  BoolColumn get requested => boolean().withDefault(Constant(false))();
-  BoolColumn get blocked => boolean().withDefault(Constant(false))();
-  BoolColumn get verified => boolean().withDefault(Constant(false))();
-  BoolColumn get archived => boolean().withDefault(Constant(false))();
-  BoolColumn get pinned => boolean().withDefault(Constant(false))();
-  BoolColumn get deleted => boolean().withDefault(Constant(false))();
+  BoolColumn get accepted => boolean().withDefault(const Constant(false))();
+  BoolColumn get requested => boolean().withDefault(const Constant(false))();
+  BoolColumn get blocked => boolean().withDefault(const Constant(false))();
+  BoolColumn get verified => boolean().withDefault(const Constant(false))();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
+  BoolColumn get pinned => boolean().withDefault(const Constant(false))();
+  BoolColumn get deleted => boolean().withDefault(const Constant(false))();
 
-  BoolColumn get alsoBestFriend => boolean().withDefault(Constant(false))();
+  BoolColumn get alsoBestFriend =>
+      boolean().withDefault(const Constant(false))();
 
   IntColumn get deleteMessagesAfterXMinutes =>
-      integer().withDefault(Constant(60 * 24))();
+      integer().withDefault(const Constant(60 * 24))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
-  IntColumn get totalMediaCounter => integer().withDefault(Constant(0))();
+  IntColumn get totalMediaCounter => integer().withDefault(const Constant(0))();
 
   DateTimeColumn get lastMessageSend => dateTime().nullable()();
   DateTimeColumn get lastMessageReceived => dateTime().nullable()();
@@ -34,7 +35,7 @@ class Contacts extends Table {
   DateTimeColumn get lastMessageExchange =>
       dateTime().withDefault(currentDateAndTime)();
 
-  IntColumn get flameCounter => integer().withDefault(Constant(0))();
+  IntColumn get flameCounter => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {userId};

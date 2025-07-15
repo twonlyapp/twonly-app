@@ -51,7 +51,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
               (t.openedAt.isNull() |
                   t.mediaStored.equals(true) |
                   t.openedAt.isBiggerThanValue(
-                      DateTime.now().subtract(Duration(days: 1)))))
+                      DateTime.now().subtract(const Duration(days: 1)))))
           ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
         .watch();
   }
@@ -60,13 +60,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     return (update(messages)
           ..where((t) =>
               (t.openedAt.isSmallerThanValue(
-                    DateTime.now().subtract(Duration(days: 1)),
+                    DateTime.now().subtract(const Duration(days: 1)),
                   ) |
                   (t.sendAt.isSmallerThanValue(
-                          DateTime.now().subtract(Duration(days: 1))) &
+                          DateTime.now().subtract(const Duration(days: 1))) &
                       t.errorWhileSending.equals(true))) &
               t.kind.equals(MessageKind.textMessage.name)))
-        .write(MessagesCompanion(contentJson: Value(null)));
+        .write(const MessagesCompanion(contentJson: Value(null)));
   }
 
   Future<void> handleMediaFilesOlderThan7Days() {
@@ -78,11 +78,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
                 t.messageOtherId.isNull() &
                 (t.sendAt.isSmallerThanValue(
                   DateTime.now().subtract(
-                    Duration(days: 8),
+                    const Duration(days: 8),
                   ),
                 ))),
           ))
-        .write(MessagesCompanion(errorWhileSending: Value(true)));
+        .write(const MessagesCompanion(errorWhileSending: Value(true)));
   }
 
   Future<List<Message>> getAllMessagesPendingDownloading() {
@@ -104,7 +104,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
               t.messageOtherId.isNull() &
               t.errorWhileSending.equals(false) &
               t.sendAt.isBiggerThanValue(
-                DateTime.now().subtract(Duration(minutes: 10)),
+                DateTime.now().subtract(const Duration(minutes: 10)),
               )))
         .get();
   }
@@ -142,10 +142,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   Future<void> resetPendingDownloadState() {
-    // All media files in the downloading state are reseteded to the pending state
+    // All media files in the downloading state are reset to the pending state
     // When the app is used in mobile network, they will not be downloaded at the start
     // if they are not yet downloaded...
-    final updates =
+    const updates =
         MessagesCompanion(downloadState: Value(DownloadState.pending));
     return (update(messages)
           ..where((t) =>
@@ -198,7 +198,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
 
       return await into(messages).insert(message);
     } catch (e) {
-      Log.error("Error while inserting message: $e");
+      Log.error('Error while inserting message: $e');
       return null;
     }
   }
@@ -244,7 +244,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   Future<List<Message>> getMessagesByMediaUploadId(int mediaUploadId) async {
-    return await (select(messages)
+    return (select(messages)
           ..where((t) => t.mediaUploadId.equals(mediaUploadId)))
         .get();
   }

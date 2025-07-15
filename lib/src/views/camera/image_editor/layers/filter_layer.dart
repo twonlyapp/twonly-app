@@ -60,7 +60,7 @@ class FilterText extends StatelessWidget {
         shadows: const [
           Shadow(
             color: Color.fromARGB(122, 0, 0, 0),
-            blurRadius: 5.0,
+            blurRadius: 5,
           )
         ],
       ),

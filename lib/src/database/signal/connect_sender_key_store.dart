@@ -1,15 +1,14 @@
 import 'package:drift/drift.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly_database.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 class ConnectSenderKeyStore extends SenderKeyStore {
   @override
   Future<SenderKeyRecord> loadSenderKey(SenderKeyName senderKeyName) async {
-    SignalSenderKeyStore? identity =
-        await (twonlyDB.select(twonlyDB.signalSenderKeyStores)
-              ..where((t) => t.senderKeyName.equals(senderKeyName.serialize())))
-            .getSingleOrNull();
+    final identity = await (twonlyDB.select(twonlyDB.signalSenderKeyStores)
+          ..where((t) => t.senderKeyName.equals(senderKeyName.serialize())))
+        .getSingleOrNull();
     if (identity == null) {
       throw InvalidKeyIdException(
           'No such sender key record! - $senderKeyName');

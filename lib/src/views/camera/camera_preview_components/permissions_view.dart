@@ -1,9 +1,11 @@
+// ignore_for_file: avoid_dynamic_calls
+
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class PermissionHandlerView extends StatefulWidget {
-  const PermissionHandlerView({super.key, required this.onSuccess});
+  const PermissionHandlerView({required this.onSuccess, super.key});
 
   final Function onSuccess;
 
@@ -25,7 +27,7 @@ Future<bool> checkPermissions() async {
 class PermissionHandlerViewState extends State<PermissionHandlerView> {
   Future<Map<Permission, PermissionStatus>> permissionServices() async {
     // try {
-    Map<Permission, PermissionStatus> statuses = await [
+    final statuses = await [
       Permission.camera,
       // Permission.microphone,
       Permission.notification
@@ -57,18 +59,17 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
     return Scaffold(
       body: Center(
         child: Container(
-          padding: EdgeInsets.all(100),
+          padding: const EdgeInsets.all(100),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                "twonly needs access to the camera and microphone.",
+              const Text(
+                'twonly needs access to the camera and microphone.',
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 50),
+              const SizedBox(height: 50),
               FilledButton.icon(
-                label: Text("Request permissions"),
+                label: const Text('Request permissions'),
                 icon: const Icon(Icons.perm_camera_mic),
                 onPressed: () async {
                   try {

@@ -6,18 +6,17 @@ import 'package:twonly/src/views/camera/image_editor/layers/filters/location_fil
 import 'package:url_launcher/url_launcher.dart';
 
 class UrlListTitle extends StatelessWidget {
+  const UrlListTitle({
+    required this.title,
+    required this.url,
+    super.key,
+    this.leading,
+    this.subtitle,
+  });
   final String? title;
   final String url;
   final String? subtitle;
   final Widget? leading;
-
-  const UrlListTitle({
-    super.key,
-    required this.title,
-    required this.url,
-    this.leading,
-    this.subtitle,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +27,7 @@ class UrlListTitle extends StatelessWidget {
       onTap: () {
         launchUrl(Uri.parse(url));
       },
-      trailing: FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+      trailing: const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
     );
   }
 }
@@ -50,7 +49,7 @@ class _CreditsViewState extends State<CreditsView> {
   }
 
   Future<void> initAsync() async {
-    sticker = (await getStickerIndex()).where((x) => x.source != "").toList();
+    sticker = (await getStickerIndex()).where((x) => x.source != '').toList();
     setState(() {});
   }
 
@@ -62,86 +61,86 @@ class _CreditsViewState extends State<CreditsView> {
       ),
       body: ListView(
         children: [
-          UrlListTitle(
-            title: "twonly Logo",
-            subtitle: "by Font Awesome (modified)",
-            url: "https://fontawesome.com/icons/link?f=classic&s=solid",
+          const UrlListTitle(
+            title: 'twonly Logo',
+            subtitle: 'by Font Awesome (modified)',
+            url: 'https://fontawesome.com/icons/link?f=classic&s=solid',
           ),
-          UrlListTitle(
-            title: "Most Icons",
-            subtitle: "by Font Awesome",
-            url: "https://github.com/FortAwesome/Font-Awesome",
+          const UrlListTitle(
+            title: 'Most Icons',
+            subtitle: 'by Font Awesome',
+            url: 'https://github.com/FortAwesome/Font-Awesome',
           ),
-          UrlListTitle(
-            title: "Animated Emoji",
-            subtitle: "CC BY 4.0",
-            url: "https://googlefonts.github.io/noto-emoji-animation/",
+          const UrlListTitle(
+            title: 'Animated Emoji',
+            subtitle: 'CC BY 4.0',
+            url: 'https://googlefonts.github.io/noto-emoji-animation/',
           ),
-          UrlListTitle(
-            title: "Avatar Icons",
-            url: "https://github.com/RoadTripMoustache/avatar_maker",
+          const UrlListTitle(
+            title: 'Avatar Icons',
+            url: 'https://github.com/RoadTripMoustache/avatar_maker',
           ),
           const Divider(),
-          ListTile(
+          const ListTile(
             title: Center(
                 child: Text(
-              "Animations",
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              'Animations',
+              style: TextStyle(fontWeight: FontWeight.bold),
             )),
           ),
-          UrlListTitle(
-            title: "selfie fast Animation",
-            subtitle: "Brandon Ambuila",
+          const UrlListTitle(
+            title: 'selfie fast Animation',
+            subtitle: 'Brandon Ambuila',
             url:
-                "https://lottiefiles.com/free-animation/selfie-fast-JZx4Ftrg1E",
+                'https://lottiefiles.com/free-animation/selfie-fast-JZx4Ftrg1E',
           ),
-          UrlListTitle(
-            title: "Security status - Safe Animation",
-            subtitle: "Yogesh Pal",
+          const UrlListTitle(
+            title: 'Security status - Safe Animation',
+            subtitle: 'Yogesh Pal',
             url:
-                "https://lottiefiles.com/free-animation/security-status-safe-CePJPAwLVx",
+                'https://lottiefiles.com/free-animation/security-status-safe-CePJPAwLVx',
           ),
-          UrlListTitle(
-            title: "send mail Animation",
-            subtitle: "jignesh gajjar",
-            url: "https://lottiefiles.com/free-animation/send-mail-3pvzm2kmNq",
+          const UrlListTitle(
+            title: 'send mail Animation',
+            subtitle: 'jignesh gajjar',
+            url: 'https://lottiefiles.com/free-animation/send-mail-3pvzm2kmNq',
           ),
-          UrlListTitle(
-            title: "Present for you Animation",
-            subtitle: "Tatsiana Melnikova",
+          const UrlListTitle(
+            title: 'Present for you Animation',
+            subtitle: 'Tatsiana Melnikova',
             url:
-                "https://lottiefiles.com/free-animation/present-for-you-QalWyuNptY",
+                'https://lottiefiles.com/free-animation/present-for-you-QalWyuNptY',
           ),
-          UrlListTitle(
-            title: "Take a photo Animation",
-            subtitle: "Nguyễn Như Lân",
+          const UrlListTitle(
+            title: 'Take a photo Animation',
+            subtitle: 'Nguyễn Như Lân',
             url:
-                "https://lottiefiles.com/free-animation/take-a-photo-CzOUerxwPP?color-palette=true",
+                'https://lottiefiles.com/free-animation/take-a-photo-CzOUerxwPP?color-palette=true',
           ),
-          UrlListTitle(
+          const UrlListTitle(
             title: "Valentine's Day-Animation",
-            subtitle: "Strezha",
+            subtitle: 'Strezha',
             url:
-                "https://lottiefiles.com/de/free-animation/valentines-day-1UiMkPHnPK?color-palette=true",
+                'https://lottiefiles.com/de/free-animation/valentines-day-1UiMkPHnPK?color-palette=true',
           ),
-          UrlListTitle(
-            title: "success-Animation",
-            subtitle: "Aman Awasthy",
+          const UrlListTitle(
+            title: 'success-Animation',
+            subtitle: 'Aman Awasthy',
             url:
-                "https://lottiefiles.com/de/free-animation/success-tick-cuwjLHAR7g",
+                'https://lottiefiles.com/de/free-animation/success-tick-cuwjLHAR7g',
           ),
-          UrlListTitle(
-            title: "Failed-Animation",
-            subtitle: "Ahmed Shami أحمد شامي",
-            url: "https://lottiefiles.com/de/free-animation/failed-e5cQFDEtLv",
+          const UrlListTitle(
+            title: 'Failed-Animation',
+            subtitle: 'Ahmed Shami أحمد شامي',
+            url: 'https://lottiefiles.com/de/free-animation/failed-e5cQFDEtLv',
           ),
           const Divider(),
           if (sticker.isNotEmpty)
-            ListTile(
+            const ListTile(
               title: Center(
                   child: Text(
-                "Filters",
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                'Filters',
+                style: TextStyle(fontWeight: FontWeight.bold),
               )),
             ),
           ...sticker.map(
@@ -150,9 +149,9 @@ class _CreditsViewState extends State<CreditsView> {
                 height: 50,
                 width: 50,
                 child: CachedNetworkImage(
-                    imageUrl: "https://twonly.eu/${x.imageSrc}"),
+                    imageUrl: 'https://twonly.eu/${x.imageSrc}'),
               ),
-              title: "",
+              title: '',
               url: x.source,
             ),
           ),

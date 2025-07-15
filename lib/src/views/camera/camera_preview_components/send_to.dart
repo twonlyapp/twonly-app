@@ -2,29 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class SendToWidget extends StatelessWidget {
-  final String sendTo;
-
   const SendToWidget({
-    super.key,
     required this.sendTo,
+    super.key,
   });
+  final String sendTo;
 
   @override
   Widget build(BuildContext context) {
-    TextStyle textStyle = TextStyle(
+    const textStyle = TextStyle(
       color: Colors.white,
       fontWeight: FontWeight.bold,
       fontSize: 24,
       decoration: TextDecoration.none,
       shadows: [
         Shadow(
-          color: const Color.fromARGB(122, 0, 0, 0),
-          blurRadius: 5.0,
+          color: Color.fromARGB(122, 0, 0, 0),
+          blurRadius: 5,
         ),
       ],
     );
 
-    TextStyle boldTextStyle = textStyle.copyWith(
+    final boldTextStyle = textStyle.copyWith(
       fontWeight: FontWeight.normal,
       fontSize: 28,
     );

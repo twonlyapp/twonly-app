@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -18,7 +18,7 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
     // Assuming the button is at the bottom of the scroll view
     _scrollController.animateTo(
       _scrollController.position.maxScrollExtent, // Scroll to the bottom
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
@@ -42,12 +42,12 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                 Expanded(
                   child: SingleChildScrollView(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16),
                     child: Text(logText),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -65,7 +65,8 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                           final result = await SharePlus.instance.share(params);
 
                           if (result.status != ShareResultStatus.success) {
-                            Clipboard.setData(ClipboardData(text: logText));
+                            await Clipboard.setData(
+                                ClipboardData(text: logText));
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(

@@ -1,25 +1,24 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/in_chat_media_viewer.dart';
-import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/media_download.dart' as received;
-
-import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
+import 'package:twonly/src/services/api/media_download.dart' as received;
+import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/in_chat_media_viewer.dart';
+import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
 
 class ChatMediaEntry extends StatefulWidget {
   const ChatMediaEntry({
-    super.key,
     required this.message,
     required this.contact,
     required this.content,
     required this.galleryItems,
+    super.key,
   });
 
   final Message message;
@@ -47,13 +46,13 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
         widget.message.mediaStored) {
       return;
     }
-    if (await received.existsMediaFile(widget.message.messageId, "png")) {
+    if (await received.existsMediaFile(widget.message.messageId, 'png')) {
       if (mounted) {
         setState(() {
           canBeReopened = true;
         });
       }
-      Future.delayed(Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 1), () {
         if (!mounted) return;
         showReopenMediaFilesTutorial(context, reopenMediaFile);
       });
@@ -62,7 +61,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
 
   @override
   Widget build(BuildContext context) {
-    Color color = getMessageColorFromType(
+    final color = getMessageColorFromType(
       widget.content,
       context,
     );
@@ -75,7 +74,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
             widget.message.mediaStored) {
           return;
         }
-        if (await received.existsMediaFile(widget.message.messageId, "png")) {
+        if (await received.existsMediaFile(widget.message.messageId, 'png')) {
           await encryptAndSendMessageAsync(
             null,
             widget.contact.userId,
@@ -93,7 +92,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
           );
           await twonlyDB.messagesDao.updateMessageByMessageId(
             widget.message.messageId,
-            MessagesCompanion(openedAt: Value(null)),
+            const MessagesCompanion(openedAt: Value(null)),
           );
         }
       },
@@ -108,9 +107,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
                     initialMessage: widget.message);
               }),
             );
-            checkIfTutorialCanBeShown();
+            await checkIfTutorialCanBeShown();
           } else if (widget.message.downloadState == DownloadState.pending) {
-            received.startDownloadMedia(widget.message, true);
+            await received.startDownloadMedia(widget.message, true);
           }
         }
       },

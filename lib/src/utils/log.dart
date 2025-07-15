@@ -36,8 +36,8 @@ Future<String> loadLogFile() async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
 
-  if (await logFile.exists()) {
-    return await logFile.readAsString();
+  if (logFile.existsSync()) {
+    return logFile.readAsString();
   } else {
     return 'Log file does not exist.';
   }
@@ -51,7 +51,7 @@ Future<void> _writeLogToFile(LogRecord record) async {
   final logMessage =
       '${DateTime.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
 
-  writeToLogGuard.protect(() async {
+  await writeToLogGuard.protect(() async {
     // Append the log message to the file
     await logFile.writeAsString(logMessage, mode: FileMode.append);
   });
@@ -61,7 +61,7 @@ Future<bool> deleteLogFile() async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
 
-  if (await logFile.exists()) {
+  if (logFile.existsSync()) {
     await logFile.delete();
     return true;
   }
@@ -69,18 +69,18 @@ Future<bool> deleteLogFile() async {
 }
 
 String _getCallerSourceCodeFilename() {
-  StackTrace stackTrace = StackTrace.current;
-  String stackTraceString = stackTrace.toString();
-  String fileName = "";
-  String lineNumber = "";
-  List<String> stackLines = stackTraceString.split('\n');
+  final stackTrace = StackTrace.current;
+  final stackTraceString = stackTrace.toString();
+  var fileName = '';
+  var lineNumber = '';
+  final stackLines = stackTraceString.split('\n');
   if (stackLines.length > 2) {
-    String callerInfo = stackLines[2];
-    List<String> parts = callerInfo.split('/');
+    final callerInfo = stackLines[2];
+    final parts = callerInfo.split('/');
     fileName = parts.last.split(':').first; // Extract the file name
     lineNumber = parts.last.split(':')[1]; // Extract the line number
   } else {
-    String firstLine = stackTraceString.split('\n')[0];
+    final firstLine = stackTraceString.split('\n')[0];
     fileName =
         firstLine.split('/').last.split(':').first; // Extract the file name
     lineNumber = firstLine.split(':')[1]; // Extract the line number

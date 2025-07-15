@@ -56,7 +56,7 @@ class _ShareImageView extends State<ShareImageView> {
   final TextEditingController searchUserName = TextEditingController();
   bool showRealTwonlyWarning = false;
   late StreamSubscription<List<Contact>> contactSub;
-  String lastQuery = "";
+  String lastQuery = '';
 
   @override
   void initState() {

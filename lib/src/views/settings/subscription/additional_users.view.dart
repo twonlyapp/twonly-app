@@ -117,7 +117,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
               ),
             ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: GridView.count(
               crossAxisCount: 2,
               physics: const NeverScrollableScrollPhysics(),

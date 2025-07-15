@@ -11,17 +11,18 @@ Future<void> showChatListTutorialSearchOtherUsers(
   GlobalKey searchForOtherUsers,
 ) async {
   await lockDisplayTutorial.protect(() async {
-    if (await checkIfTutorialAlreadyShown("chat_list:search_users")) {
+    if (await checkIfTutorialAlreadyShown('chat_list:search_users')) {
       return;
     }
     if (!context.mounted) return;
-    List<TargetFocus> targets = [];
-    targets.add(getTargetFocus(
-      context,
-      searchForOtherUsers,
-      context.lang.tutorialChatListSearchUsersTitle,
-      context.lang.tutorialChatListSearchUsersDesc,
-    ));
+    final targets = <TargetFocus>[
+      getTargetFocus(
+        context,
+        searchForOtherUsers,
+        context.lang.tutorialChatListSearchUsersTitle,
+        context.lang.tutorialChatListSearchUsersDesc,
+      )
+    ];
     await showTutorial(context, targets);
   });
 }
@@ -31,17 +32,18 @@ Future<void> showChatListTutorialContextMenu(
   GlobalKey firstUserListItemKey,
 ) async {
   await lockDisplayTutorial.protect(() async {
-    if (await checkIfTutorialAlreadyShown("chat_list:context_menu")) {
+    if (await checkIfTutorialAlreadyShown('chat_list:context_menu')) {
       return;
     }
     if (!context.mounted) return;
-    List<TargetFocus> targets = [];
-    targets.add(getTargetFocus(
-      context,
-      firstUserListItemKey,
-      context.lang.tutorialChatListContextMenuTitle,
-      context.lang.tutorialChatListContextMenuDesc,
-    ));
+    final targets = <TargetFocus>[
+      getTargetFocus(
+        context,
+        firstUserListItemKey,
+        context.lang.tutorialChatListContextMenuTitle,
+        context.lang.tutorialChatListContextMenuDesc,
+      )
+    ];
     await showTutorial(context, targets);
   });
 }
@@ -51,17 +53,18 @@ Future<void> showVerifyShieldTutorial(
   GlobalKey firstUserListItemKey,
 ) async {
   await lockDisplayTutorial.protect(() async {
-    if (await checkIfTutorialAlreadyShown("chat_messages:verify_shield")) {
+    if (await checkIfTutorialAlreadyShown('chat_messages:verify_shield')) {
       return;
     }
     if (!context.mounted) return;
-    List<TargetFocus> targets = [];
-    targets.add(getTargetFocus(
-      context,
-      firstUserListItemKey,
-      context.lang.tutorialChatMessagesVerifyShieldTitle,
-      context.lang.tutorialChatMessagesVerifyShieldDesc,
-    ));
+    final targets = <TargetFocus>[
+      getTargetFocus(
+        context,
+        firstUserListItemKey,
+        context.lang.tutorialChatMessagesVerifyShieldTitle,
+        context.lang.tutorialChatMessagesVerifyShieldDesc,
+      )
+    ];
     await showTutorial(context, targets);
   });
 }
@@ -71,17 +74,18 @@ Future<void> showReopenMediaFilesTutorial(
   GlobalKey firstUserListItemKey,
 ) async {
   await lockDisplayTutorial.protect(() async {
-    if (await checkIfTutorialAlreadyShown("chat_messages:reopen_message")) {
+    if (await checkIfTutorialAlreadyShown('chat_messages:reopen_message')) {
       return;
     }
     if (!context.mounted) return;
-    List<TargetFocus> targets = [];
-    targets.add(getTargetFocus(
-      context,
-      firstUserListItemKey,
-      context.lang.tutorialChatMessagesReopenMessageTitle,
-      context.lang.tutorialChatMessagesReopenMessageDesc,
-    ));
+    final targets = <TargetFocus>[
+      getTargetFocus(
+        context,
+        firstUserListItemKey,
+        context.lang.tutorialChatMessagesReopenMessageTitle,
+        context.lang.tutorialChatMessagesReopenMessageDesc,
+      )
+    ];
     await showTutorial(context, targets);
   });
 }

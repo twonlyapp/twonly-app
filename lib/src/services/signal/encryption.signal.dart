@@ -43,18 +43,17 @@ Future<Uint8List?> signalEncryptMessage(
           );
         }
 
-        final ECPublicKey? tempSignedPreKeyPublic = Curve.decodePoint(
+        final tempSignedPreKeyPublic = Curve.decodePoint(
           DjbECPublicKey(Uint8List.fromList(signedPreKey.signedPreKey))
               .serialize(),
           1,
         );
 
-        final Uint8List? tempSignedPreKeySignature = Uint8List.fromList(
+        final tempSignedPreKeySignature = Uint8List.fromList(
           signedPreKey.signedPreKeySignature,
         );
 
-        final IdentityKey? tempIdentityKey =
-            await signalStore.getIdentity(address);
+        final tempIdentityKey = await signalStore.getIdentity(address);
         if (tempIdentityKey != null) {
           final preKeyBundle = PreKeyBundle(
             target,
@@ -79,9 +78,9 @@ Future<Uint8List?> signalEncryptMessage(
 
       final ciphertext = await session.encrypt(plaintextContent);
 
-      final b = BytesBuilder();
-      b.add(ciphertext.serialize());
-      b.add(intToBytes(ciphertext.getType()));
+      final b = BytesBuilder()
+        ..add(ciphertext.serialize())
+        ..add(intToBytes(ciphertext.getType()));
 
       return b.takeBytes();
     } catch (e) {

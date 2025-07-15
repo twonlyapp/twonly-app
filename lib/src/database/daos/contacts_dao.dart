@@ -103,8 +103,8 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 
   Future<void> updateContact(
       int userId, ContactsCompanion updatedValues) async {
-    await ((update(contacts)..where((c) => c.userId.equals(userId)))
-        .write(updatedValues));
+    await (update(contacts)..where((c) => c.userId.equals(userId)))
+        .write(updatedValues);
     if (updatedValues.blocked.present ||
         updatedValues.displayName.present ||
         updatedValues.nickName.present) {
@@ -177,8 +177,9 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 
   Stream<int?> watchContactsBlocked() {
     final count = contacts.userId.count();
-    final query = selectOnly(contacts)..where(contacts.blocked.equals(true));
-    query.addColumns([count]);
+    final query = selectOnly(contacts)
+      ..where(contacts.blocked.equals(true))
+      ..addColumns([count]);
     return query.map((row) => row.read(count)).watchSingle();
   }
 
@@ -186,8 +187,8 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     final count = contacts.requested.count(distinct: true);
     final query = selectOnly(contacts)
       ..where(contacts.requested.equals(true) &
-          contacts.accepted.equals(true).not());
-    query.addColumns([count]);
+          contacts.accepted.equals(true).not())
+      ..addColumns([count]);
     return query.map((row) => row.read(count)).watchSingle();
   }
 
@@ -204,15 +205,13 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
                 u.lastMessageSend.isNotNull(),
           ))
         .watchSingle()
-        .asyncMap((contact) {
-      return getFlameCounterFromContact(contact);
-    });
+        .asyncMap(getFlameCounterFromContact);
   }
 }
 
 String getContactDisplayName(Contact user) {
-  String name = user.username;
-  if (user.nickName != null && user.nickName != "") {
+  var name = user.username;
+  if (user.nickName != null && user.nickName != '') {
     name = user.nickName!;
   } else if (user.displayName != null) {
     name = user.displayName!;
@@ -224,7 +223,7 @@ String getContactDisplayName(Contact user) {
 }
 
 String applyStrikethrough(String text) {
-  return text.split('').map((char) => '$char\u0336').join('');
+  return text.split('').map((char) => '$char\u0336').join();
 }
 
 int getFlameCounterFromContact(Contact contact) {
@@ -233,7 +232,7 @@ int getFlameCounterFromContact(Contact contact) {
   }
   final now = DateTime.now();
   final startOfToday = DateTime(now.year, now.month, now.day);
-  final twoDaysAgo = startOfToday.subtract(Duration(days: 2));
+  final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
   if (contact.lastMessageSend!.isAfter(twoDaysAgo) &&
       contact.lastMessageReceived!.isAfter(twoDaysAgo)) {
     return contact.flameCounter + 1;

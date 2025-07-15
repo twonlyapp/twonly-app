@@ -62,9 +62,9 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
       List<SignalContactPreKeysCompanion> preKeys) async {
     for (final preKey in preKeys) {
       try {
-        into(signalContactPreKeys).insert(preKey);
+        await into(signalContactPreKeys).insert(preKey);
       } catch (e) {
-        Log.error("$e");
+        Log.error('$e');
       }
     }
   }
@@ -90,7 +90,7 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
     await (delete(signalContactSignedPreKeys)
           ..where((t) => (t.createdAt.isSmallerThanValue(
                 DateTime.now().subtract(
-                  Duration(days: 25),
+                  const Duration(days: 25),
                 ),
               ))))
         .go();
@@ -98,7 +98,7 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
     await (delete(twonlyDB.signalPreKeyStores)
           ..where((t) => (t.createdAt.isSmallerThanValue(
                 DateTime.now().subtract(
-                  Duration(days: 40),
+                  const Duration(days: 40),
                 ),
               ))))
         .go();

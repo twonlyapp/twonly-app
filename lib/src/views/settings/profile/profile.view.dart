@@ -1,11 +1,11 @@
 import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/settings/profile/modify_avatar.view.dart';
 
 class ProfileView extends StatefulWidget {
@@ -33,13 +33,14 @@ class _ProfileViewState extends State<ProfileView> {
 
   Future<void> updateUserDisplayName(String displayName) async {
     await updateUserdata((user) {
-      user.displayName = displayName;
-      user.avatarCounter = user.avatarCounter + 1;
+      user
+        ..displayName = displayName
+        ..avatarCounter = user.avatarCounter + 1;
       return user;
     });
 
     await notifyContactsAboutProfileChange();
-    initAsync();
+    await initAsync();
   }
 
   @override
@@ -49,34 +50,34 @@ class _ProfileViewState extends State<ProfileView> {
         title: Text(context.lang.settingsProfile),
       ),
       body: ListView(
-        physics: BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
         children: <Widget>[
-          SizedBox(height: 25),
+          const SizedBox(height: 25),
           AvatarMakerAvatar(
             backgroundColor: Colors.transparent,
             radius: 80,
             controller: _avatarMakerController,
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Center(
             child: SizedBox(
               height: 35,
               child: ElevatedButton.icon(
-                  icon: Icon(Icons.edit),
+                  icon: const Icon(Icons.edit),
                   label: Text(context.lang.settingsProfileCustomizeAvatar),
                   onPressed: () async {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ModifyAvatar(),
+                        builder: (context) => const ModifyAvatar(),
                       ),
                     );
-                    _avatarMakerController.performRestore();
+                    await _avatarMakerController.performRestore();
                     setState(() {});
                   }),
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           const Divider(),
           BetterListTile(
             icon: FontAwesomeIcons.userPen,
@@ -85,8 +86,8 @@ class _ProfileViewState extends State<ProfileView> {
             onTap: () async {
               final displayName =
                   await showDisplayNameChangeDialog(context, user!.displayName);
-              if (context.mounted && displayName != null && displayName != "") {
-                updateUserDisplayName(displayName);
+              if (context.mounted && displayName != null && displayName != '') {
+                await updateUserDisplayName(displayName);
               }
             },
           ),
@@ -98,8 +99,7 @@ class _ProfileViewState extends State<ProfileView> {
 
 Future<String?> showDisplayNameChangeDialog(
     BuildContext context, String currentName) {
-  final TextEditingController controller =
-      TextEditingController(text: currentName);
+  final controller = TextEditingController(text: currentName);
 
   return showDialog<String>(
     context: context,

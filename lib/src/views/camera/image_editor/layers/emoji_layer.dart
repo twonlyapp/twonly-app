@@ -68,9 +68,7 @@ class _EmojiLayerState extends State<EmojiLayer> {
                 }
                 if (deleteLayer) {
                   widget.layerData.isDeleted = true;
-                  if (widget.onUpdate != null) {
-                    widget.onUpdate!();
-                  }
+                  widget.onUpdate!();
                 }
               });
             },
@@ -138,7 +136,7 @@ class _EmojiLayerState extends State<EmojiLayer> {
                   padding: const EdgeInsets.all(44),
                   color: Colors.transparent,
                   child: Text(
-                    widget.layerData.text.toString(),
+                    widget.layerData.text,
                     style: TextStyle(
                       fontSize: widget.layerData.size,
                     ),
@@ -157,7 +155,7 @@ class _EmojiLayerState extends State<EmojiLayer> {
               child: GestureDetector(
                 child: ActionButton(
                   FontAwesomeIcons.trashCan,
-                  tooltipText: "",
+                  tooltipText: '',
                   color: deleteLayer ? Colors.red : Colors.white,
                 ),
               ),

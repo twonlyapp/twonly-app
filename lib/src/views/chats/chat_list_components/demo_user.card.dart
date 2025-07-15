@@ -8,11 +8,10 @@ class DemoUserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ColoredBox(
       color: isDarkMode(context) ? Colors.white : Colors.black,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             'This is a Demo-Preview.',

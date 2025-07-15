@@ -62,7 +62,7 @@ class _ConnectionInfoWidgetState extends State<ConnectionInfo>
   @override
   Widget build(BuildContext context) {
     if (!showAnimation || gIsDemoUser) return Container();
-    double screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return SizedBox(
       width: screenWidth,
@@ -70,8 +70,8 @@ class _ConnectionInfoWidgetState extends State<ConnectionInfo>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          double barWidth = _widthAnim.value;
-          double left = _positionAnim.value * (screenWidth - barWidth);
+          final barWidth = _widthAnim.value;
+          final left = _positionAnim.value * (screenWidth - barWidth);
           return Stack(
             children: [
               Positioned(

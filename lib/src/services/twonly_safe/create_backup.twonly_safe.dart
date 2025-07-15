@@ -1,3 +1,5 @@
+// ignore_for_file: parameter_assignments
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
@@ -31,8 +33,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     return;
   }
 
-  final DateTime? lastUpdateTime = user.twonlySafeBackup!.lastBackupDone;
-  if (!force && lastUpdateTime != null) {
+  final lastUpdateTime = user.twonlySafeBackup!.lastBackupDone;
+  if (force != true && lastUpdateTime != null) {
     if (lastUpdateTime
         .isAfter(DateTime.now().subtract(const Duration(days: 1)))) {
       return;
@@ -179,8 +181,6 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     file: encryptedBackupBytesFile,
     httpRequestMethod: 'PUT',
     url: (await getTwonlySafeBackupUrl())!,
-    // requiresWiFi: true,
-    priority: 5,
     post: 'binary',
     retries: 2,
     headers: {

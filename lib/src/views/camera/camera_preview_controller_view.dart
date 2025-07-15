@@ -26,26 +26,28 @@ import 'package:twonly/src/views/home.view.dart';
 int maxVideoRecordingTime = 15;
 
 Future<(SelectedCameraDetails, CameraController)?> initializeCameraController(
-    SelectedCameraDetails details,
-    int sCameraId,
-    bool init,
-    bool enableAudio) async {
-  if (sCameraId >= gCameras.length) return null;
+  SelectedCameraDetails details,
+  int sCameraId,
+  bool init,
+  bool enableAudio,
+) async {
+  var cameraId = sCameraId;
+  if (cameraId >= gCameras.length) return null;
   if (init) {
-    for (; sCameraId < gCameras.length; sCameraId++) {
-      if (gCameras[sCameraId].lensDirection == CameraLensDirection.back) {
+    for (; cameraId < gCameras.length; cameraId++) {
+      if (gCameras[cameraId].lensDirection == CameraLensDirection.back) {
         break;
       }
     }
   }
   details.isZoomAble = false;
-  if (details.cameraId != sCameraId) {
+  if (details.cameraId != cameraId) {
     // switch between front and back
     details.scaleFactor = 1;
   }
 
   final cameraController = CameraController(
-    gCameras[sCameraId],
+    gCameras[cameraId],
     ResolutionPreset.high,
     enableAudio: enableAudio,
   );
@@ -64,9 +66,9 @@ Future<(SelectedCameraDetails, CameraController)?> initializeCameraController(
     details
       ..isZoomAble = details.maxAvailableZoom != details.minAvailableZoom
       ..cameraLoaded = true
-      ..cameraId = sCameraId;
+      ..cameraId = cameraId;
   }).catchError((Object e) {
-    Log.error("$e");
+    Log.error('$e');
   });
   return (details, cameraController);
 }
@@ -213,7 +215,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Future<Uint8List?> loadAndDeletePictureFromFile(XFile picture) async {
     try {
       // Load the image into bytes
-      final Uint8List imageBytes = await picture.readAsBytes();
+      final imageBytes = await picture.readAsBytes();
       // Remove the image file
       await File(picture.path).delete();
       return imageBytes;
@@ -400,7 +402,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       videoRecordingTimer = null;
     }
     if (cameraController == null || !cameraController!.value.isRecordingVideo) {
-      return null;
+      return;
     }
 
     try {
@@ -414,8 +416,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       if (videoPath != null) {
         if (Platform.isAndroid) {
           // see https://github.com/flutter/flutter/issues/148335
-          await File(videoPath.path).rename("${videoPath.path}.mp4");
-          videoPathFile = File("${videoPath.path}.mp4");
+          await File(videoPath.path).rename('${videoPath.path}.mp4');
+          videoPathFile = File('${videoPath.path}.mp4');
         } else {
           videoPathFile = File(videoPath.path);
         }
@@ -426,12 +428,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       }
     } on CameraException catch (e) {
       _showCameraException(e);
-      return null;
+      return;
     }
   }
 
   void _showCameraException(dynamic e) {
-    Log.error("$e");
+    Log.error('$e');
     try {
       if (context.mounted) {
         // ignore: use_build_context_synchronously
@@ -536,10 +538,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               : Colors.white.withAlpha(160),
                           onPressed: () async {
                             if (selectedCameraDetails.isFlashOn) {
-                              cameraController?.setFlashMode(FlashMode.off);
+                              await cameraController
+                                  ?.setFlashMode(FlashMode.off);
                               selectedCameraDetails.isFlashOn = false;
                             } else {
-                              cameraController?.setFlashMode(FlashMode.always);
+                              await cameraController
+                                  ?.setFlashMode(FlashMode.always);
                               selectedCameraDetails.isFlashOn = true;
                             }
                             setState(() {});
@@ -566,16 +570,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             Icons.mic_off_rounded,
                             color: Colors.white.withAlpha(160),
                             tooltipText:
-                                "Allow microphone access for video recording.",
+                                'Allow microphone access for video recording.',
                             onPressed: requestMicrophonePermission,
                           ),
                         if (hasAudioPermission)
                           ActionButton(
-                            (videoWithAudio)
+                            videoWithAudio
                                 ? Icons.volume_up_rounded
                                 : Icons.volume_off_rounded,
-                            tooltipText: "Record video with audio.",
-                            color: (videoWithAudio)
+                            tooltipText: 'Record video with audio.',
+                            color: videoWithAudio
                                 ? Colors.white
                                 : Colors.white.withAlpha(160),
                             onPressed: () async {
@@ -614,13 +618,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       const SizedBox(height: 30),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           if (!isVideoRecording)
                             GestureDetector(
                               onTap: pickImageFromGallery,
                               child: Align(
-                                alignment: Alignment.center,
                                 child: Container(
                                   height: 50,
                                   width: 80,
@@ -640,7 +642,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             // onLongPress: startVideoRecording,
                             key: keyTriggerButton,
                             child: Align(
-                              alignment: Alignment.center,
                               child: Container(
                                 height: 100,
                                 width: 100,

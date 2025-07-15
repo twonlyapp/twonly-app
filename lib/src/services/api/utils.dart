@@ -37,8 +37,8 @@ Result asResult(server.ServerToClient? msg) {
 }
 
 ClientToServer createClientToServerFromHandshake(Handshake handshake) {
-  var v0 = client.V0()
-    ..seq = Int64(0)
+  final v0 = client.V0()
+    ..seq = Int64()
     ..handshake = handshake;
   return ClientToServer()..v0 = v0;
 }
@@ -46,7 +46,7 @@ ClientToServer createClientToServerFromHandshake(Handshake handshake) {
 ClientToServer createClientToServerFromApplicationData(
     ApplicationData applicationData) {
   final v0 = client.V0()
-    ..seq = Int64(0)
+    ..seq = Int64()
     ..applicationdata = applicationData;
   return ClientToServer()..v0 = v0;
 }

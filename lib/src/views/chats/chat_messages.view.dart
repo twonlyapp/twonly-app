@@ -157,7 +157,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         );
       }
 
-      twonlyDB.messagesDao.openedAllNonMediaMessages(widget.contact.userId);
+      await twonlyDB.messagesDao
+          .openedAllNonMediaMessages(widget.contact.userId);
 
       setState(() {
         textReactionsToMessageId = tmpTextReactionsToMessageId;
@@ -271,7 +272,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Container(
+                child: ColoredBox(
                   color: Colors.transparent,
                   child: Row(
                     children: [

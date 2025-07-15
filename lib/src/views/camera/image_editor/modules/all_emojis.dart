@@ -7,7 +7,7 @@ class Emojis extends StatefulWidget {
   const Emojis({super.key});
 
   @override
-  createState() => _EmojisState();
+  State<Emojis> createState() => _EmojisState();
 }
 
 class _EmojisState extends State<Emojis> {
@@ -57,7 +57,7 @@ class _EmojisState extends State<Emojis> {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Container(
-        padding: const EdgeInsets.all(0.0),
+        padding: EdgeInsets.zero,
         height: 400,
         decoration: const BoxDecoration(
           borderRadius: BorderRadius.only(
@@ -77,14 +77,12 @@ class _EmojisState extends State<Emojis> {
             const SizedBox(height: 16),
             Container(
               height: 315,
-              padding: const EdgeInsets.all(0.0),
+              padding: EdgeInsets.zero,
               child: GridView(
                 shrinkWrap: true,
                 physics: const ClampingScrollPhysics(),
-                scrollDirection: Axis.vertical,
                 gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  mainAxisSpacing: 0.0,
-                  maxCrossAxisExtent: 60.0,
+                  maxCrossAxisExtent: 60,
                 ),
                 children: lastUsed.map((String emoji) {
                   return GridTile(

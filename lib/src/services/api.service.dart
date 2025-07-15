@@ -61,12 +61,13 @@ class ApiService {
 
   final HashMap<Int64, server.ServerToClient?> messagesV0 = HashMap();
   IOWebSocketChannel? _channel;
+  // ignore: cancel_subscriptions
   StreamSubscription<List<ConnectivityResult>>? connectivitySubscription;
 
   Future<bool> _connectTo(String apiUrl) async {
     if (appIsOutdated) return false;
     try {
-      var channel = IOWebSocketChannel.connect(
+      final channel = IOWebSocketChannel.connect(
         Uri.parse(apiUrl),
       );
       _channel = channel;
@@ -195,11 +196,11 @@ class ApiService {
     onClosed();
   }
 
-  void _onData(dynamic msgBuffer) async {
+  Future<void> _onData(dynamic msgBuffer) async {
     try {
       final msg = server.ServerToClient.fromBuffer(msgBuffer as Uint8List);
       if (msg.v0.hasResponse()) {
-        removeFromRetransmissionBuffer(msg.v0.seq);
+        await removeFromRetransmissionBuffer(msg.v0.seq);
         messagesV0[msg.v0.seq] = msg;
       } else {
         await handleServerMessage(msg);
@@ -212,7 +213,7 @@ class ApiService {
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
     final startTime = DateTime.now();
 
-    final timeout = Duration(seconds: 20);
+    const timeout = Duration(seconds: 20);
 
     while (true) {
       if (messagesV0[seq] != null) {
@@ -393,7 +394,7 @@ class ApiService {
       return;
     }
 
-    var handshake = Handshake()
+    final handshake = Handshake()
       ..getauthchallenge = Handshake_GetAuthChallenge();
     final req = createClientToServerFromHandshake(handshake);
 
@@ -445,7 +446,7 @@ class ApiService {
 
     final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
 
-    var register = Handshake_Register()
+    final register = Handshake_Register()
       ..username = username
       ..publicIdentityKey =
           (await signalStore.getIdentityKeyPair()).getPublicKey().serialize()
@@ -614,7 +615,7 @@ class ApiService {
       ..userId = Int64(userId);
     final appData = ApplicationData()..getsignedprekeybyuserid = get;
     final req = createClientToServerFromApplicationData(appData);
-    Result res = await sendRequestSync(req, contactId: userId);
+    final res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
       final ok = res.value as server.Response_Ok;
       if (ok.hasSignedprekey()) {
@@ -628,11 +629,11 @@ class ApiService {
     final get = ApplicationData_GetPrekeysByUserId()..userId = Int64(userId);
     final appData = ApplicationData()..getprekeysbyuserid = get;
     final req = createClientToServerFromApplicationData(appData);
-    Result res = await sendRequestSync(req, contactId: userId);
+    final res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
       final ok = res.value as server.Response_Ok;
       if (ok.hasUserdata()) {
-        server.Response_UserData data = ok.userdata;
+        final data = ok.userdata;
         if (data.hasSignedPrekey() &&
             data.hasSignedPrekeyId() &&
             data.hasSignedPrekeySignature()) {
@@ -650,7 +651,7 @@ class ApiService {
 
   Future<Result> sendTextMessage(
       int target, Uint8List msg, List<int>? pushData) async {
-    var testMessage = ApplicationData_TextMessage()
+    final testMessage = ApplicationData_TextMessage()
       ..userId = Int64(target)
       ..body = msg;
 

@@ -34,18 +34,18 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
         backupServer,
       );
 
-      Restart.restartApp(
+      await Restart.restartApp(
         notificationTitle: 'Backup successfully recovered.',
         notificationBody: 'Click here to open the app again',
       );
     } catch (e) {
       // in case something was already written from the backup...
-      Log.error("$e");
+      Log.error('$e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$e'),
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -60,23 +60,24 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("twonly Safe ${context.lang.twonlySafeRecoverTitle}"),
+        title: Text('twonly Safe ${context.lang.twonlySafeRecoverTitle}'),
         actions: [
           IconButton(
             onPressed: () {
               showAlertDialog(
                 context,
-                "twonly Safe",
+                'twonly Safe',
                 context.lang.backupTwonlySafeLongDesc,
               );
             },
-            icon: FaIcon(FontAwesomeIcons.circleInfo),
+            icon: const FaIcon(FontAwesomeIcons.circleInfo),
             iconSize: 18,
           )
         ],
       ),
       body: Padding(
-        padding: EdgeInsetsGeometry.symmetric(vertical: 40, horizontal: 40),
+        padding:
+            const EdgeInsetsGeometry.symmetric(vertical: 40, horizontal: 40),
         child: ListView(
           children: [
             Text(
@@ -95,7 +96,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                 context.lang.registerUsernameDecoration,
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Stack(
               children: [
                 TextField(
@@ -130,30 +131,30 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                 )
               ],
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             Center(
               child: OutlinedButton(
                 onPressed: () async {
                   backupServer = await Navigator.push(context,
                       MaterialPageRoute(builder: (context) {
-                    return TwonlySafeServerView();
+                    return const TwonlySafeServerView();
                   }));
                   setState(() {});
                 },
                 child: Text(context.lang.backupExpertSettings),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Center(
                 child: FilledButton.icon(
               onPressed: (!isLoading) ? _recoverTwonlySafe : null,
               icon: isLoading
-                  ? SizedBox(
+                  ? const SizedBox(
                       height: 12,
                       width: 12,
                       child: CircularProgressIndicator(strokeWidth: 1),
                     )
-                  : Icon(Icons.lock_clock_rounded),
+                  : const Icon(Icons.lock_clock_rounded),
               label: Text(context.lang.twonlySafeRecoverBtn),
             ))
           ],

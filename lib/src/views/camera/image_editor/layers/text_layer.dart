@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_null_aware_method_calls
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,16 +10,15 @@ import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 
 /// Text layer
 class TextLayer extends StatefulWidget {
-  final TextLayerData layerData;
-  final VoidCallback? onUpdate;
-
   const TextLayer({
-    super.key,
     required this.layerData,
+    super.key,
     this.onUpdate,
   });
+  final TextLayerData layerData;
+  final VoidCallback? onUpdate;
   @override
-  createState() => _TextViewState();
+  State<TextLayer> createState() => _TextViewState();
 }
 
 class _TextViewState extends State<TextLayer> {
@@ -69,7 +70,7 @@ class _TextViewState extends State<TextLayer> {
             minLines: 1,
             onEditingComplete: () {
               setState(() {
-                widget.layerData.isDeleted = textController.text == "";
+                widget.layerData.isDeleted = textController.text == '';
                 widget.layerData.isEditing = false;
                 widget.layerData.text = textController.text;
               });
@@ -83,10 +84,10 @@ class _TextViewState extends State<TextLayer> {
             },
             onTapOutside: (a) {
               widget.layerData.text = textController.text;
-              Future.delayed(Duration(milliseconds: 100), () {
+              Future.delayed(const Duration(milliseconds: 100), () {
                 if (context.mounted) {
                   setState(() {
-                    widget.layerData.isDeleted = textController.text == "";
+                    widget.layerData.isDeleted = textController.text == '';
                     widget.layerData.isEditing = false;
                     context
                         .read<ImageEditorProvider>()
@@ -102,10 +103,10 @@ class _TextViewState extends State<TextLayer> {
                   .read<ImageEditorProvider>()
                   .updateSomeTextViewIsAlreadyEditing(false);
             },
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               border: InputBorder.none,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
+              contentPadding: EdgeInsets.symmetric(
                 horizontal: 8,
                 vertical: 4,
               ),
@@ -136,7 +137,7 @@ class _TextViewState extends State<TextLayer> {
             onScaleEnd: (d) {
               if (deleteLayer) {
                 widget.layerData.isDeleted = true;
-                textController.text = "";
+                textController.text = '';
               }
               elementIsScaled = false;
               if (widget.onUpdate != null) {
@@ -161,8 +162,8 @@ class _TextViewState extends State<TextLayer> {
                 widget.layerData.offset = Offset(
                     0, widget.layerData.offset.dy + detail.focalPointDelta.dy);
               }
-              final RenderBox renderBox =
-                  _widgetKey.currentContext!.findRenderObject() as RenderBox;
+              final renderBox =
+                  _widgetKey.currentContext!.findRenderObject()! as RenderBox;
 
               if (widget.layerData.offset.dy > renderBox.size.height - 80) {
                 if (!deleteLayer) {
@@ -198,11 +199,11 @@ class _TextViewState extends State<TextLayer> {
             child: Center(
               child: GestureDetector(
                 onTapUp: (d) {
-                  textController.text = "";
+                  textController.text = '';
                 },
                 child: ActionButton(
                   FontAwesomeIcons.trashCan,
-                  tooltipText: "",
+                  tooltipText: '',
                   color: deleteLayer ? Colors.red : Colors.white,
                 ),
               ),

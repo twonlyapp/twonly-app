@@ -67,7 +67,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                             child: Row(
                               children: [
                                 ContactAvatar(
-                                  userData: userData!,
+                                  userData: userData,
                                   fontSize: 30,
                                 ),
                                 Container(width: 20, color: Colors.transparent),
@@ -200,7 +200,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(
                       builder: (context) {
-                        return HelpView();
+                        return const HelpView();
                       },
                     ));
                   },

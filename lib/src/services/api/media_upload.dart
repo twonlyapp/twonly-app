@@ -114,7 +114,7 @@ Future<void> initFileDownloader() async {
 Future<bool> checkForFailedUploads() async {
   final messages = await twonlyDB.messagesDao.getAllMessagesPendingUpload();
   final mediaUploadIds = <int>[];
-  for (var message in messages) {
+  for (final message in messages) {
     if (mediaUploadIds.contains(message.mediaUploadId)) {
       continue;
     }
@@ -690,7 +690,7 @@ Future<void> handleUploadWhenAppGoesBackground() async {
   Log.info('App goes into background. Enqueue uploads to the background.');
   final keys = currentUploadTasks.keys.toList();
   for (final key in keys) {
-    enqueueUploadTask(key);
+    await enqueueUploadTask(key);
   }
 }
 

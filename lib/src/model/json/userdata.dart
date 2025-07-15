@@ -11,6 +11,8 @@ class UserData {
     required this.subscriptionPlan,
     required this.isDemoUser,
   });
+  factory UserData.fromJson(Map<String, dynamic> json) =>
+      _$UserDataFromJson(json);
 
   final int userId;
 
@@ -29,7 +31,7 @@ class UserData {
 
   // --- SUBSCRIPTION DTA ---
 
-  @JsonKey(defaultValue: "Preview")
+  @JsonKey(defaultValue: 'Preview')
   String subscriptionPlan;
   DateTime? lastImageSend;
   int? todaysImageCounter;
@@ -81,9 +83,6 @@ class UserData {
   DateTime? nextTimeToShowBackupNotice;
   BackupServer? backupServer;
   TwonlySafeBackup? twonlySafeBackup;
-
-  factory UserData.fromJson(Map<String, dynamic> json) =>
-      _$UserDataFromJson(json);
   Map<String, dynamic> toJson() => _$UserDataToJson(this);
 }
 
@@ -95,15 +94,14 @@ class TwonlySafeBackup {
     required this.backupId,
     required this.encryptionKey,
   });
+  factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) =>
+      _$TwonlySafeBackupFromJson(json);
 
   int lastBackupSize = 0;
   LastBackupUploadState backupUploadState = LastBackupUploadState.none;
   DateTime? lastBackupDone;
   List<int> backupId;
   List<int> encryptionKey;
-
-  factory TwonlySafeBackup.fromJson(Map<String, dynamic> json) =>
-      _$TwonlySafeBackupFromJson(json);
   Map<String, dynamic> toJson() => _$TwonlySafeBackupToJson(this);
 }
 
@@ -114,12 +112,11 @@ class BackupServer {
     required this.retentionDays,
     required this.maxBackupBytes,
   });
+  factory BackupServer.fromJson(Map<String, dynamic> json) =>
+      _$BackupServerFromJson(json);
 
   String serverUrl;
   int retentionDays;
   int maxBackupBytes;
-
-  factory BackupServer.fromJson(Map<String, dynamic> json) =>
-      _$BackupServerFromJson(json);
   Map<String, dynamic> toJson() => _$BackupServerToJson(this);
 }

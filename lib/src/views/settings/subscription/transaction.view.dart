@@ -4,8 +4,11 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
 import 'package:twonly/src/utils/misc.dart';
 
 class TransactionView extends StatefulWidget {
-  const TransactionView(
-      {super.key, required this.transactions, required this.formattedBalance});
+  const TransactionView({
+    required this.transactions,
+    required this.formattedBalance,
+    super.key,
+  });
   final List<Response_Transaction>? transactions;
   final String formattedBalance;
 
@@ -23,7 +26,7 @@ class _TransactionViewState extends State<TransactionView> {
       body: ListView(
         children: [
           Padding(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.all(32),
             child: Center(
               child: Container(
                 decoration: BoxDecoration(
@@ -51,9 +54,8 @@ class _TransactionViewState extends State<TransactionView> {
 }
 
 class TransactionCard extends StatefulWidget {
+  const TransactionCard({required this.transaction, super.key});
   final Response_Transaction transaction;
-
-  const TransactionCard({super.key, required this.transaction});
 
   @override
   State<TransactionCard> createState() => _TransactionCardState();

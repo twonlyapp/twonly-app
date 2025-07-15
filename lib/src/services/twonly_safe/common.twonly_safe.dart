@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:hashlib/hashlib.dart';
@@ -21,7 +22,7 @@ Future<void> enableTwonlySafe(String password) async {
     );
     return user;
   });
-  performTwonlySafeBackup(force: true);
+  unawaited(performTwonlySafeBackup(force: true));
 }
 
 Future<void> disableTwonlySafe() async {
@@ -35,9 +36,9 @@ Future<void> disableTwonlySafe() async {
           // Add any other headers if required
         },
       );
-      Log.info("Download deleted with: ${response.statusCode}");
+      Log.info('Download deleted with: ${response.statusCode}');
     } catch (e) {
-      Log.error("Could not connect to the server.");
+      Log.error('Could not connect to the server.');
     }
   }
   await updateUserdata((user) {
@@ -50,21 +51,18 @@ Future<(Uint8List, Uint8List)> getMasterKey(
   String password,
   String username,
 ) async {
-  List<int> passwordBytes = utf8.encode(password);
-  List<int> saltBytes = utf8.encode(username);
+  final List<int> passwordBytes = utf8.encode(password);
+  final List<int> saltBytes = utf8.encode(username);
 
   // Values are derived from the Threema Whitepaper
   // https://threema.com/assets/documents/cryptography_whitepaper.pdf
 
   final scrypt = Scrypt(
     cost: 65536,
-    blockSize: 8,
-    parallelism: 1,
-    derivedKeyLength: 64,
     salt: saltBytes,
   );
 
-  final key = (scrypt.convert(passwordBytes)).bytes;
+  final key = scrypt.convert(passwordBytes).bytes;
   return (key.sublist(0, 32), key.sublist(32, 64));
 }
 
@@ -81,13 +79,13 @@ Future<String?> getTwonlySafeBackupUrlFromServer(
   List<int> backupId,
   BackupServer? backupServer,
 ) async {
-  String backupServerUrl = "https://safe.twonly.eu/";
+  var backupServerUrl = 'https://safe.twonly.eu/';
 
   if (backupServer != null) {
     backupServerUrl = backupServer.serverUrl;
   }
 
-  String backupIdHex = uint8ListToHex(backupId).toLowerCase();
+  final backupIdHex = uint8ListToHex(backupId).toLowerCase();
 
-  return "${backupServerUrl}backups/$backupIdHex";
+  return '${backupServerUrl}backups/$backupIdHex';
 }

@@ -4,7 +4,7 @@ import 'package:twonly/src/views/settings/subscription/voucher.view.dart';
 // import 'package:url_launcher/url_launcher.dart';
 
 class RefundCreditsView extends StatefulWidget {
-  const RefundCreditsView({super.key, required this.formattedBalance});
+  const RefundCreditsView({required this.formattedBalance, super.key});
   final String formattedBalance;
 
   @override
@@ -19,7 +19,7 @@ class _RefundCreditsViewState extends State<RefundCreditsView> {
         title: const Text('Refund Credits'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -32,13 +32,15 @@ class _RefundCreditsViewState extends State<RefundCreditsView> {
             const SizedBox(height: 20), // Space between balance and options
 
             ListTile(
-              title: Text("Create a Voucher"),
+              title: const Text('Create a Voucher'),
               onTap: () async {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (context) {
-                  return VoucherView();
+                  return const VoucherView();
                 }));
-                Navigator.pop(context, false);
+                if (context.mounted) {
+                  Navigator.pop(context, false);
+                }
               },
             ),
             // ListTile(

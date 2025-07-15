@@ -49,8 +49,7 @@ class ChatTextResponseColumns extends StatelessWidget {
         children.insert(
           0,
           Container(
-            padding:
-                const EdgeInsets.only(top: 5, bottom: 0, right: 10, left: 10),
+            padding: const EdgeInsets.only(top: 5, right: 10, left: 10),
             child: Container(
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.8,

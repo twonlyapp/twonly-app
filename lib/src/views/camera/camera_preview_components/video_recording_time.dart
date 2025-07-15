@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
 class VideoRecordingTimer extends StatelessWidget {
-  final DateTime? videoRecordingStarted;
-  final int maxVideoRecordingTime;
-
   const VideoRecordingTimer({
-    super.key,
     required this.videoRecordingStarted,
     required this.maxVideoRecordingTime,
+    super.key,
   });
+  final DateTime? videoRecordingStarted;
+  final int maxVideoRecordingTime;
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +25,12 @@ class VideoRecordingTimer extends StatelessWidget {
               children: [
                 Center(
                   child: CircularProgressIndicator(
-                    value: (currentTime.difference(videoRecordingStarted!))
+                    value: currentTime
+                            .difference(videoRecordingStarted!)
                             .inMilliseconds /
                         (maxVideoRecordingTime * 1000),
                     strokeWidth: 4,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
                     backgroundColor: Colors.grey[300],
                   ),
                 ),
@@ -46,7 +46,7 @@ class VideoRecordingTimer extends StatelessWidget {
                       shadows: [
                         Shadow(
                           color: Color.fromARGB(122, 0, 0, 0),
-                          blurRadius: 5.0,
+                          blurRadius: 5,
                         )
                       ],
                     ),

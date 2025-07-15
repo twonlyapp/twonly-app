@@ -24,9 +24,10 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
 
   Future<void> updateUserAvatar(String json, String svg) async {
     await updateUserdata((user) {
-      user.avatarJson = json;
-      user.avatarSvg = svg;
-      user.avatarCounter = user.avatarCounter + 1;
+      user
+        ..avatarJson = json
+        ..avatarSvg = svg
+        ..avatarCounter = user.avatarCounter + 1;
       return user;
     });
     await notifyContactsAboutProfileChange();
@@ -35,7 +36,7 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
   AvatarMakerThemeData getAvatarMakerTheme(BuildContext context) {
     if (isDarkMode(context)) {
       return AvatarMakerThemeData(
-        boxDecoration: BoxDecoration(
+        boxDecoration: const BoxDecoration(
           boxShadow: [BoxShadow()],
         ),
         unselectedTileDecoration: BoxDecoration(
@@ -49,13 +50,13 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
         selectedIconColor: Colors.white,
         unselectedIconColor: Colors.grey,
         primaryBgColor: Colors.black, // Dark mode background
-        secondaryBgColor: Colors.grey[850]!, // Dark mode secondary background
+        secondaryBgColor: Colors.grey[850], // Dark mode secondary background
         labelTextStyle:
-            TextStyle(color: Colors.white), // Light text for dark mode
+            const TextStyle(color: Colors.white), // Light text for dark mode
       );
     } else {
       return AvatarMakerThemeData(
-        boxDecoration: BoxDecoration(
+        boxDecoration: const BoxDecoration(
           boxShadow: [BoxShadow()],
         ),
         unselectedTileDecoration: BoxDecoration(
@@ -69,9 +70,9 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
         selectedIconColor: Colors.black,
         unselectedIconColor: Colors.grey,
         primaryBgColor: Colors.white, // Light mode background
-        secondaryBgColor: Colors.grey[200]!, // Light mode secondary background
+        secondaryBgColor: Colors.grey[200], // Light mode secondary background
         labelTextStyle:
-            TextStyle(color: Colors.black), // Dark text for light mode
+            const TextStyle(color: Colors.black), // Dark text for light mode
       );
     }
   }
@@ -85,10 +86,9 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
       body: Center(
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 00),
+                padding: EdgeInsets.zero,
                 child: AvatarMakerAvatar(
                   radius: 130,
                   backgroundColor: Colors.transparent,
@@ -100,7 +100,7 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: FaIcon(FontAwesomeIcons.floppyDisk),
+                      icon: const FaIcon(FontAwesomeIcons.floppyDisk),
                       onPressed: () async {
                         await _avatarMakerController.saveAvatarSVG();
                         final json =
@@ -113,27 +113,23 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
                       },
                     ),
                     IconButton(
-                      icon: FaIcon(FontAwesomeIcons.shuffle),
-                      onPressed: () {
-                        _avatarMakerController.randomizedSelectedOptions();
-                      },
+                      icon: const FaIcon(FontAwesomeIcons.shuffle),
+                      onPressed:
+                          _avatarMakerController.randomizedSelectedOptions,
                     ),
                     IconButton(
-                      icon: Icon(FontAwesomeIcons.rotateLeft),
-                      onPressed: () {
-                        _avatarMakerController.restoreState();
-                      },
+                      icon: const Icon(FontAwesomeIcons.rotateLeft),
+                      onPressed: _avatarMakerController.restoreState,
                     ),
                   ],
                 ),
               ),
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 30),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 30),
                 child: AvatarMakerCustomizer(
                   scaffoldWidth:
                       min(600, MediaQuery.of(context).size.width * 0.85),
-                  autosave: false,
                   theme: getAvatarMakerTheme(context),
                   controller: _avatarMakerController,
                 ),

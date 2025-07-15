@@ -54,7 +54,7 @@ class NotificationView extends StatelessWidget {
                     final pushData = await getPushData(
                       user.userId,
                       PushNotification(
-                        messageId: Int64(0),
+                        messageId: Int64(),
                         kind: PushKind.testNotification,
                       ),
                     );

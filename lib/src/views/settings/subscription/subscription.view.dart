@@ -266,7 +266,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             PlanCard(
               planId: 'Tester',
               onTap: () async {
-                bool activate = await showAlertDialog(
+                final activate = await showAlertDialog(
                   context,
                   context.lang.testingAccountTitle,
                   context.lang.testingAccountBody,

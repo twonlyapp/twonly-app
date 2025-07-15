@@ -111,7 +111,7 @@ class _VoucherCardState extends State<VoucherCard> {
         margin: const EdgeInsets.all(10),
         elevation: 5,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -160,7 +160,7 @@ Future<void> redeemVoucher(BuildContext context) async {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: TextField(
                       onChanged: (value) {
                         // Convert to uppercase

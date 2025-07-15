@@ -106,7 +106,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             Locale('en', ''),
             Locale('de', ''),
           ],
-          onGenerateTitle: (BuildContext context) => "twonly",
+          onGenerateTitle: (BuildContext context) => 'twonly',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF57CC99),
@@ -132,8 +132,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           themeMode: context.watch<SettingsChangeProvider>().themeMode,
           initialRoute: '/',
           routes: {
-            "/": (context) => AppMainWidget(initialPage: 1),
-            "/chats": (context) => AppMainWidget(initialPage: 0)
+            '/': (context) => const AppMainWidget(initialPage: 1),
+            '/chats': (context) => const AppMainWidget(initialPage: 0)
           },
         );
       },
@@ -143,8 +143,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
 class AppMainWidget extends StatefulWidget {
   const AppMainWidget({
-    super.key,
     required this.initialPage,
+    super.key,
   });
   final int initialPage;
   @override
@@ -182,7 +182,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
             );
           },
         ),
-        AppOutdated(),
+        const AppOutdated(),
       ],
     );
   }

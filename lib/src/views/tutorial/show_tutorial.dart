@@ -76,7 +76,6 @@ TargetFocus getTargetFocus(
             left: 0, right: 0, top: top, bottom: bottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(

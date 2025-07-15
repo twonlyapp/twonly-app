@@ -61,7 +61,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   bool loadingImage = true;
   bool isDisposed = false;
   HashSet<int> selectedUserIds = HashSet();
-  double widthRatio = 1, heightRatio = 1, pixelRatio = 1;
+  double widthRatio = 1;
+  double heightRatio = 1;
+  double pixelRatio = 1;
   VideoPlayerController? videoController;
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
@@ -93,7 +95,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
   }
 
-  void initAsync() async {
+  Future<void> initAsync() async {
     final user = await getUser();
     if (user == null) return;
     if (user.defaultShowTime != null) {

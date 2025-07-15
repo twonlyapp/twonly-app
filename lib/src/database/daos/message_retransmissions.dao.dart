@@ -17,7 +17,7 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
     try {
       return await into(messageRetransmissions).insert(message);
     } catch (e) {
-      Log.error("Error while inserting message for retransmission: $e");
+      Log.error('Error while inserting message for retransmission: $e');
       return null;
     }
   }
@@ -29,7 +29,7 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
         .go();
 
     if (countDeleted > 0) {
-      Log.info("Deleted $countDeleted faulty retransmissions");
+      Log.info('Deleted $countDeleted faulty retransmissions');
     }
 
     return (await (select(messageRetransmissions)

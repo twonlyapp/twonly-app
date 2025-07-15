@@ -1,18 +1,13 @@
+// ignore_for_file: comment_references
+
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
 import 'package:twonly/src/views/camera/image_editor/data/image_item.dart';
 
 /// Layer class with some common properties
 class Layer {
-  Offset offset;
-  double rotation, scale, opacity;
-  bool isEditing;
-  bool isDeleted;
-  bool hasCustomActionButtons;
-  bool showCustomButtons;
-
   Layer({
-    this.offset = const Offset(0, 0),
+    this.offset = Offset.zero,
     this.opacity = 1,
     this.isEditing = false,
     this.isDeleted = false,
@@ -21,24 +16,28 @@ class Layer {
     this.rotation = 0,
     this.scale = 1,
   });
+  Offset offset;
+  double rotation;
+  double scale;
+  double opacity;
+  bool isEditing;
+  bool isDeleted;
+  bool hasCustomActionButtons;
+  bool showCustomButtons;
 }
 
 /// Attributes used by [BackgroundLayer]
 class BackgroundLayerData extends Layer {
-  ImageItem image;
-
   BackgroundLayerData({
     required this.image,
   });
+  ImageItem image;
 }
 
 class FilterLayerData extends Layer {}
 
 /// Attributes used by [EmojiLayer]
 class EmojiLayerData extends Layer {
-  String text;
-  double size;
-
   EmojiLayerData({
     this.text = '',
     this.size = 64,
@@ -48,31 +47,27 @@ class EmojiLayerData extends Layer {
     super.scale,
     super.isEditing,
   });
+  String text;
+  double size;
 }
 
 /// Attributes used by [TextLayer]
 class TextLayerData extends Layer {
-  String text;
-  int textLayersBefore;
   TextLayerData({
-    this.text = "",
     required this.textLayersBefore,
+    this.text = '',
     super.offset,
     super.opacity,
     super.rotation,
     super.scale,
     super.isEditing = true,
   });
+  String text;
+  int textLayersBefore;
 }
 
 /// Attributes used by [DrawLayer]
 class DrawLayerData extends Layer {
-  final control = HandSignatureControl(
-    threshold: 3.0,
-    smoothRatio: 0.65,
-    velocityRange: 2.0,
-  );
-
   // String text;
   DrawLayerData({
     super.offset,
@@ -82,4 +77,5 @@ class DrawLayerData extends Layer {
     super.hasCustomActionButtons = true,
     super.isEditing = true,
   });
+  final control = HandSignatureControl();
 }

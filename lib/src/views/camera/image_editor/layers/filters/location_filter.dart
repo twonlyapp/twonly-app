@@ -99,7 +99,6 @@ class _LocationFilterState extends State<LocationFilter> {
             bottom: 50,
             left: 40,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 FilterText(location!.city),
                 FilterText(location!.county),
@@ -131,8 +130,8 @@ Future<List<Sticker>> getStickerIndex() async {
   final indexFile = File('${directory.path}/stickers.json');
   var res = <Sticker>[];
 
-  if (await indexFile.exists() && !kDebugMode) {
-    final lastModified = await indexFile.lastModified();
+  if (indexFile.existsSync() && !kDebugMode) {
+    final lastModified = indexFile.lastModifiedSync();
     final difference = DateTime.now().difference(lastModified);
     final content = await indexFile.readAsString();
     final jsonList = json.decode(content) as List;

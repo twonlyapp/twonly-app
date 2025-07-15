@@ -1,8 +1,8 @@
-import 'package:twonly/src/database/signal/connect_identitiy_key_store.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/src/database/signal/connect_identity_key_store.dart';
 import 'package:twonly/src/database/signal/connect_pre_key_store.dart';
 import 'package:twonly/src/database/signal/connect_session_store.dart';
 import 'package:twonly/src/database/signal/connect_signed_pre_key_store.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 
 class ConnectSignalProtocolStore implements SignalProtocolStore {
   ConnectSignalProtocolStore(

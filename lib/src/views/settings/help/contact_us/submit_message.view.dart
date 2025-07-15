@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:twonly/src/utils/misc.dart';
 
 class SubmitMessage extends StatefulWidget {
-  const SubmitMessage({super.key, required this.fullMessage});
+  const SubmitMessage({required this.fullMessage, super.key});
 
   final String fullMessage;
 
@@ -22,14 +22,14 @@ class _ContactUsState extends State<SubmitMessage> {
   }
 
   Future<void> _submitFeedback() async {
-    final String feedback = _controller.text;
+    final feedback = _controller.text;
     setState(() {
       isLoading = true;
     });
 
     if (feedback.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter your message.')),
+        const SnackBar(content: Text('Please enter your message.')),
       );
       return;
     }
@@ -57,7 +57,7 @@ class _ContactUsState extends State<SubmitMessage> {
     } else {
       // Handle error response
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to submit feedback.')),
+        const SnackBar(content: Text('Failed to submit feedback.')),
       );
     }
   }
@@ -69,30 +69,30 @@ class _ContactUsState extends State<SubmitMessage> {
         title: Text(context.lang.settingsHelpContactUs),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
             Text(
               context.lang.contactUsLastWarning,
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: _controller,
               decoration: InputDecoration(
                 hintText: context.lang.contactUsYourMessage,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               minLines: 5,
               maxLines: 20,
             ),
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 40, horizontal: 40),
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: (isLoading) ? null : _submitFeedback,
+                    onPressed: isLoading ? null : _submitFeedback,
                     child: Text(context.lang.submit),
                   ),
                 ],

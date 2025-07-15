@@ -39,9 +39,9 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
 
     return Card(
       elevation: 4,
-      margin: EdgeInsets.all(10),
+      margin: const EdgeInsets.all(10),
       child: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -52,7 +52,7 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 5),
+            const SizedBox(height: 5),
             Text(
               context.lang.backupNoticeDesc,
               style: const TextStyle(fontSize: 14),
@@ -64,20 +64,20 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
                   onPressed: () async {
                     await updateUserdata((user) {
                       user.nextTimeToShowBackupNotice =
-                          DateTime.now().add(Duration(days: 7));
+                          DateTime.now().add(const Duration(days: 7));
                       return user;
                     });
-                    initAsync();
+                    await initAsync();
                   },
                   child: Text(context.lang.backupNoticeLater),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 FilledButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => BackupView(),
+                        builder: (context) => const BackupView(),
                       ),
                     );
                   },

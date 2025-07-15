@@ -44,16 +44,18 @@ class Messages extends Table {
   IntColumn get responseToMessageId => integer().nullable()();
   IntColumn get responseToOtherMessageId => integer().nullable()();
 
-  BoolColumn get acknowledgeByUser => boolean().withDefault(Constant(false))();
-  BoolColumn get mediaStored => boolean().withDefault(Constant(false))();
+  BoolColumn get acknowledgeByUser =>
+      boolean().withDefault(const Constant(false))();
+  BoolColumn get mediaStored => boolean().withDefault(const Constant(false))();
 
   IntColumn get downloadState => intEnum<DownloadState>()
       .withDefault(Constant(DownloadState.downloaded.index))();
 
   BoolColumn get acknowledgeByServer =>
-      boolean().withDefault(Constant(false))();
+      boolean().withDefault(const Constant(false))();
 
-  BoolColumn get errorWhileSending => boolean().withDefault(Constant(false))();
+  BoolColumn get errorWhileSending =>
+      boolean().withDefault(const Constant(false))();
   TextColumn get mediaRetransmissionState => textEnum<MediaRetransmitting>()
       .withDefault(Constant(MediaRetransmitting.none.name))();
 

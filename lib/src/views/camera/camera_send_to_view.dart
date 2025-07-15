@@ -44,7 +44,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
   Future<void> toggleSelectedCamera() async {
     await cameraController?.dispose();
     cameraController = null;
-    selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
+    await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
   }
 
   @override
@@ -54,7 +54,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
         onDoubleTap: toggleSelectedCamera,
         child: Stack(
           children: [
-            SendToCameraPreview(),
+            const SendToCameraPreview(),
             CameraPreviewControllerView(
               selectCamera: selectCamera,
               sendTo: widget.sendTo,

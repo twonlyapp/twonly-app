@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/src/views/camera/image_editor/layers/filter_layer.dart';
 
 class ImageFilter extends StatelessWidget {
-  const ImageFilter({super.key, required this.imagePath});
+  const ImageFilter({required this.imagePath, super.key});
   final String imagePath;
 
   @override
@@ -15,7 +15,7 @@ class ImageFilter extends StatelessWidget {
         right: 10,
         child: Center(
           child: CachedNetworkImage(
-            imageUrl: "https://twonly.eu/$imagePath",
+            imageUrl: 'https://twonly.eu/$imagePath',
             height: 150,
           ),
         ),

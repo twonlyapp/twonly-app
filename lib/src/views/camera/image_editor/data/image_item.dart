@@ -3,14 +3,13 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 class ImageItem {
+  ImageItem([dynamic image]) {
+    if (image != null) load(image);
+  }
   int width = 1;
   int height = 1;
   Uint8List bytes = Uint8List.fromList([]);
   Completer<bool> loader = Completer<bool>();
-
-  ImageItem([dynamic image]) {
-    if (image != null) load(image);
-  }
 
   Future<void> load(dynamic image) async {
     loader = Completer<bool>();
@@ -24,7 +23,7 @@ class ImageItem {
       return loader.complete(true);
     } else if (image is Uint8List) {
       bytes = image;
-      var decodedImage = await decodeImageFromList(bytes);
+      final decodedImage = await decodeImageFromList(bytes);
 
       height = decodedImage.height;
       width = decodedImage.width;

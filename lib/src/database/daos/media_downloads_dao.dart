@@ -21,7 +21,7 @@ class MediaDownloadsDao extends DatabaseAccessor<TwonlyDatabase>
     try {
       return await into(mediaDownloads).insert(values);
     } catch (e) {
-      Log.error("Error while inserting media upload: $e");
+      Log.error('Error while inserting media upload: $e');
       return null;
     }
   }

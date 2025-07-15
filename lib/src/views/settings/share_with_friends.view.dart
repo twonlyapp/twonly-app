@@ -18,11 +18,11 @@ class _ShareWithFriendsView extends State<ShareWithFriendsView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _controller.text =
-          context.lang.inviteFriendsShareText("https://twonly.eu/install");
+          context.lang.inviteFriendsShareText('https://twonly.eu/install');
     });
   }
 
-  void _shareText() async {
+  Future<void> _shareText() async {
     final textToShare = _controller.text;
     final params = ShareParams(
       text: textToShare,
@@ -37,19 +37,18 @@ class _ShareWithFriendsView extends State<ShareWithFriendsView> {
         title: Text(context.lang.inviteFriends),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
               controller: _controller,
-              style: const TextStyle(fontSize: 14.0),
-              decoration: InputDecoration(),
+              style: const TextStyle(fontSize: 14),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _shareText,
-              icon: FaIcon(FontAwesomeIcons.shareFromSquare),
+              icon: const FaIcon(FontAwesomeIcons.shareFromSquare),
               label: Text(context.lang.inviteFriendsShareBtn),
             ),
           ],

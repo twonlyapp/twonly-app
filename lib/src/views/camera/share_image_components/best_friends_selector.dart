@@ -58,7 +58,7 @@ class BestFriendsSelector extends StatelessWidget {
                         color: Color.fromRGBO(0, 0, 0, 0.1),
                       ),
                     ],
-                    borderRadius: BorderRadius.circular(8.0),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(context.lang.shareImagedSelectAll,
                       style: const TextStyle(fontSize: 10)),
@@ -143,7 +143,7 @@ class UserCheckbox extends StatelessWidget {
                 color: Color.fromRGBO(0, 0, 0, 0.1),
               ),
             ],
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             children: [

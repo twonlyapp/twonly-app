@@ -43,7 +43,7 @@ class _PrivacyViewState extends State<PrivacyView> {
             onTap: () async {
               await Navigator.push(context,
                   MaterialPageRoute(builder: (context) {
-                return PrivacyViewBlockUsers();
+                return const PrivacyViewBlockUsers();
               }));
             },
           ),

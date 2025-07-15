@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/better_text.dart';
-import 'package:twonly/src/database/twonly_database.dart';
 
 class ChatTextEntry extends StatelessWidget {
-  const ChatTextEntry({super.key, required this.message, required this.text});
+  const ChatTextEntry({required this.message, required this.text, super.key});
 
   final String text;
   final Message message;
@@ -14,10 +14,10 @@ class ChatTextEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     if (EmojiAnimation.supported(text)) {
       return Container(
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           maxWidth: 100,
         ),
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           vertical: 4,
           horizontal: 10,
         ),
@@ -28,10 +28,10 @@ class ChatTextEntry extends StatelessWidget {
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.8,
       ),
-      padding: EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
       decoration: BoxDecoration(
         color: getMessageColor(message),
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: BetterText(text: text),
     );

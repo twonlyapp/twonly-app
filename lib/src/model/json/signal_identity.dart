@@ -1,6 +1,8 @@
-import 'dart:typed_data';
-import 'package:json_annotation/json_annotation.dart';
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:json_annotation/json_annotation.dart';
+
 part 'signal_identity.g.dart';
 
 @JsonSerializable()
@@ -9,13 +11,13 @@ class SignalIdentity {
     required this.identityKeyPairU8List,
     required this.registrationId,
   });
+  factory SignalIdentity.fromJson(Map<String, dynamic> json) =>
+      _$SignalIdentityFromJson(json);
 
   final int registrationId;
 
   @Uint8ListConverter()
   final Uint8List identityKeyPairU8List;
-  factory SignalIdentity.fromJson(Map<String, dynamic> json) =>
-      _$SignalIdentityFromJson(json);
   Map<String, dynamic> toJson() => _$SignalIdentityToJson(this);
 }
 

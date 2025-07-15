@@ -38,7 +38,7 @@ class _ContactUsState extends State<ContactUsView> {
 
     final messageOnSuccess = TextMessage()
       ..body = []
-      ..userId = Int64(0);
+      ..userId = Int64();
 
     final uploadRequest = UploadRequest(
       messagesOnSuccess: [messageOnSuccess],
@@ -116,6 +116,7 @@ class _ContactUsState extends State<ContactUsView> {
               'Debug Log: https://api.twonly.eu/api/download/$token';
         }
       } catch (e) {
+        if (!mounted) return '';
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not upload the debug log!')),
         );

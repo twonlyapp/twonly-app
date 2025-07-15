@@ -2,27 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hand_signature/signature.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
-import 'package:twonly/src/utils/misc.dart';
 
 class DrawLayer extends StatefulWidget {
-  final DrawLayerData layerData;
-  final VoidCallback? onUpdate;
-
   const DrawLayer({
-    super.key,
     required this.layerData,
+    super.key,
     this.onUpdate,
   });
+  final DrawLayerData layerData;
+  final VoidCallback? onUpdate;
   @override
-  createState() => _DrawLayerState();
+  State<DrawLayer> createState() => _DrawLayerState();
 }
 
 class _DrawLayerState extends State<DrawLayer> {
   Color currentColor = Colors.red;
 
-  var screenshotController = ScreenshotController();
+  ScreenshotController screenshotController = ScreenshotController();
 
   List<CubicPath> undoList = [];
   bool skipNextEvent = false;
@@ -48,7 +47,7 @@ class _DrawLayerState extends State<DrawLayer> {
 
   double _sliderValue = 0.125;
 
-  final colors = [
+  final List<Color> colors = [
     Colors.white,
     Colors.red,
     Colors.orange,
@@ -61,11 +60,11 @@ class _DrawLayerState extends State<DrawLayer> {
 
   Color _getColorFromSliderValue(double value) {
     // Calculate the index based on the slider value
-    int index = (value * (colors.length - 1)).floor();
-    int nextIndex = (index + 1).clamp(0, colors.length - 1);
+    final index = (value * (colors.length - 1)).floor();
+    final nextIndex = (index + 1).clamp(0, colors.length - 1);
 
     // Calculate the interpolation factor
-    double factor = value * (colors.length - 1) - index;
+    final factor = value * (colors.length - 1) - index;
 
     // Interpolate between the two colors
     return Color.lerp(colors[index], colors[nextIndex], factor)!;
@@ -85,17 +84,14 @@ class _DrawLayerState extends State<DrawLayer> {
       children: [
         Positioned.fill(
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.transparent,
             ),
             child: Screenshot(
               controller: screenshotController,
               child: HandSignature(
                 control: widget.layerData.control,
-                color: currentColor,
-                width: 1.0,
-                maxWidth: 7.0,
-                type: SignatureDrawType.shape,
+                drawer: LineSignatureDrawer(color: currentColor, width: 7),
               ),
             ),
           ),
@@ -112,9 +108,7 @@ class _DrawLayerState extends State<DrawLayer> {
                   tooltipText: context.lang.imageEditorDrawOk,
                   onPressed: () async {
                     widget.layerData.isEditing = false;
-                    if (widget.onUpdate != null) {
-                      widget.onUpdate!();
-                    }
+                    widget.onUpdate!();
                     setState(() {});
                   },
                 ),
@@ -200,8 +194,6 @@ class _DrawLayerState extends State<DrawLayer> {
                           showMagnifyingGlass = false;
                         })
                       },
-                      min: 0.0,
-                      max: 1.0,
                       divisions: 100,
                     ),
                   ),
@@ -226,9 +218,8 @@ class _DrawLayerState extends State<DrawLayer> {
 }
 
 class MagnifyingGlass extends StatelessWidget {
+  const MagnifyingGlass({required this.color, super.key});
   final Color color;
-
-  const MagnifyingGlass({super.key, required this.color});
 
   @override
   Widget build(BuildContext context) {
