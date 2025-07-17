@@ -15,7 +15,7 @@ class ConnectSignedPreKeyStore extends SignedPreKeyStore {
     if (storeSerialized == null) {
       return store;
     }
-    final storeHashMap = json.decode(storeSerialized) as List<List<dynamic>>;
+    final storeHashMap = json.decode(storeSerialized) as List<dynamic>;
     for (final item in storeHashMap) {
       store[item[0] as int] = base64Decode(item[1] as String);
     }
