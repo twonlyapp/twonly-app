@@ -117,6 +117,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       setState(() {});
       if (firstRun) {
         loadCurrentMediaFile();
+        // ignore: parameter_assignments
+        firstRun = false;
       }
     });
   }
@@ -585,26 +587,28 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ],
                 ),
               ),
-            if (showSendTextMessageInput)
-              Positioned(
-                top: 20,
-                left: 0,
-                right: 0,
-                child: Text(
-                  getContactDisplayName(widget.contact),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        color: Color.fromARGB(122, 0, 0, 0),
-                        blurRadius: 5,
-                      )
-                    ],
-                  ),
+            Positioned(
+              top: 10,
+              left: showSendTextMessageInput ? 0 : null,
+              right: showSendTextMessageInput ? 0 : 15,
+              child: Text(
+                getContactDisplayName(widget.contact),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: showSendTextMessageInput ? 24 : 14,
+                  fontWeight: FontWeight.bold,
+                  color: showSendTextMessageInput
+                      ? null
+                      : const Color.fromARGB(255, 126, 126, 126),
+                  shadows: const [
+                    Shadow(
+                      color: Color.fromARGB(122, 0, 0, 0),
+                      blurRadius: 5,
+                    )
+                  ],
                 ),
               ),
+            ),
             if (showSendTextMessageInput)
               Positioned(
                 bottom: 0,

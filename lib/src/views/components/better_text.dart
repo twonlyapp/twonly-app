@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/log.dart';
 
-import 'package:twonly/src/utils/misc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BetterText extends StatelessWidget {
