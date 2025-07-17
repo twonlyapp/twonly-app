@@ -13,9 +13,9 @@ class CameraSendToView extends StatefulWidget {
 }
 
 class CameraSendToViewState extends State<CameraSendToView> {
-  static CameraController? cameraController;
-  static ScreenshotController screenshotController = ScreenshotController();
-  static SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
+  CameraController? cameraController;
+  ScreenshotController screenshotController = ScreenshotController();
+  SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
 
   @override
   void initState() {
@@ -54,11 +54,16 @@ class CameraSendToViewState extends State<CameraSendToView> {
         onDoubleTap: toggleSelectedCamera,
         child: Stack(
           children: [
-            const SendToCameraPreview(),
+            SendToCameraPreview(
+              cameraController: cameraController,
+              screenshotController: screenshotController,
+            ),
             CameraPreviewControllerView(
               selectCamera: selectCamera,
               sendTo: widget.sendTo,
-              isHomeView: false,
+              cameraController: cameraController,
+              selectedCameraDetails: selectedCameraDetails,
+              screenshotController: screenshotController,
             ),
           ],
         ),

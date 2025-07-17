@@ -55,9 +55,9 @@ class HomeViewState extends State<HomeView> {
   Timer? disableCameraTimer;
   bool initCameraStarted = true;
 
-  static CameraController? cameraController;
-  static ScreenshotController screenshotController = ScreenshotController();
-  static SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
+  CameraController? cameraController;
+  ScreenshotController screenshotController = ScreenshotController();
+  SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
 
   bool onPageView(ScrollNotification notification) {
     disableCameraTimer?.cancel();
@@ -145,7 +145,10 @@ class HomeViewState extends State<HomeView> {
           onDoubleTap: offsetRatio == 0 ? toggleSelectedCamera : null,
           child: Stack(
             children: <Widget>[
-              const HomeViewCameraPreview(),
+              HomeViewCameraPreview(
+                controller: cameraController,
+                screenshotController: screenshotController,
+              ),
               Shade(
                 opacity: offsetRatio,
               ),
@@ -177,8 +180,10 @@ class HomeViewState extends State<HomeView> {
                   child: Opacity(
                     opacity: 1 - (offsetRatio * 4) % 1,
                     child: CameraPreviewControllerView(
+                      cameraController: cameraController,
+                      screenshotController: screenshotController,
+                      selectedCameraDetails: selectedCameraDetails,
                       selectCamera: selectCamera,
-                      isHomeView: true,
                     ),
                   )),
             ],
