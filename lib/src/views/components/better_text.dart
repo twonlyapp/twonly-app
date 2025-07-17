@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/log.dart';
+
+import 'package:twonly/src/utils/misc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BetterText extends StatelessWidget {
@@ -28,7 +30,10 @@ class BetterText extends StatelessWidget {
       final url = match.group(0);
       spans.add(TextSpan(
         text: url,
-        style: const TextStyle(color: Colors.blue),
+        style: const TextStyle(
+          decoration: TextDecoration.underline,
+          decorationColor: Colors.white,
+        ),
         recognizer: TapGestureRecognizer()
           ..onTap = () async {
             final lUrl =

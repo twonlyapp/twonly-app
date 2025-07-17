@@ -258,7 +258,6 @@ class _ChatListViewState extends State<ChatListView> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),
         child: FloatingActionButton(
-          foregroundColor: Colors.white,
           onPressed: () {
             Navigator.push(
               context,

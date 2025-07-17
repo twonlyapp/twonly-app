@@ -28,7 +28,7 @@ import 'package:twonly/src/views/tutorial/tutorials.dart';
 Color getMessageColor(Message message) {
   return (message.messageOtherId == null)
       ? const Color.fromARGB(255, 58, 136, 102)
-      : const Color.fromARGB(83, 68, 137, 255);
+      : const Color.fromARGB(233, 68, 137, 255);
 }
 
 /// Displays detailed information about a SampleItem.
