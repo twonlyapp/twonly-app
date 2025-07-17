@@ -243,7 +243,7 @@ class AckContent extends MessageContent {
 
   static AckContent fromJson(Map json) {
     return AckContent(
-      messageIdToAck: json['messageIdToAck'] as int,
+      messageIdToAck: json['messageIdToAck'] as int?,
       retransIdToAck: json['retransIdToAck'] as int,
     );
   }
