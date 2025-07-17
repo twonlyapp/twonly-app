@@ -274,8 +274,11 @@ class _ChatListViewState extends State<ChatListView> {
 }
 
 class UserListItem extends StatefulWidget {
-  const UserListItem(
-      {required this.user, required this.firstUserListItemKey, super.key});
+  const UserListItem({
+    required this.user,
+    required this.firstUserListItemKey,
+    super.key,
+  });
   final Contact user;
   final GlobalKey? firstUserListItemKey;
 

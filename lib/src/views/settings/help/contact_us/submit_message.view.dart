@@ -64,41 +64,45 @@ class _ContactUsState extends State<SubmitMessage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.settingsHelpContactUs),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            Text(
-              context.lang.contactUsLastWarning,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: context.lang.contactUsYourMessage,
-                border: const OutlineInputBorder(),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(context.lang.settingsHelpContactUs),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ListView(
+            children: [
+              Text(
+                context.lang.contactUsLastWarning,
+                textAlign: TextAlign.center,
               ),
-              minLines: 5,
-              maxLines: 20,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: isLoading ? null : _submitFeedback,
-                    child: Text(context.lang.submit),
-                  ),
-                ],
+              const SizedBox(height: 10),
+              TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: context.lang.contactUsYourMessage,
+                  border: const OutlineInputBorder(),
+                ),
+                minLines: 5,
+                maxLines: 20,
               ),
-            ),
-          ],
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: isLoading ? null : _submitFeedback,
+                      child: Text(context.lang.submit),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

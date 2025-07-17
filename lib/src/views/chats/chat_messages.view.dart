@@ -256,187 +256,192 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: GestureDetector(
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return ContactView(widget.contact.userId);
-            }));
-          },
-          child: Row(
-            children: [
-              ContactAvatar(
-                contact: user,
-                fontSize: 19,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ColoredBox(
-                  color: Colors.transparent,
-                  child: Row(
-                    children: [
-                      Text(getContactDisplayName(user)),
-                      const SizedBox(width: 10),
-                      VerifiedShield(key: verifyShieldKey, user),
-                    ],
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return ContactView(widget.contact.userId);
+              }));
+            },
+            child: Row(
+              children: [
+                ContactAvatar(
+                  contact: user,
+                  fontSize: 19,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ColoredBox(
+                    color: Colors.transparent,
+                    child: Row(
+                      children: [
+                        Text(getContactDisplayName(user)),
+                        const SizedBox(width: 10),
+                        VerifiedShield(key: verifyShieldKey, user),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-      body: PieCanvas(
-        theme: getPieCanvasTheme(context),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: messages.length + 1,
-                  reverse: true,
-                  itemExtentBuilder: (index, dimensions) {
-                    if (index == 0) return 10; // empty padding
-                    index -= 1;
-                    double size = 44;
-                    if (messages[index].kind == MessageKind.textMessage) {
-                      final content = TextMessageContent.fromJson(
-                          jsonDecode(messages[index].contentJson!) as Map);
-                      if (EmojiAnimation.supported(content.text)) {
-                        size = 99;
-                      } else {
-                        size = 11 +
-                            calculateNumberOfLines(
-                                    content.text,
-                                    MediaQuery.of(context).size.width * 0.8,
-                                    17) *
-                                27;
-                      }
-                    }
-                    if (messages[index].mediaStored) {
-                      size = 271;
-                    }
-                    final reactions =
-                        textReactionsToMessageId[messages[index].messageId];
-                    if (reactions != null && reactions.isNotEmpty) {
-                      for (final reaction in reactions) {
-                        if (reaction.kind == MessageKind.textMessage) {
-                          final content = TextMessageContent.fromJson(
-                              jsonDecode(reaction.contentJson!) as Map);
-                          size += calculateNumberOfLines(content.text,
-                                  MediaQuery.of(context).size.width * 0.5, 14) *
-                              27;
+        body: PieCanvas(
+          theme: getPieCanvasTheme(context),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: messages.length + 1,
+                    reverse: true,
+                    itemExtentBuilder: (index, dimensions) {
+                      if (index == 0) return 10; // empty padding
+                      index -= 1;
+                      double size = 44;
+                      if (messages[index].kind == MessageKind.textMessage) {
+                        final content = TextMessageContent.fromJson(
+                            jsonDecode(messages[index].contentJson!) as Map);
+                        if (EmojiAnimation.supported(content.text)) {
+                          size = 99;
+                        } else {
+                          size = 11 +
+                              calculateNumberOfLines(
+                                      content.text,
+                                      MediaQuery.of(context).size.width * 0.8,
+                                      17) *
+                                  27;
                         }
                       }
-                    }
+                      if (messages[index].mediaStored) {
+                        size = 271;
+                      }
+                      final reactions =
+                          textReactionsToMessageId[messages[index].messageId];
+                      if (reactions != null && reactions.isNotEmpty) {
+                        for (final reaction in reactions) {
+                          if (reaction.kind == MessageKind.textMessage) {
+                            final content = TextMessageContent.fromJson(
+                                jsonDecode(reaction.contentJson!) as Map);
+                            size += calculateNumberOfLines(
+                                    content.text,
+                                    MediaQuery.of(context).size.width * 0.5,
+                                    14) *
+                                27;
+                          }
+                        }
+                      }
 
-                    if (!isLastMessageFromSameUser(messages, index)) {
-                      size += 20;
-                    }
-                    return size;
-                  },
-                  itemBuilder: (context, i) {
-                    if (i == 0) {
-                      return Container(); // just a padding
-                    }
-                    i -= 1;
-                    return ChatListEntry(
-                      key: Key(messages[i].messageId.toString()),
-                      messages[i],
-                      user,
-                      galleryItems,
-                      isLastMessageFromSameUser(messages, i),
-                      textReactionsToMessageId[messages[i].messageId] ?? [],
-                      emojiReactionsToMessageId[messages[i].messageId] ?? [],
-                      onResponseTriggered: (message) {
-                        setState(() {
-                          responseToMessage = message;
-                        });
-                        textFieldFocus.requestFocus();
-                      },
-                    );
-                  },
+                      if (!isLastMessageFromSameUser(messages, index)) {
+                        size += 20;
+                      }
+                      return size;
+                    },
+                    itemBuilder: (context, i) {
+                      if (i == 0) {
+                        return Container(); // just a padding
+                      }
+                      i -= 1;
+                      return ChatListEntry(
+                        key: Key(messages[i].messageId.toString()),
+                        messages[i],
+                        user,
+                        galleryItems,
+                        isLastMessageFromSameUser(messages, i),
+                        textReactionsToMessageId[messages[i].messageId] ?? [],
+                        emojiReactionsToMessageId[messages[i].messageId] ?? [],
+                        onResponseTriggered: (message) {
+                          setState(() {
+                            responseToMessage = message;
+                          });
+                          textFieldFocus.requestFocus();
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-              if (responseToMessage != null && !user.deleted)
-                Container(
+                if (responseToMessage != null && !user.deleted)
+                  Container(
+                    padding: const EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      top: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(child: getResponsePreview(responseToMessage!)),
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              responseToMessage = null;
+                            });
+                          },
+                          icon: const FaIcon(
+                            FontAwesomeIcons.xmark,
+                            size: 16,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                Padding(
                   padding: const EdgeInsets.only(
+                    bottom: 30,
                     left: 20,
                     right: 20,
                     top: 10,
                   ),
                   child: Row(
-                    children: [
-                      Expanded(child: getResponsePreview(responseToMessage!)),
-                      IconButton(
-                        onPressed: () {
-                          setState(() {
-                            responseToMessage = null;
-                          });
-                        },
-                        icon: const FaIcon(
-                          FontAwesomeIcons.xmark,
-                          size: 16,
-                        ),
-                      )
-                    ],
+                    children: (user.deleted)
+                        ? []
+                        : [
+                            Expanded(
+                              child: TextField(
+                                controller: newMessageController,
+                                focusNode: textFieldFocus,
+                                keyboardType: TextInputType.multiline,
+                                maxLines: 4,
+                                minLines: 1,
+                                onChanged: (value) {
+                                  currentInputText = value;
+                                  setState(() {});
+                                },
+                                onSubmitted: (_) {
+                                  _sendMessage();
+                                },
+                                decoration: inputTextMessageDeco(context),
+                              ),
+                            ),
+                            if (currentInputText != '')
+                              IconButton(
+                                padding: const EdgeInsets.all(15),
+                                icon: const FaIcon(
+                                    FontAwesomeIcons.solidPaperPlane),
+                                onPressed: _sendMessage,
+                              )
+                            else
+                              IconButton(
+                                icon: const FaIcon(FontAwesomeIcons.camera),
+                                padding: const EdgeInsets.all(15),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return CameraSendToView(widget.contact);
+                                      },
+                                    ),
+                                  );
+                                },
+                              )
+                          ],
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 30,
-                  left: 20,
-                  right: 20,
-                  top: 10,
-                ),
-                child: Row(
-                  children: (user.deleted)
-                      ? []
-                      : [
-                          Expanded(
-                            child: TextField(
-                              controller: newMessageController,
-                              focusNode: textFieldFocus,
-                              keyboardType: TextInputType.multiline,
-                              maxLines: 4,
-                              minLines: 1,
-                              onChanged: (value) {
-                                currentInputText = value;
-                                setState(() {});
-                              },
-                              onSubmitted: (_) {
-                                _sendMessage();
-                              },
-                              decoration: inputTextMessageDeco(context),
-                            ),
-                          ),
-                          if (currentInputText != '')
-                            IconButton(
-                              padding: const EdgeInsets.all(15),
-                              icon: const FaIcon(
-                                  FontAwesomeIcons.solidPaperPlane),
-                              onPressed: _sendMessage,
-                            )
-                          else
-                            IconButton(
-                              icon: const FaIcon(FontAwesomeIcons.camera),
-                              padding: const EdgeInsets.all(15),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) {
-                                      return CameraSendToView(widget.contact);
-                                    },
-                                  ),
-                                );
-                              },
-                            )
-                        ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

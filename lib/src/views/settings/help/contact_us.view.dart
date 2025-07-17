@@ -151,112 +151,115 @@ $debugLogToken
       context.lang.contactUsReasonFeedback,
       context.lang.contactUsReasonOther,
     ];
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.settingsHelpContactUs),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            Text(context.lang.contactUsMessageTitle),
-            const SizedBox(height: 5),
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: context.lang.contactUsYourMessage,
-                border: const OutlineInputBorder(),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(context.lang.settingsHelpContactUs),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ListView(
+            children: [
+              Text(context.lang.contactUsMessageTitle),
+              const SizedBox(height: 5),
+              TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: context.lang.contactUsYourMessage,
+                  border: const OutlineInputBorder(),
+                ),
+                minLines: 5,
+                maxLines: 10,
               ),
-              minLines: 5,
-              maxLines: 10,
-            ),
-            const SizedBox(height: 5),
-            Text(
-              context.lang.contactUsMessage,
-              textAlign: TextAlign.left,
-              style: const TextStyle(
-                fontSize: 10,
+              const SizedBox(height: 5),
+              Text(
+                context.lang.contactUsMessage,
+                textAlign: TextAlign.left,
+                style: const TextStyle(
+                  fontSize: 10,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(context.lang.contactUsReason),
-            const SizedBox(height: 5),
-            DropdownButton<String>(
-              hint: Text(context.lang.contactUsSelectOption),
-              underline: const SizedBox.shrink(),
-              value: _selectedReason,
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedReason = newValue;
-                });
-              },
-              items: reasons.map<DropdownMenuItem<String>>((String reason) {
-                return DropdownMenuItem<String>(
-                  value: reason,
-                  child: Text(reason),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-            Text(context.lang.contactUsEmojis),
-            const SizedBox(height: 5),
-            FeedbackEmojiRow(
-              selectedFeedback: _selectedFeedback,
-              onFeedbackChanged: (int? newValue) {
-                setState(() {
-                  _selectedFeedback = newValue;
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            IncludeDebugLog(
-              isChecked: includeDebugLog,
-              onChanged: (value) {
-                setState(() {
-                  includeDebugLog = value;
-                });
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      launchUrl(Uri.parse('https://twonly.eu/en/faq/'));
-                    },
-                    child: Text(
-                      context.lang.contactUsFaq,
-                      style: const TextStyle(
-                        color: Colors.blue,
-                      ),
-                    ),
+              const SizedBox(height: 20),
+              Text(context.lang.contactUsReason),
+              const SizedBox(height: 5),
+              DropdownButton<String>(
+                hint: Text(context.lang.contactUsSelectOption),
+                underline: const SizedBox.shrink(),
+                value: _selectedReason,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedReason = newValue;
+                  });
+                },
+                items: reasons.map<DropdownMenuItem<String>>((String reason) {
+                  return DropdownMenuItem<String>(
+                    value: reason,
+                    child: Text(reason),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+              Text(context.lang.contactUsEmojis),
+              const SizedBox(height: 5),
+              FeedbackEmojiRow(
+                selectedFeedback: _selectedFeedback,
+                onFeedbackChanged: (int? newValue) {
+                  setState(() {
+                    _selectedFeedback = newValue;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              IncludeDebugLog(
+                isChecked: includeDebugLog,
+                onChanged: (value) {
+                  setState(() {
+                    includeDebugLog = value;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  launchUrl(Uri.parse('https://twonly.eu/en/faq/'));
+                },
+                child: Text(
+                  context.lang.contactUsFaq,
+                  style: const TextStyle(
+                    color: Colors.blue,
                   ),
-                  ElevatedButton(
-                    onPressed: isLoading
-                        ? null
-                        : () async {
-                            final fullMessage = await _getFeedbackText();
-                            if (!context.mounted) return;
-
-                            final feedbackSend = await Navigator.push(context,
-                                MaterialPageRoute(builder: (context) {
-                              return SubmitMessage(
-                                fullMessage: fullMessage,
-                              );
-                            }));
-
-                            if (feedbackSend == true && context.mounted) {
-                              Navigator.pop(context);
-                            }
-                          },
-                    child: Text(context.lang.next),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+              ElevatedButton(
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                        final fullMessage = await _getFeedbackText();
+                        if (!context.mounted) return;
+
+                        final feedbackSend = await Navigator.push(context,
+                            MaterialPageRoute(builder: (context) {
+                          return SubmitMessage(
+                            fullMessage: fullMessage,
+                          );
+                        }));
+
+                        if (feedbackSend == true && context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
+                child: Text(context.lang.next),
+              ),
+            ],
+          ),
         ),
       ),
     );
