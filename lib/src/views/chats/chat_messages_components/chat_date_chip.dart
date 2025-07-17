@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';

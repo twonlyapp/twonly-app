@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/help/credits.view.dart';
 import 'package:twonly/src/views/settings/help/diagnostics.view.dart';
@@ -90,6 +92,14 @@ class HelpView extends StatelessWidget {
             },
           ),
           ListTile(
+            title: const Text("Open Source"),
+            onTap: () {
+              launchUrl(Uri.parse('https://github.com/twonlyapp/twonly-app'));
+            },
+            trailing:
+                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+          ),
+          ListTile(
             title: Text(context.lang.settingsHelpImprint),
             onTap: () {
               launchUrl(Uri.parse('https://twonly.eu/de/legal/'));
@@ -105,7 +115,18 @@ class HelpView extends StatelessWidget {
             trailing:
                 const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
-          const ListTile(
+          ListTile(
+            onLongPress: () async {
+              bool? okay = await showAlertDialog(
+                context,
+                "Delete Retransmission messages",
+                "Only do this if you know what you are doing :)",
+              );
+              if (okay == true) {
+                await twonlyDB.messageRetransmissionDao
+                    .clearRetransmissionTable();
+              }
+            },
             title: Text(
               'Copyright twonly',
               style: TextStyle(color: Colors.grey, fontSize: 13),

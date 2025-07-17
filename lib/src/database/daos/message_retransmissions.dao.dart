@@ -92,6 +92,10 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
         .go();
   }
 
+  Future<void> clearRetransmissionTable() {
+    return delete(messageRetransmissions).go();
+  }
+
   Future<void> deleteRetransmissionByMessageId(int messageId) {
     return (delete(messageRetransmissions)
           ..where((t) => t.messageId.equals(messageId)))
