@@ -31,13 +31,21 @@ class _RegisterViewState extends State<RegisterView> {
 
   bool _isTryingToRegister = false;
   bool _isValidUserName = false;
+  bool _showUserNameError = false;
 
   Future<void> createNewUser({bool isDemoAccount = false}) async {
+    if (!_isValidUserName) {
+      setState(() {
+        _showUserNameError = true;
+      });
+      return;
+    }
     final username = isDemoAccount ? '<demo>' : usernameController.text;
     final inviteCode = inviteCodeController.text;
 
     setState(() {
       _isTryingToRegister = true;
+      _showUserNameError = false;
     });
 
     await createIfNotExistsSignalIdentity();
@@ -56,6 +64,9 @@ class _RegisterViewState extends State<RegisterView> {
           return createNewUser();
         }
         if (mounted) {
+          setState(() {
+            _isTryingToRegister = false;
+          });
           await showAlertDialog(
             context,
             'Oh no!',
@@ -152,6 +163,15 @@ class _RegisterViewState extends State<RegisterView> {
                     context.lang.registerUsernameDecoration,
                   ),
                 ),
+                const SizedBox(height: 10),
+                Text(
+                  context.lang.registerUsernameLimits,
+                  style: TextStyle(
+                    color: _showUserNameError ? Colors.red : Colors.transparent,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
                 // const SizedBox(height: 5),
                 // Center(
                 //   child: Padding(
@@ -163,19 +183,19 @@ class _RegisterViewState extends State<RegisterView> {
                 //     ),
                 //   ),
                 // ),
-                const SizedBox(height: 30),
-                Center(
-                  child: Text(
-                    context.lang.registerTwonlyCodeText,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: inviteCodeController,
-                  decoration:
-                      getInputDecoration(context.lang.registerTwonlyCodeLabel),
-                ),
+                // const SizedBox(height: 30),
+                // Center(
+                //   child: Text(
+                //     context.lang.registerTwonlyCodeText,
+                //     textAlign: TextAlign.center,
+                //   ),
+                // ),
+                // const SizedBox(height: 10),
+                // TextField(
+                //   controller: inviteCodeController,
+                //   decoration:
+                //       getInputDecoration(context.lang.registerTwonlyCodeLabel),
+                // ),
                 const SizedBox(height: 30),
                 Column(children: [
                   FilledButton.icon(
@@ -189,7 +209,7 @@ class _RegisterViewState extends State<RegisterView> {
                             ),
                           )
                         : const Icon(Icons.group),
-                    onPressed: _isValidUserName ? createNewUser : null,
+                    onPressed: createNewUser,
                     style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(
                           const EdgeInsets.symmetric(
@@ -208,12 +228,12 @@ class _RegisterViewState extends State<RegisterView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          createNewUser(isDemoAccount: true);
-                        },
-                        label: const Text('Demo'),
-                      ),
+                      // OutlinedButton.icon(
+                      //   onPressed: () {
+                      //     createNewUser(isDemoAccount: true);
+                      //   },
+                      //   label: const Text('Demo'),
+                      // ),
                       OutlinedButton.icon(
                         onPressed: () {
                           Navigator.push(context, MaterialPageRoute(

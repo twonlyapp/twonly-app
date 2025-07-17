@@ -215,7 +215,7 @@ abstract class AppLocalizations {
   /// No description provided for @registerUsernameLimits.
   ///
   /// In en, this message translates to:
-  /// **'Username must be 3 to 12 characters long, consisting only of letters (a-z) and numbers (0-9).'**
+  /// **'Your username must be at least 3 characters long.'**
   String get registerUsernameLimits;
 
   /// No description provided for @registerSubmitButton.

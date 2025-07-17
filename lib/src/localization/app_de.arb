@@ -19,7 +19,7 @@
     "onboardingTryForFree": "Jetzt registrieren",
     "registerUsernameSlogan": "Bitte wähle einen Benutzernamen, damit dich andere finden können!",
     "registerUsernameDecoration": "Benutzername",
-    "registerUsernameLimits": "Der Benutzername muss 3 bis 12 Zeichen lang sein und darf nur aus Buchstaben (a-z) und Zahlen (0-9) bestehen.",
+    "registerUsernameLimits": "Der Benutzername muss mindestens 3 Zeichen lang sein.",
     "registerSubmitButton": "Jetzt registrieren!",
     "registerTwonlyCodeText": "Hast du einen twonly-Code erhalten? Dann löse ihn entweder direkt hier oder später ein!",
     "registerTwonlyCodeLabel": "twonly-Code",

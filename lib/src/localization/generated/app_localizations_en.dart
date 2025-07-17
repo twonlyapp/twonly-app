@@ -76,7 +76,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerUsernameLimits =>
-      'Username must be 3 to 12 characters long, consisting only of letters (a-z) and numbers (0-9).';
+      'Your username must be at least 3 characters long.';
 
   @override
   String get registerSubmitButton => 'Register now!';
