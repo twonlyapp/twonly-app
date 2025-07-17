@@ -5,10 +5,16 @@ import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/better_text.dart';
 
 class ChatTextEntry extends StatelessWidget {
-  const ChatTextEntry({required this.message, required this.text, super.key});
+  const ChatTextEntry({
+    required this.message,
+    required this.text,
+    required this.hasReaction,
+    super.key,
+  });
 
   final String text;
   final Message message;
+  final bool hasReaction;
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +34,12 @@ class ChatTextEntry extends StatelessWidget {
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.8,
       ),
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+      padding: EdgeInsets.only(
+          left: 10, top: 4, bottom: 4, right: hasReaction ? 30 : 10),
       decoration: BoxDecoration(
-        color: getMessageColor(message),
+        color: message.responseToMessageId == null
+            ? getMessageColor(message)
+            : null,
         borderRadius: BorderRadius.circular(12),
       ),
       child: BetterText(text: text),

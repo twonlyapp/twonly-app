@@ -108,7 +108,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (galleryItemIndex == null) {
+    if (!widget.message.mediaStored) {
       return Container(
         constraints: const BoxConstraints(
           minHeight: 39,
@@ -138,10 +138,12 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: MemoriesItemThumbnail(
-        galleryItem: widget.galleryItems[galleryItemIndex!],
-        onTap: onTap,
-      ),
+      child: galleryItemIndex != null
+          ? MemoriesItemThumbnail(
+              galleryItem: widget.galleryItems[galleryItemIndex!],
+              onTap: onTap,
+            )
+          : null,
     );
   }
 }

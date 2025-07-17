@@ -17,7 +17,9 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/chat_message_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/chat_date_chip.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
@@ -29,6 +31,31 @@ Color getMessageColor(Message message) {
   return (message.messageOtherId == null)
       ? const Color.fromARGB(255, 58, 136, 102)
       : const Color.fromARGB(233, 68, 137, 255);
+}
+
+class ChatMessage {
+  ChatMessage({required this.message, required this.responseTo});
+  final Message message;
+  final Message? responseTo;
+}
+
+class ChatItem {
+  const ChatItem._({this.message, this.date, this.time});
+  factory ChatItem.date(DateTime date) {
+    return ChatItem._(date: date);
+  }
+  factory ChatItem.time(DateTime time) {
+    return ChatItem._(time: time);
+  }
+  factory ChatItem.message(ChatMessage message) {
+    return ChatItem._(message: message);
+  }
+  final ChatMessage? message;
+  final DateTime? date;
+  final DateTime? time;
+  bool get isMessage => message != null;
+  bool get isDate => date != null;
+  bool get isTime => time != null;
 }
 
 /// Displays detailed information about a SampleItem.
@@ -48,9 +75,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   String currentInputText = '';
   late StreamSubscription<Contact?> userSub;
   late StreamSubscription<List<Message>> messageSub;
-  List<Message> messages = [];
+  List<ChatItem> messages = [];
   List<MemoryItem> galleryItems = [];
-  Map<int, List<Message>> textReactionsToMessageId = {};
   Map<int, List<Message>> emojiReactionsToMessageId = {};
   Message? responseToMessage;
   GlobalKey verifyShieldKey = GlobalKey();
@@ -92,61 +118,85 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
     final msgStream =
         twonlyDB.messagesDao.watchAllMessagesFrom(widget.contact.userId);
-    messageSub = msgStream.listen((msgs) async {
+    messageSub = msgStream.listen((newMessages) async {
       // if (!context.mounted) return;
       if (Platform.isAndroid) {
         await flutterLocalNotificationsPlugin.cancel(widget.contact.userId);
       } else {
         await flutterLocalNotificationsPlugin.cancelAll();
       }
-      final displayedMessages = <Message>[];
-      // should be cleared
-      final tmpTextReactionsToMessageId = <int, List<Message>>{};
+      final chatItems = <ChatItem>[];
+      final storedMediaFiles = <Message>[];
+      DateTime? lastDate;
       final tmpEmojiReactionsToMessageId = <int, List<Message>>{};
 
       final openedMessageOtherIds = <int>[];
 
       final messageOtherMessageIdToMyMessageId = <int, int>{};
+      final messageIdToMessage = <int, Message>{};
 
       /// there is probably a better way...
-      for (final msg in msgs) {
+      for (final msg in newMessages) {
         if (msg.messageOtherId != null) {
           messageOtherMessageIdToMyMessageId[msg.messageOtherId!] =
               msg.messageId;
         }
+        messageIdToMessage[msg.messageId] = msg;
       }
 
-      for (final msg in msgs) {
+      for (final msg in newMessages) {
         if (msg.kind == MessageKind.textMessage &&
             msg.messageOtherId != null &&
             msg.openedAt == null) {
           openedMessageOtherIds.add(msg.messageOtherId!);
         }
 
+        Message? responseTo;
+
+        if (msg.kind == MessageKind.media && msg.mediaStored) {
+          storedMediaFiles.add(msg);
+        }
+
         final responseId = msg.responseToMessageId ??
             messageOtherMessageIdToMyMessageId[msg.responseToOtherMessageId];
 
+        var isReaction = false;
         if (responseId != null) {
-          var added = false;
+          responseTo = messageIdToMessage[responseId];
           final content = MessageContent.fromJson(
             msg.kind,
             jsonDecode(msg.contentJson!) as Map,
           );
           if (content is TextMessageContent) {
-            if (content.text.isNotEmpty && !isEmoji(content.text)) {
-              added = true;
-              tmpTextReactionsToMessageId
+            if (isEmoji(content.text)) {
+              isReaction = true;
+              tmpEmojiReactionsToMessageId
                   .putIfAbsent(responseId, () => [])
                   .add(msg);
             }
           }
-          if (!added) {
+          if (msg.kind == MessageKind.reopenedMedia) {
+            isReaction = true;
             tmpEmojiReactionsToMessageId
                 .putIfAbsent(responseId, () => [])
                 .add(msg);
           }
-        } else {
-          displayedMessages.add(msg);
+        }
+        if (!isReaction) {
+          if (lastDate == null ||
+              msg.sendAt.day != lastDate.day ||
+              msg.sendAt.month != lastDate.month ||
+              msg.sendAt.year != lastDate.year) {
+            chatItems.add(ChatItem.date(msg.sendAt));
+            lastDate = msg.sendAt;
+          } else if (msg.sendAt.difference(lastDate).inMinutes >= 20) {
+            chatItems.add(ChatItem.time(msg.sendAt));
+            lastDate = msg.sendAt;
+          }
+          chatItems.add(ChatItem.message(ChatMessage(
+            message: msg,
+            responseTo: responseTo,
+          )));
         }
       }
 
@@ -161,17 +211,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           .openedAllNonMediaMessages(widget.contact.userId);
 
       setState(() {
-        textReactionsToMessageId = tmpTextReactionsToMessageId;
         emojiReactionsToMessageId = tmpEmojiReactionsToMessageId;
-        messages = displayedMessages;
+        messages = chatItems.reversed.toList();
       });
 
-      final filteredMediaFiles = displayedMessages
-          .where((x) => x.kind == MessageKind.media && x.mediaStored)
-          .toList()
-          .reversed
-          .toList();
-      final items = await MemoryItem.convertFromMessages(filteredMediaFiles);
+      final items = await MemoryItem.convertFromMessages(storedMediaFiles);
       galleryItems = items.values.toList();
       setState(() {});
     });
@@ -202,56 +246,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     currentInputText = '';
     responseToMessage = null;
     setState(() {});
-  }
-
-  Widget getResponsePreview(Message message) {
-    String? subtitle;
-
-    if (message.kind == MessageKind.textMessage) {
-      if (message.contentJson != null) {
-        final content = MessageContent.fromJson(
-            MessageKind.textMessage, jsonDecode(message.contentJson!) as Map);
-        if (content is TextMessageContent) {
-          subtitle = truncateString(content.text);
-        }
-      }
-    }
-    if (message.kind == MessageKind.media) {
-      final content = MessageContent.fromJson(
-          MessageKind.media, jsonDecode(message.contentJson!) as Map);
-      if (content is MediaMessageContent) {
-        subtitle = content.isVideo ? 'Video' : 'Image';
-      }
-    }
-
-    var username = 'You';
-    if (message.messageOtherId != null) {
-      username = getContactDisplayName(widget.contact);
-    }
-
-    final color = getMessageColor(message);
-
-    return Container(
-      padding: const EdgeInsets.only(left: 10),
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(
-            color: color,
-            width: 2,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            username,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          if (subtitle != null) Text(subtitle)
-        ],
-      ),
-    );
   }
 
   @override
@@ -296,70 +290,37 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
               children: [
                 Expanded(
                   child: ListView.builder(
-                    itemCount: messages.length + 1,
                     reverse: true,
-                    itemExtentBuilder: (index, dimensions) {
-                      if (index == 0) return 10; // empty padding
-                      index -= 1;
-                      double size = 44;
-                      if (messages[index].kind == MessageKind.textMessage) {
-                        final content = TextMessageContent.fromJson(
-                            jsonDecode(messages[index].contentJson!) as Map);
-                        if (EmojiAnimation.supported(content.text)) {
-                          size = 99;
-                        } else {
-                          size = 11 +
-                              calculateNumberOfLines(
-                                      content.text,
-                                      MediaQuery.of(context).size.width * 0.8,
-                                      17) *
-                                  27;
-                        }
-                      }
-                      if (messages[index].mediaStored) {
-                        size = 271;
-                      }
-                      final reactions =
-                          textReactionsToMessageId[messages[index].messageId];
-                      if (reactions != null && reactions.isNotEmpty) {
-                        for (final reaction in reactions) {
-                          if (reaction.kind == MessageKind.textMessage) {
-                            final content = TextMessageContent.fromJson(
-                                jsonDecode(reaction.contentJson!) as Map);
-                            size += calculateNumberOfLines(
-                                    content.text,
-                                    MediaQuery.of(context).size.width * 0.5,
-                                    14) *
-                                27;
-                          }
-                        }
-                      }
-
-                      if (!isLastMessageFromSameUser(messages, index)) {
-                        size += 20;
-                      }
-                      return size;
-                    },
+                    itemCount: messages.length + 1,
                     itemBuilder: (context, i) {
-                      if (i == 0) {
-                        return Container(); // just a padding
+                      if (i == messages.length) {
+                        return const Padding(
+                          padding: EdgeInsetsGeometry.only(top: 10),
+                        );
                       }
-                      i -= 1;
-                      return ChatListEntry(
-                        key: Key(messages[i].messageId.toString()),
-                        messages[i],
-                        user,
-                        galleryItems,
-                        isLastMessageFromSameUser(messages, i),
-                        textReactionsToMessageId[messages[i].messageId] ?? [],
-                        emojiReactionsToMessageId[messages[i].messageId] ?? [],
-                        onResponseTriggered: (message) {
-                          setState(() {
-                            responseToMessage = message;
-                          });
-                          textFieldFocus.requestFocus();
-                        },
-                      );
+                      if (messages[i].isDate || messages[i].isTime) {
+                        return ChatDateChip(
+                          item: messages[i],
+                        );
+                      } else {
+                        final chatMessage = messages[i].message!;
+                        return ChatListEntry(
+                          key: Key(chatMessage.message.messageId.toString()),
+                          chatMessage,
+                          user,
+                          galleryItems,
+                          isLastMessageFromSameUser(messages, i),
+                          emojiReactionsToMessageId[
+                                  chatMessage.message.messageId] ??
+                              [],
+                          onResponseTriggered: () {
+                            setState(() {
+                              responseToMessage = chatMessage.message;
+                            });
+                            textFieldFocus.requestFocus();
+                          },
+                        );
+                      }
                     },
                   ),
                 ),
@@ -372,7 +333,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     ),
                     child: Row(
                       children: [
-                        Expanded(child: getResponsePreview(responseToMessage!)),
+                        Expanded(
+                          child: ResponsePreview(
+                            message: responseToMessage!,
+                            showBorder: true,
+                            contact: user,
+                          ),
+                        ),
                         IconButton(
                           onPressed: () {
                             setState(() {
@@ -449,7 +416,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   }
 }
 
-bool isLastMessageFromSameUser(List<Message> messages, int index) {
+bool isLastMessageFromSameUser(List<ChatItem> messages, int index) {
   if (index <= 0) {
     return true; // If there is no previous message, return true
   }
@@ -457,11 +424,14 @@ bool isLastMessageFromSameUser(List<Message> messages, int index) {
   final lastMessage = messages[index - 1];
   final currentMessage = messages[index];
 
-  // Check if both messages have the same messageOtherId (or both are null)
-  return (lastMessage.messageOtherId == null &&
-          currentMessage.messageOtherId == null) ||
-      (lastMessage.messageOtherId != null &&
-          currentMessage.messageOtherId != null);
+  if (lastMessage.isMessage && currentMessage.isMessage) {
+    // Check if both messages have the same messageOtherId (or both are null)
+    return (lastMessage.message!.message.messageOtherId == null &&
+            currentMessage.message!.message.messageOtherId == null) ||
+        (lastMessage.message!.message.messageOtherId != null &&
+            currentMessage.message!.message.messageOtherId != null);
+  }
+  return false;
 }
 
 double calculateNumberOfLines(String text, double width, double fontSize) {

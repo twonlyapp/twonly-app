@@ -52,7 +52,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
                   t.mediaStored.equals(true) |
                   t.openedAt.isBiggerThanValue(
                       DateTime.now().subtract(const Duration(days: 1)))))
-          ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
+          ..orderBy([(t) => OrderingTerm.asc(t.sendAt)]))
         .watch();
   }
 

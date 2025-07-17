@@ -59,6 +59,51 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     }
   }
 
+  Future<void> onDoubleTap() async {
+    if (widget.message.openedAt == null &&
+            widget.message.messageOtherId != null ||
+        widget.message.mediaStored) {
+      return;
+    }
+    if (await received.existsMediaFile(widget.message.messageId, 'png')) {
+      await encryptAndSendMessageAsync(
+        null,
+        widget.contact.userId,
+        MessageJson(
+          kind: MessageKind.reopenedMedia,
+          messageSenderId: widget.message.messageId,
+          content: ReopenedMediaFileContent(
+            messageId: widget.message.messageOtherId!,
+          ),
+          timestamp: DateTime.now(),
+        ),
+        pushNotification: PushNotification(
+          kind: PushKind.reopenedMedia,
+        ),
+      );
+      await twonlyDB.messagesDao.updateMessageByMessageId(
+        widget.message.messageId,
+        const MessagesCompanion(openedAt: Value(null)),
+      );
+    }
+  }
+
+  Future<void> onTap() async {
+    if (widget.message.downloadState == DownloadState.downloaded &&
+        widget.message.openedAt == null) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) {
+          return MediaViewerView(widget.contact,
+              initialMessage: widget.message);
+        }),
+      );
+      await checkIfTutorialCanBeShown();
+    } else if (widget.message.downloadState == DownloadState.pending) {
+      await received.startDownloadMedia(widget.message, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = getMessageColorFromType(
@@ -68,53 +113,11 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
 
     return GestureDetector(
       key: reopenMediaFile,
-      onDoubleTap: () async {
-        if (widget.message.openedAt == null &&
-                widget.message.messageOtherId != null ||
-            widget.message.mediaStored) {
-          return;
-        }
-        if (await received.existsMediaFile(widget.message.messageId, 'png')) {
-          await encryptAndSendMessageAsync(
-            null,
-            widget.contact.userId,
-            MessageJson(
-              kind: MessageKind.reopenedMedia,
-              messageSenderId: widget.message.messageId,
-              content: ReopenedMediaFileContent(
-                messageId: widget.message.messageOtherId!,
-              ),
-              timestamp: DateTime.now(),
-            ),
-            pushNotification: PushNotification(
-              kind: PushKind.reopenedMedia,
-            ),
-          );
-          await twonlyDB.messagesDao.updateMessageByMessageId(
-            widget.message.messageId,
-            const MessagesCompanion(openedAt: Value(null)),
-          );
-        }
-      },
-      onTap: () async {
-        if (widget.message.kind == MessageKind.media) {
-          if (widget.message.downloadState == DownloadState.downloaded &&
-              widget.message.openedAt == null) {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) {
-                return MediaViewerView(widget.contact,
-                    initialMessage: widget.message);
-              }),
-            );
-            await checkIfTutorialCanBeShown();
-          } else if (widget.message.downloadState == DownloadState.pending) {
-            await received.startDownloadMedia(widget.message, true);
-          }
-        }
-      },
+      onDoubleTap: onDoubleTap,
+      onTap: widget.message.kind == MessageKind.media ? onTap : null,
       child: SizedBox(
         width: 150,
+        height: widget.message.mediaStored ? 271 : null,
         child: Align(
           alignment: Alignment.centerRight,
           child: ClipRRect(

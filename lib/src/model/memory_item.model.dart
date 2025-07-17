@@ -34,7 +34,7 @@ class MemoryItem {
       final isSend = message.messageOtherId == null;
       final id = message.mediaUploadId ?? message.messageId;
       final basePath = await send.getMediaFilePath(
-        isSend ? message.mediaUploadId! : message.messageId,
+        id,
         isSend ? 'send' : 'received',
       );
       File? imagePath;
