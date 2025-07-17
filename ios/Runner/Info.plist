@@ -33,11 +33,11 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>twonly uses your camera to create photos or videos.</string>
+	<string>Use your camera to make photos or videos and share them encrypted with your friends.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>twonly Screen Lock for real twonlies uses FACE ID.</string>
+	<string>FACE ID is required to open protected twonlies.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>twonly uses your microphone to create videos.</string>
+	<string>Use your microphone to enable audio when making videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>twonly will save photos or videos to your library.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
