@@ -69,8 +69,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
         .write(const MessagesCompanion(contentJson: Value(null)));
   }
 
-  Future<void> handleMediaFilesOlderThan7Days() {
-    /// media files will be deleted by the server after 7 days, so delete them here also
+  Future<void> handleMediaFilesOlderThan30Days() {
+    /// media files will be deleted by the server after 30 days, so delete them here also
     return (update(messages)
           ..where(
             (t) => (t.kind.equals(MessageKind.media.name) &
@@ -78,7 +78,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
                 t.messageOtherId.isNull() &
                 (t.sendAt.isSmallerThanValue(
                   DateTime.now().subtract(
-                    const Duration(days: 8),
+                    const Duration(days: 30),
                   ),
                 ))),
           ))

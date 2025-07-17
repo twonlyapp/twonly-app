@@ -22,6 +22,17 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
     }
   }
 
+  Future<void> purgeOldRetransmissions() async {
+    // delete entries older than two weeks
+    await (delete(messageRetransmissions)
+          ..where((t) => (t.acknowledgeByServerAt.isSmallerThanValue(
+                DateTime.now().subtract(
+                  const Duration(days: 25),
+                ),
+              ))))
+        .go();
+  }
+
   Future<List<int>> getRetransmitAbleMessages() async {
     final countDeleted = await (delete(messageRetransmissions)
           ..where((t) =>
