@@ -368,8 +368,9 @@ class _UserListItem extends State<UserListItem> {
     updateTime = Timer.periodic(const Duration(milliseconds: 200), (timer) {
       setState(() {
         if (currentMessage != null) {
-          lastMessageInSeconds =
-              DateTime.now().difference(currentMessage!.sendAt).inSeconds;
+          lastMessageInSeconds = DateTime.now()
+              .difference(currentMessage!.openedAt ?? currentMessage!.sendAt)
+              .inSeconds;
           if (lastMessageInSeconds < 0) {
             lastMessageInSeconds = 0;
           }
