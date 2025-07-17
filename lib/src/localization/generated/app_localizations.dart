@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingNotProductBody.
   ///
   /// In en, this message translates to:
-  /// **'twonly is financed by a small monthly fee and not by selling your data.'**
+  /// **'twonly is financed by donations and an optional subscription. Your data will never be sold.'**
   String get onboardingNotProductBody;
 
   /// No description provided for @onboardingBuyOneGetTwoTitle.

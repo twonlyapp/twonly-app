@@ -48,7 +48,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingNotProductBody =>
-      'twonly is financed by a small monthly fee and not by selling your data.';
+      'twonly is financed by donations and an optional subscription. Your data will never be sold.';
 
   @override
   String get onboardingBuyOneGetTwoTitle => 'Buy one get two';

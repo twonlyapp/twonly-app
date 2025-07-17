@@ -130,6 +130,12 @@ class _CreditsViewState extends State<CreditsView> {
                 'https://lottiefiles.com/de/free-animation/success-tick-cuwjLHAR7g',
           ),
           const UrlListTitle(
+            title: 'Donation-Animation',
+            subtitle: 'Abdul Latif',
+            url:
+                'https://lottiefiles.com/free-animation/international-day-of-charity-NBAKAkCcBr',
+          ),
+          const UrlListTitle(
             title: 'Failed-Animation',
             subtitle: 'Ahmed Shami أحمد شامي',
             url: 'https://lottiefiles.com/de/free-animation/failed-e5cQFDEtLv',

@@ -49,7 +49,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get onboardingNotProductBody =>
-      'twonly finanziert sich durch eine geringe monatliche Gebühr und nicht durch den Verkauf deiner Daten.';
+      'twonly wird durch Spenden und ein optionales Abonnement finanziert. Deine Daten werden niemals verkauft.';
 
   @override
   String get onboardingBuyOneGetTwoTitle => 'Kaufe eins, bekomme zwei';
@@ -66,7 +66,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Du kannst twonly kostenlos im Preview-Modus testen. In diesem Modus kannst du von anderen gefunden werden und Bilder oder Videos empfangen, aber du kannst selbst keine senden.';
 
   @override
-  String get onboardingTryForFree => 'Kostenlos testen';
+  String get onboardingTryForFree => 'Jetzt registrieren';
 
   @override
   String get registerUsernameSlogan =>

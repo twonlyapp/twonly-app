@@ -162,6 +162,11 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         FutureBuilder<bool>(
           future: userCreated,
           builder: (context, snapshot) {
+            return OnboardingView(
+              callbackOnSuccess: () => setState(() {
+                showOnboarding = false;
+              }),
+            );
             if (!snapshot.hasData) {
               return Center(child: Container());
             } else if (snapshot.data!) {
