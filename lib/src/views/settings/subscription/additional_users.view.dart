@@ -243,16 +243,13 @@ class _AdditionalUserInviteState extends State<AdditionalUserInvite> {
     return GestureDetector(
       onTap: _copyVoucherId,
       child: Card(
-        elevation: 5,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: Text(
-              widget.invite.inviteCode.toUpperCase(),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+        elevation: 3,
+        child: Center(
+          child: Text(
+            widget.invite.inviteCode.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
