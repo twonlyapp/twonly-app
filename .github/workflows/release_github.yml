@@ -21,9 +21,10 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-        run: flutter pub get
-        run: flutter analyze
-        run: flutter test
+        run: | 
+          flutter pub get
+          flutter analyze
+          flutter test
 
       - name: Create key.properties file
         run: |
@@ -31,6 +32,8 @@ jobs:
           echo "keyPassword=${{ secrets.ALIAS_PASSWORD }}" >> ./android/key.properties
           echo "keyAlias=androidreleasekey" >> key.properties
           echo "storeFile=./android/keystore.jks" >> ./android/key.properties
+
+      - name: Create keystore file
         run: base64 -d <<< $KEYSTORE_FILE > ./android/keystore.jks
 
       - name: Build Android APK
