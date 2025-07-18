@@ -69,8 +69,7 @@ class ChatMessagesView extends StatefulWidget {
   State<ChatMessagesView> createState() => _ChatMessagesViewState();
 }
 
-class _ChatMessagesViewState extends State<ChatMessagesView>
-    with SingleTickerProviderStateMixin {
+class _ChatMessagesViewState extends State<ChatMessagesView> {
   TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late Contact user;
@@ -86,7 +85,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
   Timer? tutorial;
   final ItemScrollController itemScrollController = ItemScrollController();
   int? focusedScrollItem;
-  late AnimationController _animationController;
 
   @override
   void initState() {
@@ -94,11 +92,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     user = widget.contact;
     textFieldFocus = FocusNode();
     initStreams();
-
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
 
     tutorial = Timer(const Duration(seconds: 1), () async {
       tutorial = null;
@@ -262,19 +255,18 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
     final index = messages.indexWhere(
         (x) => x.isMessage && x.message!.message.messageId == messageId);
     if (index == -1) return;
-    await itemScrollController.scrollTo(
-      index: index,
-      duration: const Duration(milliseconds: 400),
-      alignment: 0.5,
-    );
     setState(() {
       focusedScrollItem = index;
-      _animationController.forward().then((_) {
-        _animationController.reverse().then((_) {
-          setState(() {
-            _animationController.value = 0.0;
-          });
-        });
+    });
+    await itemScrollController.scrollTo(
+      index: index,
+      duration: const Duration(milliseconds: 300),
+      alignment: 0.5,
+    );
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (!context.mounted) return;
+      setState(() {
+        focusedScrollItem = null;
       });
     });
   }
@@ -336,32 +328,37 @@ class _ChatMessagesViewState extends State<ChatMessagesView>
                         );
                       } else {
                         final chatMessage = messages[i].message!;
-                        return ScaleTransition(
-                          scale: Tween<double>(
-                                  begin: 1,
-                                  end: (focusedScrollItem == i) ? 1.03 : 1)
-                              .animate(
-                            CurvedAnimation(
-                              parent: _animationController,
-                              curve: Curves.easeInOut,
+                        return Transform.translate(
+                          offset: Offset((focusedScrollItem == i) ? -3 : 0, 0),
+                          child: Transform.scale(
+                            scale: (focusedScrollItem == i) ? 1.03 : 1,
+                            // scale: Tween<double>(
+                            //         begin: 1,
+                            //         end: (focusedScrollItem == i) ? 1.03 : 1)
+                            //     .animate(
+                            //   CurvedAnimation(
+                            //     parent: _animationController,
+                            //     curve: Curves.easeInOut,
+                            //   ),
+                            // ),
+                            child: ChatListEntry(
+                              key:
+                                  Key(chatMessage.message.messageId.toString()),
+                              chatMessage,
+                              user,
+                              galleryItems,
+                              isLastMessageFromSameUser(messages, i),
+                              emojiReactionsToMessageId[
+                                      chatMessage.message.messageId] ??
+                                  [],
+                              scrollToMessage: scrollToMessage,
+                              onResponseTriggered: () {
+                                setState(() {
+                                  responseToMessage = chatMessage.message;
+                                });
+                                textFieldFocus.requestFocus();
+                              },
                             ),
-                          ),
-                          child: ChatListEntry(
-                            key: Key(chatMessage.message.messageId.toString()),
-                            chatMessage,
-                            user,
-                            galleryItems,
-                            isLastMessageFromSameUser(messages, i),
-                            emojiReactionsToMessageId[
-                                    chatMessage.message.messageId] ??
-                                [],
-                            scrollToMessage: scrollToMessage,
-                            onResponseTriggered: () {
-                              setState(() {
-                                responseToMessage = chatMessage.message;
-                              });
-                              textFieldFocus.requestFocus();
-                            },
                           ),
                         );
                       }
