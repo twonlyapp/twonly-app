@@ -15,12 +15,14 @@ class ResponseContainer extends StatefulWidget {
     required this.msg,
     required this.contact,
     required this.child,
+    required this.scrollToMessage,
     super.key,
   });
 
   final ChatMessage msg;
   final Widget child;
   final Contact contact;
+  final void Function(int) scrollToMessage;
 
   @override
   State<ResponseContainer> createState() => _ResponseContainerState();
@@ -57,44 +59,47 @@ class _ResponseContainerState extends State<ResponseContainer> {
     if (widget.msg.responseTo == null) {
       return widget.child;
     }
-    return Container(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width * 0.8,
-      ),
-      decoration: BoxDecoration(
-        color: getMessageColor(widget.msg.message),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 4, right: 4, left: 4),
-            child: Container(
-              key: _preview,
-              width: minWidth,
-              decoration: BoxDecoration(
-                color: context.color.surface.withAlpha(150),
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  topLeft: Radius.circular(8),
-                  bottomLeft: Radius.circular(4),
-                  bottomRight: Radius.circular(4),
+    return GestureDetector(
+      onTap: () => widget.scrollToMessage(widget.msg.responseTo!.messageId),
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
+        decoration: BoxDecoration(
+          color: getMessageColor(widget.msg.message),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 4, right: 4, left: 4),
+              child: Container(
+                key: _preview,
+                width: minWidth,
+                decoration: BoxDecoration(
+                  color: context.color.surface.withAlpha(150),
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(8),
+                    topLeft: Radius.circular(8),
+                    bottomLeft: Radius.circular(4),
+                    bottomRight: Radius.circular(4),
+                  ),
+                ),
+                child: ResponsePreview(
+                  contact: widget.contact,
+                  message: widget.msg.responseTo!,
+                  showBorder: false,
                 ),
               ),
-              child: ResponsePreview(
-                contact: widget.contact,
-                message: widget.msg.responseTo!,
-                showBorder: false,
-              ),
             ),
-          ),
-          SizedBox(
-            key: _message,
-            width: minWidth,
-            child: widget.child,
-          ),
-        ],
+            SizedBox(
+              key: _message,
+              width: minWidth,
+              child: widget.child,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -68,7 +69,8 @@ class ChatMessagesView extends StatefulWidget {
   State<ChatMessagesView> createState() => _ChatMessagesViewState();
 }
 
-class _ChatMessagesViewState extends State<ChatMessagesView> {
+class _ChatMessagesViewState extends State<ChatMessagesView>
+    with SingleTickerProviderStateMixin {
   TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late Contact user;
@@ -82,6 +84,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   GlobalKey verifyShieldKey = GlobalKey();
   late FocusNode textFieldFocus;
   Timer? tutorial;
+  final ItemScrollController itemScrollController = ItemScrollController();
+  int? focusedScrollItem;
+  late AnimationController _animationController;
 
   @override
   void initState() {
@@ -89,6 +94,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     user = widget.contact;
     textFieldFocus = FocusNode();
     initStreams();
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
 
     tutorial = Timer(const Duration(seconds: 1), () async {
       tutorial = null;
@@ -248,6 +258,27 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     setState(() {});
   }
 
+  Future<void> scrollToMessage(int messageId) async {
+    final index = messages.indexWhere(
+        (x) => x.isMessage && x.message!.message.messageId == messageId);
+    if (index == -1) return;
+    await itemScrollController.scrollTo(
+      index: index,
+      duration: const Duration(milliseconds: 400),
+      alignment: 0.5,
+    );
+    setState(() {
+      focusedScrollItem = index;
+      _animationController.forward().then((_) {
+        _animationController.reverse().then((_) {
+          setState(() {
+            _animationController.value = 0.0;
+          });
+        });
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -289,9 +320,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
             child: Column(
               children: [
                 Expanded(
-                  child: ListView.builder(
+                  child: ScrollablePositionedList.builder(
                     reverse: true,
                     itemCount: messages.length + 1,
+                    itemScrollController: itemScrollController,
                     itemBuilder: (context, i) {
                       if (i == messages.length) {
                         return const Padding(
@@ -304,21 +336,33 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                         );
                       } else {
                         final chatMessage = messages[i].message!;
-                        return ChatListEntry(
-                          key: Key(chatMessage.message.messageId.toString()),
-                          chatMessage,
-                          user,
-                          galleryItems,
-                          isLastMessageFromSameUser(messages, i),
-                          emojiReactionsToMessageId[
-                                  chatMessage.message.messageId] ??
-                              [],
-                          onResponseTriggered: () {
-                            setState(() {
-                              responseToMessage = chatMessage.message;
-                            });
-                            textFieldFocus.requestFocus();
-                          },
+                        return ScaleTransition(
+                          scale: Tween<double>(
+                                  begin: 1,
+                                  end: (focusedScrollItem == i) ? 1.03 : 1)
+                              .animate(
+                            CurvedAnimation(
+                              parent: _animationController,
+                              curve: Curves.easeInOut,
+                            ),
+                          ),
+                          child: ChatListEntry(
+                            key: Key(chatMessage.message.messageId.toString()),
+                            chatMessage,
+                            user,
+                            galleryItems,
+                            isLastMessageFromSameUser(messages, i),
+                            emojiReactionsToMessageId[
+                                    chatMessage.message.messageId] ??
+                                [],
+                            scrollToMessage: scrollToMessage,
+                            onResponseTriggered: () {
+                              setState(() {
+                                responseToMessage = chatMessage.message;
+                              });
+                              textFieldFocus.requestFocus();
+                            },
+                          ),
                         );
                       }
                     },

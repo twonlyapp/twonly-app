@@ -20,6 +20,7 @@ class ChatListEntry extends StatefulWidget {
     this.lastMessageFromSameUser,
     this.otherReactions, {
     required this.onResponseTriggered,
+    required this.scrollToMessage,
     super.key,
   });
   final ChatMessage msg;
@@ -27,6 +28,7 @@ class ChatListEntry extends StatefulWidget {
   final bool lastMessageFromSameUser;
   final List<Message> otherReactions;
   final List<MemoryItem> galleryItems;
+  final void Function(int) scrollToMessage;
   final void Function() onResponseTriggered;
 
   @override
@@ -78,6 +80,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
                     ResponseContainer(
                       msg: widget.msg,
                       contact: widget.contact,
+                      scrollToMessage: widget.scrollToMessage,
                       child: (textMessage != null)
                           ? ChatTextEntry(
                               message: widget.msg.message,
