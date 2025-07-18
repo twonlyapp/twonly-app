@@ -263,7 +263,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       duration: const Duration(milliseconds: 300),
       alignment: 0.5,
     );
-    Future.delayed(const Duration(milliseconds: 250), () {
+    Future.delayed(const Duration(milliseconds: 300), () {
       if (!context.mounted) return;
       setState(() {
         focusedScrollItem = null;
@@ -329,18 +329,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                       } else {
                         final chatMessage = messages[i].message!;
                         return Transform.translate(
-                          offset: Offset((focusedScrollItem == i) ? -3 : 0, 0),
+                          offset: Offset(
+                              (focusedScrollItem == i)
+                                  ? (chatMessage.message.messageOtherId == null)
+                                      ? -8
+                                      : 8
+                                  : 0,
+                              0),
                           child: Transform.scale(
-                            scale: (focusedScrollItem == i) ? 1.03 : 1,
-                            // scale: Tween<double>(
-                            //         begin: 1,
-                            //         end: (focusedScrollItem == i) ? 1.03 : 1)
-                            //     .animate(
-                            //   CurvedAnimation(
-                            //     parent: _animationController,
-                            //     curve: Curves.easeInOut,
-                            //   ),
-                            // ),
+                            scale: (focusedScrollItem == i) ? 1.05 : 1,
                             child: ChatListEntry(
                               key:
                                   Key(chatMessage.message.messageId.toString()),

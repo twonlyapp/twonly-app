@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/better_text.dart';
@@ -13,7 +12,7 @@ class ChatTextEntry extends StatelessWidget {
   });
 
   final String text;
-  final Message message;
+  final ChatMessage message;
   final bool hasReaction;
 
   @override
@@ -37,8 +36,8 @@ class ChatTextEntry extends StatelessWidget {
       padding: EdgeInsets.only(
           left: 10, top: 4, bottom: 4, right: hasReaction ? 30 : 10),
       decoration: BoxDecoration(
-        color: message.responseToMessageId == null
-            ? getMessageColor(message)
+        color: message.responseTo == null
+            ? getMessageColor(message.message)
             : null,
         borderRadius: BorderRadius.circular(12),
       ),

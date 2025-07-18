@@ -83,7 +83,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
                       scrollToMessage: widget.scrollToMessage,
                       child: (textMessage != null)
                           ? ChatTextEntry(
-                              message: widget.msg.message,
+                              message: widget.msg,
                               text: textMessage!,
                               hasReaction: widget.otherReactions.isNotEmpty,
                             )
