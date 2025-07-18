@@ -1,9 +1,14 @@
-name: Github Release
+name: Publish (Android)
 
 on:
+  workflow_dispatch: {}
   push:
     branches:
       - main
+    paths:
+      - lib/**
+      - pubspec.lock
+      - pubspec.yaml
 
 jobs:
   build_and_publish:
