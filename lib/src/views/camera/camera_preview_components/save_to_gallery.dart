@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
@@ -75,10 +76,16 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                   res = await saveVideoToGallery(widget.videoFilePath!.path);
                 }
               } else {
-                memoryPath += '.png';
                 final imageBytes = await widget.getMergedImage();
                 if (imageBytes == null || !mounted) return;
-                await File(memoryPath).writeAsBytes(imageBytes);
+                final webPImageBytes =
+                    await FlutterImageCompress.compressWithList(
+                  format: CompressFormat.webp,
+                  imageBytes,
+                  quality: 100,
+                );
+                memoryPath += '.png';
+                await File(memoryPath).writeAsBytes(webPImageBytes);
                 unawaited(createThumbnailsForImage(File(memoryPath)));
                 if (storeToGallery) {
                   res = await saveImageToGallery(imageBytes);

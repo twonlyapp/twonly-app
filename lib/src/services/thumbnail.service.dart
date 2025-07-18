@@ -1,39 +1,9 @@
 import 'dart:io';
-import 'dart:ui';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
-
-Future<void> createThumbnails(String directoryPath) async {
-  final directory = Directory(directoryPath);
-  final outputDirectory = await getTemporaryDirectory();
-
-  if (directory.existsSync()) {
-    final files = directory.listSync();
-
-    for (final file in files) {
-      if (file is File) {
-        final filePath = file.path;
-        final fileExtension = filePath.split('.').last.toLowerCase();
-
-        if (['jpg', 'jpeg', 'png'].contains(fileExtension)) {
-          // Create thumbnail for images
-          final image = await decodeImageFromList(file.readAsBytesSync());
-          final thumbnail = await image.toByteData(format: ImageByteFormat.png);
-          final thumbnailFile =
-              File('${outputDirectory.path}/${file.uri.pathSegments.last}');
-          await thumbnailFile.writeAsBytes(thumbnail!.buffer.asUint8List());
-        } else if (['mp4', 'mov', 'avi'].contains(fileExtension)) {
-          // Create thumbnail for videos
-        }
-      }
-    }
-  }
-}
 
 Future<void> createThumbnailsForImage(File file) async {
   final fileExtension = file.path.split('.').last.toLowerCase();
@@ -47,8 +17,8 @@ Future<void> createThumbnailsForImage(File file) async {
       minHeight: 800,
       minWidth: 450,
       file.path,
-      format: CompressFormat.png,
-      quality: 30,
+      format: CompressFormat.webp,
+      quality: 50,
     );
 
     if (imageBytesCompressed == null) {

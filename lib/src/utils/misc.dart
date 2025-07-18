@@ -26,12 +26,18 @@ extension ShortCutsExtension on BuildContext {
 }
 
 Future<String?> saveImageToGallery(Uint8List imageBytes) async {
+  final jpgImages = await FlutterImageCompress.compressWithList(
+    // ignore: avoid_redundant_argument_values
+    format: CompressFormat.jpeg,
+    imageBytes,
+    quality: 100,
+  );
   final hasAccess = await Gal.hasAccess();
   if (!hasAccess) {
     await Gal.requestAccess();
   }
   try {
-    await Gal.putImageBytes(imageBytes);
+    await Gal.putImageBytes(jpgImages);
     return null;
   } on GalException catch (e) {
     return e.type.message;
