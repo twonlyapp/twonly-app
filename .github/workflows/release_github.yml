@@ -28,10 +28,13 @@ jobs:
           flutter analyze
           flutter test
 
+      - name: Cloning sub-repos
+        run: git submodule update --init --recursive
+
       - name: Create key.properties file
         run: |
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
-          echo "keyPassword=${{ secrets.ALIAS_PASSWORD }}" >> ./android/key.properties
+          echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
           echo "keyAlias=androidreleasekey" >> key.properties
           echo "storeFile=./android/keystore.jks" >> ./android/key.properties
 
