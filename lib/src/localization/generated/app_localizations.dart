@@ -2047,6 +2047,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Report user'**
   String get reportUser;
+
+  /// No description provided for @newDeviceRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'You have logged in on another device. You have therefore been logged out here.'**
+  String get newDeviceRegistered;
 }
 
 class _AppLocalizationsDelegate

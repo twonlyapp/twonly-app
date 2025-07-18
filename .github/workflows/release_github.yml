@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - main
+      - main_disabled
     # paths:
     #   - lib/**
     #   - pubspec.lock

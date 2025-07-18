@@ -19,6 +19,7 @@ void Function({required bool isConnected}) globalCallbackConnectionState = ({
   required bool isConnected,
 }) {};
 void Function() globalCallbackAppIsOutdated = () {};
+void Function() globalCallbackNewDeviceRegistered = () {};
 void Function(String planId) globalCallbackUpdatePlan = (String planId) {};
 
 bool globalIsAppInBackground = true;

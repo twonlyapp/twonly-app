@@ -490,5 +490,6 @@
   "openChangeLog": "Open changelog automatically",
   "reportUserTitle": "Report {username}",
   "reportUserReason": "Reporting reason",
-  "reportUser": "Report user"
+  "reportUser": "Report user",
+  "newDeviceRegistered": "You have logged in on another device. You have therefore been logged out here."
 }

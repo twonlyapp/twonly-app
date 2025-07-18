@@ -48,7 +48,8 @@ Future<void> updateUsersPlan(BuildContext context, String planId) async {
 Mutex updateProtection = Mutex();
 
 Future<UserData?> updateUserdata(
-    UserData Function(UserData userData) updateUser) async {
+  UserData Function(UserData userData) updateUser,
+) async {
   return updateProtection.protect<UserData?>(() async {
     final user = await getUser();
     if (user == null) return null;

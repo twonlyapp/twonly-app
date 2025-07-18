@@ -50,6 +50,7 @@ const ErrorCode$json = {
     {'1': 'UserIdNotFound', '2': 1028},
     {'1': 'UserIdAlreadyTaken', '2': 1029},
     {'1': 'AppVersionOutdated', '2': 1030},
+    {'1': 'NewDeviceRegistered', '2': 1031},
   ],
 };
 
@@ -69,5 +70,5 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'dlZBD+BxIVChBQbGFuTGltaXRSZWFjaGVkEP8HEhQKD05vdEVub3VnaENyZWRpdBCACBISCg1Q'
     'bGFuRG93bmdyYWRlEIEIEhkKFFBsYW5VcGdyYWRlTm90WWVhcmx5EIIIEhgKE0ludmFsaWRTaW'
     'duZWRQcmVLZXkQgwgSEwoOVXNlcklkTm90Rm91bmQQhAgSFwoSVXNlcklkQWxyZWFkeVRha2Vu'
-    'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCA==');
+    'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCBIYChNOZXdEZXZpY2VSZWdpc3RlcmVkEIcI');
 

@@ -10,12 +10,13 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       userId: (json['userId'] as num).toInt(),
       username: json['username'] as String,
       displayName: json['displayName'] as String,
-      subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Preview',
+      subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Free',
       isDemoUser: json['isDemoUser'] as bool? ?? false,
     )
       ..avatarSvg = json['avatarSvg'] as String?
       ..avatarJson = json['avatarJson'] as String?
       ..avatarCounter = (json['avatarCounter'] as num?)?.toInt() ?? 0
+      ..deviceId = (json['deviceId'] as num?)?.toInt() ?? 0
       ..lastImageSend = json['lastImageSend'] == null
           ? null
           : DateTime.parse(json['lastImageSend'] as String)
@@ -76,6 +77,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'avatarSvg': instance.avatarSvg,
       'avatarJson': instance.avatarJson,
       'avatarCounter': instance.avatarCounter,
+      'deviceId': instance.deviceId,
       'subscriptionPlan': instance.subscriptionPlan,
       'lastImageSend': instance.lastImageSend?.toIso8601String(),
       'todaysImageCounter': instance.todaysImageCounter,

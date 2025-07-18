@@ -29,9 +29,12 @@ class UserData {
   @JsonKey(defaultValue: 0)
   int avatarCounter = 0;
 
+  @JsonKey(defaultValue: 0)
+  int deviceId = 0;
+
   // --- SUBSCRIPTION DTA ---
 
-  @JsonKey(defaultValue: 'Preview')
+  @JsonKey(defaultValue: 'Free')
   String subscriptionPlan;
   DateTime? lastImageSend;
   int? todaysImageCounter;

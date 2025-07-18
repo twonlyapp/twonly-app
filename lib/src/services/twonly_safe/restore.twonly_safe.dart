@@ -16,6 +16,7 @@ import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/backup/backup.pb.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/storage.dart';
 
 Future<void> recoverTwonlySafe(
   String username,
@@ -136,4 +137,8 @@ Future<void> handleBackupData(
   await storage.write(
       key: SecureStorageKeys.userData,
       value: secureStorage[SecureStorageKeys.userData] as String);
+  await updateUserdata((u) {
+    u.deviceId += 1;
+    return u;
+  });
 }

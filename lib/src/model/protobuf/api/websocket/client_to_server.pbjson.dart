@@ -106,9 +106,11 @@ const Handshake_Authenticate$json = {
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'auth_token', '3': 2, '4': 1, '5': 12, '10': 'authToken'},
     {'1': 'app_version', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'appVersion', '17': true},
+    {'1': 'device_id', '3': 4, '4': 1, '5': 3, '9': 1, '10': 'deviceId', '17': true},
   ],
   '8': [
     {'1': '_app_version'},
+    {'1': '_device_id'},
   ],
 };
 
@@ -128,9 +130,10 @@ final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'lkGAcgASgDUg5yZWdpc3RyYXRpb25JZBIaCgZpc19pb3MYCCABKAhIAVIFaXNJb3OIAQFCDgoM'
     'X2ludml0ZV9jb2RlQgkKB19pc19pb3MaEgoQR2V0QXV0aENoYWxsZW5nZRpDCgxHZXRBdXRoVG'
     '9rZW4SFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEhoKCHJlc3BvbnNlGAIgASgMUghyZXNwb25z'
-    'ZRp8CgxBdXRoZW50aWNhdGUSFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEh0KCmF1dGhfdG9rZW'
-    '4YAiABKAxSCWF1dGhUb2tlbhIkCgthcHBfdmVyc2lvbhgDIAEoCUgAUgphcHBWZXJzaW9uiAEB'
-    'Qg4KDF9hcHBfdmVyc2lvbkILCglIYW5kc2hha2U=');
+    'ZRqsAQoMQXV0aGVudGljYXRlEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBIdCgphdXRoX3Rva2'
+    'VuGAIgASgMUglhdXRoVG9rZW4SJAoLYXBwX3ZlcnNpb24YAyABKAlIAFIKYXBwVmVyc2lvbogB'
+    'ARIgCglkZXZpY2VfaWQYBCABKANIAVIIZGV2aWNlSWSIAQFCDgoMX2FwcF92ZXJzaW9uQgwKCl'
+    '9kZXZpY2VfaWRCCwoJSGFuZHNoYWtl');
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData$json = {

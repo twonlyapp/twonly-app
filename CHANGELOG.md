@@ -5,7 +5,7 @@
 - twonly now has a free plan and is now financed by donations and an optional subscription with more features (coming soon)
 - iOS gestures to close images
 - Improved chat messages view, including better citation view and display times
-- onboarding screens updated and registration view simplified 
+- Onboarding screens updated and registration view simplified 
 - The sender is displayed in the top right corner when a media file is opened
 - Images are now stored as WebP to save storage
 - Button to report users

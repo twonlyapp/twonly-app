@@ -1087,4 +1087,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get reportUser => 'Benutzer melden';
+
+  @override
+  String get newDeviceRegistered =>
+      'Du hast dich auf einem anderen Gerät angemeldet. Daher wurdest du hier abgemeldet.';
 }

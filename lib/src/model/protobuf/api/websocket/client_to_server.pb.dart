@@ -445,6 +445,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     $fixnum.Int64? userId,
     $core.List<$core.int>? authToken,
     $core.String? appVersion,
+    $fixnum.Int64? deviceId,
   }) {
     final $result = create();
     if (userId != null) {
@@ -456,6 +457,9 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     if (appVersion != null) {
       $result.appVersion = appVersion;
     }
+    if (deviceId != null) {
+      $result.deviceId = deviceId;
+    }
     return $result;
   }
   Handshake_Authenticate._() : super();
@@ -466,6 +470,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     ..aInt64(1, _omitFieldNames ? '' : 'userId')
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'authToken', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'appVersion')
+    ..aInt64(4, _omitFieldNames ? '' : 'deviceId')
     ..hasRequiredFields = false
   ;
 
@@ -516,6 +521,15 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   $core.bool hasAppVersion() => $_has(2);
   @$pb.TagNumber(3)
   void clearAppVersion() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get deviceId => $_getI64(3);
+  @$pb.TagNumber(4)
+  set deviceId($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasDeviceId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearDeviceId() => clearField(4);
 }
 
 enum Handshake_Handshake {

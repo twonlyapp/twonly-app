@@ -316,6 +316,13 @@ class ApiService {
         await close(() {});
         return Result.error(ErrorCode.InternalError);
       }
+      if (res.error == ErrorCode.NewDeviceRegistered) {
+        globalCallbackNewDeviceRegistered();
+        Log.error('Device is disabled, as a newer device restore twonly Safe.');
+        appIsOutdated = true;
+        await close(() {});
+        return Result.error(ErrorCode.InternalError);
+      }
       if (res.error == ErrorCode.SessionNotAuthenticated) {
         isAuthenticated = false;
         if (authenticated) {
@@ -346,11 +353,13 @@ class ApiService {
     const storage = FlutterSecureStorage();
     final apiAuthToken =
         await storage.read(key: SecureStorageKeys.apiAuthToken);
+    final user = await getUser();
 
-    if (apiAuthToken != null) {
+    if (apiAuthToken != null && user != null) {
       final authenticate = Handshake_Authenticate()
         ..userId = Int64(userId)
         ..appVersion = (await PackageInfo.fromPlatform()).version
+        ..deviceId = Int64(user.deviceId)
         ..authToken = base64Decode(apiAuthToken);
 
       final handshake = Handshake()..authenticate = authenticate;

@@ -6,7 +6,6 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -14,7 +13,6 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
@@ -24,7 +22,6 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/headline.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class AddNewUserView extends StatefulWidget {
   const AddNewUserView({super.key});
@@ -143,7 +140,6 @@ class _SearchUsernameView extends State<AddNewUserView> {
 
   @override
   Widget build(BuildContext context) {
-    final isPreview = context.read<CustomChangeProvider>().plan == 'Preview';
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.searchUsernameTitle),
@@ -154,49 +150,27 @@ class _SearchUsernameView extends State<AddNewUserView> {
               const EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
           child: Column(
             children: [
-              if (isPreview) ...[
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Text(
-                    context.lang.searchUserNamePreview,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                FilledButton.icon(
-                  icon: const FaIcon(FontAwesomeIcons.shieldHeart),
-                  onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return const SubscriptionView();
-                    }));
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: TextField(
+                  onSubmitted: (_) {
+                    _addNewUser(context);
                   },
-                  label: Text(context.lang.selectSubscription),
+                  onChanged: (value) {
+                    searchUserName.text = value.toLowerCase();
+                    searchUserName.selection = TextSelection.fromPosition(
+                      TextPosition(offset: searchUserName.text.length),
+                    );
+                  },
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(12),
+                    FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z]')),
+                  ],
+                  controller: searchUserName,
+                  decoration:
+                      getInputDecoration(context.lang.searchUsernameInput),
                 ),
-                const SizedBox(height: 30),
-              ],
-              if (!isPreview) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: TextField(
-                    onSubmitted: (_) {
-                      _addNewUser(context);
-                    },
-                    onChanged: (value) {
-                      searchUserName.text = value.toLowerCase();
-                      searchUserName.selection = TextSelection.fromPosition(
-                        TextPosition(offset: searchUserName.text.length),
-                      );
-                    },
-                    inputFormatters: [
-                      LengthLimitingTextInputFormatter(12),
-                      FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z]')),
-                    ],
-                    controller: searchUserName,
-                    decoration:
-                        getInputDecoration(context.lang.searchUsernameInput),
-                  ),
-                ),
-              ],
+              ),
               const SizedBox(height: 20),
               if (contacts.isNotEmpty)
                 HeadLineComponent(
@@ -209,20 +183,18 @@ class _SearchUsernameView extends State<AddNewUserView> {
           ),
         ),
       ),
-      floatingActionButton: isPreview
-          ? null
-          : Padding(
-              padding: const EdgeInsets.only(bottom: 30),
-              child: FloatingActionButton(
-                foregroundColor: Colors.white,
-                onPressed: () {
-                  if (!_isLoading) _addNewUser(context);
-                },
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : const FaIcon(FontAwesomeIcons.magnifyingGlassPlus),
-              ),
-            ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 30),
+        child: FloatingActionButton(
+          foregroundColor: Colors.white,
+          onPressed: () {
+            if (!_isLoading) _addNewUser(context);
+          },
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : const FaIcon(FontAwesomeIcons.magnifyingGlassPlus),
+        ),
+      ),
     );
   }
 }

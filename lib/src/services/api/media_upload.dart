@@ -36,9 +36,6 @@ import 'package:video_compress/video_compress.dart';
 Future<ErrorCode?> isAllowedToSend() async {
   final user = await getUser();
   if (user == null) return null;
-  if (user.subscriptionPlan == 'Preview') {
-    return ErrorCode.PlanNotAllowed;
-  }
   if (user.subscriptionPlan == 'Free') {
     var todaysImageCounter = user.todaysImageCounter;
     if (user.lastImageSend != null && user.todaysImageCounter != null) {

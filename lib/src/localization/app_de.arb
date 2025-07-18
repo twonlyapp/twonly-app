@@ -334,5 +334,6 @@
     "openChangeLog": "Changelog automatisch öffnen",
     "reportUserTitle": "Melde {username}",
     "reportUserReason": "Meldegrund",
-    "reportUser": "Benutzer melden"
+    "reportUser": "Benutzer melden",
+    "newDeviceRegistered": "Du hast dich auf einem anderen Gerät angemeldet. Daher wurdest du hier abgemeldet."
 }
