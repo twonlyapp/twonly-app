@@ -39,7 +39,9 @@ jobs:
           echo "storeFile=./android/app/android/keystore.jks" >> ./android/key.properties
 
       - name: Create keystore file
-        run: base64 -d <<< $KEYSTORE_FILE > ./android/app/android/keystore.jks
+        env:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+        run: echo $KEYSTORE_FILE | base64 --decode > ./android/app/android/keystore.jks
 
       - name: Build Android APK
         run: flutter build apk --release --split-per-abi
