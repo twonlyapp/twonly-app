@@ -1073,4 +1073,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get testPaymentMethod =>
       'Vielen Dank für dein Interesse an einem kostenpflichtigen Tarif. Die kostenpflichtigen Pläne sind derzeit noch deaktiviert. Sie werden aber bald aktiviert!';
+
+  @override
+  String get openChangeLog => 'Changelog automatisch öffnen';
 }

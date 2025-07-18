@@ -1067,4 +1067,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get testPaymentMethod =>
       'Thanks for the interest in a paid plan. Currently the paid plans are still deactivated. But they will be activated soon!';
+
+  @override
+  String get openChangeLog => 'Open changelog automatically';
 }

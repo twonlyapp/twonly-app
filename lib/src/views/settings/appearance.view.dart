@@ -108,7 +108,7 @@ class _AppearanceViewState extends State<AppearanceView> {
           ListTile(
             title: Text(context.lang.contactUsShortcut),
             onTap: toggleShowFeedbackIcon,
-            trailing: Checkbox(
+            trailing: Switch(
               value: !showFeedbackShortcut,
               onChanged: (a) => toggleShowFeedbackIcon(),
             ),

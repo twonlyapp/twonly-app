@@ -56,6 +56,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..lastChangeLogHash = (json['lastChangeLogHash'] as List<dynamic>?)
           ?.map((e) => (e as num).toInt())
           .toList()
+      ..hideChangeLog = json['hideChangeLog'] as bool? ?? false
       ..nextTimeToShowBackupNotice = json['nextTimeToShowBackupNotice'] == null
           ? null
           : DateTime.parse(json['nextTimeToShowBackupNotice'] as String)
@@ -95,6 +96,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
       'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
       'lastChangeLogHash': instance.lastChangeLogHash,
+      'hideChangeLog': instance.hideChangeLog,
       'nextTimeToShowBackupNotice':
           instance.nextTimeToShowBackupNotice?.toIso8601String(),
       'backupServer': instance.backupServer,

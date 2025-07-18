@@ -2023,6 +2023,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thanks for the interest in a paid plan. Currently the paid plans are still deactivated. But they will be activated soon!'**
   String get testPaymentMethod;
+
+  /// No description provided for @openChangeLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Open changelog automatically'**
+  String get openChangeLog;
 }
 
 class _AppLocalizationsDelegate

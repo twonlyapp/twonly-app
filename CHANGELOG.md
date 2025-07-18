@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.58 (WIP)
+## 0.0.58
 
 - twonly now has a free plan and is now financed by donations and an optional subscription with more features (coming soon)
 - Implementing iOS gestures to close images

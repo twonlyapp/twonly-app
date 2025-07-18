@@ -87,8 +87,8 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
                 style: const TextStyle(fontSize: 12),
               ),
               onTap: toggleRenewalOption,
-              trailing: Checkbox(
-                value: autoRenewal,
+              trailing: Switch(
+                value: autoRenewal!,
                 onChanged: (a) {
                   toggleRenewalOption();
                 },

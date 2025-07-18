@@ -77,6 +77,9 @@ class UserData {
 
   List<int>? lastChangeLogHash;
 
+  @JsonKey(defaultValue: false)
+  bool hideChangeLog = false;
+
   // --- BACKUP ---
 
   DateTime? nextTimeToShowBackupNotice;

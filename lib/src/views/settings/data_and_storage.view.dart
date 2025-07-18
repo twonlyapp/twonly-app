@@ -68,7 +68,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
             title: Text(context.lang.settingsStorageDataStoreInGTitle),
             subtitle: Text(context.lang.settingsStorageDataStoreInGSubtitle),
             onTap: toggleStoreInGallery,
-            trailing: Checkbox(
+            trailing: Switch(
               value: storeMediaFilesInGallery,
               onChanged: (a) => toggleStoreInGallery(),
             ),

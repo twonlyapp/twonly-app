@@ -5,6 +5,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/settings/help/changelog.view.dart';
 import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/help/credits.view.dart';
 import 'package:twonly/src/views/settings/help/diagnostics.view.dart';
@@ -88,6 +89,15 @@ class HelpView extends StatelessWidget {
               await Navigator.push(context,
                   MaterialPageRoute(builder: (context) {
                 return const DiagnosticsView();
+              }));
+            },
+          ),
+          ListTile(
+            title: const Text('Changelog'),
+            onTap: () async {
+              await Navigator.push(context,
+                  MaterialPageRoute(builder: (context) {
+                return const ChangeLogView();
               }));
             },
           ),

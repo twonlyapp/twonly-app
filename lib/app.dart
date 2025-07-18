@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:cryptography_plus/cryptography_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
@@ -12,6 +16,7 @@ import 'package:twonly/src/views/components/app_outdated.dart';
 import 'package:twonly/src/views/home.view.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/onboarding/register.view.dart';
+import 'package:twonly/src/views/settings/help/changelog.view.dart';
 
 class App extends StatefulWidget {
   const App({super.key});

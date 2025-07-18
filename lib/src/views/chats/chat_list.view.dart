@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:cryptography_plus/cryptography_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
@@ -24,6 +27,7 @@ import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
+import 'package:twonly/src/views/settings/help/changelog.view.dart';
 import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
@@ -71,10 +75,26 @@ class _ChatListViewState extends State<ChatListView> {
     });
 
     final user = await getUser();
-    if (user != null) {
-      setState(() {
-        showFeedbackShortcut = user.showFeedbackShortcut;
+    if (user == null) return;
+    setState(() {
+      showFeedbackShortcut = user.showFeedbackShortcut;
+    });
+
+    final changeLog = await rootBundle.loadString('CHANGELOG.md');
+    final changeLogHash =
+        (await compute(Sha256().hash, changeLog.codeUnits)).bytes;
+    if (!user.hideChangeLog &&
+        user.lastChangeLogHash.toString() != changeLogHash.toString()) {
+      await updateUserdata((u) {
+        u.lastChangeLogHash = changeLogHash;
+        return u;
       });
+      if (!mounted) return;
+      await Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return ChangeLogView(
+          changeLog: changeLog,
+        );
+      }));
     }
   }
 

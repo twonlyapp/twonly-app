@@ -104,4 +104,5 @@ flutter:
     - assets/animated_icons/
     - assets/animations/
     - assets/passwords/
+    - CHANGELOG.md
 
