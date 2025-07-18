@@ -22,14 +22,14 @@ jobs:
         with:
           channel: stable
 
+      - name: Cloning sub-repos
+        run: git submodule update --init --recursive
+
       - name: Check flutter code
         run: | 
           flutter pub get
           flutter analyze
           flutter test
-
-      - name: Cloning sub-repos
-        run: git submodule update --init --recursive
 
       - name: Create key.properties file
         run: |
