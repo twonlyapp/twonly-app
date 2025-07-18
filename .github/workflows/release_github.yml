@@ -5,10 +5,10 @@ on:
   push:
     branches:
       - main
-    paths:
-      - lib/**
-      - pubspec.lock
-      - pubspec.yaml
+    # paths:
+    #   - lib/**
+    #   - pubspec.lock
+    #   - pubspec.yaml
 
 jobs:
   build_and_publish:
