@@ -83,6 +83,7 @@ class _ShareImageView extends State<ShareImageView> {
       await encryptMediaFiles(
           widget.mediaUploadId, imageHandler, widget.videoUploadHandler);
     }
+    if (!mounted) return;
     setState(() {});
   }
 

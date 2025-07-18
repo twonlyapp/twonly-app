@@ -132,7 +132,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
 
   Future<void> initAsync() async {
     final items = await MemoryItem.convertFromMessages([widget.message]);
-    if (items.length == 1) {
+    if (items.length == 1 && mounted) {
       setState(() {
         thumbnailPath = items.values.first.thumbnailPath;
       });

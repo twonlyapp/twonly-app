@@ -164,7 +164,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   @override
   void initState() {
     super.initState();
-    // selectCamera(0, init: true);
     initAsync();
   }
 
@@ -614,6 +613,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             scaleFactor:
                                 widget.selectedCameraDetails.scaleFactor,
                             updateScaleFactor: updateScaleFactor,
+                            selectCamera: widget.selectCamera,
+                            selectedCameraDetails: widget.selectedCameraDetails,
                             controller: widget.cameraController!,
                           ),
                         ),

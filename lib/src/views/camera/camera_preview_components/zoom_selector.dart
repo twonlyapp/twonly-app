@@ -1,21 +1,28 @@
 // ignore_for_file: avoid_dynamic_calls
 
+import 'dart:io';
 import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
 
 class CameraZoomButtons extends StatefulWidget {
   const CameraZoomButtons({
     required this.controller,
     required this.updateScaleFactor,
     required this.scaleFactor,
+    required this.selectedCameraDetails,
+    required this.selectCamera,
     super.key,
   });
 
   final CameraController controller;
   final double scaleFactor;
   final Function updateScaleFactor;
+  final SelectedCameraDetails selectedCameraDetails;
+  final void Function(int sCameraId, bool init, bool enableAudio) selectCamera;
 
   @override
   State<CameraZoomButtons> createState() => _CameraZoomButtonsState();
@@ -31,6 +38,7 @@ String beautifulZoomScale(double scale) {
 
 class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   bool showWideAngleZoom = false;
+  bool showWideAngleZoomIOS = false;
   bool _isDisposed = false;
 
   @override
@@ -41,6 +49,9 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
 
   Future<void> initAsync() async {
     showWideAngleZoom = (await widget.controller.getMinZoomLevel()) < 1;
+    if (!showWideAngleZoom && Platform.isIOS && gCameras.length == 3) {
+      showWideAngleZoomIOS = true;
+    }
     if (_isDisposed) return;
     setState(() {});
   }
@@ -62,7 +73,11 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
     );
 
     const zoomTextStyle = TextStyle(fontSize: 13);
-    final isMiddleFocused = widget.scaleFactor >= 1 && widget.scaleFactor < 2;
+    final isSmallerFocused = widget.scaleFactor < 1 ||
+        (showWideAngleZoomIOS && widget.selectedCameraDetails.cameraId == 2);
+    final isMiddleFocused = widget.scaleFactor >= 1 &&
+        widget.scaleFactor < 2 &&
+        !(showWideAngleZoomIOS && widget.selectedCameraDetails.cameraId == 2);
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(40),
@@ -71,35 +86,41 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (showWideAngleZoom)
+              if (showWideAngleZoom || showWideAngleZoomIOS)
                 TextButton(
                   style: zoomButtonStyle.copyWith(
                     foregroundColor: WidgetStateProperty.all(
-                      (widget.scaleFactor < 1) ? Colors.yellow : Colors.white,
+                      isSmallerFocused ? Colors.yellow : Colors.white,
                     ),
                   ),
                   onPressed: () async {
-                    final level = await widget.controller.getMinZoomLevel();
-                    widget.updateScaleFactor(level);
+                    if (showWideAngleZoomIOS) {
+                      widget.selectCamera(2, true, false);
+                    } else {
+                      final level = await widget.controller.getMinZoomLevel();
+                      widget.updateScaleFactor(level);
+                    }
                   },
-                  child: FutureBuilder(
-                    future: widget.controller.getMinZoomLevel(),
-                    builder: (context, snap) {
-                      if (snap.hasData) {
-                        final minLevel = beautifulZoomScale(snap.data!);
-                        final currentLevel =
-                            beautifulZoomScale(widget.scaleFactor);
-                        return Text(
-                          widget.scaleFactor < 1
-                              ? '${currentLevel}x'
-                              : '${minLevel}x',
-                          style: zoomTextStyle,
-                        );
-                      } else {
-                        return const Text('');
-                      }
-                    },
-                  ),
+                  child: showWideAngleZoomIOS
+                      ? const Text('0.5')
+                      : FutureBuilder(
+                          future: widget.controller.getMinZoomLevel(),
+                          builder: (context, snap) {
+                            if (snap.hasData) {
+                              final minLevel = beautifulZoomScale(snap.data!);
+                              final currentLevel =
+                                  beautifulZoomScale(widget.scaleFactor);
+                              return Text(
+                                widget.scaleFactor < 1
+                                    ? '${currentLevel}x'
+                                    : '${minLevel}x',
+                                style: zoomTextStyle,
+                              );
+                            } else {
+                              return const Text('');
+                            }
+                          },
+                        ),
                 ),
               TextButton(
                   style: zoomButtonStyle.copyWith(
@@ -108,7 +129,12 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                     ),
                   ),
                   onPressed: () {
-                    widget.updateScaleFactor(1.0);
+                    if (showWideAngleZoomIOS &&
+                        widget.selectedCameraDetails.cameraId == 2) {
+                      widget.selectCamera(0, true, false);
+                    } else {
+                      widget.updateScaleFactor(1.0);
+                    }
                   },
                   child: Text(
                     isMiddleFocused
