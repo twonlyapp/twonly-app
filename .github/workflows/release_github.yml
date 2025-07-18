@@ -2,11 +2,11 @@ name: Github Release
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - main
 
 jobs:
-  build:
+  build_and_publish:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repository
