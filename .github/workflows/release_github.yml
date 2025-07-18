@@ -51,14 +51,11 @@ jobs:
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 2
 
-      - name: Generate Checksums
+      - name: Extract pubspec version
         run: |
-          tree .
-          find app -type f -exec md5sum {} \; >> RELEASE.md5sum
-          find app -type f -exec sha256sum {} \; >> RELEASE.sha256sum
-          sed -i 's|app/.*/\([^/]*\)$|\1|' RELEASE.sha256sum RELEASE.md5sum
-          sed -i 's|app/||' RELEASE.sha256sum RELEASE.md5sum
+          echo "PUBSPEC_VERSION=$(grep -oP 'version:\s*\K[^+]+(?=\+)' pubspec.yaml)" >> $GITHUB_ENV
 
       - name: Upload Release Binaries (stable)
         if: ${{ !inputs.dry_run && inputs.channel == 'stable' }}
@@ -70,4 +67,4 @@ jobs:
           omitNameDuringUpdate: true
           omitPrereleaseDuringUpdate: true
           allowUpdates: true
-          artifacts: app_*/**/*,RELEASE.sha256sum,RELEASE.md5sum
+          artifacts: app*
