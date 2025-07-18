@@ -36,12 +36,12 @@ jobs:
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
           echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
           echo "keyAlias=androidreleasekey" >> key.properties
-          echo "storeFile=./android/app/android/keystore.jks" >> ./android/key.properties
+          echo "storeFile=./android/app/keystore.jks" >> ./android/key.properties
 
       - name: Create keystore file
         env:
           KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
-        run: echo $KEYSTORE_FILE | base64 --decode > ./android/app/android/keystore.jks
+        run: echo $KEYSTORE_FILE | base64 --decode > ./android/app/keystore.jks
 
       - name: Build Android APK
         run: flutter build apk --release --split-per-abi
