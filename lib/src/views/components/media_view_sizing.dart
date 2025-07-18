@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 class MediaViewSizing extends StatefulWidget {
-  const MediaViewSizing(
-      {required this.child,
-      super.key,
-      this.requiredHeight,
-      this.bottomNavigation});
+  const MediaViewSizing({
+    required this.child,
+    super.key,
+    this.requiredHeight,
+    this.bottomNavigation,
+  });
 
   final double? requiredHeight;
   final Widget? bottomNavigation;

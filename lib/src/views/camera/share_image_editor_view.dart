@@ -471,6 +471,64 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               setState(() {});
             },
             child: MediaViewSizing(
+              bottomNavigation: ColoredBox(
+                color: Theme.of(context).colorScheme.surface,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SaveToGalleryButton(
+                      getMergedImage: getMergedImage,
+                      mediaUploadId: mediaUploadId,
+                      videoFilePath: widget.videoFilePath,
+                      displayButtonLabel: widget.sendTo == null,
+                      isLoading: loadingImage,
+                    ),
+                    if (widget.sendTo != null) const SizedBox(width: 10),
+                    if (widget.sendTo != null)
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          iconColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.primary,
+                        ),
+                        onPressed: pushShareImageView,
+                        child: const FaIcon(FontAwesomeIcons.userPlus),
+                      ),
+                    SizedBox(width: widget.sendTo == null ? 20 : 10),
+                    FilledButton.icon(
+                      icon: sendingOrLoadingImage
+                          ? SizedBox(
+                              height: 12,
+                              width: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary,
+                              ),
+                            )
+                          : const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                      onPressed: () async {
+                        if (sendingOrLoadingImage) return;
+                        if (widget.sendTo == null) return pushShareImageView();
+                        await sendImageToSinglePerson();
+                      },
+                      style: ButtonStyle(
+                        padding: WidgetStateProperty.all<EdgeInsets>(
+                          const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 30),
+                        ),
+                      ),
+                      label: Text(
+                        (widget.sendTo == null)
+                            ? context.lang.shareImagedEditorShareWith
+                            : getContactDisplayName(widget.sendTo!),
+                        style: const TextStyle(fontSize: 17),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               child: SizedBox(
                 height: currentImage.height / pixelRatio,
                 width: currentImage.width / pixelRatio,
@@ -529,65 +587,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: ColoredBox(
-        color: Theme.of(context).colorScheme.surface,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SaveToGalleryButton(
-                  getMergedImage: getMergedImage,
-                  mediaUploadId: mediaUploadId,
-                  videoFilePath: widget.videoFilePath,
-                  displayButtonLabel: widget.sendTo == null,
-                  isLoading: loadingImage,
-                ),
-                if (widget.sendTo != null) const SizedBox(width: 10),
-                if (widget.sendTo != null)
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      iconColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.primary,
-                    ),
-                    onPressed: pushShareImageView,
-                    child: const FaIcon(FontAwesomeIcons.userPlus),
-                  ),
-                SizedBox(width: widget.sendTo == null ? 20 : 10),
-                FilledButton.icon(
-                  icon: sendingOrLoadingImage
-                      ? SizedBox(
-                          height: 12,
-                          width: 12,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Theme.of(context).colorScheme.inversePrimary,
-                          ),
-                        )
-                      : const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                  onPressed: () async {
-                    if (sendingOrLoadingImage) return;
-                    if (widget.sendTo == null) return pushShareImageView();
-                    await sendImageToSinglePerson();
-                  },
-                  style: ButtonStyle(
-                    padding: WidgetStateProperty.all<EdgeInsets>(
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                    ),
-                  ),
-                  label: Text(
-                    (widget.sendTo == null)
-                        ? context.lang.shareImagedEditorShareWith
-                        : getContactDisplayName(widget.sendTo!),
-                    style: const TextStyle(fontSize: 17),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
