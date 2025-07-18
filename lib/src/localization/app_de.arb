@@ -331,5 +331,8 @@
     "doubleClickToReopen": "Doppelklicken zum\nerneuten Öffnen.",
     "retransmissionRequested": "Wird erneut versucht.",
     "testPaymentMethod": "Vielen Dank für dein Interesse an einem kostenpflichtigen Tarif. Die kostenpflichtigen Pläne sind derzeit noch deaktiviert. Sie werden aber bald aktiviert!",
-    "openChangeLog": "Changelog automatisch öffnen"
+    "openChangeLog": "Changelog automatisch öffnen",
+    "reportUserTitle": "Melde {username}",
+    "reportUserReason": "Meldegrund",
+    "reportUser": "Benutzer melden"
 }

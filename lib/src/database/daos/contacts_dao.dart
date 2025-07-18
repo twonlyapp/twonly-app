@@ -219,6 +219,9 @@ String getContactDisplayName(Contact user) {
   if (user.deleted) {
     name = applyStrikethrough(name);
   }
+  if (name.length > 12) {
+    return '${name.substring(0, 12)} ...';
+  }
   return name;
 }
 

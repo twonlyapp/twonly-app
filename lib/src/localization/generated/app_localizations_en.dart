@@ -1070,4 +1070,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openChangeLog => 'Open changelog automatically';
+
+  @override
+  String reportUserTitle(Object username) {
+    return 'Report $username';
+  }
+
+  @override
+  String get reportUserReason => 'Reporting reason';
+
+  @override
+  String get reportUser => 'Report user';
 }

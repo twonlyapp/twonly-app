@@ -371,7 +371,6 @@ class PlanCard extends StatelessWidget {
     final yearlyPrice = getPlanPrice(planId, paidMonthly: false);
     final monthlyPrice = getPlanPrice(planId, paidMonthly: true);
     var features = <String>[];
-    final isPayingUser = planId == 'Family' || planId == 'Pro';
 
     switch (planId) {
       case 'Free':
@@ -419,7 +418,7 @@ class PlanCard extends StatelessWidget {
                       ),
                     ),
                     if (yearlyPrice != 0) const SizedBox(height: 10),
-                    if (isPayingUser)
+                    if (yearlyPrice != 0 && paidMonthly == null)
                       Column(
                         children: [
                           if (paidMonthly == null || paidMonthly!)
@@ -442,7 +441,7 @@ class PlanCard extends StatelessWidget {
                             ),
                         ],
                       ),
-                    if (isPayingUser && paidMonthly != null)
+                    if (paidMonthly != null)
                       Text(
                         (paidMonthly!)
                             ? '${localePrizing(context, monthlyPrice)}/${context.lang.month}'

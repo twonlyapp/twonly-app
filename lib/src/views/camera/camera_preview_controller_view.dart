@@ -317,10 +317,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
-    widget.selectedCameraDetails.scaleFactor =
-        // ignore: avoid_dynamic_calls
-        (baseScaleFactor + (basePanY - (details.localPosition.dy as int)) / 30)
-            .clamp(1, widget.selectedCameraDetails.maxAvailableZoom);
+    widget.selectedCameraDetails.scaleFactor = (baseScaleFactor +
+            // ignore: avoid_dynamic_calls
+            (basePanY - (details.localPosition.dy as double)) / 30)
+        .clamp(1, widget.selectedCameraDetails.maxAvailableZoom);
 
     await widget.cameraController!
         .setZoomLevel(widget.selectedCameraDetails.scaleFactor);

@@ -56,6 +56,38 @@ class _ContactViewState extends State<ContactView> {
     }
   }
 
+  Future<void> handleReportUser(Contact contact) async {
+    final reason = await showReportDialog(context, contact);
+    if (reason == null) return;
+    final res = await apiService.reportUser(contact.userId, reason);
+    if (!mounted) return;
+    if (res.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Benutzer wurde gemeldet.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+    // if (block) {
+    //   const update = ContactsCompanion(blocked: Value(true));
+    //   if (context.mounted) {
+    //     await twonlyDB.contactsDao.updateContact(contact.userId, update);
+    //   }
+    //   if (mounted) {
+    //     Navigator.popUntil(context, (route) => route.isFirst);
+    //   }
+    // }
+  }
+
   @override
   Widget build(BuildContext context) {
     final contact = twonlyDB.contactsDao
@@ -147,8 +179,12 @@ class _ContactViewState extends State<ContactView> {
                 },
               ),
               BetterListTile(
+                icon: FontAwesomeIcons.flag,
+                text: context.lang.reportUser,
+                onTap: () => handleReportUser(contact),
+              ),
+              BetterListTile(
                 icon: FontAwesomeIcons.ban,
-                color: Colors.red,
                 text: context.lang.contactBlock,
                 onTap: () => handleUserBlockRequest(contact),
               ),
@@ -195,6 +231,42 @@ Future<String?> showNicknameChangeDialog(
             onPressed: () {
               Navigator.of(context)
                   .pop(controller.text); // Return the input text
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<String?> showReportDialog(
+  BuildContext context,
+  Contact contact,
+) {
+  final controller = TextEditingController();
+
+  return showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title:
+            Text(context.lang.reportUserTitle(getContactDisplayName(contact))),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: context.lang.reportUserReason),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text(context.lang.cancel),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text(context.lang.ok),
+            onPressed: () {
+              Navigator.of(context).pop(controller.text);
             },
           ),
         ],

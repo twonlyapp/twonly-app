@@ -576,6 +576,15 @@ class ApiService {
     return sendRequestSync(req);
   }
 
+  Future<Result> reportUser(int userId, String reason) async {
+    final get = ApplicationData_ReportUser()
+      ..reportedUserId = Int64(userId)
+      ..reason = reason;
+    final appData = ApplicationData()..reportuser = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
   Future<Result> deleteAccount() async {
     final get = ApplicationData_DeleteAccount();
     final appData = ApplicationData()..deleteaccount = get;

@@ -2029,6 +2029,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open changelog automatically'**
   String get openChangeLog;
+
+  /// No description provided for @reportUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report {username}'**
+  String reportUserTitle(Object username);
+
+  /// No description provided for @reportUserReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reporting reason'**
+  String get reportUserReason;
+
+  /// No description provided for @reportUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Report user'**
+  String get reportUser;
 }
 
 class _AppLocalizationsDelegate
