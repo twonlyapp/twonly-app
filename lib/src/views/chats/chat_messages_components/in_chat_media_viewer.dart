@@ -97,8 +97,9 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     if (galleryItemIndex == null) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => MemoriesPhotoSliderView(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
           galleryItems: widget.galleryItems,
           initialIndex: galleryItemIndex!,
         ),

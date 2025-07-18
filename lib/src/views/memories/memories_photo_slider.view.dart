@@ -19,7 +19,6 @@ class MemoriesPhotoSliderView extends StatefulWidget {
     required this.galleryItems,
     super.key,
     this.loadingBuilder,
-    this.backgroundDecoration,
     this.minScale,
     this.maxScale,
     this.initialIndex = 0,
@@ -27,7 +26,6 @@ class MemoriesPhotoSliderView extends StatefulWidget {
   }) : pageController = PageController(initialPage: initialIndex);
 
   final LoadingBuilder? loadingBuilder;
-  final BoxDecoration? backgroundDecoration;
   final dynamic minScale;
   final dynamic maxScale;
   final int initialIndex;
@@ -43,6 +41,7 @@ class MemoriesPhotoSliderView extends StatefulWidget {
 
 class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
   late int currentIndex = widget.initialIndex;
+  final GlobalKey<State<StatefulWidget>> key = GlobalKey();
 
   void onPageChanged(int index) {
     setState(() {
@@ -102,97 +101,108 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: widget.backgroundDecoration,
-        constraints: BoxConstraints.expand(
-          height: MediaQuery.of(context).size.height,
-        ),
-        child: Stack(
-          alignment: Alignment.bottomRight,
-          children: <Widget>[
-            MediaViewSizing(
-              bottomNavigation: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FilledButton.icon(
-                    icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ShareImageEditorView(
-                            videoFilePath:
-                                widget.galleryItems[currentIndex].videoPath,
-                            imageBytes: widget
-                                .galleryItems[currentIndex].imagePath
-                                ?.readAsBytes(),
-                            mirrorVideo: false,
-                            sharedFromGallery: true,
-                            useHighQuality: true,
+    return Dismissible(
+      key: key,
+      direction: DismissDirection.vertical,
+      resizeDuration: null,
+      onDismissed: (d) {
+        Navigator.pop(context, false);
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white.withAlpha(0),
+        body: Container(
+          color: context.color.surface,
+          constraints: BoxConstraints.expand(
+            height: MediaQuery.of(context).size.height,
+          ),
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: <Widget>[
+              MediaViewSizing(
+                bottomNavigation: Container(
+                  color: context.color.surface,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FilledButton.icon(
+                        icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ShareImageEditorView(
+                                videoFilePath:
+                                    widget.galleryItems[currentIndex].videoPath,
+                                imageBytes: widget
+                                    .galleryItems[currentIndex].imagePath
+                                    ?.readAsBytes(),
+                                mirrorVideo: false,
+                                sharedFromGallery: true,
+                                useHighQuality: true,
+                              ),
+                            ),
+                          );
+                        },
+                        style: ButtonStyle(
+                            padding: WidgetStateProperty.all<EdgeInsets>(
+                              const EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 30),
+                            ),
+                            backgroundColor: WidgetStateProperty.all<Color>(
+                              Theme.of(context).colorScheme.primary,
+                            )),
+                        label: Text(
+                          context.lang.shareImagedEditorSendImage,
+                          style: const TextStyle(fontSize: 17),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    PhotoViewGallery.builder(
+                      scrollPhysics: const BouncingScrollPhysics(),
+                      builder: _buildItem,
+                      itemCount: widget.galleryItems.length,
+                      loadingBuilder: widget.loadingBuilder,
+                      pageController: widget.pageController,
+                      onPageChanged: onPageChanged,
+                      scrollDirection: widget.scrollDirection,
+                    ),
+                    Positioned(
+                      right: 5,
+                      child: PopupMenuButton<String>(
+                        onSelected: (String result) {
+                          if (result == 'delete') {
+                            deleteFile();
+                          }
+                          if (result == 'export') {
+                            exportFile();
+                          }
+                        },
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<String>>[
+                          PopupMenuItem<String>(
+                            value: 'delete',
+                            child: Text(context.lang.galleryDelete),
                           ),
-                        ),
-                      );
-                    },
-                    style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 30),
-                        ),
-                        backgroundColor: WidgetStateProperty.all<Color>(
-                          Theme.of(context).colorScheme.primary,
-                        )),
-                    label: Text(
-                      context.lang.shareImagedEditorSendImage,
-                      style: const TextStyle(fontSize: 17),
-                    ),
-                  ),
-                ],
+                          PopupMenuItem<String>(
+                            value: 'export',
+                            child: Text(context.lang.galleryExport),
+                          ),
+                          // PopupMenuItem<String>(
+                          //   value: 'details',
+                          //   child: Text(context.lang.galleryDetails),
+                          // ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
               ),
-              child: Stack(
-                children: [
-                  PhotoViewGallery.builder(
-                    scrollPhysics: const BouncingScrollPhysics(),
-                    builder: _buildItem,
-                    itemCount: widget.galleryItems.length,
-                    loadingBuilder: widget.loadingBuilder,
-                    backgroundDecoration: widget.backgroundDecoration,
-                    pageController: widget.pageController,
-                    onPageChanged: onPageChanged,
-                    scrollDirection: widget.scrollDirection,
-                  ),
-                  Positioned(
-                    right: 5,
-                    child: PopupMenuButton<String>(
-                      onSelected: (String result) {
-                        if (result == 'delete') {
-                          deleteFile();
-                        }
-                        if (result == 'export') {
-                          exportFile();
-                        }
-                      },
-                      itemBuilder: (BuildContext context) =>
-                          <PopupMenuEntry<String>>[
-                        PopupMenuItem<String>(
-                          value: 'delete',
-                          child: Text(context.lang.galleryDelete),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'export',
-                          child: Text(context.lang.galleryExport),
-                        ),
-                        // PopupMenuItem<String>(
-                        //   value: 'details',
-                        //   child: Text(context.lang.galleryDetails),
-                        // ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

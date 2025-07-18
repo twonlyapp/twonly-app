@@ -166,14 +166,22 @@ class MemoriesViewState extends State<MemoriesView> {
   Future<void> open(BuildContext context, int index) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => MemoriesPhotoSliderView(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
           galleryItems: galleryItems,
           initialIndex: index,
           scrollDirection: verticalGallery ? Axis.vertical : Axis.horizontal,
         ),
+        // transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        //   return child;
+        // },
+        // transitionDuration: Duration.zero,
+        // reverseTransitionDuration: Duration.zero,
       ),
-    );
+    ) as bool?;
+    setState(() {});
+
     await initAsync();
   }
 }
