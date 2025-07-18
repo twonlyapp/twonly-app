@@ -21,6 +21,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      - name: Check flutter code
         run: | 
           flutter pub get
           flutter analyze
