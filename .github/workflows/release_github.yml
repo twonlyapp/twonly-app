@@ -46,25 +46,24 @@ jobs:
       - name: Build Android APK
         run: flutter build apk --release --split-per-abi
 
-      - name: Create Github Release
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-apk
-          path: build/app/outputs/flutter-apk/*.apk
-          retention-days: 2
+      # - name: Create Github Release
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: release-apk
+      #     path: build/app/outputs/flutter-apk/*.apk
+      #     retention-days: 2
 
       - name: Extract pubspec version
         run: |
           echo "PUBSPEC_VERSION=$(grep -oP 'version:\s*\K[^+]+(?=\+)' pubspec.yaml)" >> $GITHUB_ENV
 
       - name: Upload Release Binaries (stable)
-        if: ${{ !inputs.dry_run && inputs.channel == 'stable' }}
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1.18.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: v${{ env.PUBSPEC_VERSION }} # mind the "v" prefix
+          tag: v${{ env.PUBSPEC_VERSION }}
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
           omitPrereleaseDuringUpdate: true
           allowUpdates: true
-          artifacts: app*
+          artifacts: build/app/outputs/flutter-apk/*.apk
