@@ -1,0 +1,58 @@
+name: Github Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+      - name: Create key.properties file
+        run: |
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
+          echo "keyPassword=${{ secrets.ALIAS_PASSWORD }}" >> ./android/key.properties
+          echo "keyAlias=androidreleasekey" >> key.properties
+          echo "storeFile=./android/keystore.jks" >> ./android/key.properties
+        run: base64 -d <<< $KEYSTORE_FILE > ./android/keystore.jks
+
+      - name: Build Android APK
+      - run: flutter build apk --release --split-per-abi
+
+      - name: Create Github Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/*.apk
+
+      - name: Generate Checksums
+        run: |
+          tree .
+          find app -type f -exec md5sum {} \; >> RELEASE.md5sum
+          find app -type f -exec sha256sum {} \; >> RELEASE.sha256sum
+          sed -i 's|app/.*/\([^/]*\)$|\1|' RELEASE.sha256sum RELEASE.md5sum
+          sed -i 's|app/||' RELEASE.sha256sum RELEASE.md5sum
+
+    - name: Upload Release Binaries (stable)
+        if: ${{ !inputs.dry_run && inputs.channel == 'stable' }}
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: v${{ env.PUBSPEC_VERSION }} # mind the "v" prefix
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+          allowUpdates: true
+          artifacts: app_*/**/*,RELEASE.sha256sum,RELEASE.md5sum

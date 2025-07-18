@@ -102,7 +102,7 @@ class HelpView extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text("Open Source"),
+            title: const Text('Open Source'),
             onTap: () {
               launchUrl(Uri.parse('https://github.com/twonlyapp/twonly-app'));
             },
@@ -127,17 +127,17 @@ class HelpView extends StatelessWidget {
           ),
           ListTile(
             onLongPress: () async {
-              bool? okay = await showAlertDialog(
+              final okay = await showAlertDialog(
                 context,
-                "Delete Retransmission messages",
-                "Only do this if you know what you are doing :)",
+                'Delete Retransmission messages',
+                'Only do this if you know what you are doing :)',
               );
               if (okay == true) {
                 await twonlyDB.messageRetransmissionDao
                     .clearRetransmissionTable();
               }
             },
-            title: Text(
+            title: const Text(
               'Copyright twonly',
               style: TextStyle(color: Colors.grey, fontSize: 13),
             ),

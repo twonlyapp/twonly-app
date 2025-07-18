@@ -119,7 +119,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
             alignment: Alignment.bottomRight,
             children: <Widget>[
               MediaViewSizing(
-                bottomNavigation: Container(
+                bottomNavigation: ColoredBox(
                   color: context.color.surface,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

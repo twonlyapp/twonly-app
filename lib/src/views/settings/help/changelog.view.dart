@@ -4,7 +4,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 List<Widget> parseMarkdown(BuildContext context, String markdown) {
-  List<Widget> widgets = [];
+  final widgets = <Widget>[];
   // Split the string into lines
   final lines = markdown.split('\n');
 
@@ -37,7 +37,7 @@ List<Widget> parseMarkdown(BuildContext context, String markdown) {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 7),
+            padding: const EdgeInsets.only(top: 7),
             child: Icon(
               Icons.brightness_1,
               size: 7,

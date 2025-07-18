@@ -9,7 +9,7 @@ class ChatDateChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var formattedDate = item.isTime
+    final formattedDate = item.isTime
         ? DateFormat.Hm(Localizations.localeOf(context).toLanguageTag())
             .format(item.time!)
         : '${DateFormat.Hm(Localizations.localeOf(context).toLanguageTag()).format(item.date!)} ${DateFormat.yMd(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}';
