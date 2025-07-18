@@ -2,7 +2,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
@@ -13,7 +12,6 @@ import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/settings/subscription/additional_users.view.dart';
 import 'package:twonly/src/views/settings/subscription/checkout.view.dart';
@@ -129,45 +127,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
         additionalOwnerName = ownerId.toString();
       }
     }
-    final user = await getUser();
-    if (user != null) {
-      testerRequested = user.requestedTesterAccount;
-      // if (kDebugMode) {
-      //   testerRequested = false;
-      // }
-    }
     setState(() {});
-  }
-
-  Future<void> _submitTesterRequest() async {
-    final user = await getUser();
-    if (user == null) return;
-    final response = await http.post(
-      Uri.parse('https://twonly.theconnectapp.de/subscribe.twonly.php'),
-      headers: <String, String>{
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {
-        'feedback': '[TESTER REQUEST] ${user.username} ${user.userId}',
-      },
-    );
-    if (!mounted) return;
-    if (response.statusCode == 200) {
-      // Handle successful response
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your request has been submitted.')),
-      );
-      await updateUserdata((u) {
-        u.requestedTesterAccount = true;
-        return u;
-      });
-      await initAsync();
-    } else {
-      // Handle error response
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to submit your request.')),
-      );
-    }
   }
 
   @override
@@ -176,12 +136,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     String? formattedBalance;
     DateTime? nextPayment;
     final currentPlan = context.read<CustomChangeProvider>().plan;
-    final isAdditionalUser = currentPlan == 'Free' || currentPlan == 'Plus';
+    final isPayingUser = currentPlan == 'Family' || currentPlan == 'Pro';
 
     if (ballance != null) {
       final lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
           ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000);
-      if (!isAdditionalUser) {
+      if (isPayingUser) {
         nextPayment = lastPaymentDateTime
             .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
       }
@@ -262,20 +222,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 ),
               ),
             ),
-          if (currentPlan != 'Tester' && !testerRequested)
-            PlanCard(
-              planId: 'Tester',
-              onTap: () async {
-                final activate = await showAlertDialog(
-                  context,
-                  context.lang.testingAccountTitle,
-                  context.lang.testingAccountBody,
-                );
-                if (activate) {
-                  await _submitTesterRequest();
-                }
-              },
-            ),
           if (currentPlan != 'Family' && currentPlan != 'Pro')
             PlanCard(
               planId: 'Pro',
@@ -307,7 +253,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 await initAsync();
               },
             ),
-          if (currentPlan == 'Preview' || currentPlan == 'Free') ...[
+          if (!isPayingUser) ...[
             const SizedBox(height: 10),
             Center(
               child: Padding(
@@ -320,14 +266,6 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               ),
             ),
             const SizedBox(height: 10),
-            if (currentPlan != 'Free')
-              PlanCard(
-                planId: 'Free',
-                onTap: () async {
-                  await redeemUserInviteCode(context, 'Free');
-                  await initAsync();
-                },
-              ),
             PlanCard(
               planId: 'Plus',
               onTap: () async {
@@ -338,25 +276,24 @@ class _SubscriptionViewState extends State<SubscriptionView> {
           ],
           const SizedBox(height: 10),
           if (currentPlan != 'Family') const Divider(),
-          if (currentPlan != 'Preview')
-            BetterListTile(
-              icon: FontAwesomeIcons.gears,
-              text: context.lang.manageSubscription,
-              subtitle: (nextPayment != null)
-                  ? Text(
-                      '${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}')
-                  : null,
-              onTap: () async {
-                await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) {
-                  return ManageSubscriptionView(
-                    ballance: ballance,
-                    nextPayment: nextPayment,
-                  );
-                }));
-                await initAsync();
-              },
-            ),
+          BetterListTile(
+            icon: FontAwesomeIcons.gears,
+            text: context.lang.manageSubscription,
+            subtitle: (nextPayment != null)
+                ? Text(
+                    '${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}')
+                : null,
+            onTap: () async {
+              await Navigator.push(context,
+                  MaterialPageRoute(builder: (context) {
+                return ManageSubscriptionView(
+                  ballance: ballance,
+                  nextPayment: nextPayment,
+                );
+              }));
+              await initAsync();
+            },
+          ),
           BetterListTile(
             icon: FontAwesomeIcons.moneyBillTransfer,
             text: context.lang.transactionHistory,
@@ -373,7 +310,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               }));
             },
           ),
-          if (!isAdditionalUser)
+          if (isPayingUser)
             BetterListTile(
               icon: FontAwesomeIcons.userPlus,
               text: context.lang.manageAdditionalUsers,
@@ -434,24 +371,25 @@ class PlanCard extends StatelessWidget {
     final yearlyPrice = getPlanPrice(planId, paidMonthly: false);
     final monthlyPrice = getPlanPrice(planId, paidMonthly: true);
     var features = <String>[];
+    final isPayingUser = planId == 'Family' || planId == 'Pro';
 
     switch (planId) {
       case 'Free':
         features = [context.lang.freeFeature1];
       case 'Plus':
-        features = [context.lang.plusFeature1];
+        features = [context.lang.plusFeature1, context.lang.plusFeature2];
       case 'Tester':
       case 'Pro':
         features = [
           context.lang.proFeature1,
           context.lang.proFeature2,
-          context.lang.proFeature3
+          context.lang.proFeature3,
+          context.lang.proFeature4,
         ];
       case 'Family':
         features = [
           context.lang.familyFeature1,
           context.lang.familyFeature2,
-          context.lang.familyFeature3
         ];
       default:
     }
@@ -481,7 +419,7 @@ class PlanCard extends StatelessWidget {
                       ),
                     ),
                     if (yearlyPrice != 0) const SizedBox(height: 10),
-                    if (yearlyPrice != 0 && paidMonthly == null)
+                    if (isPayingUser)
                       Column(
                         children: [
                           if (paidMonthly == null || paidMonthly!)
@@ -504,7 +442,7 @@ class PlanCard extends StatelessWidget {
                             ),
                         ],
                       ),
-                    if (paidMonthly != null)
+                    if (isPayingUser && paidMonthly != null)
                       Text(
                         (paidMonthly!)
                             ? '${localePrizing(context, monthlyPrice)}/${context.lang.month}'

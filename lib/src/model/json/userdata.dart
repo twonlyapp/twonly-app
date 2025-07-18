@@ -67,9 +67,6 @@ class UserData {
 
   DateTime? signalLastSignedPreKeyUpdated;
 
-  @JsonKey(defaultValue: false)
-  bool requestedTesterAccount = false;
-
   //  -- Custom DATA --
 
   @JsonKey(defaultValue: 100_000)
@@ -77,6 +74,8 @@ class UserData {
 
   @JsonKey(defaultValue: 100_000)
   int currentSignedPreKeyIndexStart = 100_000;
+
+  List<int>? lastChangeLogHash;
 
   // --- BACKUP ---
 

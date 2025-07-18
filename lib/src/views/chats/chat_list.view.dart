@@ -88,32 +88,34 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) {
     final isConnected = context.watch<CustomChangeProvider>().isConnected;
+    final planId = context.watch<CustomChangeProvider>().plan;
     return Scaffold(
       appBar: AppBar(
         title: Row(children: [
           const Text('twonly '),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const SubscriptionView();
-              }));
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: context.color.primary,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-              child: Text(
-                context.watch<CustomChangeProvider>().plan,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode(context) ? Colors.black : Colors.white,
+          if (planId != 'Free')
+            GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return const SubscriptionView();
+                }));
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.color.primary,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                child: Text(
+                  planId,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode(context) ? Colors.black : Colors.white,
+                  ),
                 ),
               ),
             ),
-          ),
         ]),
         actions: [
           if (showFeedbackShortcut)

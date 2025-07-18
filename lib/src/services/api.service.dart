@@ -366,6 +366,7 @@ class ApiService {
             user.subscriptionPlan = authenticated.plan;
             return user;
           });
+          globalCallbackUpdatePlan(authenticated.plan);
         }
         Log.info('websocket is authenticated');
         unawaited(onAuthenticated());

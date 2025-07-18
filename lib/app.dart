@@ -33,6 +33,10 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       setUserPlan();
     };
 
+    globalCallbackUpdatePlan = (String planId) {
+      context.read<CustomChangeProvider>().updatePlan(planId);
+    };
+
     initAsync();
   }
 
@@ -86,6 +90,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     globalCallbackConnectionState = ({required bool isConnected}) {};
+    globalCallbackUpdatePlan = (String planId) {};
     super.dispose();
   }
 

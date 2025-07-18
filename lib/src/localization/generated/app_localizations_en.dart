@@ -679,16 +679,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proFeature2 => '1 additional Plus user';
 
   @override
-  String get proFeature3 => '3 additional Free users';
+  String get proFeature3 => 'Cloud-Backup encrypted (coming-soon)';
 
   @override
-  String get familyFeature1 => '✓ Unlimited media file uploads';
+  String get proFeature4 => 'Additional features (coming-soon)';
+
+  @override
+  String get familyFeature1 => '✓ All from Pro';
 
   @override
   String get familyFeature2 => '4 additional Plus users';
-
-  @override
-  String get familyFeature3 => '4 additional Free users';
 
   @override
   String get redeemUserInviteCode => 'Or redeem a twonly-Code.';
@@ -701,10 +701,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your plan has been successfully adjusted.';
 
   @override
-  String get freeFeature1 => '3 Media file uploads per day';
+  String get freeFeature1 => '10 Media file uploads per day';
 
   @override
   String get plusFeature1 => '✓ Unlimited media file uploads';
+
+  @override
+  String get plusFeature2 => 'Additional features (coming-soon)';
 
   @override
   String get transactionHistory => 'Your transaction history';
@@ -1063,12 +1066,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get testPaymentMethod =>
-      'twonly is currently in a test phase and can only be used in full with an invitation code. There is currently no payment method to top up your twonly credit!';
-
-  @override
-  String get testingAccountTitle => 'Tester account activation';
-
-  @override
-  String get testingAccountBody =>
-      'Thank you for your interest! We will check your request and activate the plan as soon as possible. However, as we are currently still in a test phase, the number of tester accounts is limited. However, we will notify you as soon as you have been allocated a place.';
+      'Thanks for the interest in a paid plan. Currently the paid plans are still deactivated. But they will be activated soon!';
 }

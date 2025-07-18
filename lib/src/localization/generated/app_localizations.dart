@@ -1307,13 +1307,19 @@ abstract class AppLocalizations {
   /// No description provided for @proFeature3.
   ///
   /// In en, this message translates to:
-  /// **'3 additional Free users'**
+  /// **'Cloud-Backup encrypted (coming-soon)'**
   String get proFeature3;
+
+  /// No description provided for @proFeature4.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional features (coming-soon)'**
+  String get proFeature4;
 
   /// No description provided for @familyFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ Unlimited media file uploads'**
+  /// **'✓ All from Pro'**
   String get familyFeature1;
 
   /// No description provided for @familyFeature2.
@@ -1321,12 +1327,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'4 additional Plus users'**
   String get familyFeature2;
-
-  /// No description provided for @familyFeature3.
-  ///
-  /// In en, this message translates to:
-  /// **'4 additional Free users'**
-  String get familyFeature3;
 
   /// No description provided for @redeemUserInviteCode.
   ///
@@ -1349,7 +1349,7 @@ abstract class AppLocalizations {
   /// No description provided for @freeFeature1.
   ///
   /// In en, this message translates to:
-  /// **'3 Media file uploads per day'**
+  /// **'10 Media file uploads per day'**
   String get freeFeature1;
 
   /// No description provided for @plusFeature1.
@@ -1357,6 +1357,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'✓ Unlimited media file uploads'**
   String get plusFeature1;
+
+  /// No description provided for @plusFeature2.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional features (coming-soon)'**
+  String get plusFeature2;
 
   /// No description provided for @transactionHistory.
   ///
@@ -2015,20 +2021,8 @@ abstract class AppLocalizations {
   /// No description provided for @testPaymentMethod.
   ///
   /// In en, this message translates to:
-  /// **'twonly is currently in a test phase and can only be used in full with an invitation code. There is currently no payment method to top up your twonly credit!'**
+  /// **'Thanks for the interest in a paid plan. Currently the paid plans are still deactivated. But they will be activated soon!'**
   String get testPaymentMethod;
-
-  /// No description provided for @testingAccountTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Tester account activation'**
-  String get testingAccountTitle;
-
-  /// No description provided for @testingAccountBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Thank you for your interest! We will check your request and activate the plan as soon as possible. However, as we are currently still in a test phase, the number of tester accounts is limited. However, we will notify you as soon as you have been allocated a place.'**
-  String get testingAccountBody;
 }
 
 class _AppLocalizationsDelegate

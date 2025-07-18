@@ -46,7 +46,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       'my_avatar_counter', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
-      defaultValue: Constant(0));
+      defaultValue: const Constant(0));
   static const VerificationMeta _acceptedMeta =
       const VerificationMeta('accepted');
   @override
@@ -56,7 +56,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("accepted" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _requestedMeta =
       const VerificationMeta('requested');
   @override
@@ -66,7 +66,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("requested" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _blockedMeta =
       const VerificationMeta('blocked');
   @override
@@ -76,7 +76,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("blocked" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _verifiedMeta =
       const VerificationMeta('verified');
   @override
@@ -86,7 +86,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("verified" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _archivedMeta =
       const VerificationMeta('archived');
   @override
@@ -96,7 +96,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
   @override
   late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
@@ -105,7 +105,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _deletedMeta =
       const VerificationMeta('deleted');
   @override
@@ -115,7 +115,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _alsoBestFriendMeta =
       const VerificationMeta('alsoBestFriend');
   @override
@@ -125,7 +125,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("also_best_friend" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _deleteMessagesAfterXMinutesMeta =
       const VerificationMeta('deleteMessagesAfterXMinutes');
   @override
@@ -134,7 +134,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           'delete_messages_after_x_minutes', aliasedName, false,
           type: DriftSqlType.int,
           requiredDuringInsert: false,
-          defaultValue: Constant(60 * 24));
+          defaultValue: const Constant(60 * 24));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -150,7 +150,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       'total_media_counter', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
-      defaultValue: Constant(0));
+      defaultValue: const Constant(0));
   static const VerificationMeta _lastMessageSendMeta =
       const VerificationMeta('lastMessageSend');
   @override
@@ -190,7 +190,7 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       'flame_counter', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
-      defaultValue: Constant(0));
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         userId,
@@ -1160,7 +1160,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("acknowledge_by_user" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _mediaStoredMeta =
       const VerificationMeta('mediaStored');
   @override
@@ -1170,7 +1170,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("media_stored" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   @override
   late final GeneratedColumnWithTypeConverter<DownloadState, int>
       downloadState = GeneratedColumn<int>('download_state', aliasedName, false,
@@ -1187,7 +1187,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("acknowledge_by_server" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   static const VerificationMeta _errorWhileSendingMeta =
       const VerificationMeta('errorWhileSending');
   @override
@@ -1197,7 +1197,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("error_while_sending" IN (0, 1))'),
-      defaultValue: Constant(false));
+      defaultValue: const Constant(false));
   @override
   late final GeneratedColumnWithTypeConverter<MediaRetransmitting, String>
       mediaRetransmissionState = GeneratedColumn<String>(
@@ -2099,7 +2099,7 @@ class $MediaUploadsTable extends MediaUploads
   static JsonTypeConverter2<UploadState, String, String> $converterstate =
       const EnumNameConverter<UploadState>(UploadState.values);
   static JsonTypeConverter2<MediaUploadMetadata, String, Map<String, Object?>>
-      $convertermetadata = MediaUploadMetadataConverter();
+      $convertermetadata = const MediaUploadMetadataConverter();
   static JsonTypeConverter2<MediaUploadMetadata?, String?,
           Map<String, Object?>?> $convertermetadatan =
       JsonTypeConverter2.asNullable($convertermetadata);
@@ -2108,7 +2108,7 @@ class $MediaUploadsTable extends MediaUploads
   static TypeConverter<List<int>?, String?> $convertermessageIdsn =
       NullAwareTypeConverter.wrap($convertermessageIds);
   static JsonTypeConverter2<MediaEncryptionData, String, Map<String, Object?>>
-      $converterencryptionData = MediaEncryptionDataConverter();
+      $converterencryptionData = const MediaEncryptionDataConverter();
   static JsonTypeConverter2<MediaEncryptionData?, String?,
           Map<String, Object?>?> $converterencryptionDatan =
       JsonTypeConverter2.asNullable($converterencryptionData);

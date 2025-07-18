@@ -684,16 +684,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get proFeature2 => '1 zusätzlicher Plus Benutzer';
 
   @override
-  String get proFeature3 => '3 zusätzliche kostenlose Benutzer';
+  String get proFeature3 => 'Zusatzfunktionen (coming-soon)';
 
   @override
-  String get familyFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+  String get proFeature4 => 'Cloud-Backup verschlüsselt (coming-soon)';
+
+  @override
+  String get familyFeature1 => '✓ Alles von Pro';
 
   @override
   String get familyFeature2 => '4 zusätzliche Plus Benutzer';
-
-  @override
-  String get familyFeature3 => '4 zusätzliche kostenlose Benutzer';
 
   @override
   String get redeemUserInviteCode => 'Oder löse einen twonly-Code ein.';
@@ -706,10 +706,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dein Plan wurde erfolgreich angepasst.';
 
   @override
-  String get freeFeature1 => '3 Medien-Datei-Uploads pro Tag';
+  String get freeFeature1 => '10 Medien-Datei-Uploads pro Tag';
 
   @override
   String get plusFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
+
+  @override
+  String get plusFeature2 => 'Zusatzfunktionen (coming-soon)';
 
   @override
   String get transactionHistory => 'Transaktionshistorie';
@@ -1069,12 +1072,5 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get testPaymentMethod =>
-      'twonly befindet sich derzeit in einer Testphase und kann nur mit einem Einladungscode vollständig genutzt werden. Es gibt derzeit keine Zahlungsmethode, um Ihr twonly-Guthaben aufzuladen!';
-
-  @override
-  String get testingAccountTitle => 'Tester-Zugang';
-
-  @override
-  String get testingAccountBody =>
-      'Danke für dein Interesse! Wir werden deine Anfrage prüfen und den Plan so schnell wie möglich aktivieren. Da wir uns jedoch noch in einer Testphase befinden, ist die Anzahl der Tester-Konten begrenzt. Wir werden dich jedoch benachrichtigen, sobald dir ein Platz zugewiesen wurde.';
+      'Vielen Dank für dein Interesse an einem kostenpflichtigen Tarif. Die kostenpflichtigen Pläne sind derzeit noch deaktiviert. Sie werden aber bald aktiviert!';
 }
