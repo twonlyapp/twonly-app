@@ -36,7 +36,7 @@ jobs:
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
           echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
           echo "keyAlias=androidreleasekey" >> key.properties
-          echo "storeFile=./android/app/keystore.jks" >> ./android/key.properties
+          echo "storeFile=./keystore.jks" >> ./android/key.properties
 
       - name: Create keystore file
         env:

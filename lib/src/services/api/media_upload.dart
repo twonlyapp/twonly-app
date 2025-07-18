@@ -824,7 +824,9 @@ Future<String> getMediaBaseFilePath(String type) async {
 /// combines two utf8 list
 Uint8List combineUint8Lists(Uint8List list1, Uint8List list2) {
   final combinedLength = 4 + list1.length + list2.length;
-  final combinedList = Uint8List(combinedLength)
+  final combinedList = Uint8List(combinedLength);
+  ByteData.sublistView(combinedList).setInt32(0, list1.length);
+  combinedList
     ..setRange(4, 4 + list1.length, list1)
     ..setRange(4 + list1.length, combinedLength, list2);
   return combinedList;
