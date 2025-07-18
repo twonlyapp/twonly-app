@@ -119,6 +119,10 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
                     ),
                     IconButton(
                       icon: const Icon(FontAwesomeIcons.rotateLeft),
+                      onLongPress: () {
+                        PersistentAvatarMakerController.clearAvatarMaker();
+                        _avatarMakerController.restoreState();
+                      },
                       onPressed: _avatarMakerController.restoreState,
                     ),
                   ],
