@@ -10,7 +10,6 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
@@ -48,7 +47,6 @@ class MessageContextMenu extends StatelessWidget {
               },
             ) as EmojiLayerData?;
             if (layer == null) return;
-            Log.info(layer.text);
 
             await sendTextMessage(
               message.contactId,

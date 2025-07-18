@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:twonly/src/views/camera/image_editor/data/data.dart';
 
 // animations from: https://googlefonts.github.io/noto-emoji-animation/
 // from https://github.com/eitanliu/emoji_regex/tree/master
@@ -9,6 +10,9 @@ RegExp emojiRegex() => RegExp(
 
 bool isEmoji(String character) {
   final matches = emojiRegex().allMatches(character);
+  if (emojis.contains(character)) {
+    return true;
+  }
   if (matches.length == 1) {
     final match = matches.first;
     return match.start == 0 && match.end == character.length;
