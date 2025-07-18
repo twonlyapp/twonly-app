@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - main_disabled
+      - main
     # paths:
     #   - lib/**
     #   - pubspec.lock
@@ -34,8 +34,8 @@ jobs:
       - name: Create key.properties file
         run: |
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
-          echo "keyPassword=${{ secrets.STORE_PASSWORD }}" >> ./android/key.properties
-          echo "keyAlias=androidreleasekey" >> key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> ./android/key.properties
+          echo "keyAlias=github-releases-signature" >> ./android/key.properties
           echo "storeFile=./keystore.jks" >> ./android/key.properties
 
       - name: Create keystore file
