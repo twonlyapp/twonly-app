@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - lib/**/*.dart
 
 jobs:
   build_and_publish:
