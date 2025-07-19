@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - main_ignore
+      - main
     # paths:
     #   - lib/**
     #   - pubspec.lock
@@ -13,6 +13,8 @@ on:
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
@@ -46,13 +48,6 @@ jobs:
       - name: Build Android APK
         run: flutter build apk --release --split-per-abi
 
-      # - name: Create Github Release
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: release-apk
-      #     path: build/app/outputs/flutter-apk/*.apk
-      #     retention-days: 2
-
       - name: Extract pubspec version
         run: |
           echo "PUBSPEC_VERSION=$(grep -oP 'version:\s*\K[^+]+(?=\+)' pubspec.yaml)" >> $GITHUB_ENV
@@ -62,8 +57,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: v${{ env.PUBSPEC_VERSION }}
-          omitBodyDuringUpdate: true
-          omitNameDuringUpdate: true
-          omitPrereleaseDuringUpdate: true
           allowUpdates: true
           artifacts: build/app/outputs/flutter-apk/*.apk
