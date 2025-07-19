@@ -1,7 +1,6 @@
 name: twonly
 description: "twonly, a privacy-friendly way to connect with friends through secure, spontaneous image sharing."
 
-# Prevent accidental publishing to pub.dev.
 publish_to: 'none'
 
 version: 0.0.58+58

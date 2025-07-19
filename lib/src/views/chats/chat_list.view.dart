@@ -390,6 +390,7 @@ class _UserListItem extends State<UserListItem> {
           return;
       }
     }
+    if (!mounted) return;
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) {

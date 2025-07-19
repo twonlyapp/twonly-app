@@ -1,0 +1,30 @@
+name: Publish on Github
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - dev
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Cloning sub-repos
+        run: git submodule update --init --recursive
+
+      - name: Check flutter code
+        run: | 
+          flutter pub get
+          flutter analyze
+          flutter test
