@@ -53,7 +53,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   VideoPlayerController? videoController;
 
   DateTime? canBeSeenUntil;
-  int maxShowTime = 999999;
+  int maxShowTime = gMediaShowInfinite;
   double progress = 0;
   bool isRealTwonly = false;
   bool mirrorVideo = false;
@@ -157,7 +157,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       videoController = null;
       imageBytes = null;
       canBeSeenUntil = null;
-      maxShowTime = 999999;
+      maxShowTime = gMediaShowInfinite;
       imageSaving = false;
       imageSaved = false;
       mirrorVideo = false;

@@ -19,6 +19,7 @@ import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_list_components/backup_notice.card.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/chats/chat_list_components/demo_user.card.dart';
+import 'package:twonly/src/views/chats/chat_list_components/last_message_time.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/views/chats/start_new_chat.view.dart';
@@ -309,7 +310,6 @@ class UserListItem extends StatefulWidget {
 }
 
 class _UserListItem extends State<UserListItem> {
-  int lastMessageInSeconds = 0;
   MessageSendState state = MessageSendState.send;
   Message? currentMessage;
 
@@ -321,18 +321,14 @@ class _UserListItem extends State<UserListItem> {
 
   List<Message> previewMessages = [];
 
-  Timer? updateTime;
-
   @override
   void initState() {
     super.initState();
     initStreams();
-    lastUpdateTime();
   }
 
   @override
   void dispose() {
-    updateTime?.cancel();
     messagesNotOpenedStream.cancel();
     lastMessageStream.cancel();
     super.dispose();
@@ -385,22 +381,6 @@ class _UserListItem extends State<UserListItem> {
     });
   }
 
-  void lastUpdateTime() {
-    // Change the color every 200 milliseconds
-    updateTime = Timer.periodic(const Duration(milliseconds: 200), (timer) {
-      setState(() {
-        if (currentMessage != null) {
-          lastMessageInSeconds = DateTime.now()
-              .difference(currentMessage!.openedAt ?? currentMessage!.sendAt)
-              .inSeconds;
-          if (lastMessageInSeconds < 0) {
-            lastMessageInSeconds = 0;
-          }
-        }
-      });
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final flameCounter = getFlameCounterFromContact(widget.user);
@@ -432,10 +412,8 @@ class _UserListItem extends State<UserListItem> {
                           MessageSendStateIcon(previewMessages),
                           const Text('•'),
                           const SizedBox(width: 5),
-                          Text(
-                            formatDuration(lastMessageInSeconds),
-                            style: const TextStyle(fontSize: 12),
-                          ),
+                          if (currentMessage != null)
+                            LastMessageTime(message: currentMessage!),
                           if (flameCounter > 0)
                             FlameCounterWidget(
                               widget.user,

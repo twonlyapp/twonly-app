@@ -81,9 +81,13 @@ Future<void> initFileDownloader() async {
 
   await FileDownloader().start();
 
-  await FileDownloader().configure(androidConfig: [
-    (Config.bypassTLSCertificateValidation, kDebugMode),
-  ]);
+  try {
+    await FileDownloader().configure(androidConfig: [
+      (Config.bypassTLSCertificateValidation, kDebugMode),
+    ]);
+  } catch (e) {
+    Log.error(e);
+  }
 
   if (kDebugMode) {
     FileDownloader().configureNotification(

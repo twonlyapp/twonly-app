@@ -10,6 +10,8 @@ import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/views/camera/share_image_editor_view.dart'
+    show gMediaShowInfinite;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -30,7 +32,7 @@ Future<void> customLocalPushNotification(String title, String msg) async {
   );
 
   await flutterLocalNotificationsPlugin.show(
-    999999 + Random.secure().nextInt(9999),
+    gMediaShowInfinite + Random.secure().nextInt(9999),
     title,
     msg,
     notificationDetails,

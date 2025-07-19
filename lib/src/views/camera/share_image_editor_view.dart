@@ -193,12 +193,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       NotificationBadge(
         count: (widget.videoFilePath != null)
             ? '0'
-            : maxShowTime == 999999
+            : maxShowTime == gMediaShowInfinite
                 ? '∞'
                 : maxShowTime.toString(),
         child: ActionButton(
           (widget.videoFilePath != null)
-              ? maxShowTime == 999999
+              ? maxShowTime == gMediaShowInfinite
                   ? Icons.repeat_rounded
                   : Icons.repeat_one_rounded
               : Icons.timer_outlined,

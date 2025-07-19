@@ -92,7 +92,8 @@ class CameraPreviewControllerView extends StatelessWidget {
     this.sendTo,
   });
   final Contact? sendTo;
-  final void Function(int sCameraId, bool init, bool enableAudio) selectCamera;
+  final Future<CameraController?> Function(
+      int sCameraId, bool init, bool enableAudio) selectCamera;
   final CameraController? cameraController;
   final SelectedCameraDetails selectedCameraDetails;
   final ScreenshotController screenshotController;
@@ -135,7 +136,8 @@ class CameraPreviewView extends StatefulWidget {
     this.sendTo,
   });
   final Contact? sendTo;
-  final void Function(int sCameraId, bool init, bool enableAudio) selectCamera;
+  final Future<CameraController?> Function(
+      int sCameraId, bool init, bool enableAudio) selectCamera;
   final CameraController? cameraController;
   final SelectedCameraDetails selectedCameraDetails;
   final ScreenshotController screenshotController;
@@ -299,7 +301,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       }
       return true;
     }
-    widget.selectCamera(widget.selectedCameraDetails.cameraId, false, false);
+    await widget.selectCamera(
+        widget.selectedCameraDetails.cameraId, false, false);
     return false;
   }
 
@@ -355,8 +358,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         widget.cameraController!.value.isRecordingVideo) {
       return;
     }
+    var cameraController = widget.cameraController;
     if (hasAudioPermission && videoWithAudio) {
-      widget.selectCamera(
+      cameraController = await widget.selectCamera(
         widget.selectedCameraDetails.cameraId,
         false,
         await Permission.microphone.isGranted && videoWithAudio,
@@ -368,7 +372,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     });
 
     try {
-      await widget.cameraController?.startVideoRecording();
+      await cameraController?.startVideoRecording();
       videoRecordingTimer =
           Timer.periodic(const Duration(milliseconds: 15), (timer) {
         setState(() {
@@ -522,7 +526,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           Icons.repeat_rounded,
                           tooltipText: context.lang.switchFrontAndBackCamera,
                           onPressed: () async {
-                            widget.selectCamera(
+                            await widget.selectCamera(
                                 (widget.selectedCameraDetails.cameraId + 1) % 2,
                                 false,
                                 false);

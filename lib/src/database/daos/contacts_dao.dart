@@ -220,7 +220,7 @@ String getContactDisplayName(Contact user) {
     name = applyStrikethrough(name);
   }
   if (name.length > 12) {
-    return '${name.substring(0, 12)} ...';
+    return '${name.substring(0, 12)}...';
   }
   return name;
 }

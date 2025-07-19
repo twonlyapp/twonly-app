@@ -22,7 +22,8 @@ class CameraZoomButtons extends StatefulWidget {
   final double scaleFactor;
   final Function updateScaleFactor;
   final SelectedCameraDetails selectedCameraDetails;
-  final void Function(int sCameraId, bool init, bool enableAudio) selectCamera;
+  final Future<void> Function(int sCameraId, bool init, bool enableAudio)
+      selectCamera;
 
   @override
   State<CameraZoomButtons> createState() => _CameraZoomButtonsState();
@@ -78,6 +79,15 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
     final isMiddleFocused = widget.scaleFactor >= 1 &&
         widget.scaleFactor < 2 &&
         !(showWideAngleZoomIOS && widget.selectedCameraDetails.cameraId == 2);
+
+    final maxLevel = max(
+      min(widget.selectedCameraDetails.maxAvailableZoom, 2),
+      widget.scaleFactor,
+    );
+
+    final minLevel =
+        beautifulZoomScale(widget.selectedCameraDetails.minAvailableZoom);
+    final currentLevel = beautifulZoomScale(widget.scaleFactor);
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(40),
@@ -95,7 +105,7 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                   ),
                   onPressed: () async {
                     if (showWideAngleZoomIOS) {
-                      widget.selectCamera(2, true, false);
+                      await widget.selectCamera(2, true, false);
                     } else {
                       final level = await widget.controller.getMinZoomLevel();
                       widget.updateScaleFactor(level);
@@ -103,23 +113,11 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                   },
                   child: showWideAngleZoomIOS
                       ? const Text('0.5')
-                      : FutureBuilder(
-                          future: widget.controller.getMinZoomLevel(),
-                          builder: (context, snap) {
-                            if (snap.hasData) {
-                              final minLevel = beautifulZoomScale(snap.data!);
-                              final currentLevel =
-                                  beautifulZoomScale(widget.scaleFactor);
-                              return Text(
-                                widget.scaleFactor < 1
-                                    ? '${currentLevel}x'
-                                    : '${minLevel}x',
-                                style: zoomTextStyle,
-                              );
-                            } else {
-                              return const Text('');
-                            }
-                          },
+                      : Text(
+                          widget.scaleFactor < 1
+                              ? '${currentLevel}x'
+                              : '${minLevel}x',
+                          style: zoomTextStyle,
                         ),
                 ),
               TextButton(
@@ -128,10 +126,10 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                       isMiddleFocused ? Colors.yellow : Colors.white,
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     if (showWideAngleZoomIOS &&
                         widget.selectedCameraDetails.cameraId == 2) {
-                      widget.selectCamera(0, true, false);
+                      await widget.selectCamera(0, true, false);
                     } else {
                       widget.updateScaleFactor(1.0);
                     }
@@ -154,21 +152,8 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                           .toDouble();
                   widget.updateScaleFactor(level);
                 },
-                child: FutureBuilder(
-                    future: widget.controller.getMaxZoomLevel(),
-                    builder: (context, snap) {
-                      if (snap.hasData) {
-                        final maxLevel = max(
-                          min((snap.data?.toInt())!, 2),
-                          widget.scaleFactor,
-                        );
-                        return Text(
-                            '${beautifulZoomScale(maxLevel.toDouble())}x',
-                            style: zoomTextStyle);
-                      } else {
-                        return const Text('');
-                      }
-                    }),
+                child: Text('${beautifulZoomScale(maxLevel.toDouble())}x',
+                    style: zoomTextStyle),
               )
             ],
           ),

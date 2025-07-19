@@ -108,7 +108,8 @@ class HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
-  Future<void> selectCamera(int sCameraId, bool init, bool enableAudio) async {
+  Future<CameraController?> selectCamera(
+      int sCameraId, bool init, bool enableAudio) async {
     final opts = await initializeCameraController(
         selectedCameraDetails, sCameraId, init, enableAudio);
     if (opts != null) {
@@ -117,6 +118,7 @@ class HomeViewState extends State<HomeView> {
       initCameraStarted = false;
     }
     setState(() {});
+    return cameraController;
   }
 
   Future<void> toggleSelectedCamera() async {
