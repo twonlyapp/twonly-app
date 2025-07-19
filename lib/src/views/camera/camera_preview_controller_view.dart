@@ -246,13 +246,17 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
 
     await widget.cameraController?.pausePreview();
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
-    await widget.cameraController?.setFlashMode(
-        widget.selectedCameraDetails.isFlashOn
-            ? FlashMode.always
-            : FlashMode.off);
-    if (!mounted) return;
+    if (Platform.isIOS) {
+      // android has a problem with this. Flash is turned off in the pausePreview function.
+      await widget.cameraController?.setFlashMode(FlashMode.off);
+    }
+    if (!mounted) {
+      return;
+    }
 
     imageBytes = widget.screenshotController
         .capture(pixelRatio: MediaQuery.of(context).devicePixelRatio);
@@ -260,6 +264,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (await pushMediaEditor(imageBytes, null)) {
       return;
     }
+    setState(() {
+      sharePreviewIsShown = false;
+    });
   }
 
   Future<bool> pushMediaEditor(
@@ -404,17 +411,22 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       videoRecordingTimer?.cancel();
       videoRecordingTimer = null;
     }
+
+    setState(() {
+      videoRecordingStarted = null;
+      isVideoRecording = false;
+    });
+
     if (widget.cameraController == null ||
         !widget.cameraController!.value.isRecordingVideo) {
       return;
     }
 
+    setState(() {
+      sharePreviewIsShown = true;
+    });
+
     try {
-      setState(() {
-        videoRecordingStarted = null;
-        isVideoRecording = false;
-        sharePreviewIsShown = true;
-      });
       File? videoPathFile;
       final videoPath = await widget.cameraController?.stopVideoRecording();
       if (videoPath != null) {
@@ -553,22 +565,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             setState(() {});
                           },
                         ),
-                        // if (!isFront)
-                        //   ActionButton(
-                        //     Icons.hd_rounded,
-                        //     tooltipText: context.lang.toggleHighQuality,
-                        //     color: useHighQuality
-                        //         ? Colors.white
-                        //         : Colors.white.withAlpha(160),
-                        //     onPressed: () async {
-                        //       useHighQuality = !useHighQuality;
-                        //       setState(() {});
-                        //       await updateUserdata((user) {
-                        //         user.useHighQuality = useHighQuality;
-                        //         return user;
-                        //       });
-                        //     },
-                        //   ),
                         if (!hasAudioPermission)
                           ActionButton(
                             Icons.mic_off_rounded,

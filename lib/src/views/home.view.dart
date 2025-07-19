@@ -51,6 +51,7 @@ class HomeViewState extends State<HomeView> {
   double buttonDiameter = 100;
   double offsetRatio = 0;
   double offsetFromOne = 0;
+  double lastChange = 0;
 
   Timer? disableCameraTimer;
   bool initCameraStarted = true;
@@ -62,6 +63,8 @@ class HomeViewState extends State<HomeView> {
   bool onPageView(ScrollNotification notification) {
     disableCameraTimer?.cancel();
     if (notification.depth == 0 && notification is ScrollUpdateNotification) {
+      final page = homeViewPageController.page ?? 0;
+      lastChange = page;
       setState(() {
         offsetFromOne = 1.0 - (homeViewPageController.page ?? 0);
         offsetRatio = offsetFromOne.abs();

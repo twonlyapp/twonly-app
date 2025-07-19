@@ -157,10 +157,6 @@ Future<void> encryptAndSendMessageAsync(
   MessageJson msg, {
   PushNotification? pushNotification,
 }) async {
-  if (gIsDemoUser) {
-    return;
-  }
-
   Uint8List? pushData;
   if (pushNotification != null) {
     pushData = await getPushData(userId, pushNotification);

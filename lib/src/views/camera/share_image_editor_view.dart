@@ -78,6 +78,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     initAsync();
     initMediaFileUpload();
     layers.add(FilterLayerData());
+    if (widget.sendTo != null) {
+      selectedUserIds.add(widget.sendTo!.userId);
+    }
     if (widget.imageBytes != null) {
       loadImage(widget.imageBytes!);
     } else if (widget.videoFilePath != null) {

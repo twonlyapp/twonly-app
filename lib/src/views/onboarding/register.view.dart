@@ -33,14 +33,14 @@ class _RegisterViewState extends State<RegisterView> {
   bool _isValidUserName = false;
   bool _showUserNameError = false;
 
-  Future<void> createNewUser({bool isDemoAccount = false}) async {
+  Future<void> createNewUser() async {
     if (!_isValidUserName) {
       setState(() {
         _showUserNameError = true;
       });
       return;
     }
-    final username = isDemoAccount ? '<demo>' : usernameController.text;
+    final username = usernameController.text;
     final inviteCode = inviteCodeController.text;
 
     setState(() {
@@ -52,29 +52,27 @@ class _RegisterViewState extends State<RegisterView> {
 
     var userId = 0;
 
-    if (!isDemoAccount) {
-      final res = await apiService.register(username, inviteCode);
-      if (res.isSuccess) {
-        Log.info('Got user_id ${res.value} from server');
-        userId = res.value.userid.toInt() as int;
-      } else {
-        if (res.error == ErrorCode.UserIdAlreadyTaken) {
-          Log.error('User ID already token. Tying again.');
-          await deleteLocalUserData();
-          return createNewUser();
-        }
-        if (mounted) {
-          setState(() {
-            _isTryingToRegister = false;
-          });
-          await showAlertDialog(
-            context,
-            'Oh no!',
-            errorCodeToText(context, res.error as ErrorCode),
-          );
-        }
-        return;
+    final res = await apiService.register(username, inviteCode);
+    if (res.isSuccess) {
+      Log.info('Got user_id ${res.value} from server');
+      userId = res.value.userid.toInt() as int;
+    } else {
+      if (res.error == ErrorCode.UserIdAlreadyTaken) {
+        Log.error('User ID already token. Tying again.');
+        await deleteLocalUserData();
+        return createNewUser();
       }
+      if (mounted) {
+        setState(() {
+          _isTryingToRegister = false;
+        });
+        await showAlertDialog(
+          context,
+          'Oh no!',
+          errorCodeToText(context, res.error as ErrorCode),
+        );
+      }
+      return;
     }
 
     setState(() {
@@ -86,18 +84,13 @@ class _RegisterViewState extends State<RegisterView> {
       username: username,
       displayName: username,
       subscriptionPlan: 'Preview',
-      isDemoUser: isDemoAccount,
+      isDemoUser: false,
     );
 
     await const FlutterSecureStorage()
         .write(key: SecureStorageKeys.userData, value: jsonEncode(userData));
 
-    if (!isDemoAccount) {
-      await apiService.authenticate();
-    } else {
-      gIsDemoUser = true;
-      await createFakeDemoData();
-    }
+    await apiService.authenticate();
     widget.callbackOnSuccess();
   }
 
@@ -228,12 +221,6 @@ class _RegisterViewState extends State<RegisterView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // OutlinedButton.icon(
-                      //   onPressed: () {
-                      //     createNewUser(isDemoAccount: true);
-                      //   },
-                      //   label: const Text('Demo'),
-                      // ),
                       OutlinedButton.icon(
                         onPressed: () {
                           Navigator.push(context, MaterialPageRoute(

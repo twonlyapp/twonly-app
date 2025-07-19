@@ -30,8 +30,8 @@ class NotificationView extends StatelessWidget {
             subtitle: Text(context.lang.settingsNotifyTroubleshootingDesc),
             onTap: () async {
               await initFCMAfterAuthenticated();
-              final storedToken = const FlutterSecureStorage()
-                  .read(key: SecureStorageKeys.googleFcm) as String?;
+              final storedToken = await (const FlutterSecureStorage()
+                  .read(key: SecureStorageKeys.googleFcm));
               await setupNotificationWithUsers(force: true);
               if (!context.mounted) return;
 

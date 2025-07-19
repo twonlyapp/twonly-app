@@ -40,7 +40,7 @@ Future<ErrorCode?> isAllowedToSend() async {
     var todaysImageCounter = user.todaysImageCounter;
     if (user.lastImageSend != null && user.todaysImageCounter != null) {
       if (isToday(user.lastImageSend!)) {
-        if (user.todaysImageCounter == 3) {
+        if (user.todaysImageCounter == 10) {
           return ErrorCode.PlanLimitReached;
         }
         todaysImageCounter = user.todaysImageCounter! + 1;

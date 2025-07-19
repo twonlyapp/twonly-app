@@ -18,7 +18,7 @@ import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_list_components/backup_notice.card.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
-import 'package:twonly/src/views/chats/chat_list_components/demo_user.card.dart';
+import 'package:twonly/src/views/chats/chat_list_components/feedback_btn.dart';
 import 'package:twonly/src/views/chats/chat_list_components/last_message_time.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
@@ -29,7 +29,6 @@ import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/views/settings/help/changelog.view.dart';
-import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
@@ -77,10 +76,6 @@ class _ChatListViewState extends State<ChatListView> {
 
     final user = await getUser();
     if (user == null) return;
-    setState(() {
-      showFeedbackShortcut = user.showFeedbackShortcut;
-    });
-
     final changeLog = await rootBundle.loadString('CHANGELOG.md');
     final changeLogHash =
         (await compute(Sha256().hash, changeLog.codeUnits)).bytes;
@@ -91,11 +86,15 @@ class _ChatListViewState extends State<ChatListView> {
         return u;
       });
       if (!mounted) return;
-      await Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return ChangeLogView(
-          changeLog: changeLog,
-        );
-      }));
+      // only show changelog to people who already have contacts
+      // this prevents that this is shown directly after the user registered
+      if (_contacts.isNotEmpty) {
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return ChangeLogView(
+            changeLog: changeLog,
+          );
+        }));
+      }
     }
   }
 
@@ -139,20 +138,7 @@ class _ChatListViewState extends State<ChatListView> {
             ),
         ]),
         actions: [
-          if (showFeedbackShortcut)
-            IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ContactUsView(),
-                  ),
-                );
-              },
-              color: Colors.grey,
-              tooltip: context.lang.feedbackTooltip,
-              icon: const FaIcon(FontAwesomeIcons.commentDots, size: 19),
-            ),
+          const FeedbackIconButton(),
           StreamBuilder(
             stream: twonlyDB.contactsDao.watchContactsRequested(),
             builder: (context, snapshot) {
@@ -226,7 +212,6 @@ class _ChatListViewState extends State<ChatListView> {
                     child: ListView.builder(
                       itemCount: _pinnedContacts.length +
                           (_pinnedContacts.isNotEmpty ? 1 : 0) +
-                          (gIsDemoUser ? 1 : 0) +
                           _contacts.length +
                           1,
                       itemBuilder: (context, index) {
@@ -234,20 +219,13 @@ class _ChatListViewState extends State<ChatListView> {
                           return const BackupNoticeCard();
                         }
                         index -= 1;
-                        if (gIsDemoUser) {
-                          if (index == 0) {
-                            return const DemoUserCard();
-                          }
-                          index -= 1;
-                        }
                         // Check if the index is for the pinned users
                         if (index < _pinnedContacts.length) {
                           final contact = _pinnedContacts[index];
                           return UserListItem(
                             key: ValueKey(contact.userId),
                             user: contact,
-                            firstUserListItemKey: (index == 0 && !gIsDemoUser ||
-                                    index == 1 && gIsDemoUser)
+                            firstUserListItemKey: (index == 0 || index == 1)
                                 ? firstUserListItemKey
                                 : null,
                           );
@@ -381,6 +359,45 @@ class _UserListItem extends State<UserListItem> {
     });
   }
 
+  Future<void> onTap() async {
+    if (currentMessage == null) {
+      await Navigator.push(context, MaterialPageRoute(
+        builder: (context) {
+          return CameraSendToView(widget.user);
+        },
+      ));
+      return;
+    }
+    final msgs =
+        previewMessages.where((x) => x.kind == MessageKind.media).toList();
+    if (msgs.isNotEmpty &&
+        msgs.first.kind == MessageKind.media &&
+        msgs.first.messageOtherId != null &&
+        msgs.first.openedAt == null) {
+      switch (msgs.first.downloadState) {
+        case DownloadState.pending:
+          await startDownloadMedia(msgs.first, true);
+          return;
+        case DownloadState.downloaded:
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) {
+              return MediaViewerView(widget.user);
+            }),
+          );
+          return;
+        case DownloadState.downloading:
+          return;
+      }
+    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        return ChatMessagesView(widget.user);
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final flameCounter = getFlameCounterFromContact(widget.user);
@@ -433,48 +450,12 @@ class _UserListItem extends State<UserListItem> {
                         },
                       ));
                     },
-                    icon: FaIcon(FontAwesomeIcons.camera,
-                        color: context.color.outline.withAlpha(150)),
+                    icon: FaIcon(
+                      FontAwesomeIcons.camera,
+                      color: context.color.outline.withAlpha(150),
+                    ),
                   ),
-            onTap: () {
-              if (currentMessage == null) {
-                Navigator.push(context, MaterialPageRoute(
-                  builder: (context) {
-                    return CameraSendToView(widget.user);
-                  },
-                ));
-                return;
-              }
-              final msgs = previewMessages
-                  .where((x) => x.kind == MessageKind.media)
-                  .toList();
-              if (msgs.isNotEmpty &&
-                  msgs.first.kind == MessageKind.media &&
-                  msgs.first.messageOtherId != null &&
-                  msgs.first.openedAt == null) {
-                switch (msgs.first.downloadState) {
-                  case DownloadState.pending:
-                    startDownloadMedia(msgs.first, true);
-                    return;
-                  case DownloadState.downloaded:
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) {
-                        return MediaViewerView(widget.user);
-                      }),
-                    );
-                    return;
-                  case DownloadState.downloading:
-                    return;
-                }
-              }
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) {
-                  return ChatMessagesView(widget.user);
-                }),
-              );
-            },
+            onTap: onTap,
           ),
         )
       ],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
@@ -26,11 +25,13 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
     if (user != null &&
         (user.nextTimeToShowBackupNotice == null ||
             DateTime.now().isAfter(user.nextTimeToShowBackupNotice!))) {
-      if (!gIsDemoUser && (user.twonlySafeBackup == null)) {
+      if (user.twonlySafeBackup == null) {
         showBackupNotice = true;
       }
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
