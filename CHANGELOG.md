@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.59
+
+- Fixing media download error
+- Fixing issue with video recording
+- Location Filter are now stored as WebP instead of PNG
+
 ## 0.0.58
 
 - twonly now has a free plan and is now financed by donations and an optional subscription with more features (coming soon)
