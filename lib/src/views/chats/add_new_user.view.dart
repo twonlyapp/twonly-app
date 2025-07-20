@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_dynamic_calls
-
 import 'dart:async';
 
 import 'package:drift/drift.dart' hide Column;
@@ -11,7 +9,6 @@ import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
@@ -41,7 +38,11 @@ class _SearchUsernameView extends State<AddNewUserView> {
   @override
   void initState() {
     super.initState();
-    initStreams();
+    contactsStream = twonlyDB.contactsDao
+        .watchNotAcceptedContacts()
+        .listen((update) => setState(() {
+              contacts = update;
+            }));
   }
 
   @override
@@ -50,18 +51,9 @@ class _SearchUsernameView extends State<AddNewUserView> {
     super.dispose();
   }
 
-  void initStreams() {
-    contactsStream =
-        twonlyDB.contactsDao.watchNotAcceptedContacts().listen((update) {
-      setState(() {
-        contacts = update;
-      });
-    });
-  }
-
   Future<void> _addNewUser(BuildContext context) async {
     final user = await getUser();
-    if (user == null || user.username == searchUserName.text) {
+    if (user == null || user.username == searchUserName.text || !mounted) {
       return;
     }
 
@@ -69,70 +61,67 @@ class _SearchUsernameView extends State<AddNewUserView> {
       _isLoading = true;
     });
 
-    final res = await apiService.getUserData(searchUserName.text);
+    final userdata = await apiService.getUserData(searchUserName.text);
+    if (!context.mounted) return;
 
-    if (!context.mounted) {
-      return;
-    }
-
-    if (res.isSuccess) {
-      final addUser = await showAlertDialog(
-          context, context.lang.userFound, context.lang.userFoundBody);
-      if (!addUser || !context.mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final added = await twonlyDB.contactsDao.insertContact(
-        ContactsCompanion(
-          username: Value(searchUserName.text),
-          userId: Value(res.value.userdata.userId.toInt() as int),
-          requested: const Value(false),
-        ),
-      );
-
-      if (added > 0) {
-        if (await createNewSignalSession(
-            res.value.userdata as Response_UserData)) {
-          // before notifying the other party, add
-          await setupNotificationWithUsers(
-            forceContact: res.value.userdata.userId.toInt() as int,
-          );
-          await encryptAndSendMessageAsync(
-            null,
-            res.value.userdata.userId.toInt() as int,
-            MessageJson(
-              kind: MessageKind.contactRequest,
-              timestamp: DateTime.now(),
-              content: MessageContent(),
-            ),
-            pushNotification: PushNotification(kind: PushKind.contactRequest),
-          );
-        }
-      }
-    } else {
-      await showAlertDialog(context, context.lang.searchUsernameNotFound,
-          context.lang.searchUsernameNotFoundBody(searchUserName.text));
-    }
     setState(() {
       _isLoading = false;
     });
+
+    if (userdata == null) {
+      await showAlertDialog(context, context.lang.searchUsernameNotFound,
+          context.lang.searchUsernameNotFoundBody(searchUserName.text));
+      return;
+    }
+
+    final addUser = await showAlertDialog(
+      context,
+      context.lang.userFound,
+      context.lang.userFoundBody,
+    );
+
+    if (!addUser || !context.mounted) {
+      return;
+    }
+
+    final added = await twonlyDB.contactsDao.insertContact(
+      ContactsCompanion(
+        username: Value(searchUserName.text),
+        userId: Value(userdata.userId.toInt()),
+        requested: const Value(false),
+      ),
+    );
+
+    if (added > 0) {
+      if (await createNewSignalSession(userdata)) {
+        // before notifying the other party, add
+        await setupNotificationWithUsers(
+          forceContact: userdata.userId.toInt(),
+        );
+        await encryptAndSendMessageAsync(
+          null,
+          userdata.userId.toInt(),
+          MessageJson(
+            kind: MessageKind.contactRequest,
+            timestamp: DateTime.now(),
+            content: MessageContent(),
+          ),
+          pushNotification: PushNotification(kind: PushKind.contactRequest),
+        );
+      }
+    }
   }
 
   InputDecoration getInputDecoration(String hintText) {
-    final primaryColor =
-        Theme.of(context).colorScheme.primary; // Get the primary color
     return InputDecoration(
       hintText: hintText,
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(9),
-        borderSide: BorderSide(color: primaryColor),
+        borderSide: BorderSide(color: context.color.primary),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
+        borderSide: BorderSide(color: context.color.outline),
       ),
       contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
     );
@@ -146,8 +135,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
       ),
       body: SafeArea(
         child: Padding(
-          padding:
-              const EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
           child: Column(
             children: [
               Padding(
@@ -186,10 +174,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),
         child: FloatingActionButton(
-          foregroundColor: Colors.white,
-          onPressed: () {
-            if (!_isLoading) _addNewUser(context);
-          },
+          onPressed: _isLoading ? null : () async => _addNewUser(context),
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : const FaIcon(FontAwesomeIcons.magnifyingGlassPlus),
@@ -199,17 +184,11 @@ class _SearchUsernameView extends State<AddNewUserView> {
   }
 }
 
-class ContactsListView extends StatefulWidget {
+class ContactsListView extends StatelessWidget {
   const ContactsListView(this.contacts, {super.key});
-
   final List<Contact> contacts;
 
-  @override
-  State<ContactsListView> createState() => _ContactsListViewState();
-}
-
-class _ContactsListViewState extends State<ContactsListView> {
-  List<Widget> sendRequestActions(Contact contact) {
+  List<Widget> sendRequestActions(BuildContext context, Contact contact) {
     return [
       Tooltip(
         message: context.lang.searchUserNameArchiveUserTooltip,
@@ -225,7 +204,7 @@ class _ContactsListViewState extends State<ContactsListView> {
     ];
   }
 
-  List<Widget> requestedActions(Contact contact) {
+  List<Widget> requestedActions(BuildContext context, Contact contact) {
     return [
       Tooltip(
         message: context.lang.searchUserNameBlockUserTooltip,
@@ -272,9 +251,9 @@ class _ContactsListViewState extends State<ContactsListView> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: widget.contacts.length,
+      itemCount: contacts.length,
       itemBuilder: (context, index) {
-        final contact = widget.contacts[index];
+        final contact = contacts[index];
         final displayName = getContactDisplayName(contact);
         return ListTile(
           title: Text(displayName),
@@ -282,8 +261,8 @@ class _ContactsListViewState extends State<ContactsListView> {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: contact.requested
-                ? requestedActions(contact)
-                : sendRequestActions(contact),
+                ? requestedActions(context, contact)
+                : sendRequestActions(context, contact),
           ),
         );
       },

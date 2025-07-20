@@ -8,6 +8,7 @@ import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:http/http.dart' as http;
+import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
@@ -20,11 +21,8 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 
-Map<int, DateTime> downloadStartedForMediaReceived = {};
-
 Future<void> tryDownloadAllMediaFiles({bool force = false}) async {
   // This is called when WebSocket is newly connected, so allow all downloads to be restarted.
-  downloadStartedForMediaReceived = {};
   final messages =
       await twonlyDB.messagesDao.getAllMessagesPendingDownloading();
 
@@ -102,13 +100,15 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
 }
 
 Future<void> handleDownloadStatusUpdateInternal(
-    int messageId, bool failed) async {
+  int messageId,
+  bool failed,
+) async {
   if (failed) {
     Log.error('Download failed for $messageId');
     final message = await twonlyDB.messagesDao
         .getMessageByMessageId(messageId)
         .getSingleOrNull();
-    if (message != null) {
+    if (message != null && message.downloadState != DownloadState.downloaded) {
       await handleMediaError(message);
     }
   } else {
@@ -117,18 +117,10 @@ Future<void> handleDownloadStatusUpdateInternal(
   }
 }
 
-Future<void> startDownloadMedia(Message message, bool force,
-    {int retryCounter = 0}) async {
+Mutex protectDownload = Mutex();
+
+Future<void> startDownloadMedia(Message message, bool force) async {
   if (message.contentJson == null) return;
-  if (downloadStartedForMediaReceived[message.messageId] != null &&
-      retryCounter == 0) {
-    final started = downloadStartedForMediaReceived[message.messageId]!;
-    final elapsed = DateTime.now().difference(started);
-    if (elapsed <= const Duration(seconds: 60)) {
-      Log.error('Download already started...');
-      return;
-    }
-  }
 
   final content = MessageContent.fromJson(
       message.kind, jsonDecode(message.contentJson!) as Map);
@@ -157,16 +149,33 @@ Future<void> startDownloadMedia(Message message, bool force,
     return;
   }
 
-  if (message.downloadState != DownloadState.downloaded) {
+  final isBlocked = await protectDownload.protect<bool>(() async {
+    final msg = await twonlyDB.messagesDao
+        .getMessageByMessageId(message.messageId)
+        .getSingleOrNull();
+
+    if (msg == null) return true;
+
+    if (msg.downloadState != DownloadState.pending) {
+      Log.error(
+          '${message.messageId} is already downloaded or is downloading.');
+      return true;
+    }
+
     await twonlyDB.messagesDao.updateMessageByMessageId(
       message.messageId,
       const MessagesCompanion(
         downloadState: Value(DownloadState.downloading),
       ),
     );
-  }
 
-  downloadStartedForMediaReceived[message.messageId] = DateTime.now();
+    return false;
+  });
+
+  if (isBlocked) {
+    Log.info('Download for ${message.messageId} already started.');
+    return;
+  }
 
   final downloadToken = uint8ListToHex(content.downloadToken!);
 

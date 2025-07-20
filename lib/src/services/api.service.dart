@@ -497,11 +497,18 @@ class ApiService {
     return sendRequestSync(req);
   }
 
-  Future<Result> getUserData(String username) async {
+  Future<Response_UserData?> getUserData(String username) async {
     final get = ApplicationData_GetUserByUsername()..username = username;
     final appData = ApplicationData()..getuserbyusername = get;
     final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasUserdata()) {
+        return ok.userdata;
+      }
+    }
+    return null;
   }
 
   Future<Response_PlanBallance?> getPlanBallance() async {
