@@ -112,7 +112,10 @@ class HomeViewState extends State<HomeView> {
   }
 
   Future<CameraController?> selectCamera(
-      int sCameraId, bool init, bool enableAudio) async {
+    int sCameraId,
+    bool init,
+    bool enableAudio,
+  ) async {
     final opts = await initializeCameraController(
         selectedCameraDetails, sCameraId, init, enableAudio);
     if (opts != null) {
@@ -124,8 +127,14 @@ class HomeViewState extends State<HomeView> {
     return cameraController;
   }
 
+  /// same function also in camera_send_to_view
   Future<void> toggleSelectedCamera() async {
-    await cameraController?.dispose();
+    if (cameraController == null) return;
+    // do not allow switching camera when recording
+    if (cameraController!.value.isRecordingVideo == true) {
+      return;
+    }
+    await cameraController!.dispose();
     cameraController = null;
     await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
   }

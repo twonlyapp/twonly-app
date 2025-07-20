@@ -43,8 +43,14 @@ class CameraSendToViewState extends State<CameraSendToView> {
     return cameraController;
   }
 
+  /// same function also in home.view.dart
   Future<void> toggleSelectedCamera() async {
-    await cameraController?.dispose();
+    if (cameraController == null) return;
+    // do not allow switching camera when recording
+    if (cameraController!.value.isRecordingVideo == true) {
+      return;
+    }
+    await cameraController!.dispose();
     cameraController = null;
     await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
   }

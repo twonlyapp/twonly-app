@@ -50,7 +50,7 @@ class _LocationFilterState extends State<LocationFilter> {
     for (final item in imageIndex) {
       if (item.imageSrc.contains('/cities/$normalizedCountry/')) {
         // Check if the item matches the normalized city
-        if (item.imageSrc.endsWith('$normalizedCity.png')) {
+        if (item.imageSrc.contains('$normalizedCity.')) {
           if (item.imageSrc.startsWith('/api/')) {
             _imageUrl = 'https://twonly.eu/${item.imageSrc}';
             if (mounted) setState(() {});
