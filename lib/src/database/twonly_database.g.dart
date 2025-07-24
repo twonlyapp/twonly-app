@@ -2341,206 +2341,6 @@ class MediaUploadsCompanion extends UpdateCompanion<MediaUpload> {
   }
 }
 
-class $MediaDownloadsTable extends MediaDownloads
-    with TableInfo<$MediaDownloadsTable, MediaDownload> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $MediaDownloadsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _messageIdMeta =
-      const VerificationMeta('messageId');
-  @override
-  late final GeneratedColumn<int> messageId = GeneratedColumn<int>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  @override
-  late final GeneratedColumnWithTypeConverter<List<int>, String> downloadToken =
-      GeneratedColumn<String>('download_token', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<List<int>>(
-              $MediaDownloadsTable.$converterdownloadToken);
-  @override
-  List<GeneratedColumn> get $columns => [messageId, downloadToken];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'media_downloads';
-  @override
-  VerificationContext validateIntegrity(Insertable<MediaDownload> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('message_id')) {
-      context.handle(_messageIdMeta,
-          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
-    } else if (isInserting) {
-      context.missing(_messageIdMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => const {};
-  @override
-  MediaDownload map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return MediaDownload(
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}message_id'])!,
-      downloadToken: $MediaDownloadsTable.$converterdownloadToken.fromSql(
-          attachedDatabase.typeMapping.read(
-              DriftSqlType.string, data['${effectivePrefix}download_token'])!),
-    );
-  }
-
-  @override
-  $MediaDownloadsTable createAlias(String alias) {
-    return $MediaDownloadsTable(attachedDatabase, alias);
-  }
-
-  static TypeConverter<List<int>, String> $converterdownloadToken =
-      IntListTypeConverter();
-}
-
-class MediaDownload extends DataClass implements Insertable<MediaDownload> {
-  final int messageId;
-  final List<int> downloadToken;
-  const MediaDownload({required this.messageId, required this.downloadToken});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['message_id'] = Variable<int>(messageId);
-    {
-      map['download_token'] = Variable<String>(
-          $MediaDownloadsTable.$converterdownloadToken.toSql(downloadToken));
-    }
-    return map;
-  }
-
-  MediaDownloadsCompanion toCompanion(bool nullToAbsent) {
-    return MediaDownloadsCompanion(
-      messageId: Value(messageId),
-      downloadToken: Value(downloadToken),
-    );
-  }
-
-  factory MediaDownload.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return MediaDownload(
-      messageId: serializer.fromJson<int>(json['messageId']),
-      downloadToken: serializer.fromJson<List<int>>(json['downloadToken']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'messageId': serializer.toJson<int>(messageId),
-      'downloadToken': serializer.toJson<List<int>>(downloadToken),
-    };
-  }
-
-  MediaDownload copyWith({int? messageId, List<int>? downloadToken}) =>
-      MediaDownload(
-        messageId: messageId ?? this.messageId,
-        downloadToken: downloadToken ?? this.downloadToken,
-      );
-  MediaDownload copyWithCompanion(MediaDownloadsCompanion data) {
-    return MediaDownload(
-      messageId: data.messageId.present ? data.messageId.value : this.messageId,
-      downloadToken: data.downloadToken.present
-          ? data.downloadToken.value
-          : this.downloadToken,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('MediaDownload(')
-          ..write('messageId: $messageId, ')
-          ..write('downloadToken: $downloadToken')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(messageId, downloadToken);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is MediaDownload &&
-          other.messageId == this.messageId &&
-          other.downloadToken == this.downloadToken);
-}
-
-class MediaDownloadsCompanion extends UpdateCompanion<MediaDownload> {
-  final Value<int> messageId;
-  final Value<List<int>> downloadToken;
-  final Value<int> rowid;
-  const MediaDownloadsCompanion({
-    this.messageId = const Value.absent(),
-    this.downloadToken = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  MediaDownloadsCompanion.insert({
-    required int messageId,
-    required List<int> downloadToken,
-    this.rowid = const Value.absent(),
-  })  : messageId = Value(messageId),
-        downloadToken = Value(downloadToken);
-  static Insertable<MediaDownload> custom({
-    Expression<int>? messageId,
-    Expression<String>? downloadToken,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (messageId != null) 'message_id': messageId,
-      if (downloadToken != null) 'download_token': downloadToken,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  MediaDownloadsCompanion copyWith(
-      {Value<int>? messageId,
-      Value<List<int>>? downloadToken,
-      Value<int>? rowid}) {
-    return MediaDownloadsCompanion(
-      messageId: messageId ?? this.messageId,
-      downloadToken: downloadToken ?? this.downloadToken,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (messageId.present) {
-      map['message_id'] = Variable<int>(messageId.value);
-    }
-    if (downloadToken.present) {
-      map['download_token'] = Variable<String>($MediaDownloadsTable
-          .$converterdownloadToken
-          .toSql(downloadToken.value));
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('MediaDownloadsCompanion(')
-          ..write('messageId: $messageId, ')
-          ..write('downloadToken: $downloadToken, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $SignalIdentityKeyStoresTable extends SignalIdentityKeyStores
     with TableInfo<$SignalIdentityKeyStoresTable, SignalIdentityKeyStore> {
   @override
@@ -4568,7 +4368,6 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
   late final $ContactsTable contacts = $ContactsTable(this);
   late final $MessagesTable messages = $MessagesTable(this);
   late final $MediaUploadsTable mediaUploads = $MediaUploadsTable(this);
-  late final $MediaDownloadsTable mediaDownloads = $MediaDownloadsTable(this);
   late final $SignalIdentityKeyStoresTable signalIdentityKeyStores =
       $SignalIdentityKeyStoresTable(this);
   late final $SignalPreKeyStoresTable signalPreKeyStores =
@@ -4587,8 +4386,6 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDatabase);
   late final MediaUploadsDao mediaUploadsDao =
       MediaUploadsDao(this as TwonlyDatabase);
-  late final MediaDownloadsDao mediaDownloadsDao =
-      MediaDownloadsDao(this as TwonlyDatabase);
   late final SignalDao signalDao = SignalDao(this as TwonlyDatabase);
   late final MessageRetransmissionDao messageRetransmissionDao =
       MessageRetransmissionDao(this as TwonlyDatabase);
@@ -4600,7 +4397,6 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
         contacts,
         messages,
         mediaUploads,
-        mediaDownloads,
         signalIdentityKeyStores,
         signalPreKeyStores,
         signalSenderKeyStores,
@@ -5999,139 +5795,6 @@ typedef $$MediaUploadsTableProcessedTableManager = ProcessedTableManager<
     ),
     MediaUpload,
     PrefetchHooks Function()>;
-typedef $$MediaDownloadsTableCreateCompanionBuilder = MediaDownloadsCompanion
-    Function({
-  required int messageId,
-  required List<int> downloadToken,
-  Value<int> rowid,
-});
-typedef $$MediaDownloadsTableUpdateCompanionBuilder = MediaDownloadsCompanion
-    Function({
-  Value<int> messageId,
-  Value<List<int>> downloadToken,
-  Value<int> rowid,
-});
-
-class $$MediaDownloadsTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $MediaDownloadsTable> {
-  $$MediaDownloadsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get messageId => $composableBuilder(
-      column: $table.messageId, builder: (column) => ColumnFilters(column));
-
-  ColumnWithTypeConverterFilters<List<int>, List<int>, String>
-      get downloadToken => $composableBuilder(
-          column: $table.downloadToken,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
-}
-
-class $$MediaDownloadsTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $MediaDownloadsTable> {
-  $$MediaDownloadsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get messageId => $composableBuilder(
-      column: $table.messageId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get downloadToken => $composableBuilder(
-      column: $table.downloadToken,
-      builder: (column) => ColumnOrderings(column));
-}
-
-class $$MediaDownloadsTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $MediaDownloadsTable> {
-  $$MediaDownloadsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get messageId =>
-      $composableBuilder(column: $table.messageId, builder: (column) => column);
-
-  GeneratedColumnWithTypeConverter<List<int>, String> get downloadToken =>
-      $composableBuilder(
-          column: $table.downloadToken, builder: (column) => column);
-}
-
-class $$MediaDownloadsTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
-    $MediaDownloadsTable,
-    MediaDownload,
-    $$MediaDownloadsTableFilterComposer,
-    $$MediaDownloadsTableOrderingComposer,
-    $$MediaDownloadsTableAnnotationComposer,
-    $$MediaDownloadsTableCreateCompanionBuilder,
-    $$MediaDownloadsTableUpdateCompanionBuilder,
-    (
-      MediaDownload,
-      BaseReferences<_$TwonlyDatabase, $MediaDownloadsTable, MediaDownload>
-    ),
-    MediaDownload,
-    PrefetchHooks Function()> {
-  $$MediaDownloadsTableTableManager(
-      _$TwonlyDatabase db, $MediaDownloadsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$MediaDownloadsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$MediaDownloadsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$MediaDownloadsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> messageId = const Value.absent(),
-            Value<List<int>> downloadToken = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              MediaDownloadsCompanion(
-            messageId: messageId,
-            downloadToken: downloadToken,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required int messageId,
-            required List<int> downloadToken,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              MediaDownloadsCompanion.insert(
-            messageId: messageId,
-            downloadToken: downloadToken,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$MediaDownloadsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDatabase,
-    $MediaDownloadsTable,
-    MediaDownload,
-    $$MediaDownloadsTableFilterComposer,
-    $$MediaDownloadsTableOrderingComposer,
-    $$MediaDownloadsTableAnnotationComposer,
-    $$MediaDownloadsTableCreateCompanionBuilder,
-    $$MediaDownloadsTableUpdateCompanionBuilder,
-    (
-      MediaDownload,
-      BaseReferences<_$TwonlyDatabase, $MediaDownloadsTable, MediaDownload>
-    ),
-    MediaDownload,
-    PrefetchHooks Function()>;
 typedef $$SignalIdentityKeyStoresTableCreateCompanionBuilder
     = SignalIdentityKeyStoresCompanion Function({
   required int deviceId,
@@ -7481,8 +7144,6 @@ class $TwonlyDatabaseManager {
       $$MessagesTableTableManager(_db, _db.messages);
   $$MediaUploadsTableTableManager get mediaUploads =>
       $$MediaUploadsTableTableManager(_db, _db.mediaUploads);
-  $$MediaDownloadsTableTableManager get mediaDownloads =>
-      $$MediaDownloadsTableTableManager(_db, _db.mediaDownloads);
   $$SignalIdentityKeyStoresTableTableManager get signalIdentityKeyStores =>
       $$SignalIdentityKeyStoresTableTableManager(
           _db, _db.signalIdentityKeyStores);

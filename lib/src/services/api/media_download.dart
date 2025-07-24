@@ -120,32 +120,34 @@ Future<void> handleDownloadStatusUpdateInternal(
 Mutex protectDownload = Mutex();
 
 Future<void> startDownloadMedia(Message message, bool force) async {
-  if (message.contentJson == null) return;
-
-  final content = MessageContent.fromJson(
-      message.kind, jsonDecode(message.contentJson!) as Map);
-
-  if (content is! MediaMessageContent) return;
-  if (content.downloadToken == null) return;
-
-  var media = await twonlyDB.mediaDownloadsDao
-      .getMediaDownloadById(message.messageId)
-      .getSingleOrNull();
-  if (media == null) {
-    await twonlyDB.mediaDownloadsDao.insertMediaDownload(
-      MediaDownloadsCompanion(
-        messageId: Value(message.messageId),
-        downloadToken: Value(content.downloadToken!),
-      ),
-    );
-    media = await twonlyDB.mediaDownloadsDao
-        .getMediaDownloadById(message.messageId)
-        .getSingleOrNull();
+  Log.info(
+      'Download blocked for ${message.messageId} because of network state.');
+  if (message.contentJson == null) {
+    Log.error('Content of ${message.messageId} not found.');
+    await handleMediaError(message);
+    return;
   }
 
-  if (media == null) return;
+  final content = MessageContent.fromJson(
+    message.kind,
+    jsonDecode(message.contentJson!) as Map,
+  );
+
+  if (content is! MediaMessageContent) {
+    Log.error('Content of ${message.messageId} is not media file.');
+    await handleMediaError(message);
+    return;
+  }
+
+  if (content.downloadToken == null) {
+    Log.error('Download token not defined for ${message.messageId}.');
+    await handleMediaError(message);
+    return;
+  }
 
   if (!force && !await isAllowedToDownload(content.isVideo)) {
+    Log.warn(
+        'Download blocked for ${message.messageId} because of network state.');
     return;
   }
 
@@ -185,10 +187,10 @@ Future<void> startDownloadMedia(Message message, bool force) async {
   try {
     final task = DownloadTask(
       url: apiUrl,
-      taskId: 'download_${media.messageId}',
+      taskId: 'download_${message.messageId}',
       directory: 'media/received/',
       baseDirectory: BaseDirectory.applicationSupport,
-      filename: '${media.messageId}.encrypted',
+      filename: '${message.messageId}.encrypted',
       priority: 0,
       retries: 10,
     );
@@ -198,7 +200,7 @@ Future<void> startDownloadMedia(Message message, bool force) async {
     );
 
     try {
-      await downloadFileFast(media.messageId, apiUrl);
+      await downloadFileFast(message.messageId, apiUrl);
     } catch (e) {
       Log.error('Fast download failed: $e');
       await FileDownloader().enqueue(task);
