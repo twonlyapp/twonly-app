@@ -298,6 +298,7 @@ class _UserListItem extends State<UserListItem> {
   late StreamSubscription<List<Message>> lastMessageStream;
 
   List<Message> previewMessages = [];
+  bool hasNonOpenedMediaFile = false;
 
   @override
   void initState() {
@@ -352,6 +353,17 @@ class _UserListItem extends State<UserListItem> {
       }
     }
 
+    final msgs =
+        previewMessages.where((x) => x.kind == MessageKind.media).toList();
+    if (msgs.isNotEmpty &&
+        msgs.first.kind == MessageKind.media &&
+        msgs.first.messageOtherId != null &&
+        msgs.first.openedAt == null) {
+      hasNonOpenedMediaFile = true;
+    } else {
+      hasNonOpenedMediaFile = false;
+    }
+
     lastMessages = newLastMessages;
     messagesNotOpened = newMessagesNotOpened;
     setState(() {
@@ -368,12 +380,10 @@ class _UserListItem extends State<UserListItem> {
       ));
       return;
     }
-    final msgs =
-        previewMessages.where((x) => x.kind == MessageKind.media).toList();
-    if (msgs.isNotEmpty &&
-        msgs.first.kind == MessageKind.media &&
-        msgs.first.messageOtherId != null &&
-        msgs.first.openedAt == null) {
+
+    if (hasNonOpenedMediaFile) {
+      final msgs =
+          previewMessages.where((x) => x.kind == MessageKind.media).toList();
       switch (msgs.first.downloadState) {
         case DownloadState.pending:
           await startDownloadMedia(msgs.first, true);
@@ -447,12 +457,18 @@ class _UserListItem extends State<UserListItem> {
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(
                         builder: (context) {
-                          return CameraSendToView(widget.user);
+                          if (hasNonOpenedMediaFile) {
+                            return ChatMessagesView(widget.user);
+                          } else {
+                            return CameraSendToView(widget.user);
+                          }
                         },
                       ));
                     },
                     icon: FaIcon(
-                      FontAwesomeIcons.camera,
+                      hasNonOpenedMediaFile
+                          ? FontAwesomeIcons.solidComments
+                          : FontAwesomeIcons.camera,
                       color: context.color.outline.withAlpha(150),
                     ),
                   ),
