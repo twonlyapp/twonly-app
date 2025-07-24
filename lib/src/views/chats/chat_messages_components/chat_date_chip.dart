@@ -12,20 +12,23 @@ class ChatDateChip extends StatelessWidget {
     final formattedDate = item.isTime
         ? DateFormat.Hm(Localizations.localeOf(context).toLanguageTag())
             .format(item.time!)
-        : '${DateFormat.Hm(Localizations.localeOf(context).toLanguageTag()).format(item.date!)} ${DateFormat.yMd(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}';
+        : '${DateFormat.Hm(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}\n${DateFormat.yMd(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}';
 
     return Center(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.black.withAlpha(40),
+          color: isDarkMode(context)
+              ? const Color.fromARGB(255, 38, 38, 38)
+              : Colors.black.withAlpha(40),
           borderRadius: BorderRadius.circular(8),
         ),
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         child: Text(
           formattedDate,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 10,
-            color: isDarkMode(context) ? Colors.white : Colors.black,
+            color: isDarkMode(context) ? Colors.white : Colors.grey,
           ),
         ),
       ),
