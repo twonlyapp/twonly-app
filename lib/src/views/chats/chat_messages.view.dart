@@ -297,7 +297,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                       children: [
                         Text(getContactDisplayName(user)),
                         const SizedBox(width: 10),
-                        VerifiedShield(key: verifyShieldKey, user),
+                        if (user.verified)
+                          VerifiedShield(key: verifyShieldKey, user)
                       ],
                     ),
                   ),
