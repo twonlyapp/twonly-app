@@ -15,7 +15,7 @@ Color getMessageColorFromType(MessageContent content, BuildContext context) {
         color = context.color.primary;
       } else {
         if (content.isVideo) {
-          color = const Color.fromARGB(255, 240, 243, 33);
+          color = const Color.fromARGB(255, 243, 33, 208);
         } else {
           color = Colors.redAccent;
         }

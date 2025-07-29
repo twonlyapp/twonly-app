@@ -115,15 +115,6 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     }
   }
 
-  Future<void> newMessageExchange(int userId) {
-    return updateContact(
-      userId,
-      ContactsCompanion(
-        lastMessageExchange: Value(DateTime.now()),
-      ),
-    );
-  }
-
   Stream<List<Contact>> watchNotAcceptedContacts() {
     return (select(contacts)
           ..where((t) =>

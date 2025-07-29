@@ -10,6 +10,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -21,14 +22,15 @@ import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp
 import 'package:twonly/src/views/chats/chat_list_components/feedback_btn.dart';
 import 'package:twonly/src/views/chats/chat_list_components/last_message_time.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/message_send_state_icon.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/views/chats/start_new_chat.view.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/message_send_state_icon.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
 import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/views/settings/help/changelog.view.dart';
+import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
@@ -43,6 +45,7 @@ class _ChatListViewState extends State<ChatListView> {
   late StreamSubscription<List<Contact>> _contactsSub;
   List<Contact> _contacts = [];
   List<Contact> _pinnedContacts = [];
+  UserData? _user;
 
   GlobalKey firstUserListItemKey = GlobalKey();
   GlobalKey searchForOtherUsers = GlobalKey();
@@ -76,6 +79,7 @@ class _ChatListViewState extends State<ChatListView> {
 
     final user = await getUser();
     if (user == null) return;
+    _user = user;
     final changeLog = await rootBundle.loadString('CHANGELOG.md');
     final changeLogHash =
         (await compute(Sha256().hash, changeLog.codeUnits)).bytes;
@@ -112,6 +116,23 @@ class _ChatListViewState extends State<ChatListView> {
     return Scaffold(
       appBar: AppBar(
         title: Row(children: [
+          GestureDetector(
+            onTap: () async {
+              await Navigator.push(context,
+                  MaterialPageRoute(builder: (context) {
+                return const ProfileView();
+              }));
+              _user = await getUser();
+              if (!mounted) return;
+              setState(() {});
+            },
+            child: ContactAvatar(
+              userData: _user,
+              fontSize: 14,
+              color: context.color.onSurface.withAlpha(20),
+            ),
+          ),
+          const SizedBox(width: 10),
           const Text('twonly '),
           if (planId != 'Free')
             GestureDetector(
