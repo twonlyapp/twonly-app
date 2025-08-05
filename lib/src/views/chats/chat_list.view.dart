@@ -79,7 +79,9 @@ class _ChatListViewState extends State<ChatListView> {
 
     final user = await getUser();
     if (user == null) return;
-    _user = user;
+    setState(() {
+      _user = user;
+    });
     final changeLog = await rootBundle.loadString('CHANGELOG.md');
     final changeLogHash =
         (await compute(Sha256().hash, changeLog.codeUnits)).bytes;
