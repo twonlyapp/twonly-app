@@ -8,7 +8,6 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
-import 'package:twonly/src/views/contact/contact_verify.view.dart';
 
 class UserContextMenu extends StatefulWidget {
   const UserContextMenu({
@@ -57,18 +56,6 @@ class _UserContextMenuState extends State<UserContextMenu> {
               }
             },
             child: const FaIcon(FontAwesomeIcons.boxOpen),
-          ),
-        if (!widget.contact.verified)
-          PieAction(
-            tooltip: Text(context.lang.contextMenuVerifyUser),
-            onSelect: () {
-              Navigator.push(context, MaterialPageRoute(
-                builder: (context) {
-                  return ContactVerifyView(widget.contact);
-                },
-              ));
-            },
-            child: const Icon(Icons.gpp_maybe_rounded),
           ),
         PieAction(
           tooltip: Text(context.lang.contextMenuOpenChat),

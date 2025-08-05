@@ -193,7 +193,9 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
   Future<int?> insertMessage(MessagesCompanion message) async {
     try {
       await (update(contacts)
-            ..where((c) => c.userId.equals(message.contactId.value)))
+            ..where(
+              (c) => c.userId.equals(message.contactId.value),
+            ))
           .write(ContactsCompanion(lastMessageExchange: Value(DateTime.now())));
 
       return await into(messages).insert(message);

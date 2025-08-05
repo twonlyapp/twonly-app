@@ -310,7 +310,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               }));
             },
           ),
-          if (isPayingUser)
+          if (isPayingUser || currentPlan == 'Tester')
             BetterListTile(
               icon: FontAwesomeIcons.userPlus,
               text: context.lang.manageAdditionalUsers,
@@ -387,8 +387,10 @@ class PlanCard extends StatelessWidget {
         ];
       case 'Family':
         features = [
-          context.lang.familyFeature1,
+          context.lang.proFeature1,
           context.lang.familyFeature2,
+          context.lang.proFeature3,
+          context.lang.proFeature4,
         ];
       default:
     }

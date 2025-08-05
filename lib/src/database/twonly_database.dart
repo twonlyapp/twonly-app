@@ -3,13 +3,11 @@ import 'package:drift_flutter/drift_flutter.dart'
     show DriftNativeOptions, driftDatabase;
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/daos/media_downloads_dao.dart';
 import 'package:twonly/src/database/daos/media_uploads_dao.dart';
 import 'package:twonly/src/database/daos/message_retransmissions.dao.dart';
 import 'package:twonly/src/database/daos/messages_dao.dart';
 import 'package:twonly/src/database/daos/signal_dao.dart';
 import 'package:twonly/src/database/tables/contacts_table.dart';
-import 'package:twonly/src/database/tables/media_download_table.dart';
 import 'package:twonly/src/database/tables/media_uploads_table.dart';
 import 'package:twonly/src/database/tables/message_retransmissions.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
@@ -29,7 +27,6 @@ part 'twonly_database.g.dart';
   Contacts,
   Messages,
   MediaUploads,
-  MediaDownloads,
   SignalIdentityKeyStores,
   SignalPreKeyStores,
   SignalSenderKeyStores,
@@ -41,7 +38,6 @@ part 'twonly_database.g.dart';
   MessagesDao,
   ContactsDao,
   MediaUploadsDao,
-  MediaDownloadsDao,
   SignalDao,
   MessageRetransmissionDao
 ])
@@ -54,7 +50,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -91,7 +87,7 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           ));
         },
         from4To5: (m, schema) async {
-          await m.createTable(mediaDownloads);
+          await m.createTable(schema.mediaDownloads);
           await m.addColumn(schema.messages, schema.messages.mediaDownloadId);
           await m.addColumn(schema.messages, schema.messages.mediaUploadId);
         },
@@ -140,6 +136,9 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           await m.addColumn(
               schema.messages, schema.messages.mediaRetransmissionState);
         },
+        from15To16: (m, schema) async {
+          await m.deleteTable('media_downloads');
+        },
       ),
     );
   }
@@ -164,7 +163,6 @@ class TwonlyDatabase extends _$TwonlyDatabase {
   Future<void> deleteDataForTwonlySafe() async {
     await delete(messages).go();
     await delete(messageRetransmissions).go();
-    await delete(mediaDownloads).go();
     await delete(mediaUploads).go();
     await update(contacts).write(
       const ContactsCompanion(

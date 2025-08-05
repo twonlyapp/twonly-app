@@ -13,6 +13,7 @@ import 'package:twonly/src/database/daos/contacts_dao.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/video_recording_time.dart';
@@ -171,6 +172,19 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   Future<void> initAsync() async {
     hasAudioPermission = await Permission.microphone.isGranted;
+
+    if (!hasAudioPermission) {
+      final user = await getUser();
+      if (user != null) {
+        if (!user.requestedAudioPermission) {
+          await updateUserdata((u) {
+            u.requestedAudioPermission = true;
+            return u;
+          });
+          await requestMicrophonePermission();
+        }
+      }
+    }
     if (!mounted) return;
     setState(() {});
   }

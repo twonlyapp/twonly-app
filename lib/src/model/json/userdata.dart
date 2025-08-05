@@ -49,6 +49,9 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool useHighQuality = true;
 
+  @JsonKey(defaultValue: false)
+  bool requestedAudioPermission = false;
+
   @JsonKey(defaultValue: true)
   bool showFeedbackShortcut = true;
 

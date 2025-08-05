@@ -555,8 +555,9 @@ Future<void> handleMediaUpload(MediaUpload media) async {
       timestamp: media.metadata!.messageSendAt,
     );
 
-    final plaintextContent =
-        Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson()))));
+    final plaintextContent = Uint8List.fromList(
+      gzip.encode(utf8.encode(jsonEncode(msg.toJson()))),
+    );
 
     final contact = await twonlyDB.contactsDao
         .getContactByUserId(message.contactId)

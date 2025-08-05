@@ -10,7 +10,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/headline.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/verified_shield.dart';
 
 class BestFriendsSelector extends StatelessWidget {
   const BestFriendsSelector({
@@ -157,13 +156,6 @@ class UserCheckbox extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      if (isRealTwonly)
-                        Padding(
-                            padding: const EdgeInsets.only(right: 2),
-                            child: VerifiedShield(
-                              user,
-                              size: 12,
-                            )),
                       Text(
                         displayName.length > 8
                             ? '${displayName.substring(0, 8)}...'

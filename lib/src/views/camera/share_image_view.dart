@@ -54,7 +54,6 @@ class _ShareImageView extends State<ShareImageView> {
   bool sendingImage = false;
   bool hideArchivedUsers = true;
   final TextEditingController searchUserName = TextEditingController();
-  bool showRealTwonlyWarning = false;
   late StreamSubscription<List<Contact>> contactSub;
   String lastQuery = '';
 
@@ -150,15 +149,6 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   void updateStatus(int userId, bool checked) {
-    if (widget.isRealTwonly) {
-      final user = contacts.firstWhere((x) => x.userId == userId);
-      if (!user.verified) {
-        showRealTwonlyWarning = true;
-        setState(() {});
-        return;
-      }
-    }
-    showRealTwonlyWarning = false;
     widget.updateStatus(userId, checked);
     setState(() {});
   }
@@ -175,13 +165,6 @@ class _ShareImageView extends State<ShareImageView> {
               const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
           child: Column(
             children: [
-              if (showRealTwonlyWarning)
-                Text(
-                  context.lang.shareImageAllTwonlyWarning,
-                  style: const TextStyle(color: Colors.orange, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              if (showRealTwonlyWarning) const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: TextField(

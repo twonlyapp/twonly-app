@@ -398,8 +398,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
           );
 
           if (messageId == null) {
+            Log.error('could not insert message into db');
             return client.Response()..error = ErrorCode.InternalError;
           }
+
+          Log.info('Inserted a new message with id: $messageId');
 
           if (message.kind == MessageKind.media) {
             await twonlyDB.contactsDao.incFlameCounter(

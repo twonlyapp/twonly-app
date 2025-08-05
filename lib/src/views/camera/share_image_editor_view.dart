@@ -21,7 +21,6 @@ import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/layers_viewer.dart';
 import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:twonly/src/views/camera/share_image_view.dart';
-import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
@@ -242,16 +241,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             ? Theme.of(context).colorScheme.primary
             : Colors.white,
         onPressed: () async {
-          if (widget.sendTo != null) {
-            if (!widget.sendTo!.verified) {
-              await showAlertDialog(
-                context,
-                context.lang.shareImageUserNotVerified,
-                context.lang.shareImageUserNotVerifiedDesc,
-              );
-              return;
-            }
-          }
           _isRealTwonly = !_isRealTwonly;
           if (_isRealTwonly) {
             maxShowTime = 12;
