@@ -33,8 +33,10 @@ class LayersViewer extends StatelessWidget {
           );
         }),
         ...layers
-            .where((layerItem) =>
-                layerItem is EmojiLayerData || layerItem is DrawLayerData)
+            .where(
+          (layerItem) =>
+              layerItem is EmojiLayerData || layerItem is DrawLayerData,
+        )
             .map((layerItem) {
           if (layerItem is EmojiLayerData) {
             return EmojiLayer(

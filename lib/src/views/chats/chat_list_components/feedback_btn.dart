@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -17,7 +19,7 @@ class _FeedbackIconButtonState extends State<FeedbackIconButton> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -35,8 +37,8 @@ class _FeedbackIconButtonState extends State<FeedbackIconButton> {
     }
 
     return IconButton(
-      onPressed: () {
-        Navigator.push(
+      onPressed: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => const ContactUsView(),

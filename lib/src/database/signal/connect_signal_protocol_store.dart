@@ -6,7 +6,9 @@ import 'package:twonly/src/database/signal/connect_signed_pre_key_store.dart';
 
 class ConnectSignalProtocolStore implements SignalProtocolStore {
   ConnectSignalProtocolStore(
-      IdentityKeyPair identityKeyPair, int registrationId) {
+    IdentityKeyPair identityKeyPair,
+    int registrationId,
+  ) {
     _identityKeyStore =
         ConnectIdentityKeyStore(identityKeyPair, registrationId);
   }
@@ -27,12 +29,17 @@ class ConnectSignalProtocolStore implements SignalProtocolStore {
 
   @override
   Future<bool> saveIdentity(
-          SignalProtocolAddress address, IdentityKey? identityKey) async =>
+    SignalProtocolAddress address,
+    IdentityKey? identityKey,
+  ) async =>
       _identityKeyStore.saveIdentity(address, identityKey);
 
   @override
-  Future<bool> isTrustedIdentity(SignalProtocolAddress address,
-          IdentityKey? identityKey, Direction direction) async =>
+  Future<bool> isTrustedIdentity(
+    SignalProtocolAddress address,
+    IdentityKey? identityKey,
+    Direction direction,
+  ) async =>
       _identityKeyStore.isTrustedIdentity(address, identityKey, direction);
 
   @override
@@ -67,7 +74,9 @@ class ConnectSignalProtocolStore implements SignalProtocolStore {
 
   @override
   Future<void> storeSession(
-      SignalProtocolAddress address, SessionRecord record) async {
+    SignalProtocolAddress address,
+    SessionRecord record,
+  ) async {
     await sessionStore.storeSession(address, record);
   }
 
@@ -95,7 +104,9 @@ class ConnectSignalProtocolStore implements SignalProtocolStore {
 
   @override
   Future<void> storeSignedPreKey(
-      int signedPreKeyId, SignedPreKeyRecord record) async {
+    int signedPreKeyId,
+    SignedPreKeyRecord record,
+  ) async {
     await signedPreKeyStore.storeSignedPreKey(signedPreKeyId, record);
   }
 

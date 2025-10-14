@@ -42,8 +42,10 @@ class _ChatListEntryState extends State<ChatListEntry> {
   @override
   void initState() {
     super.initState();
-    final msgContent = MessageContent.fromJson(widget.msg.message.kind,
-        jsonDecode(widget.msg.message.contentJson!) as Map);
+    final msgContent = MessageContent.fromJson(
+      widget.msg.message.kind,
+      jsonDecode(widget.msg.message.contentJson!) as Map,
+    );
     if (msgContent is TextMessageContent) {
       textMessage = msgContent.text;
     }

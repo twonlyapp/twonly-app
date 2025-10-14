@@ -22,10 +22,10 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
   final TextEditingController _passwordController = TextEditingController();
 
   @override
-  void initState() {
+  Future<void> initState() async {
     _urlController.text = 'https://';
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -86,7 +86,8 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
       } else {
         // If the server did not return a 200 OK response, throw an exception.
         throw Exception(
-            'Got invalid status code ${response.statusCode} from server.');
+          'Got invalid status code ${response.statusCode} from server.',
+        );
       }
     } catch (e) {
       Log.error('$e');
@@ -172,7 +173,7 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
                 },
                 child: Text(context.lang.backupResetServer),
               ),
-            )
+            ),
           ],
         ),
       ),

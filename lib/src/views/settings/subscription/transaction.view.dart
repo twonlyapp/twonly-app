@@ -46,7 +46,7 @@ class _TransactionViewState extends State<TransactionView> {
             ),
           ),
           if (widget.transactions != null)
-            ...widget.transactions!.map((x) => TransactionCard(transaction: x))
+            ...widget.transactions!.map((x) => TransactionCard(transaction: x)),
         ],
       ),
     );
@@ -94,7 +94,8 @@ class _TransactionCardState extends State<TransactionCard> {
     ).format(widget.transaction.depositCents.toInt() / 100);
 
     final timestamp = DateTime.fromMillisecondsSinceEpoch(
-        widget.transaction.createdAtUnixTimestamp.toInt() * 1000);
+      widget.transaction.createdAtUnixTimestamp.toInt() * 1000,
+    );
 
     return Card(
       margin: const EdgeInsets.all(10),

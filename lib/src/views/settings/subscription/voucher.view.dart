@@ -17,9 +17,9 @@ class _VoucherViewState extends State<VoucherView> {
   List<Response_Voucher> vouchers = [];
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -85,10 +85,11 @@ class VoucherCard extends StatefulWidget {
 }
 
 class _VoucherCardState extends State<VoucherCard> {
-  void _copyVoucherId() {
+  Future<void> _copyVoucherId() async {
     if (!widget.voucher.redeemed) {
-      Clipboard.setData(ClipboardData(text: widget.voucher.voucherId));
-      HapticFeedback.heavyImpact();
+      await Clipboard.setData(ClipboardData(text: widget.voucher.voucherId));
+      await HapticFeedback.heavyImpact();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${widget.voucher.voucherId} copied.')),
       );

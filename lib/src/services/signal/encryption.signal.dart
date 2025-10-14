@@ -15,7 +15,9 @@ import 'package:twonly/src/utils/misc.dart';
 final lockingSignalEncryption = Mutex();
 
 Future<Uint8List?> signalEncryptMessage(
-    int target, Uint8List plaintextContent) async {
+  int target,
+  Uint8List plaintextContent,
+) async {
   return lockingSignalEncryption.protect<Uint8List?>(() async {
     try {
       final signalStore = (await getSignalStore())!;
@@ -95,7 +97,9 @@ Future<MessageJson?> signalDecryptMessage(int source, Uint8List msg) async {
     final signalStore = (await getSignalStore())!;
 
     final session = SessionCipher.fromStore(
-        signalStore, SignalProtocolAddress(source.toString(), defaultDeviceId));
+      signalStore,
+      SignalProtocolAddress(source.toString(), defaultDeviceId),
+    );
 
     final msgs = removeLastXBytes(msg, 4);
     if (msgs == null) {
@@ -115,11 +119,13 @@ Future<MessageJson?> signalDecryptMessage(int source, Uint8List msg) async {
       Log.error('Type not known: $type');
       return null;
     }
-    return MessageJson.fromJson(jsonDecode(
-      utf8.decode(
-        gzip.decode(plaintext),
-      ),
-    ) as Map<String, dynamic>);
+    return MessageJson.fromJson(
+      jsonDecode(
+        utf8.decode(
+          gzip.decode(plaintext),
+        ),
+      ) as Map<String, dynamic>,
+    );
   } catch (e) {
     Log.error(e.toString());
     return null;

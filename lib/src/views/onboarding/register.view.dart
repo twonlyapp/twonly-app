@@ -105,92 +105,93 @@ class _RegisterViewState extends State<RegisterView> {
         title: const Text(''),
       ),
       body: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 10, right: 10),
-            child: ListView(
-              children: [
-                const SizedBox(height: 50),
-                Text(
-                  context.lang.registerTitle,
+        padding: const EdgeInsets.all(10),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 10, right: 10),
+          child: ListView(
+            children: [
+              const SizedBox(height: 50),
+              Text(
+                context.lang.registerTitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 30),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Text(
+                  context.lang.registerSlogan,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 30),
+                  style: const TextStyle(fontSize: 12),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
+              ),
+              const SizedBox(height: 60),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10, right: 10),
                   child: Text(
-                    context.lang.registerSlogan,
+                    context.lang.registerUsernameSlogan,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 15),
                   ),
                 ),
-                const SizedBox(height: 60),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 10, right: 10),
-                    child: Text(
-                      context.lang.registerUsernameSlogan,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                  ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: usernameController,
+                onChanged: (value) {
+                  usernameController.text = value.toLowerCase();
+                  usernameController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: usernameController.text.length),
+                  );
+                  setState(() {
+                    _isValidUserName = usernameController.text.length >= 3;
+                  });
+                },
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(12),
+                  FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z]')),
+                ],
+                style: const TextStyle(fontSize: 17),
+                decoration: getInputDecoration(
+                  context.lang.registerUsernameDecoration,
                 ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: usernameController,
-                  onChanged: (value) {
-                    usernameController.text = value.toLowerCase();
-                    usernameController.selection = TextSelection.fromPosition(
-                      TextPosition(offset: usernameController.text.length),
-                    );
-                    setState(() {
-                      _isValidUserName = usernameController.text.length >= 3;
-                    });
-                  },
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(12),
-                    FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z]')),
-                  ],
-                  style: const TextStyle(fontSize: 17),
-                  decoration: getInputDecoration(
-                    context.lang.registerUsernameDecoration,
-                  ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                context.lang.registerUsernameLimits,
+                style: TextStyle(
+                  color: _showUserNameError ? Colors.red : Colors.transparent,
+                  fontSize: 12,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  context.lang.registerUsernameLimits,
-                  style: TextStyle(
-                    color: _showUserNameError ? Colors.red : Colors.transparent,
-                    fontSize: 12,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                // const SizedBox(height: 5),
-                // Center(
-                //   child: Padding(
-                //     padding: EdgeInsets.only(left: 10, right: 10),
-                //     child: Text(
-                //       context.lang.registerUsernameLimits,
-                //       textAlign: TextAlign.center,
-                //       style: const TextStyle(fontSize: 9),
-                //     ),
-                //   ),
-                // ),
-                // const SizedBox(height: 30),
-                // Center(
-                //   child: Text(
-                //     context.lang.registerTwonlyCodeText,
-                //     textAlign: TextAlign.center,
-                //   ),
-                // ),
-                // const SizedBox(height: 10),
-                // TextField(
-                //   controller: inviteCodeController,
-                //   decoration:
-                //       getInputDecoration(context.lang.registerTwonlyCodeLabel),
-                // ),
-                const SizedBox(height: 30),
-                Column(children: [
+                textAlign: TextAlign.center,
+              ),
+              // const SizedBox(height: 5),
+              // Center(
+              //   child: Padding(
+              //     padding: EdgeInsets.only(left: 10, right: 10),
+              //     child: Text(
+              //       context.lang.registerUsernameLimits,
+              //       textAlign: TextAlign.center,
+              //       style: const TextStyle(fontSize: 9),
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(height: 30),
+              // Center(
+              //   child: Text(
+              //     context.lang.registerTwonlyCodeText,
+              //     textAlign: TextAlign.center,
+              //   ),
+              // ),
+              // const SizedBox(height: 10),
+              // TextField(
+              //   controller: inviteCodeController,
+              //   decoration:
+              //       getInputDecoration(context.lang.registerTwonlyCodeLabel),
+              // ),
+              const SizedBox(height: 30),
+              Column(
+                children: [
                   FilledButton.icon(
                     icon: _isTryingToRegister
                         ? const SizedBox(
@@ -204,14 +205,18 @@ class _RegisterViewState extends State<RegisterView> {
                         : const Icon(Icons.group),
                     onPressed: createNewUser,
                     style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 30),
+                      padding: WidgetStateProperty.all<EdgeInsets>(
+                        const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 30,
                         ),
-                        backgroundColor: _isTryingToRegister
-                            ? WidgetStateProperty.all<MaterialColor>(
-                                Colors.grey)
-                            : null),
+                      ),
+                      backgroundColor: _isTryingToRegister
+                          ? WidgetStateProperty.all<MaterialColor>(
+                              Colors.grey,
+                            )
+                          : null,
+                    ),
                     label: Text(
                       context.lang.registerSubmitButton,
                       style: const TextStyle(fontSize: 17),
@@ -222,22 +227,27 @@ class _RegisterViewState extends State<RegisterView> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(
-                            builder: (context) {
-                              return const BackupRecoveryView();
-                            },
-                          ));
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return const BackupRecoveryView();
+                              },
+                            ),
+                          );
                         },
                         label: Text(context.lang.twonlySafeRecoverBtn),
                       ),
                     ],
                   ),
-                ]),
-                //   ),
-              ],
-            ),
-          )),
+                ],
+              ),
+              //   ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

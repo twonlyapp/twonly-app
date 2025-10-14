@@ -131,7 +131,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       }
     case MessageKind.signalDecryptError:
       Log.error(
-          'Got signal decrypt error from other user! Sending all non ACK messages again.');
+        'Got signal decrypt error from other user! Sending all non ACK messages again.',
+      );
 
       final content = message.content;
       if (content is SignalDecryptErrorContent) {
@@ -303,7 +304,9 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             );
             final msg = await twonlyDB.messagesDao
                 .getMessageByIdAndContactId(
-                    fromUserId, message.messageReceiverId!)
+                  fromUserId,
+                  message.messageReceiverId!,
+                )
                 .getSingleOrNull();
             if (msg != null && msg.mediaUploadId != null) {
               final filePath =
@@ -329,7 +332,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
                   .deleteMessagesByMessageId(openedMessage.messageId);
             } else {
               Log.error(
-                  'Got a duplicated message from other user: ${message.messageSenderId!}');
+                'Got a duplicated message from other user: ${message.messageSenderId!}',
+              );
               final ok = client.Response_Ok()..none = true;
               return client.Response()..ok = ok;
             }
@@ -387,9 +391,11 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             responseToMessageId: Value(responseToMessageId),
             responseToOtherMessageId: Value(responseToOtherMessageId),
             openedAt: Value(openedAt),
-            downloadState: Value(message.kind == MessageKind.media
-                ? DownloadState.pending
-                : DownloadState.downloaded),
+            downloadState: Value(
+              message.kind == MessageKind.media
+                  ? DownloadState.pending
+                  : DownloadState.downloaded,
+            ),
             sendAt: Value(message.timestamp),
           );
 
@@ -440,9 +446,11 @@ Future<client.Response> handleRequestNewPreKey() async {
 
   final prekeysList = <client.Response_PreKey>[];
   for (var i = 0; i < localPreKeys.length; i++) {
-    prekeysList.add(client.Response_PreKey()
-      ..id = Int64(localPreKeys[i].id)
-      ..prekey = localPreKeys[i].getKeyPair().publicKey.serialize());
+    prekeysList.add(
+      client.Response_PreKey()
+        ..id = Int64(localPreKeys[i].id)
+        ..prekey = localPreKeys[i].getKeyPair().publicKey.serialize(),
+    );
   }
   final prekeys = client.Response_Prekeys(prekeys: prekeysList);
   final ok = client.Response_Ok()..prekeys = prekeys;
@@ -450,7 +458,9 @@ Future<client.Response> handleRequestNewPreKey() async {
 }
 
 Future<client.Response> handleContactRequest(
-    int fromUserId, MessageJson message) async {
+  int fromUserId,
+  MessageJson message,
+) async {
   // request the username by the server so an attacker can not
   // forge the displayed username in the contact request
   final username = await apiService.getUsername(fromUserId);

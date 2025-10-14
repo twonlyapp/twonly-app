@@ -67,21 +67,24 @@ class MemoryItem {
       var mirrorVideo = false;
       if (videoPath != null) {
         final content = MediaMessageContent.fromJson(
-            jsonDecode(message.contentJson!) as Map);
+          jsonDecode(message.contentJson!) as Map,
+        );
         mirrorVideo = content.mirrorVideo;
       }
 
       items
           .putIfAbsent(
-              id,
-              () => MemoryItem(
-                  id: id,
-                  messages: [],
-                  date: message.sendAt,
-                  mirrorVideo: mirrorVideo,
-                  thumbnailPath: thumbnailFile,
-                  imagePath: imagePath,
-                  videoPath: videoPath))
+            id,
+            () => MemoryItem(
+              id: id,
+              messages: [],
+              date: message.sendAt,
+              mirrorVideo: mirrorVideo,
+              thumbnailPath: thumbnailFile,
+              imagePath: imagePath,
+              videoPath: videoPath,
+            ),
+          )
           .messages
           .add(message);
     }

@@ -40,10 +40,11 @@ class _TextViewState extends State<TextLayer> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
           widget.layerData.offset = Offset(
-              0,
-              MediaQuery.of(context).size.height / 2 -
-                  150 +
-                  (widget.layerData.textLayersBefore * 40));
+            0,
+            MediaQuery.of(context).size.height / 2 -
+                150 +
+                (widget.layerData.textLayersBefore * 40),
+          );
           textController.text = widget.layerData.text;
         });
       });
@@ -68,28 +69,28 @@ class _TextViewState extends State<TextLayer> {
             autofocus: true,
             maxLines: null,
             minLines: 1,
-            onEditingComplete: () {
+            onEditingComplete: () async {
               setState(() {
                 widget.layerData.isDeleted = textController.text == '';
                 widget.layerData.isEditing = false;
                 widget.layerData.text = textController.text;
               });
 
-              context
+              await context
                   .read<ImageEditorProvider>()
                   .updateSomeTextViewIsAlreadyEditing(false);
               if (widget.onUpdate != null) {
                 widget.onUpdate!();
               }
             },
-            onTapOutside: (a) {
+            onTapOutside: (a) async {
               widget.layerData.text = textController.text;
               Future.delayed(const Duration(milliseconds: 100), () {
                 if (context.mounted) {
-                  setState(() {
+                  setState(() async {
                     widget.layerData.isDeleted = textController.text == '';
                     widget.layerData.isEditing = false;
-                    context
+                    await context
                         .read<ImageEditorProvider>()
                         .updateSomeTextViewIsAlreadyEditing(false);
                     if (widget.onUpdate != null) {
@@ -99,7 +100,7 @@ class _TextViewState extends State<TextLayer> {
                 }
               });
 
-              context
+              await context
                   .read<ImageEditorProvider>()
                   .updateSomeTextViewIsAlreadyEditing(false);
             },
@@ -150,24 +151,26 @@ class _TextViewState extends State<TextLayer> {
                     .someTextViewIsAlreadyEditing)
                 ? null
                 : () {
-                    setState(() {
-                      context
+                    setState(() async {
+                      await context
                           .read<ImageEditorProvider>()
                           .updateSomeTextViewIsAlreadyEditing(true);
                       widget.layerData.isEditing = true;
                     });
                   },
-            onScaleUpdate: (detail) {
+            onScaleUpdate: (detail) async {
               if (detail.pointerCount == 1) {
                 widget.layerData.offset = Offset(
-                    0, widget.layerData.offset.dy + detail.focalPointDelta.dy);
+                  0,
+                  widget.layerData.offset.dy + detail.focalPointDelta.dy,
+                );
               }
               final renderBox =
                   _widgetKey.currentContext!.findRenderObject()! as RenderBox;
 
               if (widget.layerData.offset.dy > renderBox.size.height - 80) {
                 if (!deleteLayer) {
-                  HapticFeedback.heavyImpact();
+                  await HapticFeedback.heavyImpact();
                 }
                 deleteLayer = true;
               } else {

@@ -75,16 +75,19 @@ Future<void> initFileDownloader() async {
         }
       case TaskProgressUpdate():
         Log.info(
-            'Progress update for ${update.task} with progress ${update.progress}');
+          'Progress update for ${update.task} with progress ${update.progress}',
+        );
     }
   });
 
   await FileDownloader().start();
 
   try {
-    await FileDownloader().configure(androidConfig: [
-      (Config.bypassTLSCertificateValidation, kDebugMode),
-    ]);
+    var androidConfig = [];
+    if (kDebugMode) {
+      androidConfig = [(Config.bypassTLSCertificateValidation, kDebugMode)];
+    }
+    await FileDownloader().configure(androidConfig: androidConfig);
   } catch (e) {
     Log.error(e);
   }
@@ -201,7 +204,9 @@ Future<bool> addVideoToUpload(int mediaUploadId, File videoFilePath) async {
 }
 
 Future<Uint8List> addOrModifyImageToUpload(
-    int mediaUploadId, Uint8List imageBytes) async {
+  int mediaUploadId,
+  Uint8List imageBytes,
+) async {
   Uint8List imageBytesCompressed;
 
   final stopwatch = Stopwatch()..start();
@@ -236,7 +241,8 @@ Future<Uint8List> addOrModifyImageToUpload(
   stopwatch.stop();
 
   Log.info(
-      'Compression the image took: ${stopwatch.elapsedMilliseconds} milliseconds');
+    'Compression the image took: ${stopwatch.elapsedMilliseconds} milliseconds',
+  );
   Log.info('Raw images size in bytes: ${imageBytesCompressed.length}');
 
   // stopwatch.reset();
@@ -285,7 +291,6 @@ Future<void> encryptMediaFiles(
   Future<bool>? videoHandler,
 ) async {
   Log.info('$mediaUploadId encrypting files');
-  // ignore: cast_nullable_to_non_nullable
   var dataToEncrypt = await imageHandler;
 
   /// if there is a video wait until it is finished with compression
@@ -332,8 +337,14 @@ Future<void> encryptMediaFiles(
   unawaited(handleNextMediaUploadSteps(mediaUploadId));
 }
 
-Future<void> finalizeUpload(int mediaUploadId, List<int> contactIds,
-    bool isRealTwonly, bool isVideo, bool mirrorVideo, int maxShowTime) async {
+Future<void> finalizeUpload(
+  int mediaUploadId,
+  List<int> contactIds,
+  bool isRealTwonly,
+  bool isVideo,
+  bool mirrorVideo,
+  int maxShowTime,
+) async {
   final metadata = MediaUploadMetadata()
     ..contactIds = contactIds
     ..isRealTwonly = isRealTwonly
@@ -474,7 +485,8 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
     }
   }
   Log.info(
-      'Status update for ${update.task.taskId} with status ${update.status}');
+    'Status update for ${update.task.taskId} with status ${update.status}',
+  );
 }
 
 Future<void> handleUploadSuccess(MediaUpload media) async {
@@ -565,7 +577,8 @@ Future<void> handleMediaUpload(MediaUpload media) async {
 
     if (contact == null || contact.deleted) {
       Log.warn(
-          'Contact deleted ${message.contactId} or not found in database.');
+        'Contact deleted ${message.contactId} or not found in database.',
+      );
       await twonlyDB.messagesDao.updateMessageByMessageId(
         message.messageId,
         const MessagesCompanion(errorWhileSending: Value(true)),
@@ -708,11 +721,13 @@ Future<void> uploadFileFast(
   );
   requestMultipart.headers['x-twonly-auth-token'] = apiAuthToken;
 
-  requestMultipart.files.add(http.MultipartFile.fromBytes(
-    'file',
-    uploadRequestFile,
-    filename: 'upload',
-  ));
+  requestMultipart.files.add(
+    http.MultipartFile.fromBytes(
+      'file',
+      uploadRequestFile,
+      filename: 'upload',
+    ),
+  );
 
   final response = await requestMultipart.send();
   if (response.statusCode == 200) {
@@ -790,7 +805,10 @@ Future<Uint8List> readSendMediaFile(int mediaUploadId, String type) async {
 }
 
 Future<File> writeSendMediaFile(
-    int mediaUploadId, String type, Uint8List data) async {
+  int mediaUploadId,
+  String type,
+  Uint8List data,
+) async {
   final basePath = await getMediaFilePath(mediaUploadId, 'send');
   final file = File('$basePath.$type');
   await file.writeAsBytes(data);
@@ -838,8 +856,11 @@ List<Uint8List> extractUint8Lists(Uint8List combinedList) {
   final byteData = ByteData.sublistView(combinedList);
   final sizeOfList1 = byteData.getInt32(0);
   final list1 = Uint8List.view(combinedList.buffer, 4, sizeOfList1);
-  final list2 = Uint8List.view(combinedList.buffer, 4 + sizeOfList1,
-      combinedList.lengthInBytes - 4 - sizeOfList1);
+  final list2 = Uint8List.view(
+    combinedList.buffer,
+    4 + sizeOfList1,
+    combinedList.lengthInBytes - 4 - sizeOfList1,
+  );
   return [list1, list2];
 }
 
@@ -853,9 +874,12 @@ String uint8ListToHex(List<int> bytes) {
   return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
 }
 
-Uint8List hexToUint8List(String hex) => Uint8List.fromList(List<int>.generate(
-    hex.length ~/ 2,
-    (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16)));
+Uint8List hexToUint8List(String hex) => Uint8List.fromList(
+      List<int>.generate(
+        hex.length ~/ 2,
+        (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16),
+      ),
+    );
 
 Uint8List createDownloadToken() {
   final random = Random();

@@ -34,7 +34,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   }
 
   final lastUpdateTime = user.twonlySafeBackup!.lastBackupDone;
-  if (force != true && lastUpdateTime != null) {
+  if (!force && lastUpdateTime != null) {
     if (lastUpdateTime
         .isAfter(DateTime.now().subtract(const Duration(days: 1)))) {
       return;
@@ -163,7 +163,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   await encryptedBackupBytesFile.writeAsBytes(encryptedBackupBytes);
 
   Log.info(
-      'Create twonly Safe backup with a size of ${encryptedBackupBytes.length} bytes.');
+    'Create twonly Safe backup with a size of ${encryptedBackupBytes.length} bytes.',
+  );
 
   if (user.backupServer != null) {
     if (encryptedBackupBytes.length > user.backupServer!.maxBackupBytes) {
@@ -205,7 +206,8 @@ Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
     Log.error(
-        'twonly Safe upload failed. ${update.responseStatusCode} ${update.responseBody} ${update.responseHeaders} ${update.exception}');
+      'twonly Safe upload failed. ${update.responseStatusCode} ${update.responseBody} ${update.responseHeaders} ${update.exception}',
+    );
     await updateUserdata((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;
@@ -214,7 +216,8 @@ Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
     });
   } else if (update.status == TaskStatus.complete) {
     Log.error(
-        'twonly Safe uploaded with status code ${update.responseStatusCode}');
+      'twonly Safe uploaded with status code ${update.responseStatusCode}',
+    );
     await updateUserdata((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState =

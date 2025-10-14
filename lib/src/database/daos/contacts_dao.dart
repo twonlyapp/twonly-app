@@ -10,6 +10,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     with _$ContactsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
+  // ignore: matching_super_parameters
   ContactsDao(super.db);
 
   Future<int> insertContact(ContactsCompanion contact) async {
@@ -102,7 +103,9 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   Future<void> updateContact(
-      int userId, ContactsCompanion updatedValues) async {
+    int userId,
+    ContactsCompanion updatedValues,
+  ) async {
     await (update(contacts)..where((c) => c.userId.equals(userId)))
         .write(updatedValues);
     if (updatedValues.blocked.present ||
@@ -117,10 +120,12 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 
   Stream<List<Contact>> watchNotAcceptedContacts() {
     return (select(contacts)
-          ..where((t) =>
-              t.accepted.equals(false) &
-              t.archived.equals(false) &
-              t.blocked.equals(false)))
+          ..where(
+            (t) =>
+                t.accepted.equals(false) &
+                t.archived.equals(false) &
+                t.blocked.equals(false),
+          ))
         .watch();
     // return (select(contacts)).watch();
   }
@@ -132,10 +137,12 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
 
   Stream<List<Contact>> watchContactsForShareView() {
     return (select(contacts)
-          ..where((t) =>
-              t.accepted.equals(true) &
-              t.blocked.equals(false) &
-              t.deleted.equals(false))
+          ..where(
+            (t) =>
+                t.accepted.equals(true) &
+                t.blocked.equals(false) &
+                t.deleted.equals(false),
+          )
           ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
         .watch();
   }
@@ -177,8 +184,9 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
   Stream<int?> watchContactsRequested() {
     final count = contacts.requested.count(distinct: true);
     final query = selectOnly(contacts)
-      ..where(contacts.requested.equals(true) &
-          contacts.accepted.equals(true).not())
+      ..where(
+        contacts.requested.equals(true) & contacts.accepted.equals(true).not(),
+      )
       ..addColumns([count]);
     return query.map((row) => row.read(count)).watchSingle();
   }

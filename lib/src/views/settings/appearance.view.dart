@@ -16,9 +16,9 @@ class _AppearanceViewState extends State<AppearanceView> {
   bool showFeedbackShortcut = false;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -99,10 +99,12 @@ class _AppearanceViewState extends State<AppearanceView> {
         children: [
           ListTile(
             title: Text(context.lang.settingsAppearanceTheme),
-            subtitle: Text(selectedTheme.name,
-                style: const TextStyle(color: Colors.grey)),
-            onTap: () {
-              _showSelectThemeMode(context);
+            subtitle: Text(
+              selectedTheme.name,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            onTap: () async {
+              await _showSelectThemeMode(context);
             },
           ),
           ListTile(

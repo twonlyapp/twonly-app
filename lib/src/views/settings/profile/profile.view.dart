@@ -21,9 +21,9 @@ class _ProfileViewState extends State<ProfileView> {
       PersistentAvatarMakerController(customizedPropertyCategories: []);
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -63,18 +63,19 @@ class _ProfileViewState extends State<ProfileView> {
             child: SizedBox(
               height: 35,
               child: ElevatedButton.icon(
-                  icon: const Icon(Icons.edit),
-                  label: Text(context.lang.settingsProfileCustomizeAvatar),
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ModifyAvatar(),
-                      ),
-                    );
-                    await _avatarMakerController.performRestore();
-                    setState(() {});
-                  }),
+                icon: const Icon(Icons.edit),
+                label: Text(context.lang.settingsProfileCustomizeAvatar),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ModifyAvatar(),
+                    ),
+                  );
+                  await _avatarMakerController.performRestore();
+                  setState(() {});
+                },
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -98,7 +99,9 @@ class _ProfileViewState extends State<ProfileView> {
 }
 
 Future<String?> showDisplayNameChangeDialog(
-    BuildContext context, String currentName) {
+  BuildContext context,
+  String currentName,
+) {
   final controller = TextEditingController(text: currentName);
 
   return showDialog<String>(
@@ -110,7 +113,8 @@ Future<String?> showDisplayNameChangeDialog(
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-              hintText: context.lang.settingsProfileEditDisplayNameNew),
+            hintText: context.lang.settingsProfileEditDisplayNameNew,
+          ),
         ),
         actions: <Widget>[
           TextButton(

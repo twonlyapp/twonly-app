@@ -14,9 +14,9 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
   bool showBackupNotice = false;
 
   @override
-  void initState() {
-    initAsync();
+  Future<void> initState() async {
     super.initState();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -74,8 +74,8 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
                 ),
                 const SizedBox(width: 10),
                 FilledButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const BackupView(),

@@ -14,9 +14,9 @@ class _EmojisState extends State<Emojis> {
   List<String> lastUsed = emojis;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -86,22 +86,23 @@ class _EmojisState extends State<Emojis> {
                 ),
                 children: lastUsed.map((String emoji) {
                   return GridTile(
-                      child: GestureDetector(
-                    onTap: () {
-                      selectEmojis(emoji);
-                    },
-                    child: Container(
-                      padding: EdgeInsets.zero,
-                      alignment: Alignment.center,
-                      child: Text(
-                        emoji,
-                        style: const TextStyle(fontSize: 35),
+                    child: GestureDetector(
+                      onTap: () async {
+                        await selectEmojis(emoji);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.center,
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 35),
+                        ),
                       ),
                     ),
-                  ));
+                  );
                 }).toList(),
               ),
-            )
+            ),
           ],
         ),
       ),

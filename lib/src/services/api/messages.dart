@@ -52,11 +52,13 @@ Future<void> sendRetransmitMessage(int retransId) async {
       return;
     }
 
-    final json = MessageJson.fromJson(jsonDecode(
-      utf8.decode(
-        gzip.decode(retrans.plaintextContent),
-      ),
-    ) as Map<String, dynamic>);
+    final json = MessageJson.fromJson(
+      jsonDecode(
+        utf8.decode(
+          gzip.decode(retrans.plaintextContent),
+        ),
+      ) as Map<String, dynamic>,
+    );
 
     Log.info('Retransmitting $retransId: ${json.kind} to ${retrans.contactId}');
 
@@ -183,9 +185,11 @@ Future<void> encryptAndSendMessageAsync(
       Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson()))));
 
   await twonlyDB.messageRetransmissionDao.updateRetransmission(
-      retransId,
-      MessageRetransmissionsCompanion(
-          plaintextContent: Value(plaintextContent)));
+    retransId,
+    MessageRetransmissionsCompanion(
+      plaintextContent: Value(plaintextContent),
+    ),
+  );
 
   // this can now be done in the background...
   unawaited(sendRetransmitMessage(retransId));

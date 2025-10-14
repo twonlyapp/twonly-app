@@ -11,14 +11,17 @@ class ConnectSenderKeyStore extends SenderKeyStore {
         .getSingleOrNull();
     if (identity == null) {
       throw InvalidKeyIdException(
-          'No such sender key record! - $senderKeyName');
+        'No such sender key record! - $senderKeyName',
+      );
     }
     return SenderKeyRecord.fromSerialized(identity.senderKey);
   }
 
   @override
   Future<void> storeSenderKey(
-      SenderKeyName senderKeyName, SenderKeyRecord record) async {
+    SenderKeyName senderKeyName,
+    SenderKeyRecord record,
+  ) async {
     await twonlyDB.into(twonlyDB.signalSenderKeyStores).insert(
           SignalSenderKeyStoresCompanion(
             senderKey: Value(record.serialize()),

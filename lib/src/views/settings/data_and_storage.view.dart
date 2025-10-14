@@ -16,9 +16,9 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
   bool storeMediaFilesInGallery = true;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -32,7 +32,9 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
   }
 
   Future<void> showAutoDownloadOptions(
-      BuildContext context, ConnectivityResult connectionMode) async {
+    BuildContext context,
+    ConnectivityResult connectionMode,
+  ) async {
     // ignore: inference_failure_on_function_invocation
     await showDialog(
       context: context,
@@ -86,8 +88,8 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               autoDownloadOptions[ConnectivityResult.mobile.name]!.join(', '),
               style: const TextStyle(color: Colors.grey),
             ),
-            onTap: () {
-              showAutoDownloadOptions(context, ConnectivityResult.mobile);
+            onTap: () async {
+              await showAutoDownloadOptions(context, ConnectivityResult.mobile);
             },
           ),
           ListTile(
@@ -96,8 +98,8 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               autoDownloadOptions[ConnectivityResult.wifi.name]!.join(', '),
               style: const TextStyle(color: Colors.grey),
             ),
-            onTap: () {
-              showAutoDownloadOptions(context, ConnectivityResult.wifi);
+            onTap: () async {
+              await showAutoDownloadOptions(context, ConnectivityResult.wifi);
             },
           ),
         ],
@@ -168,7 +170,9 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
   }
 
   Future<void> _updateAutoDownloadSetting(
-      DownloadMediaTypes type, bool? value) async {
+    DownloadMediaTypes type,
+    bool? value,
+  ) async {
     if (value == null) return;
 
     // Update the autoDownloadOptions based on the checkbox state

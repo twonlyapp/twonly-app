@@ -10,6 +10,7 @@ analyzer:
     inference_failure_on_instance_creation: ignore
     avoid_positional_boolean_parameters: ignore
     inference_failure_on_collection_literal: ignore
+    matching_super_parameters: ignore
   exclude: 
     - "lib/src/model/protobuf/**"
     - "lib/src/model/protobuf/api/websocket/**"

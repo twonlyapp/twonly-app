@@ -34,10 +34,14 @@ class _RefundCreditsViewState extends State<RefundCreditsView> {
             ListTile(
               title: const Text('Create a Voucher'),
               onTap: () async {
-                await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) {
-                  return const VoucherView();
-                }));
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const VoucherView();
+                    },
+                  ),
+                );
                 if (context.mounted) {
                   Navigator.pop(context, false);
                 }

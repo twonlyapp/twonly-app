@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_dynamic_calls, inference_failure_on_function_invocation
+// ignore_for_file: inference_failure_on_function_invocation
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,9 +30,9 @@ class MessageContextMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return PieMenu(
       onPressed: () => (),
-      onToggle: (menuOpen) {
+      onToggle: (menuOpen) async {
         if (menuOpen) {
-          HapticFeedback.heavyImpact();
+          await HapticFeedback.heavyImpact();
         }
       },
       actions: [
@@ -51,11 +51,11 @@ class MessageContextMenu extends StatelessWidget {
             await sendTextMessage(
               message.contactId,
               TextMessageContent(
-                  text: layer.text,
-                  responseToMessageId: message.messageOtherId,
-                  responseToOtherMessageId: (message.messageOtherId == null)
-                      ? message.messageId
-                      : null),
+                text: layer.text,
+                responseToMessageId: message.messageOtherId,
+                responseToOtherMessageId:
+                    (message.messageOtherId == null) ? message.messageId : null,
+              ),
               (message.messageOtherId != null)
                   ? PushNotification(
                       kind: (message.kind == MessageKind.textMessage)
@@ -77,10 +77,10 @@ class MessageContextMenu extends StatelessWidget {
         ),
         PieAction(
           tooltip: Text(context.lang.copy),
-          onSelect: () {
+          onSelect: () async {
             final text = getMessageText(message);
-            Clipboard.setData(ClipboardData(text: text));
-            HapticFeedback.heavyImpact();
+            await Clipboard.setData(ClipboardData(text: text));
+            await HapticFeedback.heavyImpact();
           },
           child: const FaIcon(FontAwesomeIcons.solidCopy),
         ),

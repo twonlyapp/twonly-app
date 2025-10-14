@@ -40,8 +40,8 @@ Map<String, List<String>> defaultAutoDownloadOptions = {
   ConnectivityResult.mobile.name: [],
   ConnectivityResult.wifi.name: [
     DownloadMediaTypes.video.name,
-    DownloadMediaTypes.image.name
-  ]
+    DownloadMediaTypes.image.name,
+  ],
 };
 
 Future<bool> isAllowedToDownload(bool isVideo) async {
@@ -121,7 +121,8 @@ Mutex protectDownload = Mutex();
 
 Future<void> startDownloadMedia(Message message, bool force) async {
   Log.info(
-      'Download blocked for ${message.messageId} because of network state.');
+    'Download blocked for ${message.messageId} because of network state.',
+  );
   if (message.contentJson == null) {
     Log.error('Content of ${message.messageId} not found.');
     await handleMediaError(message);
@@ -147,7 +148,8 @@ Future<void> startDownloadMedia(Message message, bool force) async {
 
   if (!force && !await isAllowedToDownload(content.isVideo)) {
     Log.warn(
-        'Download blocked for ${message.messageId} because of network state.');
+      'Download blocked for ${message.messageId} because of network state.',
+    );
     return;
   }
 
@@ -160,7 +162,8 @@ Future<void> startDownloadMedia(Message message, bool force) async {
 
     if (msg.downloadState != DownloadState.pending) {
       Log.error(
-          '${message.messageId} is already downloaded or is downloading.');
+        '${message.messageId} is already downloaded or is downloading.',
+      );
       return true;
     }
 
@@ -317,7 +320,8 @@ Future<void> handleEncryptedFile(int messageId) async {
       await writeMediaFile(msg.messageId, 'png', imageBytes);
     } catch (e) {
       Log.error(
-          'could not decrypt the media file in the second try. reporting error to user: $e');
+        'could not decrypt the media file in the second try. reporting error to user: $e',
+      );
       await handleMediaError(msg);
       return;
     }
@@ -461,7 +465,7 @@ Future<void> purgeMediaFiles(Directory directory) async {
             if ((message == null) ||
                 (message.openedAt != null &&
                     !message.mediaStored &&
-                    message.acknowledgeByServer == true) ||
+                    message.acknowledgeByServer) ||
                 message.errorWhileSending) {
               file.deleteSync();
             }

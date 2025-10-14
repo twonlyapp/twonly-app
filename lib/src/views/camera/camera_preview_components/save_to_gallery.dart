@@ -61,7 +61,8 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
               } else {
                 final random = Random();
                 final token = uint8ListToHex(
-                    List<int>.generate(32, (i) => random.nextInt(256)));
+                  List<int>.generate(32, (i) => random.nextInt(256)),
+                );
                 memoryPath = join(memoryPath, token);
               }
               final user = await getUser();
@@ -111,18 +112,21 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
         children: [
           if (_imageSaving || widget.isLoading)
             const SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(strokeWidth: 1))
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(strokeWidth: 1),
+            )
           else
             _imageSaved
                 ? const Icon(Icons.check)
                 : const FaIcon(FontAwesomeIcons.floppyDisk),
           if (widget.displayButtonLabel) const SizedBox(width: 10),
           if (widget.displayButtonLabel)
-            Text(_imageSaved
-                ? context.lang.shareImagedEditorSavedImage
-                : context.lang.shareImagedEditorSaveImage)
+            Text(
+              _imageSaved
+                  ? context.lang.shareImagedEditorSavedImage
+                  : context.lang.shareImagedEditorSaveImage,
+            ),
         ],
       ),
     );

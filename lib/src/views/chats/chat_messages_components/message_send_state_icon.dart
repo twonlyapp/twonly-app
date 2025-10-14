@@ -198,8 +198,8 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
           Transform(
             transform: Matrix4.identity()
-              ..scale(0.7) // Scale to half
-              ..translate(3.0, 5),
+              ..scaleByDouble(0.7, 0.7, 0.7, 0.7) // Scale to half
+              ..translateByDouble(3, 5, 0, 1),
             // Move down by 10 pixels (adjust as needed)
             alignment: Alignment.center,
             child: icons[1],

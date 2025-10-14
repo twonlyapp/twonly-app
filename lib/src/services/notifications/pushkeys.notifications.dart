@@ -18,8 +18,10 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/log.dart';
 
 /// This function must be called after the database is setup
-Future<void> setupNotificationWithUsers(
-    {bool force = false, int? forceContact}) async {
+Future<void> setupNotificationWithUsers({
+  bool force = false,
+  int? forceContact,
+}) async {
   var pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
   // HotFIX: Search for user with id 0 if not there remove all
@@ -29,11 +31,13 @@ Future<void> setupNotificationWithUsers(
     Log.info('Clearing push keys');
     await setPushKeys(SecureStorageKeys.receivingPushKeys, []);
     pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys)
-      ..add(PushUser(
-        userId: Int64(),
-        displayName: 'NoUser',
-        pushKeys: [],
-      ));
+      ..add(
+        PushUser(
+          userId: Int64(),
+          displayName: 'NoUser',
+          pushKeys: [],
+        ),
+      );
   }
 
   var wasChanged = false;
@@ -51,7 +55,8 @@ Future<void> setupNotificationWithUsers(
           DateTime.now().subtract(Duration(days: 5 + random.nextInt(5)));
       final lastKey = pushUser.pushKeys.last;
       final createdAt = DateTime.fromMillisecondsSinceEpoch(
-          lastKey.createdAtUnixTimestamp.toInt());
+        lastKey.createdAtUnixTimestamp.toInt(),
+      );
 
       if (force ||
           (forceContact == contact.userId) ||
@@ -82,12 +87,14 @@ Future<void> setupNotificationWithUsers(
         createdAtUnixTimestamp: Int64(DateTime.now().millisecondsSinceEpoch),
       );
       await sendNewPushKey(contact.userId, pushKey);
-      pushUsers.add(PushUser(
-        userId: Int64(contact.userId),
-        displayName: getContactDisplayName(contact),
-        blocked: contact.blocked,
-        pushKeys: [pushKey],
-      ));
+      pushUsers.add(
+        PushUser(
+          userId: Int64(contact.userId),
+          displayName: getContactDisplayName(contact),
+          blocked: contact.blocked,
+          pushKeys: [pushKey],
+        ),
+      );
     }
   }
 
@@ -119,13 +126,15 @@ Future<void> updatePushUser(Contact contact) async {
   final pushUser = pushKeys.firstWhereOrNull((x) => x.userId == contact.userId);
 
   if (pushUser == null) {
-    pushKeys.add(PushUser(
-      userId: Int64(contact.userId),
-      displayName: getContactDisplayName(contact),
-      pushKeys: [],
-      blocked: contact.blocked,
-      lastMessageId: Int64(),
-    ));
+    pushKeys.add(
+      PushUser(
+        userId: Int64(contact.userId),
+        displayName: getContactDisplayName(contact),
+        pushKeys: [],
+        blocked: contact.blocked,
+        lastMessageId: Int64(),
+      ),
+    );
   } else {
     pushUser
       ..displayName = getContactDisplayName(contact)
@@ -145,13 +154,15 @@ Future<void> handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
         .getContactByUserId(fromUserId)
         .getSingleOrNull();
     if (contact == null) return;
-    pushKeys.add(PushUser(
-      userId: Int64(fromUserId),
-      displayName: getContactDisplayName(contact),
-      pushKeys: [],
-      blocked: contact.blocked,
-      lastMessageId: Int64(),
-    ));
+    pushKeys.add(
+      PushUser(
+        userId: Int64(fromUserId),
+        displayName: getContactDisplayName(contact),
+        pushKeys: [],
+        blocked: contact.blocked,
+        lastMessageId: Int64(),
+      ),
+    );
     pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);
   }
 

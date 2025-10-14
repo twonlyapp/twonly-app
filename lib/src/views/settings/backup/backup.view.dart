@@ -33,9 +33,9 @@ class _BackupViewState extends State<BackupView> {
   final PageController pageController = PageController();
 
   @override
-  void initState() {
-    initAsync();
+  Future<void> initState() async {
     super.initState();
+    await initAsync();
     gUpdateBackupView = initAsync;
   }
 
@@ -113,7 +113,9 @@ class _BackupViewState extends State<BackupView> {
                             (
                               context.lang.backupLastBackupDate,
                               formatDateTime(
-                                  context, twonlySafeBackup!.lastBackupDone)
+                                context,
+                                twonlySafeBackup!.lastBackupDone,
+                              )
                             ),
                             (
                               context.lang.backupLastBackupSize,
@@ -122,7 +124,7 @@ class _BackupViewState extends State<BackupView> {
                             (
                               context.lang.backupLastBackupResult,
                               backupStatus(twonlySafeBackup!.backupUploadState)
-                            )
+                            ),
                           ].map((pair) {
                             return TableRow(
                               children: [
@@ -159,15 +161,16 @@ class _BackupViewState extends State<BackupView> {
                                 });
                               },
                         child: Text(context.lang.backupTwonlySaveNow),
-                      )
+                      ),
                     ],
                   ),
             onTap: () async {
               if (twonlySafeBackup != null) {
                 final disable = await showAlertDialog(
-                    context,
-                    context.lang.deleteBackupTitle,
-                    context.lang.deleteBackupBody);
+                  context,
+                  context.lang.deleteBackupTitle,
+                  context.lang.deleteBackupBody,
+                );
                 if (disable) {
                   await disableTwonlySafe();
                 }
@@ -175,10 +178,14 @@ class _BackupViewState extends State<BackupView> {
                 setState(() {
                   isLoading = true;
                 });
-                await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) {
-                  return const TwonlyIdentityBackupView();
-                }));
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const TwonlyIdentityBackupView();
+                    },
+                  ),
+                );
               }
               await initAsync();
             },
@@ -195,7 +202,8 @@ class _BackupViewState extends State<BackupView> {
         showSelectedLabels: true,
         showUnselectedLabels: true,
         unselectedIconTheme: IconThemeData(
-            color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150)),
+          color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150),
+        ),
         selectedIconTheme:
             IconThemeData(color: Theme.of(context).colorScheme.inverseSurface),
         items: [
@@ -210,8 +218,8 @@ class _BackupViewState extends State<BackupView> {
         ],
         onTap: (int index) {
           activePageIdx = index;
-          setState(() {
-            pageController.animateToPage(
+          setState(() async {
+            await pageController.animateToPage(
               index,
               duration: const Duration(milliseconds: 100),
               curve: Curves.bounceIn,
@@ -271,7 +279,7 @@ class BackupOption extends StatelessWidget {
                         onPressed: onTap,
                         child: Text(context.lang.enable),
                       ),
-              )
+              ),
             ],
           ),
         ),

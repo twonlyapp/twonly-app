@@ -63,8 +63,8 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
         title: Text('twonly Safe ${context.lang.twonlySafeRecoverTitle}'),
         actions: [
           IconButton(
-            onPressed: () {
-              showAlertDialog(
+            onPressed: () async {
+              await showAlertDialog(
                 context,
                 'twonly Safe',
                 context.lang.backupTwonlySafeLongDesc,
@@ -72,7 +72,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
             },
             icon: const FaIcon(FontAwesomeIcons.circleInfo),
             iconSize: 18,
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -128,17 +128,21 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
                       size: 16,
                     ),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 30),
             Center(
               child: OutlinedButton(
                 onPressed: () async {
-                  backupServer = await Navigator.push(context,
-                      MaterialPageRoute(builder: (context) {
-                    return const TwonlySafeServerView();
-                  }));
+                  backupServer = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const TwonlySafeServerView();
+                      },
+                    ),
+                  );
                   setState(() {});
                 },
                 child: Text(context.lang.backupExpertSettings),
@@ -146,17 +150,18 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
             ),
             const SizedBox(height: 10),
             Center(
-                child: FilledButton.icon(
-              onPressed: (!isLoading) ? _recoverTwonlySafe : null,
-              icon: isLoading
-                  ? const SizedBox(
-                      height: 12,
-                      width: 12,
-                      child: CircularProgressIndicator(strokeWidth: 1),
-                    )
-                  : const Icon(Icons.lock_clock_rounded),
-              label: Text(context.lang.twonlySafeRecoverBtn),
-            ))
+              child: FilledButton.icon(
+                onPressed: (!isLoading) ? _recoverTwonlySafe : null,
+                icon: isLoading
+                    ? const SizedBox(
+                        height: 12,
+                        width: 12,
+                        child: CircularProgressIndicator(strokeWidth: 1),
+                      )
+                    : const Icon(Icons.lock_clock_rounded),
+                label: Text(context.lang.twonlySafeRecoverBtn),
+              ),
+            ),
           ],
         ),
       ),

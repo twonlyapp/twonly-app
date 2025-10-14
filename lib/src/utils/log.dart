@@ -11,7 +11,8 @@ void initLogger() {
     await _writeLogToFile(record);
     if (kDebugMode) {
       print(
-          '${record.level.name} [twonly] ${record.loggerName} > ${record.message}');
+        '${record.level.name} [twonly] ${record.loggerName} > ${record.message}',
+      );
     }
   });
 }

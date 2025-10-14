@@ -24,8 +24,8 @@ class UrlListTitle extends StatelessWidget {
       leading: leading,
       title: (title != null) ? Text(title!) : null,
       subtitle: subtitle == null ? null : Text(subtitle!),
-      onTap: () {
-        launchUrl(Uri.parse(url));
+      onTap: () async {
+        await launchUrl(Uri.parse(url));
       },
       trailing: const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
     );
@@ -43,9 +43,9 @@ class _CreditsViewState extends State<CreditsView> {
   List<Sticker> sticker = [];
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -83,10 +83,11 @@ class _CreditsViewState extends State<CreditsView> {
           const Divider(),
           const ListTile(
             title: Center(
-                child: Text(
-              'Animations',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            )),
+              child: Text(
+                'Animations',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
           const UrlListTitle(
             title: 'selfie fast Animation',
@@ -144,10 +145,11 @@ class _CreditsViewState extends State<CreditsView> {
           if (sticker.isNotEmpty)
             const ListTile(
               title: Center(
-                  child: Text(
-                'Filters',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              )),
+                child: Text(
+                  'Filters',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
           ...sticker.map(
             (x) => UrlListTitle(
@@ -155,7 +157,8 @@ class _CreditsViewState extends State<CreditsView> {
                 height: 50,
                 width: 50,
                 child: CachedNetworkImage(
-                    imageUrl: 'https://twonly.eu/${x.imageSrc}'),
+                  imageUrl: 'https://twonly.eu/${x.imageSrc}',
+                ),
               ),
               title: '',
               url: x.source,

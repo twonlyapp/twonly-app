@@ -11,26 +11,31 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     with _$MessagesDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
+  // ignore: matching_super_parameters
   MessagesDao(super.db);
 
   Stream<List<Message>> watchMessageNotOpened(int contactId) {
     return (select(messages)
-          ..where((t) =>
-              t.openedAt.isNull() &
-              t.contactId.equals(contactId) &
-              t.errorWhileSending.equals(false))
+          ..where(
+            (t) =>
+                t.openedAt.isNull() &
+                t.contactId.equals(contactId) &
+                t.errorWhileSending.equals(false),
+          )
           ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
         .watch();
   }
 
   Stream<List<Message>> watchMediaMessageNotOpened(int contactId) {
     return (select(messages)
-          ..where((t) =>
-              t.openedAt.isNull() &
-              t.contactId.equals(contactId) &
-              t.errorWhileSending.equals(false) &
-              t.messageOtherId.isNotNull() &
-              t.kind.equals(MessageKind.media.name))
+          ..where(
+            (t) =>
+                t.openedAt.isNull() &
+                t.contactId.equals(contactId) &
+                t.errorWhileSending.equals(false) &
+                t.messageOtherId.isNotNull() &
+                t.kind.equals(MessageKind.media.name),
+          )
           ..orderBy([(t) => OrderingTerm.asc(t.sendAt)]))
         .watch();
   }
@@ -45,27 +50,33 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
 
   Stream<List<Message>> watchAllMessagesFrom(int contactId) {
     return (select(messages)
-          ..where((t) =>
-              t.contactId.equals(contactId) &
-              t.contentJson.isNotNull() &
-              (t.openedAt.isNull() |
-                  t.mediaStored.equals(true) |
-                  t.openedAt.isBiggerThanValue(
-                      DateTime.now().subtract(const Duration(days: 1)))))
+          ..where(
+            (t) =>
+                t.contactId.equals(contactId) &
+                t.contentJson.isNotNull() &
+                (t.openedAt.isNull() |
+                    t.mediaStored.equals(true) |
+                    t.openedAt.isBiggerThanValue(
+                      DateTime.now().subtract(const Duration(days: 1)),
+                    )),
+          )
           ..orderBy([(t) => OrderingTerm.asc(t.sendAt)]))
         .watch();
   }
 
   Future<void> removeOldMessages() {
     return (update(messages)
-          ..where((t) =>
-              (t.openedAt.isSmallerThanValue(
-                    DateTime.now().subtract(const Duration(days: 1)),
-                  ) |
-                  (t.sendAt.isSmallerThanValue(
-                          DateTime.now().subtract(const Duration(days: 1))) &
-                      t.errorWhileSending.equals(true))) &
-              t.kind.equals(MessageKind.textMessage.name)))
+          ..where(
+            (t) =>
+                (t.openedAt.isSmallerThanValue(
+                      DateTime.now().subtract(const Duration(days: 1)),
+                    ) |
+                    (t.sendAt.isSmallerThanValue(
+                          DateTime.now().subtract(const Duration(days: 1)),
+                        ) &
+                        t.errorWhileSending.equals(true))) &
+                t.kind.equals(MessageKind.textMessage.name),
+          ))
         .write(const MessagesCompanion(contentJson: Value(null)));
   }
 
@@ -99,13 +110,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
 
   Future<List<Message>> getAllNonACKMessagesFromUser() {
     return (select(messages)
-          ..where((t) =>
-              t.acknowledgeByUser.equals(false) &
-              t.messageOtherId.isNull() &
-              t.errorWhileSending.equals(false) &
-              t.sendAt.isBiggerThanValue(
-                DateTime.now().subtract(const Duration(minutes: 10)),
-              )))
+          ..where(
+            (t) =>
+                t.acknowledgeByUser.equals(false) &
+                t.messageOtherId.isNull() &
+                t.errorWhileSending.equals(false) &
+                t.sendAt.isBiggerThanValue(
+                  DateTime.now().subtract(const Duration(minutes: 10)),
+                ),
+          ))
         .get();
   }
 
@@ -133,11 +146,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
   Future<void> openedAllNonMediaMessages(int contactId) {
     final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
     return (update(messages)
-          ..where((t) =>
-              t.contactId.equals(contactId) &
-              t.messageOtherId.isNotNull() &
-              t.openedAt.isNull() &
-              t.kind.equals(MessageKind.media.name).not()))
+          ..where(
+            (t) =>
+                t.contactId.equals(contactId) &
+                t.messageOtherId.isNotNull() &
+                t.openedAt.isNull() &
+                t.kind.equals(MessageKind.media.name).not(),
+          ))
         .write(updates);
   }
 
@@ -148,44 +163,59 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     const updates =
         MessagesCompanion(downloadState: Value(DownloadState.pending));
     return (update(messages)
-          ..where((t) =>
-              t.messageOtherId.isNotNull() &
-              t.downloadState.equals(DownloadState.downloading.index) &
-              t.kind.equals(MessageKind.media.name)))
+          ..where(
+            (t) =>
+                t.messageOtherId.isNotNull() &
+                t.downloadState.equals(DownloadState.downloading.index) &
+                t.kind.equals(MessageKind.media.name),
+          ))
         .write(updates);
   }
 
   Future<void> openedAllNonMediaMessagesFromOtherUser(int contactId) {
     final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
     return (update(messages)
-          ..where((t) =>
-              t.contactId.equals(contactId) &
-              t.messageOtherId
-                  .isNull() & // only mark messages open that where send
-              t.openedAt.isNull() &
-              t.kind.equals(MessageKind.media.name).not()))
+          ..where(
+            (t) =>
+                t.contactId.equals(contactId) &
+                t.messageOtherId
+                    .isNull() & // only mark messages open that where send
+                t.openedAt.isNull() &
+                t.kind.equals(MessageKind.media.name).not(),
+          ))
         .write(updates);
   }
 
   Future<void> updateMessageByOtherUser(
-      int userId, int messageId, MessagesCompanion updatedValues) {
+    int userId,
+    int messageId,
+    MessagesCompanion updatedValues,
+  ) {
     return (update(messages)
-          ..where((c) =>
-              c.contactId.equals(userId) & c.messageId.equals(messageId)))
+          ..where(
+            (c) => c.contactId.equals(userId) & c.messageId.equals(messageId),
+          ))
         .write(updatedValues);
   }
 
   Future<void> updateMessageByOtherMessageId(
-      int userId, int messageOtherId, MessagesCompanion updatedValues) {
+    int userId,
+    int messageOtherId,
+    MessagesCompanion updatedValues,
+  ) {
     return (update(messages)
-          ..where((c) =>
-              c.contactId.equals(userId) &
-              c.messageOtherId.equals(messageOtherId)))
+          ..where(
+            (c) =>
+                c.contactId.equals(userId) &
+                c.messageOtherId.equals(messageOtherId),
+          ))
         .write(updatedValues);
   }
 
   Future<void> updateMessageByMessageId(
-      int messageId, MessagesCompanion updatedValues) {
+    int messageId,
+    MessagesCompanion updatedValues,
+  ) {
     return (update(messages)..where((c) => c.messageId.equals(messageId)))
         .write(updatedValues);
   }
@@ -207,17 +237,22 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
 
   Future<void> deleteMessagesByContactId(int contactId) {
     return (delete(messages)
-          ..where((t) =>
-              t.contactId.equals(contactId) & t.mediaStored.equals(false)))
+          ..where(
+            (t) => t.contactId.equals(contactId) & t.mediaStored.equals(false),
+          ))
         .go();
   }
 
   Future<void> deleteMessagesByContactIdAndOtherMessageId(
-      int contactId, int messageOtherId) {
+    int contactId,
+    int messageOtherId,
+  ) {
     return (delete(messages)
-          ..where((t) =>
-              t.contactId.equals(contactId) &
-              t.messageOtherId.equals(messageOtherId)))
+          ..where(
+            (t) =>
+                t.contactId.equals(contactId) &
+                t.messageOtherId.equals(messageOtherId),
+          ))
         .go();
   }
 
@@ -234,9 +269,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
     int messageOtherId,
   ) async {
     final query = select(messages)
-      ..where((t) =>
-          t.messageOtherId.equals(messageOtherId) &
-          t.contactId.equals(fromUserId));
+      ..where(
+        (t) =>
+            t.messageOtherId.equals(messageOtherId) &
+            t.contactId.equals(fromUserId),
+      );
     final entry = await query.get();
     return entry.isNotEmpty;
   }
@@ -252,16 +289,23 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   SingleOrNullSelectable<Message> getMessageByOtherMessageId(
-      int fromUserId, int messageId) {
+    int fromUserId,
+    int messageId,
+  ) {
     return select(messages)
-      ..where((t) =>
-          t.messageOtherId.equals(messageId) & t.contactId.equals(fromUserId));
+      ..where(
+        (t) =>
+            t.messageOtherId.equals(messageId) & t.contactId.equals(fromUserId),
+      );
   }
 
   SingleOrNullSelectable<Message> getMessageByIdAndContactId(
-      int fromUserId, int messageId) {
+    int fromUserId,
+    int messageId,
+  ) {
     return select(messages)
-      ..where((t) =>
-          t.messageId.equals(messageId) & t.contactId.equals(fromUserId));
+      ..where(
+        (t) => t.messageId.equals(messageId) & t.contactId.equals(fromUserId),
+      );
   }
 }

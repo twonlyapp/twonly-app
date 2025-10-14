@@ -167,8 +167,10 @@ class _DrawLayerState extends State<DrawLayer> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: colors,
-                          stops: List.generate(colors.length,
-                              (index) => index / (colors.length - 1)),
+                          stops: List.generate(
+                            colors.length,
+                            (index) => index / (colors.length - 1),
+                          ),
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -187,12 +189,12 @@ class _DrawLayerState extends State<DrawLayer> {
                       onChangeStart: (value) => {
                         setState(() {
                           showMagnifyingGlass = true;
-                        })
+                        }),
                       },
                       onChangeEnd: (value) => {
                         setState(() {
                           showMagnifyingGlass = false;
-                        })
+                        }),
                       },
                       divisions: 100,
                     ),
@@ -209,9 +211,10 @@ class _DrawLayerState extends State<DrawLayer> {
           ),
         if (!widget.layerData.isEditing)
           Positioned.fill(
-              child: Container(
-            color: Colors.transparent,
-          ))
+            child: Container(
+              color: Colors.transparent,
+            ),
+          ),
       ],
     );
   }

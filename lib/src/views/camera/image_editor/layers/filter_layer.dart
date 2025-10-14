@@ -61,7 +61,7 @@ class FilterText extends StatelessWidget {
           Shadow(
             color: Color.fromARGB(122, 0, 0, 0),
             blurRadius: 5,
-          )
+          ),
         ],
       ),
     );
@@ -78,12 +78,12 @@ class _FilterLayerState extends State<FilterLayer> {
   ];
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       pageController.jumpToPage(1);
     });
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {

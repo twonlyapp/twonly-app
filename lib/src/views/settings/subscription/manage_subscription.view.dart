@@ -27,13 +27,13 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
   bool? autoRenewal;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
     ballance = widget.ballance;
     if (ballance != null) {
       autoRenewal = ballance!.autoRenewal;
     }
-    initAsync(true);
+    await initAsync(true);
   }
 
   Future<void> initAsync(bool force) async {
@@ -52,7 +52,8 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(errorCodeToText(context, res.error as ErrorCode))),
+            content: Text(errorCodeToText(context, res.error as ErrorCode)),
+          ),
         );
       }
     }
@@ -89,8 +90,8 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
               onTap: toggleRenewalOption,
               trailing: Switch(
                 value: autoRenewal!,
-                onChanged: (a) {
-                  toggleRenewalOption();
+                onChanged: (a) async {
+                  await toggleRenewalOption();
                 },
               ),
             ),

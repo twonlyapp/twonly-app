@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class BetterListTile extends StatelessWidget {
-  const BetterListTile(
-      {required this.icon,
-      required this.text,
-      required this.onTap,
-      super.key,
-      this.color,
-      this.subtitle,
-      this.iconSize = 20});
+  const BetterListTile({
+    required this.icon,
+    required this.text,
+    required this.onTap,
+    super.key,
+    this.color,
+    this.subtitle,
+    this.iconSize = 20,
+  });
   final IconData icon;
   final String text;
   final Widget? subtitle;

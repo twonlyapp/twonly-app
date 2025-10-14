@@ -28,7 +28,8 @@ class FlameCounterWidget extends StatelessWidget {
         SizedBox(
           height: 15,
           child: EmojiAnimation(
-              emoji: (globalBestFriendUserId == user.userId) ? '❤️‍🔥' : '🔥'),
+            emoji: (globalBestFriendUserId == user.userId) ? '❤️‍🔥' : '🔥',
+          ),
         ),
       ],
     );

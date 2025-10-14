@@ -15,9 +15,9 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
   List<String> selectedEmojis = [];
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -66,8 +66,8 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
         itemBuilder: (context, index) {
           final emoji = EmojiAnimation.animatedIcons.keys.elementAt(index);
           return GestureDetector(
-            onTap: () {
-              _onEmojiSelected(emoji);
+            onTap: () async {
+              await _onEmojiSelected(emoji);
             },
             child: Card(
               color: selectedEmojis.contains(emoji)

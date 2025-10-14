@@ -14,9 +14,9 @@ class DiagnosticsView extends StatefulWidget {
 class _DiagnosticsViewState extends State<DiagnosticsView> {
   final ScrollController _scrollController = ScrollController();
 
-  void _scrollToBottom() {
+  Future<void> _scrollToBottom() async {
     // Assuming the button is at the bottom of the scroll view
-    _scrollController.animateTo(
+    await _scrollController.animateTo(
       _scrollController.position.maxScrollExtent, // Scroll to the bottom
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -66,11 +66,13 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
 
                           if (result.status != ShareResultStatus.success) {
                             await Clipboard.setData(
-                                ClipboardData(text: logText));
+                              ClipboardData(text: logText),
+                            );
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('Log copied to clipboard!')),
+                                  content: Text('Log copied to clipboard!'),
+                                ),
                               );
                             }
                           }
@@ -87,13 +89,15 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text('Log file deleted!')),
+                                content: Text('Log file deleted!'),
+                              ),
                             );
                           } else {
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text('Log file does not exist.')),
+                                content: Text('Log file does not exist.'),
+                              ),
                             );
                           }
                         },

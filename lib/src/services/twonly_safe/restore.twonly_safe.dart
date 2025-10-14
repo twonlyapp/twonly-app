@@ -37,9 +37,12 @@ Future<void> recoverTwonlySafe(
   late http.Response response;
 
   try {
-    response = await http.get(Uri.parse(backupServerUrl), headers: {
-      HttpHeaders.acceptHeader: 'application/octet-stream',
-    });
+    response = await http.get(
+      Uri.parse(backupServerUrl),
+      headers: {
+        HttpHeaders.acceptHeader: 'application/octet-stream',
+      },
+    );
   } catch (e) {
     Log.error('Error fetching backup: $e');
     throw Exception('Backup server could not be reached. ($e)');
@@ -110,7 +113,8 @@ Future<void> handleBackupData(
     // for each day add 400 message ids
     final dummyMessagesCounter = (lastMessageSend + 1) * 400;
     Log.info(
-        'Creating $dummyMessagesCounter dummy messages to increase message counter as last message was $lastMessageSend days ago.');
+      'Creating $dummyMessagesCounter dummy messages to increase message counter as last message was $lastMessageSend days ago.',
+    );
     for (var i = 0; i < dummyMessagesCounter; i++) {
       await database.messagesDao.insertMessage(
         MessagesCompanion(
@@ -129,14 +133,17 @@ Future<void> handleBackupData(
   final secureStorage = jsonDecode(backupContent.secureStorageJson);
 
   await storage.write(
-      key: SecureStorageKeys.signalIdentity,
-      value: secureStorage[SecureStorageKeys.signalIdentity] as String);
+    key: SecureStorageKeys.signalIdentity,
+    value: secureStorage[SecureStorageKeys.signalIdentity] as String,
+  );
   await storage.write(
-      key: SecureStorageKeys.signalSignedPreKey,
-      value: secureStorage[SecureStorageKeys.signalSignedPreKey] as String);
+    key: SecureStorageKeys.signalSignedPreKey,
+    value: secureStorage[SecureStorageKeys.signalSignedPreKey] as String,
+  );
   await storage.write(
-      key: SecureStorageKeys.userData,
-      value: secureStorage[SecureStorageKeys.userData] as String);
+    key: SecureStorageKeys.userData,
+    value: secureStorage[SecureStorageKeys.userData] as String,
+  );
   await updateUserdata((u) {
     u.deviceId += 1;
     return u;

@@ -66,8 +66,11 @@ int calculateRefund(Response_PlanBallance current) {
 
   if (current.paymentPeriodDays == YEARLY_PAYMENT_DAYS) {
     final elapsedDays = DateTime.now()
-        .difference(DateTime.fromMillisecondsSinceEpoch(
-            current.lastPaymentDoneUnixTimestamp.toInt() * 1000))
+        .difference(
+          DateTime.fromMillisecondsSinceEpoch(
+            current.lastPaymentDoneUnixTimestamp.toInt() * 1000,
+          ),
+        )
         .inDays;
     if (elapsedDays < current.paymentPeriodDays.toInt()) {
       // User has yearly plan with 10€
@@ -83,8 +86,11 @@ int calculateRefund(Response_PlanBallance current) {
     }
   } else {
     final elapsedDays = DateTime.now()
-        .difference(DateTime.fromMillisecondsSinceEpoch(
-            current.lastPaymentDoneUnixTimestamp.toInt() * 1000))
+        .difference(
+          DateTime.fromMillisecondsSinceEpoch(
+            current.lastPaymentDoneUnixTimestamp.toInt() * 1000,
+          ),
+        )
         .inDays;
     if (elapsedDays > 14) {
       refund = 0;
@@ -109,9 +115,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   String? additionalOwnerName;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -140,7 +146,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
 
     if (ballance != null) {
       final lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
-          ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000);
+        ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000,
+      );
       if (isPayingUser) {
         nextPayment = lastPaymentDateTime
             .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
@@ -226,12 +233,16 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             PlanCard(
               planId: 'Pro',
               onTap: () async {
-                await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) {
-                  return const CheckoutView(
-                    planId: 'Pro',
-                  );
-                }));
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const CheckoutView(
+                        planId: 'Pro',
+                      );
+                    },
+                  ),
+                );
                 await initAsync();
               },
             ),
@@ -240,16 +251,20 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               planId: 'Family',
               refund: refund,
               onTap: () async {
-                await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) {
-                  return CheckoutView(
-                    planId: 'Family',
-                    refund: (refund > 0) ? refund : null,
-                    disableMonthlyOption: currentPlan == 'Pro' &&
-                        ballance!.paymentPeriodDays.toInt() ==
-                            YEARLY_PAYMENT_DAYS,
-                  );
-                }));
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return CheckoutView(
+                        planId: 'Family',
+                        refund: (refund > 0) ? refund : null,
+                        disableMonthlyOption: currentPlan == 'Pro' &&
+                            ballance!.paymentPeriodDays.toInt() ==
+                                YEARLY_PAYMENT_DAYS,
+                      );
+                    },
+                  ),
+                );
                 await initAsync();
               },
             ),
@@ -281,16 +296,21 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             text: context.lang.manageSubscription,
             subtitle: (nextPayment != null)
                 ? Text(
-                    '${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}')
+                    '${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}',
+                  )
                 : null,
             onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return ManageSubscriptionView(
-                  ballance: ballance,
-                  nextPayment: nextPayment,
-                );
-              }));
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ManageSubscriptionView(
+                      ballance: ballance,
+                      nextPayment: nextPayment,
+                    );
+                  },
+                ),
+              );
               await initAsync();
             },
           ),
@@ -300,14 +320,19 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             subtitle: (formattedBalance != null)
                 ? Text('${context.lang.currentBalance}: $formattedBalance')
                 : null,
-            onTap: () {
+            onTap: () async {
               if (formattedBalance == null) return;
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return TransactionView(
-                  transactions: ballance?.transactions,
-                  formattedBalance: formattedBalance!,
-                );
-              }));
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return TransactionView(
+                      transactions: ballance?.transactions,
+                      formattedBalance: formattedBalance!,
+                    );
+                  },
+                ),
+              );
             },
           ),
           if (isPayingUser || currentPlan == 'Tester')
@@ -316,12 +341,16 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               text: context.lang.manageAdditionalUsers,
               subtitle: loaded ? Text('${context.lang.open}: 3') : null,
               onTap: () async {
-                await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) {
-                  return AdditionalUsersView(
-                    ballance: ballance,
-                  );
-                }));
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return AdditionalUsersView(
+                        ballance: ballance,
+                      );
+                    },
+                  ),
+                );
                 await initAsync();
               },
             ),
@@ -329,14 +358,18 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             icon: FontAwesomeIcons.ticket,
             text: context.lang.createOrRedeemVoucher,
             onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return const VoucherView();
-              }));
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const VoucherView();
+                  },
+                ),
+              );
               await initAsync();
             },
           ),
-          const SizedBox(height: 30)
+          const SizedBox(height: 30),
         ],
       ),
     );
@@ -488,7 +521,7 @@ class PlanCard extends StatelessWidget {
                           ? Text(context.lang.redeemUserInviteCodeTitle)
                           : Text(context.lang.upgradeToPaidPlanButton(planId)),
                     ),
-                  )
+                  ),
               ],
             ),
           ),
@@ -553,8 +586,10 @@ Future<void> redeemUserInviteCode(BuildContext context, String newPlan) async {
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(
-                          errorCodeToText(context, res.error as ErrorCode))),
+                    content: Text(
+                      errorCodeToText(context, res.error as ErrorCode),
+                    ),
+                  ),
                 );
               }
               if (!context.mounted) return;

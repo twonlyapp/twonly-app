@@ -13,9 +13,11 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
   @override
   Future<IdentityKey?> getIdentity(SignalProtocolAddress address) async {
     final identity = await (twonlyDB.select(twonlyDB.signalIdentityKeyStores)
-          ..where((t) =>
-              t.deviceId.equals(address.getDeviceId()) &
-              t.name.equals(address.getName())))
+          ..where(
+            (t) =>
+                t.deviceId.equals(address.getDeviceId()) &
+                t.name.equals(address.getName()),
+          ))
         .getSingleOrNull();
     if (identity == null) return null;
     return IdentityKey.fromBytes(identity.identityKey, 0);
@@ -28,8 +30,11 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
   Future<int> getLocalRegistrationId() async => localRegistrationId;
 
   @override
-  Future<bool> isTrustedIdentity(SignalProtocolAddress address,
-      IdentityKey? identityKey, Direction? direction) async {
+  Future<bool> isTrustedIdentity(
+    SignalProtocolAddress address,
+    IdentityKey? identityKey,
+    Direction? direction,
+  ) async {
     final trusted = await getIdentity(address);
     if (identityKey == null) {
       return false;
@@ -41,7 +46,9 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
 
   @override
   Future<bool> saveIdentity(
-      SignalProtocolAddress address, IdentityKey? identityKey) async {
+    SignalProtocolAddress address,
+    IdentityKey? identityKey,
+  ) async {
     if (identityKey == null) {
       return false;
     }
@@ -55,9 +62,11 @@ class ConnectIdentityKeyStore extends IdentityKeyStore {
           );
     } else {
       await (twonlyDB.update(twonlyDB.signalIdentityKeyStores)
-            ..where((t) =>
-                t.deviceId.equals(address.getDeviceId()) &
-                t.name.equals(address.getName())))
+            ..where(
+              (t) =>
+                  t.deviceId.equals(address.getDeviceId()) &
+                  t.name.equals(address.getName()),
+            ))
           .write(
         SignalIdentityKeyStoresCompanion(
           identityKey: Value(identityKey.serialize()),

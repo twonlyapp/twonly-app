@@ -32,20 +32,21 @@ class _StartNewChatView extends State<StartNewChatView> {
 
     final stream = twonlyDB.contactsDao.watchContactsForStartNewChat();
 
-    contactSub = stream.listen((update) {
-      update.sort((a, b) =>
-          getContactDisplayName(a).compareTo(getContactDisplayName(b)));
+    contactSub = stream.listen((update) async {
+      update.sort(
+        (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)),
+      );
       setState(() {
         allContacts = update;
       });
-      filterUsers();
+      await filterUsers();
     });
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
+    await contactSub.cancel();
     super.dispose();
-    contactSub.cancel();
   }
 
   Future<void> filterUsers() async {
@@ -56,9 +57,11 @@ class _StartNewChatView extends State<StartNewChatView> {
       return;
     }
     final usersFiltered = allContacts
-        .where((user) => getContactDisplayName(user)
-            .toLowerCase()
-            .contains(searchUserName.value.text.toLowerCase()))
+        .where(
+          (user) => getContactDisplayName(user)
+              .toLowerCase()
+              .contains(searchUserName.value.text.toLowerCase()),
+        )
         .toList();
     setState(() {
       contacts = usersFiltered;
@@ -82,8 +85,8 @@ class _StartNewChatView extends State<StartNewChatView> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: TextField(
-                    onChanged: (_) {
-                      filterUsers();
+                    onChanged: (_) async {
+                      await filterUsers();
                     },
                     controller: searchUserName,
                     decoration: getInputDecoration(
@@ -97,7 +100,7 @@ class _StartNewChatView extends State<StartNewChatView> {
                   child: UserList(
                     contacts,
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -130,8 +133,8 @@ class UserList extends StatelessWidget {
                 size: 13,
               ),
             ),
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AddNewUserView(),
@@ -160,29 +163,34 @@ class UserList extends StatelessWidget {
                   ),
                 const Spacer(),
                 IconButton(
-                    icon: FaIcon(FontAwesomeIcons.boxOpen,
-                        size: 13,
-                        color: user.archived ? null : Colors.transparent),
-                    onPressed: user.archived
-                        ? () async {
-                            const update =
-                                ContactsCompanion(archived: Value(false));
-                            await twonlyDB.contactsDao
-                                .updateContact(user.userId, update);
-                          }
-                        : null)
+                  icon: FaIcon(
+                    FontAwesomeIcons.boxOpen,
+                    size: 13,
+                    color: user.archived ? null : Colors.transparent,
+                  ),
+                  onPressed: user.archived
+                      ? () async {
+                          const update =
+                              ContactsCompanion(archived: Value(false));
+                          await twonlyDB.contactsDao
+                              .updateContact(user.userId, update);
+                        }
+                      : null,
+                ),
               ],
             ),
             leading: ContactAvatar(
               contact: user,
               fontSize: 13,
             ),
-            onTap: () {
-              Navigator.pushReplacement(
+            onTap: () async {
+              await Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) {
-                  return ChatMessagesView(user);
-                }),
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ChatMessagesView(user);
+                  },
+                ),
               );
             },
           ),

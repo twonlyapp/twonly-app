@@ -7,9 +7,11 @@ class ConnectSessionStore extends SessionStore {
   @override
   Future<bool> containsSession(SignalProtocolAddress address) async {
     final sessions = await (twonlyDB.select(twonlyDB.signalSessionStores)
-          ..where((tbl) =>
-              tbl.deviceId.equals(address.getDeviceId()) &
-              tbl.name.equals(address.getName())))
+          ..where(
+            (tbl) =>
+                tbl.deviceId.equals(address.getDeviceId()) &
+                tbl.name.equals(address.getName()),
+          ))
         .get();
     return sessions.isNotEmpty;
   }
@@ -24,9 +26,11 @@ class ConnectSessionStore extends SessionStore {
   @override
   Future<void> deleteSession(SignalProtocolAddress address) async {
     await (twonlyDB.delete(twonlyDB.signalSessionStores)
-          ..where((tbl) =>
-              tbl.deviceId.equals(address.getDeviceId()) &
-              tbl.name.equals(address.getName())))
+          ..where(
+            (tbl) =>
+                tbl.deviceId.equals(address.getDeviceId()) &
+                tbl.name.equals(address.getName()),
+          ))
         .go();
   }
 
@@ -34,7 +38,8 @@ class ConnectSessionStore extends SessionStore {
   Future<List<int>> getSubDeviceSessions(String name) async {
     final deviceIds = await (twonlyDB.select(twonlyDB.signalSessionStores)
           ..where(
-              (tbl) => tbl.deviceId.equals(1).not() & tbl.name.equals(name)))
+            (tbl) => tbl.deviceId.equals(1).not() & tbl.name.equals(name),
+          ))
         .get();
     return deviceIds.map((row) => row.deviceId).toList();
   }
@@ -42,9 +47,11 @@ class ConnectSessionStore extends SessionStore {
   @override
   Future<SessionRecord> loadSession(SignalProtocolAddress address) async {
     final dbSession = await (twonlyDB.select(twonlyDB.signalSessionStores)
-          ..where((tbl) =>
-              tbl.deviceId.equals(address.getDeviceId()) &
-              tbl.name.equals(address.getName())))
+          ..where(
+            (tbl) =>
+                tbl.deviceId.equals(address.getDeviceId()) &
+                tbl.name.equals(address.getName()),
+          ))
         .get();
 
     if (dbSession.isEmpty) {
@@ -56,7 +63,9 @@ class ConnectSessionStore extends SessionStore {
 
   @override
   Future<void> storeSession(
-      SignalProtocolAddress address, SessionRecord record) async {
+    SignalProtocolAddress address,
+    SessionRecord record,
+  ) async {
     final sessionCompanion = SignalSessionStoresCompanion(
       deviceId: Value(address.getDeviceId()),
       name: Value(address.getName()),
@@ -69,9 +78,11 @@ class ConnectSessionStore extends SessionStore {
           .insert(sessionCompanion);
     } else {
       await (twonlyDB.update(twonlyDB.signalSessionStores)
-            ..where((tbl) =>
-                tbl.deviceId.equals(address.getDeviceId()) &
-                tbl.name.equals(address.getName())))
+            ..where(
+              (tbl) =>
+                  tbl.deviceId.equals(address.getDeviceId()) &
+                  tbl.name.equals(address.getName()),
+            ))
           .write(sessionCompanion);
     }
   }

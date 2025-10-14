@@ -71,24 +71,24 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   TextEditingController textMessageController = TextEditingController();
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
 
     if (widget.initialMessage != null) {
       allMediaFiles = [widget.initialMessage!];
     }
 
-    asyncLoadNextMedia(true);
+    await asyncLoadNextMedia(true);
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
-    _noScreenshot.screenshotOn();
-    _subscription.cancel();
-    downloadStateListener?.cancel();
-    videoController?.dispose();
+    await _noScreenshot.screenshotOn();
+    await _subscription.cancel();
+    await downloadStateListener?.cancel();
+    await videoController?.dispose();
     super.dispose();
   }
 
@@ -96,7 +96,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     final messages =
         twonlyDB.messagesDao.watchMediaMessageNotOpened(widget.contact.userId);
 
-    _subscription = messages.listen((messages) {
+    _subscription = messages.listen((messages) async {
       for (final msg in messages) {
         // if (!allMediaFiles.any((m) => m.messageId == msg.messageId)) {
         //   allMediaFiles.add(msg);
@@ -116,7 +116,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
       setState(() {});
       if (firstRun) {
-        loadCurrentMediaFile();
+        await loadCurrentMediaFile();
         // ignore: parameter_assignments
         firstRun = false;
       }
@@ -201,7 +201,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> handleNextDownloadedMedia(
-      Message current, bool showTwonly) async {
+    Message current,
+    bool showTwonly,
+  ) async {
     final content =
         MediaMessageContent.fromJson(jsonDecode(current.contentJson!) as Map);
 
@@ -237,9 +239,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         videoController = VideoPlayerController.file(File(videoPathTmp.path));
         await videoController
             ?.setLooping(content.maxShowTime == gMediaShowInfinite);
-        await videoController?.initialize().then((_) {
-          videoController!.play();
-          videoController?.addListener(() {
+        await videoController?.initialize().then((_) async {
+          await videoController!.play();
+          videoController?.addListener(() async {
             setState(() {
               progress = 1 -
                   videoController!.value.position.inSeconds /
@@ -248,7 +250,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if (content.maxShowTime != gMediaShowInfinite) {
               if (videoController?.value.position ==
                   videoController?.value.duration) {
-                nextMediaOrExit();
+                await nextMediaOrExit();
               }
             }
           });
@@ -288,9 +290,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   void startTimer() {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
-    nextMediaTimer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
+    nextMediaTimer =
+        Timer(canBeSeenUntil!.difference(DateTime.now()), () async {
       if (context.mounted) {
-        nextMediaOrExit();
+        await nextMediaOrExit();
       }
     });
     progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
@@ -371,9 +374,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               children: [
                 if (imageSaving)
                   const SizedBox(
-                      width: 10,
-                      height: 10,
-                      child: CircularProgressIndicator(strokeWidth: 1))
+                    width: 10,
+                    height: 10,
+                    child: CircularProgressIndicator(strokeWidth: 1),
+                  )
                 else
                   imageSaved
                       ? const Icon(Icons.check)
@@ -443,11 +447,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             progressTimer?.cancel();
             await videoController?.pause();
             if (!mounted) return;
-            await Navigator.push(context, MaterialPageRoute(
-              builder: (context) {
-                return CameraSendToView(widget.contact);
-              },
-            ));
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return CameraSendToView(widget.contact);
+                },
+              ),
+            );
             if (mounted && maxShowTime != gMediaShowInfinite) {
               await nextMediaOrExit();
             } else {
@@ -474,7 +481,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if ((imageBytes != null || videoController != null) &&
                 (canBeSeenUntil == null || progress >= 0))
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   if (showSendTextMessageInput) {
                     setState(() {
                       showShortReactions = false;
@@ -482,7 +489,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     });
                     return;
                   }
-                  nextMediaOrExit();
+                  await nextMediaOrExit();
                 },
                 child: MediaViewSizing(
                   bottomNavigation: bottomNavigation(),
@@ -501,8 +508,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           child: Image.memory(
                             imageBytes!,
                             fit: BoxFit.contain,
-                            frameBuilder: (context, child, frame,
-                                wasSynchronouslyLoaded) {
+                            frameBuilder: (
+                              context,
+                              child,
+                              frame,
+                              wasSynchronouslyLoaded,
+                            ) {
                               if (wasSynchronouslyLoaded) return child;
                               return AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 200),
@@ -527,8 +538,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if (isRealTwonly && imageBytes == null)
               Positioned.fill(
                 child: GestureDetector(
-                  onTap: () {
-                    loadCurrentMediaFile(showTwonly: true);
+                  onTap: () async {
+                    await loadCurrentMediaFile(showTwonly: true);
                   },
                   child: Column(
                     children: [
@@ -604,7 +615,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     Shadow(
                       color: Color.fromARGB(122, 0, 0, 0),
                       blurRadius: 5,
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -617,7 +628,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 child: Container(
                   color: context.color.surface,
                   padding: const EdgeInsets.only(
-                      bottom: 10, left: 20, right: 20, top: 10),
+                    bottom: 10,
+                    left: 20,
+                    right: 20,
+                    top: 10,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
@@ -644,9 +659,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                       ),
                       IconButton(
                         icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                        onPressed: () {
+                        onPressed: () async {
                           if (textMessageController.text.isNotEmpty) {
-                            sendTextMessage(
+                            await sendTextMessage(
                               widget.contact.userId,
                               TextMessageContent(
                                 text: textMessageController.text,
@@ -664,7 +679,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                             showShortReactions = false;
                           });
                         },
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -722,9 +737,9 @@ class _ReactionButtonsState extends State<ReactionButtons> {
       EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -765,14 +780,16 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: secondRowEmojis
-                      .map((emoji) => EmojiReactionWidget(
-                            userId: widget.userId,
-                            responseToMessageId: widget.responseToMessageId,
-                            hide: widget.hide,
-                            show: widget.show,
-                            isVideo: widget.isVideo,
-                            emoji: emoji as String,
-                          ))
+                      .map(
+                        (emoji) => EmojiReactionWidget(
+                          userId: widget.userId,
+                          responseToMessageId: widget.responseToMessageId,
+                          hide: widget.hide,
+                          show: widget.show,
+                          isVideo: widget.isVideo,
+                          emoji: emoji as String,
+                        ),
+                      )
                       .toList(),
                 ),
               if (secondRowEmojis.isNotEmpty) const SizedBox(height: 15),
@@ -830,8 +847,8 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
       duration: const Duration(milliseconds: 200),
       curve: Curves.linearToEaseOut,
       child: GestureDetector(
-        onTap: () {
-          sendTextMessage(
+        onTap: () async {
+          await sendTextMessage(
             widget.userId,
             TextMessageContent(
               text: widget.emoji,

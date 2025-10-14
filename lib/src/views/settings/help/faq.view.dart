@@ -21,10 +21,10 @@ class _FaqViewState extends State<FaqView> {
   bool noInternet = false;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
     domain = 'https://twonly.eu';
-    _fetchFAQData();
+    await _fetchFAQData();
   }
 
   Future<void> _fetchFAQData() async {

@@ -27,23 +27,25 @@ class BetterText extends StatelessWidget {
       }
 
       final url = match.group(0);
-      spans.add(TextSpan(
-        text: url,
-        style: const TextStyle(
-          decoration: TextDecoration.underline,
-          decorationColor: Colors.white,
+      spans.add(
+        TextSpan(
+          text: url,
+          style: const TextStyle(
+            decoration: TextDecoration.underline,
+            decorationColor: Colors.white,
+          ),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () async {
+              final lUrl =
+                  Uri.parse(url!.startsWith('http') ? url : 'http://$url');
+              try {
+                await launchUrl(lUrl);
+              } catch (e) {
+                Log.error('Could not launch $e');
+              }
+            },
         ),
-        recognizer: TapGestureRecognizer()
-          ..onTap = () async {
-            final lUrl =
-                Uri.parse(url!.startsWith('http') ? url : 'http://$url');
-            try {
-              await launchUrl(lUrl);
-            } catch (e) {
-              Log.error('Could not launch $e');
-            }
-          },
-      ));
+      );
 
       lastMatchEnd = match.end;
     }

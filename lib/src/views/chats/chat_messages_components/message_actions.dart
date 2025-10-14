@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_dynamic_calls, inference_failure_on_function_invocation
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -25,12 +23,12 @@ class _SlidingResponseWidgetState extends State<MessageActions> {
   bool gotFeedback = false;
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
-    setState(() {
+    setState(() async {
       _offsetX += details.delta.dx;
       if (_offsetX > 40) {
         _offsetX = 40;
         if (!gotFeedback) {
-          HapticFeedback.heavyImpact();
+          await HapticFeedback.heavyImpact();
           gotFeedback = true;
         }
       }

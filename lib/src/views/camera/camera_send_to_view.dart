@@ -18,23 +18,30 @@ class CameraSendToViewState extends State<CameraSendToView> {
   SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    selectCamera(0, true, false);
+    await selectCamera(0, true, false);
   }
 
   @override
-  void dispose() {
-    cameraController?.dispose();
+  Future<void> dispose() async {
+    await cameraController?.dispose();
     cameraController = null;
     selectedCameraDetails = SelectedCameraDetails();
     super.dispose();
   }
 
   Future<CameraController?> selectCamera(
-      int sCameraId, bool init, bool enableAudio) async {
+    int sCameraId,
+    bool init,
+    bool enableAudio,
+  ) async {
     final opts = await initializeCameraController(
-        selectedCameraDetails, sCameraId, init, enableAudio);
+      selectedCameraDetails,
+      sCameraId,
+      init,
+      enableAudio,
+    );
     if (opts != null) {
       selectedCameraDetails = opts.$1;
       cameraController = opts.$2;
@@ -47,7 +54,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
   Future<void> toggleSelectedCamera() async {
     if (cameraController == null) return;
     // do not allow switching camera when recording
-    if (cameraController!.value.isRecordingVideo == true) {
+    if (cameraController!.value.isRecordingVideo) {
       return;
     }
     await cameraController!.dispose();

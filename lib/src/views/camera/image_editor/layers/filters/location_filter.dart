@@ -24,9 +24,9 @@ class _LocationFilterState extends State<LocationFilter> {
   Response_Location? location;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {

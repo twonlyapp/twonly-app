@@ -23,30 +23,34 @@ import 'package:twonly/src/utils/log.dart';
 part 'twonly_database.g.dart';
 
 // You can then create a database class that includes this table
-@DriftDatabase(tables: [
-  Contacts,
-  Messages,
-  MediaUploads,
-  SignalIdentityKeyStores,
-  SignalPreKeyStores,
-  SignalSenderKeyStores,
-  SignalSessionStores,
-  SignalContactPreKeys,
-  SignalContactSignedPreKeys,
-  MessageRetransmissions
-], daos: [
-  MessagesDao,
-  ContactsDao,
-  MediaUploadsDao,
-  SignalDao,
-  MessageRetransmissionDao
-])
+@DriftDatabase(
+  tables: [
+    Contacts,
+    Messages,
+    MediaUploads,
+    SignalIdentityKeyStores,
+    SignalPreKeyStores,
+    SignalSenderKeyStores,
+    SignalSessionStores,
+    SignalContactPreKeys,
+    SignalContactSignedPreKeys,
+    MessageRetransmissions,
+  ],
+  daos: [
+    MessagesDao,
+    ContactsDao,
+    MediaUploadsDao,
+    SignalDao,
+    MessageRetransmissionDao,
+  ],
+)
 class TwonlyDatabase extends _$TwonlyDatabase {
   TwonlyDatabase([QueryExecutor? e])
       : super(
           e ?? _openConnection(),
         );
 
+  // ignore: matching_super_parameters
   TwonlyDatabase.forTesting(DatabaseConnection super.connection);
 
   @override
@@ -74,17 +78,21 @@ class TwonlyDatabase extends _$TwonlyDatabase {
         from2To3: (m, schema) async {
           await m.addColumn(schema.contacts, schema.contacts.archived);
           await m.addColumn(
-              schema.contacts, schema.contacts.deleteMessagesAfterXMinutes);
+            schema.contacts,
+            schema.contacts.deleteMessagesAfterXMinutes,
+          );
         },
         from3To4: (m, schema) async {
           await m.createTable(schema.mediaUploads);
-          await m.alterTable(TableMigration(
-            schema.mediaUploads,
-            columnTransformer: {
-              schema.mediaUploads.metadata:
-                  schema.mediaUploads.metadata.cast<String>(),
-            },
-          ));
+          await m.alterTable(
+            TableMigration(
+              schema.mediaUploads,
+              columnTransformer: {
+                schema.mediaUploads.metadata:
+                    schema.mediaUploads.metadata.cast<String>(),
+              },
+            ),
+          );
         },
         from4To5: (m, schema) async {
           await m.createTable(schema.mediaDownloads);
@@ -102,13 +110,15 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           await m.addColumn(schema.contacts, schema.contacts.lastFlameSync);
         },
         from8To9: (m, schema) async {
-          await m.alterTable(TableMigration(
-            schema.mediaUploads,
-            columnTransformer: {
-              schema.mediaUploads.metadata:
-                  schema.mediaUploads.metadata.cast<String>(),
-            },
-          ));
+          await m.alterTable(
+            TableMigration(
+              schema.mediaUploads,
+              columnTransformer: {
+                schema.mediaUploads.metadata:
+                    schema.mediaUploads.metadata.cast<String>(),
+              },
+            ),
+          );
         },
         from9To10: (m, schema) async {
           await m.createTable(schema.signalContactPreKeys);
@@ -119,22 +129,30 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           await m.createTable(schema.messageRetransmissions);
         },
         from11To12: (m, schema) async {
-          await m.addColumn(schema.messageRetransmissions,
-              schema.messageRetransmissions.willNotGetACKByUser);
+          await m.addColumn(
+            schema.messageRetransmissions,
+            schema.messageRetransmissions.willNotGetACKByUser,
+          );
         },
         from12To13: (m, schema) async {
           await m.dropColumn(
-              schema.messageRetransmissions, 'will_not_get_a_c_k_by_user');
+            schema.messageRetransmissions,
+            'will_not_get_a_c_k_by_user',
+          );
         },
         from13To14: (m, schema) async {
-          await m.addColumn(schema.messageRetransmissions,
-              schema.messageRetransmissions.encryptedHash);
+          await m.addColumn(
+            schema.messageRetransmissions,
+            schema.messageRetransmissions.encryptedHash,
+          );
         },
         from14To15: (m, schema) async {
           await m.dropColumn(schema.mediaUploads, 'upload_tokens');
           await m.dropColumn(schema.mediaUploads, 'already_notified');
           await m.addColumn(
-              schema.messages, schema.messages.mediaRetransmissionState);
+            schema.messages,
+            schema.messages.mediaRetransmissionState,
+          );
         },
         from15To16: (m, schema) async {
           await m.deleteTable('media_downloads');
@@ -150,8 +168,8 @@ class TwonlyDatabase extends _$TwonlyDatabase {
 
   Future<void> printTableSizes() async {
     final result = await customSelect(
-            'SELECT name, SUM(pgsize) as size FROM dbstat GROUP BY name')
-        .get();
+      'SELECT name, SUM(pgsize) as size FROM dbstat GROUP BY name',
+    ).get();
 
     for (final row in result) {
       final tableName = row.read<String>('name');
@@ -173,11 +191,13 @@ class TwonlyDatabase extends _$TwonlyDatabase {
     await delete(signalContactPreKeys).go();
     await delete(signalContactSignedPreKeys).go();
     await (delete(signalPreKeyStores)
-          ..where((t) => (t.createdAt.isSmallerThanValue(
-                DateTime.now().subtract(
-                  const Duration(days: 25),
-                ),
-              ))))
+          ..where(
+            (t) => (t.createdAt.isSmallerThanValue(
+              DateTime.now().subtract(
+                const Duration(days: 25),
+              ),
+            )),
+          ))
         .go();
   }
 }

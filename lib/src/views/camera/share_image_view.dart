@@ -58,19 +58,19 @@ class _ShareImageView extends State<ShareImageView> {
   String lastQuery = '';
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
 
     final allContacts = twonlyDB.contactsDao.watchContactsForShareView();
 
-    contactSub = allContacts.listen((allContacts) {
+    contactSub = allContacts.listen((allContacts) async {
       setState(() {
         contacts = allContacts;
       });
-      updateUsers(allContacts.where((x) => !x.archived).toList());
+      await updateUsers(allContacts.where((x) => !x.archived).toList());
     });
 
-    initAsync();
+    await initAsync();
   }
 
   Future<void> initAsync() async {
@@ -80,16 +80,19 @@ class _ShareImageView extends State<ShareImageView> {
           addOrModifyImageToUpload(widget.mediaUploadId, imageBytes!);
       // start with the pre upload of the media file...
       await encryptMediaFiles(
-          widget.mediaUploadId, imageHandler, widget.videoUploadHandler);
+        widget.mediaUploadId,
+        imageHandler,
+        widget.videoUploadHandler,
+      );
     }
     if (!mounted) return;
     setState(() {});
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     super.dispose();
-    contactSub.cancel();
+    await contactSub.cancel();
   }
 
   Future<void> updateUsers(List<Contact> users) async {
@@ -103,7 +106,8 @@ class _ShareImageView extends State<ShareImageView> {
       }
       // If flameCounter is the same, compare by totalMediaCounter
       return b.totalMediaCounter.compareTo(
-          a.totalMediaCounter); // Sort by totalMediaCounter in descending order
+        a.totalMediaCounter,
+      ); // Sort by totalMediaCounter in descending order
     });
 
     // Separate best friends and other users
@@ -132,18 +136,24 @@ class _ShareImageView extends State<ShareImageView> {
   Future<void> _filterUsers(String query) async {
     lastQuery = query;
     if (query.isEmpty) {
-      await updateUsers(contacts
-          .where((x) =>
-              !x.archived ||
-              !hideArchivedUsers ||
-              widget.selectedUserIds.contains(x.userId))
-          .toList());
+      await updateUsers(
+        contacts
+            .where(
+              (x) =>
+                  !x.archived ||
+                  !hideArchivedUsers ||
+                  widget.selectedUserIds.contains(x.userId),
+            )
+            .toList(),
+      );
       return;
     }
     final usersFiltered = contacts
-        .where((user) => getContactDisplayName(user)
-            .toLowerCase()
-            .contains(query.toLowerCase()))
+        .where(
+          (user) => getContactDisplayName(user)
+              .toLowerCase()
+              .contains(query.toLowerCase()),
+        )
         .toList();
     await updateUsers(usersFiltered);
   }
@@ -214,21 +224,21 @@ class _ShareImageView extends State<ShareImageView> {
                                     return const BorderSide(width: 0);
                                   }
                                   return BorderSide(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .outline);
+                                    color:
+                                        Theme.of(context).colorScheme.outline,
+                                  );
                                 },
                               ),
                               onChanged: (a) {
-                                setState(() {
+                                setState(() async {
                                   hideArchivedUsers = !hideArchivedUsers;
-                                  _filterUsers(lastQuery);
+                                  await _filterUsers(lastQuery);
                                 });
                               },
                             ),
-                          )
+                          ),
                         ],
-                      )
+                      ),
                   ],
                 ),
               Expanded(
@@ -238,7 +248,7 @@ class _ShareImageView extends State<ShareImageView> {
                   isRealTwonly: widget.isRealTwonly,
                   updateStatus: updateStatus,
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -270,12 +280,16 @@ class _ShareImageView extends State<ShareImageView> {
                   if (!context.mounted) return;
 
                   if (err != null) {
-                    await Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return SubscriptionView(
-                        redirectError: err,
-                      );
-                    }));
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return SubscriptionView(
+                            redirectError: err,
+                          );
+                        },
+                      ),
+                    );
                   } else {
                     setState(() {
                       sendingImage = true;
@@ -305,14 +319,15 @@ class _ShareImageView extends State<ShareImageView> {
                   }
                 },
                 style: ButtonStyle(
-                    padding: WidgetStateProperty.all<EdgeInsets>(
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                    ),
-                    backgroundColor: WidgetStateProperty.all<Color>(
-                      imageBytes == null || widget.selectedUserIds.isEmpty
-                          ? Theme.of(context).colorScheme.secondary
-                          : Theme.of(context).colorScheme.primary,
-                    )),
+                  padding: WidgetStateProperty.all<EdgeInsets>(
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                  ),
+                  backgroundColor: WidgetStateProperty.all<Color>(
+                    imageBytes == null || widget.selectedUserIds.isEmpty
+                        ? Theme.of(context).colorScheme.secondary
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                ),
                 label: Text(
                   context.lang.shareImagedEditorSendImage,
                   style: const TextStyle(fontSize: 17),

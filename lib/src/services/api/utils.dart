@@ -44,7 +44,8 @@ ClientToServer createClientToServerFromHandshake(Handshake handshake) {
 }
 
 ClientToServer createClientToServerFromApplicationData(
-    ApplicationData applicationData) {
+  ApplicationData applicationData,
+) {
   final v0 = client.V0()
     ..seq = Int64()
     ..applicationdata = applicationData;

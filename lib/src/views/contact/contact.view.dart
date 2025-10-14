@@ -72,7 +72,8 @@ class _ContactViewState extends State<ContactView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.'),
+            'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.',
+          ),
           duration: Duration(seconds: 3),
         ),
       );
@@ -116,8 +117,9 @@ class _ContactViewState extends State<ContactView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: VerifiedShield(contact)),
+                    padding: const EdgeInsets.only(right: 10),
+                    child: VerifiedShield(contact),
+                  ),
                   Text(
                     getContactDisplayName(contact),
                     style: const TextStyle(fontSize: 20),
@@ -151,12 +153,15 @@ class _ContactViewState extends State<ContactView> {
               BetterListTile(
                 icon: FontAwesomeIcons.shieldHeart,
                 text: context.lang.contactVerifyNumberTitle,
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (context) {
-                      return ContactVerifyView(contact);
-                    },
-                  ));
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return ContactVerifyView(contact);
+                      },
+                    ),
+                  );
                 },
               ),
               BetterListTile(
@@ -168,7 +173,8 @@ class _ContactViewState extends State<ContactView> {
                     context,
                     context.lang.deleteAllContactMessages,
                     context.lang.deleteAllContactMessagesBody(
-                        getContactDisplayName(contact)),
+                      getContactDisplayName(contact),
+                    ),
                   );
                   if (block) {
                     if (context.mounted) {
@@ -204,7 +210,9 @@ class _ContactViewState extends State<ContactView> {
 }
 
 Future<String?> showNicknameChangeDialog(
-    BuildContext context, Contact contact) {
+  BuildContext context,
+  Contact contact,
+) {
   final controller =
       TextEditingController(text: getContactDisplayName(contact));
 

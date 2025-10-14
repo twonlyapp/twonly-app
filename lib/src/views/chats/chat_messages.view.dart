@@ -87,11 +87,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   int? focusedScrollItem;
 
   @override
-  void initState() {
+  Future<void> initState() async {
     super.initState();
     user = widget.contact;
     textFieldFocus = FocusNode();
-    initStreams();
+    await initStreams();
 
     tutorial = Timer(const Duration(seconds: 1), () async {
       tutorial = null;
@@ -101,12 +101,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-    userSub.cancel();
-    messageSub.cancel();
+  Future<void> dispose() async {
+    await userSub.cancel();
+    await messageSub.cancel();
     tutorial?.cancel();
     textFieldFocus.dispose();
+    super.dispose();
   }
 
   Future<void> initStreams() async {
@@ -196,10 +196,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
             chatItems.add(ChatItem.time(msg.sendAt));
             lastDate = msg.sendAt;
           }
-          chatItems.add(ChatItem.message(ChatMessage(
-            message: msg,
-            responseTo: responseTo,
-          )));
+          chatItems.add(
+            ChatItem.message(
+              ChatMessage(
+                message: msg,
+                responseTo: responseTo,
+              ),
+            ),
+          );
         }
       }
 
@@ -253,7 +257,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   Future<void> scrollToMessage(int messageId) async {
     final index = messages.indexWhere(
-        (x) => x.isMessage && x.message!.message.messageId == messageId);
+      (x) => x.isMessage && x.message!.message.messageId == messageId,
+    );
     if (index == -1) return;
     setState(() {
       focusedScrollItem = index;
@@ -278,10 +283,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       child: Scaffold(
         appBar: AppBar(
           title: GestureDetector(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return ContactView(widget.contact.userId);
-              }));
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ContactView(widget.contact.userId);
+                  },
+                ),
+              );
             },
             child: Row(
               children: [
@@ -298,7 +308,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                         Text(getContactDisplayName(user)),
                         const SizedBox(width: 10),
                         if (user.verified)
-                          VerifiedShield(key: verifyShieldKey, user)
+                          VerifiedShield(key: verifyShieldKey, user),
                       ],
                     ),
                   ),
@@ -331,12 +341,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                         final chatMessage = messages[i].message!;
                         return Transform.translate(
                           offset: Offset(
-                              (focusedScrollItem == i)
-                                  ? (chatMessage.message.messageOtherId == null)
-                                      ? -8
-                                      : 8
-                                  : 0,
-                              0),
+                            (focusedScrollItem == i)
+                                ? (chatMessage.message.messageOtherId == null)
+                                    ? -8
+                                    : 8
+                                : 0,
+                            0,
+                          ),
                           child: Transform.scale(
                             scale: (focusedScrollItem == i) ? 1.05 : 1,
                             child: ChatListEntry(
@@ -389,7 +400,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                             FontAwesomeIcons.xmark,
                             size: 16,
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -415,8 +426,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                                   currentInputText = value;
                                   setState(() {});
                                 },
-                                onSubmitted: (_) {
-                                  _sendMessage();
+                                onSubmitted: (_) async {
+                                  await _sendMessage();
                                 },
                                 decoration: inputTextMessageDeco(context),
                               ),
@@ -425,15 +436,16 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                               IconButton(
                                 padding: const EdgeInsets.all(15),
                                 icon: const FaIcon(
-                                    FontAwesomeIcons.solidPaperPlane),
+                                  FontAwesomeIcons.solidPaperPlane,
+                                ),
                                 onPressed: _sendMessage,
                               )
                             else
                               IconButton(
                                 icon: const FaIcon(FontAwesomeIcons.camera),
                                 padding: const EdgeInsets.all(15),
-                                onPressed: () {
-                                  Navigator.push(
+                                onPressed: () async {
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) {
@@ -442,7 +454,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                                     ),
                                   );
                                 },
-                              )
+                              ),
                           ],
                   ),
                 ),

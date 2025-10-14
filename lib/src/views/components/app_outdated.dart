@@ -100,9 +100,12 @@ class _AppOutdatedState extends State<AppOutdated> {
                 if (Platform.isAndroid) const SizedBox(height: 5),
                 if (Platform.isAndroid)
                   ElevatedButton(
-                    onPressed: () {
-                      launchUrl(Uri.parse(
-                          'https://play.google.com/store/apps/details?id=eu.twonly'));
+                    onPressed: () async {
+                      await launchUrl(
+                        Uri.parse(
+                          'https://play.google.com/store/apps/details?id=eu.twonly',
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
