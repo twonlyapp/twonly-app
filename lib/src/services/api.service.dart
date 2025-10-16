@@ -339,12 +339,18 @@ class ApiService {
       }
       if (res.error == ErrorCode.UserIdNotFound && contactId != null) {
         Log.error('Contact deleted their account $contactId.');
-        await twonlyDB.contactsDao.updateContact(
-          contactId,
-          const ContactsCompanion(
-            deleted: Value(true),
-          ),
-        );
+        final contact = await twonlyDB.contactsDao
+            .getContactByUserId(contactId)
+            .getSingleOrNull();
+        if (contact != null) {
+          await twonlyDB.contactsDao.updateContact(
+            contactId,
+            ContactsCompanion(
+              deleted: const Value(true),
+              username: Value('${contact.username} (${contact.userId})'),
+            ),
+          );
+        }
       }
     }
     return res;
