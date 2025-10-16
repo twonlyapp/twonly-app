@@ -67,6 +67,8 @@ Future<void> sendRetransmitMessage(int retransId) async {
         .getSingleOrNull();
     if (contact == null || contact.deleted) {
       Log.warn('Contact deleted $retransId or not found in database.');
+      await twonlyDB.messageRetransmissionDao
+          .deleteRetransmissionById(retransId);
       if (retrans.messageId != null) {
         await twonlyDB.messagesDao.updateMessageByMessageId(
           retrans.messageId!,
@@ -142,6 +144,8 @@ Future<void> sendRetransmitMessage(int retransId) async {
           retransId,
           MessageRetransmissionsCompanion(
             acknowledgeByServerAt: Value(DateTime.now()),
+            retryCount: Value(retrans.retryCount + 1),
+            lastRetry: Value(DateTime.now()),
           ),
         );
       }

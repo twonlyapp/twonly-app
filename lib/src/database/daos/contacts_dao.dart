@@ -195,6 +195,16 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
     return select(contacts).watch();
   }
 
+  Future<void> modifyFlameCounterForTesting() async {
+    await update(contacts).write(
+      ContactsCompanion(
+        lastFlameCounterChange: Value(DateTime.now()),
+        flameCounter: const Value(1337),
+        lastFlameSync: const Value(null),
+      ),
+    );
+  }
+
   Stream<int> watchFlameCounter(int userId) {
     return (select(contacts)
           ..where(
