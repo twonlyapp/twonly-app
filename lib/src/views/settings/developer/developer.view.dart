@@ -70,7 +70,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
           ),
           if (kDebugMode)
             ListTile(
-              title: const Text('Test FlameSync'),
+              title: const Text('FlameSync Test'),
               onTap: () async {
                 await twonlyDB.contactsDao.modifyFlameCounterForTesting();
                 await syncFlameCounters();
