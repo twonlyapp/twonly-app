@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -46,7 +48,7 @@ class _ConnectionInfoWidgetState extends State<ConnectionInfo>
     // Delay start by 2 seconds
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        _controller.repeat(reverse: true);
+        unawaited(_controller.repeat(reverse: true));
         setState(() {
           showAnimation = true;
         });
