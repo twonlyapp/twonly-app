@@ -158,10 +158,14 @@ class TwonlyDatabase extends _$TwonlyDatabase {
           await m.deleteTable('media_downloads');
         },
         from16To17: (m, schema) async {
-          await m.addColumn(schema.messageRetransmissions,
-              schema.messageRetransmissions.lastRetry);
-          await m.addColumn(schema.messageRetransmissions,
-              schema.messageRetransmissions.retryCount);
+          await m.addColumn(
+            schema.messageRetransmissions,
+            schema.messageRetransmissions.lastRetry,
+          );
+          await m.addColumn(
+            schema.messageRetransmissions,
+            schema.messageRetransmissions.retryCount,
+          );
         },
       ),
     );

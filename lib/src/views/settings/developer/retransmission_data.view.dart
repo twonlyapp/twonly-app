@@ -138,7 +138,8 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
                                   onDoubleTap: () async {
                                     await twonlyDB.messageRetransmissionDao
                                         .deleteRetransmissionById(
-                                            retrans.retrans.retransmissionId);
+                                      retrans.retrans.retransmissionId,
+                                    );
                                   },
                                   child: const FaIcon(
                                     FontAwesomeIcons.trash,
