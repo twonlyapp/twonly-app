@@ -27,14 +27,14 @@ class MemoriesViewState extends State<MemoriesView> {
   StreamSubscription<List<Message>>? messageSub;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   @override
-  Future<void> dispose() async {
-    await messageSub?.cancel();
+  void dispose() {
+    messageSub?.cancel();
     super.dispose();
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
@@ -40,10 +42,10 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
   PaymentMethods paymentMethods = PaymentMethods.twonlyCredit;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     setCheckout(true);
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

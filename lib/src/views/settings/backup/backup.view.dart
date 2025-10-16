@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/model/json/userdata.dart';
@@ -33,9 +35,9 @@ class _BackupViewState extends State<BackupView> {
   final PageController pageController = PageController();
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
     gUpdateBackupView = initAsync;
   }
 

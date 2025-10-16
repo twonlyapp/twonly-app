@@ -1,4 +1,6 @@
 // ignore_for_file: inference_failure_on_instance_creation
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -115,9 +117,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   String? additionalOwnerName;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

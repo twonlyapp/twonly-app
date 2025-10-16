@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -27,13 +29,13 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
   bool? autoRenewal;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     ballance = widget.ballance;
     if (ballance != null) {
       autoRenewal = ballance!.autoRenewal;
     }
-    await initAsync(true);
+    unawaited(initAsync(true));
   }
 
   Future<void> initAsync(bool force) async {

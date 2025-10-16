@@ -1,4 +1,4 @@
-// ignore_for_file: inference_failure_on_collection_literal, avoid_dynamic_calls
+// ignore_for_file: inference_failure_on_collection_literal, avoid_dynamic_calls, discarded_futures
 
 import 'dart:async';
 import 'dart:convert';
@@ -71,24 +71,24 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   TextEditingController textMessageController = TextEditingController();
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
 
     if (widget.initialMessage != null) {
       allMediaFiles = [widget.initialMessage!];
     }
 
-    await asyncLoadNextMedia(true);
+    unawaited(asyncLoadNextMedia(true));
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
-    await _noScreenshot.screenshotOn();
-    await _subscription.cancel();
-    await downloadStateListener?.cancel();
-    await videoController?.dispose();
+    _noScreenshot.screenshotOn();
+    _subscription.cancel();
+    downloadStateListener?.cancel();
+    videoController?.dispose();
     super.dispose();
   }
 
@@ -737,9 +737,9 @@ class _ReactionButtonsState extends State<ReactionButtons> {
       EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

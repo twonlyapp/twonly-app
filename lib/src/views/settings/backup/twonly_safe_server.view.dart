@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_dynamic_calls
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -22,10 +23,10 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
   final TextEditingController _passwordController = TextEditingController();
 
   @override
-  Future<void> initState() async {
+  void initState() {
     _urlController.text = 'https://';
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

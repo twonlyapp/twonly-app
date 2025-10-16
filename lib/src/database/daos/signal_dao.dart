@@ -93,22 +93,22 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
   }
 
   Future<void> purgeOutDatedPreKeys() async {
-    // other pre keys are valid 25 days
+    // other pre keys are valid 100 days
     await (delete(signalContactSignedPreKeys)
           ..where(
             (t) => (t.createdAt.isSmallerThanValue(
               DateTime.now().subtract(
-                const Duration(days: 25),
+                const Duration(days: 100),
               ),
             )),
           ))
         .go();
-    // own pre keys are valid for 40 days
+    // own pre keys are valid for 180 days
     await (delete(twonlyDB.signalPreKeyStores)
           ..where(
             (t) => (t.createdAt.isSmallerThanValue(
               DateTime.now().subtract(
-                const Duration(days: 40),
+                const Duration(days: 365),
               ),
             )),
           ))

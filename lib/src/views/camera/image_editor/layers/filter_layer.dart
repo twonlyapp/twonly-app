@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
@@ -78,12 +80,12 @@ class _FilterLayerState extends State<FilterLayer> {
   ];
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       pageController.jumpToPage(1);
     });
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

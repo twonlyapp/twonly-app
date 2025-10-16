@@ -131,7 +131,7 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
       }
     case MessageKind.signalDecryptError:
       Log.error(
-        'Got signal decrypt error from other user! Sending all non ACK messages again.',
+        'Got signal decrypt error from other user! Sending it again.',
       );
 
       final content = message.content;

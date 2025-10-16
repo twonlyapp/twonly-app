@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
@@ -18,14 +20,15 @@ class CameraSendToViewState extends State<CameraSendToView> {
   SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await selectCamera(0, true, false);
+    unawaited(selectCamera(0, true, false));
   }
 
   @override
-  Future<void> dispose() async {
-    await cameraController?.dispose();
+  void dispose() {
+    // ignore: discarded_futures
+    cameraController?.dispose();
     cameraController = null;
     selectedCameraDetails = SelectedCameraDetails();
     super.dispose();

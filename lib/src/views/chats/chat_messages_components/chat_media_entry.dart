@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
@@ -37,9 +39,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   bool canBeReopened = false;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await checkIfTutorialCanBeShown();
+    unawaited(checkIfTutorialCanBeShown());
   }
 
   Future<void> checkIfTutorialCanBeShown() async {

@@ -25,9 +25,9 @@ class _AccountViewState extends State<AccountView> {
   bool hasRemainingBallance = false;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

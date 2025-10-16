@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -15,9 +17,9 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
   List<String> selectedEmojis = [];
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

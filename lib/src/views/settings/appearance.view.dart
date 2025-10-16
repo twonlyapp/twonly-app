@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
@@ -16,9 +18,9 @@ class _AppearanceViewState extends State<AppearanceView> {
   bool showFeedbackShortcut = false;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

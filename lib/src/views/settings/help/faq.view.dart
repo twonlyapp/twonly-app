@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_dynamic_calls, inference_failure_on_untyped_parameter
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -21,10 +22,10 @@ class _FaqViewState extends State<FaqView> {
   bool noInternet = false;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     domain = 'https://twonly.eu';
-    await _fetchFAQData();
+    unawaited(_fetchFAQData());
   }
 
   Future<void> _fetchFAQData() async {

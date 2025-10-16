@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -20,22 +21,24 @@ class _VideoPlayerWrapperState extends State<VideoPlayerWrapper> {
   late VideoPlayerController _controller;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     _controller = VideoPlayerController.file(widget.videoPath);
 
-    await _controller.initialize().then((_) async {
-      if (context.mounted) {
-        await _controller.setLooping(true);
-        await _controller.play();
-        setState(() {});
-      }
-    });
+    unawaited(
+      _controller.initialize().then((_) async {
+        if (context.mounted) {
+          await _controller.setLooping(true);
+          await _controller.play();
+          setState(() {});
+        }
+      }),
+    );
   }
 
   @override
-  Future<void> dispose() async {
-    await _controller.dispose();
+  void dispose() {
+    unawaited(_controller.dispose());
     super.dispose();
   }
 

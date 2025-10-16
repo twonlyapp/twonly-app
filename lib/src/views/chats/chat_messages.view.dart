@@ -87,11 +87,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   int? focusedScrollItem;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     user = widget.contact;
     textFieldFocus = FocusNode();
-    await initStreams();
+    unawaited(initStreams());
 
     tutorial = Timer(const Duration(seconds: 1), () async {
       tutorial = null;
@@ -101,9 +101,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   }
 
   @override
-  Future<void> dispose() async {
-    await userSub.cancel();
-    await messageSub.cancel();
+  void dispose() {
+    unawaited(userSub.cancel());
+    unawaited(messageSub.cancel());
     tutorial?.cancel();
     textFieldFocus.dispose();
     super.dispose();

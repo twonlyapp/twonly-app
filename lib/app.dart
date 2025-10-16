@@ -23,7 +23,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   bool wasPaused = false;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     globalIsAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
@@ -39,7 +39,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       await context.read<CustomChangeProvider>().updatePlan(planId);
     };
 
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> setUserPlan() async {

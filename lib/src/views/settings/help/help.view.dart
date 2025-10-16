@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -154,12 +153,14 @@ class HelpView extends StatelessWidget {
             onLongPress: () async {
               final okay = await showAlertDialog(
                 context,
-                'Delete Retransmission messages',
-                'Only do this if you know what you are doing :)',
+                'Developer Settings',
+                'Do you want to enable the developer settings?',
               );
               if (okay) {
-                await twonlyDB.messageRetransmissionDao
-                    .clearRetransmissionTable();
+                await updateUserdata((u) {
+                  u.isDeveloper = true;
+                  return u;
+                });
               }
             },
             title: const Text(

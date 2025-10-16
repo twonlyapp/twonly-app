@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/services/api/media_download.dart';
@@ -16,9 +18,8 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
   bool storeMediaFilesInGallery = true;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
   }
 
   Future<void> initAsync() async {

@@ -44,8 +44,8 @@ class _StartNewChatView extends State<StartNewChatView> {
   }
 
   @override
-  Future<void> dispose() async {
-    await contactSub.cancel();
+  void dispose() {
+    unawaited(contactSub.cancel());
     super.dispose();
   }
 

@@ -352,9 +352,9 @@ class _UserListItem extends State<UserListItem> {
   }
 
   @override
-  Future<void> dispose() async {
-    await messagesNotOpenedStream.cancel();
-    await lastMessageStream.cancel();
+  void dispose() {
+    unawaited(messagesNotOpenedStream.cancel());
+    unawaited(lastMessageStream.cancel());
     super.dispose();
   }
 

@@ -29,6 +29,9 @@ class UserData {
   @JsonKey(defaultValue: 0)
   int avatarCounter = 0;
 
+  @JsonKey(defaultValue: false)
+  bool isDeveloper = false;
+
   @JsonKey(defaultValue: 0)
   int deviceId = 0;
 

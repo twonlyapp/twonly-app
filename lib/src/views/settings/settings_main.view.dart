@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/model/json/userdata.dart';
@@ -10,6 +12,7 @@ import 'package:twonly/src/views/settings/appearance.view.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
 import 'package:twonly/src/views/settings/chat/chat_settings.view.dart';
 import 'package:twonly/src/views/settings/data_and_storage.view.dart';
+import 'package:twonly/src/views/settings/developer/developer.view.dart';
 import 'package:twonly/src/views/settings/help/help.view.dart';
 import 'package:twonly/src/views/settings/notification.view.dart';
 import 'package:twonly/src/views/settings/privacy.view.dart';
@@ -28,9 +31,9 @@ class _SettingsMainViewState extends State<SettingsMainView> {
   UserData? userData;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -235,6 +238,21 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     );
                   },
                 ),
+                if (userData != null && userData!.isDeveloper)
+                  BetterListTile(
+                    icon: FontAwesomeIcons.code,
+                    text: 'Developer Settings',
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return const DeveloperSettingsView();
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 BetterListTile(
                   icon: FontAwesomeIcons.shareFromSquare,
                   text: context.lang.inviteFriends,

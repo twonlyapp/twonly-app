@@ -63,6 +63,12 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
       ..where((t) => t.retransmissionId.equals(retransmissionId));
   }
 
+  Stream<List<MessageRetransmission>> watchAllMessages() {
+    return (select(messageRetransmissions)
+          ..orderBy([(t) => OrderingTerm.asc(t.retransmissionId)]))
+        .watch();
+  }
+
   Future<void> updateRetransmission(
     int retransmissionId,
     MessageRetransmissionsCompanion updatedValues,

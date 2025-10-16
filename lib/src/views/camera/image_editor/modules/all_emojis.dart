@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/image_editor/data/data.dart';
@@ -14,9 +16,9 @@ class _EmojisState extends State<Emojis> {
   List<String> lastUsed = emojis;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

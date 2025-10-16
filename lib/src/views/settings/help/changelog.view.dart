@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -74,12 +76,12 @@ class _ChangeLogViewState extends State<ChangeLogView> {
   bool hideChangeLog = false;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     if (widget.changeLog != null) {
       changeLog = widget.changeLog!;
     } else {
-      await initAsync();
+      unawaited(initAsync());
     }
   }
 

@@ -36,15 +36,15 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
   Uint8List? _qrCodeImageBytes;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     _contact = widget.contact;
-    await loadAsync();
+    unawaited(loadAsync());
   }
 
   @override
-  Future<void> dispose() async {
-    await _contactSub.cancel();
+  void dispose() {
+    unawaited(_contactSub.cancel());
     super.dispose();
   }
 

@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_dynamic_calls
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -43,9 +44,9 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   bool _isDisposed = false;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

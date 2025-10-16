@@ -86,7 +86,7 @@ class HomeViewState extends State<HomeView> {
   }
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     activePageIdx = widget.initialPage;
     globalUpdateOfHomeViewPageIndex = (index) {
@@ -99,15 +99,16 @@ class HomeViewState extends State<HomeView> {
         .listen((NotificationResponse? response) async {
       globalUpdateOfHomeViewPageIndex(0);
     });
-    await selectCamera(0, true, false);
-    await initAsync();
+    unawaited(selectCamera(0, true, false));
+    unawaited(initAsync());
   }
 
   @override
-  Future<void> dispose() async {
-    await selectNotificationStream.close();
+  void dispose() {
+    unawaited(selectNotificationStream.close());
     disableCameraTimer?.cancel();
-    await cameraController?.dispose();
+    // ignore: discarded_futures
+    cameraController?.dispose();
     super.dispose();
   }
 

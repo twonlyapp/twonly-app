@@ -21,14 +21,9 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
   String filter = '';
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     allUsers = twonlyDB.contactsDao.watchAllContacts();
-    await loadAsync();
-  }
-
-  Future<void> loadAsync() async {
-    setState(() {});
   }
 
   @override

@@ -46,8 +46,8 @@ class _SearchUsernameView extends State<AddNewUserView> {
   }
 
   @override
-  Future<void> dispose() async {
-    await contactsStream.cancel();
+  void dispose() {
+    unawaited(contactsStream.cancel());
     super.dispose();
   }
 

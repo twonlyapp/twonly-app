@@ -72,27 +72,28 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<bool>? videoUploadHandler;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
-    await initMediaFileUpload();
+    unawaited(initAsync());
+    unawaited(initMediaFileUpload());
     layers.add(FilterLayerData());
     if (widget.sendTo != null) {
       selectedUserIds.add(widget.sendTo!.userId);
     }
     if (widget.imageBytes != null) {
-      await loadImage(widget.imageBytes!);
+      unawaited(loadImage(widget.imageBytes!));
     } else if (widget.videoFilePath != null) {
       setState(() {
         sendingOrLoadingImage = false;
         loadingImage = false;
       });
       videoController = VideoPlayerController.file(widget.videoFilePath!);
-      await videoController?.setLooping(true);
-      await videoController?.initialize().then((_) async {
+      // ignore: discarded_futures
+      videoController?.setLooping(true);
+      videoController?.initialize().then((_) async {
         await videoController!.play();
         setState(() {});
-        // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler
+        // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler, discarded_futures
       }).catchError(Log.error);
     }
   }
@@ -121,10 +122,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
     isDisposed = true;
     layers.clear();
-    await videoController?.dispose();
+    // ignore: discarded_futures
+    videoController?.dispose();
     super.dispose();
   }
 

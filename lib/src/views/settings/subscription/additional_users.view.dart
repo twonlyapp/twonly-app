@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,10 +49,10 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
   Response_PlanBallance? ballance;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     ballance = widget.ballance;
-    await initAsync(force: false);
+    unawaited(initAsync(force: false));
   }
 
   Future<void> initAsync({required bool force}) async {
@@ -151,10 +152,10 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
   late String username;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
     username = widget.account.userId.toString();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

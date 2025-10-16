@@ -35,10 +35,10 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   Timer? _timer;
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await loadIndexAsync();
-    await initStream();
+    unawaited(loadIndexAsync());
+    unawaited(initStream());
   }
 
   Future<void> loadIndexAsync() async {
@@ -68,9 +68,10 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
     super.dispose();
-    await messageStream?.cancel();
+    // ignore: discarded_futures
+    messageStream?.cancel();
     _timer?.cancel();
     // videoController?.dispose();
   }

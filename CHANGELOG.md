@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.61
+
+- Fixing message decryption error 
+- Dependency and Flutter upgrade
 
 ## 0.0.60
 

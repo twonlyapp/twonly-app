@@ -58,7 +58,7 @@ class _ShareImageView extends State<ShareImageView> {
   String lastQuery = '';
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
 
     final allContacts = twonlyDB.contactsDao.watchContactsForShareView();
@@ -70,7 +70,7 @@ class _ShareImageView extends State<ShareImageView> {
       await updateUsers(allContacts.where((x) => !x.archived).toList());
     });
 
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -90,9 +90,9 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
+    unawaited(contactSub.cancel());
     super.dispose();
-    await contactSub.cancel();
   }
 
   Future<void> updateUsers(List<Contact> users) async {

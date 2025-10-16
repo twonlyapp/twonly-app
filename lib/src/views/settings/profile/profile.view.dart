@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -21,9 +23,9 @@ class _ProfileViewState extends State<ProfileView> {
       PersistentAvatarMakerController(customizedPropertyCategories: []);
 
   @override
-  Future<void> initState() async {
+  void initState() {
     super.initState();
-    await initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
