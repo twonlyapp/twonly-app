@@ -27,7 +27,8 @@ Future<void> syncFlameCounters() async {
   }
 
   for (final contact in contacts) {
-    if (contact.lastFlameCounterChange == null) continue;
+    if (contact.lastFlameCounterChange == null || contact.deleted) continue;
+    if (!isToday(contact.lastFlameCounterChange!)) continue;
     if (contact.lastFlameSync != null) {
       if (isToday(contact.lastFlameSync!)) continue;
     }
