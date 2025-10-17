@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -23,12 +25,12 @@ class _SlidingResponseWidgetState extends State<MessageActions> {
   bool gotFeedback = false;
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
-    setState(() async {
+    setState(() {
       _offsetX += details.delta.dx;
       if (_offsetX > 40) {
         _offsetX = 40;
         if (!gotFeedback) {
-          await HapticFeedback.heavyImpact();
+          unawaited(HapticFeedback.heavyImpact());
           gotFeedback = true;
         }
       }

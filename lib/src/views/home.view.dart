@@ -107,7 +107,6 @@ class HomeViewState extends State<HomeView> {
   void dispose() {
     unawaited(selectNotificationStream.close());
     disableCameraTimer?.cancel();
-    // ignore: discarded_futures
     cameraController?.dispose();
     super.dispose();
   }
@@ -232,15 +231,14 @@ class HomeViewState extends State<HomeView> {
               label: '',
             ),
           ],
-          onTap: (int index) {
+          onTap: (int index) async {
             activePageIdx = index;
-            setState(() async {
-              await homeViewPageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.bounceIn,
-              );
-            });
+            await homeViewPageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.bounceIn,
+            );
+            if (mounted) setState(() {});
           },
           currentIndex: activePageIdx,
         ),

@@ -218,15 +218,14 @@ class _BackupViewState extends State<BackupView> {
             label: context.lang.backupData,
           ),
         ],
-        onTap: (int index) {
+        onTap: (int index) async {
           activePageIdx = index;
-          setState(() async {
-            await pageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.bounceIn,
-            );
-          });
+          await pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.bounceIn,
+          );
+          if (mounted) setState(() {});
         },
         currentIndex: activePageIdx,
         // ),

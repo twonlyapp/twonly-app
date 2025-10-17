@@ -118,9 +118,9 @@ class CameraPreviewControllerView extends StatelessWidget {
             );
           } else {
             return PermissionHandlerView(
-              onSuccess: () async {
+              onSuccess: () {
                 // setState(() {});
-                await selectCamera(0, true, false);
+                selectCamera(0, true, false);
               },
             );
           }
@@ -175,7 +175,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   @override
   void initState() {
     super.initState();
-    unawaited(initAsync());
+    initAsync();
   }
 
   Future<void> initAsync() async {
@@ -410,7 +410,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     try {
       await cameraController?.startVideoRecording();
       videoRecordingTimer =
-          Timer.periodic(const Duration(milliseconds: 15), (timer) async {
+          Timer.periodic(const Duration(milliseconds: 15), (timer) {
         setState(() {
           currentTime = DateTime.now();
         });
@@ -419,7 +419,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 maxVideoRecordingTime) {
           timer.cancel();
           videoRecordingTimer = null;
-          await stopVideoRecording();
+          stopVideoRecording();
         }
       });
       setState(() {
@@ -510,7 +510,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           });
         },
         onLongPressMoveUpdate: onPanUpdate,
-        onLongPressStart: (details) async {
+        onLongPressStart: (details) {
           setState(() {
             basePanY = details.localPosition.dy;
             baseScaleFactor = widget.selectedCameraDetails.scaleFactor;
@@ -524,14 +524,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               Rect.fromLTWH(0, 0, renderBox.size.width, renderBox.size.height);
 
           if (containerRect.contains(localPosition)) {
-            await startVideoRecording();
+            startVideoRecording();
           }
         },
-        onLongPressEnd: (a) async {
-          await stopVideoRecording();
+        onLongPressEnd: (a) {
+          stopVideoRecording();
         },
-        onPanEnd: (a) async {
-          await stopVideoRecording();
+        onPanEnd: (a) {
+          stopVideoRecording();
         },
         onPanUpdate: onPanUpdate,
         child: Stack(

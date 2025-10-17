@@ -68,9 +68,7 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
 
   @override
   void dispose() {
-    // ignore: discarded_futures
     subscriptionRetransmission?.cancel();
-    // ignore: discarded_futures
     subscriptionContacts?.cancel();
     super.dispose();
   }

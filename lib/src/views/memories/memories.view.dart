@@ -34,7 +34,6 @@ class MemoriesViewState extends State<MemoriesView> {
 
   @override
   void dispose() {
-    // ignore: discarded_futures
     messageSub?.cancel();
     super.dispose();
   }

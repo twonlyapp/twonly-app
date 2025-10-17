@@ -229,11 +229,10 @@ class _ShareImageView extends State<ShareImageView> {
                                   );
                                 },
                               ),
-                              onChanged: (a) {
-                                setState(() async {
-                                  hideArchivedUsers = !hideArchivedUsers;
-                                  await _filterUsers(lastQuery);
-                                });
+                              onChanged: (a) async {
+                                hideArchivedUsers = !hideArchivedUsers;
+                                await _filterUsers(lastQuery);
+                                if (mounted) setState(() {});
                               },
                             ),
                           ),

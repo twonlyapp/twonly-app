@@ -138,13 +138,12 @@ Future<bool> authenticateUser(
     final auth = LocalAuthentication();
     final didAuthenticate = await auth.authenticate(
       localizedReason: localizedReason,
-      options: const AuthenticationOptions(useErrorDialogs: false),
     );
     if (didAuthenticate) {
       return true;
     }
-  } on PlatformException catch (e) {
-    debugPrint(e.toString());
+  } on LocalAuthException catch (e) {
+    Log.error(e.toString());
     if (!force) {
       return true;
     }

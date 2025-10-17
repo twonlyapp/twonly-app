@@ -91,7 +91,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     super.initState();
     user = widget.contact;
     textFieldFocus = FocusNode();
-    unawaited(initStreams());
+    initStreams();
 
     tutorial = Timer(const Duration(seconds: 1), () async {
       tutorial = null;
@@ -102,8 +102,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
   @override
   void dispose() {
-    unawaited(userSub.cancel());
-    unawaited(messageSub.cancel());
+    userSub.cancel();
+    messageSub.cancel();
     tutorial?.cancel();
     textFieldFocus.dispose();
     super.dispose();
@@ -283,8 +283,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       child: Scaffold(
         appBar: AppBar(
           title: GestureDetector(
-            onTap: () async {
-              await Navigator.push(
+            onTap: () {
+              Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) {
@@ -426,8 +426,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                                   currentInputText = value;
                                   setState(() {});
                                 },
-                                onSubmitted: (_) async {
-                                  await _sendMessage();
+                                onSubmitted: (_) {
+                                  _sendMessage();
                                 },
                                 decoration: inputTextMessageDeco(context),
                               ),
@@ -444,8 +444,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                               IconButton(
                                 icon: const FaIcon(FontAwesomeIcons.camera),
                                 padding: const EdgeInsets.all(15),
-                                onPressed: () async {
-                                  await Navigator.push(
+                                onPressed: () {
+                                  Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) {

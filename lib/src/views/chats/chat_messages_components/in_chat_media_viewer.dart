@@ -70,7 +70,6 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   @override
   void dispose() {
     super.dispose();
-    // ignore: discarded_futures
     messageStream?.cancel();
     _timer?.cancel();
     // videoController?.dispose();

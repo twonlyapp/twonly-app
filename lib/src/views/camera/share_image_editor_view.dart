@@ -88,12 +88,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         loadingImage = false;
       });
       videoController = VideoPlayerController.file(widget.videoFilePath!);
-      // ignore: discarded_futures
       videoController?.setLooping(true);
       videoController?.initialize().then((_) async {
         await videoController!.play();
         setState(() {});
-        // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler, discarded_futures
+        // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler
       }).catchError(Log.error);
     }
   }
@@ -125,7 +124,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   void dispose() {
     isDisposed = true;
     layers.clear();
-    // ignore: discarded_futures
     videoController?.dispose();
     super.dispose();
   }

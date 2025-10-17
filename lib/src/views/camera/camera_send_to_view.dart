@@ -27,7 +27,6 @@ class CameraSendToViewState extends State<CameraSendToView> {
 
   @override
   void dispose() {
-    // ignore: discarded_futures
     cameraController?.dispose();
     cameraController = null;
     selectedCameraDetails = SelectedCameraDetails();

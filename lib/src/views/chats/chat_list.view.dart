@@ -54,7 +54,7 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   void initState() {
-    unawaited(initAsync());
+    initAsync();
     super.initState();
   }
 
@@ -112,7 +112,7 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   void dispose() {
     tutorial?.cancel();
-    unawaited(_contactsSub.cancel());
+    _contactsSub.cancel();
     super.dispose();
   }
 
@@ -148,8 +148,8 @@ class _ChatListViewState extends State<ChatListView> {
             const Text('twonly '),
             if (planId != 'Free')
               GestureDetector(
-                onTap: () async {
-                  await Navigator.push(
+                onTap: () {
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) {
@@ -191,8 +191,8 @@ class _ChatListViewState extends State<ChatListView> {
                 child: IconButton(
                   key: searchForOtherUsers,
                   icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
-                  onPressed: () async {
-                    await Navigator.push(
+                  onPressed: () {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const AddNewUserView(),
@@ -234,8 +234,8 @@ class _ChatListViewState extends State<ChatListView> {
                       padding: const EdgeInsets.all(10),
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.person_add),
-                        onPressed: () async {
-                          await Navigator.push(
+                        onPressed: () {
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => const AddNewUserView(),
@@ -302,8 +302,8 @@ class _ChatListViewState extends State<ChatListView> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),
         child: FloatingActionButton(
-          onPressed: () async {
-            await Navigator.push(
+          onPressed: () {
+            Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) {
@@ -353,8 +353,8 @@ class _UserListItem extends State<UserListItem> {
 
   @override
   void dispose() {
-    unawaited(messagesNotOpenedStream.cancel());
-    unawaited(lastMessageStream.cancel());
+    messagesNotOpenedStream.cancel();
+    lastMessageStream.cancel();
     super.dispose();
   }
 
@@ -506,8 +506,8 @@ class _UserListItem extends State<UserListItem> {
             trailing: (widget.user.deleted)
                 ? null
                 : IconButton(
-                    onPressed: () async {
-                      await Navigator.push(
+                    onPressed: () {
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) {

@@ -85,18 +85,17 @@ class _TextViewState extends State<TextLayer> {
             },
             onTapOutside: (a) async {
               widget.layerData.text = textController.text;
-              Future.delayed(const Duration(milliseconds: 100), () {
+              Future.delayed(const Duration(milliseconds: 100), () async {
                 if (context.mounted) {
-                  setState(() async {
-                    widget.layerData.isDeleted = textController.text == '';
-                    widget.layerData.isEditing = false;
-                    await context
-                        .read<ImageEditorProvider>()
-                        .updateSomeTextViewIsAlreadyEditing(false);
-                    if (widget.onUpdate != null) {
-                      widget.onUpdate!();
-                    }
-                  });
+                  widget.layerData.isDeleted = textController.text == '';
+                  widget.layerData.isEditing = false;
+                  await context
+                      .read<ImageEditorProvider>()
+                      .updateSomeTextViewIsAlreadyEditing(false);
+                  if (widget.onUpdate != null) {
+                    widget.onUpdate!();
+                  }
+                  if (mounted) setState(() {});
                 }
               });
 
@@ -150,13 +149,12 @@ class _TextViewState extends State<TextLayer> {
                     .watch<ImageEditorProvider>()
                     .someTextViewIsAlreadyEditing)
                 ? null
-                : () {
-                    setState(() async {
-                      await context
-                          .read<ImageEditorProvider>()
-                          .updateSomeTextViewIsAlreadyEditing(true);
-                      widget.layerData.isEditing = true;
-                    });
+                : () async {
+                    await context
+                        .read<ImageEditorProvider>()
+                        .updateSomeTextViewIsAlreadyEditing(true);
+                    widget.layerData.isEditing = true;
+                    if (mounted) setState(() {});
                   },
             onScaleUpdate: (detail) async {
               if (detail.pointerCount == 1) {
