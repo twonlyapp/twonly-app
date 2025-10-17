@@ -72,7 +72,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDatabase>
                       DateTime.now().subtract(const Duration(days: 1)),
                     ) |
                     (t.sendAt.isSmallerThanValue(
-                          DateTime.now().subtract(const Duration(days: 1)),
+                          DateTime.now().subtract(const Duration(days: 3)),
                         ) &
                         t.errorWhileSending.equals(true))) &
                 t.kind.equals(MessageKind.textMessage.name),
