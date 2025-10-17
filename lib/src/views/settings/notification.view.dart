@@ -44,9 +44,10 @@ class NotificationView extends StatelessWidget {
                 );
               } else {
                 final run = await showAlertDialog(
-                    context,
-                    context.lang.settingsNotifyTroubleshootingNoProblem,
-                    context.lang.settingsNotifyTroubleshootingNoProblemDesc);
+                  context,
+                  context.lang.settingsNotifyTroubleshootingNoProblem,
+                  context.lang.settingsNotifyTroubleshootingNoProblemDesc,
+                );
 
                 if (run) {
                   final user = await getUser();

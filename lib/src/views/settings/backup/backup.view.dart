@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/model/json/userdata.dart';
@@ -34,8 +36,8 @@ class _BackupViewState extends State<BackupView> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    unawaited(initAsync());
     gUpdateBackupView = initAsync;
   }
 
@@ -113,7 +115,9 @@ class _BackupViewState extends State<BackupView> {
                             (
                               context.lang.backupLastBackupDate,
                               formatDateTime(
-                                  context, twonlySafeBackup!.lastBackupDone)
+                                context,
+                                twonlySafeBackup!.lastBackupDone,
+                              )
                             ),
                             (
                               context.lang.backupLastBackupSize,
@@ -122,7 +126,7 @@ class _BackupViewState extends State<BackupView> {
                             (
                               context.lang.backupLastBackupResult,
                               backupStatus(twonlySafeBackup!.backupUploadState)
-                            )
+                            ),
                           ].map((pair) {
                             return TableRow(
                               children: [
@@ -159,15 +163,16 @@ class _BackupViewState extends State<BackupView> {
                                 });
                               },
                         child: Text(context.lang.backupTwonlySaveNow),
-                      )
+                      ),
                     ],
                   ),
             onTap: () async {
               if (twonlySafeBackup != null) {
                 final disable = await showAlertDialog(
-                    context,
-                    context.lang.deleteBackupTitle,
-                    context.lang.deleteBackupBody);
+                  context,
+                  context.lang.deleteBackupTitle,
+                  context.lang.deleteBackupBody,
+                );
                 if (disable) {
                   await disableTwonlySafe();
                 }
@@ -175,10 +180,14 @@ class _BackupViewState extends State<BackupView> {
                 setState(() {
                   isLoading = true;
                 });
-                await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) {
-                  return const TwonlyIdentityBackupView();
-                }));
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const TwonlyIdentityBackupView();
+                    },
+                  ),
+                );
               }
               await initAsync();
             },
@@ -195,7 +204,8 @@ class _BackupViewState extends State<BackupView> {
         showSelectedLabels: true,
         showUnselectedLabels: true,
         unselectedIconTheme: IconThemeData(
-            color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150)),
+          color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150),
+        ),
         selectedIconTheme:
             IconThemeData(color: Theme.of(context).colorScheme.inverseSurface),
         items: [
@@ -208,15 +218,14 @@ class _BackupViewState extends State<BackupView> {
             label: context.lang.backupData,
           ),
         ],
-        onTap: (int index) {
+        onTap: (int index) async {
           activePageIdx = index;
-          setState(() {
-            pageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.bounceIn,
-            );
-          });
+          await pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.bounceIn,
+          );
+          if (mounted) setState(() {});
         },
         currentIndex: activePageIdx,
         // ),
@@ -271,7 +280,7 @@ class BackupOption extends StatelessWidget {
                         onPressed: onTap,
                         child: Text(context.lang.enable),
                       ),
-              )
+              ),
             ],
           ),
         ),

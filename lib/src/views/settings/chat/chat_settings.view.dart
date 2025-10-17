@@ -26,10 +26,14 @@ class _ChatSettingsViewState extends State<ChatSettingsView> {
           ListTile(
             title: Text(context.lang.settingsPreSelectedReactions),
             onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return const ChatReactionSelectionView();
-              }));
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const ChatReactionSelectionView();
+                  },
+                ),
+              );
             },
           ),
         ],

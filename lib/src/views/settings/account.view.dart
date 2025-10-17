@@ -26,17 +26,19 @@ class _AccountViewState extends State<AccountView> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
     final ballance = await loadPlanBalance(useCache: false);
     if (ballance == null || !mounted) return;
     var ballanceInCents = ballance.transactions
-        .where((x) =>
-            x.transactionType != Response_TransactionTypes.ThanksForTesting ||
-            kDebugMode)
+        .where(
+          (x) =>
+              x.transactionType != Response_TransactionTypes.ThanksForTesting ||
+              kDebugMode,
+        )
         .map((a) => a.depositCents.toInt())
         .sum;
     if (ballanceInCents < 0) {
@@ -93,9 +95,11 @@ class _AccountViewState extends State<AccountView> {
             subtitle: (formattedBallance == null)
                 ? Text(context.lang.settingsAccountDeleteAccountNoInternet)
                 : hasRemainingBallance
-                    ? Text(context.lang
-                        .settingsAccountDeleteAccountWithBallance(
-                            formattedBallance!))
+                    ? Text(
+                        context.lang.settingsAccountDeleteAccountWithBallance(
+                          formattedBallance!,
+                        ),
+                      )
                     : Text(context.lang.settingsAccountDeleteAccountNoBallance),
             onLongPress: kDebugMode
                 ? () async {
@@ -110,12 +114,16 @@ class _AccountViewState extends State<AccountView> {
                 ? null
                 : () async {
                     if (hasRemainingBallance) {
-                      final canGoNext = await Navigator.push(context,
-                          MaterialPageRoute(builder: (context) {
-                        return RefundCreditsView(
-                          formattedBalance: formattedBallance!,
-                        );
-                      })) as bool?;
+                      final canGoNext = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return RefundCreditsView(
+                              formattedBalance: formattedBallance!,
+                            );
+                          },
+                        ),
+                      ) as bool?;
                       unawaited(initAsync());
                       if (canGoNext == null || !canGoNext) return;
                     }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 class NotificationBadge extends StatelessWidget {
-  const NotificationBadge(
-      {required this.count, required this.child, super.key});
+  const NotificationBadge({
+    required this.count,
+    required this.child,
+    super.key,
+  });
   final String count;
   final Widget child;
 
@@ -35,7 +38,7 @@ class NotificationBadge extends StatelessWidget {
               ),
             ),
           ),
-        )
+        ),
       ],
     );
   }

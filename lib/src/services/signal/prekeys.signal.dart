@@ -37,7 +37,8 @@ Future<void> requestNewPrekeysForContact(int contactId) async {
     final otherKeys = await apiService.getPreKeysByUserId(contactId);
     if (otherKeys != null) {
       Log.info(
-          'got fresh ${otherKeys.preKeys.length}  pre keys from other $contactId!');
+        'got fresh ${otherKeys.preKeys.length}  pre keys from other $contactId!',
+      );
       final preKeys = otherKeys.preKeys
           .map(
             (preKey) => SignalContactPreKeysCompanion(
@@ -74,13 +75,14 @@ Future<void> requestNewSignedPreKeyForContact(int contactId) async {
     if (signedPreKey != null) {
       Log.info('got fresh signed pre keys from other $contactId!');
       await twonlyDB.signalDao.insertOrUpdateSignedPreKeyByContactId(
-          SignalContactSignedPreKeysCompanion(
-        contactId: Value(contactId),
-        signedPreKey: Value(Uint8List.fromList(signedPreKey.signedPrekey)),
-        signedPreKeySignature:
-            Value(Uint8List.fromList(signedPreKey.signedPrekeySignature)),
-        signedPreKeyId: Value(signedPreKey.signedPrekeyId.toInt()),
-      ));
+        SignalContactSignedPreKeysCompanion(
+          contactId: Value(contactId),
+          signedPreKey: Value(Uint8List.fromList(signedPreKey.signedPrekey)),
+          signedPreKeySignature:
+              Value(Uint8List.fromList(signedPreKey.signedPrekeySignature)),
+          signedPreKeyId: Value(signedPreKey.signedPrekeyId.toInt()),
+        ),
+      );
     } else {
       Log.error('could not load new signed pre key for user $contactId');
     }

@@ -27,9 +27,9 @@ class _UserContextMenuState extends State<UserContextMenu> {
   Widget build(BuildContext context) {
     return PieMenu(
       onPressed: () => (),
-      onToggle: (menuOpen) {
+      onToggle: (menuOpen) async {
         if (menuOpen) {
-          HapticFeedback.heavyImpact();
+          await HapticFeedback.heavyImpact();
         }
       },
       actions: [
@@ -59,12 +59,15 @@ class _UserContextMenuState extends State<UserContextMenu> {
           ),
         PieAction(
           tooltip: Text(context.lang.contextMenuOpenChat),
-          onSelect: () {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (context) {
-                return ChatMessagesView(widget.contact);
-              },
-            ));
+          onSelect: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return ChatMessagesView(widget.contact);
+                },
+              ),
+            );
           },
           child: const FaIcon(FontAwesomeIcons.solidComments),
         ),
@@ -82,9 +85,11 @@ class _UserContextMenuState extends State<UserContextMenu> {
                   .updateContact(widget.contact.userId, update);
             }
           },
-          child: FaIcon(widget.contact.pinned
-              ? FontAwesomeIcons.thumbtackSlash
-              : FontAwesomeIcons.thumbtack),
+          child: FaIcon(
+            widget.contact.pinned
+                ? FontAwesomeIcons.thumbtackSlash
+                : FontAwesomeIcons.thumbtack,
+          ),
         ),
       ],
       child: widget.child,
@@ -137,12 +142,15 @@ class _UserContextMenuBlocked extends State<UserContextMenuBlocked> {
           ),
         PieAction(
           tooltip: Text(context.lang.contextMenuUserProfile),
-          onSelect: () {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (context) {
-                return ContactView(widget.contact.userId);
-              },
-            ));
+          onSelect: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return ContactView(widget.contact.userId);
+                },
+              ),
+            );
           },
           child: const FaIcon(FontAwesomeIcons.user),
         ),

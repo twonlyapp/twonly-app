@@ -29,7 +29,7 @@ class MemoriesViewState extends State<MemoriesView> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   @override
@@ -71,15 +71,17 @@ class MemoriesViewState extends State<MemoriesView> {
             break;
           }
           final creationDate = file.lastModifiedSync();
-          items.add(MemoryItem(
-            id: int.parse(fileName.split('.')[0]),
-            messages: [],
-            date: creationDate,
-            mirrorVideo: false,
-            thumbnailPath: thumbnailFile,
-            imagePath: imagePath,
-            videoPath: videoPath,
-          ));
+          items.add(
+            MemoryItem(
+              id: int.parse(fileName.split('.')[0]),
+              messages: [],
+              date: creationDate,
+              mirrorVideo: false,
+              thumbnailPath: thumbnailFile,
+              imagePath: imagePath,
+              videoPath: videoPath,
+            ),
+          );
         }
       }
     }
@@ -98,8 +100,9 @@ class MemoriesViewState extends State<MemoriesView> {
       var lastMonth = '';
       galleryItems = await loadMemoriesDirectory();
       for (final item in galleryItems) {
-        items.remove(item
-            .id); // prefer the stored one and not the saved on in the chat....
+        items.remove(
+          item.id,
+        ); // prefer the stored one and not the saved on in the chat....
       }
       galleryItems += items.values.toList();
       galleryItems.sort((a, b) => b.date.compareTo(a.date));
@@ -125,19 +128,20 @@ class MemoriesViewState extends State<MemoriesView> {
         child: (galleryItems.isEmpty)
             ? Center(
                 child: Text(
-                context.lang.memoriesEmpty,
-                textAlign: TextAlign.center,
-              ))
+                  context.lang.memoriesEmpty,
+                  textAlign: TextAlign.center,
+                ),
+              )
             : ListView.builder(
                 itemCount: months.length * 2,
                 itemBuilder: (context, mIndex) {
                   if (mIndex.isEven) {
                     return Padding(
                       padding: const EdgeInsets.all(8),
-                      child: Text(months[(mIndex / 2).toInt()]),
+                      child: Text(months[(mIndex ~/ 2)]),
                     );
                   }
-                  final index = ((mIndex - 1) / 2).toInt();
+                  final index = (mIndex - 1) ~/ 2;
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const ClampingScrollPhysics(),
@@ -151,8 +155,8 @@ class MemoriesViewState extends State<MemoriesView> {
                       final gaIndex = orderedByMonth[months[index]]![gIndex];
                       return MemoriesItemThumbnail(
                         galleryItem: galleryItems[gaIndex],
-                        onTap: () {
-                          open(context, gaIndex);
+                        onTap: () async {
+                          await open(context, gaIndex);
                         },
                       );
                     },

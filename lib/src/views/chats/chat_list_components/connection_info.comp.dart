@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -34,17 +36,19 @@ class _ConnectionInfoWidgetState extends State<ConnectionInfo>
 
     _widthAnim = TweenSequence([
       TweenSequenceItem(
-          tween: Tween<double>(begin: minBarWidth, end: maxBarWidth),
-          weight: 50),
+        tween: Tween<double>(begin: minBarWidth, end: maxBarWidth),
+        weight: 50,
+      ),
       TweenSequenceItem(
-          tween: Tween<double>(begin: maxBarWidth, end: minBarWidth),
-          weight: 50),
+        tween: Tween<double>(begin: maxBarWidth, end: minBarWidth),
+        weight: 50,
+      ),
     ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     // Delay start by 2 seconds
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        _controller.repeat(reverse: true);
+        unawaited(_controller.repeat(reverse: true));
         setState(() {
           showAnimation = true;
         });

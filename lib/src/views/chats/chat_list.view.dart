@@ -95,11 +95,16 @@ class _ChatListViewState extends State<ChatListView> {
       // only show changelog to people who already have contacts
       // this prevents that this is shown directly after the user registered
       if (_contacts.isNotEmpty) {
-        await Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return ChangeLogView(
-            changeLog: changeLog,
-          );
-        }));
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return ChangeLogView(
+                changeLog: changeLog,
+              );
+            },
+          ),
+        );
       }
     }
   }
@@ -117,49 +122,61 @@ class _ChatListViewState extends State<ChatListView> {
     final planId = context.watch<CustomChangeProvider>().plan;
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [
-          GestureDetector(
-            onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return const ProfileView();
-              }));
-              _user = await getUser();
-              if (!mounted) return;
-              setState(() {});
-            },
-            child: ContactAvatar(
-              userData: _user,
-              fontSize: 14,
-              color: context.color.onSurface.withAlpha(20),
-            ),
-          ),
-          const SizedBox(width: 10),
-          const Text('twonly '),
-          if (planId != 'Free')
+        title: Row(
+          children: [
             GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const SubscriptionView();
-                }));
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const ProfileView();
+                    },
+                  ),
+                );
+                _user = await getUser();
+                if (!mounted) return;
+                setState(() {});
               },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.color.primary,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                child: Text(
-                  planId,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode(context) ? Colors.black : Colors.white,
+              child: ContactAvatar(
+                userData: _user,
+                fontSize: 14,
+                color: context.color.onSurface.withAlpha(20),
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('twonly '),
+            if (planId != 'Free')
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const SubscriptionView();
+                      },
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: context.color.primary,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                  child: Text(
+                    planId,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-        ]),
+          ],
+        ),
         actions: [
           const FeedbackIconButton(),
           StreamBuilder(
@@ -199,7 +216,7 @@ class _ChatListViewState extends State<ChatListView> {
               setState(() {});
             },
             icon: const FaIcon(FontAwesomeIcons.gear, size: 19),
-          )
+          ),
         ],
       ),
       body: Stack(
@@ -216,17 +233,17 @@ class _ChatListViewState extends State<ChatListView> {
                     child: Padding(
                       padding: const EdgeInsets.all(10),
                       child: OutlinedButton.icon(
-                          icon: const Icon(Icons.person_add),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const AddNewUserView(),
-                              ),
-                            );
-                          },
-                          label:
-                              Text(context.lang.chatListViewSearchUserNameBtn)),
+                        icon: const Icon(Icons.person_add),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AddNewUserView(),
+                            ),
+                          );
+                        },
+                        label: Text(context.lang.chatListViewSearchUserNameBtn),
+                      ),
                     ),
                   )
                 : RefreshIndicator(
@@ -288,9 +305,11 @@ class _ChatListViewState extends State<ChatListView> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) {
-                return const StartNewChatView();
-              }),
+              MaterialPageRoute(
+                builder: (context) {
+                  return const StartNewChatView();
+                },
+              ),
             );
           },
           child: const FaIcon(FontAwesomeIcons.penToSquare),
@@ -399,11 +418,14 @@ class _UserListItem extends State<UserListItem> {
 
   Future<void> onTap() async {
     if (currentMessage == null) {
-      await Navigator.push(context, MaterialPageRoute(
-        builder: (context) {
-          return CameraSendToView(widget.user);
-        },
-      ));
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            return CameraSendToView(widget.user);
+          },
+        ),
+      );
       return;
     }
 
@@ -417,9 +439,11 @@ class _UserListItem extends State<UserListItem> {
         case DownloadState.downloaded:
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) {
-              return MediaViewerView(widget.user);
-            }),
+            MaterialPageRoute(
+              builder: (context) {
+                return MediaViewerView(widget.user);
+              },
+            ),
           );
           return;
         case DownloadState.downloading:
@@ -429,9 +453,11 @@ class _UserListItem extends State<UserListItem> {
     if (!mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) {
-        return ChatMessagesView(widget.user);
-      }),
+      MaterialPageRoute(
+        builder: (context) {
+          return ChatMessagesView(widget.user);
+        },
+      ),
     );
   }
 
@@ -481,15 +507,18 @@ class _UserListItem extends State<UserListItem> {
                 ? null
                 : IconButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (context) {
-                          if (hasNonOpenedMediaFile) {
-                            return ChatMessagesView(widget.user);
-                          } else {
-                            return CameraSendToView(widget.user);
-                          }
-                        },
-                      ));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            if (hasNonOpenedMediaFile) {
+                              return ChatMessagesView(widget.user);
+                            } else {
+                              return CameraSendToView(widget.user);
+                            }
+                          },
+                        ),
+                      );
                     },
                     icon: FaIcon(
                       hasNonOpenedMediaFile
@@ -500,7 +529,7 @@ class _UserListItem extends State<UserListItem> {
                   ),
             onTap: onTap,
           ),
-        )
+        ),
       ],
     );
   }

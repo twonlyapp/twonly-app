@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_dynamic_calls
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -25,7 +26,7 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
   void initState() {
     _urlController.text = 'https://';
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -86,7 +87,8 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
       } else {
         // If the server did not return a 200 OK response, throw an exception.
         throw Exception(
-            'Got invalid status code ${response.statusCode} from server.');
+          'Got invalid status code ${response.statusCode} from server.',
+        );
       }
     } catch (e) {
       Log.error('$e');
@@ -172,7 +174,7 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
                 },
                 child: Text(context.lang.backupResetServer),
               ),
-            )
+            ),
           ],
         ),
       ),

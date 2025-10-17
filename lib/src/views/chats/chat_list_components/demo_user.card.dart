@@ -30,7 +30,7 @@ class DemoUserCard extends StatelessWidget {
               );
             },
             child: const Text('Register'),
-          )
+          ),
         ],
       ),
     );

@@ -10,10 +10,12 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
     with _$MessageRetransmissionDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
+  // ignore: matching_super_parameters
   MessageRetransmissionDao(super.db);
 
   Future<int?> insertRetransmission(
-      MessageRetransmissionsCompanion message) async {
+    MessageRetransmissionsCompanion message,
+  ) async {
     try {
       return await into(messageRetransmissions).insert(message);
     } catch (e) {
@@ -25,18 +27,22 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
   Future<void> purgeOldRetransmissions() async {
     // delete entries older than two weeks
     await (delete(messageRetransmissions)
-          ..where((t) => (t.acknowledgeByServerAt.isSmallerThanValue(
-                DateTime.now().subtract(
-                  const Duration(days: 25),
-                ),
-              ))))
+          ..where(
+            (t) => (t.acknowledgeByServerAt.isSmallerThanValue(
+              DateTime.now().subtract(
+                const Duration(days: 25),
+              ),
+            )),
+          ))
         .go();
   }
 
   Future<List<int>> getRetransmitAbleMessages() async {
     final countDeleted = await (delete(messageRetransmissions)
-          ..where((t) =>
-              t.encryptedHash.isNull() & t.acknowledgeByServerAt.isNotNull()))
+          ..where(
+            (t) =>
+                t.encryptedHash.isNull() & t.acknowledgeByServerAt.isNotNull(),
+          ))
         .go();
 
     if (countDeleted > 0) {
@@ -51,9 +57,16 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   SingleOrNullSelectable<MessageRetransmission> getRetransmissionById(
-      int retransmissionId) {
+    int retransmissionId,
+  ) {
     return select(messageRetransmissions)
       ..where((t) => t.retransmissionId.equals(retransmissionId));
+  }
+
+  Stream<List<MessageRetransmission>> watchAllMessages() {
+    return (select(messageRetransmissions)
+          ..orderBy([(t) => OrderingTerm.asc(t.retransmissionId)]))
+        .watch();
   }
 
   Future<void> updateRetransmission(
@@ -67,9 +80,11 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
 
   Future<int> resetAckStatusFor(int fromUserId, Uint8List encryptedHash) async {
     return ((update(messageRetransmissions))
-          ..where((m) =>
-              m.contactId.equals(fromUserId) &
-              m.encryptedHash.equals(encryptedHash)))
+          ..where(
+            (m) =>
+                m.contactId.equals(fromUserId) &
+                m.encryptedHash.equals(encryptedHash),
+          ))
         .write(
       const MessageRetransmissionsCompanion(
         acknowledgeByServerAt: Value(null),
@@ -78,11 +93,15 @@ class MessageRetransmissionDao extends DatabaseAccessor<TwonlyDatabase>
   }
 
   Future<MessageRetransmission?> getRetransmissionFromHash(
-      int fromUserId, Uint8List encryptedHash) async {
+    int fromUserId,
+    Uint8List encryptedHash,
+  ) async {
     return ((select(messageRetransmissions))
-          ..where((m) =>
-              m.contactId.equals(fromUserId) &
-              m.encryptedHash.equals(encryptedHash)))
+          ..where(
+            (m) =>
+                m.contactId.equals(fromUserId) &
+                m.encryptedHash.equals(encryptedHash),
+          ))
         .getSingleOrNull();
   }
 

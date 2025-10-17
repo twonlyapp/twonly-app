@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/image_editor/data/data.dart';
@@ -16,7 +18,7 @@ class _EmojisState extends State<Emojis> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -86,22 +88,23 @@ class _EmojisState extends State<Emojis> {
                 ),
                 children: lastUsed.map((String emoji) {
                   return GridTile(
-                      child: GestureDetector(
-                    onTap: () {
-                      selectEmojis(emoji);
-                    },
-                    child: Container(
-                      padding: EdgeInsets.zero,
-                      alignment: Alignment.center,
-                      child: Text(
-                        emoji,
-                        style: const TextStyle(fontSize: 35),
+                    child: GestureDetector(
+                      onTap: () async {
+                        await selectEmojis(emoji);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.zero,
+                        alignment: Alignment.center,
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 35),
+                        ),
                       ),
                     ),
-                  ));
+                  );
                 }).toList(),
               ),
-            )
+            ),
           ],
         ),
       ),

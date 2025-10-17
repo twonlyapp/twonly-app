@@ -39,12 +39,12 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
   void initState() {
     super.initState();
     _contact = widget.contact;
-    loadAsync();
+    unawaited(loadAsync());
   }
 
   @override
   void dispose() {
-    _contactSub.cancel();
+    unawaited(_contactSub.cancel());
     super.dispose();
   }
 
@@ -86,14 +86,17 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
 
   Future<void> openQrScanner() async {
     if (_fingerprint == null) return;
-    final isValid = await Navigator.push(context, MaterialPageRoute(
-      builder: (context) {
-        return ContactVerifyQrScanView(
-          widget.contact,
-          fingerprint: _fingerprint!,
-        );
-      },
-    )) as bool?;
+    final isValid = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return ContactVerifyQrScanView(
+            widget.contact,
+            fingerprint: _fingerprint!,
+          );
+        },
+      ),
+    ) as bool?;
     if (isValid == null) {
       return; // user just returned...
     }
@@ -205,7 +208,8 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
                   padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Text(
                     context.lang.contactVerifyNumberLongDesc(
-                        getContactDisplayName(_contact)),
+                      getContactDisplayName(_contact),
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -213,9 +217,12 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
                   child: GestureDetector(
-                    onTap: () {
-                      launchUrl(Uri.parse(
-                          'https://twonly.eu/en/faq/security/verify-security-number.html'));
+                    onTap: () async {
+                      await launchUrl(
+                        Uri.parse(
+                          'https://twonly.eu/en/faq/security/verify-security-number.html',
+                        ),
+                      );
                     },
                     child: Text(
                       'Read more.',
@@ -226,7 +233,7 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
                       ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
       bottomNavigationBar: SafeArea(
@@ -248,7 +255,7 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
                   label: Text(
                     context.lang.contactVerifyNumberMarkAsVerified,
                   ),
-                )
+                ),
             ],
           ),
         ),

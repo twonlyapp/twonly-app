@@ -8,7 +8,8 @@ Future<ConnectSignalProtocolStore?> getSignalStore() async {
 }
 
 Future<ConnectSignalProtocolStore> getSignalStoreFromIdentity(
-    SignalIdentity signalIdentity) async {
+  SignalIdentity signalIdentity,
+) async {
   final identityKeyPair =
       IdentityKeyPair.fromSerialized(signalIdentity.identityKeyPairU8List);
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
@@ -39,7 +41,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   @override
   void initState() {
     super.initState();
-    checkIfTutorialCanBeShown();
+    unawaited(checkIfTutorialCanBeShown());
   }
 
   Future<void> checkIfTutorialCanBeShown() async {
@@ -60,9 +62,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
           canBeReopened = true;
         });
       }
-      Future.delayed(const Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 1), () async {
         if (!mounted) return;
-        showReopenMediaFilesTutorial(context, reopenMediaFile);
+        await showReopenMediaFilesTutorial(context, reopenMediaFile);
       });
     }
   }
@@ -101,10 +103,14 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
         widget.message.openedAt == null) {
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) {
-          return MediaViewerView(widget.contact,
-              initialMessage: widget.message);
-        }),
+        MaterialPageRoute(
+          builder: (context) {
+            return MediaViewerView(
+              widget.contact,
+              initialMessage: widget.message,
+            );
+          },
+        ),
       );
       await checkIfTutorialCanBeShown();
     } else if (widget.message.downloadState == DownloadState.pending) {

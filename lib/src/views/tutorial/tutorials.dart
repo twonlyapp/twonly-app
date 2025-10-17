@@ -21,7 +21,7 @@ Future<void> showChatListTutorialSearchOtherUsers(
         searchForOtherUsers,
         context.lang.tutorialChatListSearchUsersTitle,
         context.lang.tutorialChatListSearchUsersDesc,
-      )
+      ),
     ];
     await showTutorial(context, targets);
   });
@@ -42,7 +42,7 @@ Future<void> showChatListTutorialContextMenu(
         firstUserListItemKey,
         context.lang.tutorialChatListContextMenuTitle,
         context.lang.tutorialChatListContextMenuDesc,
-      )
+      ),
     ];
     await showTutorial(context, targets);
   });
@@ -63,7 +63,7 @@ Future<void> showVerifyShieldTutorial(
         firstUserListItemKey,
         context.lang.tutorialChatMessagesVerifyShieldTitle,
         context.lang.tutorialChatMessagesVerifyShieldDesc,
-      )
+      ),
     ];
     await showTutorial(context, targets);
   });
@@ -84,7 +84,7 @@ Future<void> showReopenMediaFilesTutorial(
         firstUserListItemKey,
         context.lang.tutorialChatMessagesReopenMessageTitle,
         context.lang.tutorialChatMessagesReopenMessageDesc,
-      )
+      ),
     ];
     await showTutorial(context, targets);
   });

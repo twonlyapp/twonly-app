@@ -28,16 +28,18 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     globalIsAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
 
-    globalCallbackConnectionState = ({required bool isConnected}) {
-      context.read<CustomChangeProvider>().updateConnectionState(isConnected);
-      setUserPlan();
+    globalCallbackConnectionState = ({required bool isConnected}) async {
+      await context
+          .read<CustomChangeProvider>()
+          .updateConnectionState(isConnected);
+      await setUserPlan();
     };
 
-    globalCallbackUpdatePlan = (String planId) {
-      context.read<CustomChangeProvider>().updatePlan(planId);
+    globalCallbackUpdatePlan = (String planId) async {
+      await context.read<CustomChangeProvider>().updatePlan(planId);
     };
 
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> setUserPlan() async {
@@ -77,12 +79,12 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       if (wasPaused) {
         globalIsAppInBackground = false;
         twonlyDB.markUpdated();
-        apiService.connect(force: true);
+        unawaited(apiService.connect(force: true));
       }
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;
       globalIsAppInBackground = true;
-      handleUploadWhenAppGoesBackground();
+      unawaited(handleUploadWhenAppGoesBackground());
     }
   }
 
@@ -138,7 +140,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
           initialRoute: '/',
           routes: {
             '/': (context) => const AppMainWidget(initialPage: 1),
-            '/chats': (context) => const AppMainWidget(initialPage: 0)
+            '/chats': (context) => const AppMainWidget(initialPage: 0),
           },
         );
       },

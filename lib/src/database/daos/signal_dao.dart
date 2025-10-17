@@ -7,13 +7,16 @@ import 'package:twonly/src/utils/log.dart';
 
 part 'signal_dao.g.dart';
 
-@DriftAccessor(tables: [
-  SignalContactPreKeys,
-  SignalContactSignedPreKeys,
-])
+@DriftAccessor(
+  tables: [
+    SignalContactPreKeys,
+    SignalContactSignedPreKeys,
+  ],
+)
 class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
+  // ignore: matching_super_parameters
   SignalDao(super.db);
   Future<void> deleteAllByContactId(int contactId) async {
     await (delete(signalContactPreKeys)
@@ -48,10 +51,13 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
     if (preKey != null) {
       // remove the pre key...
       await (delete(signalContactPreKeys)
-            ..where((tbl) =>
-                tbl.contactId.equals(contactId) &
-                tbl.preKeyId.equals(preKey.preKeyId)))
+            ..where(
+              (tbl) =>
+                  tbl.contactId.equals(contactId) &
+                  tbl.preKeyId.equals(preKey.preKeyId),
+            ))
           .go();
+      Log.info('Using prekey ${preKey.preKeyId} for $contactId');
       return preKey;
     }
     return null;
@@ -59,7 +65,8 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
 
   // 3: Insert multiple pre-keys
   Future<void> insertPreKeys(
-      List<SignalContactPreKeysCompanion> preKeys) async {
+    List<SignalContactPreKeysCompanion> preKeys,
+  ) async {
     for (final preKey in preKeys) {
       try {
         await into(signalContactPreKeys).insert(preKey);
@@ -78,7 +85,8 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
 
   // 5: Insert or update signed pre-key by contact ID
   Future<void> insertOrUpdateSignedPreKeyByContactId(
-      SignalContactSignedPreKeysCompanion signedPreKey) async {
+    SignalContactSignedPreKeysCompanion signedPreKey,
+  ) async {
     await (delete(signalContactSignedPreKeys)
           ..where((t) => t.contactId.equals(signedPreKey.contactId.value)))
         .go();
@@ -86,21 +94,35 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
   }
 
   Future<void> purgeOutDatedPreKeys() async {
-    // other pre keys are valid 25 days
-    await (delete(signalContactSignedPreKeys)
-          ..where((t) => (t.createdAt.isSmallerThanValue(
-                DateTime.now().subtract(
-                  const Duration(days: 25),
-                ),
-              ))))
+    // Deletion is a workaround for the issue, that own pre keys where deleted after 40 days, while they could be 30days
+    // on the server + 25 days on the others device old, resulting in the issue that the receiver could not decrypt the
+    // messages...
+    await (delete(signalContactPreKeys)
+          ..where(
+            (t) => (t.createdAt.isSmallerThanValue(
+              DateTime(2025, 10, 10),
+            )),
+          ))
         .go();
-    // own pre keys are valid for 40 days
+    // other pre keys are valid 100 days
+    await (delete(signalContactPreKeys)
+          ..where(
+            (t) => (t.createdAt.isSmallerThanValue(
+              DateTime.now().subtract(
+                const Duration(days: 100),
+              ),
+            )),
+          ))
+        .go();
+    // own pre keys are valid for 180 days
     await (delete(twonlyDB.signalPreKeyStores)
-          ..where((t) => (t.createdAt.isSmallerThanValue(
-                DateTime.now().subtract(
-                  const Duration(days: 40),
-                ),
-              ))))
+          ..where(
+            (t) => (t.createdAt.isSmallerThanValue(
+              DateTime.now().subtract(
+                const Duration(days: 365),
+              ),
+            )),
+          ))
         .go();
   }
 }

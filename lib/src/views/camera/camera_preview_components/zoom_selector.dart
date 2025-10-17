@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_dynamic_calls
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -45,7 +46,7 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -121,25 +122,26 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                         ),
                 ),
               TextButton(
-                  style: zoomButtonStyle.copyWith(
-                    foregroundColor: WidgetStateProperty.all(
-                      isMiddleFocused ? Colors.yellow : Colors.white,
-                    ),
+                style: zoomButtonStyle.copyWith(
+                  foregroundColor: WidgetStateProperty.all(
+                    isMiddleFocused ? Colors.yellow : Colors.white,
                   ),
-                  onPressed: () async {
-                    if (showWideAngleZoomIOS &&
-                        widget.selectedCameraDetails.cameraId == 2) {
-                      await widget.selectCamera(0, true, false);
-                    } else {
-                      widget.updateScaleFactor(1.0);
-                    }
-                  },
-                  child: Text(
-                    isMiddleFocused
-                        ? '${beautifulZoomScale(widget.scaleFactor)}x'
-                        : '1.0x',
-                    style: zoomTextStyle,
-                  )),
+                ),
+                onPressed: () async {
+                  if (showWideAngleZoomIOS &&
+                      widget.selectedCameraDetails.cameraId == 2) {
+                    await widget.selectCamera(0, true, false);
+                  } else {
+                    widget.updateScaleFactor(1.0);
+                  }
+                },
+                child: Text(
+                  isMiddleFocused
+                      ? '${beautifulZoomScale(widget.scaleFactor)}x'
+                      : '1.0x',
+                  style: zoomTextStyle,
+                ),
+              ),
               TextButton(
                 style: zoomButtonStyle.copyWith(
                   foregroundColor: WidgetStateProperty.all(
@@ -152,9 +154,11 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                           .toDouble();
                   widget.updateScaleFactor(level);
                 },
-                child: Text('${beautifulZoomScale(maxLevel.toDouble())}x',
-                    style: zoomTextStyle),
-              )
+                child: Text(
+                  '${beautifulZoomScale(maxLevel.toDouble())}x',
+                  style: zoomTextStyle,
+                ),
+              ),
             ],
           ),
         ),

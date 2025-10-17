@@ -65,11 +65,13 @@ class _ContactUsState extends State<ContactUsView> {
     );
     requestMultipart.headers['x-twonly-auth-token'] = apiAuthToken;
 
-    requestMultipart.files.add(http.MultipartFile.fromBytes(
-      'file',
-      uploadRequestBytes,
-      filename: 'upload',
-    ));
+    requestMultipart.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        uploadRequestBytes,
+        filename: 'upload',
+      ),
+    );
 
     final response = await requestMultipart.send();
     if (response.statusCode == 200) {
@@ -228,8 +230,8 @@ $debugLogToken
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               GestureDetector(
-                onTap: () {
-                  launchUrl(Uri.parse('https://twonly.eu/en/faq/'));
+                onTap: () async {
+                  await launchUrl(Uri.parse('https://twonly.eu/en/faq/'));
                 },
                 child: Text(
                   context.lang.contactUsFaq,
@@ -245,12 +247,16 @@ $debugLogToken
                         final fullMessage = await _getFeedbackText();
                         if (!context.mounted) return;
 
-                        final feedbackSend = await Navigator.push(context,
-                            MaterialPageRoute(builder: (context) {
-                          return SubmitMessage(
-                            fullMessage: fullMessage,
-                          );
-                        }));
+                        final feedbackSend = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return SubmitMessage(
+                                fullMessage: fullMessage,
+                              );
+                            },
+                          ),
+                        );
 
                         if (feedbackSend == true && context.mounted) {
                           Navigator.pop(context);

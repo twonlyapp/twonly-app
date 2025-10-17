@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -22,32 +24,36 @@ List<Widget> parseMarkdown(BuildContext context, String markdown) {
       //   ),
       // ));
     } else if (line.startsWith('## ')) {
-      widgets.add(Padding(
-        padding: const EdgeInsets.only(top: 20, bottom: 10),
-        child: Text(
-          line.substring(3), // Remove the '## ' part
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 20, bottom: 10),
+          child: Text(
+            line.substring(3), // Remove the '## ' part
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
         ),
-      ));
+      );
     }
     // Check for bullet points
     else if (line.startsWith('- ')) {
-      widgets.add(Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 7),
-            child: Icon(
-              Icons.brightness_1,
-              size: 7,
-              color: context.color.onSurface,
-            ),
-          ), // Bullet point icon
-          const SizedBox(width: 8), // Space between bullet and text
-          Expanded(child: Text(line.substring(2))), // Remove the '- ' part
-        ],
-      ));
+      widgets.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 7),
+              child: Icon(
+                Icons.brightness_1,
+                size: 7,
+                color: context.color.onSurface,
+              ),
+            ), // Bullet point icon
+            const SizedBox(width: 8), // Space between bullet and text
+            Expanded(child: Text(line.substring(2))), // Remove the '- ' part
+          ],
+        ),
+      );
     } else {
       widgets.add(Text(line));
     }
@@ -75,7 +81,7 @@ class _ChangeLogViewState extends State<ChangeLogView> {
     if (widget.changeLog != null) {
       changeLog = widget.changeLog!;
     } else {
-      initAsync();
+      unawaited(initAsync());
     }
   }
 

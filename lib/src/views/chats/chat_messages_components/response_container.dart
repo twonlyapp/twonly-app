@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -126,8 +127,8 @@ class _ResponsePreviewState extends State<ResponsePreview> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -145,8 +146,10 @@ class _ResponsePreviewState extends State<ResponsePreview> {
 
     if (widget.message.kind == MessageKind.textMessage) {
       if (widget.message.contentJson != null) {
-        final content = MessageContent.fromJson(MessageKind.textMessage,
-            jsonDecode(widget.message.contentJson!) as Map);
+        final content = MessageContent.fromJson(
+          MessageKind.textMessage,
+          jsonDecode(widget.message.contentJson!) as Map,
+        );
         if (content is TextMessageContent) {
           subtitle = truncateString(content.text);
         }
@@ -154,7 +157,9 @@ class _ResponsePreviewState extends State<ResponsePreview> {
     }
     if (widget.message.kind == MessageKind.media) {
       final content = MessageContent.fromJson(
-          MessageKind.media, jsonDecode(widget.message.contentJson!) as Map);
+        MessageKind.media,
+        jsonDecode(widget.message.contentJson!) as Map,
+      );
       if (content is MediaMessageContent) {
         subtitle = content.isVideo ? 'Video' : 'Image';
       }
@@ -189,7 +194,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
               username,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            if (subtitle != null) Text(subtitle)
+            if (subtitle != null) Text(subtitle),
           ],
         ),
       );
@@ -216,7 +221,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
                   username,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                if (subtitle != null) Text(subtitle)
+                if (subtitle != null) Text(subtitle),
               ],
             ),
           ),
@@ -224,7 +229,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
             SizedBox(
               height: widget.showBorder ? 100 : 210,
               child: Image.file(thumbnailPath!),
-            )
+            ),
         ],
       ),
     );

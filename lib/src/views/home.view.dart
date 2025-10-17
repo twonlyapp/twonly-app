@@ -72,11 +72,11 @@ class HomeViewState extends State<HomeView> {
     }
     if (cameraController == null && !initCameraStarted && offsetRatio < 1) {
       initCameraStarted = true;
-      selectCamera(selectedCameraDetails.cameraId, false, false);
+      unawaited(selectCamera(selectedCameraDetails.cameraId, false, false));
     }
     if (offsetRatio == 1) {
-      disableCameraTimer = Timer(const Duration(milliseconds: 500), () {
-        cameraController?.dispose();
+      disableCameraTimer = Timer(const Duration(milliseconds: 500), () async {
+        await cameraController?.dispose();
         cameraController = null;
         selectedCameraDetails = SelectedCameraDetails();
         disableCameraTimer = null;
@@ -99,13 +99,13 @@ class HomeViewState extends State<HomeView> {
         .listen((NotificationResponse? response) async {
       globalUpdateOfHomeViewPageIndex(0);
     });
-    selectCamera(0, true, false);
-    initAsync();
+    unawaited(selectCamera(0, true, false));
+    unawaited(initAsync());
   }
 
   @override
   void dispose() {
-    selectNotificationStream.close();
+    unawaited(selectNotificationStream.close());
     disableCameraTimer?.cancel();
     cameraController?.dispose();
     super.dispose();
@@ -117,7 +117,11 @@ class HomeViewState extends State<HomeView> {
     bool enableAudio,
   ) async {
     final opts = await initializeCameraController(
-        selectedCameraDetails, sCameraId, init, enableAudio);
+      selectedCameraDetails,
+      sCameraId,
+      init,
+      enableAudio,
+    );
     if (opts != null) {
       selectedCameraDetails = opts.$1;
       cameraController = opts.$2;
@@ -131,7 +135,7 @@ class HomeViewState extends State<HomeView> {
   Future<void> toggleSelectedCamera() async {
     if (cameraController == null) return;
     // do not allow switching camera when recording
-    if (cameraController!.value.isRecordingVideo == true) {
+    if (cameraController!.value.isRecordingVideo) {
       return;
     }
     await cameraController!.dispose();
@@ -185,21 +189,22 @@ class HomeViewState extends State<HomeView> {
                 ),
               ),
               Positioned(
-                  left: 0,
-                  top: 0,
-                  right: 0,
-                  bottom: (offsetRatio > 0.25)
-                      ? MediaQuery.sizeOf(context).height * 2
-                      : 0,
-                  child: Opacity(
-                    opacity: 1 - (offsetRatio * 4) % 1,
-                    child: CameraPreviewControllerView(
-                      cameraController: cameraController,
-                      screenshotController: screenshotController,
-                      selectedCameraDetails: selectedCameraDetails,
-                      selectCamera: selectCamera,
-                    ),
-                  )),
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: (offsetRatio > 0.25)
+                    ? MediaQuery.sizeOf(context).height * 2
+                    : 0,
+                child: Opacity(
+                  opacity: 1 - (offsetRatio * 4) % 1,
+                  child: CameraPreviewControllerView(
+                    cameraController: cameraController,
+                    screenshotController: screenshotController,
+                    selectedCameraDetails: selectedCameraDetails,
+                    selectCamera: selectCamera,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -207,10 +212,11 @@ class HomeViewState extends State<HomeView> {
           showSelectedLabels: false,
           showUnselectedLabels: false,
           unselectedIconTheme: IconThemeData(
-              color:
-                  Theme.of(context).colorScheme.inverseSurface.withAlpha(150)),
+            color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150),
+          ),
           selectedIconTheme: IconThemeData(
-              color: Theme.of(context).colorScheme.inverseSurface),
+            color: Theme.of(context).colorScheme.inverseSurface,
+          ),
           items: const [
             BottomNavigationBarItem(
               icon: FaIcon(FontAwesomeIcons.solidComments),
@@ -225,15 +231,14 @@ class HomeViewState extends State<HomeView> {
               label: '',
             ),
           ],
-          onTap: (int index) {
+          onTap: (int index) async {
             activePageIdx = index;
-            setState(() {
-              homeViewPageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 100),
-                curve: Curves.bounceIn,
-              );
-            });
+            await homeViewPageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.bounceIn,
+            );
+            if (mounted) setState(() {});
           },
           currentIndex: activePageIdx,
         ),

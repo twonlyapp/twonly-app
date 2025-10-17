@@ -1,4 +1,4 @@
-name: Publish on Github
+name: Flutter analyze & test
 
 on:
   workflow_dispatch: {}
@@ -9,7 +9,7 @@ on:
       - lib/**/*.dart
 
 jobs:
-  build_and_publish:
+  flutter_analyze_and_test:
     runs-on: ubuntu-latest
     permissions:
       contents: write

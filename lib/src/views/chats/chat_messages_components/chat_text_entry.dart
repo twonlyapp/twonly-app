@@ -34,7 +34,11 @@ class ChatTextEntry extends StatelessWidget {
         maxWidth: MediaQuery.of(context).size.width * 0.8,
       ),
       padding: EdgeInsets.only(
-          left: 10, top: 4, bottom: 4, right: hasReaction ? 30 : 10),
+        left: 10,
+        top: 4,
+        bottom: 4,
+        right: hasReaction ? 30 : 10,
+      ),
       decoration: BoxDecoration(
         color: message.responseTo == null
             ? getMessageColor(message.message)

@@ -38,16 +38,16 @@ class _SearchUsernameView extends State<AddNewUserView> {
   @override
   void initState() {
     super.initState();
-    contactsStream = twonlyDB.contactsDao
-        .watchNotAcceptedContacts()
-        .listen((update) => setState(() {
-              contacts = update;
-            }));
+    contactsStream = twonlyDB.contactsDao.watchNotAcceptedContacts().listen(
+          (update) => setState(() {
+            contacts = update;
+          }),
+        );
   }
 
   @override
   void dispose() {
-    contactsStream.cancel();
+    unawaited(contactsStream.cancel());
     super.dispose();
   }
 
@@ -69,8 +69,11 @@ class _SearchUsernameView extends State<AddNewUserView> {
     });
 
     if (userdata == null) {
-      await showAlertDialog(context, context.lang.searchUsernameNotFound,
-          context.lang.searchUsernameNotFoundBody(searchUserName.text));
+      await showAlertDialog(
+        context,
+        context.lang.searchUsernameNotFound,
+        context.lang.searchUsernameNotFoundBody(searchUserName.text),
+      );
       return;
     }
 
@@ -141,8 +144,8 @@ class _SearchUsernameView extends State<AddNewUserView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: TextField(
-                  onSubmitted: (_) {
-                    _addNewUser(context);
+                  onSubmitted: (_) async {
+                    await _addNewUser(context);
                   },
                   onChanged: (value) {
                     searchUserName.text = value.toLowerCase();
@@ -166,7 +169,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
                 ),
               Expanded(
                 child: ContactsListView(contacts),
-              )
+              ),
             ],
           ),
         ),
@@ -209,8 +212,10 @@ class ContactsListView extends StatelessWidget {
       Tooltip(
         message: context.lang.searchUserNameBlockUserTooltip,
         child: IconButton(
-          icon: const Icon(Icons.person_off_rounded,
-              color: Color.fromARGB(164, 244, 67, 54)),
+          icon: const Icon(
+            Icons.person_off_rounded,
+            color: Color.fromARGB(164, 244, 67, 54),
+          ),
           onPressed: () async {
             const update = ContactsCompanion(blocked: Value(true));
             await twonlyDB.contactsDao.updateContact(contact.userId, update);

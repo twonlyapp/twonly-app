@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -26,7 +27,7 @@ class _LocationFilterState extends State<LocationFilter> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

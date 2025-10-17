@@ -77,5 +77,12 @@ class DrawLayerData extends Layer {
     super.hasCustomActionButtons = true,
     super.isEditing = true,
   });
-  final control = HandSignatureControl();
+  final control = HandSignatureControl(
+    // ignore: prefer_const_constructors
+    setup: () => SignaturePathSetup(
+      args: {
+        'color': null,
+      },
+    ),
+  );
 }

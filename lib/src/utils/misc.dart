@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,8 +9,6 @@ import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/json/message.dart';
@@ -133,18 +130,20 @@ Future<Uint8List?> getCompressedImage(Uint8List imageBytes) async {
   return result;
 }
 
-Future<bool> authenticateUser(String localizedReason,
-    {bool force = true}) async {
+Future<bool> authenticateUser(
+  String localizedReason, {
+  bool force = true,
+}) async {
   try {
     final auth = LocalAuthentication();
     final didAuthenticate = await auth.authenticate(
-        localizedReason: localizedReason,
-        options: const AuthenticationOptions(useErrorDialogs: false));
+      localizedReason: localizedReason,
+    );
     if (didAuthenticate) {
       return true;
     }
-  } on PlatformException catch (e) {
-    debugPrint(e.toString());
+  } on LocalAuthException catch (e) {
+    Log.error(e.toString());
     if (!force) {
       return true;
     }
@@ -218,171 +217,6 @@ String truncateString(String input, {int maxLength = 20}) {
   return input;
 }
 
-Future<void> insertDemoContacts() async {
-  final commonUsernames = <String>[
-    'James',
-    'Mary',
-    'John',
-    'Patricia',
-    'Robert',
-    'Jennifer',
-    'Michael',
-    'Linda',
-    'William',
-    'Elizabeth',
-    'David',
-    'Barbara',
-    'Richard',
-    'Susan',
-    'Joseph',
-    'Jessica',
-    'Charles',
-    'Sarah',
-    'Thomas',
-    'Karen',
-  ];
-  final contactConfigs = <Map<String, dynamic>>[
-    {'count': 3, 'requested': true},
-    {'count': 4, 'requested': false, 'accepted': true},
-    {'count': 1, 'accepted': true, 'blocked': true},
-    {'count': 1, 'accepted': true, 'archived': true},
-    {'count': 2, 'accepted': true, 'pinned': true},
-    {'count': 1, 'requested': false},
-  ];
-
-  var counter = 0;
-
-  for (final config in contactConfigs) {
-    for (var i = 0; i < (config['count'] as int); i++) {
-      if (counter >= commonUsernames.length) {
-        break;
-      }
-      final username = commonUsernames[counter];
-      final userId = Random().nextInt(1000000);
-      await twonlyDB.contactsDao.insertContact(
-        ContactsCompanion(
-          username: Value(username),
-          userId: Value(userId),
-          requested: Value(config['requested'] as bool? ?? false),
-          accepted: Value(config['accepted'] as bool? ?? false),
-          blocked: Value(config['blocked'] as bool? ?? false),
-          archived: Value(config['archived'] as bool? ?? false),
-          pinned: Value(config['pinned'] as bool? ?? false),
-        ),
-      );
-      if (config['accepted'] as bool? ?? false) {
-        for (var i = 0; i < 20; i++) {
-          final chatId = Random().nextInt(chatMessages.length);
-          await twonlyDB.messagesDao.insertMessage(
-            MessagesCompanion(
-              contactId: Value(userId),
-              kind: const Value(MessageKind.textMessage),
-              sendAt: Value(chatMessages[chatId][1] as DateTime),
-              acknowledgeByServer: const Value(true),
-              acknowledgeByUser: const Value(true),
-              messageOtherId:
-                  Value(Random().nextBool() ? Random().nextInt(10000) : null),
-              // responseToOtherMessageId: Value(content.responseToMessageId),
-              // responseToMessageId: Value(content.responseToOtherMessageId),
-              downloadState: const Value(DownloadState.downloaded),
-              contentJson: Value(
-                jsonEncode(TextMessageContent(
-                    text: chatMessages[chatId][0] as String)),
-              ),
-            ),
-          );
-        }
-      }
-      counter++;
-    }
-  }
-}
-
-Future<void> createFakeDemoData() async {
-  await insertDemoContacts();
-}
-
-List<List<dynamic>> chatMessages = [
-  [
-    'Lorem ipsum dolor sit amet.',
-    DateTime.now().subtract(const Duration(minutes: 20))
-  ],
-  [
-    'Consectetur adipiscing elit.',
-    DateTime.now().subtract(const Duration(minutes: 19))
-  ],
-  [
-    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    DateTime.now().subtract(const Duration(minutes: 18))
-  ],
-  [
-    'Ut enim ad minim veniam.',
-    DateTime.now().subtract(const Duration(minutes: 17))
-  ],
-  [
-    'Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-    DateTime.now().subtract(const Duration(minutes: 16))
-  ],
-  [
-    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
-    DateTime.now().subtract(const Duration(minutes: 15))
-  ],
-  [
-    'Excepteur sint occaecat cupidatat non proident.',
-    DateTime.now().subtract(const Duration(minutes: 14))
-  ],
-  [
-    'Sunt in culpa qui officia deserunt mollit anim id est laborum.',
-    DateTime.now().subtract(const Duration(minutes: 13))
-  ],
-  [
-    'Curabitur pretium tincidunt lacus.',
-    DateTime.now().subtract(const Duration(minutes: 12))
-  ],
-  ['Nulla facilisi.', DateTime.now().subtract(const Duration(minutes: 11))],
-  [
-    'Aenean lacinia bibendum nulla sed consectetur.',
-    DateTime.now().subtract(const Duration(minutes: 10))
-  ],
-  [
-    'Sed posuere consectetur est at lobortis.',
-    DateTime.now().subtract(const Duration(minutes: 9))
-  ],
-  [
-    'Vestibulum id ligula porta felis euismod semper.',
-    DateTime.now().subtract(const Duration(minutes: 8))
-  ],
-  [
-    'Cras justo odio, dapibus ac facilisis in, egestas eget quam.',
-    DateTime.now().subtract(const Duration(minutes: 7))
-  ],
-  [
-    'Morbi leo risus, porta ac consectetur ac, vestibulum at eros.',
-    DateTime.now().subtract(const Duration(minutes: 6))
-  ],
-  [
-    'Praesent commodo cursus magna, vel scelerisque nisl consectetur et.',
-    DateTime.now().subtract(const Duration(minutes: 5))
-  ],
-  [
-    'Donec ullamcorper nulla non metus auctor fringilla.',
-    DateTime.now().subtract(const Duration(minutes: 4))
-  ],
-  [
-    'Etiam porta sem malesuada magna mollis euismod.',
-    DateTime.now().subtract(const Duration(minutes: 3))
-  ],
-  [
-    'Aenean lacinia bibendum nulla sed consectetur.',
-    DateTime.now().subtract(const Duration(minutes: 2))
-  ],
-  [
-    'Nullam quis risus eget urna mollis ornare vel eu leo.',
-    DateTime.now().subtract(const Duration(minutes: 1))
-  ],
-  ['Curabitur blandit tempus porttitor.', DateTime.now()],
-];
-
 String formatDateTime(BuildContext context, DateTime? dateTime) {
   if (dateTime == null) {
     return 'Never';
@@ -426,7 +260,8 @@ MediaMessageContent? getMediaContent(Message message) {
   try {
     if (message.contentJson == null) return null;
     return MediaMessageContent.fromJson(
-        jsonDecode(message.contentJson!) as Map);
+      jsonDecode(message.contentJson!) as Map,
+    );
   } catch (e) {
     Log.error(e);
     return null;

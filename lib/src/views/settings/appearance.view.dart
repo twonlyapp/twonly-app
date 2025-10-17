@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
@@ -18,7 +20,7 @@ class _AppearanceViewState extends State<AppearanceView> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -99,10 +101,12 @@ class _AppearanceViewState extends State<AppearanceView> {
         children: [
           ListTile(
             title: Text(context.lang.settingsAppearanceTheme),
-            subtitle: Text(selectedTheme.name,
-                style: const TextStyle(color: Colors.grey)),
-            onTap: () {
-              _showSelectThemeMode(context);
+            subtitle: Text(
+              selectedTheme.name,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            onTap: () async {
+              await _showSelectThemeMode(context);
             },
           ),
           ListTile(

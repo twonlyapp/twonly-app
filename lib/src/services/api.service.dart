@@ -119,9 +119,10 @@ class ApiService {
 
   Future<void> startReconnectionTimer() async {
     reconnectionTimer?.cancel();
-    reconnectionTimer ??= Timer(Duration(seconds: _reconnectionDelay), () {
+    reconnectionTimer ??=
+        Timer(Duration(seconds: _reconnectionDelay), () async {
       reconnectionTimer = null;
-      connect(force: true);
+      await connect(force: true);
     });
     _reconnectionDelay += 5;
   }
@@ -143,9 +144,9 @@ class ApiService {
     }
     connectivitySubscription = Connectivity()
         .onConnectivityChanged
-        .listen((List<ConnectivityResult> result) {
+        .listen((List<ConnectivityResult> result) async {
       if (!result.contains(ConnectivityResult.none)) {
-        connect(force: true);
+        await connect(force: true);
       }
       // Received changes in available connectivity types!
     });
@@ -186,14 +187,14 @@ class ApiService {
 
   bool get isConnected => _channel != null && _channel!.closeCode != null;
 
-  void _onDone() {
+  Future<void> _onDone() async {
     Log.info('websocket closed without error');
-    onClosed();
+    await onClosed();
   }
 
-  void _onError(dynamic e) {
+  Future<void> _onError(dynamic e) async {
     Log.error('websocket error: $e');
-    onClosed();
+    await onClosed();
   }
 
   Future<void> _onData(dynamic msgBuffer) async {
@@ -338,12 +339,18 @@ class ApiService {
       }
       if (res.error == ErrorCode.UserIdNotFound && contactId != null) {
         Log.error('Contact deleted their account $contactId.');
-        await twonlyDB.contactsDao.updateContact(
-          contactId,
-          const ContactsCompanion(
-            deleted: Value(true),
-          ),
-        );
+        final contact = await twonlyDB.contactsDao
+            .getContactByUserId(contactId)
+            .getSingleOrNull();
+        if (contact != null) {
+          await twonlyDB.contactsDao.updateContact(
+            contactId,
+            ContactsCompanion(
+              deleted: const Value(true),
+              username: Value('${contact.username} (${contact.userId})'),
+            ),
+          );
+        }
       }
     }
     return res;
@@ -441,7 +448,9 @@ class ApiService {
 
     const storage = FlutterSecureStorage();
     await storage.write(
-        key: SecureStorageKeys.apiAuthToken, value: apiAuthTokenB64);
+      key: SecureStorageKeys.apiAuthToken,
+      value: apiAuthTokenB64,
+    );
 
     await tryAuthenticateWithToken(userData.userId);
   }
@@ -575,7 +584,10 @@ class ApiService {
   }
 
   Future<Result> switchToPayedPlan(
-      String planId, bool payMonthly, bool autoRenewal) async {
+    String planId,
+    bool payMonthly,
+    bool autoRenewal,
+  ) async {
     final get = ApplicationData_SwitchToPayedPlan()
       ..planId = planId
       ..payMonthly = payMonthly
@@ -676,7 +688,10 @@ class ApiService {
   }
 
   Future<Result> sendTextMessage(
-      int target, Uint8List msg, List<int>? pushData) async {
+    int target,
+    Uint8List msg,
+    List<int>? pushData,
+  ) async {
     final testMessage = ApplicationData_TextMessage()
       ..userId = Int64(target)
       ..body = msg;

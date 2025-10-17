@@ -8,17 +8,21 @@ part 'media_uploads_dao.g.dart';
 @DriftAccessor(tables: [MediaUploads])
 class MediaUploadsDao extends DatabaseAccessor<TwonlyDatabase>
     with _$MediaUploadsDaoMixin {
+  // ignore: matching_super_parameters
   MediaUploadsDao(super.db);
 
   Future<List<MediaUpload>> getMediaUploadsForRetry() {
     return (select(mediaUploads)
           ..where(
-              (t) => t.state.equals(UploadState.receiverNotified.name).not()))
+            (t) => t.state.equals(UploadState.receiverNotified.name).not(),
+          ))
         .get();
   }
 
   Future<int> updateMediaUpload(
-      int mediaUploadId, MediaUploadsCompanion updatedValues) {
+    int mediaUploadId,
+    MediaUploadsCompanion updatedValues,
+  ) {
     return (update(mediaUploads)
           ..where((c) => c.mediaUploadId.equals(mediaUploadId)))
         .write(updatedValues);

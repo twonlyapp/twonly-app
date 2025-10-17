@@ -24,11 +24,6 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
   void initState() {
     super.initState();
     allUsers = twonlyDB.contactsDao.watchAllContacts();
-    loadAsync();
-  }
-
-  Future<void> loadAsync() async {
-    setState(() {});
   }
 
   @override
@@ -81,7 +76,7 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
                     );
                   },
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -105,7 +100,8 @@ class UserList extends StatelessWidget {
   Widget build(BuildContext context) {
     // Step 1: Sort the users alphabetically
     users.sort(
-        (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)));
+      (a, b) => getContactDisplayName(a).compareTo(getContactDisplayName(b)),
+    );
 
     return ListView.builder(
       restorationId: 'new_message_users_list',
@@ -115,18 +111,20 @@ class UserList extends StatelessWidget {
         return UserContextMenuBlocked(
           contact: user,
           child: ListTile(
-            title: Row(children: [
-              Text(getContactDisplayName(user)),
-            ]),
+            title: Row(
+              children: [
+                Text(getContactDisplayName(user)),
+              ],
+            ),
             leading: ContactAvatar(contact: user, fontSize: 15),
             trailing: Checkbox(
               value: user.blocked,
-              onChanged: (bool? value) {
-                block(context, user.userId, value);
+              onChanged: (bool? value) async {
+                await block(context, user.userId, value);
               },
             ),
-            onTap: () {
-              block(context, user.userId, !user.blocked);
+            onTap: () async {
+              await block(context, user.userId, !user.blocked);
             },
           ),
         );

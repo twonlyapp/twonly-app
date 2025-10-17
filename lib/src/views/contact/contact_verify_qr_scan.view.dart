@@ -7,8 +7,11 @@ import 'package:twonly/src/database/twonly_database.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class ContactVerifyQrScanView extends StatefulWidget {
-  const ContactVerifyQrScanView(this.contact,
-      {required this.fingerprint, super.key});
+  const ContactVerifyQrScanView(
+    this.contact, {
+    required this.fingerprint,
+    super.key,
+  });
   final Fingerprint fingerprint;
   final Contact contact;
 

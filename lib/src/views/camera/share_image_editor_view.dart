@@ -74,14 +74,14 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   @override
   void initState() {
     super.initState();
-    initAsync();
-    initMediaFileUpload();
+    unawaited(initAsync());
+    unawaited(initMediaFileUpload());
     layers.add(FilterLayerData());
     if (widget.sendTo != null) {
       selectedUserIds.add(widget.sendTo!.userId);
     }
     if (widget.imageBytes != null) {
-      loadImage(widget.imageBytes!);
+      unawaited(loadImage(widget.imageBytes!));
     } else if (widget.videoFilePath != null) {
       setState(() {
         sendingOrLoadingImage = false;
@@ -89,8 +89,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       });
       videoController = VideoPlayerController.file(widget.videoFilePath!);
       videoController?.setLooping(true);
-      videoController?.initialize().then((_) {
-        videoController!.play();
+      videoController?.initialize().then((_) async {
+        await videoController!.play();
         setState(() {});
         // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler
       }).catchError(Log.error);
@@ -155,9 +155,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           if (layers.any((x) => x.isEditing)) return;
           undoLayers.clear();
           removedLayers.clear();
-          layers.add(TextLayerData(
-            textLayersBefore: layers.whereType<TextLayerData>().length,
-          ));
+          layers.add(
+            TextLayerData(
+              textLayersBefore: layers.whereType<TextLayerData>().length,
+            ),
+          );
           setState(() {});
         },
       ),
@@ -301,7 +303,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           setState(() {});
         },
       ),
-      const SizedBox(width: 70)
+      const SizedBox(width: 70),
     ];
   }
 
@@ -329,7 +331,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
     ) as bool?;
     if (wasSend != null && wasSend && mounted) {
-      // ignore: use_build_context_synchronously
       Navigator.pop(context, true);
     } else {
       await videoController?.play();
@@ -345,7 +346,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       }
       setState(() {});
       image = await screenshotController.capture(
-          pixelRatio: (widget.useHighQuality) ? pixelRatio : 1);
+        pixelRatio: (widget.useHighQuality) ? pixelRatio : 1,
+      );
       for (final x in layers) {
         x.showCustomButtons = true;
       }
@@ -397,11 +399,16 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         sendingOrLoadingImage = false;
       });
       if (mounted) {
-        await Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return SubscriptionView(
-            redirectError: err,
-          );
-        }));
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return SubscriptionView(
+                redirectError: err,
+              );
+            },
+          ),
+        );
       }
     } else {
       final imageHandler = addOrModifyImageToUpload(mediaUploadId!, imageBytes);
@@ -456,10 +463,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               layers = layers.where((x) => !x.isDeleted).toList();
               undoLayers.clear();
               removedLayers.clear();
-              layers.add(TextLayerData(
-                offset: Offset(0, tabDownPosition),
-                textLayersBefore: layers.whereType<TextLayerData>().length,
-              ));
+              layers.add(
+                TextLayerData(
+                  offset: Offset(0, tabDownPosition),
+                  textLayersBefore: layers.whereType<TextLayerData>().length,
+                ),
+              );
               setState(() {});
             },
             child: MediaViewSizing(
@@ -508,7 +517,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsets>(
                           const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 30),
+                            vertical: 10,
+                            horizontal: 30,
+                          ),
                         ),
                       ),
                       label: Text(

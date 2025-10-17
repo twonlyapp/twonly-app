@@ -37,8 +37,8 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   @override
   void initState() {
     super.initState();
-    loadIndexAsync();
-    initStream();
+    unawaited(loadIndexAsync());
+    unawaited(initStream());
   }
 
   Future<void> loadIndexAsync() async {
@@ -55,8 +55,10 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   bool loadIndex() {
     if (widget.message.mediaStored) {
-      final index = widget.galleryItems.indexWhere((x) =>
-          x.id == (widget.message.mediaUploadId ?? widget.message.messageId));
+      final index = widget.galleryItems.indexWhere(
+        (x) =>
+            x.id == (widget.message.mediaUploadId ?? widget.message.messageId),
+      );
       if (index != -1) {
         galleryItemIndex = index;
         return true;
@@ -122,7 +124,9 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(
-              vertical: (widget.canBeReopened) ? 5 : 10.0, horizontal: 4),
+            vertical: (widget.canBeReopened) ? 5 : 10.0,
+            horizontal: 4,
+          ),
           child: MessageSendStateIcon(
             [widget.message],
             mainAxisAlignment: MainAxisAlignment.center,

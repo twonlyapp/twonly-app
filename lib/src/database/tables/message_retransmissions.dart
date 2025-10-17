@@ -16,5 +16,8 @@ class MessageRetransmissions extends Table {
   BlobColumn get pushData => blob().nullable()();
   BlobColumn get encryptedHash => blob().nullable()();
 
+  IntColumn get retryCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastRetry => dateTime().nullable()();
+
   DateTimeColumn get acknowledgeByServerAt => dateTime().nullable()();
 }

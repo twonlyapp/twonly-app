@@ -98,7 +98,9 @@ Future<void> handlePushData(String pushDataB64) async {
 }
 
 Future<PushNotification?> tryDecryptMessage(
-    List<int> key, EncryptedPushNotification push) async {
+  List<int> key,
+  EncryptedPushNotification push,
+) async {
   try {
     final chacha20 = FlutterChacha20.poly1305Aead();
     final secretKeyData = SecretKeyData(key);
@@ -190,7 +192,9 @@ Future<void> showLocalPushNotificationWithoutUserId(
 
   const darwinNotificationDetails = DarwinNotificationDetails();
   const notificationDetails = NotificationDetails(
-      android: androidNotificationDetails, iOS: darwinNotificationDetails);
+    android: androidNotificationDetails,
+    iOS: darwinNotificationDetails,
+  );
 
   await flutterLocalNotificationsPlugin.show(
     2,
@@ -307,7 +311,9 @@ String getPushNotificationText(PushNotification pushNotification) {
   var contentText = pushNotificationText[pushNotification.kind.name] ?? '';
   if (pushNotification.hasReactionContent()) {
     contentText = contentText.replaceAll(
-        '{{reaction}}', pushNotification.reactionContent);
+      '{{reaction}}',
+      pushNotification.reactionContent,
+    );
   }
   return contentText;
 }

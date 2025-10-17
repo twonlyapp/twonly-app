@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 class ImageItem {
   ImageItem([dynamic image]) {
-    if (image != null) load(image);
+    if (image != null) unawaited(load(image));
   }
   int width = 1;
   int height = 1;

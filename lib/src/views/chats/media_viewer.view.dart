@@ -1,4 +1,4 @@
-// ignore_for_file: inference_failure_on_collection_literal, avoid_dynamic_calls
+// ignore_for_file: avoid_dynamic_calls
 
 import 'dart:async';
 import 'dart:convert';
@@ -201,7 +201,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   }
 
   Future<void> handleNextDownloadedMedia(
-      Message current, bool showTwonly) async {
+    Message current,
+    bool showTwonly,
+  ) async {
     final content =
         MediaMessageContent.fromJson(jsonDecode(current.contentJson!) as Map);
 
@@ -371,9 +373,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               children: [
                 if (imageSaving)
                   const SizedBox(
-                      width: 10,
-                      height: 10,
-                      child: CircularProgressIndicator(strokeWidth: 1))
+                    width: 10,
+                    height: 10,
+                    child: CircularProgressIndicator(strokeWidth: 1),
+                  )
                 else
                   imageSaved
                       ? const Icon(Icons.check)
@@ -443,11 +446,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             progressTimer?.cancel();
             await videoController?.pause();
             if (!mounted) return;
-            await Navigator.push(context, MaterialPageRoute(
-              builder: (context) {
-                return CameraSendToView(widget.contact);
-              },
-            ));
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return CameraSendToView(widget.contact);
+                },
+              ),
+            );
             if (mounted && maxShowTime != gMediaShowInfinite) {
               await nextMediaOrExit();
             } else {
@@ -501,8 +507,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           child: Image.memory(
                             imageBytes!,
                             fit: BoxFit.contain,
-                            frameBuilder: (context, child, frame,
-                                wasSynchronouslyLoaded) {
+                            frameBuilder: (
+                              context,
+                              child,
+                              frame,
+                              wasSynchronouslyLoaded,
+                            ) {
                               if (wasSynchronouslyLoaded) return child;
                               return AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 200),
@@ -604,7 +614,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     Shadow(
                       color: Color.fromARGB(122, 0, 0, 0),
                       blurRadius: 5,
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -617,7 +627,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 child: Container(
                   color: context.color.surface,
                   padding: const EdgeInsets.only(
-                      bottom: 10, left: 20, right: 20, top: 10),
+                    bottom: 10,
+                    left: 20,
+                    right: 20,
+                    top: 10,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
@@ -664,7 +678,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                             showShortReactions = false;
                           });
                         },
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -765,14 +779,16 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: secondRowEmojis
-                      .map((emoji) => EmojiReactionWidget(
-                            userId: widget.userId,
-                            responseToMessageId: widget.responseToMessageId,
-                            hide: widget.hide,
-                            show: widget.show,
-                            isVideo: widget.isVideo,
-                            emoji: emoji as String,
-                          ))
+                      .map(
+                        (emoji) => EmojiReactionWidget(
+                          userId: widget.userId,
+                          responseToMessageId: widget.responseToMessageId,
+                          hide: widget.hide,
+                          show: widget.show,
+                          isVideo: widget.isVideo,
+                          emoji: emoji as String,
+                        ),
+                      )
                       .toList(),
                 ),
               if (secondRowEmojis.isNotEmpty) const SizedBox(height: 15),
@@ -848,10 +864,12 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
             selectedShortReaction = 0; // Assuming index is 0 for this example
           });
           Future.delayed(const Duration(milliseconds: 300), () {
-            setState(() {
-              widget.hide();
-              selectedShortReaction = -1;
-            });
+            if (mounted) {
+              setState(() {
+                widget.hide();
+                selectedShortReaction = -1;
+              });
+            }
           });
         },
         child: (selectedShortReaction ==

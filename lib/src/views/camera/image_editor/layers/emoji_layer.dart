@@ -39,8 +39,9 @@ class _EmojiLayerState extends State<EmojiLayer> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
           widget.layerData.offset = Offset(
-              MediaQuery.of(context).size.width / 2 - (153 / 2),
-              MediaQuery.of(context).size.height / 2 - (153 / 2) - 100);
+            MediaQuery.of(context).size.width / 2 - (153 / 2),
+            MediaQuery.of(context).size.height / 2 - (153 / 2) - 100,
+          );
         });
         display = true;
       });
@@ -87,8 +88,8 @@ class _EmojiLayerState extends State<EmojiLayer> {
 
                 setState(() {});
               },
-              onScaleUpdate: (details) {
-                if (twoPointerWhereDown == true && details.pointerCount != 2) {
+              onScaleUpdate: (details) async {
+                if (twoPointerWhereDown && details.pointerCount != 2) {
                   return;
                 }
                 final outlineBox =
@@ -109,7 +110,7 @@ class _EmojiLayerState extends State<EmojiLayer> {
 
                 if (isAtTheBottom && isInTheCenter) {
                   if (!deleteLayer) {
-                    HapticFeedback.heavyImpact();
+                    await HapticFeedback.heavyImpact();
                   }
                   deleteLayer = true;
                 } else {

@@ -29,7 +29,9 @@ class _ReactionRowState extends State<ReactionRow> {
     var hasOneReopened = false;
     for (final reaction in widget.otherReactions.reversed) {
       final content = MessageContent.fromJson(
-          reaction.kind, jsonDecode(reaction.contentJson!) as Map);
+        reaction.kind,
+        jsonDecode(reaction.contentJson!) as Map,
+      );
 
       if (content is ReopenedMediaFileContent) {
         if (hasOneReopened) continue;

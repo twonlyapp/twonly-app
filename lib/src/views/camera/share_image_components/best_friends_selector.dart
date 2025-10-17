@@ -59,8 +59,10 @@ class BestFriendsSelector extends StatelessWidget {
                     ],
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(context.lang.shareImagedSelectAll,
-                      style: const TextStyle(fontSize: 10)),
+                  child: Text(
+                    context.lang.shareImagedSelectAll,
+                    style: const TextStyle(fontSize: 10),
+                  ),
                 ),
               ),
           ],
@@ -127,7 +129,8 @@ class UserCheckbox extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: 3), // Padding inside the container
+        horizontal: 3,
+      ), // Padding inside the container
       child: GestureDetector(
         onTap: () {
           onChanged(user.userId, !isChecked);
@@ -172,7 +175,7 @@ class UserCheckbox extends StatelessWidget {
                       }
                       return FlameCounterWidget(user, snapshot.data!);
                     },
-                  )
+                  ),
                 ],
               ),
               Expanded(child: Container()),
@@ -184,7 +187,8 @@ class UserCheckbox extends StatelessWidget {
                       return const BorderSide(width: 0);
                     }
                     return BorderSide(
-                        color: Theme.of(context).colorScheme.outline);
+                      color: Theme.of(context).colorScheme.outline,
+                    );
                   },
                 ),
                 onChanged: (bool? value) {

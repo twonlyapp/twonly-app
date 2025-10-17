@@ -3983,6 +3983,20 @@ class $MessageRetransmissionsTable extends MessageRetransmissions
   late final GeneratedColumn<Uint8List> encryptedHash =
       GeneratedColumn<Uint8List>('encrypted_hash', aliasedName, true,
           type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _retryCountMeta =
+      const VerificationMeta('retryCount');
+  @override
+  late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
+      'retry_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastRetryMeta =
+      const VerificationMeta('lastRetry');
+  @override
+  late final GeneratedColumn<DateTime> lastRetry = GeneratedColumn<DateTime>(
+      'last_retry', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _acknowledgeByServerAtMeta =
       const VerificationMeta('acknowledgeByServerAt');
   @override
@@ -3997,6 +4011,8 @@ class $MessageRetransmissionsTable extends MessageRetransmissions
         plaintextContent,
         pushData,
         encryptedHash,
+        retryCount,
+        lastRetry,
         acknowledgeByServerAt
       ];
   @override
@@ -4044,6 +4060,16 @@ class $MessageRetransmissionsTable extends MessageRetransmissions
           encryptedHash.isAcceptableOrUnknown(
               data['encrypted_hash']!, _encryptedHashMeta));
     }
+    if (data.containsKey('retry_count')) {
+      context.handle(
+          _retryCountMeta,
+          retryCount.isAcceptableOrUnknown(
+              data['retry_count']!, _retryCountMeta));
+    }
+    if (data.containsKey('last_retry')) {
+      context.handle(_lastRetryMeta,
+          lastRetry.isAcceptableOrUnknown(data['last_retry']!, _lastRetryMeta));
+    }
     if (data.containsKey('acknowledge_by_server_at')) {
       context.handle(
           _acknowledgeByServerAtMeta,
@@ -4071,6 +4097,10 @@ class $MessageRetransmissionsTable extends MessageRetransmissions
           .read(DriftSqlType.blob, data['${effectivePrefix}push_data']),
       encryptedHash: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}encrypted_hash']),
+      retryCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}retry_count'])!,
+      lastRetry: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_retry']),
       acknowledgeByServerAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}acknowledge_by_server_at']),
@@ -4091,6 +4121,8 @@ class MessageRetransmission extends DataClass
   final Uint8List plaintextContent;
   final Uint8List? pushData;
   final Uint8List? encryptedHash;
+  final int retryCount;
+  final DateTime? lastRetry;
   final DateTime? acknowledgeByServerAt;
   const MessageRetransmission(
       {required this.retransmissionId,
@@ -4099,6 +4131,8 @@ class MessageRetransmission extends DataClass
       required this.plaintextContent,
       this.pushData,
       this.encryptedHash,
+      required this.retryCount,
+      this.lastRetry,
       this.acknowledgeByServerAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4114,6 +4148,10 @@ class MessageRetransmission extends DataClass
     }
     if (!nullToAbsent || encryptedHash != null) {
       map['encrypted_hash'] = Variable<Uint8List>(encryptedHash);
+    }
+    map['retry_count'] = Variable<int>(retryCount);
+    if (!nullToAbsent || lastRetry != null) {
+      map['last_retry'] = Variable<DateTime>(lastRetry);
     }
     if (!nullToAbsent || acknowledgeByServerAt != null) {
       map['acknowledge_by_server_at'] =
@@ -4136,6 +4174,10 @@ class MessageRetransmission extends DataClass
       encryptedHash: encryptedHash == null && nullToAbsent
           ? const Value.absent()
           : Value(encryptedHash),
+      retryCount: Value(retryCount),
+      lastRetry: lastRetry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastRetry),
       acknowledgeByServerAt: acknowledgeByServerAt == null && nullToAbsent
           ? const Value.absent()
           : Value(acknowledgeByServerAt),
@@ -4153,6 +4195,8 @@ class MessageRetransmission extends DataClass
           serializer.fromJson<Uint8List>(json['plaintextContent']),
       pushData: serializer.fromJson<Uint8List?>(json['pushData']),
       encryptedHash: serializer.fromJson<Uint8List?>(json['encryptedHash']),
+      retryCount: serializer.fromJson<int>(json['retryCount']),
+      lastRetry: serializer.fromJson<DateTime?>(json['lastRetry']),
       acknowledgeByServerAt:
           serializer.fromJson<DateTime?>(json['acknowledgeByServerAt']),
     );
@@ -4167,6 +4211,8 @@ class MessageRetransmission extends DataClass
       'plaintextContent': serializer.toJson<Uint8List>(plaintextContent),
       'pushData': serializer.toJson<Uint8List?>(pushData),
       'encryptedHash': serializer.toJson<Uint8List?>(encryptedHash),
+      'retryCount': serializer.toJson<int>(retryCount),
+      'lastRetry': serializer.toJson<DateTime?>(lastRetry),
       'acknowledgeByServerAt':
           serializer.toJson<DateTime?>(acknowledgeByServerAt),
     };
@@ -4179,6 +4225,8 @@ class MessageRetransmission extends DataClass
           Uint8List? plaintextContent,
           Value<Uint8List?> pushData = const Value.absent(),
           Value<Uint8List?> encryptedHash = const Value.absent(),
+          int? retryCount,
+          Value<DateTime?> lastRetry = const Value.absent(),
           Value<DateTime?> acknowledgeByServerAt = const Value.absent()}) =>
       MessageRetransmission(
         retransmissionId: retransmissionId ?? this.retransmissionId,
@@ -4188,6 +4236,8 @@ class MessageRetransmission extends DataClass
         pushData: pushData.present ? pushData.value : this.pushData,
         encryptedHash:
             encryptedHash.present ? encryptedHash.value : this.encryptedHash,
+        retryCount: retryCount ?? this.retryCount,
+        lastRetry: lastRetry.present ? lastRetry.value : this.lastRetry,
         acknowledgeByServerAt: acknowledgeByServerAt.present
             ? acknowledgeByServerAt.value
             : this.acknowledgeByServerAt,
@@ -4207,6 +4257,9 @@ class MessageRetransmission extends DataClass
       encryptedHash: data.encryptedHash.present
           ? data.encryptedHash.value
           : this.encryptedHash,
+      retryCount:
+          data.retryCount.present ? data.retryCount.value : this.retryCount,
+      lastRetry: data.lastRetry.present ? data.lastRetry.value : this.lastRetry,
       acknowledgeByServerAt: data.acknowledgeByServerAt.present
           ? data.acknowledgeByServerAt.value
           : this.acknowledgeByServerAt,
@@ -4222,6 +4275,8 @@ class MessageRetransmission extends DataClass
           ..write('plaintextContent: $plaintextContent, ')
           ..write('pushData: $pushData, ')
           ..write('encryptedHash: $encryptedHash, ')
+          ..write('retryCount: $retryCount, ')
+          ..write('lastRetry: $lastRetry, ')
           ..write('acknowledgeByServerAt: $acknowledgeByServerAt')
           ..write(')'))
         .toString();
@@ -4235,6 +4290,8 @@ class MessageRetransmission extends DataClass
       $driftBlobEquality.hash(plaintextContent),
       $driftBlobEquality.hash(pushData),
       $driftBlobEquality.hash(encryptedHash),
+      retryCount,
+      lastRetry,
       acknowledgeByServerAt);
   @override
   bool operator ==(Object other) =>
@@ -4247,6 +4304,8 @@ class MessageRetransmission extends DataClass
               other.plaintextContent, this.plaintextContent) &&
           $driftBlobEquality.equals(other.pushData, this.pushData) &&
           $driftBlobEquality.equals(other.encryptedHash, this.encryptedHash) &&
+          other.retryCount == this.retryCount &&
+          other.lastRetry == this.lastRetry &&
           other.acknowledgeByServerAt == this.acknowledgeByServerAt);
 }
 
@@ -4258,6 +4317,8 @@ class MessageRetransmissionsCompanion
   final Value<Uint8List> plaintextContent;
   final Value<Uint8List?> pushData;
   final Value<Uint8List?> encryptedHash;
+  final Value<int> retryCount;
+  final Value<DateTime?> lastRetry;
   final Value<DateTime?> acknowledgeByServerAt;
   const MessageRetransmissionsCompanion({
     this.retransmissionId = const Value.absent(),
@@ -4266,6 +4327,8 @@ class MessageRetransmissionsCompanion
     this.plaintextContent = const Value.absent(),
     this.pushData = const Value.absent(),
     this.encryptedHash = const Value.absent(),
+    this.retryCount = const Value.absent(),
+    this.lastRetry = const Value.absent(),
     this.acknowledgeByServerAt = const Value.absent(),
   });
   MessageRetransmissionsCompanion.insert({
@@ -4275,6 +4338,8 @@ class MessageRetransmissionsCompanion
     required Uint8List plaintextContent,
     this.pushData = const Value.absent(),
     this.encryptedHash = const Value.absent(),
+    this.retryCount = const Value.absent(),
+    this.lastRetry = const Value.absent(),
     this.acknowledgeByServerAt = const Value.absent(),
   })  : contactId = Value(contactId),
         plaintextContent = Value(plaintextContent);
@@ -4285,6 +4350,8 @@ class MessageRetransmissionsCompanion
     Expression<Uint8List>? plaintextContent,
     Expression<Uint8List>? pushData,
     Expression<Uint8List>? encryptedHash,
+    Expression<int>? retryCount,
+    Expression<DateTime>? lastRetry,
     Expression<DateTime>? acknowledgeByServerAt,
   }) {
     return RawValuesInsertable({
@@ -4294,6 +4361,8 @@ class MessageRetransmissionsCompanion
       if (plaintextContent != null) 'plaintext_content': plaintextContent,
       if (pushData != null) 'push_data': pushData,
       if (encryptedHash != null) 'encrypted_hash': encryptedHash,
+      if (retryCount != null) 'retry_count': retryCount,
+      if (lastRetry != null) 'last_retry': lastRetry,
       if (acknowledgeByServerAt != null)
         'acknowledge_by_server_at': acknowledgeByServerAt,
     });
@@ -4306,6 +4375,8 @@ class MessageRetransmissionsCompanion
       Value<Uint8List>? plaintextContent,
       Value<Uint8List?>? pushData,
       Value<Uint8List?>? encryptedHash,
+      Value<int>? retryCount,
+      Value<DateTime?>? lastRetry,
       Value<DateTime?>? acknowledgeByServerAt}) {
     return MessageRetransmissionsCompanion(
       retransmissionId: retransmissionId ?? this.retransmissionId,
@@ -4314,6 +4385,8 @@ class MessageRetransmissionsCompanion
       plaintextContent: plaintextContent ?? this.plaintextContent,
       pushData: pushData ?? this.pushData,
       encryptedHash: encryptedHash ?? this.encryptedHash,
+      retryCount: retryCount ?? this.retryCount,
+      lastRetry: lastRetry ?? this.lastRetry,
       acknowledgeByServerAt:
           acknowledgeByServerAt ?? this.acknowledgeByServerAt,
     );
@@ -4340,6 +4413,12 @@ class MessageRetransmissionsCompanion
     if (encryptedHash.present) {
       map['encrypted_hash'] = Variable<Uint8List>(encryptedHash.value);
     }
+    if (retryCount.present) {
+      map['retry_count'] = Variable<int>(retryCount.value);
+    }
+    if (lastRetry.present) {
+      map['last_retry'] = Variable<DateTime>(lastRetry.value);
+    }
     if (acknowledgeByServerAt.present) {
       map['acknowledge_by_server_at'] =
           Variable<DateTime>(acknowledgeByServerAt.value);
@@ -4356,6 +4435,8 @@ class MessageRetransmissionsCompanion
           ..write('plaintextContent: $plaintextContent, ')
           ..write('pushData: $pushData, ')
           ..write('encryptedHash: $encryptedHash, ')
+          ..write('retryCount: $retryCount, ')
+          ..write('lastRetry: $lastRetry, ')
           ..write('acknowledgeByServerAt: $acknowledgeByServerAt')
           ..write(')'))
         .toString();
@@ -6752,6 +6833,8 @@ typedef $$MessageRetransmissionsTableCreateCompanionBuilder
   required Uint8List plaintextContent,
   Value<Uint8List?> pushData,
   Value<Uint8List?> encryptedHash,
+  Value<int> retryCount,
+  Value<DateTime?> lastRetry,
   Value<DateTime?> acknowledgeByServerAt,
 });
 typedef $$MessageRetransmissionsTableUpdateCompanionBuilder
@@ -6762,6 +6845,8 @@ typedef $$MessageRetransmissionsTableUpdateCompanionBuilder
   Value<Uint8List> plaintextContent,
   Value<Uint8List?> pushData,
   Value<Uint8List?> encryptedHash,
+  Value<int> retryCount,
+  Value<DateTime?> lastRetry,
   Value<DateTime?> acknowledgeByServerAt,
 });
 
@@ -6823,6 +6908,12 @@ class $$MessageRetransmissionsTableFilterComposer
 
   ColumnFilters<Uint8List> get encryptedHash => $composableBuilder(
       column: $table.encryptedHash, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get retryCount => $composableBuilder(
+      column: $table.retryCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastRetry => $composableBuilder(
+      column: $table.lastRetry, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get acknowledgeByServerAt => $composableBuilder(
       column: $table.acknowledgeByServerAt,
@@ -6893,6 +6984,12 @@ class $$MessageRetransmissionsTableOrderingComposer
       column: $table.encryptedHash,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get retryCount => $composableBuilder(
+      column: $table.retryCount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastRetry => $composableBuilder(
+      column: $table.lastRetry, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get acknowledgeByServerAt => $composableBuilder(
       column: $table.acknowledgeByServerAt,
       builder: (column) => ColumnOrderings(column));
@@ -6958,6 +7055,12 @@ class $$MessageRetransmissionsTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get encryptedHash => $composableBuilder(
       column: $table.encryptedHash, builder: (column) => column);
+
+  GeneratedColumn<int> get retryCount => $composableBuilder(
+      column: $table.retryCount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastRetry =>
+      $composableBuilder(column: $table.lastRetry, builder: (column) => column);
 
   GeneratedColumn<DateTime> get acknowledgeByServerAt => $composableBuilder(
       column: $table.acknowledgeByServerAt, builder: (column) => column);
@@ -7036,6 +7139,8 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
             Value<Uint8List> plaintextContent = const Value.absent(),
             Value<Uint8List?> pushData = const Value.absent(),
             Value<Uint8List?> encryptedHash = const Value.absent(),
+            Value<int> retryCount = const Value.absent(),
+            Value<DateTime?> lastRetry = const Value.absent(),
             Value<DateTime?> acknowledgeByServerAt = const Value.absent(),
           }) =>
               MessageRetransmissionsCompanion(
@@ -7045,6 +7150,8 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
             plaintextContent: plaintextContent,
             pushData: pushData,
             encryptedHash: encryptedHash,
+            retryCount: retryCount,
+            lastRetry: lastRetry,
             acknowledgeByServerAt: acknowledgeByServerAt,
           ),
           createCompanionCallback: ({
@@ -7054,6 +7161,8 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
             required Uint8List plaintextContent,
             Value<Uint8List?> pushData = const Value.absent(),
             Value<Uint8List?> encryptedHash = const Value.absent(),
+            Value<int> retryCount = const Value.absent(),
+            Value<DateTime?> lastRetry = const Value.absent(),
             Value<DateTime?> acknowledgeByServerAt = const Value.absent(),
           }) =>
               MessageRetransmissionsCompanion.insert(
@@ -7063,6 +7172,8 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
             plaintextContent: plaintextContent,
             pushData: pushData,
             encryptedHash: encryptedHash,
+            retryCount: retryCount,
+            lastRetry: lastRetry,
             acknowledgeByServerAt: acknowledgeByServerAt,
           ),
           withReferenceMapper: (p0) => p0

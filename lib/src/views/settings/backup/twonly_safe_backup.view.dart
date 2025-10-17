@@ -66,8 +66,8 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
         title: const Text('twonly Safe'),
         actions: [
           IconButton(
-            onPressed: () {
-              showAlertDialog(
+            onPressed: () async {
+              await showAlertDialog(
                 context,
                 'twonly Safe',
                 context.lang.backupTwonlySafeLongDesc,
@@ -75,7 +75,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
             },
             icon: const FaIcon(FontAwesomeIcons.circleInfo),
             iconSize: 18,
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -119,7 +119,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                       size: 16,
                     ),
                   ),
-                )
+                ),
               ],
             ),
             Padding(
@@ -127,11 +127,12 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               child: Text(
                 context.lang.backupPasswordRequirement,
                 style: TextStyle(
-                    fontSize: 13,
-                    color: (passwordCtrl.text.length < 8 &&
-                            passwordCtrl.text.isNotEmpty)
-                        ? Colors.red
-                        : Colors.transparent),
+                  fontSize: 13,
+                  color: (passwordCtrl.text.length < 8 &&
+                          passwordCtrl.text.isNotEmpty)
+                      ? Colors.red
+                      : Colors.transparent,
+                ),
               ),
             ),
             const SizedBox(height: 5),
@@ -152,42 +153,49 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               child: Text(
                 context.lang.passwordRepeatedNotEqual,
                 style: TextStyle(
-                    fontSize: 13,
-                    color: (passwordCtrl.text != repeatedPasswordCtrl.text &&
-                            repeatedPasswordCtrl.text.isNotEmpty)
-                        ? Colors.red
-                        : Colors.transparent),
+                  fontSize: 13,
+                  color: (passwordCtrl.text != repeatedPasswordCtrl.text &&
+                          repeatedPasswordCtrl.text.isNotEmpty)
+                      ? Colors.red
+                      : Colors.transparent,
+                ),
               ),
             ),
             const SizedBox(height: 10),
             Center(
               child: OutlinedButton(
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return const TwonlySafeServerView();
-                  }));
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const TwonlySafeServerView();
+                      },
+                    ),
+                  );
                 },
                 child: Text(context.lang.backupExpertSettings),
               ),
             ),
             const SizedBox(height: 10),
             Center(
-                child: FilledButton.icon(
-              onPressed: (!isLoading &&
-                      (passwordCtrl.text == repeatedPasswordCtrl.text &&
-                              passwordCtrl.text.length >= 8 ||
-                          kDebugMode))
-                  ? onPressedEnableTwonlySafe
-                  : null,
-              icon: isLoading
-                  ? const SizedBox(
-                      height: 12,
-                      width: 12,
-                      child: CircularProgressIndicator(strokeWidth: 1),
-                    )
-                  : const Icon(Icons.lock_clock_rounded),
-              label: Text(context.lang.backupEnableBackup),
-            ))
+              child: FilledButton.icon(
+                onPressed: (!isLoading &&
+                        (passwordCtrl.text == repeatedPasswordCtrl.text &&
+                                passwordCtrl.text.length >= 8 ||
+                            kDebugMode))
+                    ? onPressedEnableTwonlySafe
+                    : null,
+                icon: isLoading
+                    ? const SizedBox(
+                        height: 12,
+                        width: 12,
+                        child: CircularProgressIndicator(strokeWidth: 1),
+                      )
+                    : const Icon(Icons.lock_clock_rounded),
+                label: Text(context.lang.backupEnableBackup),
+              ),
+            ),
           ],
         ),
       ),

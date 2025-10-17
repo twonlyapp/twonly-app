@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -19,7 +21,7 @@ class _VoucherViewState extends State<VoucherView> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -85,10 +87,11 @@ class VoucherCard extends StatefulWidget {
 }
 
 class _VoucherCardState extends State<VoucherCard> {
-  void _copyVoucherId() {
+  Future<void> _copyVoucherId() async {
     if (!widget.voucher.redeemed) {
-      Clipboard.setData(ClipboardData(text: widget.voucher.voucherId));
-      HapticFeedback.heavyImpact();
+      await Clipboard.setData(ClipboardData(text: widget.voucher.voucherId));
+      await HapticFeedback.heavyImpact();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${widget.voucher.voucherId} copied.')),
       );

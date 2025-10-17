@@ -1,3 +1,5 @@
+// ignore_for_file: unreachable_from_main
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -18,7 +20,8 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
   if (notificationResponse.input?.isNotEmpty ?? false) {
     // ignore: avoid_print
     print(
-        'notification action tapped with input: ${notificationResponse.input}');
+      'notification action tapped with input: ${notificationResponse.input}',
+    );
   }
 }
 

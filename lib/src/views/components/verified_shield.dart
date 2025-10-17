@@ -11,12 +11,15 @@ class VerifiedShield extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(
-          builder: (context) {
-            return ContactVerifyView(contact);
-          },
-        ));
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return ContactVerifyView(contact);
+            },
+          ),
+        );
       },
       child: Tooltip(
         message: contact.verified

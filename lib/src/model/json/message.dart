@@ -65,7 +65,9 @@ class MessageJson {
       messageSenderId: (json['messageSenderId'] as num?)?.toInt(),
       retransId: (json['retransId'] as num?)?.toInt(),
       content: MessageContent.fromJson(
-          kind, json['content'] as Map<String, dynamic>),
+        kind,
+        json['content'] as Map<String, dynamic>,
+      ),
       timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] as int),
     );
   }
@@ -185,13 +187,14 @@ class TextMessageContent extends MessageContent {
 
   static TextMessageContent fromJson(Map json) {
     return TextMessageContent(
-        text: json['text'] as String,
-        responseToOtherMessageId: json.containsKey('responseToOtherMessageId')
-            ? json['responseToOtherMessageId'] as int?
-            : null,
-        responseToMessageId: json.containsKey('responseToMessageId')
-            ? json['responseToMessageId'] as int?
-            : null);
+      text: json['text'] as String,
+      responseToOtherMessageId: json.containsKey('responseToOtherMessageId')
+          ? json['responseToOtherMessageId'] as int?
+          : null,
+      responseToMessageId: json.containsKey('responseToMessageId')
+          ? json['responseToMessageId'] as int?
+          : null,
+    );
   }
 
   @override
@@ -297,10 +300,11 @@ class PushKeyContent extends MessageContent {
 }
 
 class FlameSyncContent extends MessageContent {
-  FlameSyncContent(
-      {required this.flameCounter,
-      required this.bestFriend,
-      required this.lastFlameCounterChange});
+  FlameSyncContent({
+    required this.flameCounter,
+    required this.bestFriend,
+    required this.lastFlameCounterChange,
+  });
   int flameCounter;
   DateTime lastFlameCounterChange;
   bool bestFriend;
@@ -310,7 +314,8 @@ class FlameSyncContent extends MessageContent {
       flameCounter: json['flameCounter'] as int,
       bestFriend: json['bestFriend'] as bool,
       lastFlameCounterChange: DateTime.fromMillisecondsSinceEpoch(
-          json['lastFlameCounterChange'] as int),
+        json['lastFlameCounterChange'] as int,
+      ),
     );
   }
 

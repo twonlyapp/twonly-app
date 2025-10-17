@@ -30,7 +30,7 @@ class PermissionHandlerViewState extends State<PermissionHandlerView> {
     final statuses = await [
       Permission.camera,
       // Permission.microphone,
-      Permission.notification
+      Permission.notification,
     ].request();
     // } catch (e) {}
     // You can request multiple permissions at once.

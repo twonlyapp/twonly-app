@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -24,18 +23,28 @@ class HelpView extends StatelessWidget {
         children: [
           ListTile(
             title: Text(context.lang.settingsHelpFAQ),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const FaqView();
-              }));
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const FaqView();
+                  },
+                ),
+              );
             },
           ),
           ListTile(
             title: Text(context.lang.settingsHelpContactUs),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const ContactUsView();
-              }));
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const ContactUsView();
+                  },
+                ),
+              );
             },
           ),
           ListTile(
@@ -77,50 +86,65 @@ class HelpView extends StatelessWidget {
           ),
           ListTile(
             title: Text(context.lang.settingsHelpCredits),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return const CreditsView();
-              }));
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const CreditsView();
+                  },
+                ),
+              );
             },
           ),
           ListTile(
             title: Text(context.lang.settingsHelpDiagnostics),
             onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return const DiagnosticsView();
-              }));
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const DiagnosticsView();
+                  },
+                ),
+              );
             },
           ),
           ListTile(
             title: const Text('Changelog'),
             onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (context) {
-                return const ChangeLogView();
-              }));
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const ChangeLogView();
+                  },
+                ),
+              );
             },
           ),
           ListTile(
             title: const Text('Open Source'),
-            onTap: () {
-              launchUrl(Uri.parse('https://github.com/twonlyapp/twonly-app'));
+            onTap: () async {
+              await launchUrl(
+                Uri.parse('https://github.com/twonlyapp/twonly-app'),
+              );
             },
             trailing:
                 const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpImprint),
-            onTap: () {
-              launchUrl(Uri.parse('https://twonly.eu/de/legal/'));
+            onTap: () async {
+              await launchUrl(Uri.parse('https://twonly.eu/de/legal/'));
             },
             trailing:
                 const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpTerms),
-            onTap: () {
-              launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html'));
+            onTap: () async {
+              await launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html'));
             },
             trailing:
                 const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
@@ -129,12 +153,14 @@ class HelpView extends StatelessWidget {
             onLongPress: () async {
               final okay = await showAlertDialog(
                 context,
-                'Delete Retransmission messages',
-                'Only do this if you know what you are doing :)',
+                'Developer Settings',
+                'Do you want to enable the developer settings?',
               );
-              if (okay == true) {
-                await twonlyDB.messageRetransmissionDao
-                    .clearRetransmissionTable();
+              if (okay) {
+                await updateUserdata((u) {
+                  u.isDeveloper = true;
+                  return u;
+                });
               }
             },
             title: const Text(

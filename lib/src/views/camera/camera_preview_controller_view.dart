@@ -94,7 +94,10 @@ class CameraPreviewControllerView extends StatelessWidget {
   });
   final Contact? sendTo;
   final Future<CameraController?> Function(
-      int sCameraId, bool init, bool enableAudio) selectCamera;
+    int sCameraId,
+    bool init,
+    bool enableAudio,
+  ) selectCamera;
   final CameraController? cameraController;
   final SelectedCameraDetails selectedCameraDetails;
   final ScreenshotController screenshotController;
@@ -114,10 +117,12 @@ class CameraPreviewControllerView extends StatelessWidget {
               screenshotController: screenshotController,
             );
           } else {
-            return PermissionHandlerView(onSuccess: () {
-              // setState(() {});
-              selectCamera(0, true, false);
-            });
+            return PermissionHandlerView(
+              onSuccess: () {
+                // setState(() {});
+                selectCamera(0, true, false);
+              },
+            );
           }
         } else {
           return Container();
@@ -138,7 +143,10 @@ class CameraPreviewView extends StatefulWidget {
   });
   final Contact? sendTo;
   final Future<CameraController?> Function(
-      int sCameraId, bool init, bool enableAudio) selectCamera;
+    int sCameraId,
+    bool init,
+    bool enableAudio,
+  ) selectCamera;
   final CameraController? cameraController;
   final SelectedCameraDetails selectedCameraDetails;
   final ScreenshotController screenshotController;
@@ -212,9 +220,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         widget.cameraController == null) {
       return;
     }
-    await widget.cameraController?.setZoomLevel(newScale.clamp(
+    await widget.cameraController?.setZoomLevel(
+      newScale.clamp(
         widget.selectedCameraDetails.minAvailableZoom,
-        widget.selectedCameraDetails.maxAvailableZoom));
+        widget.selectedCameraDetails.maxAvailableZoom,
+      ),
+    );
     setState(() {
       widget.selectedCameraDetails.scaleFactor = newScale;
     });
@@ -284,8 +295,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<bool> pushMediaEditor(
-      Future<Uint8List?>? imageBytes, File? videoFilePath,
-      {bool sharedFromGallery = false}) async {
+    Future<Uint8List?>? imageBytes,
+    File? videoFilePath, {
+    bool sharedFromGallery = false,
+  }) async {
     final shouldReturn = await Navigator.push(
       context,
       PageRouteBuilder(
@@ -314,7 +327,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (!mounted) return true;
     // shouldReturn is null when the user used the back button
     if (shouldReturn != null && shouldReturn) {
-      // ignore: use_build_context_synchronously
       if (widget.sendTo == null) {
         globalUpdateOfHomeViewPageIndex(0);
       } else {
@@ -323,7 +335,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return true;
     }
     await widget.selectCamera(
-        widget.selectedCameraDetails.cameraId, false, false);
+      widget.selectedCameraDetails.cameraId,
+      false,
+      false,
+    );
     return false;
   }
 
@@ -466,7 +481,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     Log.error('$e');
     try {
       if (context.mounted) {
-        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: $e'),
@@ -553,9 +567,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           tooltipText: context.lang.switchFrontAndBackCamera,
                           onPressed: () async {
                             await widget.selectCamera(
-                                (widget.selectedCameraDetails.cameraId + 1) % 2,
-                                false,
-                                false);
+                              (widget.selectedCameraDetails.cameraId + 1) % 2,
+                              false,
+                              false,
+                            );
                           },
                         ),
                         ActionButton(
@@ -676,7 +691,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               ),
                             ),
                           ),
-                          if (!isVideoRecording) const SizedBox(width: 80)
+                          if (!isVideoRecording) const SizedBox(width: 80),
                         ],
                       ),
                     ],

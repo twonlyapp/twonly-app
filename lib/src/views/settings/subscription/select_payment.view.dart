@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
@@ -43,7 +45,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
   void initState() {
     super.initState();
     setCheckout(true);
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -121,7 +123,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                                   Text(
                                     '${context.lang.currentBalance}: ${localePrizing(context, balanceInCents!)}',
                                     style: const TextStyle(fontSize: 10),
-                                  )
+                                  ),
                               ],
                             ),
                             Checkbox(
@@ -154,10 +156,14 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: FilledButton(
                   onPressed: () async {
-                    await Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return const VoucherView();
-                    }));
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const VoucherView();
+                        },
+                      ),
+                    );
                     await initAsync();
                   },
                   child: Text(context.lang.chargeCredit),
@@ -233,7 +239,10 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 onPressed: canPay
                     ? () async {
                         final res = await apiService.switchToPayedPlan(
-                            widget.planId!, widget.payMonthly!, tryAutoRenewal);
+                          widget.planId!,
+                          widget.payMonthly!,
+                          tryAutoRenewal,
+                        );
                         if (!context.mounted) return;
                         if (res.isSuccess) {
                           await updateUsersPlan(context, widget.planId!);
@@ -247,9 +256,13 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text(
-                              errorCodeToText(context, res.error as ErrorCode),
-                            )),
+                              content: Text(
+                                errorCodeToText(
+                                  context,
+                                  res.error as ErrorCode,
+                                ),
+                              ),
+                            ),
                           );
                         }
                       }
@@ -261,8 +274,11 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 TextButton(
-                  onPressed: () => launchUrl(Uri.parse(
-                      'https://twonly.eu/de/legal/#revocation-policy')),
+                  onPressed: () => launchUrl(
+                    Uri.parse(
+                      'https://twonly.eu/de/legal/#revocation-policy',
+                    ),
+                  ),
                   child: const Text(
                     'Widerrufsbelehrung',
                     style: TextStyle(color: Colors.blue),
@@ -270,15 +286,16 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 ),
                 TextButton(
                   onPressed: () => launchUrl(
-                      Uri.parse('https://twonly.eu/de/legal/agb.html')),
+                    Uri.parse('https://twonly.eu/de/legal/agb.html'),
+                  ),
                   child: const Text(
                     'ABG',
                     style: TextStyle(color: Colors.blue),
                   ),
-                )
+                ),
               ],
             ),
-            const SizedBox(height: 20)
+            const SizedBox(height: 20),
           ],
         ),
       ),

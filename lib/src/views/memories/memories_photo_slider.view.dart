@@ -126,8 +126,8 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                     children: [
                       FilledButton.icon(
                         icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ShareImageEditorView(
@@ -144,13 +144,16 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                           );
                         },
                         style: ButtonStyle(
-                            padding: WidgetStateProperty.all<EdgeInsets>(
-                              const EdgeInsets.symmetric(
-                                  vertical: 10, horizontal: 30),
+                          padding: WidgetStateProperty.all<EdgeInsets>(
+                            const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 30,
                             ),
-                            backgroundColor: WidgetStateProperty.all<Color>(
-                              Theme.of(context).colorScheme.primary,
-                            )),
+                          ),
+                          backgroundColor: WidgetStateProperty.all<Color>(
+                            Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                         label: Text(
                           context.lang.shareImagedEditorSendImage,
                           style: const TextStyle(fontSize: 17),
@@ -173,12 +176,12 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                     Positioned(
                       right: 5,
                       child: PopupMenuButton<String>(
-                        onSelected: (String result) {
+                        onSelected: (String result) async {
                           if (result == 'delete') {
-                            deleteFile();
+                            await deleteFile();
                           }
                           if (result == 'export') {
-                            exportFile();
+                            await exportFile();
                           }
                         },
                         itemBuilder: (BuildContext context) =>
@@ -197,7 +200,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                           // ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -17,7 +19,7 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -66,8 +68,8 @@ class _ChatReactionSelectionView extends State<ChatReactionSelectionView> {
         itemBuilder: (context, index) {
           final emoji = EmojiAnimation.animatedIcons.keys.elementAt(index);
           return GestureDetector(
-            onTap: () {
-              _onEmojiSelected(emoji);
+            onTap: () async {
+              await _onEmojiSelected(emoji);
             },
             child: Card(
               color: selectedEmojis.contains(emoji)

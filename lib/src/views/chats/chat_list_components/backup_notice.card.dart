@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -15,8 +17,8 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
 
   @override
   void initState() {
-    initAsync();
     super.initState();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -74,8 +76,8 @@ class _BackupNoticeCardState extends State<BackupNoticeCard> {
                 ),
                 const SizedBox(width: 10),
                 FilledButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const BackupView(),

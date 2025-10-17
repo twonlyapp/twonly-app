@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
@@ -20,7 +22,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
   @override
   void initState() {
     super.initState();
-    selectCamera(0, true, false);
+    unawaited(selectCamera(0, true, false));
   }
 
   @override
@@ -32,9 +34,16 @@ class CameraSendToViewState extends State<CameraSendToView> {
   }
 
   Future<CameraController?> selectCamera(
-      int sCameraId, bool init, bool enableAudio) async {
+    int sCameraId,
+    bool init,
+    bool enableAudio,
+  ) async {
     final opts = await initializeCameraController(
-        selectedCameraDetails, sCameraId, init, enableAudio);
+      selectedCameraDetails,
+      sCameraId,
+      init,
+      enableAudio,
+    );
     if (opts != null) {
       selectedCameraDetails = opts.$1;
       cameraController = opts.$2;
@@ -47,7 +56,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
   Future<void> toggleSelectedCamera() async {
     if (cameraController == null) return;
     // do not allow switching camera when recording
-    if (cameraController!.value.isRecordingVideo == true) {
+    if (cameraController!.value.isRecordingVideo) {
       return;
     }
     await cameraController!.dispose();

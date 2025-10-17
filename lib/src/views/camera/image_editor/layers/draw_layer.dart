@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hand_signature/signature.dart';
+// ignore: implementation_imports
+import 'package:hand_signature/src/utils.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
@@ -91,7 +93,7 @@ class _DrawLayerState extends State<DrawLayer> {
               controller: screenshotController,
               child: HandSignature(
                 control: widget.layerData.control,
-                drawer: LineSignatureDrawer(color: currentColor, width: 7),
+                drawer: CustomSignatureDrawer(color: currentColor, width: 7),
               ),
             ),
           ),
@@ -167,8 +169,10 @@ class _DrawLayerState extends State<DrawLayer> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: colors,
-                          stops: List.generate(colors.length,
-                              (index) => index / (colors.length - 1)),
+                          stops: List.generate(
+                            colors.length,
+                            (index) => index / (colors.length - 1),
+                          ),
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -187,12 +191,12 @@ class _DrawLayerState extends State<DrawLayer> {
                       onChangeStart: (value) => {
                         setState(() {
                           showMagnifyingGlass = true;
-                        })
+                        }),
                       },
                       onChangeEnd: (value) => {
                         setState(() {
                           showMagnifyingGlass = false;
-                        })
+                        }),
                       },
                       divisions: 100,
                     ),
@@ -209,9 +213,10 @@ class _DrawLayerState extends State<DrawLayer> {
           ),
         if (!widget.layerData.isEditing)
           Positioned.fill(
-              child: Container(
-            color: Colors.transparent,
-          ))
+            child: Container(
+              color: Colors.transparent,
+            ),
+          ),
       ],
     );
   }
@@ -237,5 +242,35 @@ class MagnifyingGlass extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class CustomSignatureDrawer extends HandSignatureDrawer {
+  const CustomSignatureDrawer({
+    this.width = 1.0,
+    this.color = Colors.black,
+  });
+  final Color color;
+  final double width;
+
+  @override
+  void paint(Canvas canvas, Size size, List<CubicPath> paths) {
+    for (final path in paths) {
+      var lineColor = color;
+      if (path.setup.args!['color'] != null) {
+        lineColor = path.setup.args!['color'] as Color;
+      } else {
+        path.setup.args!['color'] = color;
+      }
+      final paint = Paint()
+        ..color = lineColor
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..strokeWidth = width;
+      if (path.isFilled) {
+        canvas.drawPath(PathUtil.toLinePath(path.lines), paint);
+      }
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,7 +52,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
   void initState() {
     super.initState();
     ballance = widget.ballance;
-    initAsync(force: false);
+    unawaited(initAsync(force: false));
   }
 
   Future<void> initAsync({required bool force}) async {
@@ -86,12 +87,14 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
               ),
             ),
           if (ballance != null)
-            ...ballance!.additionalAccounts.map((e) => AdditionalAccount(
-                  account: e,
-                  refresh: () {
-                    initAsync(force: true);
-                  },
-                )),
+            ...ballance!.additionalAccounts.map(
+              (e) => AdditionalAccount(
+                account: e,
+                refresh: () async {
+                  await initAsync(force: true);
+                },
+              ),
+            ),
           if (plusInvites.isNotEmpty)
             ListTile(
               title: Text(
@@ -152,7 +155,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
   void initState() {
     super.initState();
     username = widget.account.userId.toString();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -181,7 +184,9 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                 Text(
                   username,
                   style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -194,9 +199,10 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
               icon: const FaIcon(FontAwesomeIcons.userXmark, size: 16),
               onPressed: () async {
                 final remove = await showAlertDialog(
-                    context,
-                    'Remove this additional user',
-                    'The additional user will automatically be downgraded to the preview plan after removal and you will receive a new invitation code to give to another person.');
+                  context,
+                  'Remove this additional user',
+                  'The additional user will automatically be downgraded to the preview plan after removal and you will receive a new invitation code to give to another person.',
+                );
                 if (remove) {
                   final res = await apiService
                       .removeAdditionalUser(widget.account.userId);
@@ -206,10 +212,13 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text(errorCodeToText(
-                        context,
-                        res.error as ErrorCode,
-                      ))),
+                        content: Text(
+                          errorCodeToText(
+                            context,
+                            res.error as ErrorCode,
+                          ),
+                        ),
+                      ),
                     );
                   }
                 }
@@ -230,9 +239,10 @@ class AdditionalUserInvite extends StatefulWidget {
 }
 
 class _AdditionalUserInviteState extends State<AdditionalUserInvite> {
-  void _copyVoucherId() {
-    Clipboard.setData(ClipboardData(text: widget.invite.inviteCode));
-    HapticFeedback.heavyImpact();
+  Future<void> _copyVoucherId() async {
+    await Clipboard.setData(ClipboardData(text: widget.invite.inviteCode));
+    await HapticFeedback.heavyImpact();
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${widget.invite.inviteCode} copied.')),
     );

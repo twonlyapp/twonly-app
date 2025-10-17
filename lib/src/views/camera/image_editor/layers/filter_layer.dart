@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
@@ -61,7 +63,7 @@ class FilterText extends StatelessWidget {
           Shadow(
             color: Color.fromARGB(122, 0, 0, 0),
             blurRadius: 5,
-          )
+          ),
         ],
       ),
     );
@@ -83,7 +85,7 @@ class _FilterLayerState extends State<FilterLayer> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       pageController.jumpToPage(1);
     });
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {

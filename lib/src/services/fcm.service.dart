@@ -1,3 +1,5 @@
+// ignore_for_file: unreachable_from_main
+
 import 'dart:io' show Platform;
 
 import 'package:firebase_core/firebase_core.dart';

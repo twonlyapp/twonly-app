@@ -49,7 +49,11 @@ Future<bool> checkIfTutorialAlreadyShown(String tutorialId) async {
 }
 
 TargetFocus getTargetFocus(
-    BuildContext context, GlobalKey key, String title, String body) {
+  BuildContext context,
+  GlobalKey key,
+  String title,
+  String body,
+) {
   final renderBox = key.currentContext!.findRenderObject()! as RenderBox;
   final position = renderBox.localToGlobal(Offset.zero);
   final screenHeight = MediaQuery.of(context).size.height;
@@ -73,7 +77,11 @@ TargetFocus getTargetFocus(
       TargetContent(
         align: ContentAlign.custom,
         customPosition: CustomTargetContentPosition(
-            left: 0, right: 0, top: top, bottom: bottom),
+          left: 0,
+          right: 0,
+          top: top,
+          bottom: bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -97,10 +105,10 @@ TargetFocus getTargetFocus(
                   fontSize: 16,
                 ),
               ),
-            )
+            ),
           ],
         ),
-      )
+      ),
     ],
   );
 }

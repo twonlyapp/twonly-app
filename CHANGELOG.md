@@ -1,12 +1,16 @@
 # Changelog
 
+## 0.0.61
+
+- Improving image editor when changing colors
+- Fixing message decryption error 
+- Fixing issue with user deletion
+- Fixing issue with flame counter sync
+- Dependency and Flutter upgrade
 
 ## 0.0.60
 
 - Improved logging to debug the 'Tap to load' issue.
-
-==> If you encounter any issues, please send your debug log via the feedback button along with a short description of the error so that we can resolve them. :)
-
 - Display your own avatar in the title bar of the chat list.
 - Created a default avatar image in case none was set.
 - Improved UI handling when requesting microphone access for the first time.

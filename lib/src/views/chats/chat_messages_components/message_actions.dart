@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_dynamic_calls, inference_failure_on_function_invocation
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,7 +30,7 @@ class _SlidingResponseWidgetState extends State<MessageActions> {
       if (_offsetX > 40) {
         _offsetX = 40;
         if (!gotFeedback) {
-          HapticFeedback.heavyImpact();
+          unawaited(HapticFeedback.heavyImpact());
           gotFeedback = true;
         }
       }

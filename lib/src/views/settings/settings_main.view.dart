@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/model/json/userdata.dart';
@@ -10,6 +12,7 @@ import 'package:twonly/src/views/settings/appearance.view.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
 import 'package:twonly/src/views/settings/chat/chat_settings.view.dart';
 import 'package:twonly/src/views/settings/data_and_storage.view.dart';
+import 'package:twonly/src/views/settings/developer/developer.view.dart';
 import 'package:twonly/src/views/settings/help/help.view.dart';
 import 'package:twonly/src/views/settings/notification.view.dart';
 import 'package:twonly/src/views/settings/privacy.view.dart';
@@ -30,7 +33,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
   @override
   void initState() {
     super.initState();
-    initAsync();
+    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
@@ -55,11 +58,14 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                       Expanded(
                         child: GestureDetector(
                           onTap: () async {
-                            await Navigator.push(context, MaterialPageRoute(
-                              builder: (context) {
-                                return const ProfileView();
-                              },
-                            ));
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return const ProfileView();
+                                },
+                              ),
+                            );
                             await initAsync();
                           },
                           child: ColoredBox(
@@ -106,114 +112,159 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                 BetterListTile(
                   icon: FontAwesomeIcons.user,
                   text: context.lang.settingsAccount,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const AccountView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const AccountView();
+                        },
+                      ),
+                    );
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.shieldHeart,
                   text: context.lang.settingsSubscription,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const SubscriptionView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const SubscriptionView();
+                        },
+                      ),
+                    );
                   },
                 ),
                 BetterListTile(
                   icon: Icons.lock_clock_rounded,
                   text: context.lang.settingsBackup,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const BackupView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const BackupView();
+                        },
+                      ),
+                    );
                   },
                 ),
                 const Divider(),
                 BetterListTile(
                   icon: FontAwesomeIcons.sun,
                   text: context.lang.settingsAppearance,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const AppearanceView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const AppearanceView();
+                        },
+                      ),
+                    );
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.comment,
                   text: context.lang.settingsChats,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const ChatSettingsView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const ChatSettingsView();
+                        },
+                      ),
+                    );
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.lock,
                   text: context.lang.settingsPrivacy,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const PrivacyView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const PrivacyView();
+                        },
+                      ),
+                    );
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.bell,
                   text: context.lang.settingsNotification,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const NotificationView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const NotificationView();
+                        },
+                      ),
+                    );
                   },
                 ),
                 BetterListTile(
                   icon: FontAwesomeIcons.chartPie,
                   iconSize: 15,
                   text: context.lang.settingsStorageData,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const DataAndStorageView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const DataAndStorageView();
+                        },
+                      ),
+                    );
                   },
                 ),
                 const Divider(),
                 BetterListTile(
                   icon: FontAwesomeIcons.circleQuestion,
                   text: context.lang.settingsHelp,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const HelpView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const HelpView();
+                        },
+                      ),
+                    );
                   },
                 ),
+                if (userData != null && userData!.isDeveloper)
+                  BetterListTile(
+                    icon: FontAwesomeIcons.code,
+                    text: 'Developer Settings',
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return const DeveloperSettingsView();
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 BetterListTile(
                   icon: FontAwesomeIcons.shareFromSquare,
                   text: context.lang.inviteFriends,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (context) {
-                        return const ShareWithFriendsView();
-                      },
-                    ));
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const ShareWithFriendsView();
+                        },
+                      ),
+                    );
                   },
                 ),
               ],

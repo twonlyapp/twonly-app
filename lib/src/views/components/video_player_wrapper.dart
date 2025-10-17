@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerWrapper extends StatefulWidget {
-  const VideoPlayerWrapper(
-      {required this.videoPath, required this.mirrorVideo, super.key});
+  const VideoPlayerWrapper({
+    required this.videoPath,
+    required this.mirrorVideo,
+    super.key,
+  });
   final File videoPath;
   final bool mirrorVideo;
 
@@ -19,21 +23,22 @@ class _VideoPlayerWrapperState extends State<VideoPlayerWrapper> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(widget.videoPath)
-      ..initialize().then((_) {
+    _controller = VideoPlayerController.file(widget.videoPath);
+
+    unawaited(
+      _controller.initialize().then((_) async {
         if (context.mounted) {
-          setState(() {
-            _controller
-              ..setLooping(true)
-              ..play();
-          });
+          await _controller.setLooping(true);
+          await _controller.play();
+          setState(() {});
         }
-      });
+      }),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    unawaited(_controller.dispose());
     super.dispose();
   }
 
