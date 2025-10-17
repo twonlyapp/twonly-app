@@ -21,6 +21,7 @@ class ConnectPreKeyStore extends PreKeyStore {
     if (preKeyRecord.isEmpty) {
       throw InvalidKeyIdException('No such preKey record! - $preKeyId');
     }
+    Log.info('Contact used preKey $preKeyId');
     final preKey = preKeyRecord.first.preKey;
     return PreKeyRecord.fromBuffer(preKey);
   }

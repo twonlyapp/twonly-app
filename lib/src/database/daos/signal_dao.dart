@@ -57,6 +57,7 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
                   tbl.preKeyId.equals(preKey.preKeyId),
             ))
           .go();
+      Log.info('Using prekey ${preKey.preKeyId} for $contactId');
       return preKey;
     }
     return null;
@@ -96,7 +97,7 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
     // Deletion is a workaround for the issue, that own pre keys where deleted after 40 days, while they could be 30days
     // on the server + 25 days on the others device old, resulting in the issue that the receiver could not decrypt the
     // messages...
-    await (delete(signalContactSignedPreKeys)
+    await (delete(signalContactPreKeys)
           ..where(
             (t) => (t.createdAt.isSmallerThanValue(
               DateTime(2025, 10, 10),
@@ -104,7 +105,7 @@ class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
           ))
         .go();
     // other pre keys are valid 100 days
-    await (delete(signalContactSignedPreKeys)
+    await (delete(signalContactPreKeys)
           ..where(
             (t) => (t.createdAt.isSmallerThanValue(
               DateTime.now().subtract(
