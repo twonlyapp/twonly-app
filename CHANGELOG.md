@@ -2,11 +2,11 @@
 
 ## 0.0.61
 
+- Improving image editor when changing colors
 - Fixing message decryption error 
 - Fixing issue with user deletion
 - Fixing issue with flame counter sync
 - Dependency and Flutter upgrade
-- Developer Settings
 
 ## 0.0.60
 
