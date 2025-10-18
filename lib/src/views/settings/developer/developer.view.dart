@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/settings/developer/automated_testing.view.dart';
 import 'package:twonly/src/views/settings/developer/retransmission_data.view.dart';
 
 class DeveloperSettingsView extends StatefulWidget {
@@ -74,6 +75,20 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               onTap: () async {
                 await twonlyDB.contactsDao.modifyFlameCounterForTesting();
                 await syncFlameCounters();
+              },
+            ),
+          if (kDebugMode)
+            ListTile(
+              title: const Text('Automated Testing'),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const AutomatedTestingView();
+                    },
+                  ),
+                );
               },
             ),
         ],

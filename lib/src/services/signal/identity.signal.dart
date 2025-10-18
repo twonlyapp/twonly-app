@@ -63,7 +63,8 @@ Future<List<PreKeyRecord>> signalGetPreKeys() async {
 
   final start = user.currentPreKeyIndexStart;
   await updateUserdata((user) {
-    user.currentPreKeyIndexStart += 200;
+    user.currentPreKeyIndexStart =
+        (user.currentPreKeyIndexStart + 200) % maxValue;
     return user;
   });
   final preKeys = generatePreKeys(start, 200);

@@ -133,7 +133,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       DateTime? lastDate;
       final tmpEmojiReactionsToMessageId = <int, List<Message>>{};
 
-      final openedMessageOtherIds = <int>[];
+      // only send openedMessage to one text message, as receiver will then set all as read...
+      int? openedTextMessageOtherIds;
 
       final messageOtherMessageIdToMyMessageId = <int, int>{};
       final messageIdToMessage = <int, Message>{};
@@ -150,8 +151,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       for (final msg in newMessages) {
         if (msg.kind == MessageKind.textMessage &&
             msg.messageOtherId != null &&
-            msg.openedAt == null) {
-          openedMessageOtherIds.add(msg.messageOtherId!);
+            msg.openedAt == null &&
+            (openedTextMessageOtherIds == null ||
+                openedTextMessageOtherIds < msg.messageOtherId!)) {
+          openedTextMessageOtherIds = msg.messageOtherId;
         }
 
         Message? responseTo;
@@ -207,10 +210,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         }
       }
 
-      if (openedMessageOtherIds.isNotEmpty) {
+      if (openedTextMessageOtherIds != null) {
         await notifyContactAboutOpeningMessage(
           widget.contact.userId,
-          openedMessageOtherIds,
+          [openedTextMessageOtherIds],
         );
       }
 

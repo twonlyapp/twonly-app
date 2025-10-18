@@ -35,30 +35,30 @@ import 'package:twonly/src/views/components/animate_icon.dart';
 final lockHandleServerMessage = Mutex();
 
 Future<void> handleServerMessage(server.ServerToClient msg) async {
-  return lockHandleServerMessage.protect(() async {
-    client.Response? response;
+  // return lockHandleServerMessage.protect(() async {
+  client.Response? response;
 
-    try {
-      if (msg.v0.hasRequestNewPreKeys()) {
-        response = await handleRequestNewPreKey();
-      } else if (msg.v0.hasNewMessage()) {
-        final body = Uint8List.fromList(msg.v0.newMessage.body);
-        final fromUserId = msg.v0.newMessage.fromUserId.toInt();
-        response = await handleNewMessage(fromUserId, body);
-      } else {
-        Log.error('Got a unknown message from the server: $msg');
-        response = client.Response()..error = ErrorCode.InternalError;
-      }
-    } catch (e) {
+  try {
+    if (msg.v0.hasRequestNewPreKeys()) {
+      response = await handleRequestNewPreKey();
+    } else if (msg.v0.hasNewMessage()) {
+      final body = Uint8List.fromList(msg.v0.newMessage.body);
+      final fromUserId = msg.v0.newMessage.fromUserId.toInt();
+      response = await handleNewMessage(fromUserId, body);
+    } else {
+      Log.error('Got a unknown message from the server: $msg');
       response = client.Response()..error = ErrorCode.InternalError;
     }
+  } catch (e) {
+    response = client.Response()..error = ErrorCode.InternalError;
+  }
 
-    final v0 = client.V0()
-      ..seq = msg.v0.seq
-      ..response = response;
+  final v0 = client.V0()
+    ..seq = msg.v0.seq
+    ..response = response;
 
-    await apiService.sendResponse(ClientToServer()..v0 = v0);
-  });
+  await apiService.sendResponse(ClientToServer()..v0 = v0);
+  // });
 }
 
 DateTime lastSignalDecryptMessage =
@@ -128,6 +128,8 @@ Future<client.Response> handleNewMessage(int fromUserId, Uint8List body) async {
             .getRetransmissionFromHash(fromUserId, hash);
         if (message != null) {
           unawaited(sendRetransmitMessage(message.retransmissionId));
+        } else {
+          Log.error('Could not find message to retransmit!');
         }
       }
 
