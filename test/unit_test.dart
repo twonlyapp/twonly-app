@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
@@ -30,6 +32,13 @@ void main() {
     test('encode hex', () async {
       final list1 = Uint8List.fromList([41, 41, 41, 41, 41, 41, 41]);
       expect(list1, hexToUint8List(uint8ListToHex(list1)));
+    });
+
+    test('encoding uuid4', () async {
+      final uv4 = uuid.v4();
+      final uv4Bytes = Uint8List.fromList(uv4.codeUnits);
+      final uv4String = utf8.decode(uv4Bytes.cast<int>());
+      expect(uv4String, uv4);
     });
   });
 }

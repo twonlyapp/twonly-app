@@ -11,7 +11,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/backup/backup.pb.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';

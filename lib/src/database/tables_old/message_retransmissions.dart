@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/src/database/tables/contacts_table.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/tables_old/contacts_table.dart';
+import 'package:twonly/src/database/tables_old/messages_table.dart';
 
 @DataClassName('MessageRetransmission')
 class MessageRetransmissions extends Table {

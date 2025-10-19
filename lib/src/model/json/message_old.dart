@@ -1,7 +1,7 @@
 // ignore_for_file: strict_raw_type, prefer_constructors_over_static_methods
 
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/tables_old/messages_table.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Color getMessageColorFromType(MessageContent content, BuildContext context) {

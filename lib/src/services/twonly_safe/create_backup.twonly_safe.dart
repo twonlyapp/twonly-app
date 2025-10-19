@@ -11,7 +11,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/backup/backup.pb.dart';
 import 'package:twonly/src/services/api/media_upload.dart';

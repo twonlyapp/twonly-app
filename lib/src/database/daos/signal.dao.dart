@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/tables/signal_contact_prekey_table.dart';
-import 'package:twonly/src/database/tables/signal_contact_signed_prekey_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/signal_contact_prekey.table.dart';
+import 'package:twonly/src/database/tables/signal_contact_signed_prekey.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
 
-part 'signal_dao.g.dart';
+part 'signal.dao.g.dart';
 
 @DriftAccessor(
   tables: [
@@ -13,7 +13,7 @@ part 'signal_dao.g.dart';
     SignalContactSignedPreKeys,
   ],
 )
-class SignalDao extends DatabaseAccessor<TwonlyDatabase> with _$SignalDaoMixin {
+class SignalDao extends DatabaseAccessor<TwonlyDB> with _$SignalDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
   // ignore: matching_super_parameters

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
 class FlameCounterWidget extends StatelessWidget {

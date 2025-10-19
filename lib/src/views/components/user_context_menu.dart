@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';

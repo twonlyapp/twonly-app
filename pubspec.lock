@@ -162,12 +162,13 @@ packages:
     source: hosted
     version: "0.11.2"
   camera_android_camerax:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: camera_android_camerax
-      sha256: "92dcc36e8ff2fa1ea3acdbb609ca2976cded55dceb719b4869c124c6d011f110"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/camera/camera_android_camerax"
+      ref: aef58af205a5f3ce6588a5c59bb2e734aab943f0
+      resolved-ref: aef58af205a5f3ce6588a5c59bb2e734aab943f0
+      url: "https://github.com/otsmr/flutter-packages.git"
+    source: git
     version: "0.6.23+2"
   camera_avfoundation:
     dependency: transitive
@@ -662,9 +663,11 @@ packages:
   flutter_secure_storage:
     dependency: "direct main"
     description:
-      path: "dependencies/flutter_secure_storage/flutter_secure_storage"
-      relative: true
-    source: path
+      path: flutter_secure_storage
+      ref: "71b75a36f35f2ce945998e20c6c6aa1820babfc6"
+      resolved-ref: "71b75a36f35f2ce945998e20c6c6aa1820babfc6"
+      url: "https://github.com/juliansteenbakker/flutter_secure_storage.git"
+    source: git
     version: "10.0.0-beta.4"
   flutter_secure_storage_darwin:
     dependency: transitive
@@ -1278,10 +1281,12 @@ packages:
   pie_menu:
     dependency: "direct main"
     description:
-      path: "dependencies/flutter-pie-menu"
-      relative: true
-    source: path
-    version: "3.3.0"
+      path: "."
+      ref: HEAD
+      resolved-ref: e1ae0b2dabdfa9ad204b2cf93c48a5962e243c6c
+      url: "https://github.com/otsmr/flutter-pie-menu.git"
+    source: git
+    version: "3.3.2"
   platform:
     dependency: transitive
     description:

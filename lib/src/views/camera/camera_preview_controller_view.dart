@@ -9,8 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -308,7 +308,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           imageBytes: imageBytes,
           sharedFromGallery: sharedFromGallery,
           sendTo: widget.sendTo,
-          mirrorVideo: isFront && Platform.isAndroid,
+          mirrorVideo: isFront && Platform.isAndroid && false,
           useHighQuality: true,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {

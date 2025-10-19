@@ -2,8 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
     as client;
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
@@ -22,6 +22,10 @@ class Result<T, E> {
 
   bool get isSuccess => value != null;
   bool get isError => error != null;
+}
+
+DateTime fromTimestamp(Int64 timeStamp) {
+  return DateTime.fromMillisecondsSinceEpoch(timeStamp.toInt() * 1000);
 }
 
 // ignore: strict_raw_type

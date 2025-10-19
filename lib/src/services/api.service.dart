@@ -17,7 +17,7 @@ import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'

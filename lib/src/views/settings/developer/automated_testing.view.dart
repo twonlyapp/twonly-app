@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/services/api/messages.dart';
 
 class AutomatedTestingView extends StatefulWidget {

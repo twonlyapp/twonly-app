@@ -1,10 +1,10 @@
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart' as my;
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/json/message_old.dart' as my;
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';

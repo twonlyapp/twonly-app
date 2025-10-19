@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
 

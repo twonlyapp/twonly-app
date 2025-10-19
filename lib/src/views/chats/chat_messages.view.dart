@@ -8,10 +8,10 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
@@ -134,7 +134,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       final tmpEmojiReactionsToMessageId = <int, List<Message>>{};
 
       // only send openedMessage to one text message, as receiver will then set all as read...
-      int? openedTextMessageOtherIds;
+      List<int> openedTextMessageOtherIds;
 
       final messageOtherMessageIdToMyMessageId = <int, int>{};
       final messageIdToMessage = <int, Message>{};
@@ -154,7 +154,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
             msg.openedAt == null &&
             (openedTextMessageOtherIds == null ||
                 openedTextMessageOtherIds < msg.messageOtherId!)) {
-          openedTextMessageOtherIds = msg.messageOtherId;
+          openedTextMessageOtherIds.add(msg.messageOtherId);
         }
 
         Message? responseTo;
@@ -210,10 +210,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         }
       }
 
-      if (openedTextMessageOtherIds != null) {
+      if (openedTextMessageOtherIds.isNotEmpty) {
         await notifyContactAboutOpeningMessage(
           widget.contact.userId,
-          [openedTextMessageOtherIds],
+          openedTextMessageOtherIds,
         );
       }
 

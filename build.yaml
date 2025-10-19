@@ -10,4 +10,5 @@ targets:
       drift_dev:
         options:
           databases:
-            twonly_database: lib/src/database/twonly_database.dart
+            twonly_db: lib/src/database/twonly.db.dart
+            twonly_database: lib/src/database/twonly_database_old.dart

@@ -1,13 +1,12 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/src/database/tables/contacts_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 
-part 'contacts_dao.g.dart';
+part 'contacts.dao.g.dart';
 
 @DriftAccessor(tables: [Contacts])
-class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
-    with _$ContactsDaoMixin {
+class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
   // ignore: matching_super_parameters
@@ -135,42 +134,39 @@ class ContactsDao extends DatabaseAccessor<TwonlyDatabase>
         .watchSingleOrNull();
   }
 
-  Stream<List<Contact>> watchContactsForShareView() {
-    return (select(contacts)
-          ..where(
-            (t) =>
-                t.accepted.equals(true) &
-                t.blocked.equals(false) &
-                t.deleted.equals(false),
-          )
-          ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
-        .watch();
-  }
+  // Stream<List<Contact>> watchContactsForShareView() {
+  //   return (select(contacts)
+  //         ..where(
+  //           (t) =>
+  //               t.accepted.equals(true) &
+  //               t.blocked.equals(false) &
+  //               t.deleted.equals(false),
+  //         )
+  //         ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
+  //       .watch();
+  // }
 
-  Stream<List<Contact>> watchContactsForStartNewChat() {
-    return (select(contacts)
-          ..where((t) => t.accepted.equals(true) & t.blocked.equals(false))
-          ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
-        .watch();
-  }
+  // Stream<List<Contact>> watchContactsForStartNewChat() {
+  //   return (select(contacts)
+  //         ..where((t) => t.accepted.equals(true) & t.blocked.equals(false))
+  //         ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
+  //       .watch();
+  // }
 
-  Stream<List<Contact>> watchContactsForChatList() {
-    return (select(contacts)
-          ..where(
-            (t) =>
-                t.accepted.equals(true) &
-                t.blocked.equals(false) &
-                t.archived.equals(false),
-          )
-          ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
-        .watch();
-  }
+  // Stream<List<Contact>> watchContactsForChatList() {
+  //   return (select(contacts)
+  //         ..where(
+  //           (t) =>
+  //               t.accepted.equals(true) &
+  //               t.blocked.equals(false) &
+  //               t.archived.equals(false),
+  //         )
+  //         ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
+  //       .watch();
+  // }
 
   Future<List<Contact>> getAllNotBlockedContacts() {
-    return (select(contacts)
-          ..where((t) => t.blocked.equals(false))
-          ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
-        .get();
+    return (select(contacts)..where((t) => t.blocked.equals(false))).get();
   }
 
   Stream<int?> watchContactsBlocked() {

@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/services/api/media_upload.dart' as send;
 import 'package:twonly/src/services/thumbnail.service.dart';
 

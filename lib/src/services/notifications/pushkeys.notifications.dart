@@ -9,10 +9,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart' as my;
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/json/message_old.dart' as my;
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -144,7 +144,7 @@ Future<void> updatePushUser(Contact contact) async {
   await setPushKeys(SecureStorageKeys.receivingPushKeys, pushKeys);
 }
 
-Future<void> handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
+Future<void> handleNewPushKey(int fromUserId, int keyId, List<int> key) async {
   final pushKeys = await getPushKeys(SecureStorageKeys.sendingPushKeys);
 
   var pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);

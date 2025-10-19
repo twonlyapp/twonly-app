@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/utils/log.dart';

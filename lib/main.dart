@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
@@ -43,18 +43,18 @@ void main() async {
   gCameras = await availableCameras();
 
   apiService = ApiService();
-  twonlyDB = TwonlyDatabase();
+  twonlyDB = TwonlyDB();
 
-  await twonlyDB.messagesDao.resetPendingDownloadState();
-  await twonlyDB.messagesDao.handleMediaFilesOlderThan30Days();
-  await twonlyDB.messageRetransmissionDao.purgeOldRetransmissions();
-  await twonlyDB.signalDao.purgeOutDatedPreKeys();
+  // await twonlyDB.messagesDao.resetPendingDownloadState();
+  // await twonlyDB.messagesDao.handleMediaFilesOlderThan30Days();
+  // await twonlyDB.messageRetransmissionDao.purgeOldRetransmissions();
+  // await twonlyDB.signalDao.purgeOutDatedPreKeys();
 
   // Purge media files in the background
-  unawaited(purgeReceivedMediaFiles());
-  unawaited(purgeSendMediaFiles());
+  // unawaited(purgeReceivedMediaFiles());
+  // unawaited(purgeSendMediaFiles());
 
-  unawaited(performTwonlySafeBackup());
+  // unawaited(performTwonlySafeBackup());
 
   await initFileDownloader();
 

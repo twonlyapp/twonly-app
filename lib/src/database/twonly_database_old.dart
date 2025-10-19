@@ -2,25 +2,20 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart'
     show DriftNativeOptions, driftDatabase;
 import 'package:path_provider/path_provider.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/daos/media_uploads_dao.dart';
-import 'package:twonly/src/database/daos/message_retransmissions.dao.dart';
-import 'package:twonly/src/database/daos/messages_dao.dart';
-import 'package:twonly/src/database/daos/signal_dao.dart';
-import 'package:twonly/src/database/tables/contacts_table.dart';
-import 'package:twonly/src/database/tables/media_uploads_table.dart';
-import 'package:twonly/src/database/tables/message_retransmissions.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/tables/signal_contact_prekey_table.dart';
-import 'package:twonly/src/database/tables/signal_contact_signed_prekey_table.dart';
-import 'package:twonly/src/database/tables/signal_identity_key_store_table.dart';
-import 'package:twonly/src/database/tables/signal_pre_key_store_table.dart';
-import 'package:twonly/src/database/tables/signal_sender_key_store_table.dart';
-import 'package:twonly/src/database/tables/signal_session_store_table.dart';
-import 'package:twonly/src/database/twonly_database.steps.dart';
+import 'package:twonly/src/database/tables_old/contacts_table.dart';
+import 'package:twonly/src/database/tables_old/media_uploads_table.dart';
+import 'package:twonly/src/database/tables_old/message_retransmissions.dart';
+import 'package:twonly/src/database/tables_old/messages_table.dart';
+import 'package:twonly/src/database/tables_old/signal_contact_prekey_table.dart';
+import 'package:twonly/src/database/tables_old/signal_contact_signed_prekey_table.dart';
+import 'package:twonly/src/database/tables_old/signal_identity_key_store_table.dart';
+import 'package:twonly/src/database/tables_old/signal_pre_key_store_table.dart';
+import 'package:twonly/src/database/tables_old/signal_sender_key_store_table.dart';
+import 'package:twonly/src/database/tables_old/signal_session_store_table.dart';
+import 'package:twonly/src/database/twonly_database_old.steps.dart';
 import 'package:twonly/src/utils/log.dart';
 
-part 'twonly_database.g.dart';
+part 'twonly_database_old.g.dart';
 
 // You can then create a database class that includes this table
 @DriftDatabase(
@@ -36,22 +31,16 @@ part 'twonly_database.g.dart';
     SignalContactSignedPreKeys,
     MessageRetransmissions,
   ],
-  daos: [
-    MessagesDao,
-    ContactsDao,
-    MediaUploadsDao,
-    SignalDao,
-    MessageRetransmissionDao,
-  ],
+  daos: [],
 )
-class TwonlyDatabase extends _$TwonlyDatabase {
-  TwonlyDatabase([QueryExecutor? e])
+class TwonlyDatabaseOld extends _$TwonlyDatabaseOld {
+  TwonlyDatabaseOld([QueryExecutor? e])
       : super(
           e ?? _openConnection(),
         );
 
   // ignore: matching_super_parameters
-  TwonlyDatabase.forTesting(DatabaseConnection super.connection);
+  TwonlyDatabaseOld.forTesting(DatabaseConnection super.connection);
 
   @override
   int get schemaVersion => 17;

@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+message Message {
+    enum Type {
+        SENDER_DELIVERY_RECEIPT = 0;
+        PLAINTEXT_CONTENT = 1;
+        CIPHERTEXT = 2;
+        PREKEY_BUNDLE = 3;
+    }
+    Type type = 1;
+    string receiptId = 2;
+    optional bytes encryptedContent = 3;
+    optional PlaintextContent plaintextContent = 4;
+}
+
+message PlaintextContent {
+    optional DecryptionErrorMessage decryptionErrorMessage = 1;
+
+    message DecryptionErrorMessage {
+        enum Type {
+            UNKNOWN = 0;
+            PREKEY_UNKNOWN = 1;
+        }
+        Type type = 1;
+    }
+}
+
+
+message EncryptedContent {
+
+    optional string groupId = 2;
+
+    /// This can be added, so the receiver can check weather he is up to date with the current profile
+    optional int64 senderProfileCounter = 3;
+
+    optional TextMessage textMessage  = 4;
+    optional MessageUpdate messageUpdate  = 5;
+    optional Media media = 6;
+    optional MediaUpdate mediaUpdate = 7;
+    optional ContactUpdate contactUpdate = 8;
+    optional ContactRequest contactRequest = 9;
+    optional FlameSync flameSync = 10;
+    optional PushKeys pushKeys = 11;
+    optional Reaction reaction  = 12;
+
+    message TextMessage {
+        string senderMessageId = 1;
+        string text = 2;
+        optional string quoteMessageId = 3;
+    }
+
+    message Reaction {
+        string targetMessageId = 1;
+        optional string emoji = 2;
+        optional bool remove = 3;
+    }
+
+    message MessageUpdate {
+        enum Type {
+            DELETE = 0;
+            EDIT_TEXT = 1;
+            OPENED = 2;
+        }
+        Type type = 1;
+        string senderMessageId = 2;
+        optional string text = 3;
+        optional int64 timestamp = 4;
+    }
+
+    message Media {
+        enum Type {
+            IMAGE = 0;
+            VIDEO = 1;
+            GIF = 2;
+        }
+
+        string senderMessageId = 1;
+        Type type = 2;
+        optional int64 displayLimitInMilliseconds = 3;
+        bool requiresAuthentication = 4;
+
+        optional bytes downloadToken = 5;
+        optional bytes encryptionKey = 6;
+        optional bytes encryptionMac = 7;
+        optional bytes encryptionNonce = 8;
+    }
+
+    message MediaUpdate {
+        enum Type {
+            REOPENED = 0;
+            STORED = 1;
+            DECRYPTION_ERROR = 2;
+        }
+        Type type = 1;
+        string targetMessageId = 2;
+    }
+
+    message ContactRequest {
+        enum Type {
+            REQUEST = 0;
+            REJECT = 1;
+            ACCEPT = 2;
+        }
+        Type type = 1;
+    }
+
+    message ContactUpdate {
+        enum Type {
+            REQUEST = 0;
+            UPDATE = 1;
+        }
+
+        Type type = 1;
+        optional string avatarSvg = 2;
+        optional string displayName = 3;
+    }
+
+    message PushKeys {
+        enum Type {
+            REQUEST = 0;
+            UPDATE = 1;
+        }
+
+        Type type = 1;
+        optional int64 keyId = 2;
+        optional bytes key = 3;
+    }
+
+    message FlameSync {
+        int64 flameCounter = 1;
+        int64 lastFlameCounterChange = 2;
+        bool bestFriend = 3;
+    }
+
+}

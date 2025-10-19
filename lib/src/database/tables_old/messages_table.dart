@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:twonly/src/database/tables/contacts_table.dart';
+import 'package:twonly/src/database/tables_old/contacts_table.dart';
 
 enum MessageKind {
   textMessage,

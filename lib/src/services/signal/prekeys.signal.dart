@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/utils/log.dart';

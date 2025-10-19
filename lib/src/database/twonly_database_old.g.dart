@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'twonly_database.dart';
+part of 'twonly_database_old.dart';
 
 // ignore_for_file: type=lint
 class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
@@ -4443,9 +4443,9 @@ class MessageRetransmissionsCompanion
   }
 }
 
-abstract class _$TwonlyDatabase extends GeneratedDatabase {
-  _$TwonlyDatabase(QueryExecutor e) : super(e);
-  $TwonlyDatabaseManager get managers => $TwonlyDatabaseManager(this);
+abstract class _$TwonlyDatabaseOld extends GeneratedDatabase {
+  _$TwonlyDatabaseOld(QueryExecutor e) : super(e);
+  $TwonlyDatabaseOldManager get managers => $TwonlyDatabaseOldManager(this);
   late final $ContactsTable contacts = $ContactsTable(this);
   late final $MessagesTable messages = $MessagesTable(this);
   late final $MediaUploadsTable mediaUploads = $MediaUploadsTable(this);
@@ -4463,13 +4463,6 @@ abstract class _$TwonlyDatabase extends GeneratedDatabase {
       $SignalContactSignedPreKeysTable(this);
   late final $MessageRetransmissionsTable messageRetransmissions =
       $MessageRetransmissionsTable(this);
-  late final MessagesDao messagesDao = MessagesDao(this as TwonlyDatabase);
-  late final ContactsDao contactsDao = ContactsDao(this as TwonlyDatabase);
-  late final MediaUploadsDao mediaUploadsDao =
-      MediaUploadsDao(this as TwonlyDatabase);
-  late final SignalDao signalDao = SignalDao(this as TwonlyDatabase);
-  late final MessageRetransmissionDao messageRetransmissionDao =
-      MessageRetransmissionDao(this as TwonlyDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4559,11 +4552,11 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
 });
 
 final class $$ContactsTableReferences
-    extends BaseReferences<_$TwonlyDatabase, $ContactsTable, Contact> {
+    extends BaseReferences<_$TwonlyDatabaseOld, $ContactsTable, Contact> {
   $$ContactsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$MessagesTable, List<Message>> _messagesRefsTable(
-          _$TwonlyDatabase db) =>
+          _$TwonlyDatabaseOld db) =>
       MultiTypedResultKey.fromTable(db.messages,
           aliasName:
               $_aliasNameGenerator(db.contacts.userId, db.messages.contactId));
@@ -4579,7 +4572,7 @@ final class $$ContactsTableReferences
 
   static MultiTypedResultKey<$MessageRetransmissionsTable,
       List<MessageRetransmission>> _messageRetransmissionsRefsTable(
-          _$TwonlyDatabase db) =>
+          _$TwonlyDatabaseOld db) =>
       MultiTypedResultKey.fromTable(db.messageRetransmissions,
           aliasName: $_aliasNameGenerator(
               db.contacts.userId, db.messageRetransmissions.contactId));
@@ -4599,7 +4592,7 @@ final class $$ContactsTableReferences
 }
 
 class $$ContactsTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $ContactsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $ContactsTable> {
   $$ContactsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4730,7 +4723,7 @@ class $$ContactsTableFilterComposer
 }
 
 class $$ContactsTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $ContactsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $ContactsTable> {
   $$ContactsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4819,7 +4812,7 @@ class $$ContactsTableOrderingComposer
 }
 
 class $$ContactsTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $ContactsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $ContactsTable> {
   $$ContactsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4942,7 +4935,7 @@ class $$ContactsTableAnnotationComposer
 }
 
 class $$ContactsTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $ContactsTable,
     Contact,
     $$ContactsTableFilterComposer,
@@ -4954,7 +4947,7 @@ class $$ContactsTableTableManager extends RootTableManager<
     Contact,
     PrefetchHooks Function(
         {bool messagesRefs, bool messageRetransmissionsRefs})> {
-  $$ContactsTableTableManager(_$TwonlyDatabase db, $ContactsTable table)
+  $$ContactsTableTableManager(_$TwonlyDatabaseOld db, $ContactsTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -5112,7 +5105,7 @@ class $$ContactsTableTableManager extends RootTableManager<
 }
 
 typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $ContactsTable,
     Contact,
     $$ContactsTableFilterComposer,
@@ -5166,10 +5159,10 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
 });
 
 final class $$MessagesTableReferences
-    extends BaseReferences<_$TwonlyDatabase, $MessagesTable, Message> {
+    extends BaseReferences<_$TwonlyDatabaseOld, $MessagesTable, Message> {
   $$MessagesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $ContactsTable _contactIdTable(_$TwonlyDatabase db) =>
+  static $ContactsTable _contactIdTable(_$TwonlyDatabaseOld db) =>
       db.contacts.createAlias(
           $_aliasNameGenerator(db.messages.contactId, db.contacts.userId));
 
@@ -5186,7 +5179,7 @@ final class $$MessagesTableReferences
 
   static MultiTypedResultKey<$MessageRetransmissionsTable,
       List<MessageRetransmission>> _messageRetransmissionsRefsTable(
-          _$TwonlyDatabase db) =>
+          _$TwonlyDatabaseOld db) =>
       MultiTypedResultKey.fromTable(db.messageRetransmissions,
           aliasName: $_aliasNameGenerator(
               db.messages.messageId, db.messageRetransmissions.messageId));
@@ -5206,7 +5199,7 @@ final class $$MessagesTableReferences
 }
 
 class $$MessagesTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $MessagesTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MessagesTable> {
   $$MessagesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5324,7 +5317,7 @@ class $$MessagesTableFilterComposer
 }
 
 class $$MessagesTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $MessagesTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MessagesTable> {
   $$MessagesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5415,7 +5408,7 @@ class $$MessagesTableOrderingComposer
 }
 
 class $$MessagesTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $MessagesTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MessagesTable> {
   $$MessagesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5521,7 +5514,7 @@ class $$MessagesTableAnnotationComposer
 }
 
 class $$MessagesTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $MessagesTable,
     Message,
     $$MessagesTableFilterComposer,
@@ -5532,7 +5525,7 @@ class $$MessagesTableTableManager extends RootTableManager<
     (Message, $$MessagesTableReferences),
     Message,
     PrefetchHooks Function({bool contactId, bool messageRetransmissionsRefs})> {
-  $$MessagesTableTableManager(_$TwonlyDatabase db, $MessagesTable table)
+  $$MessagesTableTableManager(_$TwonlyDatabaseOld db, $MessagesTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -5684,7 +5677,7 @@ class $$MessagesTableTableManager extends RootTableManager<
 }
 
 typedef $$MessagesTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $MessagesTable,
     Message,
     $$MessagesTableFilterComposer,
@@ -5713,7 +5706,7 @@ typedef $$MediaUploadsTableUpdateCompanionBuilder = MediaUploadsCompanion
 });
 
 class $$MediaUploadsTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $MediaUploadsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MediaUploadsTable> {
   $$MediaUploadsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5748,7 +5741,7 @@ class $$MediaUploadsTableFilterComposer
 }
 
 class $$MediaUploadsTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $MediaUploadsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MediaUploadsTable> {
   $$MediaUploadsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5775,7 +5768,7 @@ class $$MediaUploadsTableOrderingComposer
 }
 
 class $$MediaUploadsTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $MediaUploadsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MediaUploadsTable> {
   $$MediaUploadsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5802,7 +5795,7 @@ class $$MediaUploadsTableAnnotationComposer
 }
 
 class $$MediaUploadsTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $MediaUploadsTable,
     MediaUpload,
     $$MediaUploadsTableFilterComposer,
@@ -5812,11 +5805,12 @@ class $$MediaUploadsTableTableManager extends RootTableManager<
     $$MediaUploadsTableUpdateCompanionBuilder,
     (
       MediaUpload,
-      BaseReferences<_$TwonlyDatabase, $MediaUploadsTable, MediaUpload>
+      BaseReferences<_$TwonlyDatabaseOld, $MediaUploadsTable, MediaUpload>
     ),
     MediaUpload,
     PrefetchHooks Function()> {
-  $$MediaUploadsTableTableManager(_$TwonlyDatabase db, $MediaUploadsTable table)
+  $$MediaUploadsTableTableManager(
+      _$TwonlyDatabaseOld db, $MediaUploadsTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -5862,7 +5856,7 @@ class $$MediaUploadsTableTableManager extends RootTableManager<
 }
 
 typedef $$MediaUploadsTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $MediaUploadsTable,
     MediaUpload,
     $$MediaUploadsTableFilterComposer,
@@ -5872,7 +5866,7 @@ typedef $$MediaUploadsTableProcessedTableManager = ProcessedTableManager<
     $$MediaUploadsTableUpdateCompanionBuilder,
     (
       MediaUpload,
-      BaseReferences<_$TwonlyDatabase, $MediaUploadsTable, MediaUpload>
+      BaseReferences<_$TwonlyDatabaseOld, $MediaUploadsTable, MediaUpload>
     ),
     MediaUpload,
     PrefetchHooks Function()>;
@@ -5894,7 +5888,7 @@ typedef $$SignalIdentityKeyStoresTableUpdateCompanionBuilder
 });
 
 class $$SignalIdentityKeyStoresTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $SignalIdentityKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalIdentityKeyStoresTable> {
   $$SignalIdentityKeyStoresTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5916,7 +5910,7 @@ class $$SignalIdentityKeyStoresTableFilterComposer
 }
 
 class $$SignalIdentityKeyStoresTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $SignalIdentityKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalIdentityKeyStoresTable> {
   $$SignalIdentityKeyStoresTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5938,7 +5932,7 @@ class $$SignalIdentityKeyStoresTableOrderingComposer
 }
 
 class $$SignalIdentityKeyStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $SignalIdentityKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalIdentityKeyStoresTable> {
   $$SignalIdentityKeyStoresTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5960,7 +5954,7 @@ class $$SignalIdentityKeyStoresTableAnnotationComposer
 }
 
 class $$SignalIdentityKeyStoresTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $SignalIdentityKeyStoresTable,
     SignalIdentityKeyStore,
     $$SignalIdentityKeyStoresTableFilterComposer,
@@ -5970,13 +5964,13 @@ class $$SignalIdentityKeyStoresTableTableManager extends RootTableManager<
     $$SignalIdentityKeyStoresTableUpdateCompanionBuilder,
     (
       SignalIdentityKeyStore,
-      BaseReferences<_$TwonlyDatabase, $SignalIdentityKeyStoresTable,
+      BaseReferences<_$TwonlyDatabaseOld, $SignalIdentityKeyStoresTable,
           SignalIdentityKeyStore>
     ),
     SignalIdentityKeyStore,
     PrefetchHooks Function()> {
   $$SignalIdentityKeyStoresTableTableManager(
-      _$TwonlyDatabase db, $SignalIdentityKeyStoresTable table)
+      _$TwonlyDatabaseOld db, $SignalIdentityKeyStoresTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -6026,7 +6020,7 @@ class $$SignalIdentityKeyStoresTableTableManager extends RootTableManager<
 
 typedef $$SignalIdentityKeyStoresTableProcessedTableManager
     = ProcessedTableManager<
-        _$TwonlyDatabase,
+        _$TwonlyDatabaseOld,
         $SignalIdentityKeyStoresTable,
         SignalIdentityKeyStore,
         $$SignalIdentityKeyStoresTableFilterComposer,
@@ -6036,7 +6030,7 @@ typedef $$SignalIdentityKeyStoresTableProcessedTableManager
         $$SignalIdentityKeyStoresTableUpdateCompanionBuilder,
         (
           SignalIdentityKeyStore,
-          BaseReferences<_$TwonlyDatabase, $SignalIdentityKeyStoresTable,
+          BaseReferences<_$TwonlyDatabaseOld, $SignalIdentityKeyStoresTable,
               SignalIdentityKeyStore>
         ),
         SignalIdentityKeyStore,
@@ -6055,7 +6049,7 @@ typedef $$SignalPreKeyStoresTableUpdateCompanionBuilder
 });
 
 class $$SignalPreKeyStoresTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $SignalPreKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalPreKeyStoresTable> {
   $$SignalPreKeyStoresTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6074,7 +6068,7 @@ class $$SignalPreKeyStoresTableFilterComposer
 }
 
 class $$SignalPreKeyStoresTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $SignalPreKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalPreKeyStoresTable> {
   $$SignalPreKeyStoresTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6093,7 +6087,7 @@ class $$SignalPreKeyStoresTableOrderingComposer
 }
 
 class $$SignalPreKeyStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $SignalPreKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalPreKeyStoresTable> {
   $$SignalPreKeyStoresTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6112,7 +6106,7 @@ class $$SignalPreKeyStoresTableAnnotationComposer
 }
 
 class $$SignalPreKeyStoresTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $SignalPreKeyStoresTable,
     SignalPreKeyStore,
     $$SignalPreKeyStoresTableFilterComposer,
@@ -6122,13 +6116,13 @@ class $$SignalPreKeyStoresTableTableManager extends RootTableManager<
     $$SignalPreKeyStoresTableUpdateCompanionBuilder,
     (
       SignalPreKeyStore,
-      BaseReferences<_$TwonlyDatabase, $SignalPreKeyStoresTable,
+      BaseReferences<_$TwonlyDatabaseOld, $SignalPreKeyStoresTable,
           SignalPreKeyStore>
     ),
     SignalPreKeyStore,
     PrefetchHooks Function()> {
   $$SignalPreKeyStoresTableTableManager(
-      _$TwonlyDatabase db, $SignalPreKeyStoresTable table)
+      _$TwonlyDatabaseOld db, $SignalPreKeyStoresTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -6167,7 +6161,7 @@ class $$SignalPreKeyStoresTableTableManager extends RootTableManager<
 }
 
 typedef $$SignalPreKeyStoresTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $SignalPreKeyStoresTable,
     SignalPreKeyStore,
     $$SignalPreKeyStoresTableFilterComposer,
@@ -6177,7 +6171,7 @@ typedef $$SignalPreKeyStoresTableProcessedTableManager = ProcessedTableManager<
     $$SignalPreKeyStoresTableUpdateCompanionBuilder,
     (
       SignalPreKeyStore,
-      BaseReferences<_$TwonlyDatabase, $SignalPreKeyStoresTable,
+      BaseReferences<_$TwonlyDatabaseOld, $SignalPreKeyStoresTable,
           SignalPreKeyStore>
     ),
     SignalPreKeyStore,
@@ -6196,7 +6190,7 @@ typedef $$SignalSenderKeyStoresTableUpdateCompanionBuilder
 });
 
 class $$SignalSenderKeyStoresTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $SignalSenderKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalSenderKeyStoresTable> {
   $$SignalSenderKeyStoresTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6212,7 +6206,7 @@ class $$SignalSenderKeyStoresTableFilterComposer
 }
 
 class $$SignalSenderKeyStoresTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $SignalSenderKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalSenderKeyStoresTable> {
   $$SignalSenderKeyStoresTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6229,7 +6223,7 @@ class $$SignalSenderKeyStoresTableOrderingComposer
 }
 
 class $$SignalSenderKeyStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $SignalSenderKeyStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalSenderKeyStoresTable> {
   $$SignalSenderKeyStoresTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6245,7 +6239,7 @@ class $$SignalSenderKeyStoresTableAnnotationComposer
 }
 
 class $$SignalSenderKeyStoresTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $SignalSenderKeyStoresTable,
     SignalSenderKeyStore,
     $$SignalSenderKeyStoresTableFilterComposer,
@@ -6255,13 +6249,13 @@ class $$SignalSenderKeyStoresTableTableManager extends RootTableManager<
     $$SignalSenderKeyStoresTableUpdateCompanionBuilder,
     (
       SignalSenderKeyStore,
-      BaseReferences<_$TwonlyDatabase, $SignalSenderKeyStoresTable,
+      BaseReferences<_$TwonlyDatabaseOld, $SignalSenderKeyStoresTable,
           SignalSenderKeyStore>
     ),
     SignalSenderKeyStore,
     PrefetchHooks Function()> {
   $$SignalSenderKeyStoresTableTableManager(
-      _$TwonlyDatabase db, $SignalSenderKeyStoresTable table)
+      _$TwonlyDatabaseOld db, $SignalSenderKeyStoresTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -6303,7 +6297,7 @@ class $$SignalSenderKeyStoresTableTableManager extends RootTableManager<
 
 typedef $$SignalSenderKeyStoresTableProcessedTableManager
     = ProcessedTableManager<
-        _$TwonlyDatabase,
+        _$TwonlyDatabaseOld,
         $SignalSenderKeyStoresTable,
         SignalSenderKeyStore,
         $$SignalSenderKeyStoresTableFilterComposer,
@@ -6313,7 +6307,7 @@ typedef $$SignalSenderKeyStoresTableProcessedTableManager
         $$SignalSenderKeyStoresTableUpdateCompanionBuilder,
         (
           SignalSenderKeyStore,
-          BaseReferences<_$TwonlyDatabase, $SignalSenderKeyStoresTable,
+          BaseReferences<_$TwonlyDatabaseOld, $SignalSenderKeyStoresTable,
               SignalSenderKeyStore>
         ),
         SignalSenderKeyStore,
@@ -6336,7 +6330,7 @@ typedef $$SignalSessionStoresTableUpdateCompanionBuilder
 });
 
 class $$SignalSessionStoresTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $SignalSessionStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalSessionStoresTable> {
   $$SignalSessionStoresTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6358,7 +6352,7 @@ class $$SignalSessionStoresTableFilterComposer
 }
 
 class $$SignalSessionStoresTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $SignalSessionStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalSessionStoresTable> {
   $$SignalSessionStoresTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6381,7 +6375,7 @@ class $$SignalSessionStoresTableOrderingComposer
 }
 
 class $$SignalSessionStoresTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $SignalSessionStoresTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalSessionStoresTable> {
   $$SignalSessionStoresTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6403,7 +6397,7 @@ class $$SignalSessionStoresTableAnnotationComposer
 }
 
 class $$SignalSessionStoresTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $SignalSessionStoresTable,
     SignalSessionStore,
     $$SignalSessionStoresTableFilterComposer,
@@ -6413,13 +6407,13 @@ class $$SignalSessionStoresTableTableManager extends RootTableManager<
     $$SignalSessionStoresTableUpdateCompanionBuilder,
     (
       SignalSessionStore,
-      BaseReferences<_$TwonlyDatabase, $SignalSessionStoresTable,
+      BaseReferences<_$TwonlyDatabaseOld, $SignalSessionStoresTable,
           SignalSessionStore>
     ),
     SignalSessionStore,
     PrefetchHooks Function()> {
   $$SignalSessionStoresTableTableManager(
-      _$TwonlyDatabase db, $SignalSessionStoresTable table)
+      _$TwonlyDatabaseOld db, $SignalSessionStoresTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -6467,7 +6461,7 @@ class $$SignalSessionStoresTableTableManager extends RootTableManager<
 }
 
 typedef $$SignalSessionStoresTableProcessedTableManager = ProcessedTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $SignalSessionStoresTable,
     SignalSessionStore,
     $$SignalSessionStoresTableFilterComposer,
@@ -6477,7 +6471,7 @@ typedef $$SignalSessionStoresTableProcessedTableManager = ProcessedTableManager<
     $$SignalSessionStoresTableUpdateCompanionBuilder,
     (
       SignalSessionStore,
-      BaseReferences<_$TwonlyDatabase, $SignalSessionStoresTable,
+      BaseReferences<_$TwonlyDatabaseOld, $SignalSessionStoresTable,
           SignalSessionStore>
     ),
     SignalSessionStore,
@@ -6500,7 +6494,7 @@ typedef $$SignalContactPreKeysTableUpdateCompanionBuilder
 });
 
 class $$SignalContactPreKeysTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $SignalContactPreKeysTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalContactPreKeysTable> {
   $$SignalContactPreKeysTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6522,7 +6516,7 @@ class $$SignalContactPreKeysTableFilterComposer
 }
 
 class $$SignalContactPreKeysTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $SignalContactPreKeysTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalContactPreKeysTable> {
   $$SignalContactPreKeysTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6544,7 +6538,7 @@ class $$SignalContactPreKeysTableOrderingComposer
 }
 
 class $$SignalContactPreKeysTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $SignalContactPreKeysTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalContactPreKeysTable> {
   $$SignalContactPreKeysTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6566,7 +6560,7 @@ class $$SignalContactPreKeysTableAnnotationComposer
 }
 
 class $$SignalContactPreKeysTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $SignalContactPreKeysTable,
     SignalContactPreKey,
     $$SignalContactPreKeysTableFilterComposer,
@@ -6576,13 +6570,13 @@ class $$SignalContactPreKeysTableTableManager extends RootTableManager<
     $$SignalContactPreKeysTableUpdateCompanionBuilder,
     (
       SignalContactPreKey,
-      BaseReferences<_$TwonlyDatabase, $SignalContactPreKeysTable,
+      BaseReferences<_$TwonlyDatabaseOld, $SignalContactPreKeysTable,
           SignalContactPreKey>
     ),
     SignalContactPreKey,
     PrefetchHooks Function()> {
   $$SignalContactPreKeysTableTableManager(
-      _$TwonlyDatabase db, $SignalContactPreKeysTable table)
+      _$TwonlyDatabaseOld db, $SignalContactPreKeysTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -6631,7 +6625,7 @@ class $$SignalContactPreKeysTableTableManager extends RootTableManager<
 
 typedef $$SignalContactPreKeysTableProcessedTableManager
     = ProcessedTableManager<
-        _$TwonlyDatabase,
+        _$TwonlyDatabaseOld,
         $SignalContactPreKeysTable,
         SignalContactPreKey,
         $$SignalContactPreKeysTableFilterComposer,
@@ -6641,7 +6635,7 @@ typedef $$SignalContactPreKeysTableProcessedTableManager
         $$SignalContactPreKeysTableUpdateCompanionBuilder,
         (
           SignalContactPreKey,
-          BaseReferences<_$TwonlyDatabase, $SignalContactPreKeysTable,
+          BaseReferences<_$TwonlyDatabaseOld, $SignalContactPreKeysTable,
               SignalContactPreKey>
         ),
         SignalContactPreKey,
@@ -6664,7 +6658,7 @@ typedef $$SignalContactSignedPreKeysTableUpdateCompanionBuilder
 });
 
 class $$SignalContactSignedPreKeysTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $SignalContactSignedPreKeysTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalContactSignedPreKeysTable> {
   $$SignalContactSignedPreKeysTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6691,7 +6685,7 @@ class $$SignalContactSignedPreKeysTableFilterComposer
 }
 
 class $$SignalContactSignedPreKeysTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $SignalContactSignedPreKeysTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalContactSignedPreKeysTable> {
   $$SignalContactSignedPreKeysTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6719,7 +6713,7 @@ class $$SignalContactSignedPreKeysTableOrderingComposer
 }
 
 class $$SignalContactSignedPreKeysTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $SignalContactSignedPreKeysTable> {
+    extends Composer<_$TwonlyDatabaseOld, $SignalContactSignedPreKeysTable> {
   $$SignalContactSignedPreKeysTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6744,7 +6738,7 @@ class $$SignalContactSignedPreKeysTableAnnotationComposer
 }
 
 class $$SignalContactSignedPreKeysTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $SignalContactSignedPreKeysTable,
     SignalContactSignedPreKey,
     $$SignalContactSignedPreKeysTableFilterComposer,
@@ -6754,13 +6748,13 @@ class $$SignalContactSignedPreKeysTableTableManager extends RootTableManager<
     $$SignalContactSignedPreKeysTableUpdateCompanionBuilder,
     (
       SignalContactSignedPreKey,
-      BaseReferences<_$TwonlyDatabase, $SignalContactSignedPreKeysTable,
+      BaseReferences<_$TwonlyDatabaseOld, $SignalContactSignedPreKeysTable,
           SignalContactSignedPreKey>
     ),
     SignalContactSignedPreKey,
     PrefetchHooks Function()> {
   $$SignalContactSignedPreKeysTableTableManager(
-      _$TwonlyDatabase db, $SignalContactSignedPreKeysTable table)
+      _$TwonlyDatabaseOld db, $SignalContactSignedPreKeysTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -6810,7 +6804,7 @@ class $$SignalContactSignedPreKeysTableTableManager extends RootTableManager<
 
 typedef $$SignalContactSignedPreKeysTableProcessedTableManager
     = ProcessedTableManager<
-        _$TwonlyDatabase,
+        _$TwonlyDatabaseOld,
         $SignalContactSignedPreKeysTable,
         SignalContactSignedPreKey,
         $$SignalContactSignedPreKeysTableFilterComposer,
@@ -6820,7 +6814,7 @@ typedef $$SignalContactSignedPreKeysTableProcessedTableManager
         $$SignalContactSignedPreKeysTableUpdateCompanionBuilder,
         (
           SignalContactSignedPreKey,
-          BaseReferences<_$TwonlyDatabase, $SignalContactSignedPreKeysTable,
+          BaseReferences<_$TwonlyDatabaseOld, $SignalContactSignedPreKeysTable,
               SignalContactSignedPreKey>
         ),
         SignalContactSignedPreKey,
@@ -6851,11 +6845,11 @@ typedef $$MessageRetransmissionsTableUpdateCompanionBuilder
 });
 
 final class $$MessageRetransmissionsTableReferences extends BaseReferences<
-    _$TwonlyDatabase, $MessageRetransmissionsTable, MessageRetransmission> {
+    _$TwonlyDatabaseOld, $MessageRetransmissionsTable, MessageRetransmission> {
   $$MessageRetransmissionsTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $ContactsTable _contactIdTable(_$TwonlyDatabase db) =>
+  static $ContactsTable _contactIdTable(_$TwonlyDatabaseOld db) =>
       db.contacts.createAlias($_aliasNameGenerator(
           db.messageRetransmissions.contactId, db.contacts.userId));
 
@@ -6870,7 +6864,7 @@ final class $$MessageRetransmissionsTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $MessagesTable _messageIdTable(_$TwonlyDatabase db) =>
+  static $MessagesTable _messageIdTable(_$TwonlyDatabaseOld db) =>
       db.messages.createAlias($_aliasNameGenerator(
           db.messageRetransmissions.messageId, db.messages.messageId));
 
@@ -6887,7 +6881,7 @@ final class $$MessageRetransmissionsTableReferences extends BaseReferences<
 }
 
 class $$MessageRetransmissionsTableFilterComposer
-    extends Composer<_$TwonlyDatabase, $MessageRetransmissionsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MessageRetransmissionsTable> {
   $$MessageRetransmissionsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6961,7 +6955,7 @@ class $$MessageRetransmissionsTableFilterComposer
 }
 
 class $$MessageRetransmissionsTableOrderingComposer
-    extends Composer<_$TwonlyDatabase, $MessageRetransmissionsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MessageRetransmissionsTable> {
   $$MessageRetransmissionsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -7036,7 +7030,7 @@ class $$MessageRetransmissionsTableOrderingComposer
 }
 
 class $$MessageRetransmissionsTableAnnotationComposer
-    extends Composer<_$TwonlyDatabase, $MessageRetransmissionsTable> {
+    extends Composer<_$TwonlyDatabaseOld, $MessageRetransmissionsTable> {
   $$MessageRetransmissionsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -7107,7 +7101,7 @@ class $$MessageRetransmissionsTableAnnotationComposer
 }
 
 class $$MessageRetransmissionsTableTableManager extends RootTableManager<
-    _$TwonlyDatabase,
+    _$TwonlyDatabaseOld,
     $MessageRetransmissionsTable,
     MessageRetransmission,
     $$MessageRetransmissionsTableFilterComposer,
@@ -7119,7 +7113,7 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
     MessageRetransmission,
     PrefetchHooks Function({bool contactId, bool messageId})> {
   $$MessageRetransmissionsTableTableManager(
-      _$TwonlyDatabase db, $MessageRetransmissionsTable table)
+      _$TwonlyDatabaseOld db, $MessageRetransmissionsTable table)
       : super(TableManagerState(
           db: db,
           table: table,
@@ -7234,7 +7228,7 @@ class $$MessageRetransmissionsTableTableManager extends RootTableManager<
 
 typedef $$MessageRetransmissionsTableProcessedTableManager
     = ProcessedTableManager<
-        _$TwonlyDatabase,
+        _$TwonlyDatabaseOld,
         $MessageRetransmissionsTable,
         MessageRetransmission,
         $$MessageRetransmissionsTableFilterComposer,
@@ -7246,9 +7240,9 @@ typedef $$MessageRetransmissionsTableProcessedTableManager
         MessageRetransmission,
         PrefetchHooks Function({bool contactId, bool messageId})>;
 
-class $TwonlyDatabaseManager {
-  final _$TwonlyDatabase _db;
-  $TwonlyDatabaseManager(this._db);
+class $TwonlyDatabaseOldManager {
+  final _$TwonlyDatabaseOld _db;
+  $TwonlyDatabaseOldManager(this._db);
   $$ContactsTableTableManager get contacts =>
       $$ContactsTableTableManager(_db, _db.contacts);
   $$MessagesTableTableManager get messages =>

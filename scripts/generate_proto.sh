@@ -8,11 +8,16 @@ if [ ! -f "pubspec.yaml" ]; then
 fi
 
 # Definitions for twonly Safe
-protoc --proto_path="./lib/src/model/protobuf/backup/" --dart_out="./lib/src/model/protobuf/backup/" "backup.proto"
+GENERATED_DIR="./lib/src/model/protobuf/client/generated/"
+CLIENT_DIR="./lib/src/model/protobuf/client/"
 
-# Definitions for the Push Notifications
-protoc --proto_path="./lib/src/model/protobuf/push_notification/" --dart_out="./lib/src/model/protobuf/push_notification/" "push_notification.proto"
-protoc --proto_path="./lib/src/model/protobuf/push_notification/" --swift_out="./ios/NotificationService/" "push_notification.proto"
+protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "backup.proto"
+protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "messages.proto"
+
+protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "push_notification.proto"
+protoc --proto_path="$CLIENT_DIR" --swift_out="./ios/NotificationService/" "push_notification.proto"
+
+exit
 
 
 # Definitions for the Server API
