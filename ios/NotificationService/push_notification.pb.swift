@@ -128,8 +128,8 @@ struct PushNotification: Sendable {
 
   var kind: PushKind = .reaction
 
-  var messageID: Int64 {
-    get {return _messageID ?? 0}
+  var messageID: String {
+    get {return _messageID ?? String()}
     set {_messageID = newValue}
   }
   /// Returns true if `messageID` has been explicitly set.
@@ -150,7 +150,7 @@ struct PushNotification: Sendable {
 
   init() {}
 
-  fileprivate var _messageID: Int64? = nil
+  fileprivate var _messageID: String? = nil
   fileprivate var _reactionContent: String? = nil
 }
 
@@ -177,8 +177,8 @@ struct PushUser: Sendable {
 
   var blocked: Bool = false
 
-  var lastMessageID: Int64 {
-    get {return _lastMessageID ?? 0}
+  var lastMessageID: String {
+    get {return _lastMessageID ?? String()}
     set {_lastMessageID = newValue}
   }
   /// Returns true if `lastMessageID` has been explicitly set.
@@ -192,7 +192,7 @@ struct PushUser: Sendable {
 
   init() {}
 
-  fileprivate var _lastMessageID: Int64? = nil
+  fileprivate var _lastMessageID: String? = nil
 }
 
 struct PushKey: Sendable {
@@ -273,7 +273,7 @@ extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularEnumField(value: &self.kind) }()
-      case 2: try { try decoder.decodeSingularInt64Field(value: &self._messageID) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self._messageID) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self._reactionContent) }()
       default: break
       }
@@ -289,7 +289,7 @@ extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       try visitor.visitSingularEnumField(value: self.kind, fieldNumber: 1)
     }
     try { if let v = self._messageID {
-      try visitor.visitSingularInt64Field(value: v, fieldNumber: 2)
+      try visitor.visitSingularStringField(value: v, fieldNumber: 2)
     } }()
     try { if let v = self._reactionContent {
       try visitor.visitSingularStringField(value: v, fieldNumber: 3)
@@ -349,7 +349,7 @@ extension PushUser: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationB
       case 1: try { try decoder.decodeSingularInt64Field(value: &self.userID) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.displayName) }()
       case 3: try { try decoder.decodeSingularBoolField(value: &self.blocked) }()
-      case 4: try { try decoder.decodeSingularInt64Field(value: &self._lastMessageID) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self._lastMessageID) }()
       case 5: try { try decoder.decodeRepeatedMessageField(value: &self.pushKeys) }()
       default: break
       }
@@ -371,7 +371,7 @@ extension PushUser: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationB
       try visitor.visitSingularBoolField(value: self.blocked, fieldNumber: 3)
     }
     try { if let v = self._lastMessageID {
-      try visitor.visitSingularInt64Field(value: v, fieldNumber: 4)
+      try visitor.visitSingularStringField(value: v, fieldNumber: 4)
     } }()
     if !self.pushKeys.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.pushKeys, fieldNumber: 5)

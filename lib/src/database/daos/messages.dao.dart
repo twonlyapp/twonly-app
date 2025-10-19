@@ -1,13 +1,24 @@
 import 'package:drift/drift.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
+import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafile.service.dart';
+import 'package:twonly/src/utils/log.dart';
 
 part 'messages.dao.g.dart';
 
-@DriftAccessor(tables: [Messages, Contacts, MediaFiles, MessageHistories])
+@DriftAccessor(
+  tables: [
+    Messages,
+    Contacts,
+    MediaFiles,
+    MessageHistories,
+    Groups,
+  ],
+)
 class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -156,22 +167,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   //       .write(updates);
   // }
 
-  // Future<void> resetPendingDownloadState() {
-  //   // All media files in the downloading state are reset to the pending state
-  //   // When the app is used in mobile network, they will not be downloaded at the start
-  //   // if they are not yet downloaded...
-  //   const updates =
-  //       MessagesCompanion(downloadState: Value(DownloadState.pending));
-  //   return (update(messages)
-  //         ..where(
-  //           (t) =>
-  //               t.messageOtherId.isNotNull() &
-  //               t.downloadState.equals(DownloadState.downloading.index) &
-  //               t.kind.equals(MessageKind.media.name),
-  //         ))
-  //       .write(updates);
-  // }
-
   Future<void> handleMessageDeletion(
     int contactId,
     String messageId,
@@ -278,28 +273,33 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   //       .write(updatedValues);
   // }
 
-  // Future<void> updateMessageByMessageId(
-  //   int messageId,
-  //   MessagesCompanion updatedValues,
-  // ) {
-  //   return (update(messages)..where((c) => c.messageId.equals(messageId)))
-  //       .write(updatedValues);
-  // }
+  Future<void> updateMessageId(
+    String messageId,
+    MessagesCompanion updatedValues,
+  ) {
+    return (update(messages)..where((c) => c.messageId.equals(messageId)))
+        .write(updatedValues);
+  }
 
-  // Future<int?> insertMessage(MessagesCompanion message) async {
-  //   try {
-  //     await (update(contacts)
-  //           ..where(
-  //             (c) => c.userId.equals(message.contactId.value),
-  //           ))
-  //         .write(ContactsCompanion(lastMessageExchange: Value(DateTime.now())));
+  Future<Message?> insertMessage(MessagesCompanion message) async {
+    try {
+      final rowId = await into(messages).insert(message);
 
-  //     return await into(messages).insert(message);
-  //   } catch (e) {
-  //     Log.error('Error while inserting message: $e');
-  //     return null;
-  //   }
-  // }
+      await twonlyDB.groupsDao.updateGroup(
+        message.groupId.value,
+        GroupsCompanion(
+          lastMessageExchange: Value(DateTime.now()),
+          archived: const Value(false),
+        ),
+      );
+
+      return await (select(messages)..where((t) => t.rowId.equals(rowId)))
+          .getSingle();
+    } catch (e) {
+      Log.error('Could not insert message: $e');
+      return null;
+    }
+  }
 
   // Future<void> deleteMessagesByContactId(int contactId) {
   //   return (delete(messages)

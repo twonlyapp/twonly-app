@@ -37,6 +37,7 @@ const Message_Type$json = {
     {'1': 'PLAINTEXT_CONTENT', '2': 1},
     {'1': 'CIPHERTEXT', '2': 2},
     {'1': 'PREKEY_BUNDLE', '2': 3},
+    {'1': 'TEST_NOTIFICATION', '2': 4},
   ],
 };
 
@@ -45,9 +46,10 @@ final $typed_data.Uint8List messageDescriptor = $convert.base64Decode(
     'CgdNZXNzYWdlEiEKBHR5cGUYASABKA4yDS5NZXNzYWdlLlR5cGVSBHR5cGUSHAoJcmVjZWlwdE'
     'lkGAIgASgJUglyZWNlaXB0SWQSLwoQZW5jcnlwdGVkQ29udGVudBgDIAEoDEgAUhBlbmNyeXB0'
     'ZWRDb250ZW50iAEBEkIKEHBsYWludGV4dENvbnRlbnQYBCABKAsyES5QbGFpbnRleHRDb250ZW'
-    '50SAFSEHBsYWludGV4dENvbnRlbnSIAQEiXQoEVHlwZRIbChdTRU5ERVJfREVMSVZFUllfUkVD'
+    '50SAFSEHBsYWludGV4dENvbnRlbnSIAQEidAoEVHlwZRIbChdTRU5ERVJfREVMSVZFUllfUkVD'
     'RUlQVBAAEhUKEVBMQUlOVEVYVF9DT05URU5UEAESDgoKQ0lQSEVSVEVYVBACEhEKDVBSRUtFWV'
-    '9CVU5ETEUQA0ITChFfZW5jcnlwdGVkQ29udGVudEITChFfcGxhaW50ZXh0Q29udGVudA==');
+    '9CVU5ETEUQAxIVChFURVNUX05PVElGSUNBVElPThAEQhMKEV9lbmNyeXB0ZWRDb250ZW50QhMK'
+    'EV9wbGFpbnRleHRDb250ZW50');
 
 @$core.Deprecated('Use plaintextContentDescriptor instead')
 const PlaintextContent$json = {
@@ -126,7 +128,8 @@ const EncryptedContent_TextMessage$json = {
   '2': [
     {'1': 'senderMessageId', '3': 1, '4': 1, '5': 9, '10': 'senderMessageId'},
     {'1': 'text', '3': 2, '4': 1, '5': 9, '10': 'text'},
-    {'1': 'quoteMessageId', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'quoteMessageId', '17': true},
+    {'1': 'timestamp', '3': 3, '4': 1, '5': 3, '10': 'timestamp'},
+    {'1': 'quoteMessageId', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'quoteMessageId', '17': true},
   ],
   '8': [
     {'1': '_quoteMessageId'},
@@ -152,14 +155,15 @@ const EncryptedContent_MessageUpdate$json = {
   '1': 'MessageUpdate',
   '2': [
     {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.EncryptedContent.MessageUpdate.Type', '10': 'type'},
-    {'1': 'senderMessageId', '3': 2, '4': 1, '5': 9, '10': 'senderMessageId'},
-    {'1': 'text', '3': 3, '4': 1, '5': 9, '9': 0, '10': 'text', '17': true},
-    {'1': 'timestamp', '3': 4, '4': 1, '5': 3, '9': 1, '10': 'timestamp', '17': true},
+    {'1': 'senderMessageId', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'senderMessageId', '17': true},
+    {'1': 'multipleSenderMessageIds', '3': 3, '4': 3, '5': 9, '10': 'multipleSenderMessageIds'},
+    {'1': 'text', '3': 4, '4': 1, '5': 9, '9': 1, '10': 'text', '17': true},
+    {'1': 'timestamp', '3': 5, '4': 1, '5': 3, '10': 'timestamp'},
   ],
   '4': [EncryptedContent_MessageUpdate_Type$json],
   '8': [
+    {'1': '_senderMessageId'},
     {'1': '_text'},
-    {'1': '_timestamp'},
   ],
 };
 
@@ -181,14 +185,17 @@ const EncryptedContent_Media$json = {
     {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.EncryptedContent.Media.Type', '10': 'type'},
     {'1': 'displayLimitInMilliseconds', '3': 3, '4': 1, '5': 3, '9': 0, '10': 'displayLimitInMilliseconds', '17': true},
     {'1': 'requiresAuthentication', '3': 4, '4': 1, '5': 8, '10': 'requiresAuthentication'},
-    {'1': 'downloadToken', '3': 5, '4': 1, '5': 12, '9': 1, '10': 'downloadToken', '17': true},
-    {'1': 'encryptionKey', '3': 6, '4': 1, '5': 12, '9': 2, '10': 'encryptionKey', '17': true},
-    {'1': 'encryptionMac', '3': 7, '4': 1, '5': 12, '9': 3, '10': 'encryptionMac', '17': true},
-    {'1': 'encryptionNonce', '3': 8, '4': 1, '5': 12, '9': 4, '10': 'encryptionNonce', '17': true},
+    {'1': 'timestamp', '3': 5, '4': 1, '5': 3, '10': 'timestamp'},
+    {'1': 'quoteMessageId', '3': 6, '4': 1, '5': 9, '9': 1, '10': 'quoteMessageId', '17': true},
+    {'1': 'downloadToken', '3': 7, '4': 1, '5': 12, '9': 2, '10': 'downloadToken', '17': true},
+    {'1': 'encryptionKey', '3': 8, '4': 1, '5': 12, '9': 3, '10': 'encryptionKey', '17': true},
+    {'1': 'encryptionMac', '3': 9, '4': 1, '5': 12, '9': 4, '10': 'encryptionMac', '17': true},
+    {'1': 'encryptionNonce', '3': 10, '4': 1, '5': 12, '9': 5, '10': 'encryptionNonce', '17': true},
   ],
   '4': [EncryptedContent_Media_Type$json],
   '8': [
     {'1': '_displayLimitInMilliseconds'},
+    {'1': '_quoteMessageId'},
     {'1': '_downloadToken'},
     {'1': '_encryptionKey'},
     {'1': '_encryptionMac'},
@@ -200,9 +207,10 @@ const EncryptedContent_Media$json = {
 const EncryptedContent_Media_Type$json = {
   '1': 'Type',
   '2': [
-    {'1': 'IMAGE', '2': 0},
-    {'1': 'VIDEO', '2': 1},
-    {'1': 'GIF', '2': 2},
+    {'1': 'REUPLOAD', '2': 0},
+    {'1': 'IMAGE', '2': 1},
+    {'1': 'VIDEO', '2': 2},
+    {'1': 'GIF', '2': 3},
   ],
 };
 
@@ -276,11 +284,13 @@ const EncryptedContent_PushKeys$json = {
     {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.EncryptedContent.PushKeys.Type', '10': 'type'},
     {'1': 'keyId', '3': 2, '4': 1, '5': 3, '9': 0, '10': 'keyId', '17': true},
     {'1': 'key', '3': 3, '4': 1, '5': 12, '9': 1, '10': 'key', '17': true},
+    {'1': 'createdAt', '3': 4, '4': 1, '5': 3, '9': 2, '10': 'createdAt', '17': true},
   ],
   '4': [EncryptedContent_PushKeys_Type$json],
   '8': [
     {'1': '_keyId'},
     {'1': '_key'},
+    {'1': '_createdAt'},
   ],
 };
 
@@ -317,42 +327,47 @@ final $typed_data.Uint8List encryptedContentDescriptor = $convert.base64Decode(
     'N0UmVxdWVzdEgHUg5jb250YWN0UmVxdWVzdIgBARI+CglmbGFtZVN5bmMYCiABKAsyGy5FbmNy'
     'eXB0ZWRDb250ZW50LkZsYW1lU3luY0gIUglmbGFtZVN5bmOIAQESOwoIcHVzaEtleXMYCyABKA'
     'syGi5FbmNyeXB0ZWRDb250ZW50LlB1c2hLZXlzSAlSCHB1c2hLZXlziAEBEjsKCHJlYWN0aW9u'
-    'GAwgASgLMhouRW5jcnlwdGVkQ29udGVudC5SZWFjdGlvbkgKUghyZWFjdGlvbogBARqLAQoLVG'
+    'GAwgASgLMhouRW5jcnlwdGVkQ29udGVudC5SZWFjdGlvbkgKUghyZWFjdGlvbogBARqpAQoLVG'
     'V4dE1lc3NhZ2USKAoPc2VuZGVyTWVzc2FnZUlkGAEgASgJUg9zZW5kZXJNZXNzYWdlSWQSEgoE'
-    'dGV4dBgCIAEoCVIEdGV4dBIrCg5xdW90ZU1lc3NhZ2VJZBgDIAEoCUgAUg5xdW90ZU1lc3NhZ2'
-    'VJZIgBAUIRCg9fcXVvdGVNZXNzYWdlSWQagQEKCFJlYWN0aW9uEigKD3RhcmdldE1lc3NhZ2VJ'
-    'ZBgBIAEoCVIPdGFyZ2V0TWVzc2FnZUlkEhkKBWVtb2ppGAIgASgJSABSBWVtb2ppiAEBEhsKBn'
-    'JlbW92ZRgDIAEoCEgBUgZyZW1vdmWIAQFCCAoGX2Vtb2ppQgkKB19yZW1vdmUa9QEKDU1lc3Nh'
-    'Z2VVcGRhdGUSOAoEdHlwZRgBIAEoDjIkLkVuY3J5cHRlZENvbnRlbnQuTWVzc2FnZVVwZGF0ZS'
-    '5UeXBlUgR0eXBlEigKD3NlbmRlck1lc3NhZ2VJZBgCIAEoCVIPc2VuZGVyTWVzc2FnZUlkEhcK'
-    'BHRleHQYAyABKAlIAFIEdGV4dIgBARIhCgl0aW1lc3RhbXAYBCABKANIAVIJdGltZXN0YW1wiA'
-    'EBIi0KBFR5cGUSCgoGREVMRVRFEAASDQoJRURJVF9URVhUEAESCgoGT1BFTkVEEAJCBwoFX3Rl'
-    'eHRCDAoKX3RpbWVzdGFtcBqgBAoFTWVkaWESKAoPc2VuZGVyTWVzc2FnZUlkGAEgASgJUg9zZW'
-    '5kZXJNZXNzYWdlSWQSMAoEdHlwZRgCIAEoDjIcLkVuY3J5cHRlZENvbnRlbnQuTWVkaWEuVHlw'
-    'ZVIEdHlwZRJDChpkaXNwbGF5TGltaXRJbk1pbGxpc2Vjb25kcxgDIAEoA0gAUhpkaXNwbGF5TG'
-    'ltaXRJbk1pbGxpc2Vjb25kc4gBARI2ChZyZXF1aXJlc0F1dGhlbnRpY2F0aW9uGAQgASgIUhZy'
-    'ZXF1aXJlc0F1dGhlbnRpY2F0aW9uEikKDWRvd25sb2FkVG9rZW4YBSABKAxIAVINZG93bmxvYW'
-    'RUb2tlbogBARIpCg1lbmNyeXB0aW9uS2V5GAYgASgMSAJSDWVuY3J5cHRpb25LZXmIAQESKQoN'
-    'ZW5jcnlwdGlvbk1hYxgHIAEoDEgDUg1lbmNyeXB0aW9uTWFjiAEBEi0KD2VuY3J5cHRpb25Ob2'
-    '5jZRgIIAEoDEgEUg9lbmNyeXB0aW9uTm9uY2WIAQEiJQoEVHlwZRIJCgVJTUFHRRAAEgkKBVZJ'
-    'REVPEAESBwoDR0lGEAJCHQobX2Rpc3BsYXlMaW1pdEluTWlsbGlzZWNvbmRzQhAKDl9kb3dubG'
-    '9hZFRva2VuQhAKDl9lbmNyeXB0aW9uS2V5QhAKDl9lbmNyeXB0aW9uTWFjQhIKEF9lbmNyeXB0'
-    'aW9uTm9uY2UapwEKC01lZGlhVXBkYXRlEjYKBHR5cGUYASABKA4yIi5FbmNyeXB0ZWRDb250ZW'
-    '50Lk1lZGlhVXBkYXRlLlR5cGVSBHR5cGUSKAoPdGFyZ2V0TWVzc2FnZUlkGAIgASgJUg90YXJn'
-    'ZXRNZXNzYWdlSWQiNgoEVHlwZRIMCghSRU9QRU5FRBAAEgoKBlNUT1JFRBABEhQKEERFQ1JZUF'
-    'RJT05fRVJST1IQAhp4Cg5Db250YWN0UmVxdWVzdBI5CgR0eXBlGAEgASgOMiUuRW5jcnlwdGVk'
-    'Q29udGVudC5Db250YWN0UmVxdWVzdC5UeXBlUgR0eXBlIisKBFR5cGUSCwoHUkVRVUVTVBAAEg'
-    'oKBlJFSkVDVBABEgoKBkFDQ0VQVBACGtIBCg1Db250YWN0VXBkYXRlEjgKBHR5cGUYASABKA4y'
-    'JC5FbmNyeXB0ZWRDb250ZW50LkNvbnRhY3RVcGRhdGUuVHlwZVIEdHlwZRIhCglhdmF0YXJTdm'
-    'cYAiABKAlIAFIJYXZhdGFyU3ZniAEBEiUKC2Rpc3BsYXlOYW1lGAMgASgJSAFSC2Rpc3BsYXlO'
-    'YW1liAEBIh8KBFR5cGUSCwoHUkVRVUVTVBAAEgoKBlVQREFURRABQgwKCl9hdmF0YXJTdmdCDg'
-    'oMX2Rpc3BsYXlOYW1lGqQBCghQdXNoS2V5cxIzCgR0eXBlGAEgASgOMh8uRW5jcnlwdGVkQ29u'
-    'dGVudC5QdXNoS2V5cy5UeXBlUgR0eXBlEhkKBWtleUlkGAIgASgDSABSBWtleUlkiAEBEhUKA2'
-    'tleRgDIAEoDEgBUgNrZXmIAQEiHwoEVHlwZRILCgdSRVFVRVNUEAASCgoGVVBEQVRFEAFCCAoG'
-    'X2tleUlkQgYKBF9rZXkahwEKCUZsYW1lU3luYxIiCgxmbGFtZUNvdW50ZXIYASABKANSDGZsYW'
-    '1lQ291bnRlchI2ChZsYXN0RmxhbWVDb3VudGVyQ2hhbmdlGAIgASgDUhZsYXN0RmxhbWVDb3Vu'
-    'dGVyQ2hhbmdlEh4KCmJlc3RGcmllbmQYAyABKAhSCmJlc3RGcmllbmRCCgoIX2dyb3VwSWRCFw'
-    'oVX3NlbmRlclByb2ZpbGVDb3VudGVyQg4KDF90ZXh0TWVzc2FnZUIQCg5fbWVzc2FnZVVwZGF0'
-    'ZUIICgZfbWVkaWFCDgoMX21lZGlhVXBkYXRlQhAKDl9jb250YWN0VXBkYXRlQhEKD19jb250YW'
-    'N0UmVxdWVzdEIMCgpfZmxhbWVTeW5jQgsKCV9wdXNoS2V5c0ILCglfcmVhY3Rpb24=');
+    'dGV4dBgCIAEoCVIEdGV4dBIcCgl0aW1lc3RhbXAYAyABKANSCXRpbWVzdGFtcBIrCg5xdW90ZU'
+    '1lc3NhZ2VJZBgEIAEoCUgAUg5xdW90ZU1lc3NhZ2VJZIgBAUIRCg9fcXVvdGVNZXNzYWdlSWQa'
+    'gQEKCFJlYWN0aW9uEigKD3RhcmdldE1lc3NhZ2VJZBgBIAEoCVIPdGFyZ2V0TWVzc2FnZUlkEh'
+    'kKBWVtb2ppGAIgASgJSABSBWVtb2ppiAEBEhsKBnJlbW92ZRgDIAEoCEgBUgZyZW1vdmWIAQFC'
+    'CAoGX2Vtb2ppQgkKB19yZW1vdmUatwIKDU1lc3NhZ2VVcGRhdGUSOAoEdHlwZRgBIAEoDjIkLk'
+    'VuY3J5cHRlZENvbnRlbnQuTWVzc2FnZVVwZGF0ZS5UeXBlUgR0eXBlEi0KD3NlbmRlck1lc3Nh'
+    'Z2VJZBgCIAEoCUgAUg9zZW5kZXJNZXNzYWdlSWSIAQESOgoYbXVsdGlwbGVTZW5kZXJNZXNzYW'
+    'dlSWRzGAMgAygJUhhtdWx0aXBsZVNlbmRlck1lc3NhZ2VJZHMSFwoEdGV4dBgEIAEoCUgBUgR0'
+    'ZXh0iAEBEhwKCXRpbWVzdGFtcBgFIAEoA1IJdGltZXN0YW1wIi0KBFR5cGUSCgoGREVMRVRFEA'
+    'ASDQoJRURJVF9URVhUEAESCgoGT1BFTkVEEAJCEgoQX3NlbmRlck1lc3NhZ2VJZEIHCgVfdGV4'
+    'dBqMBQoFTWVkaWESKAoPc2VuZGVyTWVzc2FnZUlkGAEgASgJUg9zZW5kZXJNZXNzYWdlSWQSMA'
+    'oEdHlwZRgCIAEoDjIcLkVuY3J5cHRlZENvbnRlbnQuTWVkaWEuVHlwZVIEdHlwZRJDChpkaXNw'
+    'bGF5TGltaXRJbk1pbGxpc2Vjb25kcxgDIAEoA0gAUhpkaXNwbGF5TGltaXRJbk1pbGxpc2Vjb2'
+    '5kc4gBARI2ChZyZXF1aXJlc0F1dGhlbnRpY2F0aW9uGAQgASgIUhZyZXF1aXJlc0F1dGhlbnRp'
+    'Y2F0aW9uEhwKCXRpbWVzdGFtcBgFIAEoA1IJdGltZXN0YW1wEisKDnF1b3RlTWVzc2FnZUlkGA'
+    'YgASgJSAFSDnF1b3RlTWVzc2FnZUlkiAEBEikKDWRvd25sb2FkVG9rZW4YByABKAxIAlINZG93'
+    'bmxvYWRUb2tlbogBARIpCg1lbmNyeXB0aW9uS2V5GAggASgMSANSDWVuY3J5cHRpb25LZXmIAQ'
+    'ESKQoNZW5jcnlwdGlvbk1hYxgJIAEoDEgEUg1lbmNyeXB0aW9uTWFjiAEBEi0KD2VuY3J5cHRp'
+    'b25Ob25jZRgKIAEoDEgFUg9lbmNyeXB0aW9uTm9uY2WIAQEiMwoEVHlwZRIMCghSRVVQTE9BRB'
+    'AAEgkKBUlNQUdFEAESCQoFVklERU8QAhIHCgNHSUYQA0IdChtfZGlzcGxheUxpbWl0SW5NaWxs'
+    'aXNlY29uZHNCEQoPX3F1b3RlTWVzc2FnZUlkQhAKDl9kb3dubG9hZFRva2VuQhAKDl9lbmNyeX'
+    'B0aW9uS2V5QhAKDl9lbmNyeXB0aW9uTWFjQhIKEF9lbmNyeXB0aW9uTm9uY2UapwEKC01lZGlh'
+    'VXBkYXRlEjYKBHR5cGUYASABKA4yIi5FbmNyeXB0ZWRDb250ZW50Lk1lZGlhVXBkYXRlLlR5cG'
+    'VSBHR5cGUSKAoPdGFyZ2V0TWVzc2FnZUlkGAIgASgJUg90YXJnZXRNZXNzYWdlSWQiNgoEVHlw'
+    'ZRIMCghSRU9QRU5FRBAAEgoKBlNUT1JFRBABEhQKEERFQ1JZUFRJT05fRVJST1IQAhp4Cg5Db2'
+    '50YWN0UmVxdWVzdBI5CgR0eXBlGAEgASgOMiUuRW5jcnlwdGVkQ29udGVudC5Db250YWN0UmVx'
+    'dWVzdC5UeXBlUgR0eXBlIisKBFR5cGUSCwoHUkVRVUVTVBAAEgoKBlJFSkVDVBABEgoKBkFDQ0'
+    'VQVBACGtIBCg1Db250YWN0VXBkYXRlEjgKBHR5cGUYASABKA4yJC5FbmNyeXB0ZWRDb250ZW50'
+    'LkNvbnRhY3RVcGRhdGUuVHlwZVIEdHlwZRIhCglhdmF0YXJTdmcYAiABKAlIAFIJYXZhdGFyU3'
+    'ZniAEBEiUKC2Rpc3BsYXlOYW1lGAMgASgJSAFSC2Rpc3BsYXlOYW1liAEBIh8KBFR5cGUSCwoH'
+    'UkVRVUVTVBAAEgoKBlVQREFURRABQgwKCl9hdmF0YXJTdmdCDgoMX2Rpc3BsYXlOYW1lGtUBCg'
+    'hQdXNoS2V5cxIzCgR0eXBlGAEgASgOMh8uRW5jcnlwdGVkQ29udGVudC5QdXNoS2V5cy5UeXBl'
+    'UgR0eXBlEhkKBWtleUlkGAIgASgDSABSBWtleUlkiAEBEhUKA2tleRgDIAEoDEgBUgNrZXmIAQ'
+    'ESIQoJY3JlYXRlZEF0GAQgASgDSAJSCWNyZWF0ZWRBdIgBASIfCgRUeXBlEgsKB1JFUVVFU1QQ'
+    'ABIKCgZVUERBVEUQAUIICgZfa2V5SWRCBgoEX2tleUIMCgpfY3JlYXRlZEF0GocBCglGbGFtZV'
+    'N5bmMSIgoMZmxhbWVDb3VudGVyGAEgASgDUgxmbGFtZUNvdW50ZXISNgoWbGFzdEZsYW1lQ291'
+    'bnRlckNoYW5nZRgCIAEoA1IWbGFzdEZsYW1lQ291bnRlckNoYW5nZRIeCgpiZXN0RnJpZW5kGA'
+    'MgASgIUgpiZXN0RnJpZW5kQgoKCF9ncm91cElkQhcKFV9zZW5kZXJQcm9maWxlQ291bnRlckIO'
+    'CgxfdGV4dE1lc3NhZ2VCEAoOX21lc3NhZ2VVcGRhdGVCCAoGX21lZGlhQg4KDF9tZWRpYVVwZG'
+    'F0ZUIQCg5fY29udGFjdFVwZGF0ZUIRCg9fY29udGFjdFJlcXVlc3RCDAoKX2ZsYW1lU3luY0IL'
+    'CglfcHVzaEtleXNCCwoJX3JlYWN0aW9u');
 

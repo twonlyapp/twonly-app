@@ -65,7 +65,7 @@ Future<void> handleNewMessage(int fromUserId, Uint8List body) async {
         Log.info(
           'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
         );
-        await tryToSendCompleteMessage(receiptId);
+        await tryToSendCompleteMessage(receiptId: receiptId, reupload: true);
       }
 
     case Message_Type.CIPHERTEXT:
@@ -97,8 +97,10 @@ Future<void> handleNewMessage(int fromUserId, Uint8List body) async {
             contactWillSendsReceipt: const Value(false),
           ),
         );
-        await tryToSendCompleteMessage(receiptId);
+        await tryToSendCompleteMessage(receiptId: receiptId);
       }
+    case Message_Type.TEST_NOTIFICATION:
+      return;
   }
 }
 

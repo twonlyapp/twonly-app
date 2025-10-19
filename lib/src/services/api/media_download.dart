@@ -119,7 +119,7 @@ Future<void> handleDownloadStatusUpdateInternal(
 
 Mutex protectDownload = Mutex();
 
-Future<void> startDownloadMedia(Message message, bool force) async {
+Future<void> startDownloadMedia(MediaFile media, bool force) async {
   Log.info(
     'Download blocked for ${message.messageId} because of network state.',
   );

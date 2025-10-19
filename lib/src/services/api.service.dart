@@ -114,7 +114,7 @@ class ApiService {
     _channel = null;
     isAuthenticated = false;
     globalCallbackConnectionState(isConnected: false);
-    await twonlyDB.messagesDao.resetPendingDownloadState();
+    await twonlyDB.mediaFilesDao.resetPendingDownloadState();
   }
 
   Future<void> startReconnectionTimer() async {

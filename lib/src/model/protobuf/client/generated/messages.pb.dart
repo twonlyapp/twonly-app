@@ -218,6 +218,7 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
   factory EncryptedContent_TextMessage({
     $core.String? senderMessageId,
     $core.String? text,
+    $fixnum.Int64? timestamp,
     $core.String? quoteMessageId,
   }) {
     final $result = create();
@@ -226,6 +227,9 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
     }
     if (text != null) {
       $result.text = text;
+    }
+    if (timestamp != null) {
+      $result.timestamp = timestamp;
     }
     if (quoteMessageId != null) {
       $result.quoteMessageId = quoteMessageId;
@@ -239,7 +243,8 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.TextMessage', createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'senderMessageId', protoName: 'senderMessageId')
     ..aOS(2, _omitFieldNames ? '' : 'text')
-    ..aOS(3, _omitFieldNames ? '' : 'quoteMessageId', protoName: 'quoteMessageId')
+    ..aInt64(3, _omitFieldNames ? '' : 'timestamp')
+    ..aOS(4, _omitFieldNames ? '' : 'quoteMessageId', protoName: 'quoteMessageId')
     ..hasRequiredFields = false
   ;
 
@@ -283,13 +288,22 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
   void clearText() => clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get quoteMessageId => $_getSZ(2);
+  $fixnum.Int64 get timestamp => $_getI64(2);
   @$pb.TagNumber(3)
-  set quoteMessageId($core.String v) { $_setString(2, v); }
+  set timestamp($fixnum.Int64 v) { $_setInt64(2, v); }
   @$pb.TagNumber(3)
-  $core.bool hasQuoteMessageId() => $_has(2);
+  $core.bool hasTimestamp() => $_has(2);
   @$pb.TagNumber(3)
-  void clearQuoteMessageId() => clearField(3);
+  void clearTimestamp() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get quoteMessageId => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set quoteMessageId($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasQuoteMessageId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearQuoteMessageId() => clearField(4);
 }
 
 class EncryptedContent_Reaction extends $pb.GeneratedMessage {
@@ -374,6 +388,7 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
   factory EncryptedContent_MessageUpdate({
     EncryptedContent_MessageUpdate_Type? type,
     $core.String? senderMessageId,
+    $core.Iterable<$core.String>? multipleSenderMessageIds,
     $core.String? text,
     $fixnum.Int64? timestamp,
   }) {
@@ -383,6 +398,9 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
     }
     if (senderMessageId != null) {
       $result.senderMessageId = senderMessageId;
+    }
+    if (multipleSenderMessageIds != null) {
+      $result.multipleSenderMessageIds.addAll(multipleSenderMessageIds);
     }
     if (text != null) {
       $result.text = text;
@@ -399,8 +417,9 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.MessageUpdate', createEmptyInstance: create)
     ..e<EncryptedContent_MessageUpdate_Type>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedContent_MessageUpdate_Type.DELETE, valueOf: EncryptedContent_MessageUpdate_Type.valueOf, enumValues: EncryptedContent_MessageUpdate_Type.values)
     ..aOS(2, _omitFieldNames ? '' : 'senderMessageId', protoName: 'senderMessageId')
-    ..aOS(3, _omitFieldNames ? '' : 'text')
-    ..aInt64(4, _omitFieldNames ? '' : 'timestamp')
+    ..pPS(3, _omitFieldNames ? '' : 'multipleSenderMessageIds', protoName: 'multipleSenderMessageIds')
+    ..aOS(4, _omitFieldNames ? '' : 'text')
+    ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
     ..hasRequiredFields = false
   ;
 
@@ -444,22 +463,25 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
   void clearSenderMessageId() => clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get text => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set text($core.String v) { $_setString(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasText() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearText() => clearField(3);
+  $core.List<$core.String> get multipleSenderMessageIds => $_getList(2);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get timestamp => $_getI64(3);
+  $core.String get text => $_getSZ(3);
   @$pb.TagNumber(4)
-  set timestamp($fixnum.Int64 v) { $_setInt64(3, v); }
+  set text($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(4)
-  $core.bool hasTimestamp() => $_has(3);
+  $core.bool hasText() => $_has(3);
   @$pb.TagNumber(4)
-  void clearTimestamp() => clearField(4);
+  void clearText() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get timestamp => $_getI64(4);
+  @$pb.TagNumber(5)
+  set timestamp($fixnum.Int64 v) { $_setInt64(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasTimestamp() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearTimestamp() => clearField(5);
 }
 
 class EncryptedContent_Media extends $pb.GeneratedMessage {
@@ -468,6 +490,8 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
     EncryptedContent_Media_Type? type,
     $fixnum.Int64? displayLimitInMilliseconds,
     $core.bool? requiresAuthentication,
+    $fixnum.Int64? timestamp,
+    $core.String? quoteMessageId,
     $core.List<$core.int>? downloadToken,
     $core.List<$core.int>? encryptionKey,
     $core.List<$core.int>? encryptionMac,
@@ -485,6 +509,12 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
     }
     if (requiresAuthentication != null) {
       $result.requiresAuthentication = requiresAuthentication;
+    }
+    if (timestamp != null) {
+      $result.timestamp = timestamp;
+    }
+    if (quoteMessageId != null) {
+      $result.quoteMessageId = quoteMessageId;
     }
     if (downloadToken != null) {
       $result.downloadToken = downloadToken;
@@ -506,13 +536,15 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.Media', createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'senderMessageId', protoName: 'senderMessageId')
-    ..e<EncryptedContent_Media_Type>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedContent_Media_Type.IMAGE, valueOf: EncryptedContent_Media_Type.valueOf, enumValues: EncryptedContent_Media_Type.values)
+    ..e<EncryptedContent_Media_Type>(2, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedContent_Media_Type.REUPLOAD, valueOf: EncryptedContent_Media_Type.valueOf, enumValues: EncryptedContent_Media_Type.values)
     ..aInt64(3, _omitFieldNames ? '' : 'displayLimitInMilliseconds', protoName: 'displayLimitInMilliseconds')
     ..aOB(4, _omitFieldNames ? '' : 'requiresAuthentication', protoName: 'requiresAuthentication')
-    ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY, protoName: 'downloadToken')
-    ..a<$core.List<$core.int>>(6, _omitFieldNames ? '' : 'encryptionKey', $pb.PbFieldType.OY, protoName: 'encryptionKey')
-    ..a<$core.List<$core.int>>(7, _omitFieldNames ? '' : 'encryptionMac', $pb.PbFieldType.OY, protoName: 'encryptionMac')
-    ..a<$core.List<$core.int>>(8, _omitFieldNames ? '' : 'encryptionNonce', $pb.PbFieldType.OY, protoName: 'encryptionNonce')
+    ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
+    ..aOS(6, _omitFieldNames ? '' : 'quoteMessageId', protoName: 'quoteMessageId')
+    ..a<$core.List<$core.int>>(7, _omitFieldNames ? '' : 'downloadToken', $pb.PbFieldType.OY, protoName: 'downloadToken')
+    ..a<$core.List<$core.int>>(8, _omitFieldNames ? '' : 'encryptionKey', $pb.PbFieldType.OY, protoName: 'encryptionKey')
+    ..a<$core.List<$core.int>>(9, _omitFieldNames ? '' : 'encryptionMac', $pb.PbFieldType.OY, protoName: 'encryptionMac')
+    ..a<$core.List<$core.int>>(10, _omitFieldNames ? '' : 'encryptionNonce', $pb.PbFieldType.OY, protoName: 'encryptionNonce')
     ..hasRequiredFields = false
   ;
 
@@ -574,40 +606,58 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
   void clearRequiresAuthentication() => clearField(4);
 
   @$pb.TagNumber(5)
-  $core.List<$core.int> get downloadToken => $_getN(4);
+  $fixnum.Int64 get timestamp => $_getI64(4);
   @$pb.TagNumber(5)
-  set downloadToken($core.List<$core.int> v) { $_setBytes(4, v); }
+  set timestamp($fixnum.Int64 v) { $_setInt64(4, v); }
   @$pb.TagNumber(5)
-  $core.bool hasDownloadToken() => $_has(4);
+  $core.bool hasTimestamp() => $_has(4);
   @$pb.TagNumber(5)
-  void clearDownloadToken() => clearField(5);
+  void clearTimestamp() => clearField(5);
 
   @$pb.TagNumber(6)
-  $core.List<$core.int> get encryptionKey => $_getN(5);
+  $core.String get quoteMessageId => $_getSZ(5);
   @$pb.TagNumber(6)
-  set encryptionKey($core.List<$core.int> v) { $_setBytes(5, v); }
+  set quoteMessageId($core.String v) { $_setString(5, v); }
   @$pb.TagNumber(6)
-  $core.bool hasEncryptionKey() => $_has(5);
+  $core.bool hasQuoteMessageId() => $_has(5);
   @$pb.TagNumber(6)
-  void clearEncryptionKey() => clearField(6);
+  void clearQuoteMessageId() => clearField(6);
 
   @$pb.TagNumber(7)
-  $core.List<$core.int> get encryptionMac => $_getN(6);
+  $core.List<$core.int> get downloadToken => $_getN(6);
   @$pb.TagNumber(7)
-  set encryptionMac($core.List<$core.int> v) { $_setBytes(6, v); }
+  set downloadToken($core.List<$core.int> v) { $_setBytes(6, v); }
   @$pb.TagNumber(7)
-  $core.bool hasEncryptionMac() => $_has(6);
+  $core.bool hasDownloadToken() => $_has(6);
   @$pb.TagNumber(7)
-  void clearEncryptionMac() => clearField(7);
+  void clearDownloadToken() => clearField(7);
 
   @$pb.TagNumber(8)
-  $core.List<$core.int> get encryptionNonce => $_getN(7);
+  $core.List<$core.int> get encryptionKey => $_getN(7);
   @$pb.TagNumber(8)
-  set encryptionNonce($core.List<$core.int> v) { $_setBytes(7, v); }
+  set encryptionKey($core.List<$core.int> v) { $_setBytes(7, v); }
   @$pb.TagNumber(8)
-  $core.bool hasEncryptionNonce() => $_has(7);
+  $core.bool hasEncryptionKey() => $_has(7);
   @$pb.TagNumber(8)
-  void clearEncryptionNonce() => clearField(8);
+  void clearEncryptionKey() => clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.List<$core.int> get encryptionMac => $_getN(8);
+  @$pb.TagNumber(9)
+  set encryptionMac($core.List<$core.int> v) { $_setBytes(8, v); }
+  @$pb.TagNumber(9)
+  $core.bool hasEncryptionMac() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearEncryptionMac() => clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.List<$core.int> get encryptionNonce => $_getN(9);
+  @$pb.TagNumber(10)
+  set encryptionNonce($core.List<$core.int> v) { $_setBytes(9, v); }
+  @$pb.TagNumber(10)
+  $core.bool hasEncryptionNonce() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearEncryptionNonce() => clearField(10);
 }
 
 class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
@@ -807,6 +857,7 @@ class EncryptedContent_PushKeys extends $pb.GeneratedMessage {
     EncryptedContent_PushKeys_Type? type,
     $fixnum.Int64? keyId,
     $core.List<$core.int>? key,
+    $fixnum.Int64? createdAt,
   }) {
     final $result = create();
     if (type != null) {
@@ -818,6 +869,9 @@ class EncryptedContent_PushKeys extends $pb.GeneratedMessage {
     if (key != null) {
       $result.key = key;
     }
+    if (createdAt != null) {
+      $result.createdAt = createdAt;
+    }
     return $result;
   }
   EncryptedContent_PushKeys._() : super();
@@ -828,6 +882,7 @@ class EncryptedContent_PushKeys extends $pb.GeneratedMessage {
     ..e<EncryptedContent_PushKeys_Type>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedContent_PushKeys_Type.REQUEST, valueOf: EncryptedContent_PushKeys_Type.valueOf, enumValues: EncryptedContent_PushKeys_Type.values)
     ..aInt64(2, _omitFieldNames ? '' : 'keyId', protoName: 'keyId')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'key', $pb.PbFieldType.OY)
+    ..aInt64(4, _omitFieldNames ? '' : 'createdAt', protoName: 'createdAt')
     ..hasRequiredFields = false
   ;
 
@@ -878,6 +933,15 @@ class EncryptedContent_PushKeys extends $pb.GeneratedMessage {
   $core.bool hasKey() => $_has(2);
   @$pb.TagNumber(3)
   void clearKey() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get createdAt => $_getI64(3);
+  @$pb.TagNumber(4)
+  set createdAt($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasCreatedAt() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCreatedAt() => clearField(4);
 }
 
 class EncryptedContent_FlameSync extends $pb.GeneratedMessage {

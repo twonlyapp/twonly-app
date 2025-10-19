@@ -7,7 +7,7 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/push_notification.pbenum.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart'

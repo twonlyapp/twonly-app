@@ -64,7 +64,7 @@ const PushNotification$json = {
   '1': 'PushNotification',
   '2': [
     {'1': 'kind', '3': 1, '4': 1, '5': 14, '6': '.PushKind', '10': 'kind'},
-    {'1': 'messageId', '3': 2, '4': 1, '5': 3, '9': 0, '10': 'messageId', '17': true},
+    {'1': 'messageId', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'messageId', '17': true},
     {'1': 'reactionContent', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'reactionContent', '17': true},
   ],
   '8': [
@@ -76,7 +76,7 @@ const PushNotification$json = {
 /// Descriptor for `PushNotification`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List pushNotificationDescriptor = $convert.base64Decode(
     'ChBQdXNoTm90aWZpY2F0aW9uEh0KBGtpbmQYASABKA4yCS5QdXNoS2luZFIEa2luZBIhCgltZX'
-    'NzYWdlSWQYAiABKANIAFIJbWVzc2FnZUlkiAEBEi0KD3JlYWN0aW9uQ29udGVudBgDIAEoCUgB'
+    'NzYWdlSWQYAiABKAlIAFIJbWVzc2FnZUlkiAEBEi0KD3JlYWN0aW9uQ29udGVudBgDIAEoCUgB'
     'Ug9yZWFjdGlvbkNvbnRlbnSIAQFCDAoKX21lc3NhZ2VJZEISChBfcmVhY3Rpb25Db250ZW50');
 
 @$core.Deprecated('Use pushUsersDescriptor instead')
@@ -98,7 +98,7 @@ const PushUser$json = {
     {'1': 'userId', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'displayName', '3': 2, '4': 1, '5': 9, '10': 'displayName'},
     {'1': 'blocked', '3': 3, '4': 1, '5': 8, '10': 'blocked'},
-    {'1': 'lastMessageId', '3': 4, '4': 1, '5': 3, '9': 0, '10': 'lastMessageId', '17': true},
+    {'1': 'lastMessageId', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'lastMessageId', '17': true},
     {'1': 'pushKeys', '3': 5, '4': 3, '5': 11, '6': '.PushKey', '10': 'pushKeys'},
   ],
   '8': [
@@ -110,7 +110,7 @@ const PushUser$json = {
 final $typed_data.Uint8List pushUserDescriptor = $convert.base64Decode(
     'CghQdXNoVXNlchIWCgZ1c2VySWQYASABKANSBnVzZXJJZBIgCgtkaXNwbGF5TmFtZRgCIAEoCV'
     'ILZGlzcGxheU5hbWUSGAoHYmxvY2tlZBgDIAEoCFIHYmxvY2tlZBIpCg1sYXN0TWVzc2FnZUlk'
-    'GAQgASgDSABSDWxhc3RNZXNzYWdlSWSIAQESJAoIcHVzaEtleXMYBSADKAsyCC5QdXNoS2V5Ug'
+    'GAQgASgJSABSDWxhc3RNZXNzYWdlSWSIAQESJAoIcHVzaEtleXMYBSADKAsyCC5QdXNoS2V5Ug'
     'hwdXNoS2V5c0IQCg5fbGFzdE1lc3NhZ2VJZA==');
 
 @$core.Deprecated('Use pushKeyDescriptor instead')

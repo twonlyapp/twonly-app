@@ -12,10 +12,18 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   GroupsDao(super.db);
 
   Future<bool> isContactInGroup(int contactId, String groupId) async {
-    final entry = await (select(groupMembers)
-          ..where(
-              (t) => t.contactId.equals(contactId) & t.groupId.equals(groupId)))
+    final entry = await (select(groupMembers)..where(
+            // ignore: require_trailing_commas
+            (t) => t.contactId.equals(contactId) & t.groupId.equals(groupId)))
         .getSingleOrNull();
     return entry != null;
+  }
+
+  Future<void> updateGroup(
+    String groupId,
+    GroupsCompanion updates,
+  ) async {
+    await (update(groups)..where((c) => c.groupId.equals(groupId)))
+        .write(updates);
   }
 }

@@ -15,10 +15,13 @@ class Receipts extends Table {
       .nullable()
       .references(Messages, #messageId, onDelete: KeyAction.cascade)();
 
+  /// This is the protobuf 'Message'
   BlobColumn get message => blob()();
 
   BoolColumn get contactWillSendsReceipt =>
       boolean().withDefault(const Constant(true))();
+
+  DateTimeColumn get ackByServerAt => dateTime().nullable()();
 
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
   DateTimeColumn get lastRetry => dateTime().nullable()();

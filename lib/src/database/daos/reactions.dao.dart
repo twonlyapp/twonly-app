@@ -31,11 +31,13 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
             ))
           .go();
       if (emoji != null) {
-        await into(reactions).insert(ReactionsCompanion(
-          messageId: Value(messageId),
-          emoji: Value(emoji),
-          senderId: Value(contactId),
-        ));
+        await into(reactions).insert(
+          ReactionsCompanion(
+            messageId: Value(messageId),
+            emoji: Value(emoji),
+            senderId: Value(contactId),
+          ),
+        );
       }
     } catch (e) {
       Log.error(e);

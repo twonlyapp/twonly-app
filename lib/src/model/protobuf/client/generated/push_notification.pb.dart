@@ -113,7 +113,7 @@ class EncryptedPushNotification extends $pb.GeneratedMessage {
 class PushNotification extends $pb.GeneratedMessage {
   factory PushNotification({
     PushKind? kind,
-    $fixnum.Int64? messageId,
+    $core.String? messageId,
     $core.String? reactionContent,
   }) {
     final $result = create();
@@ -134,7 +134,7 @@ class PushNotification extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PushNotification', createEmptyInstance: create)
     ..e<PushKind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE, defaultOrMaker: PushKind.reaction, valueOf: PushKind.valueOf, enumValues: PushKind.values)
-    ..aInt64(2, _omitFieldNames ? '' : 'messageId', protoName: 'messageId')
+    ..aOS(2, _omitFieldNames ? '' : 'messageId', protoName: 'messageId')
     ..aOS(3, _omitFieldNames ? '' : 'reactionContent', protoName: 'reactionContent')
     ..hasRequiredFields = false
   ;
@@ -170,9 +170,9 @@ class PushNotification extends $pb.GeneratedMessage {
   void clearKind() => clearField(1);
 
   @$pb.TagNumber(2)
-  $fixnum.Int64 get messageId => $_getI64(1);
+  $core.String get messageId => $_getSZ(1);
   @$pb.TagNumber(2)
-  set messageId($fixnum.Int64 v) { $_setInt64(1, v); }
+  set messageId($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
   $core.bool hasMessageId() => $_has(1);
   @$pb.TagNumber(2)
@@ -237,7 +237,7 @@ class PushUser extends $pb.GeneratedMessage {
     $fixnum.Int64? userId,
     $core.String? displayName,
     $core.bool? blocked,
-    $fixnum.Int64? lastMessageId,
+    $core.String? lastMessageId,
     $core.Iterable<PushKey>? pushKeys,
   }) {
     final $result = create();
@@ -266,7 +266,7 @@ class PushUser extends $pb.GeneratedMessage {
     ..aInt64(1, _omitFieldNames ? '' : 'userId', protoName: 'userId')
     ..aOS(2, _omitFieldNames ? '' : 'displayName', protoName: 'displayName')
     ..aOB(3, _omitFieldNames ? '' : 'blocked')
-    ..aInt64(4, _omitFieldNames ? '' : 'lastMessageId', protoName: 'lastMessageId')
+    ..aOS(4, _omitFieldNames ? '' : 'lastMessageId', protoName: 'lastMessageId')
     ..pc<PushKey>(5, _omitFieldNames ? '' : 'pushKeys', $pb.PbFieldType.PM, protoName: 'pushKeys', subBuilder: PushKey.create)
     ..hasRequiredFields = false
   ;
@@ -320,9 +320,9 @@ class PushUser extends $pb.GeneratedMessage {
   void clearBlocked() => clearField(3);
 
   @$pb.TagNumber(4)
-  $fixnum.Int64 get lastMessageId => $_getI64(3);
+  $core.String get lastMessageId => $_getSZ(3);
   @$pb.TagNumber(4)
-  set lastMessageId($fixnum.Int64 v) { $_setInt64(3, v); }
+  set lastMessageId($core.String v) { $_setString(3, v); }
   @$pb.TagNumber(4)
   $core.bool hasLastMessageId() => $_has(3);
   @$pb.TagNumber(4)

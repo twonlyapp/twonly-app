@@ -15,8 +15,10 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
 
   Future<void> confirmReceipt(String receiptId, int fromUserId) async {
     final receipt = await (select(receipts)
-          ..where((t) =>
-              t.receiptId.equals(receiptId) & t.contactId.equals(fromUserId)))
+          ..where(
+            (t) =>
+                t.receiptId.equals(receiptId) & t.contactId.equals(fromUserId),
+          ))
         .getSingleOrNull();
 
     if (receipt == null) return;
@@ -26,7 +28,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
             ..where((t) => t.messageId.equals(receipt.messageId!)))
           .write(
         const MessagesCompanion(
-          acknowledgeByUser: Value(true),
+          ackByUser: Value(true),
         ),
       );
     }
@@ -35,6 +37,14 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
           ..where(
             (t) =>
                 t.receiptId.equals(receiptId) & t.contactId.equals(fromUserId),
+          ))
+        .go();
+  }
+
+  Future<void> deleteReceipt(String receiptId) async {
+    await (delete(receipts)
+          ..where(
+            (t) => t.receiptId.equals(receiptId),
           ))
         .go();
   }
@@ -48,5 +58,34 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
       Log.error(e);
       return null;
     }
+  }
+
+  Future<Receipt?> getReceiptById(String receiptId) async {
+    try {
+      return await (select(receipts)
+            ..where(
+              (t) => t.receiptId.equals(receiptId),
+            ))
+          .getSingleOrNull();
+    } catch (e) {
+      Log.error(e);
+      return null;
+    }
+  }
+
+  Future<List<Receipt>> getReceiptsNotAckByServer() async {
+    return (select(receipts)
+          ..where(
+            (t) => t.ackByServerAt.isNull(),
+          ))
+        .get();
+  }
+
+  Future<void> updateReceipt(
+    String receiptId,
+    ReceiptsCompanion updates,
+  ) async {
+    await (update(receipts)..where((c) => c.receiptId.equals(receiptId)))
+        .write(updates);
   }
 }

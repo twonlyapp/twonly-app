@@ -18,12 +18,14 @@ class Message_Type extends $pb.ProtobufEnum {
   static const Message_Type PLAINTEXT_CONTENT = Message_Type._(1, _omitEnumNames ? '' : 'PLAINTEXT_CONTENT');
   static const Message_Type CIPHERTEXT = Message_Type._(2, _omitEnumNames ? '' : 'CIPHERTEXT');
   static const Message_Type PREKEY_BUNDLE = Message_Type._(3, _omitEnumNames ? '' : 'PREKEY_BUNDLE');
+  static const Message_Type TEST_NOTIFICATION = Message_Type._(4, _omitEnumNames ? '' : 'TEST_NOTIFICATION');
 
   static const $core.List<Message_Type> values = <Message_Type> [
     SENDER_DELIVERY_RECEIPT,
     PLAINTEXT_CONTENT,
     CIPHERTEXT,
     PREKEY_BUNDLE,
+    TEST_NOTIFICATION,
   ];
 
   static final $core.Map<$core.int, Message_Type> _byValue = $pb.ProtobufEnum.initByValue(values);
@@ -65,11 +67,13 @@ class EncryptedContent_MessageUpdate_Type extends $pb.ProtobufEnum {
 }
 
 class EncryptedContent_Media_Type extends $pb.ProtobufEnum {
-  static const EncryptedContent_Media_Type IMAGE = EncryptedContent_Media_Type._(0, _omitEnumNames ? '' : 'IMAGE');
-  static const EncryptedContent_Media_Type VIDEO = EncryptedContent_Media_Type._(1, _omitEnumNames ? '' : 'VIDEO');
-  static const EncryptedContent_Media_Type GIF = EncryptedContent_Media_Type._(2, _omitEnumNames ? '' : 'GIF');
+  static const EncryptedContent_Media_Type REUPLOAD = EncryptedContent_Media_Type._(0, _omitEnumNames ? '' : 'REUPLOAD');
+  static const EncryptedContent_Media_Type IMAGE = EncryptedContent_Media_Type._(1, _omitEnumNames ? '' : 'IMAGE');
+  static const EncryptedContent_Media_Type VIDEO = EncryptedContent_Media_Type._(2, _omitEnumNames ? '' : 'VIDEO');
+  static const EncryptedContent_Media_Type GIF = EncryptedContent_Media_Type._(3, _omitEnumNames ? '' : 'GIF');
 
   static const $core.List<EncryptedContent_Media_Type> values = <EncryptedContent_Media_Type> [
+    REUPLOAD,
     IMAGE,
     VIDEO,
     GIF,

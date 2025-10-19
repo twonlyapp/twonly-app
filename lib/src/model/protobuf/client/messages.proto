@@ -6,6 +6,7 @@ message Message {
         PLAINTEXT_CONTENT = 1;
         CIPHERTEXT = 2;
         PREKEY_BUNDLE = 3;
+        TEST_NOTIFICATION = 4;
     }
     Type type = 1;
     string receiptId = 2;
@@ -46,7 +47,8 @@ message EncryptedContent {
     message TextMessage {
         string senderMessageId = 1;
         string text = 2;
-        optional string quoteMessageId = 3;
+        int64 timestamp = 3;
+        optional string quoteMessageId = 4;
     }
 
     message Reaction {
@@ -62,27 +64,31 @@ message EncryptedContent {
             OPENED = 2;
         }
         Type type = 1;
-        string senderMessageId = 2;
-        optional string text = 3;
-        optional int64 timestamp = 4;
+        optional string senderMessageId = 2;
+        repeated string multipleSenderMessageIds = 3;
+        optional string text = 4;
+        int64 timestamp = 5;
     }
 
     message Media {
         enum Type {
-            IMAGE = 0;
-            VIDEO = 1;
-            GIF = 2;
+            REUPLOAD = 0;
+            IMAGE = 1;
+            VIDEO = 2;
+            GIF = 3;
         }
 
         string senderMessageId = 1;
         Type type = 2;
         optional int64 displayLimitInMilliseconds = 3;
         bool requiresAuthentication = 4;
+        int64 timestamp = 5;
+        optional string quoteMessageId = 6;
 
-        optional bytes downloadToken = 5;
-        optional bytes encryptionKey = 6;
-        optional bytes encryptionMac = 7;
-        optional bytes encryptionNonce = 8;
+        optional bytes downloadToken = 7;
+        optional bytes encryptionKey = 8;
+        optional bytes encryptionMac = 9;
+        optional bytes encryptionNonce = 10;
     }
 
     message MediaUpdate {
@@ -124,6 +130,7 @@ message EncryptedContent {
         Type type = 1;
         optional int64 keyId = 2;
         optional bytes key = 3;
+        optional int64 createdAt = 4;
     }
 
     message FlameSync {

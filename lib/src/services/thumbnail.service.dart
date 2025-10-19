@@ -2,8 +2,22 @@ import 'dart:io';
 
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+
+
+Future<void> createThumbnailForMediaFile(MediaFile media) async {
+
+  switch (media.type) {
+    case MediaType.image:
+      TODO
+      break;
+    default:
+  }
+
+}
 
 Future<void> createThumbnailsForImage(File file) async {
   final fileExtension = file.path.split('.').last.toLowerCase();

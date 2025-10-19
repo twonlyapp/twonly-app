@@ -7,16 +7,15 @@ import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/misc.dart';
 
 /// This caused some troubles, so protection the encryption...
 final lockingSignalEncryption = Mutex();
 
-Future<Uint8List?> signalEncryptMessage(
+Future<CiphertextMessage?> signalEncryptMessage(
   int target,
   Uint8List plaintextContent,
 ) async {
-  return lockingSignalEncryption.protect<Uint8List?>(() async {
+  return lockingSignalEncryption.protect<CiphertextMessage?>(() async {
     try {
       final signalStore = (await getSignalStore())!;
       final address = SignalProtocolAddress(target.toString(), defaultDeviceId);
@@ -75,14 +74,7 @@ Future<Uint8List?> signalEncryptMessage(
           Log.error('did not get the identity of the remote address');
         }
       }
-
-      final ciphertext = await session.encrypt(plaintextContent);
-
-      final b = BytesBuilder()
-        ..add(ciphertext.serialize())
-        ..add(intToBytes(ciphertext.getType()));
-
-      return b.takeBytes();
+      return await session.encrypt(plaintextContent);
     } catch (e) {
       Log.error(e.toString());
       return null;

@@ -1,92 +1,158 @@
+import 'dart:async';
 
+import 'package:drift/drift.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/api/media_download.dart';
+import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/mediafile.service.dart';
+import 'package:twonly/src/services/thumbnail.service.dart';
+import 'package:twonly/src/utils/log.dart';
 
-Future<void> handleMedia(int fromUserId, String groupId, EncryptedContent_Media media) async {
-TODO
-}
+Future<void> handleMedia(
+  int fromUserId,
+  String groupId,
+  EncryptedContent_Media media,
+) async {
+  Log.info(
+    'Got a media message: ${media.senderMessageId} from $groupId with type ${media.type}',
+  );
 
-Future<void> handleMediaUpdate(int fromUserId, String groupId, EncryptedContent_MediaUpdate mediaUpdate) async {
-TODO
+  late MediaType mediaType;
+  switch (media.type) {
+    case EncryptedContent_Media_Type.REUPLOAD:
+      final message = await twonlyDB.messagesDao
+          .getMessageById(media.senderMessageId)
+          .getSingleOrNull();
+      if (message == null ||
+          message.senderId != fromUserId ||
+          message.mediaId == null) {
+        return;
+      }
 
+      // in case there was already a downloaded file delete it...
+      await removeMediaFile(message.mediaId!);
 
-  // switch (message.kind) {
-  //   case MessageKind.receiveMediaError:
-  // if (message.messageReceiverId != null) {
-  //   final openedMessage = await twonlyDB.messagesDao
-  //       .getMessageByIdAndContactId(fromUserId, message.messageReceiverId!)
-  //       .getSingleOrNull();
-
-  //   if (openedMessage != null) {
-  //     /// message found
-
-  //     /// checks if
-  //     ///   1. this was a media upload
-  //     ///   2. the media was not already retransmitted
-  //     ///   3. the media was send in the last two days
-  //     if (openedMessage.mediaUploadId != null &&
-  //         openedMessage.mediaRetransmissionState ==
-  //             MediaRetransmitting.none &&
-  //         openedMessage.sendAt
-  //             .isAfter(DateTime.now().subtract(const Duration(days: 2)))) {
-  //       // reset the media upload state to pending,
-  //       // this will cause the media to be re-encrypted again
-  //       await twonlyDB.mediaUploadsDao.updateMediaUpload(
-  //         openedMessage.mediaUploadId!,
-  //         const MediaUploadsCompanion(
-  //           state: Value(
-  //             UploadState.pending,
-  //           ),
-  //         ),
-  //       );
-  //       // reset the message upload so the upload will be done again
-  //       await twonlyDB.messagesDao.updateMessageByOtherUser(
-  //         fromUserId,
-  //         message.messageReceiverId!,
-  //         const MessagesCompanion(
-  //           downloadState: Value(DownloadState.pending),
-  //           mediaRetransmissionState:
-  //               Value(MediaRetransmitting.retransmitted),
-  //         ),
-  //       );
-  //       unawaited(retryMediaUpload(false));
-  //     } else {
-  //       await twonlyDB.messagesDao.updateMessageByOtherUser(
-  //         fromUserId,
-  //         message.messageReceiverId!,
-  //         const MessagesCompanion(
-  //           errorWhileSending: Value(true),
-  //         ),
-  //       );
-  //     }
-  //   }
-  // }
-
-
- if (message.kind == MessageKind.storedMediaFile) {
-    if (message.messageReceiverId != null) {
-      /// stored media file just updates the message
-      await twonlyDB.messagesDao.updateMessageByOtherUser(
-        fromUserId,
-        message.messageReceiverId!,
-        const MessagesCompanion(
-          mediaStored: Value(true),
-          errorWhileSending: Value(false),
+      await twonlyDB.mediaFilesDao.updateMedia(
+        message.mediaId!,
+        MediaFilesCompanion(
+          downloadState: const Value(DownloadState.pending),
+          downloadToken: Value(Uint8List.fromList(media.downloadToken)),
+          encryptionKey: Value(Uint8List.fromList(media.encryptionKey)),
+          encryptionMac: Value(Uint8List.fromList(media.encryptionMac)),
+          encryptionNonce: Value(Uint8List.fromList(media.encryptionNonce)),
         ),
       );
-      final msg = await twonlyDB.messagesDao
-          .getMessageByIdAndContactId(
-            fromUserId,
-            message.messageReceiverId!,
-          )
-          .getSingleOrNull();
-      if (msg != null && msg.mediaUploadId != null) {
-        final filePath = await getMediaFilePath(msg.mediaUploadId, 'send');
-        if (filePath.contains('mp4')) {
-          unawaited(createThumbnailsForVideo(File(filePath)));
-        } else {
-          unawaited(createThumbnailsForImage(File(filePath)));
-        }
+
+      final mediaFile =
+          await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+
+      if (mediaFile != null) {
+        unawaited(startDownloadMedia(mediaFile, false));
       }
-    }
-  } else if (message.content != null) {}
+
+      return;
+    case EncryptedContent_Media_Type.IMAGE:
+      mediaType = MediaType.image;
+    case EncryptedContent_Media_Type.VIDEO:
+      mediaType = MediaType.video;
+    case EncryptedContent_Media_Type.GIF:
+      mediaType = MediaType.gif;
+  }
+
+  final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+    MediaFilesCompanion(
+      downloadState: const Value(DownloadState.pending),
+      type: Value(mediaType),
+      requiresAuthentication: Value(media.requiresAuthentication),
+      displayLimitInMilliseconds: Value(
+        media.hasDisplayLimitInMilliseconds()
+            ? media.displayLimitInMilliseconds.toInt()
+            : null,
+      ),
+      downloadToken: Value(Uint8List.fromList(media.downloadToken)),
+      encryptionKey: Value(Uint8List.fromList(media.encryptionKey)),
+      encryptionMac: Value(Uint8List.fromList(media.encryptionMac)),
+      encryptionNonce: Value(Uint8List.fromList(media.encryptionNonce)),
+      createdAt: Value(fromTimestamp(media.timestamp)),
+    ),
+  );
+
+  if (mediaFile == null) {
+    return;
+  }
+
+  final message = await twonlyDB.messagesDao.insertMessage(
+    MessagesCompanion(
+      messageId: Value(media.senderMessageId),
+      senderId: Value(fromUserId),
+      groupId: Value(groupId),
+      mediaId: Value(mediaFile.mediaId),
+      ackByServer: const Value(true),
+      ackByUser: const Value(true),
+      quotesMessageId: Value(
+        media.hasQuoteMessageId() ? media.quoteMessageId : null,
+      ),
+      createdAt: Value(fromTimestamp(media.timestamp)),
+    ),
+  );
+  if (message != null) {
+    Log.info('Inserted a new media message with ID: ${message.messageId}');
+    await twonlyDB.contactsDao.incFlameCounter(
+      fromUserId,
+      true,
+      fromTimestamp(media.timestamp),
+    );
+
+    unawaited(startDownloadMedia(mediaFile, false));
+  }
+}
+
+Future<void> handleMediaUpdate(
+  int fromUserId,
+  String groupId,
+  EncryptedContent_MediaUpdate mediaUpdate,
+) async {
+  final message = await twonlyDB.messagesDao
+      .getMessageById(mediaUpdate.targetMessageId)
+      .getSingleOrNull();
+  if (message == null || message.mediaId == null) return;
+  final mediaFile =
+      await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+  if (mediaFile == null) return;
+
+  switch (mediaUpdate.type) {
+    case EncryptedContent_MediaUpdate_Type.REOPENED:
+      Log.info('Got media file reopened ${mediaFile.mediaId}');
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        const MediaFilesCompanion(
+          reopenByContact: Value(true),
+        ),
+      );
+    case EncryptedContent_MediaUpdate_Type.STORED:
+      Log.info('Got media file stored ${mediaFile.mediaId}');
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        const MediaFilesCompanion(
+          storedByContact: Value(true),
+        ),
+      );
+
+      unawaited(createThumbnailForMediaFile(mediaFile));
+
+    case EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR:
+      Log.info('Got media file decryption error ${mediaFile.mediaId}');
+      final reuploadRequestedBy = mediaFile.reuploadRequestedBy ?? [];
+      reuploadRequestedBy.add(fromUserId);
+      await twonlyDB.mediaFilesDao.updateMedia(
+        mediaFile.mediaId,
+        MediaFilesCompanion(
+          uploadState: const Value(UploadState.pending),
+          reuploadRequestedBy: Value(reuploadRequestedBy),
+        ),
+      );
+  }
 }

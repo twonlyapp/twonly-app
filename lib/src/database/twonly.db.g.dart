@@ -94,16 +94,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("verified" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _archivedMeta =
-      const VerificationMeta('archived');
-  @override
-  late final GeneratedColumn<bool> archived = GeneratedColumn<bool>(
-      'archived', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
-      defaultValue: const Constant(false));
   static const VerificationMeta _deletedMeta =
       const VerificationMeta('deleted');
   @override
@@ -194,7 +184,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         hidden,
         blocked,
         verified,
-        archived,
         deleted,
         alsoBestFriend,
         deleteMessagesAfterXMinutes,
@@ -265,10 +254,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     if (data.containsKey('verified')) {
       context.handle(_verifiedMeta,
           verified.isAcceptableOrUnknown(data['verified']!, _verifiedMeta));
-    }
-    if (data.containsKey('archived')) {
-      context.handle(_archivedMeta,
-          archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
     }
     if (data.containsKey('deleted')) {
       context.handle(_deletedMeta,
@@ -358,8 +343,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.bool, data['${effectivePrefix}blocked'])!,
       verified: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}verified'])!,
-      archived: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
       deleted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
       alsoBestFriend: attachedDatabase.typeMapping
@@ -404,7 +387,6 @@ class Contact extends DataClass implements Insertable<Contact> {
   final bool hidden;
   final bool blocked;
   final bool verified;
-  final bool archived;
   final bool deleted;
   final bool alsoBestFriend;
   final int deleteMessagesAfterXMinutes;
@@ -427,7 +409,6 @@ class Contact extends DataClass implements Insertable<Contact> {
       required this.hidden,
       required this.blocked,
       required this.verified,
-      required this.archived,
       required this.deleted,
       required this.alsoBestFriend,
       required this.deleteMessagesAfterXMinutes,
@@ -458,7 +439,6 @@ class Contact extends DataClass implements Insertable<Contact> {
     map['hidden'] = Variable<bool>(hidden);
     map['blocked'] = Variable<bool>(blocked);
     map['verified'] = Variable<bool>(verified);
-    map['archived'] = Variable<bool>(archived);
     map['deleted'] = Variable<bool>(deleted);
     map['also_best_friend'] = Variable<bool>(alsoBestFriend);
     map['delete_messages_after_x_minutes'] =
@@ -501,7 +481,6 @@ class Contact extends DataClass implements Insertable<Contact> {
       hidden: Value(hidden),
       blocked: Value(blocked),
       verified: Value(verified),
-      archived: Value(archived),
       deleted: Value(deleted),
       alsoBestFriend: Value(alsoBestFriend),
       deleteMessagesAfterXMinutes: Value(deleteMessagesAfterXMinutes),
@@ -539,7 +518,6 @@ class Contact extends DataClass implements Insertable<Contact> {
       hidden: serializer.fromJson<bool>(json['hidden']),
       blocked: serializer.fromJson<bool>(json['blocked']),
       verified: serializer.fromJson<bool>(json['verified']),
-      archived: serializer.fromJson<bool>(json['archived']),
       deleted: serializer.fromJson<bool>(json['deleted']),
       alsoBestFriend: serializer.fromJson<bool>(json['alsoBestFriend']),
       deleteMessagesAfterXMinutes:
@@ -570,7 +548,6 @@ class Contact extends DataClass implements Insertable<Contact> {
       'hidden': serializer.toJson<bool>(hidden),
       'blocked': serializer.toJson<bool>(blocked),
       'verified': serializer.toJson<bool>(verified),
-      'archived': serializer.toJson<bool>(archived),
       'deleted': serializer.toJson<bool>(deleted),
       'alsoBestFriend': serializer.toJson<bool>(alsoBestFriend),
       'deleteMessagesAfterXMinutes':
@@ -598,7 +575,6 @@ class Contact extends DataClass implements Insertable<Contact> {
           bool? hidden,
           bool? blocked,
           bool? verified,
-          bool? archived,
           bool? deleted,
           bool? alsoBestFriend,
           int? deleteMessagesAfterXMinutes,
@@ -621,7 +597,6 @@ class Contact extends DataClass implements Insertable<Contact> {
         hidden: hidden ?? this.hidden,
         blocked: blocked ?? this.blocked,
         verified: verified ?? this.verified,
-        archived: archived ?? this.archived,
         deleted: deleted ?? this.deleted,
         alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
         deleteMessagesAfterXMinutes:
@@ -657,7 +632,6 @@ class Contact extends DataClass implements Insertable<Contact> {
       hidden: data.hidden.present ? data.hidden.value : this.hidden,
       blocked: data.blocked.present ? data.blocked.value : this.blocked,
       verified: data.verified.present ? data.verified.value : this.verified,
-      archived: data.archived.present ? data.archived.value : this.archived,
       deleted: data.deleted.present ? data.deleted.value : this.deleted,
       alsoBestFriend: data.alsoBestFriend.present
           ? data.alsoBestFriend.value
@@ -701,7 +675,6 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('hidden: $hidden, ')
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
-          ..write('archived: $archived, ')
           ..write('deleted: $deleted, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
@@ -729,7 +702,6 @@ class Contact extends DataClass implements Insertable<Contact> {
         hidden,
         blocked,
         verified,
-        archived,
         deleted,
         alsoBestFriend,
         deleteMessagesAfterXMinutes,
@@ -756,7 +728,6 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.hidden == this.hidden &&
           other.blocked == this.blocked &&
           other.verified == this.verified &&
-          other.archived == this.archived &&
           other.deleted == this.deleted &&
           other.alsoBestFriend == this.alsoBestFriend &&
           other.deleteMessagesAfterXMinutes ==
@@ -782,7 +753,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<bool> hidden;
   final Value<bool> blocked;
   final Value<bool> verified;
-  final Value<bool> archived;
   final Value<bool> deleted;
   final Value<bool> alsoBestFriend;
   final Value<int> deleteMessagesAfterXMinutes;
@@ -805,7 +775,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.hidden = const Value.absent(),
     this.blocked = const Value.absent(),
     this.verified = const Value.absent(),
-    this.archived = const Value.absent(),
     this.deleted = const Value.absent(),
     this.alsoBestFriend = const Value.absent(),
     this.deleteMessagesAfterXMinutes = const Value.absent(),
@@ -829,7 +798,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     this.hidden = const Value.absent(),
     this.blocked = const Value.absent(),
     this.verified = const Value.absent(),
-    this.archived = const Value.absent(),
     this.deleted = const Value.absent(),
     this.alsoBestFriend = const Value.absent(),
     this.deleteMessagesAfterXMinutes = const Value.absent(),
@@ -853,7 +821,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<bool>? hidden,
     Expression<bool>? blocked,
     Expression<bool>? verified,
-    Expression<bool>? archived,
     Expression<bool>? deleted,
     Expression<bool>? alsoBestFriend,
     Expression<int>? deleteMessagesAfterXMinutes,
@@ -878,7 +845,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (hidden != null) 'hidden': hidden,
       if (blocked != null) 'blocked': blocked,
       if (verified != null) 'verified': verified,
-      if (archived != null) 'archived': archived,
       if (deleted != null) 'deleted': deleted,
       if (alsoBestFriend != null) 'also_best_friend': alsoBestFriend,
       if (deleteMessagesAfterXMinutes != null)
@@ -907,7 +873,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<bool>? hidden,
       Value<bool>? blocked,
       Value<bool>? verified,
-      Value<bool>? archived,
       Value<bool>? deleted,
       Value<bool>? alsoBestFriend,
       Value<int>? deleteMessagesAfterXMinutes,
@@ -930,7 +895,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       hidden: hidden ?? this.hidden,
       blocked: blocked ?? this.blocked,
       verified: verified ?? this.verified,
-      archived: archived ?? this.archived,
       deleted: deleted ?? this.deleted,
       alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
       deleteMessagesAfterXMinutes:
@@ -982,9 +946,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (verified.present) {
       map['verified'] = Variable<bool>(verified.value);
     }
-    if (archived.present) {
-      map['archived'] = Variable<bool>(archived.value);
-    }
     if (deleted.present) {
       map['deleted'] = Variable<bool>(deleted.value);
     }
@@ -1035,7 +996,6 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('hidden: $hidden, ')
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
-          ..write('archived: $archived, ')
           ..write('deleted: $deleted, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
@@ -1064,7 +1024,7 @@ class $MediaFilesTable extends MediaFiles
       'media_id', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: false,
-      clientDefault: () => uuid.v4());
+      clientDefault: () => uuid.v7());
   @override
   late final GeneratedColumnWithTypeConverter<MediaType, String> type =
       GeneratedColumn<String>('type', aliasedName, false,
@@ -1111,6 +1071,13 @@ class $MediaFilesTable extends MediaFiles
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("stored_by_contact" IN (0, 1))'),
       defaultValue: const Constant(false));
+  @override
+  late final GeneratedColumnWithTypeConverter<List<int>?, String>
+      reuploadRequestedBy = GeneratedColumn<String>(
+              'reupload_requested_by', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<List<int>?>(
+              $MediaFilesTable.$converterreuploadRequestedByn);
   static const VerificationMeta _displayLimitInMillisecondsMeta =
       const VerificationMeta('displayLimitInMilliseconds');
   @override
@@ -1158,6 +1125,7 @@ class $MediaFilesTable extends MediaFiles
         requiresAuthentication,
         reopenByContact,
         storedByContact,
+        reuploadRequestedBy,
         displayLimitInMilliseconds,
         downloadToken,
         encryptionKey,
@@ -1260,6 +1228,9 @@ class $MediaFilesTable extends MediaFiles
           DriftSqlType.bool, data['${effectivePrefix}reopen_by_contact'])!,
       storedByContact: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}stored_by_contact'])!,
+      reuploadRequestedBy: $MediaFilesTable.$converterreuploadRequestedByn
+          .fromSql(attachedDatabase.typeMapping.read(DriftSqlType.string,
+              data['${effectivePrefix}reupload_requested_by'])),
       displayLimitInMilliseconds: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}display_limit_in_milliseconds']),
@@ -1294,6 +1265,10 @@ class $MediaFilesTable extends MediaFiles
   static JsonTypeConverter2<DownloadState?, String?, String?>
       $converterdownloadStaten =
       JsonTypeConverter2.asNullable($converterdownloadState);
+  static TypeConverter<List<int>, String> $converterreuploadRequestedBy =
+      IntListTypeConverter();
+  static TypeConverter<List<int>?, String?> $converterreuploadRequestedByn =
+      NullAwareTypeConverter.wrap($converterreuploadRequestedBy);
 }
 
 class MediaFile extends DataClass implements Insertable<MediaFile> {
@@ -1304,6 +1279,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final bool requiresAuthentication;
   final bool reopenByContact;
   final bool storedByContact;
+  final List<int>? reuploadRequestedBy;
   final int? displayLimitInMilliseconds;
   final Uint8List? downloadToken;
   final Uint8List? encryptionKey;
@@ -1318,6 +1294,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       required this.requiresAuthentication,
       required this.reopenByContact,
       required this.storedByContact,
+      this.reuploadRequestedBy,
       this.displayLimitInMilliseconds,
       this.downloadToken,
       this.encryptionKey,
@@ -1343,6 +1320,11 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     map['requires_authentication'] = Variable<bool>(requiresAuthentication);
     map['reopen_by_contact'] = Variable<bool>(reopenByContact);
     map['stored_by_contact'] = Variable<bool>(storedByContact);
+    if (!nullToAbsent || reuploadRequestedBy != null) {
+      map['reupload_requested_by'] = Variable<String>($MediaFilesTable
+          .$converterreuploadRequestedByn
+          .toSql(reuploadRequestedBy));
+    }
     if (!nullToAbsent || displayLimitInMilliseconds != null) {
       map['display_limit_in_milliseconds'] =
           Variable<int>(displayLimitInMilliseconds);
@@ -1376,6 +1358,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication: Value(requiresAuthentication),
       reopenByContact: Value(reopenByContact),
       storedByContact: Value(storedByContact),
+      reuploadRequestedBy: reuploadRequestedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reuploadRequestedBy),
       displayLimitInMilliseconds:
           displayLimitInMilliseconds == null && nullToAbsent
               ? const Value.absent()
@@ -1411,6 +1396,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           serializer.fromJson<bool>(json['requiresAuthentication']),
       reopenByContact: serializer.fromJson<bool>(json['reopenByContact']),
       storedByContact: serializer.fromJson<bool>(json['storedByContact']),
+      reuploadRequestedBy:
+          serializer.fromJson<List<int>?>(json['reuploadRequestedBy']),
       displayLimitInMilliseconds:
           serializer.fromJson<int?>(json['displayLimitInMilliseconds']),
       downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
@@ -1434,6 +1421,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'requiresAuthentication': serializer.toJson<bool>(requiresAuthentication),
       'reopenByContact': serializer.toJson<bool>(reopenByContact),
       'storedByContact': serializer.toJson<bool>(storedByContact),
+      'reuploadRequestedBy': serializer.toJson<List<int>?>(reuploadRequestedBy),
       'displayLimitInMilliseconds':
           serializer.toJson<int?>(displayLimitInMilliseconds),
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
@@ -1452,6 +1440,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           bool? requiresAuthentication,
           bool? reopenByContact,
           bool? storedByContact,
+          Value<List<int>?> reuploadRequestedBy = const Value.absent(),
           Value<int?> displayLimitInMilliseconds = const Value.absent(),
           Value<Uint8List?> downloadToken = const Value.absent(),
           Value<Uint8List?> encryptionKey = const Value.absent(),
@@ -1468,6 +1457,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
             requiresAuthentication ?? this.requiresAuthentication,
         reopenByContact: reopenByContact ?? this.reopenByContact,
         storedByContact: storedByContact ?? this.storedByContact,
+        reuploadRequestedBy: reuploadRequestedBy.present
+            ? reuploadRequestedBy.value
+            : this.reuploadRequestedBy,
         displayLimitInMilliseconds: displayLimitInMilliseconds.present
             ? displayLimitInMilliseconds.value
             : this.displayLimitInMilliseconds,
@@ -1500,6 +1492,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       storedByContact: data.storedByContact.present
           ? data.storedByContact.value
           : this.storedByContact,
+      reuploadRequestedBy: data.reuploadRequestedBy.present
+          ? data.reuploadRequestedBy.value
+          : this.reuploadRequestedBy,
       displayLimitInMilliseconds: data.displayLimitInMilliseconds.present
           ? data.displayLimitInMilliseconds.value
           : this.displayLimitInMilliseconds,
@@ -1529,6 +1524,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('reopenByContact: $reopenByContact, ')
           ..write('storedByContact: $storedByContact, ')
+          ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('encryptionKey: $encryptionKey, ')
@@ -1548,6 +1544,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication,
       reopenByContact,
       storedByContact,
+      reuploadRequestedBy,
       displayLimitInMilliseconds,
       $driftBlobEquality.hash(downloadToken),
       $driftBlobEquality.hash(encryptionKey),
@@ -1565,6 +1562,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.requiresAuthentication == this.requiresAuthentication &&
           other.reopenByContact == this.reopenByContact &&
           other.storedByContact == this.storedByContact &&
+          other.reuploadRequestedBy == this.reuploadRequestedBy &&
           other.displayLimitInMilliseconds == this.displayLimitInMilliseconds &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           $driftBlobEquality.equals(other.encryptionKey, this.encryptionKey) &&
@@ -1582,6 +1580,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<bool> requiresAuthentication;
   final Value<bool> reopenByContact;
   final Value<bool> storedByContact;
+  final Value<List<int>?> reuploadRequestedBy;
   final Value<int?> displayLimitInMilliseconds;
   final Value<Uint8List?> downloadToken;
   final Value<Uint8List?> encryptionKey;
@@ -1597,6 +1596,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.reopenByContact = const Value.absent(),
     this.storedByContact = const Value.absent(),
+    this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.encryptionKey = const Value.absent(),
@@ -1613,6 +1613,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     required bool requiresAuthentication,
     this.reopenByContact = const Value.absent(),
     this.storedByContact = const Value.absent(),
+    this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.encryptionKey = const Value.absent(),
@@ -1630,6 +1631,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<bool>? requiresAuthentication,
     Expression<bool>? reopenByContact,
     Expression<bool>? storedByContact,
+    Expression<String>? reuploadRequestedBy,
     Expression<int>? displayLimitInMilliseconds,
     Expression<Uint8List>? downloadToken,
     Expression<Uint8List>? encryptionKey,
@@ -1647,6 +1649,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
         'requires_authentication': requiresAuthentication,
       if (reopenByContact != null) 'reopen_by_contact': reopenByContact,
       if (storedByContact != null) 'stored_by_contact': storedByContact,
+      if (reuploadRequestedBy != null)
+        'reupload_requested_by': reuploadRequestedBy,
       if (displayLimitInMilliseconds != null)
         'display_limit_in_milliseconds': displayLimitInMilliseconds,
       if (downloadToken != null) 'download_token': downloadToken,
@@ -1666,6 +1670,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       Value<bool>? requiresAuthentication,
       Value<bool>? reopenByContact,
       Value<bool>? storedByContact,
+      Value<List<int>?>? reuploadRequestedBy,
       Value<int?>? displayLimitInMilliseconds,
       Value<Uint8List?>? downloadToken,
       Value<Uint8List?>? encryptionKey,
@@ -1682,6 +1687,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           requiresAuthentication ?? this.requiresAuthentication,
       reopenByContact: reopenByContact ?? this.reopenByContact,
       storedByContact: storedByContact ?? this.storedByContact,
+      reuploadRequestedBy: reuploadRequestedBy ?? this.reuploadRequestedBy,
       displayLimitInMilliseconds:
           displayLimitInMilliseconds ?? this.displayLimitInMilliseconds,
       downloadToken: downloadToken ?? this.downloadToken,
@@ -1721,6 +1727,11 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (storedByContact.present) {
       map['stored_by_contact'] = Variable<bool>(storedByContact.value);
     }
+    if (reuploadRequestedBy.present) {
+      map['reupload_requested_by'] = Variable<String>($MediaFilesTable
+          .$converterreuploadRequestedByn
+          .toSql(reuploadRequestedBy.value));
+    }
     if (displayLimitInMilliseconds.present) {
       map['display_limit_in_milliseconds'] =
           Variable<int>(displayLimitInMilliseconds.value);
@@ -1756,6 +1767,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('reopenByContact: $reopenByContact, ')
           ..write('storedByContact: $storedByContact, ')
+          ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('encryptionKey: $encryptionKey, ')
@@ -1784,7 +1796,9 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   @override
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
       'message_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      clientDefault: () => uuid.v7());
   static const VerificationMeta _senderIdMeta =
       const VerificationMeta('senderId');
   @override
@@ -1838,25 +1852,25 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_edited" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _acknowledgeByUserMeta =
-      const VerificationMeta('acknowledgeByUser');
+  static const VerificationMeta _ackByUserMeta =
+      const VerificationMeta('ackByUser');
   @override
-  late final GeneratedColumn<bool> acknowledgeByUser = GeneratedColumn<bool>(
-      'acknowledge_by_user', aliasedName, false,
+  late final GeneratedColumn<bool> ackByUser = GeneratedColumn<bool>(
+      'ack_by_user', aliasedName, false,
       type: DriftSqlType.bool,
       requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("acknowledge_by_user" IN (0, 1))'),
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("ack_by_user" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _acknowledgeByServerMeta =
-      const VerificationMeta('acknowledgeByServer');
+  static const VerificationMeta _ackByServerMeta =
+      const VerificationMeta('ackByServer');
   @override
-  late final GeneratedColumn<bool> acknowledgeByServer = GeneratedColumn<bool>(
-      'acknowledge_by_server', aliasedName, false,
+  late final GeneratedColumn<bool> ackByServer = GeneratedColumn<bool>(
+      'ack_by_server', aliasedName, false,
       type: DriftSqlType.bool,
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("acknowledge_by_server" IN (0, 1))'),
+          'CHECK ("ack_by_server" IN (0, 1))'),
       defaultValue: const Constant(false));
   static const VerificationMeta _openedByCounterMeta =
       const VerificationMeta('openedByCounter');
@@ -1898,8 +1912,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         quotesMessageId,
         isDeletedFromSender,
         isEdited,
-        acknowledgeByUser,
-        acknowledgeByServer,
+        ackByUser,
+        ackByServer,
         openedByCounter,
         openedAt,
         createdAt,
@@ -1924,8 +1938,6 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     if (data.containsKey('message_id')) {
       context.handle(_messageIdMeta,
           messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
-    } else if (isInserting) {
-      context.missing(_messageIdMeta);
     }
     if (data.containsKey('sender_id')) {
       context.handle(_senderIdMeta,
@@ -1955,17 +1967,17 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       context.handle(_isEditedMeta,
           isEdited.isAcceptableOrUnknown(data['is_edited']!, _isEditedMeta));
     }
-    if (data.containsKey('acknowledge_by_user')) {
+    if (data.containsKey('ack_by_user')) {
       context.handle(
-          _acknowledgeByUserMeta,
-          acknowledgeByUser.isAcceptableOrUnknown(
-              data['acknowledge_by_user']!, _acknowledgeByUserMeta));
+          _ackByUserMeta,
+          ackByUser.isAcceptableOrUnknown(
+              data['ack_by_user']!, _ackByUserMeta));
     }
-    if (data.containsKey('acknowledge_by_server')) {
+    if (data.containsKey('ack_by_server')) {
       context.handle(
-          _acknowledgeByServerMeta,
-          acknowledgeByServer.isAcceptableOrUnknown(
-              data['acknowledge_by_server']!, _acknowledgeByServerMeta));
+          _ackByServerMeta,
+          ackByServer.isAcceptableOrUnknown(
+              data['ack_by_server']!, _ackByServerMeta));
     }
     if (data.containsKey('opened_by_counter')) {
       context.handle(
@@ -2012,10 +2024,10 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           DriftSqlType.bool, data['${effectivePrefix}is_deleted_from_sender'])!,
       isEdited: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_edited'])!,
-      acknowledgeByUser: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}acknowledge_by_user'])!,
-      acknowledgeByServer: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}acknowledge_by_server'])!,
+      ackByUser: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}ack_by_user'])!,
+      ackByServer: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}ack_by_server'])!,
       openedByCounter: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}opened_by_counter'])!,
       openedAt: attachedDatabase.typeMapping
@@ -2042,8 +2054,8 @@ class Message extends DataClass implements Insertable<Message> {
   final String? quotesMessageId;
   final bool isDeletedFromSender;
   final bool isEdited;
-  final bool acknowledgeByUser;
-  final bool acknowledgeByServer;
+  final bool ackByUser;
+  final bool ackByServer;
   final int openedByCounter;
   final DateTime? openedAt;
   final DateTime createdAt;
@@ -2057,8 +2069,8 @@ class Message extends DataClass implements Insertable<Message> {
       this.quotesMessageId,
       required this.isDeletedFromSender,
       required this.isEdited,
-      required this.acknowledgeByUser,
-      required this.acknowledgeByServer,
+      required this.ackByUser,
+      required this.ackByServer,
       required this.openedByCounter,
       this.openedAt,
       required this.createdAt,
@@ -2082,8 +2094,8 @@ class Message extends DataClass implements Insertable<Message> {
     }
     map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender);
     map['is_edited'] = Variable<bool>(isEdited);
-    map['acknowledge_by_user'] = Variable<bool>(acknowledgeByUser);
-    map['acknowledge_by_server'] = Variable<bool>(acknowledgeByServer);
+    map['ack_by_user'] = Variable<bool>(ackByUser);
+    map['ack_by_server'] = Variable<bool>(ackByServer);
     map['opened_by_counter'] = Variable<int>(openedByCounter);
     if (!nullToAbsent || openedAt != null) {
       map['opened_at'] = Variable<DateTime>(openedAt);
@@ -2113,8 +2125,8 @@ class Message extends DataClass implements Insertable<Message> {
           : Value(quotesMessageId),
       isDeletedFromSender: Value(isDeletedFromSender),
       isEdited: Value(isEdited),
-      acknowledgeByUser: Value(acknowledgeByUser),
-      acknowledgeByServer: Value(acknowledgeByServer),
+      ackByUser: Value(ackByUser),
+      ackByServer: Value(ackByServer),
       openedByCounter: Value(openedByCounter),
       openedAt: openedAt == null && nullToAbsent
           ? const Value.absent()
@@ -2139,9 +2151,8 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender:
           serializer.fromJson<bool>(json['isDeletedFromSender']),
       isEdited: serializer.fromJson<bool>(json['isEdited']),
-      acknowledgeByUser: serializer.fromJson<bool>(json['acknowledgeByUser']),
-      acknowledgeByServer:
-          serializer.fromJson<bool>(json['acknowledgeByServer']),
+      ackByUser: serializer.fromJson<bool>(json['ackByUser']),
+      ackByServer: serializer.fromJson<bool>(json['ackByServer']),
       openedByCounter: serializer.fromJson<int>(json['openedByCounter']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2160,8 +2171,8 @@ class Message extends DataClass implements Insertable<Message> {
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
       'isEdited': serializer.toJson<bool>(isEdited),
-      'acknowledgeByUser': serializer.toJson<bool>(acknowledgeByUser),
-      'acknowledgeByServer': serializer.toJson<bool>(acknowledgeByServer),
+      'ackByUser': serializer.toJson<bool>(ackByUser),
+      'ackByServer': serializer.toJson<bool>(ackByServer),
       'openedByCounter': serializer.toJson<int>(openedByCounter),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2178,8 +2189,8 @@ class Message extends DataClass implements Insertable<Message> {
           Value<String?> quotesMessageId = const Value.absent(),
           bool? isDeletedFromSender,
           bool? isEdited,
-          bool? acknowledgeByUser,
-          bool? acknowledgeByServer,
+          bool? ackByUser,
+          bool? ackByServer,
           int? openedByCounter,
           Value<DateTime?> openedAt = const Value.absent(),
           DateTime? createdAt,
@@ -2195,8 +2206,8 @@ class Message extends DataClass implements Insertable<Message> {
             : this.quotesMessageId,
         isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
         isEdited: isEdited ?? this.isEdited,
-        acknowledgeByUser: acknowledgeByUser ?? this.acknowledgeByUser,
-        acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
+        ackByUser: ackByUser ?? this.ackByUser,
+        ackByServer: ackByServer ?? this.ackByServer,
         openedByCounter: openedByCounter ?? this.openedByCounter,
         openedAt: openedAt.present ? openedAt.value : this.openedAt,
         createdAt: createdAt ?? this.createdAt,
@@ -2216,12 +2227,9 @@ class Message extends DataClass implements Insertable<Message> {
           ? data.isDeletedFromSender.value
           : this.isDeletedFromSender,
       isEdited: data.isEdited.present ? data.isEdited.value : this.isEdited,
-      acknowledgeByUser: data.acknowledgeByUser.present
-          ? data.acknowledgeByUser.value
-          : this.acknowledgeByUser,
-      acknowledgeByServer: data.acknowledgeByServer.present
-          ? data.acknowledgeByServer.value
-          : this.acknowledgeByServer,
+      ackByUser: data.ackByUser.present ? data.ackByUser.value : this.ackByUser,
+      ackByServer:
+          data.ackByServer.present ? data.ackByServer.value : this.ackByServer,
       openedByCounter: data.openedByCounter.present
           ? data.openedByCounter.value
           : this.openedByCounter,
@@ -2243,8 +2251,8 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('isEdited: $isEdited, ')
-          ..write('acknowledgeByUser: $acknowledgeByUser, ')
-          ..write('acknowledgeByServer: $acknowledgeByServer, ')
+          ..write('ackByUser: $ackByUser, ')
+          ..write('ackByServer: $ackByServer, ')
           ..write('openedByCounter: $openedByCounter, ')
           ..write('openedAt: $openedAt, ')
           ..write('createdAt: $createdAt, ')
@@ -2263,8 +2271,8 @@ class Message extends DataClass implements Insertable<Message> {
       quotesMessageId,
       isDeletedFromSender,
       isEdited,
-      acknowledgeByUser,
-      acknowledgeByServer,
+      ackByUser,
+      ackByServer,
       openedByCounter,
       openedAt,
       createdAt,
@@ -2281,8 +2289,8 @@ class Message extends DataClass implements Insertable<Message> {
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
           other.isEdited == this.isEdited &&
-          other.acknowledgeByUser == this.acknowledgeByUser &&
-          other.acknowledgeByServer == this.acknowledgeByServer &&
+          other.ackByUser == this.ackByUser &&
+          other.ackByServer == this.ackByServer &&
           other.openedByCounter == this.openedByCounter &&
           other.openedAt == this.openedAt &&
           other.createdAt == this.createdAt &&
@@ -2298,8 +2306,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
   final Value<bool> isEdited;
-  final Value<bool> acknowledgeByUser;
-  final Value<bool> acknowledgeByServer;
+  final Value<bool> ackByUser;
+  final Value<bool> ackByServer;
   final Value<int> openedByCounter;
   final Value<DateTime?> openedAt;
   final Value<DateTime> createdAt;
@@ -2314,8 +2322,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.isEdited = const Value.absent(),
-    this.acknowledgeByUser = const Value.absent(),
-    this.acknowledgeByServer = const Value.absent(),
+    this.ackByUser = const Value.absent(),
+    this.ackByServer = const Value.absent(),
     this.openedByCounter = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2324,22 +2332,21 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   });
   MessagesCompanion.insert({
     required String groupId,
-    required String messageId,
+    this.messageId = const Value.absent(),
     this.senderId = const Value.absent(),
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.isEdited = const Value.absent(),
-    this.acknowledgeByUser = const Value.absent(),
-    this.acknowledgeByServer = const Value.absent(),
+    this.ackByUser = const Value.absent(),
+    this.ackByServer = const Value.absent(),
     this.openedByCounter = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.modifiedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupId = Value(groupId),
-        messageId = Value(messageId);
+  }) : groupId = Value(groupId);
   static Insertable<Message> custom({
     Expression<String>? groupId,
     Expression<String>? messageId,
@@ -2349,8 +2356,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
     Expression<bool>? isEdited,
-    Expression<bool>? acknowledgeByUser,
-    Expression<bool>? acknowledgeByServer,
+    Expression<bool>? ackByUser,
+    Expression<bool>? ackByServer,
     Expression<int>? openedByCounter,
     Expression<DateTime>? openedAt,
     Expression<DateTime>? createdAt,
@@ -2367,9 +2374,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (isDeletedFromSender != null)
         'is_deleted_from_sender': isDeletedFromSender,
       if (isEdited != null) 'is_edited': isEdited,
-      if (acknowledgeByUser != null) 'acknowledge_by_user': acknowledgeByUser,
-      if (acknowledgeByServer != null)
-        'acknowledge_by_server': acknowledgeByServer,
+      if (ackByUser != null) 'ack_by_user': ackByUser,
+      if (ackByServer != null) 'ack_by_server': ackByServer,
       if (openedByCounter != null) 'opened_by_counter': openedByCounter,
       if (openedAt != null) 'opened_at': openedAt,
       if (createdAt != null) 'created_at': createdAt,
@@ -2387,8 +2393,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<String?>? quotesMessageId,
       Value<bool>? isDeletedFromSender,
       Value<bool>? isEdited,
-      Value<bool>? acknowledgeByUser,
-      Value<bool>? acknowledgeByServer,
+      Value<bool>? ackByUser,
+      Value<bool>? ackByServer,
       Value<int>? openedByCounter,
       Value<DateTime?>? openedAt,
       Value<DateTime>? createdAt,
@@ -2403,8 +2409,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
       isEdited: isEdited ?? this.isEdited,
-      acknowledgeByUser: acknowledgeByUser ?? this.acknowledgeByUser,
-      acknowledgeByServer: acknowledgeByServer ?? this.acknowledgeByServer,
+      ackByUser: ackByUser ?? this.ackByUser,
+      ackByServer: ackByServer ?? this.ackByServer,
       openedByCounter: openedByCounter ?? this.openedByCounter,
       openedAt: openedAt ?? this.openedAt,
       createdAt: createdAt ?? this.createdAt,
@@ -2440,11 +2446,11 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (isEdited.present) {
       map['is_edited'] = Variable<bool>(isEdited.value);
     }
-    if (acknowledgeByUser.present) {
-      map['acknowledge_by_user'] = Variable<bool>(acknowledgeByUser.value);
+    if (ackByUser.present) {
+      map['ack_by_user'] = Variable<bool>(ackByUser.value);
     }
-    if (acknowledgeByServer.present) {
-      map['acknowledge_by_server'] = Variable<bool>(acknowledgeByServer.value);
+    if (ackByServer.present) {
+      map['ack_by_server'] = Variable<bool>(ackByServer.value);
     }
     if (openedByCounter.present) {
       map['opened_by_counter'] = Variable<int>(openedByCounter.value);
@@ -2475,8 +2481,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('isEdited: $isEdited, ')
-          ..write('acknowledgeByUser: $acknowledgeByUser, ')
-          ..write('acknowledgeByServer: $acknowledgeByServer, ')
+          ..write('ackByUser: $ackByUser, ')
+          ..write('ackByServer: $ackByServer, ')
           ..write('openedByCounter: $openedByCounter, ')
           ..write('openedAt: $openedAt, ')
           ..write('createdAt: $createdAt, ')
@@ -3042,6 +3048,16 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _archivedMeta =
+      const VerificationMeta('archived');
+  @override
+  late final GeneratedColumn<bool> archived = GeneratedColumn<bool>(
+      'archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _lastMessageExchangeMeta =
       const VerificationMeta('lastMessageExchange');
   @override
@@ -3064,6 +3080,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         isGroupAdmin,
         isGroupOfTwo,
         pinned,
+        archived,
         lastMessageExchange,
         createdAt
       ];
@@ -3101,6 +3118,10 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
       context.handle(_pinnedMeta,
           pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta));
     }
+    if (data.containsKey('archived')) {
+      context.handle(_archivedMeta,
+          archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
+    }
     if (data.containsKey('last_message_exchange')) {
       context.handle(
           _lastMessageExchangeMeta,
@@ -3128,6 +3149,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           .read(DriftSqlType.bool, data['${effectivePrefix}is_group_of_two'])!,
       pinned: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
+      archived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
       lastMessageExchange: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}last_message_exchange'])!,
@@ -3147,6 +3170,7 @@ class Group extends DataClass implements Insertable<Group> {
   final bool isGroupAdmin;
   final bool isGroupOfTwo;
   final bool pinned;
+  final bool archived;
   final DateTime lastMessageExchange;
   final DateTime createdAt;
   const Group(
@@ -3154,6 +3178,7 @@ class Group extends DataClass implements Insertable<Group> {
       required this.isGroupAdmin,
       required this.isGroupOfTwo,
       required this.pinned,
+      required this.archived,
       required this.lastMessageExchange,
       required this.createdAt});
   @override
@@ -3163,6 +3188,7 @@ class Group extends DataClass implements Insertable<Group> {
     map['is_group_admin'] = Variable<bool>(isGroupAdmin);
     map['is_group_of_two'] = Variable<bool>(isGroupOfTwo);
     map['pinned'] = Variable<bool>(pinned);
+    map['archived'] = Variable<bool>(archived);
     map['last_message_exchange'] = Variable<DateTime>(lastMessageExchange);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -3174,6 +3200,7 @@ class Group extends DataClass implements Insertable<Group> {
       isGroupAdmin: Value(isGroupAdmin),
       isGroupOfTwo: Value(isGroupOfTwo),
       pinned: Value(pinned),
+      archived: Value(archived),
       lastMessageExchange: Value(lastMessageExchange),
       createdAt: Value(createdAt),
     );
@@ -3187,6 +3214,7 @@ class Group extends DataClass implements Insertable<Group> {
       isGroupAdmin: serializer.fromJson<bool>(json['isGroupAdmin']),
       isGroupOfTwo: serializer.fromJson<bool>(json['isGroupOfTwo']),
       pinned: serializer.fromJson<bool>(json['pinned']),
+      archived: serializer.fromJson<bool>(json['archived']),
       lastMessageExchange:
           serializer.fromJson<DateTime>(json['lastMessageExchange']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -3200,6 +3228,7 @@ class Group extends DataClass implements Insertable<Group> {
       'isGroupAdmin': serializer.toJson<bool>(isGroupAdmin),
       'isGroupOfTwo': serializer.toJson<bool>(isGroupOfTwo),
       'pinned': serializer.toJson<bool>(pinned),
+      'archived': serializer.toJson<bool>(archived),
       'lastMessageExchange': serializer.toJson<DateTime>(lastMessageExchange),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -3210,6 +3239,7 @@ class Group extends DataClass implements Insertable<Group> {
           bool? isGroupAdmin,
           bool? isGroupOfTwo,
           bool? pinned,
+          bool? archived,
           DateTime? lastMessageExchange,
           DateTime? createdAt}) =>
       Group(
@@ -3217,6 +3247,7 @@ class Group extends DataClass implements Insertable<Group> {
         isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
         isGroupOfTwo: isGroupOfTwo ?? this.isGroupOfTwo,
         pinned: pinned ?? this.pinned,
+        archived: archived ?? this.archived,
         lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
         createdAt: createdAt ?? this.createdAt,
       );
@@ -3230,6 +3261,7 @@ class Group extends DataClass implements Insertable<Group> {
           ? data.isGroupOfTwo.value
           : this.isGroupOfTwo,
       pinned: data.pinned.present ? data.pinned.value : this.pinned,
+      archived: data.archived.present ? data.archived.value : this.archived,
       lastMessageExchange: data.lastMessageExchange.present
           ? data.lastMessageExchange.value
           : this.lastMessageExchange,
@@ -3244,6 +3276,7 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('isGroupAdmin: $isGroupAdmin, ')
           ..write('isGroupOfTwo: $isGroupOfTwo, ')
           ..write('pinned: $pinned, ')
+          ..write('archived: $archived, ')
           ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -3252,7 +3285,7 @@ class Group extends DataClass implements Insertable<Group> {
 
   @override
   int get hashCode => Object.hash(groupId, isGroupAdmin, isGroupOfTwo, pinned,
-      lastMessageExchange, createdAt);
+      archived, lastMessageExchange, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3261,6 +3294,7 @@ class Group extends DataClass implements Insertable<Group> {
           other.isGroupAdmin == this.isGroupAdmin &&
           other.isGroupOfTwo == this.isGroupOfTwo &&
           other.pinned == this.pinned &&
+          other.archived == this.archived &&
           other.lastMessageExchange == this.lastMessageExchange &&
           other.createdAt == this.createdAt);
 }
@@ -3270,6 +3304,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<bool> isGroupAdmin;
   final Value<bool> isGroupOfTwo;
   final Value<bool> pinned;
+  final Value<bool> archived;
   final Value<DateTime> lastMessageExchange;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -3278,6 +3313,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.isGroupAdmin = const Value.absent(),
     this.isGroupOfTwo = const Value.absent(),
     this.pinned = const Value.absent(),
+    this.archived = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3287,6 +3323,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     required bool isGroupAdmin,
     required bool isGroupOfTwo,
     this.pinned = const Value.absent(),
+    this.archived = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3297,6 +3334,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<bool>? isGroupAdmin,
     Expression<bool>? isGroupOfTwo,
     Expression<bool>? pinned,
+    Expression<bool>? archived,
     Expression<DateTime>? lastMessageExchange,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -3306,6 +3344,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       if (isGroupAdmin != null) 'is_group_admin': isGroupAdmin,
       if (isGroupOfTwo != null) 'is_group_of_two': isGroupOfTwo,
       if (pinned != null) 'pinned': pinned,
+      if (archived != null) 'archived': archived,
       if (lastMessageExchange != null)
         'last_message_exchange': lastMessageExchange,
       if (createdAt != null) 'created_at': createdAt,
@@ -3318,6 +3357,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       Value<bool>? isGroupAdmin,
       Value<bool>? isGroupOfTwo,
       Value<bool>? pinned,
+      Value<bool>? archived,
       Value<DateTime>? lastMessageExchange,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
@@ -3326,6 +3366,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
       isGroupOfTwo: isGroupOfTwo ?? this.isGroupOfTwo,
       pinned: pinned ?? this.pinned,
+      archived: archived ?? this.archived,
       lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -3347,6 +3388,9 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     if (pinned.present) {
       map['pinned'] = Variable<bool>(pinned.value);
     }
+    if (archived.present) {
+      map['archived'] = Variable<bool>(archived.value);
+    }
     if (lastMessageExchange.present) {
       map['last_message_exchange'] =
           Variable<DateTime>(lastMessageExchange.value);
@@ -3367,6 +3411,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('isGroupAdmin: $isGroupAdmin, ')
           ..write('isGroupOfTwo: $isGroupOfTwo, ')
           ..write('pinned: $pinned, ')
+          ..write('archived: $archived, ')
           ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -3707,6 +3752,12 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
           defaultConstraints: GeneratedColumn.constraintIsAlways(
               'CHECK ("contact_will_sends_receipt" IN (0, 1))'),
           defaultValue: const Constant(true));
+  static const VerificationMeta _ackByServerAtMeta =
+      const VerificationMeta('ackByServerAt');
+  @override
+  late final GeneratedColumn<DateTime> ackByServerAt =
+      GeneratedColumn<DateTime>('ack_by_server_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _retryCountMeta =
       const VerificationMeta('retryCount');
   @override
@@ -3736,6 +3787,7 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
         messageId,
         message,
         contactWillSendsReceipt,
+        ackByServerAt,
         retryCount,
         lastRetry,
         createdAt
@@ -3777,6 +3829,12 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
               data['contact_will_sends_receipt']!,
               _contactWillSendsReceiptMeta));
     }
+    if (data.containsKey('ack_by_server_at')) {
+      context.handle(
+          _ackByServerAtMeta,
+          ackByServerAt.isAcceptableOrUnknown(
+              data['ack_by_server_at']!, _ackByServerAtMeta));
+    }
     if (data.containsKey('retry_count')) {
       context.handle(
           _retryCountMeta,
@@ -3811,6 +3869,8 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
       contactWillSendsReceipt: attachedDatabase.typeMapping.read(
           DriftSqlType.bool,
           data['${effectivePrefix}contact_will_sends_receipt'])!,
+      ackByServerAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}ack_by_server_at']),
       retryCount: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}retry_count'])!,
       lastRetry: attachedDatabase.typeMapping
@@ -3830,8 +3890,11 @@ class Receipt extends DataClass implements Insertable<Receipt> {
   final String receiptId;
   final int contactId;
   final String? messageId;
+
+  /// This is the protobuf 'Message'
   final Uint8List message;
   final bool contactWillSendsReceipt;
+  final DateTime? ackByServerAt;
   final int retryCount;
   final DateTime? lastRetry;
   final DateTime createdAt;
@@ -3841,6 +3904,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       this.messageId,
       required this.message,
       required this.contactWillSendsReceipt,
+      this.ackByServerAt,
       required this.retryCount,
       this.lastRetry,
       required this.createdAt});
@@ -3854,6 +3918,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
     }
     map['message'] = Variable<Uint8List>(message);
     map['contact_will_sends_receipt'] = Variable<bool>(contactWillSendsReceipt);
+    if (!nullToAbsent || ackByServerAt != null) {
+      map['ack_by_server_at'] = Variable<DateTime>(ackByServerAt);
+    }
     map['retry_count'] = Variable<int>(retryCount);
     if (!nullToAbsent || lastRetry != null) {
       map['last_retry'] = Variable<DateTime>(lastRetry);
@@ -3871,6 +3938,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           : Value(messageId),
       message: Value(message),
       contactWillSendsReceipt: Value(contactWillSendsReceipt),
+      ackByServerAt: ackByServerAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ackByServerAt),
       retryCount: Value(retryCount),
       lastRetry: lastRetry == null && nullToAbsent
           ? const Value.absent()
@@ -3889,6 +3959,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       message: serializer.fromJson<Uint8List>(json['message']),
       contactWillSendsReceipt:
           serializer.fromJson<bool>(json['contactWillSendsReceipt']),
+      ackByServerAt: serializer.fromJson<DateTime?>(json['ackByServerAt']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       lastRetry: serializer.fromJson<DateTime?>(json['lastRetry']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -3904,6 +3975,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       'message': serializer.toJson<Uint8List>(message),
       'contactWillSendsReceipt':
           serializer.toJson<bool>(contactWillSendsReceipt),
+      'ackByServerAt': serializer.toJson<DateTime?>(ackByServerAt),
       'retryCount': serializer.toJson<int>(retryCount),
       'lastRetry': serializer.toJson<DateTime?>(lastRetry),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -3916,6 +3988,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           Value<String?> messageId = const Value.absent(),
           Uint8List? message,
           bool? contactWillSendsReceipt,
+          Value<DateTime?> ackByServerAt = const Value.absent(),
           int? retryCount,
           Value<DateTime?> lastRetry = const Value.absent(),
           DateTime? createdAt}) =>
@@ -3926,6 +3999,8 @@ class Receipt extends DataClass implements Insertable<Receipt> {
         message: message ?? this.message,
         contactWillSendsReceipt:
             contactWillSendsReceipt ?? this.contactWillSendsReceipt,
+        ackByServerAt:
+            ackByServerAt.present ? ackByServerAt.value : this.ackByServerAt,
         retryCount: retryCount ?? this.retryCount,
         lastRetry: lastRetry.present ? lastRetry.value : this.lastRetry,
         createdAt: createdAt ?? this.createdAt,
@@ -3939,6 +4014,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       contactWillSendsReceipt: data.contactWillSendsReceipt.present
           ? data.contactWillSendsReceipt.value
           : this.contactWillSendsReceipt,
+      ackByServerAt: data.ackByServerAt.present
+          ? data.ackByServerAt.value
+          : this.ackByServerAt,
       retryCount:
           data.retryCount.present ? data.retryCount.value : this.retryCount,
       lastRetry: data.lastRetry.present ? data.lastRetry.value : this.lastRetry,
@@ -3954,6 +4032,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           ..write('messageId: $messageId, ')
           ..write('message: $message, ')
           ..write('contactWillSendsReceipt: $contactWillSendsReceipt, ')
+          ..write('ackByServerAt: $ackByServerAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastRetry: $lastRetry, ')
           ..write('createdAt: $createdAt')
@@ -3968,6 +4047,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       messageId,
       $driftBlobEquality.hash(message),
       contactWillSendsReceipt,
+      ackByServerAt,
       retryCount,
       lastRetry,
       createdAt);
@@ -3980,6 +4060,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           other.messageId == this.messageId &&
           $driftBlobEquality.equals(other.message, this.message) &&
           other.contactWillSendsReceipt == this.contactWillSendsReceipt &&
+          other.ackByServerAt == this.ackByServerAt &&
           other.retryCount == this.retryCount &&
           other.lastRetry == this.lastRetry &&
           other.createdAt == this.createdAt);
@@ -3991,6 +4072,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
   final Value<String?> messageId;
   final Value<Uint8List> message;
   final Value<bool> contactWillSendsReceipt;
+  final Value<DateTime?> ackByServerAt;
   final Value<int> retryCount;
   final Value<DateTime?> lastRetry;
   final Value<DateTime> createdAt;
@@ -4001,6 +4083,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.messageId = const Value.absent(),
     this.message = const Value.absent(),
     this.contactWillSendsReceipt = const Value.absent(),
+    this.ackByServerAt = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastRetry = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -4012,6 +4095,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.messageId = const Value.absent(),
     required Uint8List message,
     this.contactWillSendsReceipt = const Value.absent(),
+    this.ackByServerAt = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastRetry = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -4024,6 +4108,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     Expression<String>? messageId,
     Expression<Uint8List>? message,
     Expression<bool>? contactWillSendsReceipt,
+    Expression<DateTime>? ackByServerAt,
     Expression<int>? retryCount,
     Expression<DateTime>? lastRetry,
     Expression<DateTime>? createdAt,
@@ -4036,6 +4121,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       if (message != null) 'message': message,
       if (contactWillSendsReceipt != null)
         'contact_will_sends_receipt': contactWillSendsReceipt,
+      if (ackByServerAt != null) 'ack_by_server_at': ackByServerAt,
       if (retryCount != null) 'retry_count': retryCount,
       if (lastRetry != null) 'last_retry': lastRetry,
       if (createdAt != null) 'created_at': createdAt,
@@ -4049,6 +4135,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       Value<String?>? messageId,
       Value<Uint8List>? message,
       Value<bool>? contactWillSendsReceipt,
+      Value<DateTime?>? ackByServerAt,
       Value<int>? retryCount,
       Value<DateTime?>? lastRetry,
       Value<DateTime>? createdAt,
@@ -4060,6 +4147,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       message: message ?? this.message,
       contactWillSendsReceipt:
           contactWillSendsReceipt ?? this.contactWillSendsReceipt,
+      ackByServerAt: ackByServerAt ?? this.ackByServerAt,
       retryCount: retryCount ?? this.retryCount,
       lastRetry: lastRetry ?? this.lastRetry,
       createdAt: createdAt ?? this.createdAt,
@@ -4086,6 +4174,9 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       map['contact_will_sends_receipt'] =
           Variable<bool>(contactWillSendsReceipt.value);
     }
+    if (ackByServerAt.present) {
+      map['ack_by_server_at'] = Variable<DateTime>(ackByServerAt.value);
+    }
     if (retryCount.present) {
       map['retry_count'] = Variable<int>(retryCount.value);
     }
@@ -4109,6 +4200,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
           ..write('messageId: $messageId, ')
           ..write('message: $message, ')
           ..write('contactWillSendsReceipt: $contactWillSendsReceipt, ')
+          ..write('ackByServerAt: $ackByServerAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastRetry: $lastRetry, ')
           ..write('createdAt: $createdAt, ')
@@ -5744,6 +5836,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final ReceiptsDao receiptsDao = ReceiptsDao(this as TwonlyDB);
   late final GroupsDao groupsDao = GroupsDao(this as TwonlyDB);
   late final ReactionsDao reactionsDao = ReactionsDao(this as TwonlyDB);
+  late final MediaFilesDao mediaFilesDao = MediaFilesDao(this as TwonlyDB);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5833,7 +5926,6 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   Value<bool> hidden,
   Value<bool> blocked,
   Value<bool> verified,
-  Value<bool> archived,
   Value<bool> deleted,
   Value<bool> alsoBestFriend,
   Value<int> deleteMessagesAfterXMinutes,
@@ -5857,7 +5949,6 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<bool> hidden,
   Value<bool> blocked,
   Value<bool> verified,
-  Value<bool> archived,
   Value<bool> deleted,
   Value<bool> alsoBestFriend,
   Value<int> deleteMessagesAfterXMinutes,
@@ -6018,9 +6109,6 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get verified => $composableBuilder(
       column: $table.verified, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get archived => $composableBuilder(
-      column: $table.archived, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnFilters(column));
@@ -6232,9 +6320,6 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<bool> get verified => $composableBuilder(
       column: $table.verified, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get archived => $composableBuilder(
-      column: $table.archived, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
@@ -6315,9 +6400,6 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<bool> get verified =>
       $composableBuilder(column: $table.verified, builder: (column) => column);
-
-  GeneratedColumn<bool> get archived =>
-      $composableBuilder(column: $table.archived, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
@@ -6521,7 +6603,6 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> hidden = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
-            Value<bool> archived = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
             Value<bool> alsoBestFriend = const Value.absent(),
             Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
@@ -6545,7 +6626,6 @@ class $$ContactsTableTableManager extends RootTableManager<
             hidden: hidden,
             blocked: blocked,
             verified: verified,
-            archived: archived,
             deleted: deleted,
             alsoBestFriend: alsoBestFriend,
             deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
@@ -6569,7 +6649,6 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<bool> hidden = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
-            Value<bool> archived = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
             Value<bool> alsoBestFriend = const Value.absent(),
             Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
@@ -6593,7 +6672,6 @@ class $$ContactsTableTableManager extends RootTableManager<
             hidden: hidden,
             blocked: blocked,
             verified: verified,
-            archived: archived,
             deleted: deleted,
             alsoBestFriend: alsoBestFriend,
             deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
@@ -6739,6 +6817,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   required bool requiresAuthentication,
   Value<bool> reopenByContact,
   Value<bool> storedByContact,
+  Value<List<int>?> reuploadRequestedBy,
   Value<int?> displayLimitInMilliseconds,
   Value<Uint8List?> downloadToken,
   Value<Uint8List?> encryptionKey,
@@ -6755,6 +6834,7 @@ typedef $$MediaFilesTableUpdateCompanionBuilder = MediaFilesCompanion Function({
   Value<bool> requiresAuthentication,
   Value<bool> reopenByContact,
   Value<bool> storedByContact,
+  Value<List<int>?> reuploadRequestedBy,
   Value<int?> displayLimitInMilliseconds,
   Value<Uint8List?> downloadToken,
   Value<Uint8List?> encryptionKey,
@@ -6822,6 +6902,11 @@ class $$MediaFilesTableFilterComposer
   ColumnFilters<bool> get storedByContact => $composableBuilder(
       column: $table.storedByContact,
       builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<List<int>?, List<int>, String>
+      get reuploadRequestedBy => $composableBuilder(
+          column: $table.reuploadRequestedBy,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<int> get displayLimitInMilliseconds => $composableBuilder(
       column: $table.displayLimitInMilliseconds,
@@ -6899,6 +6984,10 @@ class $$MediaFilesTableOrderingComposer
       column: $table.storedByContact,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get reuploadRequestedBy => $composableBuilder(
+      column: $table.reuploadRequestedBy,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get displayLimitInMilliseconds => $composableBuilder(
       column: $table.displayLimitInMilliseconds,
       builder: (column) => ColumnOrderings(column));
@@ -6954,6 +7043,10 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<bool> get storedByContact => $composableBuilder(
       column: $table.storedByContact, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<int>?, String>
+      get reuploadRequestedBy => $composableBuilder(
+          column: $table.reuploadRequestedBy, builder: (column) => column);
 
   GeneratedColumn<int> get displayLimitInMilliseconds => $composableBuilder(
       column: $table.displayLimitInMilliseconds, builder: (column) => column);
@@ -7025,6 +7118,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<bool> requiresAuthentication = const Value.absent(),
             Value<bool> reopenByContact = const Value.absent(),
             Value<bool> storedByContact = const Value.absent(),
+            Value<List<int>?> reuploadRequestedBy = const Value.absent(),
             Value<int?> displayLimitInMilliseconds = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<Uint8List?> encryptionKey = const Value.absent(),
@@ -7041,6 +7135,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             requiresAuthentication: requiresAuthentication,
             reopenByContact: reopenByContact,
             storedByContact: storedByContact,
+            reuploadRequestedBy: reuploadRequestedBy,
             displayLimitInMilliseconds: displayLimitInMilliseconds,
             downloadToken: downloadToken,
             encryptionKey: encryptionKey,
@@ -7057,6 +7152,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             required bool requiresAuthentication,
             Value<bool> reopenByContact = const Value.absent(),
             Value<bool> storedByContact = const Value.absent(),
+            Value<List<int>?> reuploadRequestedBy = const Value.absent(),
             Value<int?> displayLimitInMilliseconds = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<Uint8List?> encryptionKey = const Value.absent(),
@@ -7073,6 +7169,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             requiresAuthentication: requiresAuthentication,
             reopenByContact: reopenByContact,
             storedByContact: storedByContact,
+            reuploadRequestedBy: reuploadRequestedBy,
             displayLimitInMilliseconds: displayLimitInMilliseconds,
             downloadToken: downloadToken,
             encryptionKey: encryptionKey,
@@ -7128,15 +7225,15 @@ typedef $$MediaFilesTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function({bool messagesRefs})>;
 typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   required String groupId,
-  required String messageId,
+  Value<String> messageId,
   Value<int?> senderId,
   Value<String?> content,
   Value<String?> mediaId,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
   Value<bool> isEdited,
-  Value<bool> acknowledgeByUser,
-  Value<bool> acknowledgeByServer,
+  Value<bool> ackByUser,
+  Value<bool> ackByServer,
   Value<int> openedByCounter,
   Value<DateTime?> openedAt,
   Value<DateTime> createdAt,
@@ -7152,8 +7249,8 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
   Value<bool> isEdited,
-  Value<bool> acknowledgeByUser,
-  Value<bool> acknowledgeByServer,
+  Value<bool> ackByUser,
+  Value<bool> ackByServer,
   Value<int> openedByCounter,
   Value<DateTime?> openedAt,
   Value<DateTime> createdAt,
@@ -7286,13 +7383,11 @@ class $$MessagesTableFilterComposer
   ColumnFilters<bool> get isEdited => $composableBuilder(
       column: $table.isEdited, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get acknowledgeByUser => $composableBuilder(
-      column: $table.acknowledgeByUser,
-      builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get ackByUser => $composableBuilder(
+      column: $table.ackByUser, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get acknowledgeByServer => $composableBuilder(
-      column: $table.acknowledgeByServer,
-      builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get ackByServer => $composableBuilder(
+      column: $table.ackByServer, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get openedByCounter => $composableBuilder(
       column: $table.openedByCounter,
@@ -7456,13 +7551,11 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<bool> get isEdited => $composableBuilder(
       column: $table.isEdited, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get acknowledgeByUser => $composableBuilder(
-      column: $table.acknowledgeByUser,
-      builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get ackByUser => $composableBuilder(
+      column: $table.ackByUser, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get acknowledgeByServer => $composableBuilder(
-      column: $table.acknowledgeByServer,
-      builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get ackByServer => $composableBuilder(
+      column: $table.ackByServer, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get openedByCounter => $composableBuilder(
       column: $table.openedByCounter,
@@ -7562,11 +7655,11 @@ class $$MessagesTableAnnotationComposer
   GeneratedColumn<bool> get isEdited =>
       $composableBuilder(column: $table.isEdited, builder: (column) => column);
 
-  GeneratedColumn<bool> get acknowledgeByUser => $composableBuilder(
-      column: $table.acknowledgeByUser, builder: (column) => column);
+  GeneratedColumn<bool> get ackByUser =>
+      $composableBuilder(column: $table.ackByUser, builder: (column) => column);
 
-  GeneratedColumn<bool> get acknowledgeByServer => $composableBuilder(
-      column: $table.acknowledgeByServer, builder: (column) => column);
+  GeneratedColumn<bool> get ackByServer => $composableBuilder(
+      column: $table.ackByServer, builder: (column) => column);
 
   GeneratedColumn<int> get openedByCounter => $composableBuilder(
       column: $table.openedByCounter, builder: (column) => column);
@@ -7741,8 +7834,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
             Value<bool> isEdited = const Value.absent(),
-            Value<bool> acknowledgeByUser = const Value.absent(),
-            Value<bool> acknowledgeByServer = const Value.absent(),
+            Value<bool> ackByUser = const Value.absent(),
+            Value<bool> ackByServer = const Value.absent(),
             Value<int> openedByCounter = const Value.absent(),
             Value<DateTime?> openedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7758,8 +7851,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
             isEdited: isEdited,
-            acknowledgeByUser: acknowledgeByUser,
-            acknowledgeByServer: acknowledgeByServer,
+            ackByUser: ackByUser,
+            ackByServer: ackByServer,
             openedByCounter: openedByCounter,
             openedAt: openedAt,
             createdAt: createdAt,
@@ -7768,15 +7861,15 @@ class $$MessagesTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             required String groupId,
-            required String messageId,
+            Value<String> messageId = const Value.absent(),
             Value<int?> senderId = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
             Value<bool> isEdited = const Value.absent(),
-            Value<bool> acknowledgeByUser = const Value.absent(),
-            Value<bool> acknowledgeByServer = const Value.absent(),
+            Value<bool> ackByUser = const Value.absent(),
+            Value<bool> ackByServer = const Value.absent(),
             Value<int> openedByCounter = const Value.absent(),
             Value<DateTime?> openedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7792,8 +7885,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
             isEdited: isEdited,
-            acknowledgeByUser: acknowledgeByUser,
-            acknowledgeByServer: acknowledgeByServer,
+            ackByUser: ackByUser,
+            ackByServer: ackByServer,
             openedByCounter: openedByCounter,
             openedAt: openedAt,
             createdAt: createdAt,
@@ -8518,6 +8611,7 @@ typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   required bool isGroupAdmin,
   required bool isGroupOfTwo,
   Value<bool> pinned,
+  Value<bool> archived,
   Value<DateTime> lastMessageExchange,
   Value<DateTime> createdAt,
   Value<int> rowid,
@@ -8527,6 +8621,7 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<bool> isGroupAdmin,
   Value<bool> isGroupOfTwo,
   Value<bool> pinned,
+  Value<bool> archived,
   Value<DateTime> lastMessageExchange,
   Value<DateTime> createdAt,
   Value<int> rowid,
@@ -8551,6 +8646,9 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
 
   ColumnFilters<bool> get pinned => $composableBuilder(
       column: $table.pinned, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get archived => $composableBuilder(
+      column: $table.archived, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange,
@@ -8582,6 +8680,9 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
   ColumnOrderings<bool> get pinned => $composableBuilder(
       column: $table.pinned, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get archived => $composableBuilder(
+      column: $table.archived, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange,
       builder: (column) => ColumnOrderings(column));
@@ -8610,6 +8711,9 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<bool> get pinned =>
       $composableBuilder(column: $table.pinned, builder: (column) => column);
+
+  GeneratedColumn<bool> get archived =>
+      $composableBuilder(column: $table.archived, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange, builder: (column) => column);
@@ -8645,6 +8749,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<bool> isGroupAdmin = const Value.absent(),
             Value<bool> isGroupOfTwo = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
+            Value<bool> archived = const Value.absent(),
             Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -8654,6 +8759,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             isGroupAdmin: isGroupAdmin,
             isGroupOfTwo: isGroupOfTwo,
             pinned: pinned,
+            archived: archived,
             lastMessageExchange: lastMessageExchange,
             createdAt: createdAt,
             rowid: rowid,
@@ -8663,6 +8769,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             required bool isGroupAdmin,
             required bool isGroupOfTwo,
             Value<bool> pinned = const Value.absent(),
+            Value<bool> archived = const Value.absent(),
             Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -8672,6 +8779,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             isGroupAdmin: isGroupAdmin,
             isGroupOfTwo: isGroupOfTwo,
             pinned: pinned,
+            archived: archived,
             lastMessageExchange: lastMessageExchange,
             createdAt: createdAt,
             rowid: rowid,
@@ -8965,6 +9073,7 @@ typedef $$ReceiptsTableCreateCompanionBuilder = ReceiptsCompanion Function({
   Value<String?> messageId,
   required Uint8List message,
   Value<bool> contactWillSendsReceipt,
+  Value<DateTime?> ackByServerAt,
   Value<int> retryCount,
   Value<DateTime?> lastRetry,
   Value<DateTime> createdAt,
@@ -8976,6 +9085,7 @@ typedef $$ReceiptsTableUpdateCompanionBuilder = ReceiptsCompanion Function({
   Value<String?> messageId,
   Value<Uint8List> message,
   Value<bool> contactWillSendsReceipt,
+  Value<DateTime?> ackByServerAt,
   Value<int> retryCount,
   Value<DateTime?> lastRetry,
   Value<DateTime> createdAt,
@@ -9035,6 +9145,9 @@ class $$ReceiptsTableFilterComposer
   ColumnFilters<bool> get contactWillSendsReceipt => $composableBuilder(
       column: $table.contactWillSendsReceipt,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get ackByServerAt => $composableBuilder(
+      column: $table.ackByServerAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get retryCount => $composableBuilder(
       column: $table.retryCount, builder: (column) => ColumnFilters(column));
@@ -9105,6 +9218,10 @@ class $$ReceiptsTableOrderingComposer
       column: $table.contactWillSendsReceipt,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get ackByServerAt => $composableBuilder(
+      column: $table.ackByServerAt,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get retryCount => $composableBuilder(
       column: $table.retryCount, builder: (column) => ColumnOrderings(column));
 
@@ -9172,6 +9289,9 @@ class $$ReceiptsTableAnnotationComposer
 
   GeneratedColumn<bool> get contactWillSendsReceipt => $composableBuilder(
       column: $table.contactWillSendsReceipt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get ackByServerAt => $composableBuilder(
+      column: $table.ackByServerAt, builder: (column) => column);
 
   GeneratedColumn<int> get retryCount => $composableBuilder(
       column: $table.retryCount, builder: (column) => column);
@@ -9251,6 +9371,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             Value<String?> messageId = const Value.absent(),
             Value<Uint8List> message = const Value.absent(),
             Value<bool> contactWillSendsReceipt = const Value.absent(),
+            Value<DateTime?> ackByServerAt = const Value.absent(),
             Value<int> retryCount = const Value.absent(),
             Value<DateTime?> lastRetry = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -9262,6 +9383,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             messageId: messageId,
             message: message,
             contactWillSendsReceipt: contactWillSendsReceipt,
+            ackByServerAt: ackByServerAt,
             retryCount: retryCount,
             lastRetry: lastRetry,
             createdAt: createdAt,
@@ -9273,6 +9395,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             Value<String?> messageId = const Value.absent(),
             required Uint8List message,
             Value<bool> contactWillSendsReceipt = const Value.absent(),
+            Value<DateTime?> ackByServerAt = const Value.absent(),
             Value<int> retryCount = const Value.absent(),
             Value<DateTime?> lastRetry = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -9284,6 +9407,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             messageId: messageId,
             message: message,
             contactWillSendsReceipt: contactWillSendsReceipt,
+            ackByServerAt: ackByServerAt,
             retryCount: retryCount,
             lastRetry: lastRetry,
             createdAt: createdAt,

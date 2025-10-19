@@ -26,7 +26,7 @@ enum PushKind {
 
 message PushNotification {
     PushKind kind = 1;
-    optional int64 messageId = 2;
+    optional string messageId = 2;
     optional string reactionContent = 3;
 }
 
@@ -39,7 +39,7 @@ message PushUser {
     int64 userId = 1;
     string displayName = 2;
     bool blocked = 3;
-    optional int64 lastMessageId = 4;
+    optional string lastMessageId = 4;
     repeated PushKey pushKeys = 5;
 }
 

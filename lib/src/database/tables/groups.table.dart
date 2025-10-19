@@ -9,6 +9,7 @@ class Groups extends Table {
   BoolColumn get isGroupAdmin => boolean()();
   BoolColumn get isGroupOfTwo => boolean()();
   BoolColumn get pinned => boolean().withDefault(const Constant(false))();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get lastMessageExchange =>
       dateTime().withDefault(currentDateAndTime)();

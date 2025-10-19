@@ -16,7 +16,6 @@ class Contacts extends Table {
   BoolColumn get hidden => boolean().withDefault(const Constant(false))();
   BoolColumn get blocked => boolean().withDefault(const Constant(false))();
   BoolColumn get verified => boolean().withDefault(const Constant(false))();
-  BoolColumn get archived => boolean().withDefault(const Constant(false))();
   BoolColumn get deleted => boolean().withDefault(const Constant(false))();
 
   BoolColumn get alsoBestFriend =>

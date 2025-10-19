@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 
@@ -14,13 +16,11 @@ enum UploadState {
   receiverNotified,
 }
 
-enum DownloadState {
-  pending,
-}
+enum DownloadState { pending, downloading }
 
 @DataClassName('MediaFile')
 class MediaFiles extends Table {
-  TextColumn get mediaId => text().clientDefault(() => uuid.v4())();
+  TextColumn get mediaId => text().clientDefault(() => uuid.v7())();
 
   TextColumn get type => textEnum<MediaType>()();
 
@@ -34,6 +34,9 @@ class MediaFiles extends Table {
   BoolColumn get storedByContact =>
       boolean().withDefault(const Constant(false))();
 
+  TextColumn get reuploadRequestedBy =>
+      text().map(IntListTypeConverter()).nullable()();
+
   IntColumn get displayLimitInMilliseconds => integer().nullable()();
 
   BlobColumn get downloadToken => blob().nullable()();
@@ -45,4 +48,16 @@ class MediaFiles extends Table {
 
   @override
   Set<Column> get primaryKey => {mediaId};
+}
+
+class IntListTypeConverter extends TypeConverter<List<int>, String> {
+  @override
+  List<int> fromSql(String fromDb) {
+    return List<int>.from(jsonDecode(fromDb) as Iterable<dynamic>);
+  }
+
+  @override
+  String toSql(List<int> value) {
+    return json.encode(value);
+  }
 }
