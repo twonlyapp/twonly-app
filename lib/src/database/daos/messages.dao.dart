@@ -348,6 +348,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     return select(messages)..where((t) => t.messageId.equals(messageId));
   }
 
+  Future<List<Message>> getMessagesByMediaId(String mediaId) async {
+    return (select(messages)..where((t) => t.mediaId.equals(mediaId))).get();
+  }
+
   // Future<List<Message>> getMessagesByMediaUploadId(int mediaUploadId) async {
   //   return (select(messages)
   //         ..where((t) => t.mediaUploadId.equals(mediaUploadId)))

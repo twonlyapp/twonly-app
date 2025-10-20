@@ -1,11 +1,13 @@
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
+import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 
 @DataClassName('Message')
 class Messages extends Table {
-  TextColumn get groupId => text()();
+  TextColumn get groupId =>
+      text().references(Groups, #groupId, onDelete: KeyAction.cascade)();
   TextColumn get messageId => text().clientDefault(() => uuid.v7())();
 
   // in case senderId is null, it was send by user itself

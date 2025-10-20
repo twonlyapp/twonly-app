@@ -7,9 +7,11 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
+import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pbenum.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart'
     show gMediaShowInfinite;
 
@@ -75,7 +77,10 @@ Future<void> handlePushData(String pushDataB64) async {
         );
       } else if (foundPushUser != null) {
         if (pushNotification.hasMessageId()) {
-          if (pushNotification.messageId <= foundPushUser.lastMessageId) {
+          if (isUUIDNewer(
+            foundPushUser.lastMessageId,
+            pushNotification.messageId,
+          )) {
             Log.info(
               'Got a push notification for a message which was already opened.',
             );

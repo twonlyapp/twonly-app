@@ -1,10 +1,10 @@
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/message_old.dart' as my;
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -38,17 +38,15 @@ Future<void> syncFlameCounters() async {
     // only sync when flame counter is higher than three days
     if (flameCounter < 1 && bestFriend.userId != contact.userId) continue;
 
-    await encryptAndSendMessageAsync(
-      null,
+    await sendCipherText(
       contact.userId,
-      my.MessageJson(
-        kind: MessageKind.flameSync,
-        content: my.FlameSyncContent(
-          flameCounter: flameCounter,
-          lastFlameCounterChange: contact.lastFlameCounterChange!,
+      EncryptedContent(
+        flameSync: EncryptedContent_FlameSync(
+          flameCounter: Int64(flameCounter),
+          lastFlameCounterChange:
+              Int64(contact.lastFlameCounterChange!.millisecondsSinceEpoch),
           bestFriend: contact.userId == bestFriend.userId,
         ),
-        timestamp: DateTime.now(),
       ),
     );
 

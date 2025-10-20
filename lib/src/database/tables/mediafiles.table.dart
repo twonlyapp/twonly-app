@@ -16,7 +16,7 @@ enum UploadState {
   receiverNotified,
 }
 
-enum DownloadState { pending, downloading }
+enum DownloadState { pending, downloading, reuploadRequested }
 
 @DataClassName('MediaFile')
 class MediaFiles extends Table {

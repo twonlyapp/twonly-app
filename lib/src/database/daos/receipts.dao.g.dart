@@ -5,6 +5,7 @@ part of 'receipts.dao.dart';
 // ignore_for_file: type=lint
 mixin _$ReceiptsDaoMixin on DatabaseAccessor<TwonlyDB> {
   $ContactsTable get contacts => attachedDatabase.contacts;
+  $GroupsTable get groups => attachedDatabase.groups;
   $MediaFilesTable get mediaFiles => attachedDatabase.mediaFiles;
   $MessagesTable get messages => attachedDatabase.messages;
   $ReceiptsTable get receipts => attachedDatabase.receipts;
