@@ -10,10 +10,8 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/model/protobuf/backup/backup.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -90,43 +88,8 @@ Future<void> handleBackupData(
   );
 
   final baseDir = (await getApplicationSupportDirectory()).path;
-  final originalDatabase = File(join(baseDir, 'twonly_database.sqlite'));
+  final originalDatabase = File(join(baseDir, 'twonly.sqlite'));
   await originalDatabase.writeAsBytes(backupContent.twonlyDatabase);
-
-  /// When restoring the last message ID must be increased otherwise
-  /// receivers would mark them as duplicates as they where already
-  /// send.
-  final database = TwonlyDatabase();
-  var lastMessageSend = 0;
-  int? randomUserId;
-
-  final contacts = await database.contactsDao.getAllNotBlockedContacts();
-  for (final contact in contacts) {
-    randomUserId = contact.userId;
-    final days = DateTime.now().difference(contact.lastMessageExchange).inDays;
-    if (days < lastMessageSend) {
-      lastMessageSend = days;
-    }
-  }
-
-  if (randomUserId != null) {
-    // for each day add 400 message ids
-    final dummyMessagesCounter = (lastMessageSend + 1) * 400;
-    Log.info(
-      'Creating $dummyMessagesCounter dummy messages to increase message counter as last message was $lastMessageSend days ago.',
-    );
-    for (var i = 0; i < dummyMessagesCounter; i++) {
-      await database.messagesDao.insertMessage(
-        MessagesCompanion(
-          contactId: Value(randomUserId),
-          kind: const Value(MessageKind.ack),
-          acknowledgeByServer: const Value(true),
-          errorWhileSending: const Value(true),
-        ),
-      );
-    }
-    await database.messagesDao.deleteAllMessagesByContactId(randomUserId);
-  }
 
   const storage = FlutterSecureStorage();
 

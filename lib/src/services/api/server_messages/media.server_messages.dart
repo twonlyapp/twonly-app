@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -8,7 +7,6 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/media_download.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/mediafile.service.dart';
-import 'package:twonly/src/services/thumbnail.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<void> handleMedia(
@@ -33,7 +31,10 @@ Future<void> handleMedia(
       }
 
       // in case there was already a downloaded file delete it...
-      await removeMediaFile(message.mediaId!);
+      final mediaService = await MediaFileService.fromMediaId(message.mediaId!);
+      if (mediaService != null) {
+        mediaService.tempPath.deleteSync();
+      }
 
       await twonlyDB.mediaFilesDao.updateMedia(
         message.mediaId!,
@@ -81,6 +82,7 @@ Future<void> handleMedia(
   );
 
   if (mediaFile == null) {
+    Log.error('Could not insert media file into database');
     return;
   }
 
@@ -121,7 +123,11 @@ Future<void> handleMediaUpdate(
   if (message == null || message.mediaId == null) return;
   final mediaFile =
       await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
-  if (mediaFile == null) return;
+  if (mediaFile == null) {
+    Log.info(
+        'Got media file update, but media file was not found ${message.mediaId}');
+    return;
+  }
 
   switch (mediaUpdate.type) {
     case EncryptedContent_MediaUpdate_Type.REOPENED:
@@ -137,11 +143,12 @@ Future<void> handleMediaUpdate(
       await twonlyDB.mediaFilesDao.updateMedia(
         mediaFile.mediaId,
         const MediaFilesCompanion(
-          storedByContact: Value(true),
+          stored: Value(true),
         ),
       );
 
-      unawaited(createThumbnailForMediaFile(mediaFile));
+      final mediaService = await MediaFileService.fromMedia(mediaFile);
+      unawaited(mediaService.createThumbnail());
 
     case EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR:
       Log.info('Got media file decryption error ${mediaFile.mediaId}');

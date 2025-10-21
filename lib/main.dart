@@ -45,6 +45,8 @@ void main() async {
   apiService = ApiService();
   twonlyDB = TwonlyDB();
 
+  await initFileDownloader();
+
   // await twonlyDB.messagesDao.resetPendingDownloadState();
   // await twonlyDB.messagesDao.handleMediaFilesOlderThan30Days();
   // await twonlyDB.messageRetransmissionDao.purgeOldRetransmissions();
@@ -55,8 +57,6 @@ void main() async {
   // unawaited(purgeSendMediaFiles());
 
   // unawaited(performTwonlySafeBackup());
-
-  await initFileDownloader();
 
   runApp(
     MultiProvider(

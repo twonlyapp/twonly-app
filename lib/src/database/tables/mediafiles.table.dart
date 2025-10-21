@@ -16,7 +16,13 @@ enum UploadState {
   receiverNotified,
 }
 
-enum DownloadState { pending, downloading, reuploadRequested }
+enum DownloadState {
+  pending,
+  downloading,
+  downloaded,
+  ready,
+  reuploadRequested
+}
 
 @DataClassName('MediaFile')
 class MediaFiles extends Table {
@@ -31,8 +37,7 @@ class MediaFiles extends Table {
   BoolColumn get reopenByContact =>
       boolean().withDefault(const Constant(false))();
 
-  BoolColumn get storedByContact =>
-      boolean().withDefault(const Constant(false))();
+  BoolColumn get stored => boolean().withDefault(const Constant(false))();
 
   TextColumn get reuploadRequestedBy =>
       text().map(IntListTypeConverter()).nullable()();

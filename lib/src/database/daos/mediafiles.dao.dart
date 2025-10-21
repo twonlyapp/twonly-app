@@ -51,4 +51,10 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
       ),
     );
   }
+
+  Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
+    return (select(mediaFiles)
+          ..where((t) => t.downloadState.equals(DownloadState.pending.name)))
+        .get();
+  }
 }

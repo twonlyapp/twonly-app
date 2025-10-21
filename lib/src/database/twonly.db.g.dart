@@ -1473,15 +1473,14 @@ class $MediaFilesTable extends MediaFiles
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("reopen_by_contact" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _storedByContactMeta =
-      const VerificationMeta('storedByContact');
+  static const VerificationMeta _storedMeta = const VerificationMeta('stored');
   @override
-  late final GeneratedColumn<bool> storedByContact = GeneratedColumn<bool>(
-      'stored_by_contact', aliasedName, false,
+  late final GeneratedColumn<bool> stored = GeneratedColumn<bool>(
+      'stored', aliasedName, false,
       type: DriftSqlType.bool,
       requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("stored_by_contact" IN (0, 1))'),
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("stored" IN (0, 1))'),
       defaultValue: const Constant(false));
   @override
   late final GeneratedColumnWithTypeConverter<List<int>?, String>
@@ -1536,7 +1535,7 @@ class $MediaFilesTable extends MediaFiles
         downloadState,
         requiresAuthentication,
         reopenByContact,
-        storedByContact,
+        stored,
         reuploadRequestedBy,
         displayLimitInMilliseconds,
         downloadToken,
@@ -1573,11 +1572,9 @@ class $MediaFilesTable extends MediaFiles
           reopenByContact.isAcceptableOrUnknown(
               data['reopen_by_contact']!, _reopenByContactMeta));
     }
-    if (data.containsKey('stored_by_contact')) {
-      context.handle(
-          _storedByContactMeta,
-          storedByContact.isAcceptableOrUnknown(
-              data['stored_by_contact']!, _storedByContactMeta));
+    if (data.containsKey('stored')) {
+      context.handle(_storedMeta,
+          stored.isAcceptableOrUnknown(data['stored']!, _storedMeta));
     }
     if (data.containsKey('display_limit_in_milliseconds')) {
       context.handle(
@@ -1638,8 +1635,8 @@ class $MediaFilesTable extends MediaFiles
           data['${effectivePrefix}requires_authentication'])!,
       reopenByContact: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}reopen_by_contact'])!,
-      storedByContact: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}stored_by_contact'])!,
+      stored: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}stored'])!,
       reuploadRequestedBy: $MediaFilesTable.$converterreuploadRequestedByn
           .fromSql(attachedDatabase.typeMapping.read(DriftSqlType.string,
               data['${effectivePrefix}reupload_requested_by'])),
@@ -1690,7 +1687,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final DownloadState? downloadState;
   final bool requiresAuthentication;
   final bool reopenByContact;
-  final bool storedByContact;
+  final bool stored;
   final List<int>? reuploadRequestedBy;
   final int? displayLimitInMilliseconds;
   final Uint8List? downloadToken;
@@ -1705,7 +1702,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       this.downloadState,
       required this.requiresAuthentication,
       required this.reopenByContact,
-      required this.storedByContact,
+      required this.stored,
       this.reuploadRequestedBy,
       this.displayLimitInMilliseconds,
       this.downloadToken,
@@ -1731,7 +1728,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     }
     map['requires_authentication'] = Variable<bool>(requiresAuthentication);
     map['reopen_by_contact'] = Variable<bool>(reopenByContact);
-    map['stored_by_contact'] = Variable<bool>(storedByContact);
+    map['stored'] = Variable<bool>(stored);
     if (!nullToAbsent || reuploadRequestedBy != null) {
       map['reupload_requested_by'] = Variable<String>($MediaFilesTable
           .$converterreuploadRequestedByn
@@ -1769,7 +1766,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           : Value(downloadState),
       requiresAuthentication: Value(requiresAuthentication),
       reopenByContact: Value(reopenByContact),
-      storedByContact: Value(storedByContact),
+      stored: Value(stored),
       reuploadRequestedBy: reuploadRequestedBy == null && nullToAbsent
           ? const Value.absent()
           : Value(reuploadRequestedBy),
@@ -1807,7 +1804,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication:
           serializer.fromJson<bool>(json['requiresAuthentication']),
       reopenByContact: serializer.fromJson<bool>(json['reopenByContact']),
-      storedByContact: serializer.fromJson<bool>(json['storedByContact']),
+      stored: serializer.fromJson<bool>(json['stored']),
       reuploadRequestedBy:
           serializer.fromJson<List<int>?>(json['reuploadRequestedBy']),
       displayLimitInMilliseconds:
@@ -1832,7 +1829,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           $MediaFilesTable.$converterdownloadStaten.toJson(downloadState)),
       'requiresAuthentication': serializer.toJson<bool>(requiresAuthentication),
       'reopenByContact': serializer.toJson<bool>(reopenByContact),
-      'storedByContact': serializer.toJson<bool>(storedByContact),
+      'stored': serializer.toJson<bool>(stored),
       'reuploadRequestedBy': serializer.toJson<List<int>?>(reuploadRequestedBy),
       'displayLimitInMilliseconds':
           serializer.toJson<int?>(displayLimitInMilliseconds),
@@ -1851,7 +1848,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           Value<DownloadState?> downloadState = const Value.absent(),
           bool? requiresAuthentication,
           bool? reopenByContact,
-          bool? storedByContact,
+          bool? stored,
           Value<List<int>?> reuploadRequestedBy = const Value.absent(),
           Value<int?> displayLimitInMilliseconds = const Value.absent(),
           Value<Uint8List?> downloadToken = const Value.absent(),
@@ -1868,7 +1865,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         requiresAuthentication:
             requiresAuthentication ?? this.requiresAuthentication,
         reopenByContact: reopenByContact ?? this.reopenByContact,
-        storedByContact: storedByContact ?? this.storedByContact,
+        stored: stored ?? this.stored,
         reuploadRequestedBy: reuploadRequestedBy.present
             ? reuploadRequestedBy.value
             : this.reuploadRequestedBy,
@@ -1901,9 +1898,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       reopenByContact: data.reopenByContact.present
           ? data.reopenByContact.value
           : this.reopenByContact,
-      storedByContact: data.storedByContact.present
-          ? data.storedByContact.value
-          : this.storedByContact,
+      stored: data.stored.present ? data.stored.value : this.stored,
       reuploadRequestedBy: data.reuploadRequestedBy.present
           ? data.reuploadRequestedBy.value
           : this.reuploadRequestedBy,
@@ -1935,7 +1930,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('downloadState: $downloadState, ')
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('reopenByContact: $reopenByContact, ')
-          ..write('storedByContact: $storedByContact, ')
+          ..write('stored: $stored, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('downloadToken: $downloadToken, ')
@@ -1955,7 +1950,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       downloadState,
       requiresAuthentication,
       reopenByContact,
-      storedByContact,
+      stored,
       reuploadRequestedBy,
       displayLimitInMilliseconds,
       $driftBlobEquality.hash(downloadToken),
@@ -1973,7 +1968,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.downloadState == this.downloadState &&
           other.requiresAuthentication == this.requiresAuthentication &&
           other.reopenByContact == this.reopenByContact &&
-          other.storedByContact == this.storedByContact &&
+          other.stored == this.stored &&
           other.reuploadRequestedBy == this.reuploadRequestedBy &&
           other.displayLimitInMilliseconds == this.displayLimitInMilliseconds &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
@@ -1991,7 +1986,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<DownloadState?> downloadState;
   final Value<bool> requiresAuthentication;
   final Value<bool> reopenByContact;
-  final Value<bool> storedByContact;
+  final Value<bool> stored;
   final Value<List<int>?> reuploadRequestedBy;
   final Value<int?> displayLimitInMilliseconds;
   final Value<Uint8List?> downloadToken;
@@ -2007,7 +2002,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.downloadState = const Value.absent(),
     this.requiresAuthentication = const Value.absent(),
     this.reopenByContact = const Value.absent(),
-    this.storedByContact = const Value.absent(),
+    this.stored = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.downloadToken = const Value.absent(),
@@ -2024,7 +2019,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.downloadState = const Value.absent(),
     required bool requiresAuthentication,
     this.reopenByContact = const Value.absent(),
-    this.storedByContact = const Value.absent(),
+    this.stored = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.downloadToken = const Value.absent(),
@@ -2042,7 +2037,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<String>? downloadState,
     Expression<bool>? requiresAuthentication,
     Expression<bool>? reopenByContact,
-    Expression<bool>? storedByContact,
+    Expression<bool>? stored,
     Expression<String>? reuploadRequestedBy,
     Expression<int>? displayLimitInMilliseconds,
     Expression<Uint8List>? downloadToken,
@@ -2060,7 +2055,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (requiresAuthentication != null)
         'requires_authentication': requiresAuthentication,
       if (reopenByContact != null) 'reopen_by_contact': reopenByContact,
-      if (storedByContact != null) 'stored_by_contact': storedByContact,
+      if (stored != null) 'stored': stored,
       if (reuploadRequestedBy != null)
         'reupload_requested_by': reuploadRequestedBy,
       if (displayLimitInMilliseconds != null)
@@ -2081,7 +2076,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       Value<DownloadState?>? downloadState,
       Value<bool>? requiresAuthentication,
       Value<bool>? reopenByContact,
-      Value<bool>? storedByContact,
+      Value<bool>? stored,
       Value<List<int>?>? reuploadRequestedBy,
       Value<int?>? displayLimitInMilliseconds,
       Value<Uint8List?>? downloadToken,
@@ -2098,7 +2093,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       requiresAuthentication:
           requiresAuthentication ?? this.requiresAuthentication,
       reopenByContact: reopenByContact ?? this.reopenByContact,
-      storedByContact: storedByContact ?? this.storedByContact,
+      stored: stored ?? this.stored,
       reuploadRequestedBy: reuploadRequestedBy ?? this.reuploadRequestedBy,
       displayLimitInMilliseconds:
           displayLimitInMilliseconds ?? this.displayLimitInMilliseconds,
@@ -2136,8 +2131,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (reopenByContact.present) {
       map['reopen_by_contact'] = Variable<bool>(reopenByContact.value);
     }
-    if (storedByContact.present) {
-      map['stored_by_contact'] = Variable<bool>(storedByContact.value);
+    if (stored.present) {
+      map['stored'] = Variable<bool>(stored.value);
     }
     if (reuploadRequestedBy.present) {
       map['reupload_requested_by'] = Variable<String>($MediaFilesTable
@@ -2178,7 +2173,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('downloadState: $downloadState, ')
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('reopenByContact: $reopenByContact, ')
-          ..write('storedByContact: $storedByContact, ')
+          ..write('stored: $stored, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('downloadToken: $downloadToken, ')
@@ -7107,7 +7102,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   Value<DownloadState?> downloadState,
   required bool requiresAuthentication,
   Value<bool> reopenByContact,
-  Value<bool> storedByContact,
+  Value<bool> stored,
   Value<List<int>?> reuploadRequestedBy,
   Value<int?> displayLimitInMilliseconds,
   Value<Uint8List?> downloadToken,
@@ -7124,7 +7119,7 @@ typedef $$MediaFilesTableUpdateCompanionBuilder = MediaFilesCompanion Function({
   Value<DownloadState?> downloadState,
   Value<bool> requiresAuthentication,
   Value<bool> reopenByContact,
-  Value<bool> storedByContact,
+  Value<bool> stored,
   Value<List<int>?> reuploadRequestedBy,
   Value<int?> displayLimitInMilliseconds,
   Value<Uint8List?> downloadToken,
@@ -7190,9 +7185,8 @@ class $$MediaFilesTableFilterComposer
       column: $table.reopenByContact,
       builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get storedByContact => $composableBuilder(
-      column: $table.storedByContact,
-      builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get stored => $composableBuilder(
+      column: $table.stored, builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<List<int>?, List<int>, String>
       get reuploadRequestedBy => $composableBuilder(
@@ -7271,9 +7265,8 @@ class $$MediaFilesTableOrderingComposer
       column: $table.reopenByContact,
       builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get storedByContact => $composableBuilder(
-      column: $table.storedByContact,
-      builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get stored => $composableBuilder(
+      column: $table.stored, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get reuploadRequestedBy => $composableBuilder(
       column: $table.reuploadRequestedBy,
@@ -7332,8 +7325,8 @@ class $$MediaFilesTableAnnotationComposer
   GeneratedColumn<bool> get reopenByContact => $composableBuilder(
       column: $table.reopenByContact, builder: (column) => column);
 
-  GeneratedColumn<bool> get storedByContact => $composableBuilder(
-      column: $table.storedByContact, builder: (column) => column);
+  GeneratedColumn<bool> get stored =>
+      $composableBuilder(column: $table.stored, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<List<int>?, String>
       get reuploadRequestedBy => $composableBuilder(
@@ -7408,7 +7401,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<DownloadState?> downloadState = const Value.absent(),
             Value<bool> requiresAuthentication = const Value.absent(),
             Value<bool> reopenByContact = const Value.absent(),
-            Value<bool> storedByContact = const Value.absent(),
+            Value<bool> stored = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
             Value<int?> displayLimitInMilliseconds = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
@@ -7425,7 +7418,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             downloadState: downloadState,
             requiresAuthentication: requiresAuthentication,
             reopenByContact: reopenByContact,
-            storedByContact: storedByContact,
+            stored: stored,
             reuploadRequestedBy: reuploadRequestedBy,
             displayLimitInMilliseconds: displayLimitInMilliseconds,
             downloadToken: downloadToken,
@@ -7442,7 +7435,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<DownloadState?> downloadState = const Value.absent(),
             required bool requiresAuthentication,
             Value<bool> reopenByContact = const Value.absent(),
-            Value<bool> storedByContact = const Value.absent(),
+            Value<bool> stored = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
             Value<int?> displayLimitInMilliseconds = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
@@ -7459,7 +7452,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             downloadState: downloadState,
             requiresAuthentication: requiresAuthentication,
             reopenByContact: reopenByContact,
-            storedByContact: storedByContact,
+            stored: stored,
             reuploadRequestedBy: reuploadRequestedBy,
             displayLimitInMilliseconds: displayLimitInMilliseconds,
             downloadToken: downloadToken,

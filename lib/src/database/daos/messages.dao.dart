@@ -177,7 +177,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     if (msg.mediaId != null) {
       await (delete(mediaFiles)..where((t) => t.mediaId.equals(msg.mediaId!)))
           .go();
-      await removeMediaFile(msg.mediaId!);
+
+      final mediaService = await MediaFileService.fromMediaId(msg.mediaId!);
+      if (mediaService != null) {
+        mediaService.fullMediaRemoval();
+      }
     }
     await (delete(messageHistories)
           ..where((t) => t.messageId.equals(messageId)))

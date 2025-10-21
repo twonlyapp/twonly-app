@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/model/protobuf/backup/backup.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -48,20 +48,19 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   final backupDir = Directory(join(baseDir, 'backup_twonly_safe/'));
   await backupDir.create(recursive: true);
 
-  final backupDatabaseFile =
-      File(join(backupDir.path, 'twonly_database.backup.sqlite'));
+  final backupDatabaseFile = File(join(backupDir.path, 'twonly.backup.sqlite'));
 
   final backupDatabaseFileCleaned =
-      File(join(backupDir.path, 'twonly_database.backup.cleaned.sqlite'));
+      File(join(backupDir.path, 'twonly.backup.cleaned.sqlite'));
 
   // copy database
-  final originalDatabase = File(join(baseDir, 'twonly_database.sqlite'));
+  final originalDatabase = File(join(baseDir, 'twonly.sqlite'));
   await originalDatabase.copy(backupDatabaseFile.path);
 
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-  final backupDB = TwonlyDatabase(
+  final backupDB = TwonlyDB(
     driftDatabase(
-      name: 'twonly_database.backup',
+      name: 'twonly.backup',
       native: DriftNativeOptions(
         databaseDirectory: () async {
           return backupDir;

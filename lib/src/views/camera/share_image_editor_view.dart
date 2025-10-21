@@ -340,6 +340,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<Uint8List?> getMergedImage() async {
     Uint8List? image;
 
+
+    TODO: When changed then create a new mediaID!!!!!! 
+    As storedMediaId would overwrite it....
+
     if (layers.length > 1 || widget.videoFilePath != null) {
       for (final x in layers) {
         x.showCustomButtons = false;

@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:background_downloader/background_downloader.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
@@ -10,24 +8,23 @@ import 'package:drift/drift.dart';
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/message_old.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart';
 import 'package:twonly/src/services/api/media_upload.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 
 Future<void> tryDownloadAllMediaFiles({bool force = false}) async {
   // This is called when WebSocket is newly connected, so allow all downloads to be restarted.
-  final messages =
-      await twonlyDB.messagesDao.getAllMessagesPendingDownloading();
+  final mediaFiles =
+      await twonlyDB.mediaFilesDao.getAllMediaFilesPendingDownload();
 
-  for (final message in messages) {
-    await startDownloadMedia(message, force);
+  for (final mediaFile in mediaFiles) {
+    await startDownloadMedia(mediaFile, force);
   }
 }
 
@@ -44,7 +41,7 @@ Map<String, List<String>> defaultAutoDownloadOptions = {
   ],
 };
 
-Future<bool> isAllowedToDownload(bool isVideo) async {
+Future<bool> isAllowedToDownload({required bool isVideo}) async {
   final connectivityResult = await Connectivity().checkConnectivity();
 
   final user = await getUser();
@@ -76,7 +73,7 @@ Future<bool> isAllowedToDownload(bool isVideo) async {
 }
 
 Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
-  final messageId = int.parse(update.task.taskId.replaceAll('download_', ''));
+  final mediaId = update.task.taskId.replaceAll('download_', '');
   var failed = false;
 
   if (update.status == TaskStatus.failed ||
@@ -93,83 +90,45 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
       );
     }
   } else {
-    Log.info('Got ${update.status} for $messageId');
+    Log.info('Got ${update.status} for $mediaId');
     return;
   }
-  await handleDownloadStatusUpdateInternal(messageId, failed);
-}
 
-Future<void> handleDownloadStatusUpdateInternal(
-  int messageId,
-  bool failed,
-) async {
   if (failed) {
-    Log.error('Download failed for $messageId');
-    final message = await twonlyDB.messagesDao
-        .getMessageByMessageId(messageId)
-        .getSingleOrNull();
-    if (message != null && message.downloadState != DownloadState.downloaded) {
-      await handleMediaError(message);
-    }
+    await requestMediaReupload(mediaId);
   } else {
-    Log.info('Download was successfully for $messageId');
-    await handleEncryptedFile(messageId);
+    await handleEncryptedFile(mediaId);
   }
 }
 
 Mutex protectDownload = Mutex();
 
 Future<void> startDownloadMedia(MediaFile media, bool force) async {
-  Log.info(
-    'Download blocked for ${message.messageId} because of network state.',
-  );
-  if (message.contentJson == null) {
-    Log.error('Content of ${message.messageId} not found.');
-    await handleMediaError(message);
+  final mediaService = await MediaFileService.fromMedia(media);
+
+  if (mediaService.encryptedPath.existsSync()) {
+    await handleEncryptedFile(media.mediaId);
     return;
   }
 
-  final content = MessageContent.fromJson(
-    message.kind,
-    jsonDecode(message.contentJson!) as Map,
-  );
-
-  if (content is! MediaMessageContent) {
-    Log.error('Content of ${message.messageId} is not media file.');
-    await handleMediaError(message);
-    return;
-  }
-
-  if (content.downloadToken == null) {
-    Log.error('Download token not defined for ${message.messageId}.');
-    await handleMediaError(message);
-    return;
-  }
-
-  if (!force && !await isAllowedToDownload(content.isVideo)) {
+  if (!force &&
+      !await isAllowedToDownload(isVideo: media.type == MediaType.video)) {
     Log.warn(
-      'Download blocked for ${message.messageId} because of network state.',
+      'Download blocked for ${media.mediaId} because of network state.',
     );
     return;
   }
 
   final isBlocked = await protectDownload.protect<bool>(() async {
-    final msg = await twonlyDB.messagesDao
-        .getMessageByMessageId(message.messageId)
-        .getSingleOrNull();
+    final msg = await twonlyDB.mediaFilesDao.getMediaFileById(media.mediaId);
 
-    if (msg == null) return true;
-
-    if (msg.downloadState != DownloadState.pending) {
-      Log.error(
-        '${message.messageId} is already downloaded or is downloading.',
-      );
+    if (msg == null || msg.downloadState != DownloadState.pending) {
       return true;
     }
 
-    await twonlyDB.messagesDao.updateMessageByMessageId(
-      message.messageId,
-      const MessagesCompanion(
+    await twonlyDB.mediaFilesDao.updateMedia(
+      msg.mediaId,
+      const MediaFilesCompanion(
         downloadState: Value(DownloadState.downloading),
       ),
     );
@@ -178,11 +137,16 @@ Future<void> startDownloadMedia(MediaFile media, bool force) async {
   });
 
   if (isBlocked) {
-    Log.info('Download for ${message.messageId} already started.');
+    Log.info('Download for ${media.mediaId} already started.');
     return;
   }
 
-  final downloadToken = uint8ListToHex(content.downloadToken!);
+  if (media.downloadToken == null) {
+    Log.info('Download token for ${media.mediaId} not found.');
+    return;
+  }
+
+  final downloadToken = uint8ListToHex(media.downloadToken!);
 
   final apiUrl =
       'http${apiService.apiSecure}://${apiService.apiHost}/api/download/$downloadToken';
@@ -190,20 +154,20 @@ Future<void> startDownloadMedia(MediaFile media, bool force) async {
   try {
     final task = DownloadTask(
       url: apiUrl,
-      taskId: 'download_${message.messageId}',
-      directory: 'media/received/',
-      baseDirectory: BaseDirectory.applicationSupport,
-      filename: '${message.messageId}.encrypted',
+      taskId: 'download_${media.mediaId}',
+      directory: mediaService.encryptedPath.parent.path,
+      baseDirectory: BaseDirectory.root,
+      filename: basename(mediaService.encryptedPath.path),
       priority: 0,
       retries: 10,
     );
 
     Log.info(
-      'Got media file. Starting download: ${downloadToken.substring(0, 10)}',
+      'Downloading ${media.mediaId} to ${mediaService.encryptedPath}',
     );
 
     try {
-      await downloadFileFast(message.messageId, apiUrl);
+      await downloadFileFast(media, apiUrl, mediaService.encryptedPath);
     } catch (e) {
       Log.error('Fast download failed: $e');
       await FileDownloader().enqueue(task);
@@ -214,269 +178,114 @@ Future<void> startDownloadMedia(MediaFile media, bool force) async {
 }
 
 Future<void> downloadFileFast(
-  int messageId,
+  MediaFile media,
   String apiUrl,
+  File filePath,
 ) async {
-  final directoryPath =
-      '${(await getApplicationSupportDirectory()).path}/media/received/';
-  final filename = '$messageId.encrypted';
-
-  final directory = Directory(directoryPath);
-  if (!directory.existsSync()) {
-    await directory.create(recursive: true);
-  }
-
-  final filePath = '${directory.path}/$filename';
-
   final response =
       await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 10));
 
   if (response.statusCode == 200) {
-    await File(filePath).writeAsBytes(response.bodyBytes);
+    await filePath.writeAsBytes(response.bodyBytes);
     Log.info('Fast Download successful: $filePath');
-    await handleDownloadStatusUpdateInternal(messageId, false);
+    await handleEncryptedFile(media.mediaId);
     return;
   } else {
-    if (response.statusCode == 404 || response.statusCode == 403) {
-      await handleDownloadStatusUpdateInternal(messageId, true);
+    if (response.statusCode == 404 ||
+        response.statusCode == 403 ||
+        response.statusCode == 400) {
+      // Message was deleted from the server. Requesting it again from the sender to upload it again...
+      await requestMediaReupload(media.mediaId);
       return;
     }
-    // can be tried again
+    // Will be tried again using the slow method...
     throw Exception('Fast download failed with status: ${response.statusCode}');
   }
 }
 
-Future<void> handleEncryptedFile(int messageId) async {
-  final msg = await twonlyDB.messagesDao
-      .getMessageByMessageId(messageId)
-      .getSingleOrNull();
-  if (msg == null) {
-    Log.error('Not message for downloaded file found: $messageId');
+Future<void> requestMediaReupload(String mediaId) async {
+  final messages = await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
+  if (messages.length != 1 || messages.first.senderId == null) {
+    Log.error(
+        'Media file has none or more than one sender. That is not possible');
     return;
   }
 
-  final encryptedBytes = await readMediaFile(msg.messageId, 'encrypted');
+  await sendCipherText(
+    messages.first.senderId!,
+    EncryptedContent(
+      mediaUpdate: EncryptedContent_MediaUpdate(
+        type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
+        targetMessageId: mediaId,
+      ),
+    ),
+  );
 
-  if (encryptedBytes == null) {
-    Log.error('encrypted bytes are not found for ${msg.messageId}');
+  await twonlyDB.mediaFilesDao.updateMedia(
+    mediaId,
+    const MediaFilesCompanion(
+      downloadState: Value(DownloadState.reuploadRequested),
+    ),
+  );
+}
+
+Future<void> handleEncryptedFile(String mediaId) async {
+  final mediaService = await MediaFileService.fromMediaId(mediaId);
+  if (mediaService == null) {
+    Log.error('Media file $mediaId not found in database.');
     return;
   }
 
-  final content =
-      MediaMessageContent.fromJson(jsonDecode(msg.contentJson!) as Map);
+  await twonlyDB.mediaFilesDao.updateMedia(
+    mediaId,
+    const MediaFilesCompanion(
+      downloadState: Value(DownloadState.downloaded),
+    ),
+  );
+
+  late Uint8List encryptedBytes;
+  try {
+    encryptedBytes = await mediaService.encryptedPath.readAsBytes();
+  } catch (e) {
+    Log.error('Could not read encrypted media file: $mediaId. $e');
+    await requestMediaReupload(mediaId);
+    return;
+  }
 
   try {
     final chacha20 = FlutterChacha20.poly1305Aead();
-    final secretKeyData = SecretKeyData(content.encryptionKey!);
+    final secretKeyData = SecretKeyData(mediaService.mediaFile.encryptionKey!);
 
     final secretBox = SecretBox(
       encryptedBytes,
-      nonce: content.encryptionNonce!,
-      mac: Mac(content.encryptionMac!),
+      nonce: mediaService.mediaFile.encryptionNonce!,
+      mac: Mac(mediaService.mediaFile.encryptionMac!),
     );
 
-    // try {
     final plaintextBytes =
         await chacha20.decrypt(secretBox, secretKey: secretKeyData);
-    var imageBytes = Uint8List.fromList(plaintextBytes);
 
-    if (content.isVideo) {
-      final extractedBytes = extractUint8Lists(imageBytes);
-      imageBytes = extractedBytes[0];
-      await writeMediaFile(msg.messageId, 'mp4', extractedBytes[1]);
-    }
+    final rawMediaBytes = Uint8List.fromList(plaintextBytes);
 
-    await writeMediaFile(msg.messageId, 'png', imageBytes);
-    // } catch (e) {
-    //   Log.error(
-    //       "could not decrypt the media file in the second try. reporting error to user: $e");
-    //   handleMediaError(msg);
-    //   return;
-    // }
+    await mediaService.tempPath.writeAsBytes(rawMediaBytes);
   } catch (e) {
-    Log.error('$e');
-
-    /// legacy support
-    final chacha20 = Xchacha20.poly1305Aead();
-    final secretKeyData = SecretKeyData(content.encryptionKey!);
-
-    final secretBox = SecretBox(
-      encryptedBytes,
-      nonce: content.encryptionNonce!,
-      mac: Mac(content.encryptionMac!),
+    Log.error(
+      'Could not decrypt the media file. Requesting a new upload.',
     );
-
-    try {
-      final plaintextBytes =
-          await chacha20.decrypt(secretBox, secretKey: secretKeyData);
-      var imageBytes = Uint8List.fromList(plaintextBytes);
-
-      if (content.isVideo) {
-        final extractedBytes = extractUint8Lists(imageBytes);
-        imageBytes = extractedBytes[0];
-        await writeMediaFile(msg.messageId, 'mp4', extractedBytes[1]);
-      }
-
-      await writeMediaFile(msg.messageId, 'png', imageBytes);
-    } catch (e) {
-      Log.error(
-        'could not decrypt the media file in the second try. reporting error to user: $e',
-      );
-      await handleMediaError(msg);
-      return;
-    }
+    await requestMediaReupload(mediaId);
+    return;
   }
 
-  await twonlyDB.messagesDao.updateMessageByMessageId(
-    msg.messageId,
-    const MessagesCompanion(downloadState: Value(DownloadState.downloaded)),
+  await twonlyDB.mediaFilesDao.updateMedia(
+    mediaId,
+    const MediaFilesCompanion(
+      downloadState: Value(DownloadState.ready),
+    ),
   );
 
-  Log.info('Download and decryption of ${msg.messageId} was successful');
+  Log.info('Decryption of $mediaId was successful');
 
-  await deleteMediaFile(msg.messageId, 'encrypted');
+  mediaService.encryptedPath.deleteSync();
 
-  unawaited(apiService.downloadDone(content.downloadToken!));
+  unawaited(apiService.downloadDone(mediaService.mediaFile.downloadToken!));
 }
-
-Future<Uint8List?> getImageBytes(int mediaId) async {
-  return readMediaFile(mediaId, 'png');
-}
-
-Future<File?> getVideoPath(int mediaId) async {
-  final basePath = await getMediaFilePath(mediaId, 'received');
-  return File('$basePath.mp4');
-}
-
-/// --- helper functions ---
-
-Future<Uint8List?> readMediaFile(int mediaId, String type) async {
-  final basePath = await getMediaFilePath(mediaId, 'received');
-  final file = File('$basePath.$type');
-  Log.info('Reading: $file');
-  if (!file.existsSync()) {
-    return null;
-  }
-  return file.readAsBytes();
-}
-
-Future<bool> existsMediaFile(int mediaId, String type) async {
-  final basePath = await getMediaFilePath(mediaId, 'received');
-  final file = File('$basePath.$type');
-  return file.existsSync();
-}
-
-Future<void> writeMediaFile(int mediaId, String type, Uint8List data) async {
-  final basePath = await getMediaFilePath(mediaId, 'received');
-  final file = File('$basePath.$type');
-  await file.writeAsBytes(data);
-}
-
-Future<void> deleteMediaFile(int mediaId, String type) async {
-  final basePath = await getMediaFilePath(mediaId, 'received');
-  final file = File('$basePath.$type');
-  try {
-    if (file.existsSync()) {
-      await file.delete();
-    }
-  } catch (e) {
-    Log.error('Error deleting: $e');
-  }
-}
-
-Future<void> purgeReceivedMediaFiles() async {
-  final basedir = await getApplicationSupportDirectory();
-  final directory = Directory(join(basedir.path, 'media', 'received'));
-  await purgeMediaFiles(directory);
-}
-
-Future<void> purgeMediaFiles(Directory directory) async {
-  // Check if the directory exists
-  if (directory.existsSync()) {
-    // List all files in the directory
-    final files = directory.listSync();
-
-    // Iterate over each file
-    for (final file in files) {
-      // Get the filename
-      final filename = file.uri.pathSegments.last;
-
-      // Use a regular expression to extract the integer part
-      final match = RegExp(r'(\d+)').firstMatch(filename);
-      if (match != null) {
-        // Parse the integer and add it to the list
-        final fileId = int.parse(match.group(0)!);
-
-        try {
-          if (directory.path.endsWith('send')) {
-            final messages =
-                await twonlyDB.messagesDao.getMessagesByMediaUploadId(fileId);
-            var canBeDeleted = true;
-
-            for (final message in messages) {
-              try {
-                final content = MediaMessageContent.fromJson(
-                  jsonDecode(message.contentJson!) as Map,
-                );
-
-                final oneDayAgo =
-                    DateTime.now().subtract(const Duration(days: 1));
-                final twoDaysAgo =
-                    DateTime.now().subtract(const Duration(days: 1));
-
-                if ((message.openedAt == null ||
-                        oneDayAgo.isBefore(message.openedAt!)) &&
-                    !message.errorWhileSending) {
-                  canBeDeleted = false;
-                } else if (message.mediaStored) {
-                  if (!file.path.contains('.original.') &&
-                      !file.path.contains('.encrypted')) {
-                    canBeDeleted = false;
-                  }
-                }
-
-                /// In case the image is not yet opened but successfully uploaded
-                /// to the server preserve the image for two days in case of an receiving error will happen
-                ///  and then delete them as well.
-                if (message.acknowledgeByServer &&
-                    twoDaysAgo.isAfter(message.sendAt)) {
-                  // Preserve images which can be stored by the other person...
-                  if (content.maxShowTime != gMediaShowInfinite) {
-                    canBeDeleted = true;
-                  }
-                  // Encrypted or upload data can be removed when acknowledgeByServer
-                  if (file.path.contains('.upload') ||
-                      file.path.contains('.encrypted')) {
-                    canBeDeleted = true;
-                  }
-                }
-              } catch (e) {
-                Log.error(e);
-              }
-            }
-            if (canBeDeleted) {
-              Log.info('purged media file ${file.path} ');
-              file.deleteSync();
-            }
-          } else {
-            final message = await twonlyDB.messagesDao
-                .getMessageByMessageId(fileId)
-                .getSingleOrNull();
-            if ((message == null) ||
-                (message.openedAt != null &&
-                    !message.mediaStored &&
-                    message.acknowledgeByServer) ||
-                message.errorWhileSending) {
-              file.deleteSync();
-            }
-          }
-        } catch (e) {
-          Log.error('$e');
-        }
-      }
-    }
-  }
-}
-
-// /data/user/0/eu.twonly.testing/files/media/received/27.encrypted
-// /data/user/0/eu.twonly.testing/app_flutter/data/user/0/eu.twonly.testing/files/media/received/27.encrypted
