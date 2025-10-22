@@ -23,8 +23,8 @@ import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
-import 'package:twonly/src/services/api/media_download.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/api/mediafiles/download.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
 import 'package:twonly/src/services/api/utils.dart';

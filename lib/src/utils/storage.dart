@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
@@ -14,6 +15,7 @@ Future<bool> isUserCreated() async {
   if (user == null) {
     return false;
   }
+  gUser = user;
   return true;
 }
 
@@ -56,7 +58,8 @@ Future<UserData?> updateUserdata(
     final updated = updateUser(user);
     await const FlutterSecureStorage()
         .write(key: SecureStorageKeys.userData, value: jsonEncode(updated));
-    return user;
+    gUser = updated;
+    return updated;
   });
 }
 

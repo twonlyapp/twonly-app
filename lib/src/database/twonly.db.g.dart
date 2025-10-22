@@ -1460,9 +1460,10 @@ class $MediaFilesTable extends MediaFiles
   late final GeneratedColumn<bool> requiresAuthentication =
       GeneratedColumn<bool>('requires_authentication', aliasedName, false,
           type: DriftSqlType.bool,
-          requiredDuringInsert: true,
+          requiredDuringInsert: false,
           defaultConstraints: GeneratedColumn.constraintIsAlways(
-              'CHECK ("requires_authentication" IN (0, 1))'));
+              'CHECK ("requires_authentication" IN (0, 1))'),
+          defaultValue: const Constant(false));
   static const VerificationMeta _reopenByContactMeta =
       const VerificationMeta('reopenByContact');
   @override
@@ -1563,8 +1564,6 @@ class $MediaFilesTable extends MediaFiles
           _requiresAuthenticationMeta,
           requiresAuthentication.isAcceptableOrUnknown(
               data['requires_authentication']!, _requiresAuthenticationMeta));
-    } else if (isInserting) {
-      context.missing(_requiresAuthenticationMeta);
     }
     if (data.containsKey('reopen_by_contact')) {
       context.handle(
@@ -2017,7 +2016,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     required MediaType type,
     this.uploadState = const Value.absent(),
     this.downloadState = const Value.absent(),
-    required bool requiresAuthentication,
+    this.requiresAuthentication = const Value.absent(),
     this.reopenByContact = const Value.absent(),
     this.stored = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
@@ -2028,8 +2027,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionNonce = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : type = Value(type),
-        requiresAuthentication = Value(requiresAuthentication);
+  }) : type = Value(type);
   static Insertable<MediaFile> custom({
     Expression<String>? mediaId,
     Expression<String>? type,
@@ -2233,6 +2231,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES media_files (media_id)'));
+  static const VerificationMeta _downloadTokenMeta =
+      const VerificationMeta('downloadToken');
+  @override
+  late final GeneratedColumn<Uint8List> downloadToken =
+      GeneratedColumn<Uint8List>('download_token', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   static const VerificationMeta _quotesMessageIdMeta =
       const VerificationMeta('quotesMessageId');
   @override
@@ -2319,6 +2323,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         senderId,
         content,
         mediaId,
+        downloadToken,
         quotesMessageId,
         isDeletedFromSender,
         isEdited,
@@ -2360,6 +2365,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     if (data.containsKey('media_id')) {
       context.handle(_mediaIdMeta,
           mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta));
+    }
+    if (data.containsKey('download_token')) {
+      context.handle(
+          _downloadTokenMeta,
+          downloadToken.isAcceptableOrUnknown(
+              data['download_token']!, _downloadTokenMeta));
     }
     if (data.containsKey('quotes_message_id')) {
       context.handle(
@@ -2428,6 +2439,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           .read(DriftSqlType.string, data['${effectivePrefix}content']),
       mediaId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}media_id']),
+      downloadToken: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}download_token']),
       quotesMessageId: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}quotes_message_id']),
       isDeletedFromSender: attachedDatabase.typeMapping.read(
@@ -2461,6 +2474,7 @@ class Message extends DataClass implements Insertable<Message> {
   final int? senderId;
   final String? content;
   final String? mediaId;
+  final Uint8List? downloadToken;
   final String? quotesMessageId;
   final bool isDeletedFromSender;
   final bool isEdited;
@@ -2476,6 +2490,7 @@ class Message extends DataClass implements Insertable<Message> {
       this.senderId,
       this.content,
       this.mediaId,
+      this.downloadToken,
       this.quotesMessageId,
       required this.isDeletedFromSender,
       required this.isEdited,
@@ -2498,6 +2513,9 @@ class Message extends DataClass implements Insertable<Message> {
     }
     if (!nullToAbsent || mediaId != null) {
       map['media_id'] = Variable<String>(mediaId);
+    }
+    if (!nullToAbsent || downloadToken != null) {
+      map['download_token'] = Variable<Uint8List>(downloadToken);
     }
     if (!nullToAbsent || quotesMessageId != null) {
       map['quotes_message_id'] = Variable<String>(quotesMessageId);
@@ -2530,6 +2548,9 @@ class Message extends DataClass implements Insertable<Message> {
       mediaId: mediaId == null && nullToAbsent
           ? const Value.absent()
           : Value(mediaId),
+      downloadToken: downloadToken == null && nullToAbsent
+          ? const Value.absent()
+          : Value(downloadToken),
       quotesMessageId: quotesMessageId == null && nullToAbsent
           ? const Value.absent()
           : Value(quotesMessageId),
@@ -2557,6 +2578,7 @@ class Message extends DataClass implements Insertable<Message> {
       senderId: serializer.fromJson<int?>(json['senderId']),
       content: serializer.fromJson<String?>(json['content']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
+      downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
       quotesMessageId: serializer.fromJson<String?>(json['quotesMessageId']),
       isDeletedFromSender:
           serializer.fromJson<bool>(json['isDeletedFromSender']),
@@ -2578,6 +2600,7 @@ class Message extends DataClass implements Insertable<Message> {
       'senderId': serializer.toJson<int?>(senderId),
       'content': serializer.toJson<String?>(content),
       'mediaId': serializer.toJson<String?>(mediaId),
+      'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
       'isEdited': serializer.toJson<bool>(isEdited),
@@ -2596,6 +2619,7 @@ class Message extends DataClass implements Insertable<Message> {
           Value<int?> senderId = const Value.absent(),
           Value<String?> content = const Value.absent(),
           Value<String?> mediaId = const Value.absent(),
+          Value<Uint8List?> downloadToken = const Value.absent(),
           Value<String?> quotesMessageId = const Value.absent(),
           bool? isDeletedFromSender,
           bool? isEdited,
@@ -2611,6 +2635,8 @@ class Message extends DataClass implements Insertable<Message> {
         senderId: senderId.present ? senderId.value : this.senderId,
         content: content.present ? content.value : this.content,
         mediaId: mediaId.present ? mediaId.value : this.mediaId,
+        downloadToken:
+            downloadToken.present ? downloadToken.value : this.downloadToken,
         quotesMessageId: quotesMessageId.present
             ? quotesMessageId.value
             : this.quotesMessageId,
@@ -2630,6 +2656,9 @@ class Message extends DataClass implements Insertable<Message> {
       senderId: data.senderId.present ? data.senderId.value : this.senderId,
       content: data.content.present ? data.content.value : this.content,
       mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
+      downloadToken: data.downloadToken.present
+          ? data.downloadToken.value
+          : this.downloadToken,
       quotesMessageId: data.quotesMessageId.present
           ? data.quotesMessageId.value
           : this.quotesMessageId,
@@ -2658,6 +2687,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('senderId: $senderId, ')
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
+          ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('isEdited: $isEdited, ')
@@ -2678,6 +2708,7 @@ class Message extends DataClass implements Insertable<Message> {
       senderId,
       content,
       mediaId,
+      $driftBlobEquality.hash(downloadToken),
       quotesMessageId,
       isDeletedFromSender,
       isEdited,
@@ -2696,6 +2727,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.senderId == this.senderId &&
           other.content == this.content &&
           other.mediaId == this.mediaId &&
+          $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
           other.isEdited == this.isEdited &&
@@ -2713,6 +2745,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<int?> senderId;
   final Value<String?> content;
   final Value<String?> mediaId;
+  final Value<Uint8List?> downloadToken;
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
   final Value<bool> isEdited;
@@ -2729,6 +2762,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.senderId = const Value.absent(),
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
+    this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.isEdited = const Value.absent(),
@@ -2746,6 +2780,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.senderId = const Value.absent(),
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
+    this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.isEdited = const Value.absent(),
@@ -2763,6 +2798,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<int>? senderId,
     Expression<String>? content,
     Expression<String>? mediaId,
+    Expression<Uint8List>? downloadToken,
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
     Expression<bool>? isEdited,
@@ -2780,6 +2816,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (senderId != null) 'sender_id': senderId,
       if (content != null) 'content': content,
       if (mediaId != null) 'media_id': mediaId,
+      if (downloadToken != null) 'download_token': downloadToken,
       if (quotesMessageId != null) 'quotes_message_id': quotesMessageId,
       if (isDeletedFromSender != null)
         'is_deleted_from_sender': isDeletedFromSender,
@@ -2800,6 +2837,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<int?>? senderId,
       Value<String?>? content,
       Value<String?>? mediaId,
+      Value<Uint8List?>? downloadToken,
       Value<String?>? quotesMessageId,
       Value<bool>? isDeletedFromSender,
       Value<bool>? isEdited,
@@ -2816,6 +2854,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       senderId: senderId ?? this.senderId,
       content: content ?? this.content,
       mediaId: mediaId ?? this.mediaId,
+      downloadToken: downloadToken ?? this.downloadToken,
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
       isEdited: isEdited ?? this.isEdited,
@@ -2846,6 +2885,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     }
     if (mediaId.present) {
       map['media_id'] = Variable<String>(mediaId.value);
+    }
+    if (downloadToken.present) {
+      map['download_token'] = Variable<Uint8List>(downloadToken.value);
     }
     if (quotesMessageId.present) {
       map['quotes_message_id'] = Variable<String>(quotesMessageId.value);
@@ -2888,6 +2930,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('senderId: $senderId, ')
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
+          ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('isEdited: $isEdited, ')
@@ -7100,7 +7143,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   required MediaType type,
   Value<UploadState?> uploadState,
   Value<DownloadState?> downloadState,
-  required bool requiresAuthentication,
+  Value<bool> requiresAuthentication,
   Value<bool> reopenByContact,
   Value<bool> stored,
   Value<List<int>?> reuploadRequestedBy,
@@ -7433,7 +7476,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             required MediaType type,
             Value<UploadState?> uploadState = const Value.absent(),
             Value<DownloadState?> downloadState = const Value.absent(),
-            required bool requiresAuthentication,
+            Value<bool> requiresAuthentication = const Value.absent(),
             Value<bool> reopenByContact = const Value.absent(),
             Value<bool> stored = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
@@ -7513,6 +7556,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<int?> senderId,
   Value<String?> content,
   Value<String?> mediaId,
+  Value<Uint8List?> downloadToken,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
   Value<bool> isEdited,
@@ -7530,6 +7574,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<int?> senderId,
   Value<String?> content,
   Value<String?> mediaId,
+  Value<Uint8List?> downloadToken,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
   Value<bool> isEdited,
@@ -7670,6 +7715,9 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get downloadToken => $composableBuilder(
+      column: $table.downloadToken, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isDeletedFromSender => $composableBuilder(
       column: $table.isDeletedFromSender,
@@ -7856,6 +7904,10 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<Uint8List> get downloadToken => $composableBuilder(
+      column: $table.downloadToken,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isDeletedFromSender => $composableBuilder(
       column: $table.isDeletedFromSender,
       builder: (column) => ColumnOrderings(column));
@@ -7977,6 +8029,9 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get downloadToken => $composableBuilder(
+      column: $table.downloadToken, builder: (column) => column);
 
   GeneratedColumn<bool> get isDeletedFromSender => $composableBuilder(
       column: $table.isDeletedFromSender, builder: (column) => column);
@@ -8181,6 +8236,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<int?> senderId = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
+            Value<Uint8List?> downloadToken = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
             Value<bool> isEdited = const Value.absent(),
@@ -8198,6 +8254,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             senderId: senderId,
             content: content,
             mediaId: mediaId,
+            downloadToken: downloadToken,
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
             isEdited: isEdited,
@@ -8215,6 +8272,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<int?> senderId = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
+            Value<Uint8List?> downloadToken = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
             Value<bool> isEdited = const Value.absent(),
@@ -8232,6 +8290,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             senderId: senderId,
             content: content,
             mediaId: mediaId,
+            downloadToken: downloadToken,
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
             isEdited: isEdited,

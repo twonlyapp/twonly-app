@@ -9,7 +9,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_components/best_friends_selector.dart';
 import 'package:twonly/src/views/components/flame.dart';
@@ -21,25 +22,19 @@ import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 class ShareImageView extends StatefulWidget {
   const ShareImageView({
     required this.imageBytesFuture,
-    required this.isRealTwonly,
-    required this.mirrorVideo,
-    required this.maxShowTime,
     required this.selectedUserIds,
     required this.updateStatus,
     required this.videoUploadHandler,
-    required this.mediaUploadId,
+    required this.mediaFileService,
     super.key,
     this.enableVideoAudio,
   });
   final Future<Uint8List?> imageBytesFuture;
-  final bool isRealTwonly;
-  final bool mirrorVideo;
-  final int maxShowTime;
   final HashSet<int> selectedUserIds;
   final bool? enableVideoAudio;
-  final int mediaUploadId;
   final void Function(int, bool) updateStatus;
   final Future<bool>? videoUploadHandler;
+  final MediaFileService mediaFileService;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();

@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:math';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,14 +9,13 @@ import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/utils/log.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
-  TwonlyDatabase get db => Provider.of<TwonlyDatabase>(this);
+  TwonlyDB get db => Provider.of<TwonlyDB>(this);
   ColorScheme get color => Theme.of(this).colorScheme;
 }
 
@@ -245,31 +242,19 @@ String formatBytes(int bytes, {int decimalPlaces = 2}) {
   return '${formattedSize.toStringAsFixed(decimalPlaces)} ${units[unitIndex]}';
 }
 
-String getMessageText(Message message) {
-  try {
-    if (message.contentJson == null) return '';
-    return TextMessageContent.fromJson(jsonDecode(message.contentJson!) as Map)
-        .text;
-  } catch (e) {
-    Log.error(e);
-    return '';
-  }
-}
-
-MediaMessageContent? getMediaContent(Message message) {
-  try {
-    if (message.contentJson == null) return null;
-    return MediaMessageContent.fromJson(
-      jsonDecode(message.contentJson!) as Map,
-    );
-  } catch (e) {
-    Log.error(e);
-    return null;
-  }
-}
-
 bool isUUIDNewer(String uuid1, String uuid2) {
   final timestamp1 = int.parse(uuid1.substring(0, 8), radix: 16);
   final timestamp2 = int.parse(uuid2.substring(0, 8), radix: 16);
   return timestamp1 > timestamp2;
 }
+
+String uint8ListToHex(List<int> bytes) {
+  return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+}
+
+Uint8List hexToUint8List(String hex) => Uint8List.fromList(
+      List<int>.generate(
+        hex.length ~/ 2,
+        (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16),
+      ),
+    );

@@ -90,6 +90,8 @@ class _RegisterViewState extends State<RegisterView> {
     await const FlutterSecureStorage()
         .write(key: SecureStorageKeys.userData, value: jsonEncode(userData));
 
+    gUser = userData;
+
     await apiService.authenticate();
     widget.callbackOnSuccess();
   }

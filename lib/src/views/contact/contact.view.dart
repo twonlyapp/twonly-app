@@ -31,8 +31,7 @@ class _ContactViewState extends State<ContactView> {
     );
     if (remove) {
       // trigger deletion for the other user...
-      await rejectUser(contact.userId);
-      await deleteContact(contact.userId);
+      await rejectAndDeleteContact(contact.userId);
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }

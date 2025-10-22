@@ -227,8 +227,7 @@ class ContactsListView extends StatelessWidget {
         child: IconButton(
           icon: const Icon(Icons.close, color: Colors.red),
           onPressed: () async {
-            await rejectUser(contact.userId);
-            await deleteContact(contact.userId);
+            await rejectAndDeleteContact(contact.userId);
           },
         ),
       ),

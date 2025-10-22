@@ -12,10 +12,10 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/mediafile.service.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 Future<void> tryDownloadAllMediaFiles({bool force = false}) async {

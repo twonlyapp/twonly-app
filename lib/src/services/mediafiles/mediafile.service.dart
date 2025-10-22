@@ -1,12 +1,12 @@
 import 'dart:io';
-
 import 'package:drift/drift.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/thumbnail.service.dart';
+import 'package:twonly/src/services/mediafiles/compression.service.dart';
+import 'package:twonly/src/services/mediafiles/thumbnail.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class MediaFileService {
@@ -39,6 +39,28 @@ class MediaFileService {
     }
   }
 
+  Future<void> setDisplayLimit(int? displayLimitInMilliseconds) async {
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaFile.mediaId,
+      MediaFilesCompanion(
+        displayLimitInMilliseconds: Value(displayLimitInMilliseconds),
+      ),
+    );
+    await updateFromDB();
+  }
+
+  Future<void> setRequiresAuth(bool requiresAuthentication) async {
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaFile.mediaId,
+      MediaFilesCompanion(
+        requiresAuthentication: Value(requiresAuthentication),
+        displayLimitInMilliseconds:
+            requiresAuthentication ? const Value(12) : const Value.absent(),
+      ),
+    );
+    await updateFromDB();
+  }
+
   Future<void> createThumbnail() async {
     if (!storedPath.existsSync()) {
       Log.error('Could not create Thumbnail as stored media does not exists.');
@@ -54,18 +76,35 @@ class MediaFileService {
     }
   }
 
+  Future<void> compressMedia() async {
+    if (!originalPath.existsSync()) {
+      Log.error('Could not compress as original media does not exists.');
+      return;
+    }
+    switch (mediaFile.type) {
+      case MediaType.image:
+        await compressImage(originalPath, tempPath);
+      case MediaType.video:
+        await compressVideo(originalPath, tempPath);
+      case MediaType.gif:
+        originalPath.renameSync(tempPath.path);
+        Log.error('Compression for .gif is not implemented yet.');
+    }
+  }
+
   void fullMediaRemoval() {
-    if (tempPath.existsSync()) {
-      tempPath.deleteSync();
-    }
-    if (encryptedPath.existsSync()) {
-      encryptedPath.deleteSync();
-    }
-    if (storedPath.existsSync()) {
-      storedPath.deleteSync();
-    }
-    if (thumbnailPath.existsSync()) {
-      thumbnailPath.deleteSync();
+    final pathsToRemove = [
+      tempPath,
+      encryptedPath,
+      originalPath,
+      storedPath,
+      thumbnailPath
+    ];
+
+    for (final path in pathsToRemove) {
+      if (path.existsSync()) {
+        path.deleteSync();
+      }
     }
   }
 
@@ -120,5 +159,9 @@ class MediaFileService {
   File get encryptedPath => _buildFilePath(
         'tmp',
         namePrefix: '.encrypted',
+      );
+  File get originalPath => _buildFilePath(
+        'tmp',
+        namePrefix: '.original',
       );
 }

@@ -57,13 +57,7 @@ ClientToServer createClientToServerFromApplicationData(
   return ClientToServer()..v0 = v0;
 }
 
-Future<void> deleteContact(int contactId) async {
-  await twonlyDB.signalDao.deleteAllByContactId(contactId);
-  await deleteSessionWithTarget(contactId);
-  await twonlyDB.contactsDao.deleteContactByUserId(contactId);
-}
-
-Future<void> rejectUser(int contactId) async {
+Future<void> rejectAndDeleteContact(int contactId) async {
   await sendCipherText(
     contactId,
     EncryptedContent(
@@ -72,6 +66,9 @@ Future<void> rejectUser(int contactId) async {
       ),
     ),
   );
+  await twonlyDB.signalDao.deleteAllByContactId(contactId);
+  await deleteSessionWithTarget(contactId);
+  await twonlyDB.contactsDao.deleteContactByUserId(contactId);
 }
 
 Future<void> handleMediaError(MediaFile media) async {

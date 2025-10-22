@@ -12,7 +12,7 @@ import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
-import 'package:twonly/src/services/api/media_download.dart';
+import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';

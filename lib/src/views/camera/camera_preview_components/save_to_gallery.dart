@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path/path.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
-import 'package:twonly/src/services/thumbnail.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/mediafiles/thumbnail.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 

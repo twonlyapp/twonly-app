@@ -5,7 +5,7 @@ import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/mediafile.service.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'messages.dao.g.dart';

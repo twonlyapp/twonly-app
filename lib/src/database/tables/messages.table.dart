@@ -18,6 +18,8 @@ class Messages extends Table {
   TextColumn get mediaId =>
       text().nullable().references(MediaFiles, #mediaId)();
 
+  BlobColumn get downloadToken => blob().nullable()();
+
   TextColumn get quotesMessageId =>
       text().nullable().references(Messages, #messageId)();
 

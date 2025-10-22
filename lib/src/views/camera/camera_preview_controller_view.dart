@@ -10,7 +10,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -299,17 +301,35 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     File? videoFilePath, {
     bool sharedFromGallery = false,
   }) async {
+    final mediaFileService = await initializeMediaUpload(
+      (videoFilePath != null) ? MediaType.video : MediaType.image,
+      gUser.defaultShowTime,
+    );
+    if (!mounted) return true;
+
+    if (mediaFileService == null) {
+      Log.error('Could not generate media file service');
+      return false;
+    }
+
+    if (videoFilePath != null) {
+      videoFilePath
+        ..copySync(mediaFileService.originalPath.path)
+        ..deleteSync();
+
+      // Start with compressing the video, to speed up the process in case the video is not changed.
+      unawaited(mediaFileService.compressMedia());
+    }
+
     final shouldReturn = await Navigator.push(
       context,
       PageRouteBuilder(
         opaque: false,
         pageBuilder: (context, a1, a2) => ShareImageEditorView(
-          videoFilePath: videoFilePath,
-          imageBytes: imageBytes,
+          imageBytesFuture: imageBytes,
           sharedFromGallery: sharedFromGallery,
           sendTo: widget.sendTo,
-          mirrorVideo: isFront && Platform.isAndroid && false,
-          useHighQuality: true,
+          mediaFileService: mediaFileService,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;

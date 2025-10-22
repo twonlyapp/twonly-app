@@ -6,8 +6,9 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/services/api/media_download.dart' as received;
-import 'package:twonly/src/services/api/media_upload.dart' as send;
+import 'package:twonly/src/services/api/mediafiles/download.service.dart'
+    as received;
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart' as send;
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';

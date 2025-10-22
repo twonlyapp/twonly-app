@@ -10,8 +10,8 @@ import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api.service.dart';
-import 'package:twonly/src/services/api/media_download.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/api/mediafiles/download.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
@@ -28,6 +28,7 @@ void main() async {
 
   final user = await getUser();
   if (user != null) {
+    gUser = user;
     if (user.isDemoUser) {
       await deleteLocalUserData();
     }

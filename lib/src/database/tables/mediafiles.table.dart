@@ -10,10 +10,21 @@ enum MediaType {
 }
 
 enum UploadState {
-  pending,
-  readyToUpload,
-  uploadTaskStarted,
-  receiverNotified,
+  // Image/Video was taken. A database entry was created to track it...
+  initialized,
+  // Image was stored but not send
+  storedOnly,
+  // At this point the user is finished with editing, and the media file can be uploaded
+  compressing,
+  encrypting,
+  uploading,
+  backgroundUploadTaskStarted,
+  uploaded,
+
+  uploadLimitReached,
+  // readyToUpload,
+  // uploadTaskStarted,
+  // receiverNotified,
 }
 
 enum DownloadState {
@@ -33,7 +44,8 @@ class MediaFiles extends Table {
   TextColumn get uploadState => textEnum<UploadState>().nullable()();
   TextColumn get downloadState => textEnum<DownloadState>().nullable()();
 
-  BoolColumn get requiresAuthentication => boolean()();
+  BoolColumn get requiresAuthentication =>
+      boolean().withDefault(const Constant(false))();
   BoolColumn get reopenByContact =>
       boolean().withDefault(const Constant(false))();
 

@@ -8,7 +8,8 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
-import 'package:twonly/src/services/api/media_download.dart' as received;
+import 'package:twonly/src/services/api/mediafiles/download.service.dart'
+    as received;
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';

@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hashlib/random.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
