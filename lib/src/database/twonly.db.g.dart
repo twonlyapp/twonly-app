@@ -2254,6 +2254,11 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
+  @override
+  late final GeneratedColumnWithTypeConverter<MessageType, String> type =
+      GeneratedColumn<String>('type', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<MessageType>($MessagesTable.$convertertype);
   static const VerificationMeta _contentMeta =
       const VerificationMeta('content');
   @override
@@ -2268,7 +2273,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES media_files (media_id)'));
+          'REFERENCES media_files (media_id) ON DELETE CASCADE'));
   static const VerificationMeta _mediaStoredMeta =
       const VerificationMeta('mediaStored');
   @override
@@ -2327,6 +2332,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         groupId,
         messageId,
         senderId,
+        type,
         content,
         mediaId,
         mediaStored,
@@ -2415,6 +2421,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
       senderId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}sender_id']),
+      type: $MessagesTable.$convertertype.fromSql(attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
       content: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}content']),
       mediaId: attachedDatabase.typeMapping
@@ -2438,12 +2446,16 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   $MessagesTable createAlias(String alias) {
     return $MessagesTable(attachedDatabase, alias);
   }
+
+  static JsonTypeConverter2<MessageType, String, String> $convertertype =
+      const EnumNameConverter<MessageType>(MessageType.values);
 }
 
 class Message extends DataClass implements Insertable<Message> {
   final String groupId;
   final String messageId;
   final int? senderId;
+  final MessageType type;
   final String? content;
   final String? mediaId;
   final bool mediaStored;
@@ -2456,6 +2468,7 @@ class Message extends DataClass implements Insertable<Message> {
       {required this.groupId,
       required this.messageId,
       this.senderId,
+      required this.type,
       this.content,
       this.mediaId,
       required this.mediaStored,
@@ -2471,6 +2484,9 @@ class Message extends DataClass implements Insertable<Message> {
     map['message_id'] = Variable<String>(messageId);
     if (!nullToAbsent || senderId != null) {
       map['sender_id'] = Variable<int>(senderId);
+    }
+    {
+      map['type'] = Variable<String>($MessagesTable.$convertertype.toSql(type));
     }
     if (!nullToAbsent || content != null) {
       map['content'] = Variable<String>(content);
@@ -2498,6 +2514,7 @@ class Message extends DataClass implements Insertable<Message> {
       senderId: senderId == null && nullToAbsent
           ? const Value.absent()
           : Value(senderId),
+      type: Value(type),
       content: content == null && nullToAbsent
           ? const Value.absent()
           : Value(content),
@@ -2524,6 +2541,8 @@ class Message extends DataClass implements Insertable<Message> {
       groupId: serializer.fromJson<String>(json['groupId']),
       messageId: serializer.fromJson<String>(json['messageId']),
       senderId: serializer.fromJson<int?>(json['senderId']),
+      type: $MessagesTable.$convertertype
+          .fromJson(serializer.fromJson<String>(json['type'])),
       content: serializer.fromJson<String?>(json['content']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
       mediaStored: serializer.fromJson<bool>(json['mediaStored']),
@@ -2542,6 +2561,8 @@ class Message extends DataClass implements Insertable<Message> {
       'groupId': serializer.toJson<String>(groupId),
       'messageId': serializer.toJson<String>(messageId),
       'senderId': serializer.toJson<int?>(senderId),
+      'type':
+          serializer.toJson<String>($MessagesTable.$convertertype.toJson(type)),
       'content': serializer.toJson<String?>(content),
       'mediaId': serializer.toJson<String?>(mediaId),
       'mediaStored': serializer.toJson<bool>(mediaStored),
@@ -2557,6 +2578,7 @@ class Message extends DataClass implements Insertable<Message> {
           {String? groupId,
           String? messageId,
           Value<int?> senderId = const Value.absent(),
+          MessageType? type,
           Value<String?> content = const Value.absent(),
           Value<String?> mediaId = const Value.absent(),
           bool? mediaStored,
@@ -2569,6 +2591,7 @@ class Message extends DataClass implements Insertable<Message> {
         groupId: groupId ?? this.groupId,
         messageId: messageId ?? this.messageId,
         senderId: senderId.present ? senderId.value : this.senderId,
+        type: type ?? this.type,
         content: content.present ? content.value : this.content,
         mediaId: mediaId.present ? mediaId.value : this.mediaId,
         mediaStored: mediaStored ?? this.mediaStored,
@@ -2586,6 +2609,7 @@ class Message extends DataClass implements Insertable<Message> {
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
       senderId: data.senderId.present ? data.senderId.value : this.senderId,
+      type: data.type.present ? data.type.value : this.type,
       content: data.content.present ? data.content.value : this.content,
       mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
       mediaStored:
@@ -2610,6 +2634,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('groupId: $groupId, ')
           ..write('messageId: $messageId, ')
           ..write('senderId: $senderId, ')
+          ..write('type: $type, ')
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
           ..write('mediaStored: $mediaStored, ')
@@ -2627,6 +2652,7 @@ class Message extends DataClass implements Insertable<Message> {
       groupId,
       messageId,
       senderId,
+      type,
       content,
       mediaId,
       mediaStored,
@@ -2642,6 +2668,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.groupId == this.groupId &&
           other.messageId == this.messageId &&
           other.senderId == this.senderId &&
+          other.type == this.type &&
           other.content == this.content &&
           other.mediaId == this.mediaId &&
           other.mediaStored == this.mediaStored &&
@@ -2656,6 +2683,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<String> groupId;
   final Value<String> messageId;
   final Value<int?> senderId;
+  final Value<MessageType> type;
   final Value<String?> content;
   final Value<String?> mediaId;
   final Value<bool> mediaStored;
@@ -2669,6 +2697,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.groupId = const Value.absent(),
     this.messageId = const Value.absent(),
     this.senderId = const Value.absent(),
+    this.type = const Value.absent(),
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
     this.mediaStored = const Value.absent(),
@@ -2683,6 +2712,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     required String groupId,
     this.messageId = const Value.absent(),
     this.senderId = const Value.absent(),
+    required MessageType type,
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
     this.mediaStored = const Value.absent(),
@@ -2692,11 +2722,13 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.isEdited = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : groupId = Value(groupId);
+  })  : groupId = Value(groupId),
+        type = Value(type);
   static Insertable<Message> custom({
     Expression<String>? groupId,
     Expression<String>? messageId,
     Expression<int>? senderId,
+    Expression<String>? type,
     Expression<String>? content,
     Expression<String>? mediaId,
     Expression<bool>? mediaStored,
@@ -2711,6 +2743,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (groupId != null) 'group_id': groupId,
       if (messageId != null) 'message_id': messageId,
       if (senderId != null) 'sender_id': senderId,
+      if (type != null) 'type': type,
       if (content != null) 'content': content,
       if (mediaId != null) 'media_id': mediaId,
       if (mediaStored != null) 'media_stored': mediaStored,
@@ -2728,6 +2761,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       {Value<String>? groupId,
       Value<String>? messageId,
       Value<int?>? senderId,
+      Value<MessageType>? type,
       Value<String?>? content,
       Value<String?>? mediaId,
       Value<bool>? mediaStored,
@@ -2741,6 +2775,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       groupId: groupId ?? this.groupId,
       messageId: messageId ?? this.messageId,
       senderId: senderId ?? this.senderId,
+      type: type ?? this.type,
       content: content ?? this.content,
       mediaId: mediaId ?? this.mediaId,
       mediaStored: mediaStored ?? this.mediaStored,
@@ -2764,6 +2799,10 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     }
     if (senderId.present) {
       map['sender_id'] = Variable<int>(senderId.value);
+    }
+    if (type.present) {
+      map['type'] =
+          Variable<String>($MessagesTable.$convertertype.toSql(type.value));
     }
     if (content.present) {
       map['content'] = Variable<String>(content.value);
@@ -2801,6 +2840,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('groupId: $groupId, ')
           ..write('messageId: $messageId, ')
           ..write('senderId: $senderId, ')
+          ..write('type: $type, ')
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
           ..write('mediaStored: $mediaStored, ')
@@ -6150,6 +6190,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
             ],
           ),
           WritePropagation(
+            on: TableUpdateQuery.onTableName('media_files',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('messages', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
             on: TableUpdateQuery.onTableName('messages',
                 limitUpdateKind: UpdateKind.delete),
             result: [
@@ -7817,6 +7864,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   required String groupId,
   Value<String> messageId,
   Value<int?> senderId,
+  required MessageType type,
   Value<String?> content,
   Value<String?> mediaId,
   Value<bool> mediaStored,
@@ -7831,6 +7879,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<String> groupId,
   Value<String> messageId,
   Value<int?> senderId,
+  Value<MessageType> type,
   Value<String?> content,
   Value<String?> mediaId,
   Value<bool> mediaStored,
@@ -7983,6 +8032,11 @@ class $$MessagesTableFilterComposer
   });
   ColumnFilters<String> get messageId => $composableBuilder(
       column: $table.messageId, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<MessageType, MessageType, String> get type =>
+      $composableBuilder(
+          column: $table.type,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnFilters(column));
@@ -8180,6 +8234,9 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<String> get messageId => $composableBuilder(
       column: $table.messageId, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnOrderings(column));
 
@@ -8292,6 +8349,9 @@ class $$MessagesTableAnnotationComposer
   });
   GeneratedColumn<String> get messageId =>
       $composableBuilder(column: $table.messageId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<MessageType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
 
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
@@ -8510,6 +8570,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String> groupId = const Value.absent(),
             Value<String> messageId = const Value.absent(),
             Value<int?> senderId = const Value.absent(),
+            Value<MessageType> type = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
             Value<bool> mediaStored = const Value.absent(),
@@ -8524,6 +8585,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             groupId: groupId,
             messageId: messageId,
             senderId: senderId,
+            type: type,
             content: content,
             mediaId: mediaId,
             mediaStored: mediaStored,
@@ -8538,6 +8600,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             required String groupId,
             Value<String> messageId = const Value.absent(),
             Value<int?> senderId = const Value.absent(),
+            required MessageType type,
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
             Value<bool> mediaStored = const Value.absent(),
@@ -8552,6 +8615,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             groupId: groupId,
             messageId: messageId,
             senderId: senderId,
+            type: type,
             content: content,
             mediaId: mediaId,
             mediaStored: mediaStored,

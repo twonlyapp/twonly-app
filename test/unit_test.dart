@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hashlib/random.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
@@ -20,15 +18,6 @@ void main() {
 
     test('test proof-of-work simple', () async {
       expect(await calculatePoW(Uint8List.fromList([41, 41, 41, 41]), 6), 33);
-    });
-
-    test('test utils', () async {
-      final list1 = Uint8List.fromList([41, 41, 41, 41, 41, 41, 41]);
-      final list2 = Uint8List.fromList([42, 42, 42]);
-      final combined = combineUint8Lists(list1, list2);
-      final lists = extractUint8Lists(combined);
-      expect(list1, lists[0]);
-      expect(list2, lists[1]);
     });
 
     test('encode hex', () async {

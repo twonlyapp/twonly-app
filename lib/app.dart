@@ -6,7 +6,6 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/app_outdated.dart';
 import 'package:twonly/src/views/home.view.dart';
@@ -68,8 +67,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     await setUserPlan();
     await apiService.connect(force: true);
     await apiService.listenToNetworkChanges();
-    // call this function so invalid media files are get purged
-    await retryMediaUpload(true);
   }
 
   @override
@@ -84,7 +81,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;
       globalIsAppInBackground = true;
-      unawaited(handleUploadWhenAppGoesBackground());
     }
   }
 

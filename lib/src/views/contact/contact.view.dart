@@ -163,26 +163,26 @@ class _ContactViewState extends State<ContactView> {
                   );
                 },
               ),
-              BetterListTile(
-                icon: FontAwesomeIcons.eraser,
-                iconSize: 16,
-                text: context.lang.deleteAllContactMessages,
-                onTap: () async {
-                  final block = await showAlertDialog(
-                    context,
-                    context.lang.deleteAllContactMessages,
-                    context.lang.deleteAllContactMessagesBody(
-                      getContactDisplayName(contact),
-                    ),
-                  );
-                  if (block) {
-                    if (context.mounted) {
-                      await twonlyDB.messagesDao
-                          .deleteMessagesByContactId(contact.userId);
-                    }
-                  }
-                },
-              ),
+              // BetterListTile(
+              //   icon: FontAwesomeIcons.eraser,
+              //   iconSize: 16,
+              //   text: context.lang.deleteAllContactMessages,
+              //   onTap: () async {
+              //     final block = await showAlertDialog(
+              //       context,
+              //       context.lang.deleteAllContactMessages,
+              //       context.lang.deleteAllContactMessagesBody(
+              //         getContactDisplayName(contact),
+              //       ),
+              //     );
+              //     if (block) {
+              //       if (context.mounted) {
+              //         await twonlyDB.messagesDao
+              //             .deleteMessagesByContactId(contact.userId);
+              //       }
+              //     }
+              //   },
+              // ),
               BetterListTile(
                 icon: FontAwesomeIcons.flag,
                 text: context.lang.reportUser,

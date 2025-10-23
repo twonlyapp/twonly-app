@@ -6,6 +6,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:pie_menu/pie_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
@@ -258,3 +259,28 @@ Uint8List hexToUint8List(String hex) => Uint8List.fromList(
         (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16),
       ),
     );
+
+PieTheme getPieCanvasTheme(BuildContext context) {
+  return PieTheme(
+    brightness: Theme.of(context).brightness,
+    rightClickShowsMenu: true,
+    radius: 70,
+    buttonTheme: PieButtonTheme(
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
+      iconColor: Theme.of(context).colorScheme.surfaceBright,
+    ),
+    buttonThemeHovered: PieButtonTheme(
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      iconColor: Theme.of(context).colorScheme.surfaceBright,
+    ),
+    tooltipPadding: const EdgeInsets.all(20),
+    overlayColor: isDarkMode(context)
+        ? const Color.fromARGB(69, 0, 0, 0)
+        : const Color.fromARGB(40, 0, 0, 0),
+    // spacing: 0,
+    tooltipTextStyle: const TextStyle(
+      fontSize: 32,
+      fontWeight: FontWeight.w600,
+    ),
+  );
+}

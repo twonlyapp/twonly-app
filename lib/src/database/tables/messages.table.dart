@@ -4,6 +4,8 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 
+enum MessageType { media, text }
+
 @DataClassName('Message')
 class Messages extends Table {
   TextColumn get groupId =>
@@ -14,9 +16,12 @@ class Messages extends Table {
   IntColumn get senderId =>
       integer().nullable().references(Contacts, #userId)();
 
+  TextColumn get type => textEnum<MessageType>()();
+
   TextColumn get content => text().nullable()();
-  TextColumn get mediaId =>
-      text().nullable().references(MediaFiles, #mediaId)();
+  TextColumn get mediaId => text()
+      .nullable()
+      .references(MediaFiles, #mediaId, onDelete: KeyAction.cascade)();
 
   BoolColumn get mediaStored => boolean().withDefault(const Constant(false))();
 

@@ -71,8 +71,14 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       selectedGroupIds.add(widget.sendToGroup!.groupId);
     }
 
-    if (widget.imageBytesFuture != null) {
-      unawaited(loadImage(widget.imageBytesFuture!));
+    if (widget.mediaFileService.mediaFile.type == MediaType.image) {
+      if (widget.imageBytesFuture != null) {
+        loadImage(widget.imageBytesFuture!);
+      } else {
+        if (widget.mediaFileService.storedPath.existsSync()) {
+          loadImage(widget.mediaFileService.storedPath.readAsBytes());
+        }
+      }
     }
 
     if (media.type == MediaType.video) {

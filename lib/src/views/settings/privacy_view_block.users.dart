@@ -6,7 +6,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/user_context_menu.dart';
+import 'package:twonly/src/views/components/user_context_menu.component.dart';
 
 class PrivacyViewBlockUsers extends StatefulWidget {
   const PrivacyViewBlockUsers({super.key});

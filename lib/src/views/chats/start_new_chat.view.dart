@@ -12,7 +12,7 @@ import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/user_context_menu.dart';
+import 'package:twonly/src/views/components/user_context_menu.component.dart';
 
 class StartNewChatView extends StatefulWidget {
   const StartNewChatView({super.key});

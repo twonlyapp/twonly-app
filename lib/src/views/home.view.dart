@@ -10,7 +10,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/chats/chat_list.view.dart';
-import 'package:twonly/src/views/components/user_context_menu.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
 
 void Function(int) globalUpdateOfHomeViewPageIndex = (a) {};

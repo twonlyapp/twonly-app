@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 
 class MemoriesItemThumbnail extends StatefulWidget {
@@ -39,11 +40,12 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
     return GestureDetector(
       onTap: widget.onTap,
       child: Hero(
-        tag: widget.galleryItem.id.toString(),
+        tag: widget.galleryItem.mediaService.mediaFile.mediaId,
         child: Stack(
           children: [
-            Image.file(widget.galleryItem.thumbnailPath),
-            if (widget.galleryItem.videoPath != null)
+            Image.file(widget.galleryItem.mediaService.thumbnailPath),
+            if (widget.galleryItem.mediaService.mediaFile.type ==
+                MediaType.video)
               const Positioned.fill(
                 child: Center(
                   child: FaIcon(FontAwesomeIcons.circlePlay),

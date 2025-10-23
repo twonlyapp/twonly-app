@@ -23,7 +23,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/user_context_menu.dart';
+import 'package:twonly/src/views/components/user_context_menu.component.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
@@ -61,9 +61,9 @@ class ChatItem {
 
 /// Displays detailed information about a SampleItem.
 class ChatMessagesView extends StatefulWidget {
-  const ChatMessagesView(this.contact, {super.key});
+  const ChatMessagesView(this.group, {super.key});
 
-  final Contact contact;
+  final Group group;
 
   @override
   State<ChatMessagesView> createState() => _ChatMessagesViewState();

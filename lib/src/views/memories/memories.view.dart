@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart' as send;
-import 'package:twonly/src/services/mediafiles/thumbnail.service.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
@@ -24,7 +22,7 @@ class MemoriesViewState extends State<MemoriesView> {
   List<MemoryItem> galleryItems = [];
   Map<String, List<int>> orderedByMonth = {};
   List<String> months = [];
-  StreamSubscription<List<Message>>? messageSub;
+  StreamSubscription<List<MediaFile>>? messageSub;
 
   @override
   void initState() {
@@ -38,76 +36,37 @@ class MemoriesViewState extends State<MemoriesView> {
     super.dispose();
   }
 
-  Future<List<MemoryItem>> loadMemoriesDirectory() async {
-    final directoryPath = await send.getMediaBaseFilePath('memories');
-    final directory = Directory(directoryPath);
-
-    final items = <MemoryItem>[];
-    if (directory.existsSync()) {
-      final files = directory.listSync();
-
-      for (final file in files) {
-        if (file is File) {
-          final fileName = file.uri.pathSegments.last;
-          File? imagePath;
-          File? videoPath;
-          late File thumbnailFile;
-          if (fileName.contains('.thumbnail.')) {
-            continue;
-          }
-          if (fileName.contains('.png')) {
-            imagePath = file;
-            thumbnailFile = file;
-            // if (!await thumbnailFile.exists()) {
-            //   await createThumbnailsForImage(imagePath);
-            // }
-          } else if (fileName.contains('.mp4')) {
-            videoPath = file;
-            thumbnailFile = getThumbnailPath(videoPath);
-            if (!thumbnailFile.existsSync()) {
-              await createThumbnailsForVideo(videoPath);
-            }
-          } else {
-            break;
-          }
-          final creationDate = file.lastModifiedSync();
-          items.add(
-            MemoryItem(
-              id: int.parse(fileName.split('.')[0]),
-              messages: [],
-              date: creationDate,
-              mirrorVideo: false,
-              thumbnailPath: thumbnailFile,
-              imagePath: imagePath,
-              videoPath: videoPath,
-            ),
-          );
-        }
-      }
-    }
-    return items;
-  }
-
   Future<void> initAsync() async {
     await messageSub?.cancel();
-    final msgStream = twonlyDB.messagesDao.getAllStoredMediaFiles();
+    final msgStream = twonlyDB.mediaFilesDao.watchAllStoredMediaFiles();
 
-    messageSub = msgStream.listen((msgs) async {
-      final items = await MemoryItem.convertFromMessages(msgs);
+    messageSub = msgStream.listen((mediaFiles) async {
       // Group items by month
       orderedByMonth = {};
       months = [];
       var lastMonth = '';
-      galleryItems = await loadMemoriesDirectory();
-      for (final item in galleryItems) {
-        items.remove(
-          item.id,
-        ); // prefer the stored one and not the saved on in the chat....
+      galleryItems = [];
+      final applicationSupportDirectory =
+          await getApplicationSupportDirectory();
+      for (final mediaFile in mediaFiles) {
+        galleryItems.add(
+          MemoryItem(
+            mediaService: MediaFileService(
+              mediaFile,
+              applicationSupportDirectory: applicationSupportDirectory,
+            ),
+            messages: [],
+          ),
+        );
       }
-      galleryItems += items.values.toList();
-      galleryItems.sort((a, b) => b.date.compareTo(a.date));
+      galleryItems.sort(
+        (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
+          a.mediaService.mediaFile.createdAt,
+        ),
+      );
       for (var i = 0; i < galleryItems.length; i++) {
-        final month = DateFormat('MMMM yyyy').format(galleryItems[i].date);
+        final month = DateFormat('MMMM yyyy')
+            .format(galleryItems[i].mediaService.mediaFile.createdAt);
         if (lastMonth != month) {
           lastMonth = month;
           months.add(month);

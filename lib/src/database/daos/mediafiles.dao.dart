@@ -25,6 +25,14 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     }
   }
 
+  Future<void> deleteMediaFile(String mediaId) async {
+    await (delete(mediaFiles)
+          ..where(
+            (t) => t.mediaId.equals(mediaId),
+          ))
+        .go();
+  }
+
   Future<void> updateMedia(
     String mediaId,
     MediaFilesCompanion updates,
@@ -56,5 +64,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
     return (select(mediaFiles)
           ..where((t) => t.downloadState.equals(DownloadState.pending.name)))
         .get();
+  }
+
+  Stream<List<MediaFile>> watchAllStoredMediaFiles() {
+    return (select(mediaFiles)..where((t) => t.stored.equals(true))).watch();
   }
 }
