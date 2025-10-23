@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
@@ -126,11 +127,10 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
 
     if (resp.isSuccess) {
       if (receipt.messageId != null) {
-        await twonlyDB.messagesDao.updateMessageId(
+        await twonlyDB.messagesDao.handleMessageAckByServer(
+          receipt.contactId,
           receipt.messageId!,
-          const MessagesCompanion(
-            ackByServer: Value(true),
-          ),
+          DateTime.now(),
         );
       }
       if (!receipt.contactWillSendsReceipt) {
@@ -156,6 +156,37 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     }
   }
   return null;
+}
+
+Future<void> insertAndSendTextMessage(
+  String groupId,
+  String textMessage,
+) async {
+  final message = await twonlyDB.messagesDao.insertMessage(
+    MessagesCompanion(
+      groupId: Value(groupId),
+      content: Value(textMessage),
+    ),
+  );
+  if (message == null) {
+    Log.error('Could not insert message into database');
+    return;
+  }
+
+  final groupMembers = await twonlyDB.groupsDao.getGroupMembers(groupId);
+
+  for (final groupMember in groupMembers) {
+    unawaited(sendCipherText(
+      groupMember.contactId,
+      pb.EncryptedContent(
+        textMessage: pb.EncryptedContent_TextMessage(
+          senderMessageId: message.messageId,
+          text: textMessage,
+          timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
+        ),
+      ),
+    ));
+  }
 }
 
 Future<(Uint8List, Uint8List?)?> sendCipherText(

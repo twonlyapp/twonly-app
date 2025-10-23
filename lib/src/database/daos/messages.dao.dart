@@ -16,6 +16,7 @@ part 'messages.dao.g.dart';
     Contacts,
     MediaFiles,
     MessageHistories,
+    MessageActions,
     Groups,
   ],
 )
@@ -192,11 +193,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             (t) => t.messageId.equals(messageId) & t.senderId.equals(contactId),
           ))
         .write(
-      MessagesCompanion(
-        isDeletedFromSender: const Value(true),
-        content: const Value(null),
-        modifiedAt: Value(timestamp),
-        mediaId: const Value(null),
+      const MessagesCompanion(
+        isDeletedFromSender: Value(true),
+        content: Value(null),
+        mediaId: Value(null),
       ),
     );
   }
@@ -215,6 +215,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       MessageHistoriesCompanion(
         messageId: Value(messageId),
         content: Value(msg.content),
+        createdAt: Value(timestamp),
       ),
     );
     await (update(messages)
@@ -224,29 +225,36 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .write(
       MessagesCompanion(
         content: Value(text),
-        modifiedAt: Value(timestamp),
       ),
     );
   }
 
   Future<void> handleMessageOpened(
-    String groupId,
+    int contactId,
     String messageId,
     DateTime timestamp,
   ) async {
-    final msg = await getMessageById(messageId).getSingleOrNull();
-    if (msg == null) return;
-    await (update(messages)
-          ..where(
-            (t) =>
-                t.groupId.equals(groupId) &
-                t.messageId.equals(messageId) &
-                t.senderId.isNull(),
-          ))
-        .write(
-      MessagesCompanion(
-        openedAt: Value(timestamp),
-        openedByCounter: Value(msg.openedByCounter + 1),
+    await into(messageActions).insert(
+      MessageActionsCompanion(
+        messageId: Value(messageId),
+        contactId: Value(contactId),
+        type: const Value(MessageActionType.ackByUserAt),
+        actionAt: Value(timestamp),
+      ),
+    );
+  }
+
+  Future<void> handleMessageAckByServer(
+    int contactId,
+    String messageId,
+    DateTime timestamp,
+  ) async {
+    await into(messageActions).insert(
+      MessageActionsCompanion(
+        messageId: Value(messageId),
+        contactId: Value(contactId),
+        type: const Value(MessageActionType.ackByServerAt),
+        actionAt: Value(timestamp),
       ),
     );
   }

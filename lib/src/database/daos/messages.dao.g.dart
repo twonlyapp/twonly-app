@@ -10,4 +10,5 @@ mixin _$MessagesDaoMixin on DatabaseAccessor<TwonlyDB> {
   $MessagesTable get messages => attachedDatabase.messages;
   $MessageHistoriesTable get messageHistories =>
       attachedDatabase.messageHistories;
+  $MessageActionsTable get messageActions => attachedDatabase.messageActions;
 }

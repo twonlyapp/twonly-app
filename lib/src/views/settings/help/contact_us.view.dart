@@ -8,8 +8,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart'
-    show createDownloadToken, uint8ListToHex;
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/help/contact_us/submit_message.view.dart';
@@ -32,7 +30,7 @@ class _ContactUsState extends State<ContactUsView> {
 
   Future<String?> uploadDebugLog() async {
     if (debugLogDownloadToken != null) return debugLogDownloadToken;
-    final downloadToken = createDownloadToken();
+    final downloadToken = getRandomUint8List(32);
 
     final debugLog = await loadLogFile();
 

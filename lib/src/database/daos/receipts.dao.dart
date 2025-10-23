@@ -6,7 +6,7 @@ import 'package:twonly/src/utils/log.dart';
 
 part 'receipts.dao.g.dart';
 
-@DriftAccessor(tables: [Receipts, Messages])
+@DriftAccessor(tables: [Receipts, Messages, MessageActions])
 class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -24,11 +24,11 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     if (receipt == null) return;
 
     if (receipt.messageId != null) {
-      await (update(messages)
-            ..where((t) => t.messageId.equals(receipt.messageId!)))
-          .write(
-        const MessagesCompanion(
-          ackByUser: Value(true),
+      await into(messageActions).insert(
+        MessageActionsCompanion(
+          messageId: Value(receipt.messageId!),
+          contactId: Value(fromUserId),
+          type: const Value(MessageActionType.ackByUserAt),
         ),
       );
     }
@@ -79,6 +79,10 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
             (t) => t.ackByServerAt.isNull(),
           ))
         .get();
+  }
+
+  Stream<List<Receipt>> watchAll() {
+    return select(receipts).watch();
   }
 
   Future<void> updateReceipt(

@@ -160,7 +160,6 @@ Future<PlaintextContent?> handleEncryptedMessage(
   if (content.hasMessageUpdate()) {
     await handleMessageUpdate(
       fromUserId,
-      content.groupId,
       content.messageUpdate,
     );
     return null;

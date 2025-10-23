@@ -97,6 +97,10 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     return select(contacts)..where((t) => t.userId.equals(userId));
   }
 
+  Future<List<Contact>> getContactsByUsername(String username) async {
+    return (select(contacts)..where((t) => t.username.equals(username))).get();
+  }
+
   Future<void> deleteContactByUserId(int userId) {
     return (delete(contacts)..where((t) => t.userId.equals(userId))).go();
   }

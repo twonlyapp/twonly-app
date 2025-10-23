@@ -92,8 +92,6 @@ Future<void> handleMedia(
       senderId: Value(fromUserId),
       groupId: Value(groupId),
       mediaId: Value(mediaFile.mediaId),
-      ackByServer: const Value(true),
-      ackByUser: const Value(true),
       quotesMessageId: Value(
         media.hasQuoteMessageId() ? media.quoteMessageId : null,
       ),

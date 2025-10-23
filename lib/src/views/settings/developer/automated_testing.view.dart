@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class AutomatedTestingView extends StatefulWidget {
   const AutomatedTestingView({super.key});
@@ -36,25 +36,27 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
               title: const Text('Sending a lot of messages.'),
               subtitle: Text(lotsOfMessagesStatus),
               onTap: () async {
-                await twonlyDB.messageRetransmissionDao
-                    .clearRetransmissionTable();
+                final username = await showUserNameDialog(context);
+                if (username == null) return;
 
                 final contacts =
-                    await twonlyDB.contactsDao.getAllNotBlockedContacts();
+                    await twonlyDB.contactsDao.getContactsByUsername(username);
 
                 for (final contact in contacts) {
-                  for (var i = 0; i < 200; i++) {
-                    setState(() {
-                      lotsOfMessagesStatus =
-                          'At message $i to ${contact.username}.';
-                    });
-                    await sendTextMessage(
-                      contact.userId,
-                      TextMessageContent(
-                        text: 'TestMessage $i',
-                      ),
-                      null,
-                    );
+                  final groups =
+                      await twonlyDB.groupsDao.getDirectChat(contact.userId);
+
+                  for (final group in groups) {
+                    for (var i = 0; i < 200; i++) {
+                      setState(() {
+                        lotsOfMessagesStatus =
+                            'At message $i to ${contact.username}.';
+                      });
+                      await insertAndSendTextMessage(
+                        group.groupId,
+                        'Message $i.',
+                      );
+                    }
                   }
                 }
               },
@@ -63,4 +65,38 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
       ),
     );
   }
+}
+
+Future<String?> showUserNameDialog(
+  BuildContext context,
+) {
+  final controller = TextEditingController();
+
+  return showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Username'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text(context.lang.cancel),
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+          TextButton(
+            child: Text(context.lang.ok),
+            onPressed: () {
+              Navigator.of(context)
+                  .pop(controller.text); // Return the input text
+            },
+          ),
+        ],
+      );
+    },
+  );
 }

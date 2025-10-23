@@ -20,8 +20,6 @@ Future<void> handleTextMessage(
       senderId: Value(fromUserId),
       groupId: Value(groupId),
       content: Value(textMessage.text),
-      ackByServer: const Value(true),
-      ackByUser: const Value(true),
       quotesMessageId: Value(
         textMessage.hasQuoteMessageId() ? textMessage.quoteMessageId : null,
       ),

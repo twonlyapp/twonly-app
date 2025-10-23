@@ -2314,53 +2314,11 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_edited" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _ackByUserMeta =
-      const VerificationMeta('ackByUser');
-  @override
-  late final GeneratedColumn<bool> ackByUser = GeneratedColumn<bool>(
-      'ack_by_user', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("ack_by_user" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _ackByServerMeta =
-      const VerificationMeta('ackByServer');
-  @override
-  late final GeneratedColumn<bool> ackByServer = GeneratedColumn<bool>(
-      'ack_by_server', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("ack_by_server" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _openedByCounterMeta =
-      const VerificationMeta('openedByCounter');
-  @override
-  late final GeneratedColumn<int> openedByCounter = GeneratedColumn<int>(
-      'opened_by_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _openedAtMeta =
-      const VerificationMeta('openedAt');
-  @override
-  late final GeneratedColumn<DateTime> openedAt = GeneratedColumn<DateTime>(
-      'opened_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _modifiedAtMeta =
-      const VerificationMeta('modifiedAt');
-  @override
-  late final GeneratedColumn<DateTime> modifiedAt = GeneratedColumn<DateTime>(
-      'modified_at', aliasedName, true,
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
@@ -2376,12 +2334,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         quotesMessageId,
         isDeletedFromSender,
         isEdited,
-        ackByUser,
-        ackByServer,
-        openedByCounter,
-        openedAt,
-        createdAt,
-        modifiedAt
+        createdAt
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2443,37 +2396,9 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       context.handle(_isEditedMeta,
           isEdited.isAcceptableOrUnknown(data['is_edited']!, _isEditedMeta));
     }
-    if (data.containsKey('ack_by_user')) {
-      context.handle(
-          _ackByUserMeta,
-          ackByUser.isAcceptableOrUnknown(
-              data['ack_by_user']!, _ackByUserMeta));
-    }
-    if (data.containsKey('ack_by_server')) {
-      context.handle(
-          _ackByServerMeta,
-          ackByServer.isAcceptableOrUnknown(
-              data['ack_by_server']!, _ackByServerMeta));
-    }
-    if (data.containsKey('opened_by_counter')) {
-      context.handle(
-          _openedByCounterMeta,
-          openedByCounter.isAcceptableOrUnknown(
-              data['opened_by_counter']!, _openedByCounterMeta));
-    }
-    if (data.containsKey('opened_at')) {
-      context.handle(_openedAtMeta,
-          openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta));
-    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('modified_at')) {
-      context.handle(
-          _modifiedAtMeta,
-          modifiedAt.isAcceptableOrUnknown(
-              data['modified_at']!, _modifiedAtMeta));
     }
     return context;
   }
@@ -2504,18 +2429,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           DriftSqlType.bool, data['${effectivePrefix}is_deleted_from_sender'])!,
       isEdited: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_edited'])!,
-      ackByUser: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}ack_by_user'])!,
-      ackByServer: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}ack_by_server'])!,
-      openedByCounter: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}opened_by_counter'])!,
-      openedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}opened_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      modifiedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}modified_at']),
     );
   }
 
@@ -2536,12 +2451,7 @@ class Message extends DataClass implements Insertable<Message> {
   final String? quotesMessageId;
   final bool isDeletedFromSender;
   final bool isEdited;
-  final bool ackByUser;
-  final bool ackByServer;
-  final int openedByCounter;
-  final DateTime? openedAt;
   final DateTime createdAt;
-  final DateTime? modifiedAt;
   const Message(
       {required this.groupId,
       required this.messageId,
@@ -2553,12 +2463,7 @@ class Message extends DataClass implements Insertable<Message> {
       this.quotesMessageId,
       required this.isDeletedFromSender,
       required this.isEdited,
-      required this.ackByUser,
-      required this.ackByServer,
-      required this.openedByCounter,
-      this.openedAt,
-      required this.createdAt,
-      this.modifiedAt});
+      required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2582,16 +2487,7 @@ class Message extends DataClass implements Insertable<Message> {
     }
     map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender);
     map['is_edited'] = Variable<bool>(isEdited);
-    map['ack_by_user'] = Variable<bool>(ackByUser);
-    map['ack_by_server'] = Variable<bool>(ackByServer);
-    map['opened_by_counter'] = Variable<int>(openedByCounter);
-    if (!nullToAbsent || openedAt != null) {
-      map['opened_at'] = Variable<DateTime>(openedAt);
-    }
     map['created_at'] = Variable<DateTime>(createdAt);
-    if (!nullToAbsent || modifiedAt != null) {
-      map['modified_at'] = Variable<DateTime>(modifiedAt);
-    }
     return map;
   }
 
@@ -2617,16 +2513,7 @@ class Message extends DataClass implements Insertable<Message> {
           : Value(quotesMessageId),
       isDeletedFromSender: Value(isDeletedFromSender),
       isEdited: Value(isEdited),
-      ackByUser: Value(ackByUser),
-      ackByServer: Value(ackByServer),
-      openedByCounter: Value(openedByCounter),
-      openedAt: openedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(openedAt),
       createdAt: Value(createdAt),
-      modifiedAt: modifiedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(modifiedAt),
     );
   }
 
@@ -2645,12 +2532,7 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender:
           serializer.fromJson<bool>(json['isDeletedFromSender']),
       isEdited: serializer.fromJson<bool>(json['isEdited']),
-      ackByUser: serializer.fromJson<bool>(json['ackByUser']),
-      ackByServer: serializer.fromJson<bool>(json['ackByServer']),
-      openedByCounter: serializer.fromJson<int>(json['openedByCounter']),
-      openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      modifiedAt: serializer.fromJson<DateTime?>(json['modifiedAt']),
     );
   }
   @override
@@ -2667,12 +2549,7 @@ class Message extends DataClass implements Insertable<Message> {
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
       'isEdited': serializer.toJson<bool>(isEdited),
-      'ackByUser': serializer.toJson<bool>(ackByUser),
-      'ackByServer': serializer.toJson<bool>(ackByServer),
-      'openedByCounter': serializer.toJson<int>(openedByCounter),
-      'openedAt': serializer.toJson<DateTime?>(openedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'modifiedAt': serializer.toJson<DateTime?>(modifiedAt),
     };
   }
 
@@ -2687,12 +2564,7 @@ class Message extends DataClass implements Insertable<Message> {
           Value<String?> quotesMessageId = const Value.absent(),
           bool? isDeletedFromSender,
           bool? isEdited,
-          bool? ackByUser,
-          bool? ackByServer,
-          int? openedByCounter,
-          Value<DateTime?> openedAt = const Value.absent(),
-          DateTime? createdAt,
-          Value<DateTime?> modifiedAt = const Value.absent()}) =>
+          DateTime? createdAt}) =>
       Message(
         groupId: groupId ?? this.groupId,
         messageId: messageId ?? this.messageId,
@@ -2707,12 +2579,7 @@ class Message extends DataClass implements Insertable<Message> {
             : this.quotesMessageId,
         isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
         isEdited: isEdited ?? this.isEdited,
-        ackByUser: ackByUser ?? this.ackByUser,
-        ackByServer: ackByServer ?? this.ackByServer,
-        openedByCounter: openedByCounter ?? this.openedByCounter,
-        openedAt: openedAt.present ? openedAt.value : this.openedAt,
         createdAt: createdAt ?? this.createdAt,
-        modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
       );
   Message copyWithCompanion(MessagesCompanion data) {
     return Message(
@@ -2733,16 +2600,7 @@ class Message extends DataClass implements Insertable<Message> {
           ? data.isDeletedFromSender.value
           : this.isDeletedFromSender,
       isEdited: data.isEdited.present ? data.isEdited.value : this.isEdited,
-      ackByUser: data.ackByUser.present ? data.ackByUser.value : this.ackByUser,
-      ackByServer:
-          data.ackByServer.present ? data.ackByServer.value : this.ackByServer,
-      openedByCounter: data.openedByCounter.present
-          ? data.openedByCounter.value
-          : this.openedByCounter,
-      openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      modifiedAt:
-          data.modifiedAt.present ? data.modifiedAt.value : this.modifiedAt,
     );
   }
 
@@ -2759,12 +2617,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('isEdited: $isEdited, ')
-          ..write('ackByUser: $ackByUser, ')
-          ..write('ackByServer: $ackByServer, ')
-          ..write('openedByCounter: $openedByCounter, ')
-          ..write('openedAt: $openedAt, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('modifiedAt: $modifiedAt')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -2781,12 +2634,7 @@ class Message extends DataClass implements Insertable<Message> {
       quotesMessageId,
       isDeletedFromSender,
       isEdited,
-      ackByUser,
-      ackByServer,
-      openedByCounter,
-      openedAt,
-      createdAt,
-      modifiedAt);
+      createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2801,12 +2649,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
           other.isEdited == this.isEdited &&
-          other.ackByUser == this.ackByUser &&
-          other.ackByServer == this.ackByServer &&
-          other.openedByCounter == this.openedByCounter &&
-          other.openedAt == this.openedAt &&
-          other.createdAt == this.createdAt &&
-          other.modifiedAt == this.modifiedAt);
+          other.createdAt == this.createdAt);
 }
 
 class MessagesCompanion extends UpdateCompanion<Message> {
@@ -2820,12 +2663,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
   final Value<bool> isEdited;
-  final Value<bool> ackByUser;
-  final Value<bool> ackByServer;
-  final Value<int> openedByCounter;
-  final Value<DateTime?> openedAt;
   final Value<DateTime> createdAt;
-  final Value<DateTime?> modifiedAt;
   final Value<int> rowid;
   const MessagesCompanion({
     this.groupId = const Value.absent(),
@@ -2838,12 +2676,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.isEdited = const Value.absent(),
-    this.ackByUser = const Value.absent(),
-    this.ackByServer = const Value.absent(),
-    this.openedByCounter = const Value.absent(),
-    this.openedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.modifiedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MessagesCompanion.insert({
@@ -2857,12 +2690,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.isEdited = const Value.absent(),
-    this.ackByUser = const Value.absent(),
-    this.ackByServer = const Value.absent(),
-    this.openedByCounter = const Value.absent(),
-    this.openedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.modifiedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : groupId = Value(groupId);
   static Insertable<Message> custom({
@@ -2876,12 +2704,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
     Expression<bool>? isEdited,
-    Expression<bool>? ackByUser,
-    Expression<bool>? ackByServer,
-    Expression<int>? openedByCounter,
-    Expression<DateTime>? openedAt,
     Expression<DateTime>? createdAt,
-    Expression<DateTime>? modifiedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2896,12 +2719,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (isDeletedFromSender != null)
         'is_deleted_from_sender': isDeletedFromSender,
       if (isEdited != null) 'is_edited': isEdited,
-      if (ackByUser != null) 'ack_by_user': ackByUser,
-      if (ackByServer != null) 'ack_by_server': ackByServer,
-      if (openedByCounter != null) 'opened_by_counter': openedByCounter,
-      if (openedAt != null) 'opened_at': openedAt,
       if (createdAt != null) 'created_at': createdAt,
-      if (modifiedAt != null) 'modified_at': modifiedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2917,12 +2735,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<String?>? quotesMessageId,
       Value<bool>? isDeletedFromSender,
       Value<bool>? isEdited,
-      Value<bool>? ackByUser,
-      Value<bool>? ackByServer,
-      Value<int>? openedByCounter,
-      Value<DateTime?>? openedAt,
       Value<DateTime>? createdAt,
-      Value<DateTime?>? modifiedAt,
       Value<int>? rowid}) {
     return MessagesCompanion(
       groupId: groupId ?? this.groupId,
@@ -2935,12 +2748,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
       isEdited: isEdited ?? this.isEdited,
-      ackByUser: ackByUser ?? this.ackByUser,
-      ackByServer: ackByServer ?? this.ackByServer,
-      openedByCounter: openedByCounter ?? this.openedByCounter,
-      openedAt: openedAt ?? this.openedAt,
       createdAt: createdAt ?? this.createdAt,
-      modifiedAt: modifiedAt ?? this.modifiedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2978,23 +2786,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (isEdited.present) {
       map['is_edited'] = Variable<bool>(isEdited.value);
     }
-    if (ackByUser.present) {
-      map['ack_by_user'] = Variable<bool>(ackByUser.value);
-    }
-    if (ackByServer.present) {
-      map['ack_by_server'] = Variable<bool>(ackByServer.value);
-    }
-    if (openedByCounter.present) {
-      map['opened_by_counter'] = Variable<int>(openedByCounter.value);
-    }
-    if (openedAt.present) {
-      map['opened_at'] = Variable<DateTime>(openedAt.value);
-    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (modifiedAt.present) {
-      map['modified_at'] = Variable<DateTime>(modifiedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -3015,12 +2808,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('isEdited: $isEdited, ')
-          ..write('ackByUser: $ackByUser, ')
-          ..write('ackByServer: $ackByServer, ')
-          ..write('openedByCounter: $openedByCounter, ')
-          ..write('openedAt: $openedAt, ')
           ..write('createdAt: $createdAt, ')
-          ..write('modifiedAt: $modifiedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3033,6 +2821,15 @@ class $MessageHistoriesTable extends MessageHistories
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $MessageHistoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
   static const VerificationMeta _messageIdMeta =
       const VerificationMeta('messageId');
   @override
@@ -3042,6 +2839,12 @@ class $MessageHistoriesTable extends MessageHistories
       requiredDuringInsert: true,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES messages (message_id) ON DELETE CASCADE'));
+  static const VerificationMeta _contactIdMeta =
+      const VerificationMeta('contactId');
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+      'contact_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _contentMeta =
       const VerificationMeta('content');
   @override
@@ -3057,7 +2860,8 @@ class $MessageHistoriesTable extends MessageHistories
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
   @override
-  List<GeneratedColumn> get $columns => [messageId, content, createdAt];
+  List<GeneratedColumn> get $columns =>
+      [id, messageId, contactId, content, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3068,11 +2872,20 @@ class $MessageHistoriesTable extends MessageHistories
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
     if (data.containsKey('message_id')) {
       context.handle(_messageIdMeta,
           messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
     } else if (isInserting) {
       context.missing(_messageIdMeta);
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(_contactIdMeta,
+          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    } else if (isInserting) {
+      context.missing(_contactIdMeta);
     }
     if (data.containsKey('content')) {
       context.handle(_contentMeta,
@@ -3086,13 +2899,17 @@ class $MessageHistoriesTable extends MessageHistories
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {messageId, createdAt};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   MessageHistory map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MessageHistory(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       messageId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
+      contactId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
       content: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}content']),
       createdAt: attachedDatabase.typeMapping
@@ -3107,15 +2924,23 @@ class $MessageHistoriesTable extends MessageHistories
 }
 
 class MessageHistory extends DataClass implements Insertable<MessageHistory> {
+  final int id;
   final String messageId;
+  final int contactId;
   final String? content;
   final DateTime createdAt;
   const MessageHistory(
-      {required this.messageId, this.content, required this.createdAt});
+      {required this.id,
+      required this.messageId,
+      required this.contactId,
+      this.content,
+      required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
     map['message_id'] = Variable<String>(messageId);
+    map['contact_id'] = Variable<int>(contactId);
     if (!nullToAbsent || content != null) {
       map['content'] = Variable<String>(content);
     }
@@ -3125,7 +2950,9 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
 
   MessageHistoriesCompanion toCompanion(bool nullToAbsent) {
     return MessageHistoriesCompanion(
+      id: Value(id),
       messageId: Value(messageId),
+      contactId: Value(contactId),
       content: content == null && nullToAbsent
           ? const Value.absent()
           : Value(content),
@@ -3137,7 +2964,9 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MessageHistory(
+      id: serializer.fromJson<int>(json['id']),
       messageId: serializer.fromJson<String>(json['messageId']),
+      contactId: serializer.fromJson<int>(json['contactId']),
       content: serializer.fromJson<String?>(json['content']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -3146,24 +2975,32 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
       'messageId': serializer.toJson<String>(messageId),
+      'contactId': serializer.toJson<int>(contactId),
       'content': serializer.toJson<String?>(content),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
   MessageHistory copyWith(
-          {String? messageId,
+          {int? id,
+          String? messageId,
+          int? contactId,
           Value<String?> content = const Value.absent(),
           DateTime? createdAt}) =>
       MessageHistory(
+        id: id ?? this.id,
         messageId: messageId ?? this.messageId,
+        contactId: contactId ?? this.contactId,
         content: content.present ? content.value : this.content,
         createdAt: createdAt ?? this.createdAt,
       );
   MessageHistory copyWithCompanion(MessageHistoriesCompanion data) {
     return MessageHistory(
+      id: data.id.present ? data.id.value : this.id,
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
       content: data.content.present ? data.content.value : this.content,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -3172,7 +3009,9 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
   @override
   String toString() {
     return (StringBuffer('MessageHistory(')
+          ..write('id: $id, ')
           ..write('messageId: $messageId, ')
+          ..write('contactId: $contactId, ')
           ..write('content: $content, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -3180,65 +3019,81 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
   }
 
   @override
-  int get hashCode => Object.hash(messageId, content, createdAt);
+  int get hashCode => Object.hash(id, messageId, contactId, content, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is MessageHistory &&
+          other.id == this.id &&
           other.messageId == this.messageId &&
+          other.contactId == this.contactId &&
           other.content == this.content &&
           other.createdAt == this.createdAt);
 }
 
 class MessageHistoriesCompanion extends UpdateCompanion<MessageHistory> {
+  final Value<int> id;
   final Value<String> messageId;
+  final Value<int> contactId;
   final Value<String?> content;
   final Value<DateTime> createdAt;
-  final Value<int> rowid;
   const MessageHistoriesCompanion({
+    this.id = const Value.absent(),
     this.messageId = const Value.absent(),
+    this.contactId = const Value.absent(),
     this.content = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
   });
   MessageHistoriesCompanion.insert({
+    this.id = const Value.absent(),
     required String messageId,
+    required int contactId,
     this.content = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : messageId = Value(messageId);
+  })  : messageId = Value(messageId),
+        contactId = Value(contactId);
   static Insertable<MessageHistory> custom({
+    Expression<int>? id,
     Expression<String>? messageId,
+    Expression<int>? contactId,
     Expression<String>? content,
     Expression<DateTime>? createdAt,
-    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (id != null) 'id': id,
       if (messageId != null) 'message_id': messageId,
+      if (contactId != null) 'contact_id': contactId,
       if (content != null) 'content': content,
       if (createdAt != null) 'created_at': createdAt,
-      if (rowid != null) 'rowid': rowid,
     });
   }
 
   MessageHistoriesCompanion copyWith(
-      {Value<String>? messageId,
+      {Value<int>? id,
+      Value<String>? messageId,
+      Value<int>? contactId,
       Value<String?>? content,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
+      Value<DateTime>? createdAt}) {
     return MessageHistoriesCompanion(
+      id: id ?? this.id,
       messageId: messageId ?? this.messageId,
+      contactId: contactId ?? this.contactId,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
-      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
     if (messageId.present) {
       map['message_id'] = Variable<String>(messageId.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
     }
     if (content.present) {
       map['content'] = Variable<String>(content.value);
@@ -3246,19 +3101,17 @@ class MessageHistoriesCompanion extends UpdateCompanion<MessageHistory> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('MessageHistoriesCompanion(')
+          ..write('id: $id, ')
           ..write('messageId: $messageId, ')
+          ..write('contactId: $contactId, ')
           ..write('content: $content, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('rowid: $rowid')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -5928,6 +5781,311 @@ class SignalContactSignedPreKeysCompanion
   }
 }
 
+class $MessageActionsTable extends MessageActions
+    with TableInfo<$MessageActionsTable, MessageAction> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MessageActionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _messageIdMeta =
+      const VerificationMeta('messageId');
+  @override
+  late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
+      'message_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES messages (message_id) ON DELETE CASCADE'));
+  static const VerificationMeta _contactIdMeta =
+      const VerificationMeta('contactId');
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+      'contact_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  late final GeneratedColumnWithTypeConverter<MessageActionType, String> type =
+      GeneratedColumn<String>('type', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<MessageActionType>(
+              $MessageActionsTable.$convertertype);
+  static const VerificationMeta _actionAtMeta =
+      const VerificationMeta('actionAt');
+  @override
+  late final GeneratedColumn<DateTime> actionAt = GeneratedColumn<DateTime>(
+      'action_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, messageId, contactId, type, actionAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'message_actions';
+  @override
+  VerificationContext validateIntegrity(Insertable<MessageAction> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('message_id')) {
+      context.handle(_messageIdMeta,
+          messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+    } else if (isInserting) {
+      context.missing(_messageIdMeta);
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(_contactIdMeta,
+          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
+    } else if (isInserting) {
+      context.missing(_contactIdMeta);
+    }
+    if (data.containsKey('action_at')) {
+      context.handle(_actionAtMeta,
+          actionAt.isAcceptableOrUnknown(data['action_at']!, _actionAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MessageAction map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MessageAction(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      messageId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
+      contactId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+      type: $MessageActionsTable.$convertertype.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
+      actionAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}action_at'])!,
+    );
+  }
+
+  @override
+  $MessageActionsTable createAlias(String alias) {
+    return $MessageActionsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<MessageActionType, String, String> $convertertype =
+      const EnumNameConverter<MessageActionType>(MessageActionType.values);
+}
+
+class MessageAction extends DataClass implements Insertable<MessageAction> {
+  final int id;
+  final String messageId;
+  final int contactId;
+  final MessageActionType type;
+  final DateTime actionAt;
+  const MessageAction(
+      {required this.id,
+      required this.messageId,
+      required this.contactId,
+      required this.type,
+      required this.actionAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['message_id'] = Variable<String>(messageId);
+    map['contact_id'] = Variable<int>(contactId);
+    {
+      map['type'] =
+          Variable<String>($MessageActionsTable.$convertertype.toSql(type));
+    }
+    map['action_at'] = Variable<DateTime>(actionAt);
+    return map;
+  }
+
+  MessageActionsCompanion toCompanion(bool nullToAbsent) {
+    return MessageActionsCompanion(
+      id: Value(id),
+      messageId: Value(messageId),
+      contactId: Value(contactId),
+      type: Value(type),
+      actionAt: Value(actionAt),
+    );
+  }
+
+  factory MessageAction.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MessageAction(
+      id: serializer.fromJson<int>(json['id']),
+      messageId: serializer.fromJson<String>(json['messageId']),
+      contactId: serializer.fromJson<int>(json['contactId']),
+      type: $MessageActionsTable.$convertertype
+          .fromJson(serializer.fromJson<String>(json['type'])),
+      actionAt: serializer.fromJson<DateTime>(json['actionAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'messageId': serializer.toJson<String>(messageId),
+      'contactId': serializer.toJson<int>(contactId),
+      'type': serializer
+          .toJson<String>($MessageActionsTable.$convertertype.toJson(type)),
+      'actionAt': serializer.toJson<DateTime>(actionAt),
+    };
+  }
+
+  MessageAction copyWith(
+          {int? id,
+          String? messageId,
+          int? contactId,
+          MessageActionType? type,
+          DateTime? actionAt}) =>
+      MessageAction(
+        id: id ?? this.id,
+        messageId: messageId ?? this.messageId,
+        contactId: contactId ?? this.contactId,
+        type: type ?? this.type,
+        actionAt: actionAt ?? this.actionAt,
+      );
+  MessageAction copyWithCompanion(MessageActionsCompanion data) {
+    return MessageAction(
+      id: data.id.present ? data.id.value : this.id,
+      messageId: data.messageId.present ? data.messageId.value : this.messageId,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      type: data.type.present ? data.type.value : this.type,
+      actionAt: data.actionAt.present ? data.actionAt.value : this.actionAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageAction(')
+          ..write('id: $id, ')
+          ..write('messageId: $messageId, ')
+          ..write('contactId: $contactId, ')
+          ..write('type: $type, ')
+          ..write('actionAt: $actionAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, messageId, contactId, type, actionAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MessageAction &&
+          other.id == this.id &&
+          other.messageId == this.messageId &&
+          other.contactId == this.contactId &&
+          other.type == this.type &&
+          other.actionAt == this.actionAt);
+}
+
+class MessageActionsCompanion extends UpdateCompanion<MessageAction> {
+  final Value<int> id;
+  final Value<String> messageId;
+  final Value<int> contactId;
+  final Value<MessageActionType> type;
+  final Value<DateTime> actionAt;
+  const MessageActionsCompanion({
+    this.id = const Value.absent(),
+    this.messageId = const Value.absent(),
+    this.contactId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.actionAt = const Value.absent(),
+  });
+  MessageActionsCompanion.insert({
+    this.id = const Value.absent(),
+    required String messageId,
+    required int contactId,
+    required MessageActionType type,
+    this.actionAt = const Value.absent(),
+  })  : messageId = Value(messageId),
+        contactId = Value(contactId),
+        type = Value(type);
+  static Insertable<MessageAction> custom({
+    Expression<int>? id,
+    Expression<String>? messageId,
+    Expression<int>? contactId,
+    Expression<String>? type,
+    Expression<DateTime>? actionAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (messageId != null) 'message_id': messageId,
+      if (contactId != null) 'contact_id': contactId,
+      if (type != null) 'type': type,
+      if (actionAt != null) 'action_at': actionAt,
+    });
+  }
+
+  MessageActionsCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? messageId,
+      Value<int>? contactId,
+      Value<MessageActionType>? type,
+      Value<DateTime>? actionAt}) {
+    return MessageActionsCompanion(
+      id: id ?? this.id,
+      messageId: messageId ?? this.messageId,
+      contactId: contactId ?? this.contactId,
+      type: type ?? this.type,
+      actionAt: actionAt ?? this.actionAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (messageId.present) {
+      map['message_id'] = Variable<String>(messageId.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(
+          $MessageActionsTable.$convertertype.toSql(type.value));
+    }
+    if (actionAt.present) {
+      map['action_at'] = Variable<DateTime>(actionAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageActionsCompanion(')
+          ..write('id: $id, ')
+          ..write('messageId: $messageId, ')
+          ..write('contactId: $contactId, ')
+          ..write('type: $type, ')
+          ..write('actionAt: $actionAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TwonlyDB extends GeneratedDatabase {
   _$TwonlyDB(QueryExecutor e) : super(e);
   $TwonlyDBManager get managers => $TwonlyDBManager(this);
@@ -5952,6 +6110,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
       $SignalContactPreKeysTable(this);
   late final $SignalContactSignedPreKeysTable signalContactSignedPreKeys =
       $SignalContactSignedPreKeysTable(this);
+  late final $MessageActionsTable messageActions = $MessageActionsTable(this);
   late final MessagesDao messagesDao = MessagesDao(this as TwonlyDB);
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDB);
   late final SignalDao signalDao = SignalDao(this as TwonlyDB);
@@ -5977,7 +6136,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
         signalSenderKeyStores,
         signalSessionStores,
         signalContactPreKeys,
-        signalContactSignedPreKeys
+        signalContactSignedPreKeys,
+        messageActions
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -6037,6 +6197,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
             result: [
               TableUpdate('signal_contact_signed_pre_keys',
                   kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('messages',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('message_actions', kind: UpdateKind.delete),
             ],
           ),
         ],
@@ -7657,12 +7824,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
   Value<bool> isEdited,
-  Value<bool> ackByUser,
-  Value<bool> ackByServer,
-  Value<int> openedByCounter,
-  Value<DateTime?> openedAt,
   Value<DateTime> createdAt,
-  Value<DateTime?> modifiedAt,
   Value<int> rowid,
 });
 typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
@@ -7676,12 +7838,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
   Value<bool> isEdited,
-  Value<bool> ackByUser,
-  Value<bool> ackByServer,
-  Value<int> openedByCounter,
-  Value<DateTime?> openedAt,
   Value<DateTime> createdAt,
-  Value<DateTime?> modifiedAt,
   Value<int> rowid,
 });
 
@@ -7797,6 +7954,22 @@ final class $$MessagesTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$MessageActionsTable, List<MessageAction>>
+      _messageActionsRefsTable(_$TwonlyDB db) =>
+          MultiTypedResultKey.fromTable(db.messageActions,
+              aliasName: $_aliasNameGenerator(
+                  db.messages.messageId, db.messageActions.messageId));
+
+  $$MessageActionsTableProcessedTableManager get messageActionsRefs {
+    final manager = $$MessageActionsTableTableManager($_db, $_db.messageActions)
+        .filter((f) => f.messageId.messageId
+            .sqlEquals($_itemColumn<String>('message_id')!));
+
+    final cache = $_typedResult.readTableOrNull(_messageActionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$MessagesTableFilterComposer
@@ -7827,24 +8000,8 @@ class $$MessagesTableFilterComposer
   ColumnFilters<bool> get isEdited => $composableBuilder(
       column: $table.isEdited, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get ackByUser => $composableBuilder(
-      column: $table.ackByUser, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get ackByServer => $composableBuilder(
-      column: $table.ackByServer, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get openedByCounter => $composableBuilder(
-      column: $table.openedByCounter,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get openedAt => $composableBuilder(
-      column: $table.openedAt, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get modifiedAt => $composableBuilder(
-      column: $table.modifiedAt, builder: (column) => ColumnFilters(column));
 
   $$GroupsTableFilterComposer get groupId {
     final $$GroupsTableFilterComposer composer = $composerBuilder(
@@ -7988,6 +8145,27 @@ class $$MessagesTableFilterComposer
             ));
     return f(composer);
   }
+
+  Expression<bool> messageActionsRefs(
+      Expression<bool> Function($$MessageActionsTableFilterComposer f) f) {
+    final $$MessageActionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.messageId,
+        referencedTable: $db.messageActions,
+        getReferencedColumn: (t) => t.messageId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessageActionsTableFilterComposer(
+              $db: $db,
+              $table: $db.messageActions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$MessagesTableOrderingComposer
@@ -8019,24 +8197,8 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<bool> get isEdited => $composableBuilder(
       column: $table.isEdited, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get ackByUser => $composableBuilder(
-      column: $table.ackByUser, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get ackByServer => $composableBuilder(
-      column: $table.ackByServer, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get openedByCounter => $composableBuilder(
-      column: $table.openedByCounter,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get openedAt => $composableBuilder(
-      column: $table.openedAt, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get modifiedAt => $composableBuilder(
-      column: $table.modifiedAt, builder: (column) => ColumnOrderings(column));
 
   $$GroupsTableOrderingComposer get groupId {
     final $$GroupsTableOrderingComposer composer = $composerBuilder(
@@ -8146,23 +8308,8 @@ class $$MessagesTableAnnotationComposer
   GeneratedColumn<bool> get isEdited =>
       $composableBuilder(column: $table.isEdited, builder: (column) => column);
 
-  GeneratedColumn<bool> get ackByUser =>
-      $composableBuilder(column: $table.ackByUser, builder: (column) => column);
-
-  GeneratedColumn<bool> get ackByServer => $composableBuilder(
-      column: $table.ackByServer, builder: (column) => column);
-
-  GeneratedColumn<int> get openedByCounter => $composableBuilder(
-      column: $table.openedByCounter, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get openedAt =>
-      $composableBuilder(column: $table.openedAt, builder: (column) => column);
-
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get modifiedAt => $composableBuilder(
-      column: $table.modifiedAt, builder: (column) => column);
 
   $$GroupsTableAnnotationComposer get groupId {
     final $$GroupsTableAnnotationComposer composer = $composerBuilder(
@@ -8306,6 +8453,27 @@ class $$MessagesTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> messageActionsRefs<T extends Object>(
+      Expression<T> Function($$MessageActionsTableAnnotationComposer a) f) {
+    final $$MessageActionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.messageId,
+        referencedTable: $db.messageActions,
+        getReferencedColumn: (t) => t.messageId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessageActionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.messageActions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$MessagesTableTableManager extends RootTableManager<
@@ -8326,7 +8494,8 @@ class $$MessagesTableTableManager extends RootTableManager<
         bool quotesMessageId,
         bool messageHistoriesRefs,
         bool reactionsRefs,
-        bool receiptsRefs})> {
+        bool receiptsRefs,
+        bool messageActionsRefs})> {
   $$MessagesTableTableManager(_$TwonlyDB db, $MessagesTable table)
       : super(TableManagerState(
           db: db,
@@ -8348,12 +8517,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
             Value<bool> isEdited = const Value.absent(),
-            Value<bool> ackByUser = const Value.absent(),
-            Value<bool> ackByServer = const Value.absent(),
-            Value<int> openedByCounter = const Value.absent(),
-            Value<DateTime?> openedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> modifiedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MessagesCompanion(
@@ -8367,12 +8531,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
             isEdited: isEdited,
-            ackByUser: ackByUser,
-            ackByServer: ackByServer,
-            openedByCounter: openedByCounter,
-            openedAt: openedAt,
             createdAt: createdAt,
-            modifiedAt: modifiedAt,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -8386,12 +8545,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
             Value<bool> isEdited = const Value.absent(),
-            Value<bool> ackByUser = const Value.absent(),
-            Value<bool> ackByServer = const Value.absent(),
-            Value<int> openedByCounter = const Value.absent(),
-            Value<DateTime?> openedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> modifiedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MessagesCompanion.insert(
@@ -8405,12 +8559,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
             isEdited: isEdited,
-            ackByUser: ackByUser,
-            ackByServer: ackByServer,
-            openedByCounter: openedByCounter,
-            openedAt: openedAt,
             createdAt: createdAt,
-            modifiedAt: modifiedAt,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -8424,13 +8573,15 @@ class $$MessagesTableTableManager extends RootTableManager<
               quotesMessageId = false,
               messageHistoriesRefs = false,
               reactionsRefs = false,
-              receiptsRefs = false}) {
+              receiptsRefs = false,
+              messageActionsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (messageHistoriesRefs) db.messageHistories,
                 if (reactionsRefs) db.reactions,
-                if (receiptsRefs) db.receipts
+                if (receiptsRefs) db.receipts,
+                if (messageActionsRefs) db.messageActions
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -8528,6 +8679,19 @@ class $$MessagesTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.messageId == item.messageId),
+                        typedResults: items),
+                  if (messageActionsRefs)
+                    await $_getPrefetchedData<Message, $MessagesTable,
+                            MessageAction>(
+                        currentTable: table,
+                        referencedTable: $$MessagesTableReferences
+                            ._messageActionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$MessagesTableReferences(db, table, p0)
+                                .messageActionsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.messageId == item.messageId),
                         typedResults: items)
                 ];
               },
@@ -8554,20 +8718,23 @@ typedef $$MessagesTableProcessedTableManager = ProcessedTableManager<
         bool quotesMessageId,
         bool messageHistoriesRefs,
         bool reactionsRefs,
-        bool receiptsRefs})>;
+        bool receiptsRefs,
+        bool messageActionsRefs})>;
 typedef $$MessageHistoriesTableCreateCompanionBuilder
     = MessageHistoriesCompanion Function({
+  Value<int> id,
   required String messageId,
+  required int contactId,
   Value<String?> content,
   Value<DateTime> createdAt,
-  Value<int> rowid,
 });
 typedef $$MessageHistoriesTableUpdateCompanionBuilder
     = MessageHistoriesCompanion Function({
+  Value<int> id,
   Value<String> messageId,
+  Value<int> contactId,
   Value<String?> content,
   Value<DateTime> createdAt,
-  Value<int> rowid,
 });
 
 final class $$MessageHistoriesTableReferences
@@ -8600,6 +8767,12 @@ class $$MessageHistoriesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get contactId => $composableBuilder(
+      column: $table.contactId, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnFilters(column));
 
@@ -8636,6 +8809,12 @@ class $$MessageHistoriesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get contactId => $composableBuilder(
+      column: $table.contactId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnOrderings(column));
 
@@ -8672,6 +8851,12 @@ class $$MessageHistoriesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get contactId =>
+      $composableBuilder(column: $table.contactId, builder: (column) => column);
+
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
 
@@ -8723,28 +8908,32 @@ class $$MessageHistoriesTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$MessageHistoriesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
             Value<String> messageId = const Value.absent(),
+            Value<int> contactId = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
           }) =>
               MessageHistoriesCompanion(
+            id: id,
             messageId: messageId,
+            contactId: contactId,
             content: content,
             createdAt: createdAt,
-            rowid: rowid,
           ),
           createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
             required String messageId,
+            required int contactId,
             Value<String?> content = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
           }) =>
               MessageHistoriesCompanion.insert(
+            id: id,
             messageId: messageId,
+            contactId: contactId,
             content: content,
             createdAt: createdAt,
-            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -10965,6 +11154,279 @@ typedef $$SignalContactSignedPreKeysTableProcessedTableManager
         ),
         SignalContactSignedPreKey,
         PrefetchHooks Function({bool contactId})>;
+typedef $$MessageActionsTableCreateCompanionBuilder = MessageActionsCompanion
+    Function({
+  Value<int> id,
+  required String messageId,
+  required int contactId,
+  required MessageActionType type,
+  Value<DateTime> actionAt,
+});
+typedef $$MessageActionsTableUpdateCompanionBuilder = MessageActionsCompanion
+    Function({
+  Value<int> id,
+  Value<String> messageId,
+  Value<int> contactId,
+  Value<MessageActionType> type,
+  Value<DateTime> actionAt,
+});
+
+final class $$MessageActionsTableReferences
+    extends BaseReferences<_$TwonlyDB, $MessageActionsTable, MessageAction> {
+  $$MessageActionsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $MessagesTable _messageIdTable(_$TwonlyDB db) =>
+      db.messages.createAlias($_aliasNameGenerator(
+          db.messageActions.messageId, db.messages.messageId));
+
+  $$MessagesTableProcessedTableManager get messageId {
+    final $_column = $_itemColumn<String>('message_id')!;
+
+    final manager = $$MessagesTableTableManager($_db, $_db.messages)
+        .filter((f) => f.messageId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_messageIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$MessageActionsTableFilterComposer
+    extends Composer<_$TwonlyDB, $MessageActionsTable> {
+  $$MessageActionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get contactId => $composableBuilder(
+      column: $table.contactId, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<MessageActionType, MessageActionType, String>
+      get type => $composableBuilder(
+          column: $table.type,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnFilters<DateTime> get actionAt => $composableBuilder(
+      column: $table.actionAt, builder: (column) => ColumnFilters(column));
+
+  $$MessagesTableFilterComposer get messageId {
+    final $$MessagesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.messageId,
+        referencedTable: $db.messages,
+        getReferencedColumn: (t) => t.messageId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessagesTableFilterComposer(
+              $db: $db,
+              $table: $db.messages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$MessageActionsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $MessageActionsTable> {
+  $$MessageActionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get contactId => $composableBuilder(
+      column: $table.contactId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get actionAt => $composableBuilder(
+      column: $table.actionAt, builder: (column) => ColumnOrderings(column));
+
+  $$MessagesTableOrderingComposer get messageId {
+    final $$MessagesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.messageId,
+        referencedTable: $db.messages,
+        getReferencedColumn: (t) => t.messageId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessagesTableOrderingComposer(
+              $db: $db,
+              $table: $db.messages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$MessageActionsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $MessageActionsTable> {
+  $$MessageActionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get contactId =>
+      $composableBuilder(column: $table.contactId, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<MessageActionType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get actionAt =>
+      $composableBuilder(column: $table.actionAt, builder: (column) => column);
+
+  $$MessagesTableAnnotationComposer get messageId {
+    final $$MessagesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.messageId,
+        referencedTable: $db.messages,
+        getReferencedColumn: (t) => t.messageId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessagesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.messages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$MessageActionsTableTableManager extends RootTableManager<
+    _$TwonlyDB,
+    $MessageActionsTable,
+    MessageAction,
+    $$MessageActionsTableFilterComposer,
+    $$MessageActionsTableOrderingComposer,
+    $$MessageActionsTableAnnotationComposer,
+    $$MessageActionsTableCreateCompanionBuilder,
+    $$MessageActionsTableUpdateCompanionBuilder,
+    (MessageAction, $$MessageActionsTableReferences),
+    MessageAction,
+    PrefetchHooks Function({bool messageId})> {
+  $$MessageActionsTableTableManager(_$TwonlyDB db, $MessageActionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MessageActionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MessageActionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MessageActionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> messageId = const Value.absent(),
+            Value<int> contactId = const Value.absent(),
+            Value<MessageActionType> type = const Value.absent(),
+            Value<DateTime> actionAt = const Value.absent(),
+          }) =>
+              MessageActionsCompanion(
+            id: id,
+            messageId: messageId,
+            contactId: contactId,
+            type: type,
+            actionAt: actionAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String messageId,
+            required int contactId,
+            required MessageActionType type,
+            Value<DateTime> actionAt = const Value.absent(),
+          }) =>
+              MessageActionsCompanion.insert(
+            id: id,
+            messageId: messageId,
+            contactId: contactId,
+            type: type,
+            actionAt: actionAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$MessageActionsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({messageId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (messageId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.messageId,
+                    referencedTable:
+                        $$MessageActionsTableReferences._messageIdTable(db),
+                    referencedColumn: $$MessageActionsTableReferences
+                        ._messageIdTable(db)
+                        .messageId,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$MessageActionsTableProcessedTableManager = ProcessedTableManager<
+    _$TwonlyDB,
+    $MessageActionsTable,
+    MessageAction,
+    $$MessageActionsTableFilterComposer,
+    $$MessageActionsTableOrderingComposer,
+    $$MessageActionsTableAnnotationComposer,
+    $$MessageActionsTableCreateCompanionBuilder,
+    $$MessageActionsTableUpdateCompanionBuilder,
+    (MessageAction, $$MessageActionsTableReferences),
+    MessageAction,
+    PrefetchHooks Function({bool messageId})>;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;
@@ -11000,4 +11462,6 @@ class $TwonlyDBManager {
       get signalContactSignedPreKeys =>
           $$SignalContactSignedPreKeysTableTableManager(
               _db, _db.signalContactSignedPreKeys);
+  $$MessageActionsTableTableManager get messageActions =>
+      $$MessageActionsTableTableManager(_db, _db.messageActions);
 }

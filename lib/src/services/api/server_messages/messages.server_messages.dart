@@ -5,7 +5,6 @@ import 'package:twonly/src/utils/log.dart';
 
 Future<void> handleMessageUpdate(
   int contactId,
-  String groupId,
   EncryptedContent_MessageUpdate messageUpdate,
 ) async {
   switch (messageUpdate.type) {
@@ -14,7 +13,7 @@ Future<void> handleMessageUpdate(
           'Opened message ${messageUpdate.multipleSenderMessageIds.length}');
       for (final senderMessageId in messageUpdate.multipleSenderMessageIds) {
         await twonlyDB.messagesDao.handleMessageOpened(
-          groupId,
+          contactId,
           senderMessageId,
           fromTimestamp(messageUpdate.timestamp),
         );

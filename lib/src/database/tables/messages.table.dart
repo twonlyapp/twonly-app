@@ -30,28 +30,50 @@ class Messages extends Table {
 
   BoolColumn get isEdited => boolean().withDefault(const Constant(false))();
 
-  BoolColumn get ackByUser => boolean().withDefault(const Constant(false))();
-  BoolColumn get ackByServer => boolean().withDefault(const Constant(false))();
-
-  IntColumn get openedByCounter => integer().withDefault(const Constant(0))();
-  DateTimeColumn get openedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get modifiedAt =>
-      dateTime().nullable().withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {messageId};
 }
 
-@DataClassName('MessageHistory')
-class MessageHistories extends Table {
+enum MessageActionType {
+  openedAt,
+  modifiedAt,
+  ackByUserAt,
+  ackByServerAt,
+}
+
+@DataClassName('MessageAction')
+class MessageActions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
   TextColumn get messageId =>
       text().references(Messages, #messageId, onDelete: KeyAction.cascade)();
+
+  IntColumn get contactId =>
+      integer().references(Contacts, #contactId, onDelete: KeyAction.cascade)();
+
+  TextColumn get type => textEnum<MessageActionType>()();
+  DateTimeColumn get actionAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('MessageHistory')
+class MessageHistories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  TextColumn get messageId =>
+      text().references(Messages, #messageId, onDelete: KeyAction.cascade)();
+
+  IntColumn get contactId =>
+      integer().references(Contacts, #contactId, onDelete: KeyAction.cascade)();
 
   TextColumn get content => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
-  Set<Column> get primaryKey => {messageId, createdAt};
+  Set<Column> get primaryKey => {id};
 }

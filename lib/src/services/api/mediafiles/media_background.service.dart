@@ -76,12 +76,22 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
         ),
       );
 
-      await twonlyDB.messagesDao.updateMessagesByMediaId(
-        media.mediaId,
-        const MessagesCompanion(
-          ackByServer: Value(true),
-        ),
-      );
+      /// As the messages where send in a bulk acknowledge all messages.
+
+      final messages =
+          await twonlyDB.messagesDao.getMessagesByMediaId(media.mediaId);
+      for (final message in messages) {
+        final contacts =
+            await twonlyDB.groupsDao.getGroupMembers(message.groupId);
+        for (final contact in contacts) {
+          await twonlyDB.messagesDao.handleMessageAckByServer(
+            contact.contactId,
+            message.messageId,
+            DateTime.now(),
+          );
+        }
+      }
+
       return;
     }
     Log.error(

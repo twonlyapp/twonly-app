@@ -9,4 +9,5 @@ mixin _$ReceiptsDaoMixin on DatabaseAccessor<TwonlyDB> {
   $MediaFilesTable get mediaFiles => attachedDatabase.mediaFiles;
   $MessagesTable get messages => attachedDatabase.messages;
   $ReceiptsTable get receipts => attachedDatabase.receipts;
+  $MessageActionsTable get messageActions => attachedDatabase.messageActions;
 }
