@@ -1061,6 +1061,12 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _groupNameMeta =
+      const VerificationMeta('groupName');
+  @override
+  late final GeneratedColumn<String> groupName = GeneratedColumn<String>(
+      'group_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _lastMessageExchangeMeta =
       const VerificationMeta('lastMessageExchange');
   @override
@@ -1084,6 +1090,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         isGroupOfTwo,
         pinned,
         archived,
+        groupName,
         lastMessageExchange,
         createdAt
       ];
@@ -1125,6 +1132,12 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
       context.handle(_archivedMeta,
           archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
     }
+    if (data.containsKey('group_name')) {
+      context.handle(_groupNameMeta,
+          groupName.isAcceptableOrUnknown(data['group_name']!, _groupNameMeta));
+    } else if (isInserting) {
+      context.missing(_groupNameMeta);
+    }
     if (data.containsKey('last_message_exchange')) {
       context.handle(
           _lastMessageExchangeMeta,
@@ -1154,6 +1167,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
       archived: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
+      groupName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}group_name'])!,
       lastMessageExchange: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}last_message_exchange'])!,
@@ -1174,6 +1189,7 @@ class Group extends DataClass implements Insertable<Group> {
   final bool isGroupOfTwo;
   final bool pinned;
   final bool archived;
+  final String groupName;
   final DateTime lastMessageExchange;
   final DateTime createdAt;
   const Group(
@@ -1182,6 +1198,7 @@ class Group extends DataClass implements Insertable<Group> {
       required this.isGroupOfTwo,
       required this.pinned,
       required this.archived,
+      required this.groupName,
       required this.lastMessageExchange,
       required this.createdAt});
   @override
@@ -1192,6 +1209,7 @@ class Group extends DataClass implements Insertable<Group> {
     map['is_group_of_two'] = Variable<bool>(isGroupOfTwo);
     map['pinned'] = Variable<bool>(pinned);
     map['archived'] = Variable<bool>(archived);
+    map['group_name'] = Variable<String>(groupName);
     map['last_message_exchange'] = Variable<DateTime>(lastMessageExchange);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1204,6 +1222,7 @@ class Group extends DataClass implements Insertable<Group> {
       isGroupOfTwo: Value(isGroupOfTwo),
       pinned: Value(pinned),
       archived: Value(archived),
+      groupName: Value(groupName),
       lastMessageExchange: Value(lastMessageExchange),
       createdAt: Value(createdAt),
     );
@@ -1218,6 +1237,7 @@ class Group extends DataClass implements Insertable<Group> {
       isGroupOfTwo: serializer.fromJson<bool>(json['isGroupOfTwo']),
       pinned: serializer.fromJson<bool>(json['pinned']),
       archived: serializer.fromJson<bool>(json['archived']),
+      groupName: serializer.fromJson<String>(json['groupName']),
       lastMessageExchange:
           serializer.fromJson<DateTime>(json['lastMessageExchange']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -1232,6 +1252,7 @@ class Group extends DataClass implements Insertable<Group> {
       'isGroupOfTwo': serializer.toJson<bool>(isGroupOfTwo),
       'pinned': serializer.toJson<bool>(pinned),
       'archived': serializer.toJson<bool>(archived),
+      'groupName': serializer.toJson<String>(groupName),
       'lastMessageExchange': serializer.toJson<DateTime>(lastMessageExchange),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -1243,6 +1264,7 @@ class Group extends DataClass implements Insertable<Group> {
           bool? isGroupOfTwo,
           bool? pinned,
           bool? archived,
+          String? groupName,
           DateTime? lastMessageExchange,
           DateTime? createdAt}) =>
       Group(
@@ -1251,6 +1273,7 @@ class Group extends DataClass implements Insertable<Group> {
         isGroupOfTwo: isGroupOfTwo ?? this.isGroupOfTwo,
         pinned: pinned ?? this.pinned,
         archived: archived ?? this.archived,
+        groupName: groupName ?? this.groupName,
         lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
         createdAt: createdAt ?? this.createdAt,
       );
@@ -1265,6 +1288,7 @@ class Group extends DataClass implements Insertable<Group> {
           : this.isGroupOfTwo,
       pinned: data.pinned.present ? data.pinned.value : this.pinned,
       archived: data.archived.present ? data.archived.value : this.archived,
+      groupName: data.groupName.present ? data.groupName.value : this.groupName,
       lastMessageExchange: data.lastMessageExchange.present
           ? data.lastMessageExchange.value
           : this.lastMessageExchange,
@@ -1280,6 +1304,7 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('isGroupOfTwo: $isGroupOfTwo, ')
           ..write('pinned: $pinned, ')
           ..write('archived: $archived, ')
+          ..write('groupName: $groupName, ')
           ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -1288,7 +1313,7 @@ class Group extends DataClass implements Insertable<Group> {
 
   @override
   int get hashCode => Object.hash(groupId, isGroupAdmin, isGroupOfTwo, pinned,
-      archived, lastMessageExchange, createdAt);
+      archived, groupName, lastMessageExchange, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1298,6 +1323,7 @@ class Group extends DataClass implements Insertable<Group> {
           other.isGroupOfTwo == this.isGroupOfTwo &&
           other.pinned == this.pinned &&
           other.archived == this.archived &&
+          other.groupName == this.groupName &&
           other.lastMessageExchange == this.lastMessageExchange &&
           other.createdAt == this.createdAt);
 }
@@ -1308,6 +1334,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<bool> isGroupOfTwo;
   final Value<bool> pinned;
   final Value<bool> archived;
+  final Value<String> groupName;
   final Value<DateTime> lastMessageExchange;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -1317,6 +1344,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.isGroupOfTwo = const Value.absent(),
     this.pinned = const Value.absent(),
     this.archived = const Value.absent(),
+    this.groupName = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1327,17 +1355,20 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     required bool isGroupOfTwo,
     this.pinned = const Value.absent(),
     this.archived = const Value.absent(),
+    required String groupName,
     this.lastMessageExchange = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : isGroupAdmin = Value(isGroupAdmin),
-        isGroupOfTwo = Value(isGroupOfTwo);
+        isGroupOfTwo = Value(isGroupOfTwo),
+        groupName = Value(groupName);
   static Insertable<Group> custom({
     Expression<String>? groupId,
     Expression<bool>? isGroupAdmin,
     Expression<bool>? isGroupOfTwo,
     Expression<bool>? pinned,
     Expression<bool>? archived,
+    Expression<String>? groupName,
     Expression<DateTime>? lastMessageExchange,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -1348,6 +1379,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       if (isGroupOfTwo != null) 'is_group_of_two': isGroupOfTwo,
       if (pinned != null) 'pinned': pinned,
       if (archived != null) 'archived': archived,
+      if (groupName != null) 'group_name': groupName,
       if (lastMessageExchange != null)
         'last_message_exchange': lastMessageExchange,
       if (createdAt != null) 'created_at': createdAt,
@@ -1361,6 +1393,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       Value<bool>? isGroupOfTwo,
       Value<bool>? pinned,
       Value<bool>? archived,
+      Value<String>? groupName,
       Value<DateTime>? lastMessageExchange,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
@@ -1370,6 +1403,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       isGroupOfTwo: isGroupOfTwo ?? this.isGroupOfTwo,
       pinned: pinned ?? this.pinned,
       archived: archived ?? this.archived,
+      groupName: groupName ?? this.groupName,
       lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -1394,6 +1428,9 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     if (archived.present) {
       map['archived'] = Variable<bool>(archived.value);
     }
+    if (groupName.present) {
+      map['group_name'] = Variable<String>(groupName.value);
+    }
     if (lastMessageExchange.present) {
       map['last_message_exchange'] =
           Variable<DateTime>(lastMessageExchange.value);
@@ -1415,6 +1452,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('isGroupOfTwo: $isGroupOfTwo, ')
           ..write('pinned: $pinned, ')
           ..write('archived: $archived, ')
+          ..write('groupName: $groupName, ')
           ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -2231,6 +2269,16 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES media_files (media_id)'));
+  static const VerificationMeta _mediaStoredMeta =
+      const VerificationMeta('mediaStored');
+  @override
+  late final GeneratedColumn<bool> mediaStored = GeneratedColumn<bool>(
+      'media_stored', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("media_stored" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _downloadTokenMeta =
       const VerificationMeta('downloadToken');
   @override
@@ -2323,6 +2371,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         senderId,
         content,
         mediaId,
+        mediaStored,
         downloadToken,
         quotesMessageId,
         isDeletedFromSender,
@@ -2365,6 +2414,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     if (data.containsKey('media_id')) {
       context.handle(_mediaIdMeta,
           mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta));
+    }
+    if (data.containsKey('media_stored')) {
+      context.handle(
+          _mediaStoredMeta,
+          mediaStored.isAcceptableOrUnknown(
+              data['media_stored']!, _mediaStoredMeta));
     }
     if (data.containsKey('download_token')) {
       context.handle(
@@ -2439,6 +2494,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           .read(DriftSqlType.string, data['${effectivePrefix}content']),
       mediaId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}media_id']),
+      mediaStored: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}media_stored'])!,
       downloadToken: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}download_token']),
       quotesMessageId: attachedDatabase.typeMapping.read(
@@ -2474,6 +2531,7 @@ class Message extends DataClass implements Insertable<Message> {
   final int? senderId;
   final String? content;
   final String? mediaId;
+  final bool mediaStored;
   final Uint8List? downloadToken;
   final String? quotesMessageId;
   final bool isDeletedFromSender;
@@ -2490,6 +2548,7 @@ class Message extends DataClass implements Insertable<Message> {
       this.senderId,
       this.content,
       this.mediaId,
+      required this.mediaStored,
       this.downloadToken,
       this.quotesMessageId,
       required this.isDeletedFromSender,
@@ -2514,6 +2573,7 @@ class Message extends DataClass implements Insertable<Message> {
     if (!nullToAbsent || mediaId != null) {
       map['media_id'] = Variable<String>(mediaId);
     }
+    map['media_stored'] = Variable<bool>(mediaStored);
     if (!nullToAbsent || downloadToken != null) {
       map['download_token'] = Variable<Uint8List>(downloadToken);
     }
@@ -2548,6 +2608,7 @@ class Message extends DataClass implements Insertable<Message> {
       mediaId: mediaId == null && nullToAbsent
           ? const Value.absent()
           : Value(mediaId),
+      mediaStored: Value(mediaStored),
       downloadToken: downloadToken == null && nullToAbsent
           ? const Value.absent()
           : Value(downloadToken),
@@ -2578,6 +2639,7 @@ class Message extends DataClass implements Insertable<Message> {
       senderId: serializer.fromJson<int?>(json['senderId']),
       content: serializer.fromJson<String?>(json['content']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
+      mediaStored: serializer.fromJson<bool>(json['mediaStored']),
       downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
       quotesMessageId: serializer.fromJson<String?>(json['quotesMessageId']),
       isDeletedFromSender:
@@ -2600,6 +2662,7 @@ class Message extends DataClass implements Insertable<Message> {
       'senderId': serializer.toJson<int?>(senderId),
       'content': serializer.toJson<String?>(content),
       'mediaId': serializer.toJson<String?>(mediaId),
+      'mediaStored': serializer.toJson<bool>(mediaStored),
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
@@ -2619,6 +2682,7 @@ class Message extends DataClass implements Insertable<Message> {
           Value<int?> senderId = const Value.absent(),
           Value<String?> content = const Value.absent(),
           Value<String?> mediaId = const Value.absent(),
+          bool? mediaStored,
           Value<Uint8List?> downloadToken = const Value.absent(),
           Value<String?> quotesMessageId = const Value.absent(),
           bool? isDeletedFromSender,
@@ -2635,6 +2699,7 @@ class Message extends DataClass implements Insertable<Message> {
         senderId: senderId.present ? senderId.value : this.senderId,
         content: content.present ? content.value : this.content,
         mediaId: mediaId.present ? mediaId.value : this.mediaId,
+        mediaStored: mediaStored ?? this.mediaStored,
         downloadToken:
             downloadToken.present ? downloadToken.value : this.downloadToken,
         quotesMessageId: quotesMessageId.present
@@ -2656,6 +2721,8 @@ class Message extends DataClass implements Insertable<Message> {
       senderId: data.senderId.present ? data.senderId.value : this.senderId,
       content: data.content.present ? data.content.value : this.content,
       mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
+      mediaStored:
+          data.mediaStored.present ? data.mediaStored.value : this.mediaStored,
       downloadToken: data.downloadToken.present
           ? data.downloadToken.value
           : this.downloadToken,
@@ -2687,6 +2754,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('senderId: $senderId, ')
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
+          ..write('mediaStored: $mediaStored, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
@@ -2708,6 +2776,7 @@ class Message extends DataClass implements Insertable<Message> {
       senderId,
       content,
       mediaId,
+      mediaStored,
       $driftBlobEquality.hash(downloadToken),
       quotesMessageId,
       isDeletedFromSender,
@@ -2727,6 +2796,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.senderId == this.senderId &&
           other.content == this.content &&
           other.mediaId == this.mediaId &&
+          other.mediaStored == this.mediaStored &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
@@ -2745,6 +2815,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<int?> senderId;
   final Value<String?> content;
   final Value<String?> mediaId;
+  final Value<bool> mediaStored;
   final Value<Uint8List?> downloadToken;
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
@@ -2762,6 +2833,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.senderId = const Value.absent(),
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
+    this.mediaStored = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
@@ -2780,6 +2852,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.senderId = const Value.absent(),
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
+    this.mediaStored = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
@@ -2798,6 +2871,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<int>? senderId,
     Expression<String>? content,
     Expression<String>? mediaId,
+    Expression<bool>? mediaStored,
     Expression<Uint8List>? downloadToken,
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
@@ -2816,6 +2890,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (senderId != null) 'sender_id': senderId,
       if (content != null) 'content': content,
       if (mediaId != null) 'media_id': mediaId,
+      if (mediaStored != null) 'media_stored': mediaStored,
       if (downloadToken != null) 'download_token': downloadToken,
       if (quotesMessageId != null) 'quotes_message_id': quotesMessageId,
       if (isDeletedFromSender != null)
@@ -2837,6 +2912,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<int?>? senderId,
       Value<String?>? content,
       Value<String?>? mediaId,
+      Value<bool>? mediaStored,
       Value<Uint8List?>? downloadToken,
       Value<String?>? quotesMessageId,
       Value<bool>? isDeletedFromSender,
@@ -2854,6 +2930,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       senderId: senderId ?? this.senderId,
       content: content ?? this.content,
       mediaId: mediaId ?? this.mediaId,
+      mediaStored: mediaStored ?? this.mediaStored,
       downloadToken: downloadToken ?? this.downloadToken,
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
@@ -2885,6 +2962,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     }
     if (mediaId.present) {
       map['media_id'] = Variable<String>(mediaId.value);
+    }
+    if (mediaStored.present) {
+      map['media_stored'] = Variable<bool>(mediaStored.value);
     }
     if (downloadToken.present) {
       map['download_token'] = Variable<Uint8List>(downloadToken.value);
@@ -2930,6 +3010,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('senderId: $senderId, ')
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
+          ..write('mediaStored: $mediaStored, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
@@ -6863,6 +6944,7 @@ typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   required bool isGroupOfTwo,
   Value<bool> pinned,
   Value<bool> archived,
+  required String groupName,
   Value<DateTime> lastMessageExchange,
   Value<DateTime> createdAt,
   Value<int> rowid,
@@ -6873,6 +6955,7 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<bool> isGroupOfTwo,
   Value<bool> pinned,
   Value<bool> archived,
+  Value<String> groupName,
   Value<DateTime> lastMessageExchange,
   Value<DateTime> createdAt,
   Value<int> rowid,
@@ -6920,6 +7003,9 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
 
   ColumnFilters<bool> get archived => $composableBuilder(
       column: $table.archived, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get groupName => $composableBuilder(
+      column: $table.groupName, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange,
@@ -6975,6 +7061,9 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
   ColumnOrderings<bool> get archived => $composableBuilder(
       column: $table.archived, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get groupName => $composableBuilder(
+      column: $table.groupName, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange,
       builder: (column) => ColumnOrderings(column));
@@ -7006,6 +7095,9 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<bool> get archived =>
       $composableBuilder(column: $table.archived, builder: (column) => column);
+
+  GeneratedColumn<String> get groupName =>
+      $composableBuilder(column: $table.groupName, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange, builder: (column) => column);
@@ -7063,6 +7155,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<bool> isGroupOfTwo = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
             Value<bool> archived = const Value.absent(),
+            Value<String> groupName = const Value.absent(),
             Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -7073,6 +7166,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             isGroupOfTwo: isGroupOfTwo,
             pinned: pinned,
             archived: archived,
+            groupName: groupName,
             lastMessageExchange: lastMessageExchange,
             createdAt: createdAt,
             rowid: rowid,
@@ -7083,6 +7177,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             required bool isGroupOfTwo,
             Value<bool> pinned = const Value.absent(),
             Value<bool> archived = const Value.absent(),
+            required String groupName,
             Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -7093,6 +7188,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             isGroupOfTwo: isGroupOfTwo,
             pinned: pinned,
             archived: archived,
+            groupName: groupName,
             lastMessageExchange: lastMessageExchange,
             createdAt: createdAt,
             rowid: rowid,
@@ -7556,6 +7652,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<int?> senderId,
   Value<String?> content,
   Value<String?> mediaId,
+  Value<bool> mediaStored,
   Value<Uint8List?> downloadToken,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
@@ -7574,6 +7671,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<int?> senderId,
   Value<String?> content,
   Value<String?> mediaId,
+  Value<bool> mediaStored,
   Value<Uint8List?> downloadToken,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
@@ -7715,6 +7813,9 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get mediaStored => $composableBuilder(
+      column: $table.mediaStored, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken, builder: (column) => ColumnFilters(column));
@@ -7904,6 +8005,9 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get mediaStored => $composableBuilder(
+      column: $table.mediaStored, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken,
       builder: (column) => ColumnOrderings(column));
@@ -8029,6 +8133,9 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<bool> get mediaStored => $composableBuilder(
+      column: $table.mediaStored, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken, builder: (column) => column);
@@ -8236,6 +8343,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<int?> senderId = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
+            Value<bool> mediaStored = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
@@ -8254,6 +8362,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             senderId: senderId,
             content: content,
             mediaId: mediaId,
+            mediaStored: mediaStored,
             downloadToken: downloadToken,
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
@@ -8272,6 +8381,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<int?> senderId = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
+            Value<bool> mediaStored = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
@@ -8290,6 +8400,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             senderId: senderId,
             content: content,
             mediaId: mediaId,
+            mediaStored: mediaStored,
             downloadToken: downloadToken,
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,

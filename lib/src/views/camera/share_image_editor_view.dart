@@ -2,16 +2,11 @@
 
 import 'dart:async';
 import 'dart:collection';
-import 'dart:io';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hashlib/random.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
@@ -28,14 +23,11 @@ import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:twonly/src/views/camera/share_image_view.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 import 'package:video_player/video_player.dart';
 
 List<Layer> layers = [];
 List<Layer> undoLayers = [];
 List<Layer> removedLayers = [];
-
-const gMediaShowInfinite = 999999;
 
 class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView({
@@ -43,10 +35,10 @@ class ShareImageEditorView extends StatefulWidget {
     required this.mediaFileService,
     super.key,
     this.imageBytesFuture,
-    this.sendTo,
+    this.sendToGroup,
   });
   final Future<Uint8List?>? imageBytesFuture;
-  final Group? sendTo;
+  final Group? sendToGroup;
   final bool sharedFromGallery;
   final MediaFileService mediaFileService;
   @override
@@ -66,9 +58,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
 
-  /// Media upload variables
-  Future<bool>? videoUploadHandler;
-
   MediaFileService get mediaService => widget.mediaFileService;
   MediaFile get media => widget.mediaFileService.mediaFile;
 
@@ -78,8 +67,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     layers.add(FilterLayerData());
 
-    if (widget.sendTo != null) {
-      selectedGroupIds.add(widget.sendTo!.groupId);
+    if (widget.sendToGroup != null) {
+      selectedGroupIds.add(widget.sendToGroup!.groupId);
     }
 
     if (widget.imageBytesFuture != null) {
@@ -284,17 +273,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future<void> pushShareImageView() async {
-    final imageBytes = storeImageAsOriginal();
+    final mediaStoreFuture =
+        (media.type == MediaType.image) ? storeImageAsOriginal() : null;
+
     await videoController?.pause();
     if (isDisposed || !mounted) return;
     final wasSend = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ShareImageView(
-          imageBytesFuture: imageBytes,
-          selectedUserIds: selectedGroupIds,
-          updateStatus: updateSelectedGroupIds,
-          videoUploadHandler: videoUploadHandler,
+          selectedGroupIds: selectedGroupIds,
+          updateSelectedGroupIds: updateSelectedGroupIds,
+          mediaStoreFuture: mediaStoreFuture,
           mediaFileService: mediaService,
         ),
       ),
@@ -306,11 +296,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
   }
 
-  Future<void> storeImageAsOriginal() async {
+  Future<Uint8List?> getEditedImageBytes() async {
     if (layers.length == 1) {
       if (layers.first is BackgroundLayerData) {
         final image = (layers.first as BackgroundLayerData).image.bytes;
-        mediaService.originalPath.writeAsBytesSync(image);
+        return image;
       }
     }
 
@@ -324,24 +314,31 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       );
       if (image == null) {
         Log.error('screenshotController did not return image bytes');
-        return;
-      }
-
-      mediaService.originalPath.writeAsBytesSync(image);
-
-      // In case the image was already stored, then rename the stored image.
-
-      if (mediaService.storedPath.existsSync()) {
-        final newPath = mediaService.storedPath.absolute.path
-            .replaceFirst(media.mediaId, uuid.v7());
-        mediaService.storedPath.renameSync(newPath);
+        return null;
       }
 
       for (final x in layers) {
         x.showCustomButtons = true;
       }
       setState(() {});
+      return image;
     }
+
+    return null;
+  }
+
+  Future<bool> storeImageAsOriginal() async {
+    final imageBytes = await getEditedImageBytes();
+    if (imageBytes == null) return false;
+    mediaService.originalPath.writeAsBytesSync(imageBytes);
+
+    // In case the image was already stored, then rename the stored image.
+    if (mediaService.storedPath.existsSync()) {
+      final newPath = mediaService.storedPath.absolute.path
+          .replaceFirst(media.mediaId, uuid.v7());
+      mediaService.storedPath.renameSync(newPath);
+    }
+    return true;
   }
 
   Future<void> loadImage(Future<Uint8List?> imageBytesFuture) async {
@@ -377,14 +374,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     if (!context.mounted) return;
 
-    // first finalize the upload
-    await finalizeUpload(mediaService, [widget.sendTo!.groupId]);
-
-    /// then call the upload process in the background
-    await encryptMediaFiles(
-      mediaUploadId!,
-      imageHandler,
-      videoUploadHandler,
+    // Insert media file into the messages database and start uploading process in the background
+    await insertMediaFileInMessagesTable(
+      mediaService,
+      [widget.sendToGroup!.groupId],
     );
 
     if (context.mounted) {
@@ -434,14 +427,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SaveToGalleryButton(
-                      getMergedImage: getMergedImage,
-                      mediaUploadId: mediaUploadId,
-                      videoFilePath: widget.videoFilePath,
-                      displayButtonLabel: widget.sendTo == null,
+                      getMergedImage: getEditedImageBytes,
+                      mediaService: mediaService,
+                      displayButtonLabel: widget.sendToGroup == null,
                       isLoading: loadingImage,
                     ),
-                    if (widget.sendTo != null) const SizedBox(width: 10),
-                    if (widget.sendTo != null)
+                    if (widget.sendToGroup != null) const SizedBox(width: 10),
+                    if (widget.sendToGroup != null)
                       OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           iconColor: Theme.of(context).colorScheme.primary,
@@ -451,7 +443,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         onPressed: pushShareImageView,
                         child: const FaIcon(FontAwesomeIcons.userPlus),
                       ),
-                    SizedBox(width: widget.sendTo == null ? 20 : 10),
+                    SizedBox(width: widget.sendToGroup == null ? 20 : 10),
                     FilledButton.icon(
                       icon: sendingOrLoadingImage
                           ? SizedBox(
@@ -467,7 +459,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                           : const FaIcon(FontAwesomeIcons.solidPaperPlane),
                       onPressed: () async {
                         if (sendingOrLoadingImage) return;
-                        if (widget.sendTo == null) return pushShareImageView();
+                        if (widget.sendToGroup == null)
+                          return pushShareImageView();
                         await sendImageToSinglePerson();
                       },
                       style: ButtonStyle(
@@ -479,9 +472,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         ),
                       ),
                       label: Text(
-                        (widget.sendTo == null)
+                        (widget.sendToGroup == null)
                             ? context.lang.shareImagedEditorShareWith
-                            : getContactDisplayName(widget.sendTo!),
+                            : widget.sendToGroup!.groupName,
                         style: const TextStyle(fontSize: 17),
                       ),
                     ),

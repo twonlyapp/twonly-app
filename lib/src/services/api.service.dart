@@ -24,7 +24,6 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
@@ -94,7 +93,6 @@ class ApiService {
     if (!globalIsAppInBackground) {
       unawaited(retransmitRawBytes());
       unawaited(tryTransmitMessages());
-      unawaited(retryMediaUpload(false));
       unawaited(tryDownloadAllMediaFiles());
       unawaited(notifyContactsAboutProfileChange());
       twonlyDB.markUpdated();

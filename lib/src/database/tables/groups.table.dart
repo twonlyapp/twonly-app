@@ -11,6 +11,8 @@ class Groups extends Table {
   BoolColumn get pinned => boolean().withDefault(const Constant(false))();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
 
+  TextColumn get groupName => text()();
+
   DateTimeColumn get lastMessageExchange =>
       dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

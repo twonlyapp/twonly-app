@@ -30,18 +30,20 @@ Future<void> tryTransmitMessages() async {
   });
 }
 
-Future<void> tryToSendCompleteMessage({
+// When the ackByServerAt is set this value is written in the receipted
+Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   String? receiptId,
   Receipt? receipt,
   bool reupload = false,
+  bool onlyReturnEncryptedData = false,
 }) async {
   try {
-    if (receiptId == null && receipt == null) return;
+    if (receiptId == null && receipt == null) return null;
     if (receipt == null) {
       receipt = await twonlyDB.receiptsDao.getReceiptById(receiptId!);
       if (receipt == null) {
         Log.error('Receipt $receiptId not found.');
-        return;
+        return null;
       }
     }
     receiptId = receipt.receiptId;
@@ -55,9 +57,9 @@ Future<void> tryToSendCompleteMessage({
       );
     }
 
-    if (receipt.ackByServerAt != null) {
+    if (!onlyReturnEncryptedData && receipt.ackByServerAt != null) {
       Log.error('$receiptId message already uploaded!');
-      return;
+      return null;
     }
 
     Log.info('Uploading $receiptId (Message to ${receipt.contactId})');
@@ -86,7 +88,7 @@ Future<void> tryToSendCompleteMessage({
       );
       if (cipherText == null) {
         Log.error('Could not encrypt the message. Aborting and trying again.');
-        return;
+        return null;
       }
       message.encryptedContent = cipherText.serialize();
       switch (cipherText.getType()) {
@@ -96,8 +98,12 @@ Future<void> tryToSendCompleteMessage({
           message.type = pb.Message_Type.CIPHERTEXT;
         default:
           Log.error('Invalid ciphertext type: ${cipherText.getType()}.');
-          return;
+          return null;
       }
+    }
+
+    if (onlyReturnEncryptedData) {
+      return (message.writeToBuffer(), pushData);
     }
 
     final resp = await apiService.sendTextMessage(
@@ -114,7 +120,7 @@ Future<void> tryToSendCompleteMessage({
           receipt.contactId,
           const ContactsCompanion(deleted: Value(true)),
         );
-        return;
+        return null;
       }
     }
 
@@ -149,12 +155,14 @@ Future<void> tryToSendCompleteMessage({
       await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
     }
   }
+  return null;
 }
 
-Future<void> sendCipherText(
+Future<(Uint8List, Uint8List?)?> sendCipherText(
   int contactId,
-  pb.EncryptedContent encryptedContent,
-) async {
+  pb.EncryptedContent encryptedContent, {
+  bool onlyReturnEncryptedData = false,
+}) async {
   final response = pb.Message()
     ..type = pb.Message_Type.CIPHERTEXT
     ..encryptedContent = encryptedContent.writeToBuffer();
@@ -163,12 +171,17 @@ Future<void> sendCipherText(
     ReceiptsCompanion(
       contactId: Value(contactId),
       message: Value(response.writeToBuffer()),
+      ackByServerAt: Value(onlyReturnEncryptedData ? DateTime.now() : null),
     ),
   );
 
   if (receipt != null) {
-    await tryToSendCompleteMessage(receipt: receipt);
+    return tryToSendCompleteMessage(
+      receipt: receipt,
+      onlyReturnEncryptedData: onlyReturnEncryptedData,
+    );
   }
+  return null;
 }
 
 Future<void> notifyContactAboutOpeningMessage(

@@ -14,9 +14,9 @@ import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/client/generated/backup.pb.dart';
-import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
 

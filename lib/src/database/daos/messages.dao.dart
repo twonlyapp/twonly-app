@@ -285,6 +285,14 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .write(updatedValues);
   }
 
+  Future<void> updateMessagesByMediaId(
+    String mediaId,
+    MessagesCompanion updatedValues,
+  ) {
+    return (update(messages)..where((c) => c.mediaId.equals(mediaId)))
+        .write(updatedValues);
+  }
+
   Future<Message?> insertMessage(MessagesCompanion message) async {
     try {
       final rowId = await into(messages).insert(message);

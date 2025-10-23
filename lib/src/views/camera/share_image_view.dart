@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -21,19 +22,15 @@ import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView({
-    required this.imageBytesFuture,
-    required this.selectedUserIds,
-    required this.updateStatus,
-    required this.videoUploadHandler,
+    required this.selectedGroupIds,
+    required this.updateSelectedGroupIds,
+    required this.mediaStoreFuture,
     required this.mediaFileService,
     super.key,
-    this.enableVideoAudio,
   });
-  final Future<Uint8List?> imageBytesFuture;
-  final HashSet<int> selectedUserIds;
-  final bool? enableVideoAudio;
-  final void Function(int, bool) updateStatus;
-  final Future<bool>? videoUploadHandler;
+  final HashSet<String> selectedGroupIds;
+  final void Function(String, bool) updateSelectedGroupIds;
+  final Future<bool>? mediaStoreFuture;
   final MediaFileService mediaFileService;
 
   @override
@@ -69,17 +66,11 @@ class _ShareImageView extends State<ShareImageView> {
   }
 
   Future<void> initAsync() async {
-    imageBytes = await widget.imageBytesFuture;
-    if (imageBytes != null) {
-      final imageHandler =
-          addOrModifyImageToUpload(widget.mediaUploadId, imageBytes!);
-      // start with the pre upload of the media file...
-      await encryptMediaFiles(
-        widget.mediaUploadId,
-        imageHandler,
-        widget.videoUploadHandler,
-      );
+    if (widget.mediaStoreFuture != null) {
+      await widget.mediaStoreFuture;
     }
+    await widget.mediaFileService.setUploadState(UploadState.preprocessing);
+    unawaited(startBackgroundMediaUpload(widget.mediaFileService));
     if (!mounted) return;
     setState(() {});
   }

@@ -49,6 +49,26 @@ class MediaFileService {
     await updateFromDB();
   }
 
+  Future<void> setUploadState(UploadState uploadState) async {
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaFile.mediaId,
+      MediaFilesCompanion(
+        uploadState: Value(uploadState),
+      ),
+    );
+    await updateFromDB();
+  }
+
+  Future<void> setEncryptedMac(Uint8List encryptionMac) async {
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaFile.mediaId,
+      MediaFilesCompanion(
+        encryptionMac: Value(encryptionMac),
+      ),
+    );
+    await updateFromDB();
+  }
+
   Future<void> setRequiresAuth(bool requiresAuthentication) async {
     await twonlyDB.mediaFilesDao.updateMedia(
       mediaFile.mediaId,
@@ -98,7 +118,8 @@ class MediaFileService {
       encryptedPath,
       originalPath,
       storedPath,
-      thumbnailPath
+      thumbnailPath,
+      uploadRequestPath
     ];
 
     for (final path in pathsToRemove) {
@@ -159,6 +180,10 @@ class MediaFileService {
   File get encryptedPath => _buildFilePath(
         'tmp',
         namePrefix: '.encrypted',
+      );
+  File get uploadRequestPath => _buildFilePath(
+        'tmp',
+        namePrefix: '.upload',
       );
   File get originalPath => _buildFilePath(
         'tmp',

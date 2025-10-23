@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,7 +8,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
@@ -92,9 +90,9 @@ class CameraPreviewControllerView extends StatelessWidget {
     required this.selectedCameraDetails,
     required this.screenshotController,
     super.key,
-    this.sendTo,
+    this.sendToGroup,
   });
-  final Contact? sendTo;
+  final Group? sendToGroup;
   final Future<CameraController?> Function(
     int sCameraId,
     bool init,
@@ -112,7 +110,7 @@ class CameraPreviewControllerView extends StatelessWidget {
         if (snap.hasData) {
           if (snap.data!) {
             return CameraPreviewView(
-              sendTo: sendTo,
+              sendToGroup: sendToGroup,
               selectCamera: selectCamera,
               cameraController: cameraController,
               selectedCameraDetails: selectedCameraDetails,
@@ -141,9 +139,9 @@ class CameraPreviewView extends StatefulWidget {
     required this.selectedCameraDetails,
     required this.screenshotController,
     super.key,
-    this.sendTo,
+    this.sendToGroup,
   });
-  final Contact? sendTo;
+  final Group? sendToGroup;
   final Future<CameraController?> Function(
     int sCameraId,
     bool init,
@@ -328,7 +326,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         pageBuilder: (context, a1, a2) => ShareImageEditorView(
           imageBytesFuture: imageBytes,
           sharedFromGallery: sharedFromGallery,
-          sendTo: widget.sendTo,
+          sendToGroup: widget.sendToGroup,
           mediaFileService: mediaFileService,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -347,7 +345,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (!mounted) return true;
     // shouldReturn is null when the user used the back button
     if (shouldReturn != null && shouldReturn) {
-      if (widget.sendTo == null) {
+      if (widget.sendToGroup == null) {
         globalUpdateOfHomeViewPageIndex(0);
       } else {
         Navigator.pop(context);
@@ -476,19 +474,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     });
 
     try {
-      File? videoPathFile;
       final videoPath = await widget.cameraController?.stopVideoRecording();
-      if (videoPath != null) {
-        if (Platform.isAndroid) {
-          // see https://github.com/flutter/flutter/issues/148335
-          await File(videoPath.path).rename('${videoPath.path}.mp4');
-          videoPathFile = File('${videoPath.path}.mp4');
-        } else {
-          videoPathFile = File(videoPath.path);
-        }
-      }
+      if (videoPath == null) return;
       await widget.cameraController?.pausePreview();
-      if (await pushMediaEditor(null, videoPathFile)) {
+      if (await pushMediaEditor(null, File(videoPath.path))) {
         return;
       }
     } on CameraException catch (e) {
@@ -568,9 +557,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 ),
               ),
             if (!sharePreviewIsShown &&
-                widget.sendTo != null &&
+                widget.sendToGroup != null &&
                 !isVideoRecording)
-              SendToWidget(sendTo: getContactDisplayName(widget.sendTo!)),
+              SendToWidget(sendTo: widget.sendToGroup!.groupName),
             if (!sharePreviewIsShown && !isVideoRecording)
               Positioned(
                 right: 5,
@@ -722,7 +711,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               videoRecordingStarted: videoRecordingStarted,
               maxVideoRecordingTime: maxVideoRecordingTime,
             ),
-            if (!sharePreviewIsShown && widget.sendTo != null)
+            if (!sharePreviewIsShown && widget.sendToGroup != null)
               Positioned(
                 left: 5,
                 top: 10,

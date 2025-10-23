@@ -8,8 +8,8 @@ import 'package:twonly/src/views/camera/camera_preview_components/camera_preview
 import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
 
 class CameraSendToView extends StatefulWidget {
-  const CameraSendToView(this.sendTo, {super.key});
-  final Contact sendTo;
+  const CameraSendToView(this.sendToGroup, {super.key});
+  final Group sendToGroup;
   @override
   State<CameraSendToView> createState() => CameraSendToViewState();
 }
@@ -77,7 +77,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
             ),
             CameraPreviewControllerView(
               selectCamera: selectCamera,
-              sendTo: widget.sendTo,
+              sendToGroup: widget.sendToGroup,
               cameraController: cameraController,
               selectedCameraDetails: selectedCameraDetails,
               screenshotController: screenshotController,

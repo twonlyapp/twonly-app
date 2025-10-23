@@ -18,6 +18,8 @@ class Messages extends Table {
   TextColumn get mediaId =>
       text().nullable().references(MediaFiles, #mediaId)();
 
+  BoolColumn get mediaStored => boolean().withDefault(const Constant(false))();
+
   BlobColumn get downloadToken => blob().nullable()();
 
   TextColumn get quotesMessageId =>

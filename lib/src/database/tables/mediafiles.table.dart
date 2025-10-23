@@ -15,8 +15,7 @@ enum UploadState {
   // Image was stored but not send
   storedOnly,
   // At this point the user is finished with editing, and the media file can be uploaded
-  compressing,
-  encrypting,
+  preprocessing,
   uploading,
   backgroundUploadTaskStarted,
   uploaded,
