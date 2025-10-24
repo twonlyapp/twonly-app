@@ -663,14 +663,14 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
 class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
   factory EncryptedContent_MediaUpdate({
     EncryptedContent_MediaUpdate_Type? type,
-    $core.String? targetMessageId,
+    $core.String? targetMediaId,
   }) {
     final $result = create();
     if (type != null) {
       $result.type = type;
     }
-    if (targetMessageId != null) {
-      $result.targetMessageId = targetMessageId;
+    if (targetMediaId != null) {
+      $result.targetMediaId = targetMediaId;
     }
     return $result;
   }
@@ -680,7 +680,7 @@ class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.MediaUpdate', createEmptyInstance: create)
     ..e<EncryptedContent_MediaUpdate_Type>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedContent_MediaUpdate_Type.REOPENED, valueOf: EncryptedContent_MediaUpdate_Type.valueOf, enumValues: EncryptedContent_MediaUpdate_Type.values)
-    ..aOS(2, _omitFieldNames ? '' : 'targetMessageId', protoName: 'targetMessageId')
+    ..aOS(2, _omitFieldNames ? '' : 'targetMediaId', protoName: 'targetMediaId')
     ..hasRequiredFields = false
   ;
 
@@ -715,13 +715,13 @@ class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
   void clearType() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get targetMessageId => $_getSZ(1);
+  $core.String get targetMediaId => $_getSZ(1);
   @$pb.TagNumber(2)
-  set targetMessageId($core.String v) { $_setString(1, v); }
+  set targetMediaId($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasTargetMessageId() => $_has(1);
+  $core.bool hasTargetMediaId() => $_has(1);
   @$pb.TagNumber(2)
-  void clearTargetMessageId() => clearField(2);
+  void clearTargetMediaId() => clearField(2);
 }
 
 class EncryptedContent_ContactRequest extends $pb.GeneratedMessage {
@@ -1025,8 +1025,8 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
 class EncryptedContent extends $pb.GeneratedMessage {
   factory EncryptedContent({
     $core.String? groupId,
+    $core.bool? isDirectChat,
     $fixnum.Int64? senderProfileCounter,
-    EncryptedContent_TextMessage? textMessage,
     EncryptedContent_MessageUpdate? messageUpdate,
     EncryptedContent_Media? media,
     EncryptedContent_MediaUpdate? mediaUpdate,
@@ -1035,16 +1035,17 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_FlameSync? flameSync,
     EncryptedContent_PushKeys? pushKeys,
     EncryptedContent_Reaction? reaction,
+    EncryptedContent_TextMessage? textMessage,
   }) {
     final $result = create();
     if (groupId != null) {
       $result.groupId = groupId;
     }
+    if (isDirectChat != null) {
+      $result.isDirectChat = isDirectChat;
+    }
     if (senderProfileCounter != null) {
       $result.senderProfileCounter = senderProfileCounter;
-    }
-    if (textMessage != null) {
-      $result.textMessage = textMessage;
     }
     if (messageUpdate != null) {
       $result.messageUpdate = messageUpdate;
@@ -1070,6 +1071,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (reaction != null) {
       $result.reaction = reaction;
     }
+    if (textMessage != null) {
+      $result.textMessage = textMessage;
+    }
     return $result;
   }
   EncryptedContent._() : super();
@@ -1078,8 +1082,8 @@ class EncryptedContent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent', createEmptyInstance: create)
     ..aOS(2, _omitFieldNames ? '' : 'groupId', protoName: 'groupId')
-    ..aInt64(3, _omitFieldNames ? '' : 'senderProfileCounter', protoName: 'senderProfileCounter')
-    ..aOM<EncryptedContent_TextMessage>(4, _omitFieldNames ? '' : 'textMessage', protoName: 'textMessage', subBuilder: EncryptedContent_TextMessage.create)
+    ..aOB(3, _omitFieldNames ? '' : 'isDirectChat', protoName: 'isDirectChat')
+    ..aInt64(4, _omitFieldNames ? '' : 'senderProfileCounter', protoName: 'senderProfileCounter')
     ..aOM<EncryptedContent_MessageUpdate>(5, _omitFieldNames ? '' : 'messageUpdate', protoName: 'messageUpdate', subBuilder: EncryptedContent_MessageUpdate.create)
     ..aOM<EncryptedContent_Media>(6, _omitFieldNames ? '' : 'media', subBuilder: EncryptedContent_Media.create)
     ..aOM<EncryptedContent_MediaUpdate>(7, _omitFieldNames ? '' : 'mediaUpdate', protoName: 'mediaUpdate', subBuilder: EncryptedContent_MediaUpdate.create)
@@ -1088,6 +1092,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_FlameSync>(10, _omitFieldNames ? '' : 'flameSync', protoName: 'flameSync', subBuilder: EncryptedContent_FlameSync.create)
     ..aOM<EncryptedContent_PushKeys>(11, _omitFieldNames ? '' : 'pushKeys', protoName: 'pushKeys', subBuilder: EncryptedContent_PushKeys.create)
     ..aOM<EncryptedContent_Reaction>(12, _omitFieldNames ? '' : 'reaction', subBuilder: EncryptedContent_Reaction.create)
+    ..aOM<EncryptedContent_TextMessage>(13, _omitFieldNames ? '' : 'textMessage', protoName: 'textMessage', subBuilder: EncryptedContent_TextMessage.create)
     ..hasRequiredFields = false
   ;
 
@@ -1121,26 +1126,24 @@ class EncryptedContent extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearGroupId() => clearField(2);
 
-  /// / This can be added, so the receiver can check weather he is up to date with the current profile
   @$pb.TagNumber(3)
-  $fixnum.Int64 get senderProfileCounter => $_getI64(1);
+  $core.bool get isDirectChat => $_getBF(1);
   @$pb.TagNumber(3)
-  set senderProfileCounter($fixnum.Int64 v) { $_setInt64(1, v); }
+  set isDirectChat($core.bool v) { $_setBool(1, v); }
   @$pb.TagNumber(3)
-  $core.bool hasSenderProfileCounter() => $_has(1);
+  $core.bool hasIsDirectChat() => $_has(1);
   @$pb.TagNumber(3)
-  void clearSenderProfileCounter() => clearField(3);
+  void clearIsDirectChat() => clearField(3);
 
+  /// / This can be added, so the receiver can check weather he is up to date with the current profile
   @$pb.TagNumber(4)
-  EncryptedContent_TextMessage get textMessage => $_getN(2);
+  $fixnum.Int64 get senderProfileCounter => $_getI64(2);
   @$pb.TagNumber(4)
-  set textMessage(EncryptedContent_TextMessage v) { setField(4, v); }
+  set senderProfileCounter($fixnum.Int64 v) { $_setInt64(2, v); }
   @$pb.TagNumber(4)
-  $core.bool hasTextMessage() => $_has(2);
+  $core.bool hasSenderProfileCounter() => $_has(2);
   @$pb.TagNumber(4)
-  void clearTextMessage() => clearField(4);
-  @$pb.TagNumber(4)
-  EncryptedContent_TextMessage ensureTextMessage() => $_ensure(2);
+  void clearSenderProfileCounter() => clearField(4);
 
   @$pb.TagNumber(5)
   EncryptedContent_MessageUpdate get messageUpdate => $_getN(3);
@@ -1229,6 +1232,17 @@ class EncryptedContent extends $pb.GeneratedMessage {
   void clearReaction() => clearField(12);
   @$pb.TagNumber(12)
   EncryptedContent_Reaction ensureReaction() => $_ensure(10);
+
+  @$pb.TagNumber(13)
+  EncryptedContent_TextMessage get textMessage => $_getN(11);
+  @$pb.TagNumber(13)
+  set textMessage(EncryptedContent_TextMessage v) { setField(13, v); }
+  @$pb.TagNumber(13)
+  $core.bool hasTextMessage() => $_has(11);
+  @$pb.TagNumber(13)
+  void clearTextMessage() => clearField(13);
+  @$pb.TagNumber(13)
+  EncryptedContent_TextMessage ensureTextMessage() => $_ensure(11);
 }
 
 

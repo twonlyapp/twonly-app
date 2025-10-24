@@ -5,7 +5,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/user_context_menu.component.dart';
 
 class PrivacyViewBlockUsers extends StatefulWidget {
@@ -108,7 +108,7 @@ class UserList extends StatelessWidget {
       itemCount: users.length,
       itemBuilder: (BuildContext context, int i) {
         final user = users[i];
-        return UserContextMenuBlocked(
+        return UserContextMenu(
           contact: user,
           child: ListTile(
             title: Row(
@@ -116,7 +116,7 @@ class UserList extends StatelessWidget {
                 Text(getContactDisplayName(user)),
               ],
             ),
-            leading: ContactAvatar(contact: user, fontSize: 15),
+            leading: AvatarIcon(contact: user, fontSize: 15),
             trailing: Checkbox(
               value: user.blocked,
               onChanged: (bool? value) async {

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -10,8 +9,8 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/components/user_context_menu.component.dart';
 
 class StartNewChatView extends StatefulWidget {
@@ -30,7 +29,7 @@ class _StartNewChatView extends State<StartNewChatView> {
   void initState() {
     super.initState();
 
-    final stream = twonlyDB.contactsDao.watchContactsForStartNewChat();
+    final stream = twonlyDB.contactsDao.watchAllAcceptedContacts();
 
     contactSub = stream.listen((update) async {
       update.sort(
@@ -147,7 +146,6 @@ class UserList extends StatelessWidget {
           return const Divider();
         }
         final user = users[i - 2];
-        final flameCounter = getFlameCounterFromContact(user);
         return UserContextMenu(
           key: Key(user.userId.toString()),
           contact: user,
@@ -155,40 +153,37 @@ class UserList extends StatelessWidget {
             title: Row(
               children: [
                 Text(getContactDisplayName(user)),
-                if (flameCounter >= 1)
-                  FlameCounterWidget(
-                    user,
-                    flameCounter,
-                    prefix: true,
-                  ),
-                const Spacer(),
-                IconButton(
-                  icon: FaIcon(
-                    FontAwesomeIcons.boxOpen,
-                    size: 13,
-                    color: user.archived ? null : Colors.transparent,
-                  ),
-                  onPressed: user.archived
-                      ? () async {
-                          const update =
-                              ContactsCompanion(archived: Value(false));
-                          await twonlyDB.contactsDao
-                              .updateContact(user.userId, update);
-                        }
-                      : null,
+                FlameCounterWidget(
+                  contactId: user.userId,
+                  prefix: true,
                 ),
               ],
             ),
-            leading: ContactAvatar(
+            leading: AvatarIcon(
               contact: user,
               fontSize: 13,
             ),
             onTap: () async {
+              var directChat =
+                  await twonlyDB.groupsDao.getDirectChat(user.userId);
+              if (directChat == null) {
+                await twonlyDB.groupsDao.insertGroup(
+                  GroupsCompanion(
+                    isDirectChat: const Value(true),
+                    groupName: Value(
+                      getContactDisplayName(user),
+                    ),
+                  ),
+                );
+                directChat =
+                    await twonlyDB.groupsDao.getDirectChat(user.userId);
+              }
+              if (!context.mounted) return;
               await Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
                   builder: (context) {
-                    return ChatMessagesView(user);
+                    return ChatMessagesView(directChat!);
                   },
                 ),
               );

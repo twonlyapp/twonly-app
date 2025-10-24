@@ -1,11 +1,11 @@
 import 'dart:collection';
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/message_old.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
@@ -18,17 +18,23 @@ enum MessageSendState {
   sending,
 }
 
-MessageSendState messageSendStateFromMessage(Message msg) {
+Future<MessageSendState> messageSendStateFromMessage(Message msg) async {
   MessageSendState state;
 
-  if (!msg.acknowledgeByServer) {
-    if (msg.messageOtherId == null) {
+  final ackByServer = await twonlyDB.messagesDao.haveAllMembers(
+    msg.groupId,
+    msg.messageId,
+    MessageActionType.ackByServerAt,
+  );
+
+  if (!ackByServer) {
+    if (msg.senderId == null) {
       state = MessageSendState.sending;
     } else {
       state = MessageSendState.receiving;
     }
   } else {
-    if (msg.messageOtherId == null) {
+    if (msg.senderId == null) {
       // message send
       if (msg.openedAt == null) {
         state = MessageSendState.send;
@@ -63,9 +69,113 @@ class MessageSendStateIcon extends StatefulWidget {
 }
 
 class _MessageSendStateIconState extends State<MessageSendStateIcon> {
+  List<Widget> icons = <Widget>[];
+  String text = '';
+  Widget? textWidget;
+
   @override
   void initState() {
     super.initState();
+    initAsync();
+  }
+
+  Future<void> initAsync() async {
+    final kindsAlreadyShown = HashSet<MessageType>();
+
+    for (final message in widget.messages) {
+      if (icons.length == 2) break;
+      if (kindsAlreadyShown.contains(message.type)) continue;
+      kindsAlreadyShown.add(message.type);
+
+      final state = await messageSendStateFromMessage(message);
+
+      final mediaFile = message.mediaId == null
+          ? null
+          : await MediaFileService.fromMediaId(message.mediaId!);
+
+      if (!mounted) return;
+
+      final color =
+          getMessageColorFromType(message, mediaFile?.mediaFile, context);
+
+      Widget icon = const Placeholder();
+      textWidget = null;
+
+      switch (state) {
+        case MessageSendState.receivedOpened:
+          icon = Icon(Icons.crop_square, size: 14, color: color);
+          if (message.content != null) {
+            if (isEmoji(message.content!)) {
+              icon = Text(
+                message.content!,
+                style: const TextStyle(fontSize: 12),
+              );
+            }
+          }
+          text = context.lang.messageSendState_Received;
+          if (widget.canBeReopened) {
+            textWidget = Text(
+              context.lang.doubleClickToReopen,
+              style: const TextStyle(fontSize: 9),
+            );
+          }
+        case MessageSendState.sendOpened:
+          icon = FaIcon(FontAwesomeIcons.paperPlane, size: 12, color: color);
+          text = context.lang.messageSendState_Opened;
+        case MessageSendState.received:
+          icon = Icon(Icons.square_rounded, size: 14, color: color);
+          text = context.lang.messageSendState_Received;
+          if (message.type == MessageType.media) {
+            if (mediaFile!.mediaFile.downloadState == DownloadState.pending) {
+              text = context.lang.messageSendState_TapToLoad;
+            }
+            if (mediaFile.mediaFile.downloadState ==
+                DownloadState.downloading) {
+              text = context.lang.messageSendState_Loading;
+              icon = getLoaderIcon(color);
+            }
+          }
+        case MessageSendState.send:
+          icon =
+              FaIcon(FontAwesomeIcons.solidPaperPlane, size: 12, color: color);
+          text = context.lang.messageSendState_Send;
+        case MessageSendState.sending:
+          icon = getLoaderIcon(color);
+          text = context.lang.messageSendState_Sending;
+        case MessageSendState.receiving:
+          icon = getLoaderIcon(color);
+          text = context.lang.messageSendState_Received;
+      }
+
+      if (message.mediaStored) {
+        icon = FaIcon(FontAwesomeIcons.floppyDisk, size: 12, color: color);
+        text = context.lang.messageStoredInGallery;
+      }
+
+      if (mediaFile != null) {
+        if (mediaFile.mediaFile.stored) {
+          icon = FaIcon(FontAwesomeIcons.repeat, size: 12, color: color);
+          text = context.lang.messageReopened;
+        }
+
+        if (mediaFile.mediaFile.reuploadRequestedBy != null) {
+          icon =
+              FaIcon(FontAwesomeIcons.clockRotateLeft, size: 12, color: color);
+          textWidget = Text(
+            context.lang.retransmissionRequested,
+            style: const TextStyle(fontSize: 9),
+          );
+        }
+      }
+
+      if (message.type == MessageType.media) {
+        icons.insert(0, icon);
+      } else {
+        icons.add(icon);
+      }
+    }
+
+    setState(() {});
   }
 
   Widget getLoaderIcon(Color color) {
@@ -83,108 +193,6 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
   @override
   Widget build(BuildContext context) {
-    final icons = <Widget>[];
-    var text = '';
-
-    final kindsAlreadyShown = HashSet<MessageKind>();
-    Widget? textWidget;
-
-    for (final message in widget.messages) {
-      if (icons.length == 2) break;
-      if (kindsAlreadyShown.contains(message.kind)) continue;
-      kindsAlreadyShown.add(message.kind);
-
-      final state = messageSendStateFromMessage(message);
-      late Color color;
-      MessageContent? content;
-
-      if (message.contentJson == null) {
-        color = getMessageColorFromType(TextMessageContent(text: ''), context);
-      } else {
-        content = MessageContent.fromJson(
-          message.kind,
-          jsonDecode(message.contentJson!) as Map,
-        );
-        if (content == null) continue;
-        color = getMessageColorFromType(content, context);
-      }
-
-      Widget icon = const Placeholder();
-      textWidget = null;
-
-      switch (state) {
-        case MessageSendState.receivedOpened:
-          icon = Icon(Icons.crop_square, size: 14, color: color);
-          if (content is TextMessageContent) {
-            if (isEmoji(content.text)) {
-              icon = Text(content.text, style: const TextStyle(fontSize: 12));
-            }
-          }
-          text = context.lang.messageSendState_Received;
-          if (widget.canBeReopened) {
-            textWidget = Text(
-              context.lang.doubleClickToReopen,
-              style: const TextStyle(fontSize: 9),
-            );
-          }
-        case MessageSendState.sendOpened:
-          icon = FaIcon(FontAwesomeIcons.paperPlane, size: 12, color: color);
-          text = context.lang.messageSendState_Opened;
-        case MessageSendState.received:
-          icon = Icon(Icons.square_rounded, size: 14, color: color);
-          text = context.lang.messageSendState_Received;
-          if (message.kind == MessageKind.media) {
-            if (message.downloadState == DownloadState.pending) {
-              text = context.lang.messageSendState_TapToLoad;
-            }
-            if (message.downloadState == DownloadState.downloading) {
-              text = context.lang.messageSendState_Loading;
-              icon = getLoaderIcon(color);
-            }
-          }
-        case MessageSendState.send:
-          icon =
-              FaIcon(FontAwesomeIcons.solidPaperPlane, size: 12, color: color);
-          text = context.lang.messageSendState_Send;
-        case MessageSendState.sending:
-          icon = getLoaderIcon(color);
-          text = context.lang.messageSendState_Sending;
-        case MessageSendState.receiving:
-          icon = getLoaderIcon(color);
-          text = context.lang.messageSendState_Received;
-      }
-
-      if (message.kind == MessageKind.storedMediaFile) {
-        icon = FaIcon(FontAwesomeIcons.floppyDisk, size: 12, color: color);
-        text = context.lang.messageStoredInGallery;
-      }
-
-      if (message.kind == MessageKind.reopenedMedia) {
-        icon = FaIcon(FontAwesomeIcons.repeat, size: 12, color: color);
-        text = context.lang.messageReopened;
-      }
-
-      if (message.errorWhileSending) {
-        icon =
-            FaIcon(FontAwesomeIcons.circleExclamation, size: 12, color: color);
-        text = 'Error';
-      }
-
-      if (message.mediaRetransmissionState == MediaRetransmitting.requested) {
-        icon = FaIcon(FontAwesomeIcons.clockRotateLeft, size: 12, color: color);
-        textWidget = Text(
-          context.lang.retransmissionRequested,
-          style: const TextStyle(fontSize: 9),
-        );
-      }
-
-      if (message.kind == MessageKind.media) {
-        icons.insert(0, icon);
-      } else {
-        icons.add(icon);
-      }
-    }
-
     if (icons.isEmpty) return Container();
 
     var icon = icons[0];
@@ -215,7 +223,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         icon,
         const SizedBox(width: 3),
         if (textWidget != null)
-          textWidget
+          textWidget!
         else
           Text(
             text,

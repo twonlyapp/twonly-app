@@ -1,9 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/developer/automated_testing.view.dart';
 import 'package:twonly/src/views/settings/developer/retransmission_data.view.dart';
@@ -69,14 +66,14 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               );
             },
           ),
-          if (kDebugMode)
-            ListTile(
-              title: const Text('FlameSync Test'),
-              onTap: () async {
-                await twonlyDB.contactsDao.modifyFlameCounterForTesting();
-                await syncFlameCounters();
-              },
-            ),
+          // if (kDebugMode)
+          //   ListTile(
+          //     title: const Text('FlameSync Test'),
+          //     onTap: () async {
+          //       await twonlyDB.contactsDao.modifyFlameCounterForTesting();
+          //       await syncFlameCounters();
+          //     },
+          //   ),
           if (kDebugMode)
             ListTile(
               title: const Text('Automated Testing'),

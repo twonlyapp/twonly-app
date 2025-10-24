@@ -30,11 +30,11 @@ message PlaintextContent {
 message EncryptedContent {
 
     optional string groupId = 2;
+    optional bool isDirectChat = 3;
 
     /// This can be added, so the receiver can check weather he is up to date with the current profile
-    optional int64 senderProfileCounter = 3;
+    optional int64 senderProfileCounter = 4;
 
-    optional TextMessage textMessage  = 4;
     optional MessageUpdate messageUpdate  = 5;
     optional Media media = 6;
     optional MediaUpdate mediaUpdate = 7;
@@ -43,6 +43,7 @@ message EncryptedContent {
     optional FlameSync flameSync = 10;
     optional PushKeys pushKeys = 11;
     optional Reaction reaction  = 12;
+    optional TextMessage textMessage  = 13;
 
     message TextMessage {
         string senderMessageId = 1;
@@ -98,7 +99,7 @@ message EncryptedContent {
             DECRYPTION_ERROR = 2;
         }
         Type type = 1;
-        string targetMessageId = 2;
+        string targetMediaId = 2;
     }
 
     message ContactRequest {

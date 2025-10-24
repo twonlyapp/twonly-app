@@ -186,7 +186,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           onPressed: () async {
             if (media.type != MediaType.video) {
               await mediaService.setDisplayLimit(
-                  (media.displayLimitInMilliseconds == null) ? 0 : null);
+                (media.displayLimitInMilliseconds == null) ? 0 : null,
+              );
               if (!mounted) return;
               setState(() {});
               return;
@@ -465,8 +466,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                           : const FaIcon(FontAwesomeIcons.solidPaperPlane),
                       onPressed: () async {
                         if (sendingOrLoadingImage) return;
-                        if (widget.sendToGroup == null)
+                        if (widget.sendToGroup == null) {
                           return pushShareImageView();
+                        }
                         await sendImageToSinglePerson();
                       },
                       style: ButtonStyle(

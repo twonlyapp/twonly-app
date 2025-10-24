@@ -1,9 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_send_state_icon.dart';
 import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
@@ -11,7 +11,8 @@ import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
 class InChatMediaViewer extends StatefulWidget {
   const InChatMediaViewer({
     required this.message,
-    required this.contact,
+    required this.group,
+    required this.mediaService,
     required this.color,
     required this.galleryItems,
     required this.canBeReopened,
@@ -19,7 +20,8 @@ class InChatMediaViewer extends StatefulWidget {
   });
 
   final Message message;
-  final Contact contact;
+  final Group group;
+  final MediaFileService mediaService;
   final List<MemoryItem> galleryItems;
   final Color color;
   final bool canBeReopened;
@@ -56,8 +58,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   bool loadIndex() {
     if (widget.message.mediaStored) {
       final index = widget.galleryItems.indexWhere(
-        (x) =>
-            x.id == (widget.message.mediaUploadId ?? widget.message.messageId),
+        (x) => x.mediaService.mediaFile.mediaId == (widget.message.messageId),
       );
       if (index != -1) {
         galleryItemIndex = index;
@@ -83,7 +84,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
     if (widget.message.mediaStored) return;
 
     final stream = twonlyDB.messagesDao
-        .getMessageByMessageId(widget.message.messageId)
+        .getMessageById(widget.message.messageId)
         .watchSingleOrNull();
     messageStream = stream.listen((updated) async {
       if (updated != null) {

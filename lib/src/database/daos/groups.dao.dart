@@ -32,7 +32,56 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .get();
   }
 
-  Future<List<Group>> getDirectChat(int userId) async {
+  Future<void> insertGroup(GroupsCompanion group) async {
+    await into(groups).insert(group);
+  }
+
+  Future<List<Contact>> getGroupContact(String groupId) async {
+    final query = select(contacts).join([
+      leftOuterJoin(
+        groupMembers,
+        groupMembers.contactId.equalsExp(contacts.userId) &
+            groupMembers.groupId.equals(groupId),
+      ),
+    ]);
+    return query.map((row) => row.readTable(contacts)).get();
+  }
+
+  Stream<List<Group>> watchGroups() {
+    return select(groups).watch();
+  }
+
+  Stream<Group?> watchGroup(String groupId) {
+    return (select(groups)..where((t) => t.groupId.equals(groupId)))
+        .watchSingleOrNull();
+  }
+
+  Stream<List<Group>> watchGroupsForChatList() {
+    return (select(groups)..where((t) => t.archived.equals(false))).watch();
+  }
+
+  Future<Group?> getGroup(String groupId) {
+    return (select(groups)..where((t) => t.groupId.equals(groupId)))
+        .getSingleOrNull();
+  }
+
+  Stream<int> watchFlameCounter(String groupId) {
+    return (select(groups)
+          ..where(
+            (u) =>
+                u.groupId.equals(groupId) &
+                u.lastMessageReceived.isNotNull() &
+                u.lastMessageSend.isNotNull(),
+          ))
+        .watchSingle()
+        .asyncMap(getFlameCounterFromGroup);
+  }
+
+  Future<List<Group>> getAllDirectChats() {
+    return (select(groups)..where((t) => t.isDirectChat.equals(true))).get();
+  }
+
+  Future<Group?> getDirectChat(int userId) async {
     final query = (select(groups).join([
       leftOuterJoin(
         groupMembers,
@@ -40,8 +89,94 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
             groupMembers.contactId.equals(userId),
       ),
     ])
-      ..where(groups.isGroupOfTwo.equals(true)));
+      ..where(groups.isDirectChat.equals(true)));
 
-    return query.map((row) => row.readTable(groups)).get();
+    return query.map((row) => row.readTable(groups)).getSingleOrNull();
+  }
+
+  Future<void> incFlameCounter(
+    String groupId,
+    bool received,
+    DateTime timestamp,
+  ) async {
+    final group = await (select(groups)
+          ..where((t) => t.groupId.equals(groupId)))
+        .getSingle();
+
+    final totalMediaCounter = group.totalMediaCounter + 1;
+    var flameCounter = group.flameCounter;
+
+    if (group.lastMessageReceived != null && group.lastMessageSend != null) {
+      final now = DateTime.now();
+      final startOfToday = DateTime(now.year, now.month, now.day);
+      final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
+      if (group.lastMessageSend!.isBefore(twoDaysAgo) ||
+          group.lastMessageReceived!.isBefore(twoDaysAgo)) {
+        flameCounter = 0;
+      }
+    }
+
+    var lastMessageSend = const Value<DateTime?>.absent();
+    var lastMessageReceived = const Value<DateTime?>.absent();
+    var lastFlameCounterChange = const Value<DateTime?>.absent();
+
+    if (group.lastFlameCounterChange != null) {
+      final now = DateTime.now();
+      final startOfToday = DateTime(now.year, now.month, now.day);
+
+      if (group.lastFlameCounterChange!.isBefore(startOfToday)) {
+        // last flame update was yesterday. check if it can be updated.
+        var updateFlame = false;
+        if (received) {
+          if (group.lastMessageSend != null &&
+              group.lastMessageSend!.isAfter(startOfToday)) {
+            // today a message was already send -> update flame
+            updateFlame = true;
+          }
+        } else if (group.lastMessageReceived != null &&
+            group.lastMessageReceived!.isAfter(startOfToday)) {
+          // today a message was already received -> update flame
+          updateFlame = true;
+        }
+        if (updateFlame) {
+          flameCounter += 1;
+          lastFlameCounterChange = Value(timestamp);
+        }
+      }
+    } else {
+      // There where no message until no...
+      lastFlameCounterChange = Value(timestamp);
+    }
+
+    if (received) {
+      lastMessageReceived = Value(timestamp);
+    } else {
+      lastMessageSend = Value(timestamp);
+    }
+
+    await (update(groups)..where((t) => t.groupId.equals(groupId))).write(
+      GroupsCompanion(
+        totalMediaCounter: Value(totalMediaCounter),
+        lastFlameCounterChange: lastFlameCounterChange,
+        lastMessageReceived: lastMessageReceived,
+        lastMessageSend: lastMessageSend,
+        flameCounter: Value(flameCounter),
+      ),
+    );
+  }
+}
+
+int getFlameCounterFromGroup(Group group) {
+  if (group.lastMessageSend == null || group.lastMessageReceived == null) {
+    return 0;
+  }
+  final now = DateTime.now();
+  final startOfToday = DateTime(now.year, now.month, now.day);
+  final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
+  if (group.lastMessageSend!.isAfter(twoDaysAgo) &&
+      group.lastMessageReceived!.isAfter(twoDaysAgo)) {
+    return group.flameCounter + 1;
+  } else {
+    return 0;
   }
 }

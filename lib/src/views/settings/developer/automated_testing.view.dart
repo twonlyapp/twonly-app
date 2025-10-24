@@ -43,20 +43,18 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
                     await twonlyDB.contactsDao.getContactsByUsername(username);
 
                 for (final contact in contacts) {
-                  final groups =
+                  final group =
                       await twonlyDB.groupsDao.getDirectChat(contact.userId);
-
-                  for (final group in groups) {
-                    for (var i = 0; i < 200; i++) {
-                      setState(() {
-                        lotsOfMessagesStatus =
-                            'At message $i to ${contact.username}.';
-                      });
-                      await insertAndSendTextMessage(
-                        group.groupId,
-                        'Message $i.',
-                      );
-                    }
+                  for (var i = 0; i < 200; i++) {
+                    setState(() {
+                      lotsOfMessagesStatus =
+                          'At message $i to ${contact.username}.';
+                    });
+                    await insertAndSendTextMessage(
+                      group!.groupId,
+                      'Message $i.',
+                      null,
+                    );
                   }
                 }
               },

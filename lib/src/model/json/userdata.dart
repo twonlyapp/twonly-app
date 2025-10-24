@@ -72,7 +72,7 @@ class UserData {
 
   List<String>? tutorialDisplayed;
 
-  int? myBestFriendContactId;
+  String? myBestFriendGroupId;
 
   DateTime? signalLastSignedPreKeyUpdated;
 

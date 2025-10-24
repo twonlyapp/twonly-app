@@ -65,15 +65,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("requested" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _hiddenMeta = const VerificationMeta('hidden');
-  @override
-  late final GeneratedColumn<bool> hidden = GeneratedColumn<bool>(
-      'hidden', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("hidden" IN (0, 1))'),
-      defaultValue: const Constant(false));
   static const VerificationMeta _blockedMeta =
       const VerificationMeta('blocked');
   @override
@@ -104,25 +95,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _alsoBestFriendMeta =
-      const VerificationMeta('alsoBestFriend');
-  @override
-  late final GeneratedColumn<bool> alsoBestFriend = GeneratedColumn<bool>(
-      'also_best_friend', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("also_best_friend" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _deleteMessagesAfterXMinutesMeta =
-      const VerificationMeta('deleteMessagesAfterXMinutes');
-  @override
-  late final GeneratedColumn<int> deleteMessagesAfterXMinutes =
-      GeneratedColumn<int>(
-          'delete_messages_after_x_minutes', aliasedName, false,
-          type: DriftSqlType.int,
-          requiredDuringInsert: false,
-          defaultValue: const Constant(60 * 24));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -131,46 +103,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
-  static const VerificationMeta _totalMediaCounterMeta =
-      const VerificationMeta('totalMediaCounter');
-  @override
-  late final GeneratedColumn<int> totalMediaCounter = GeneratedColumn<int>(
-      'total_media_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _lastMessageSendMeta =
-      const VerificationMeta('lastMessageSend');
-  @override
-  late final GeneratedColumn<DateTime> lastMessageSend =
-      GeneratedColumn<DateTime>('last_message_send', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _lastMessageReceivedMeta =
-      const VerificationMeta('lastMessageReceived');
-  @override
-  late final GeneratedColumn<DateTime> lastMessageReceived =
-      GeneratedColumn<DateTime>('last_message_received', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _lastFlameCounterChangeMeta =
-      const VerificationMeta('lastFlameCounterChange');
-  @override
-  late final GeneratedColumn<DateTime> lastFlameCounterChange =
-      GeneratedColumn<DateTime>('last_flame_counter_change', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _lastFlameSyncMeta =
-      const VerificationMeta('lastFlameSync');
-  @override
-  late final GeneratedColumn<DateTime> lastFlameSync =
-      GeneratedColumn<DateTime>('last_flame_sync', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _flameCounterMeta =
-      const VerificationMeta('flameCounter');
-  @override
-  late final GeneratedColumn<int> flameCounter = GeneratedColumn<int>(
-      'flame_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         userId,
@@ -181,19 +113,10 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         senderProfileCounter,
         accepted,
         requested,
-        hidden,
         blocked,
         verified,
         deleted,
-        alsoBestFriend,
-        deleteMessagesAfterXMinutes,
-        createdAt,
-        totalMediaCounter,
-        lastMessageSend,
-        lastMessageReceived,
-        lastFlameCounterChange,
-        lastFlameSync,
-        flameCounter
+        createdAt
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -243,10 +166,6 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       context.handle(_requestedMeta,
           requested.isAcceptableOrUnknown(data['requested']!, _requestedMeta));
     }
-    if (data.containsKey('hidden')) {
-      context.handle(_hiddenMeta,
-          hidden.isAcceptableOrUnknown(data['hidden']!, _hiddenMeta));
-    }
     if (data.containsKey('blocked')) {
       context.handle(_blockedMeta,
           blocked.isAcceptableOrUnknown(data['blocked']!, _blockedMeta));
@@ -259,28 +178,640 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       context.handle(_deletedMeta,
           deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
-    if (data.containsKey('also_best_friend')) {
-      context.handle(
-          _alsoBestFriendMeta,
-          alsoBestFriend.isAcceptableOrUnknown(
-              data['also_best_friend']!, _alsoBestFriendMeta));
-    }
-    if (data.containsKey('delete_messages_after_x_minutes')) {
-      context.handle(
-          _deleteMessagesAfterXMinutesMeta,
-          deleteMessagesAfterXMinutes.isAcceptableOrUnknown(
-              data['delete_messages_after_x_minutes']!,
-              _deleteMessagesAfterXMinutesMeta));
-    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId};
+  @override
+  Contact map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Contact(
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}user_id'])!,
+      username: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}username'])!,
+      displayName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}display_name']),
+      nickName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}nick_name']),
+      avatarSvg: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}avatar_svg']),
+      senderProfileCounter: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}sender_profile_counter'])!,
+      accepted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}accepted'])!,
+      requested: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}requested'])!,
+      blocked: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}blocked'])!,
+      verified: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}verified'])!,
+      deleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $ContactsTable createAlias(String alias) {
+    return $ContactsTable(attachedDatabase, alias);
+  }
+}
+
+class Contact extends DataClass implements Insertable<Contact> {
+  final int userId;
+  final String username;
+  final String? displayName;
+  final String? nickName;
+  final String? avatarSvg;
+  final int senderProfileCounter;
+  final bool accepted;
+  final bool requested;
+  final bool blocked;
+  final bool verified;
+  final bool deleted;
+  final DateTime createdAt;
+  const Contact(
+      {required this.userId,
+      required this.username,
+      this.displayName,
+      this.nickName,
+      this.avatarSvg,
+      required this.senderProfileCounter,
+      required this.accepted,
+      required this.requested,
+      required this.blocked,
+      required this.verified,
+      required this.deleted,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<int>(userId);
+    map['username'] = Variable<String>(username);
+    if (!nullToAbsent || displayName != null) {
+      map['display_name'] = Variable<String>(displayName);
+    }
+    if (!nullToAbsent || nickName != null) {
+      map['nick_name'] = Variable<String>(nickName);
+    }
+    if (!nullToAbsent || avatarSvg != null) {
+      map['avatar_svg'] = Variable<String>(avatarSvg);
+    }
+    map['sender_profile_counter'] = Variable<int>(senderProfileCounter);
+    map['accepted'] = Variable<bool>(accepted);
+    map['requested'] = Variable<bool>(requested);
+    map['blocked'] = Variable<bool>(blocked);
+    map['verified'] = Variable<bool>(verified);
+    map['deleted'] = Variable<bool>(deleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ContactsCompanion toCompanion(bool nullToAbsent) {
+    return ContactsCompanion(
+      userId: Value(userId),
+      username: Value(username),
+      displayName: displayName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(displayName),
+      nickName: nickName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nickName),
+      avatarSvg: avatarSvg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarSvg),
+      senderProfileCounter: Value(senderProfileCounter),
+      accepted: Value(accepted),
+      requested: Value(requested),
+      blocked: Value(blocked),
+      verified: Value(verified),
+      deleted: Value(deleted),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Contact.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Contact(
+      userId: serializer.fromJson<int>(json['userId']),
+      username: serializer.fromJson<String>(json['username']),
+      displayName: serializer.fromJson<String?>(json['displayName']),
+      nickName: serializer.fromJson<String?>(json['nickName']),
+      avatarSvg: serializer.fromJson<String?>(json['avatarSvg']),
+      senderProfileCounter:
+          serializer.fromJson<int>(json['senderProfileCounter']),
+      accepted: serializer.fromJson<bool>(json['accepted']),
+      requested: serializer.fromJson<bool>(json['requested']),
+      blocked: serializer.fromJson<bool>(json['blocked']),
+      verified: serializer.fromJson<bool>(json['verified']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<int>(userId),
+      'username': serializer.toJson<String>(username),
+      'displayName': serializer.toJson<String?>(displayName),
+      'nickName': serializer.toJson<String?>(nickName),
+      'avatarSvg': serializer.toJson<String?>(avatarSvg),
+      'senderProfileCounter': serializer.toJson<int>(senderProfileCounter),
+      'accepted': serializer.toJson<bool>(accepted),
+      'requested': serializer.toJson<bool>(requested),
+      'blocked': serializer.toJson<bool>(blocked),
+      'verified': serializer.toJson<bool>(verified),
+      'deleted': serializer.toJson<bool>(deleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Contact copyWith(
+          {int? userId,
+          String? username,
+          Value<String?> displayName = const Value.absent(),
+          Value<String?> nickName = const Value.absent(),
+          Value<String?> avatarSvg = const Value.absent(),
+          int? senderProfileCounter,
+          bool? accepted,
+          bool? requested,
+          bool? blocked,
+          bool? verified,
+          bool? deleted,
+          DateTime? createdAt}) =>
+      Contact(
+        userId: userId ?? this.userId,
+        username: username ?? this.username,
+        displayName: displayName.present ? displayName.value : this.displayName,
+        nickName: nickName.present ? nickName.value : this.nickName,
+        avatarSvg: avatarSvg.present ? avatarSvg.value : this.avatarSvg,
+        senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
+        accepted: accepted ?? this.accepted,
+        requested: requested ?? this.requested,
+        blocked: blocked ?? this.blocked,
+        verified: verified ?? this.verified,
+        deleted: deleted ?? this.deleted,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  Contact copyWithCompanion(ContactsCompanion data) {
+    return Contact(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      username: data.username.present ? data.username.value : this.username,
+      displayName:
+          data.displayName.present ? data.displayName.value : this.displayName,
+      nickName: data.nickName.present ? data.nickName.value : this.nickName,
+      avatarSvg: data.avatarSvg.present ? data.avatarSvg.value : this.avatarSvg,
+      senderProfileCounter: data.senderProfileCounter.present
+          ? data.senderProfileCounter.value
+          : this.senderProfileCounter,
+      accepted: data.accepted.present ? data.accepted.value : this.accepted,
+      requested: data.requested.present ? data.requested.value : this.requested,
+      blocked: data.blocked.present ? data.blocked.value : this.blocked,
+      verified: data.verified.present ? data.verified.value : this.verified,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Contact(')
+          ..write('userId: $userId, ')
+          ..write('username: $username, ')
+          ..write('displayName: $displayName, ')
+          ..write('nickName: $nickName, ')
+          ..write('avatarSvg: $avatarSvg, ')
+          ..write('senderProfileCounter: $senderProfileCounter, ')
+          ..write('accepted: $accepted, ')
+          ..write('requested: $requested, ')
+          ..write('blocked: $blocked, ')
+          ..write('verified: $verified, ')
+          ..write('deleted: $deleted, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      userId,
+      username,
+      displayName,
+      nickName,
+      avatarSvg,
+      senderProfileCounter,
+      accepted,
+      requested,
+      blocked,
+      verified,
+      deleted,
+      createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Contact &&
+          other.userId == this.userId &&
+          other.username == this.username &&
+          other.displayName == this.displayName &&
+          other.nickName == this.nickName &&
+          other.avatarSvg == this.avatarSvg &&
+          other.senderProfileCounter == this.senderProfileCounter &&
+          other.accepted == this.accepted &&
+          other.requested == this.requested &&
+          other.blocked == this.blocked &&
+          other.verified == this.verified &&
+          other.deleted == this.deleted &&
+          other.createdAt == this.createdAt);
+}
+
+class ContactsCompanion extends UpdateCompanion<Contact> {
+  final Value<int> userId;
+  final Value<String> username;
+  final Value<String?> displayName;
+  final Value<String?> nickName;
+  final Value<String?> avatarSvg;
+  final Value<int> senderProfileCounter;
+  final Value<bool> accepted;
+  final Value<bool> requested;
+  final Value<bool> blocked;
+  final Value<bool> verified;
+  final Value<bool> deleted;
+  final Value<DateTime> createdAt;
+  const ContactsCompanion({
+    this.userId = const Value.absent(),
+    this.username = const Value.absent(),
+    this.displayName = const Value.absent(),
+    this.nickName = const Value.absent(),
+    this.avatarSvg = const Value.absent(),
+    this.senderProfileCounter = const Value.absent(),
+    this.accepted = const Value.absent(),
+    this.requested = const Value.absent(),
+    this.blocked = const Value.absent(),
+    this.verified = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  ContactsCompanion.insert({
+    this.userId = const Value.absent(),
+    required String username,
+    this.displayName = const Value.absent(),
+    this.nickName = const Value.absent(),
+    this.avatarSvg = const Value.absent(),
+    this.senderProfileCounter = const Value.absent(),
+    this.accepted = const Value.absent(),
+    this.requested = const Value.absent(),
+    this.blocked = const Value.absent(),
+    this.verified = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : username = Value(username);
+  static Insertable<Contact> custom({
+    Expression<int>? userId,
+    Expression<String>? username,
+    Expression<String>? displayName,
+    Expression<String>? nickName,
+    Expression<String>? avatarSvg,
+    Expression<int>? senderProfileCounter,
+    Expression<bool>? accepted,
+    Expression<bool>? requested,
+    Expression<bool>? blocked,
+    Expression<bool>? verified,
+    Expression<bool>? deleted,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (username != null) 'username': username,
+      if (displayName != null) 'display_name': displayName,
+      if (nickName != null) 'nick_name': nickName,
+      if (avatarSvg != null) 'avatar_svg': avatarSvg,
+      if (senderProfileCounter != null)
+        'sender_profile_counter': senderProfileCounter,
+      if (accepted != null) 'accepted': accepted,
+      if (requested != null) 'requested': requested,
+      if (blocked != null) 'blocked': blocked,
+      if (verified != null) 'verified': verified,
+      if (deleted != null) 'deleted': deleted,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  ContactsCompanion copyWith(
+      {Value<int>? userId,
+      Value<String>? username,
+      Value<String?>? displayName,
+      Value<String?>? nickName,
+      Value<String?>? avatarSvg,
+      Value<int>? senderProfileCounter,
+      Value<bool>? accepted,
+      Value<bool>? requested,
+      Value<bool>? blocked,
+      Value<bool>? verified,
+      Value<bool>? deleted,
+      Value<DateTime>? createdAt}) {
+    return ContactsCompanion(
+      userId: userId ?? this.userId,
+      username: username ?? this.username,
+      displayName: displayName ?? this.displayName,
+      nickName: nickName ?? this.nickName,
+      avatarSvg: avatarSvg ?? this.avatarSvg,
+      senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
+      accepted: accepted ?? this.accepted,
+      requested: requested ?? this.requested,
+      blocked: blocked ?? this.blocked,
+      verified: verified ?? this.verified,
+      deleted: deleted ?? this.deleted,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<int>(userId.value);
+    }
+    if (username.present) {
+      map['username'] = Variable<String>(username.value);
+    }
+    if (displayName.present) {
+      map['display_name'] = Variable<String>(displayName.value);
+    }
+    if (nickName.present) {
+      map['nick_name'] = Variable<String>(nickName.value);
+    }
+    if (avatarSvg.present) {
+      map['avatar_svg'] = Variable<String>(avatarSvg.value);
+    }
+    if (senderProfileCounter.present) {
+      map['sender_profile_counter'] = Variable<int>(senderProfileCounter.value);
+    }
+    if (accepted.present) {
+      map['accepted'] = Variable<bool>(accepted.value);
+    }
+    if (requested.present) {
+      map['requested'] = Variable<bool>(requested.value);
+    }
+    if (blocked.present) {
+      map['blocked'] = Variable<bool>(blocked.value);
+    }
+    if (verified.present) {
+      map['verified'] = Variable<bool>(verified.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContactsCompanion(')
+          ..write('userId: $userId, ')
+          ..write('username: $username, ')
+          ..write('displayName: $displayName, ')
+          ..write('nickName: $nickName, ')
+          ..write('avatarSvg: $avatarSvg, ')
+          ..write('senderProfileCounter: $senderProfileCounter, ')
+          ..write('accepted: $accepted, ')
+          ..write('requested: $requested, ')
+          ..write('blocked: $blocked, ')
+          ..write('verified: $verified, ')
+          ..write('deleted: $deleted, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroupsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _groupIdMeta =
+      const VerificationMeta('groupId');
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+      'group_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      clientDefault: () => uuid.v4());
+  static const VerificationMeta _isGroupAdminMeta =
+      const VerificationMeta('isGroupAdmin');
+  @override
+  late final GeneratedColumn<bool> isGroupAdmin = GeneratedColumn<bool>(
+      'is_group_admin', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_group_admin" IN (0, 1))'));
+  static const VerificationMeta _isDirectChatMeta =
+      const VerificationMeta('isDirectChat');
+  @override
+  late final GeneratedColumn<bool> isDirectChat = GeneratedColumn<bool>(
+      'is_direct_chat', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_direct_chat" IN (0, 1))'));
+  static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
+  @override
+  late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
+      'pinned', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _archivedMeta =
+      const VerificationMeta('archived');
+  @override
+  late final GeneratedColumn<bool> archived = GeneratedColumn<bool>(
+      'archived', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _groupNameMeta =
+      const VerificationMeta('groupName');
+  @override
+  late final GeneratedColumn<String> groupName = GeneratedColumn<String>(
+      'group_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _totalMediaCounterMeta =
+      const VerificationMeta('totalMediaCounter');
+  @override
+  late final GeneratedColumn<int> totalMediaCounter = GeneratedColumn<int>(
+      'total_media_counter', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _alsoBestFriendMeta =
+      const VerificationMeta('alsoBestFriend');
+  @override
+  late final GeneratedColumn<bool> alsoBestFriend = GeneratedColumn<bool>(
+      'also_best_friend', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("also_best_friend" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _deleteMessagesAfterMillisecondsMeta =
+      const VerificationMeta('deleteMessagesAfterMilliseconds');
+  @override
+  late final GeneratedColumn<int> deleteMessagesAfterMilliseconds =
+      GeneratedColumn<int>(
+          'delete_messages_after_milliseconds', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(1000 * 60 * 24));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _lastMessageSendMeta =
+      const VerificationMeta('lastMessageSend');
+  @override
+  late final GeneratedColumn<DateTime> lastMessageSend =
+      GeneratedColumn<DateTime>('last_message_send', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _lastMessageReceivedMeta =
+      const VerificationMeta('lastMessageReceived');
+  @override
+  late final GeneratedColumn<DateTime> lastMessageReceived =
+      GeneratedColumn<DateTime>('last_message_received', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _lastFlameCounterChangeMeta =
+      const VerificationMeta('lastFlameCounterChange');
+  @override
+  late final GeneratedColumn<DateTime> lastFlameCounterChange =
+      GeneratedColumn<DateTime>('last_flame_counter_change', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _lastFlameSyncMeta =
+      const VerificationMeta('lastFlameSync');
+  @override
+  late final GeneratedColumn<DateTime> lastFlameSync =
+      GeneratedColumn<DateTime>('last_flame_sync', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _flameCounterMeta =
+      const VerificationMeta('flameCounter');
+  @override
+  late final GeneratedColumn<int> flameCounter = GeneratedColumn<int>(
+      'flame_counter', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastMessageExchangeMeta =
+      const VerificationMeta('lastMessageExchange');
+  @override
+  late final GeneratedColumn<DateTime> lastMessageExchange =
+      GeneratedColumn<DateTime>('last_message_exchange', aliasedName, false,
+          type: DriftSqlType.dateTime,
+          requiredDuringInsert: false,
+          defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        groupId,
+        isGroupAdmin,
+        isDirectChat,
+        pinned,
+        archived,
+        groupName,
+        totalMediaCounter,
+        alsoBestFriend,
+        deleteMessagesAfterMilliseconds,
+        createdAt,
+        lastMessageSend,
+        lastMessageReceived,
+        lastFlameCounterChange,
+        lastFlameSync,
+        flameCounter,
+        lastMessageExchange
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'groups';
+  @override
+  VerificationContext validateIntegrity(Insertable<Group> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('group_id')) {
+      context.handle(_groupIdMeta,
+          groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
+    }
+    if (data.containsKey('is_group_admin')) {
+      context.handle(
+          _isGroupAdminMeta,
+          isGroupAdmin.isAcceptableOrUnknown(
+              data['is_group_admin']!, _isGroupAdminMeta));
+    } else if (isInserting) {
+      context.missing(_isGroupAdminMeta);
+    }
+    if (data.containsKey('is_direct_chat')) {
+      context.handle(
+          _isDirectChatMeta,
+          isDirectChat.isAcceptableOrUnknown(
+              data['is_direct_chat']!, _isDirectChatMeta));
+    } else if (isInserting) {
+      context.missing(_isDirectChatMeta);
+    }
+    if (data.containsKey('pinned')) {
+      context.handle(_pinnedMeta,
+          pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta));
+    }
+    if (data.containsKey('archived')) {
+      context.handle(_archivedMeta,
+          archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
+    }
+    if (data.containsKey('group_name')) {
+      context.handle(_groupNameMeta,
+          groupName.isAcceptableOrUnknown(data['group_name']!, _groupNameMeta));
+    } else if (isInserting) {
+      context.missing(_groupNameMeta);
     }
     if (data.containsKey('total_media_counter')) {
       context.handle(
           _totalMediaCounterMeta,
           totalMediaCounter.isAcceptableOrUnknown(
               data['total_media_counter']!, _totalMediaCounterMeta));
+    }
+    if (data.containsKey('also_best_friend')) {
+      context.handle(
+          _alsoBestFriendMeta,
+          alsoBestFriend.isAcceptableOrUnknown(
+              data['also_best_friend']!, _alsoBestFriendMeta));
+    }
+    if (data.containsKey('delete_messages_after_milliseconds')) {
+      context.handle(
+          _deleteMessagesAfterMillisecondsMeta,
+          deleteMessagesAfterMilliseconds.isAcceptableOrUnknown(
+              data['delete_messages_after_milliseconds']!,
+              _deleteMessagesAfterMillisecondsMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     }
     if (data.containsKey('last_message_send')) {
       context.handle(
@@ -312,48 +843,42 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           flameCounter.isAcceptableOrUnknown(
               data['flame_counter']!, _flameCounterMeta));
     }
+    if (data.containsKey('last_message_exchange')) {
+      context.handle(
+          _lastMessageExchangeMeta,
+          lastMessageExchange.isAcceptableOrUnknown(
+              data['last_message_exchange']!, _lastMessageExchangeMeta));
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {userId};
+  Set<GeneratedColumn> get $primaryKey => {groupId};
   @override
-  Contact map(Map<String, dynamic> data, {String? tablePrefix}) {
+  Group map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Contact(
-      userId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}user_id'])!,
-      username: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}username'])!,
-      displayName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}display_name']),
-      nickName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}nick_name']),
-      avatarSvg: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}avatar_svg']),
-      senderProfileCounter: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}sender_profile_counter'])!,
-      accepted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}accepted'])!,
-      requested: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}requested'])!,
-      hidden: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}hidden'])!,
-      blocked: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}blocked'])!,
-      verified: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}verified'])!,
-      deleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
-      alsoBestFriend: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}also_best_friend'])!,
-      deleteMessagesAfterXMinutes: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}delete_messages_after_x_minutes'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    return Group(
+      groupId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
+      isGroupAdmin: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_group_admin'])!,
+      isDirectChat: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_direct_chat'])!,
+      pinned: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
+      archived: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
+      groupName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}group_name'])!,
       totalMediaCounter: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}total_media_counter'])!,
+      alsoBestFriend: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}also_best_friend'])!,
+      deleteMessagesAfterMilliseconds: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}delete_messages_after_milliseconds'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       lastMessageSend: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_message_send']),
       lastMessageReceived: attachedDatabase.typeMapping.read(
@@ -366,85 +891,66 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           DriftSqlType.dateTime, data['${effectivePrefix}last_flame_sync']),
       flameCounter: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}flame_counter'])!,
+      lastMessageExchange: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_message_exchange'])!,
     );
   }
 
   @override
-  $ContactsTable createAlias(String alias) {
-    return $ContactsTable(attachedDatabase, alias);
+  $GroupsTable createAlias(String alias) {
+    return $GroupsTable(attachedDatabase, alias);
   }
 }
 
-class Contact extends DataClass implements Insertable<Contact> {
-  final int userId;
-  final String username;
-  final String? displayName;
-  final String? nickName;
-  final String? avatarSvg;
-  final int senderProfileCounter;
-  final bool accepted;
-  final bool requested;
-  final bool hidden;
-  final bool blocked;
-  final bool verified;
-  final bool deleted;
-  final bool alsoBestFriend;
-  final int deleteMessagesAfterXMinutes;
-  final DateTime createdAt;
+class Group extends DataClass implements Insertable<Group> {
+  final String groupId;
+  final bool isGroupAdmin;
+  final bool isDirectChat;
+  final bool pinned;
+  final bool archived;
+  final String groupName;
   final int totalMediaCounter;
+  final bool alsoBestFriend;
+  final int deleteMessagesAfterMilliseconds;
+  final DateTime createdAt;
   final DateTime? lastMessageSend;
   final DateTime? lastMessageReceived;
   final DateTime? lastFlameCounterChange;
   final DateTime? lastFlameSync;
   final int flameCounter;
-  const Contact(
-      {required this.userId,
-      required this.username,
-      this.displayName,
-      this.nickName,
-      this.avatarSvg,
-      required this.senderProfileCounter,
-      required this.accepted,
-      required this.requested,
-      required this.hidden,
-      required this.blocked,
-      required this.verified,
-      required this.deleted,
-      required this.alsoBestFriend,
-      required this.deleteMessagesAfterXMinutes,
-      required this.createdAt,
+  final DateTime lastMessageExchange;
+  const Group(
+      {required this.groupId,
+      required this.isGroupAdmin,
+      required this.isDirectChat,
+      required this.pinned,
+      required this.archived,
+      required this.groupName,
       required this.totalMediaCounter,
+      required this.alsoBestFriend,
+      required this.deleteMessagesAfterMilliseconds,
+      required this.createdAt,
       this.lastMessageSend,
       this.lastMessageReceived,
       this.lastFlameCounterChange,
       this.lastFlameSync,
-      required this.flameCounter});
+      required this.flameCounter,
+      required this.lastMessageExchange});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['user_id'] = Variable<int>(userId);
-    map['username'] = Variable<String>(username);
-    if (!nullToAbsent || displayName != null) {
-      map['display_name'] = Variable<String>(displayName);
-    }
-    if (!nullToAbsent || nickName != null) {
-      map['nick_name'] = Variable<String>(nickName);
-    }
-    if (!nullToAbsent || avatarSvg != null) {
-      map['avatar_svg'] = Variable<String>(avatarSvg);
-    }
-    map['sender_profile_counter'] = Variable<int>(senderProfileCounter);
-    map['accepted'] = Variable<bool>(accepted);
-    map['requested'] = Variable<bool>(requested);
-    map['hidden'] = Variable<bool>(hidden);
-    map['blocked'] = Variable<bool>(blocked);
-    map['verified'] = Variable<bool>(verified);
-    map['deleted'] = Variable<bool>(deleted);
-    map['also_best_friend'] = Variable<bool>(alsoBestFriend);
-    map['delete_messages_after_x_minutes'] =
-        Variable<int>(deleteMessagesAfterXMinutes);
-    map['created_at'] = Variable<DateTime>(createdAt);
+    map['group_id'] = Variable<String>(groupId);
+    map['is_group_admin'] = Variable<bool>(isGroupAdmin);
+    map['is_direct_chat'] = Variable<bool>(isDirectChat);
+    map['pinned'] = Variable<bool>(pinned);
+    map['archived'] = Variable<bool>(archived);
+    map['group_name'] = Variable<String>(groupName);
     map['total_media_counter'] = Variable<int>(totalMediaCounter);
+    map['also_best_friend'] = Variable<bool>(alsoBestFriend);
+    map['delete_messages_after_milliseconds'] =
+        Variable<int>(deleteMessagesAfterMilliseconds);
+    map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || lastMessageSend != null) {
       map['last_message_send'] = Variable<DateTime>(lastMessageSend);
     }
@@ -459,33 +965,22 @@ class Contact extends DataClass implements Insertable<Contact> {
       map['last_flame_sync'] = Variable<DateTime>(lastFlameSync);
     }
     map['flame_counter'] = Variable<int>(flameCounter);
+    map['last_message_exchange'] = Variable<DateTime>(lastMessageExchange);
     return map;
   }
 
-  ContactsCompanion toCompanion(bool nullToAbsent) {
-    return ContactsCompanion(
-      userId: Value(userId),
-      username: Value(username),
-      displayName: displayName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(displayName),
-      nickName: nickName == null && nullToAbsent
-          ? const Value.absent()
-          : Value(nickName),
-      avatarSvg: avatarSvg == null && nullToAbsent
-          ? const Value.absent()
-          : Value(avatarSvg),
-      senderProfileCounter: Value(senderProfileCounter),
-      accepted: Value(accepted),
-      requested: Value(requested),
-      hidden: Value(hidden),
-      blocked: Value(blocked),
-      verified: Value(verified),
-      deleted: Value(deleted),
-      alsoBestFriend: Value(alsoBestFriend),
-      deleteMessagesAfterXMinutes: Value(deleteMessagesAfterXMinutes),
-      createdAt: Value(createdAt),
+  GroupsCompanion toCompanion(bool nullToAbsent) {
+    return GroupsCompanion(
+      groupId: Value(groupId),
+      isGroupAdmin: Value(isGroupAdmin),
+      isDirectChat: Value(isDirectChat),
+      pinned: Value(pinned),
+      archived: Value(archived),
+      groupName: Value(groupName),
       totalMediaCounter: Value(totalMediaCounter),
+      alsoBestFriend: Value(alsoBestFriend),
+      deleteMessagesAfterMilliseconds: Value(deleteMessagesAfterMilliseconds),
+      createdAt: Value(createdAt),
       lastMessageSend: lastMessageSend == null && nullToAbsent
           ? const Value.absent()
           : Value(lastMessageSend),
@@ -499,31 +994,25 @@ class Contact extends DataClass implements Insertable<Contact> {
           ? const Value.absent()
           : Value(lastFlameSync),
       flameCounter: Value(flameCounter),
+      lastMessageExchange: Value(lastMessageExchange),
     );
   }
 
-  factory Contact.fromJson(Map<String, dynamic> json,
+  factory Group.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Contact(
-      userId: serializer.fromJson<int>(json['userId']),
-      username: serializer.fromJson<String>(json['username']),
-      displayName: serializer.fromJson<String?>(json['displayName']),
-      nickName: serializer.fromJson<String?>(json['nickName']),
-      avatarSvg: serializer.fromJson<String?>(json['avatarSvg']),
-      senderProfileCounter:
-          serializer.fromJson<int>(json['senderProfileCounter']),
-      accepted: serializer.fromJson<bool>(json['accepted']),
-      requested: serializer.fromJson<bool>(json['requested']),
-      hidden: serializer.fromJson<bool>(json['hidden']),
-      blocked: serializer.fromJson<bool>(json['blocked']),
-      verified: serializer.fromJson<bool>(json['verified']),
-      deleted: serializer.fromJson<bool>(json['deleted']),
-      alsoBestFriend: serializer.fromJson<bool>(json['alsoBestFriend']),
-      deleteMessagesAfterXMinutes:
-          serializer.fromJson<int>(json['deleteMessagesAfterXMinutes']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    return Group(
+      groupId: serializer.fromJson<String>(json['groupId']),
+      isGroupAdmin: serializer.fromJson<bool>(json['isGroupAdmin']),
+      isDirectChat: serializer.fromJson<bool>(json['isDirectChat']),
+      pinned: serializer.fromJson<bool>(json['pinned']),
+      archived: serializer.fromJson<bool>(json['archived']),
+      groupName: serializer.fromJson<String>(json['groupName']),
       totalMediaCounter: serializer.fromJson<int>(json['totalMediaCounter']),
+      alsoBestFriend: serializer.fromJson<bool>(json['alsoBestFriend']),
+      deleteMessagesAfterMilliseconds:
+          serializer.fromJson<int>(json['deleteMessagesAfterMilliseconds']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastMessageSend: serializer.fromJson<DateTime?>(json['lastMessageSend']),
       lastMessageReceived:
           serializer.fromJson<DateTime?>(json['lastMessageReceived']),
@@ -531,78 +1020,64 @@ class Contact extends DataClass implements Insertable<Contact> {
           serializer.fromJson<DateTime?>(json['lastFlameCounterChange']),
       lastFlameSync: serializer.fromJson<DateTime?>(json['lastFlameSync']),
       flameCounter: serializer.fromJson<int>(json['flameCounter']),
+      lastMessageExchange:
+          serializer.fromJson<DateTime>(json['lastMessageExchange']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'userId': serializer.toJson<int>(userId),
-      'username': serializer.toJson<String>(username),
-      'displayName': serializer.toJson<String?>(displayName),
-      'nickName': serializer.toJson<String?>(nickName),
-      'avatarSvg': serializer.toJson<String?>(avatarSvg),
-      'senderProfileCounter': serializer.toJson<int>(senderProfileCounter),
-      'accepted': serializer.toJson<bool>(accepted),
-      'requested': serializer.toJson<bool>(requested),
-      'hidden': serializer.toJson<bool>(hidden),
-      'blocked': serializer.toJson<bool>(blocked),
-      'verified': serializer.toJson<bool>(verified),
-      'deleted': serializer.toJson<bool>(deleted),
-      'alsoBestFriend': serializer.toJson<bool>(alsoBestFriend),
-      'deleteMessagesAfterXMinutes':
-          serializer.toJson<int>(deleteMessagesAfterXMinutes),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'groupId': serializer.toJson<String>(groupId),
+      'isGroupAdmin': serializer.toJson<bool>(isGroupAdmin),
+      'isDirectChat': serializer.toJson<bool>(isDirectChat),
+      'pinned': serializer.toJson<bool>(pinned),
+      'archived': serializer.toJson<bool>(archived),
+      'groupName': serializer.toJson<String>(groupName),
       'totalMediaCounter': serializer.toJson<int>(totalMediaCounter),
+      'alsoBestFriend': serializer.toJson<bool>(alsoBestFriend),
+      'deleteMessagesAfterMilliseconds':
+          serializer.toJson<int>(deleteMessagesAfterMilliseconds),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastMessageSend': serializer.toJson<DateTime?>(lastMessageSend),
       'lastMessageReceived': serializer.toJson<DateTime?>(lastMessageReceived),
       'lastFlameCounterChange':
           serializer.toJson<DateTime?>(lastFlameCounterChange),
       'lastFlameSync': serializer.toJson<DateTime?>(lastFlameSync),
       'flameCounter': serializer.toJson<int>(flameCounter),
+      'lastMessageExchange': serializer.toJson<DateTime>(lastMessageExchange),
     };
   }
 
-  Contact copyWith(
-          {int? userId,
-          String? username,
-          Value<String?> displayName = const Value.absent(),
-          Value<String?> nickName = const Value.absent(),
-          Value<String?> avatarSvg = const Value.absent(),
-          int? senderProfileCounter,
-          bool? accepted,
-          bool? requested,
-          bool? hidden,
-          bool? blocked,
-          bool? verified,
-          bool? deleted,
-          bool? alsoBestFriend,
-          int? deleteMessagesAfterXMinutes,
-          DateTime? createdAt,
+  Group copyWith(
+          {String? groupId,
+          bool? isGroupAdmin,
+          bool? isDirectChat,
+          bool? pinned,
+          bool? archived,
+          String? groupName,
           int? totalMediaCounter,
+          bool? alsoBestFriend,
+          int? deleteMessagesAfterMilliseconds,
+          DateTime? createdAt,
           Value<DateTime?> lastMessageSend = const Value.absent(),
           Value<DateTime?> lastMessageReceived = const Value.absent(),
           Value<DateTime?> lastFlameCounterChange = const Value.absent(),
           Value<DateTime?> lastFlameSync = const Value.absent(),
-          int? flameCounter}) =>
-      Contact(
-        userId: userId ?? this.userId,
-        username: username ?? this.username,
-        displayName: displayName.present ? displayName.value : this.displayName,
-        nickName: nickName.present ? nickName.value : this.nickName,
-        avatarSvg: avatarSvg.present ? avatarSvg.value : this.avatarSvg,
-        senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
-        accepted: accepted ?? this.accepted,
-        requested: requested ?? this.requested,
-        hidden: hidden ?? this.hidden,
-        blocked: blocked ?? this.blocked,
-        verified: verified ?? this.verified,
-        deleted: deleted ?? this.deleted,
-        alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
-        deleteMessagesAfterXMinutes:
-            deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
-        createdAt: createdAt ?? this.createdAt,
+          int? flameCounter,
+          DateTime? lastMessageExchange}) =>
+      Group(
+        groupId: groupId ?? this.groupId,
+        isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
+        isDirectChat: isDirectChat ?? this.isDirectChat,
+        pinned: pinned ?? this.pinned,
+        archived: archived ?? this.archived,
+        groupName: groupName ?? this.groupName,
         totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
+        alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
+        deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds ??
+            this.deleteMessagesAfterMilliseconds,
+        createdAt: createdAt ?? this.createdAt,
         lastMessageSend: lastMessageSend.present
             ? lastMessageSend.value
             : this.lastMessageSend,
@@ -615,34 +1090,31 @@ class Contact extends DataClass implements Insertable<Contact> {
         lastFlameSync:
             lastFlameSync.present ? lastFlameSync.value : this.lastFlameSync,
         flameCounter: flameCounter ?? this.flameCounter,
+        lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
       );
-  Contact copyWithCompanion(ContactsCompanion data) {
-    return Contact(
-      userId: data.userId.present ? data.userId.value : this.userId,
-      username: data.username.present ? data.username.value : this.username,
-      displayName:
-          data.displayName.present ? data.displayName.value : this.displayName,
-      nickName: data.nickName.present ? data.nickName.value : this.nickName,
-      avatarSvg: data.avatarSvg.present ? data.avatarSvg.value : this.avatarSvg,
-      senderProfileCounter: data.senderProfileCounter.present
-          ? data.senderProfileCounter.value
-          : this.senderProfileCounter,
-      accepted: data.accepted.present ? data.accepted.value : this.accepted,
-      requested: data.requested.present ? data.requested.value : this.requested,
-      hidden: data.hidden.present ? data.hidden.value : this.hidden,
-      blocked: data.blocked.present ? data.blocked.value : this.blocked,
-      verified: data.verified.present ? data.verified.value : this.verified,
-      deleted: data.deleted.present ? data.deleted.value : this.deleted,
-      alsoBestFriend: data.alsoBestFriend.present
-          ? data.alsoBestFriend.value
-          : this.alsoBestFriend,
-      deleteMessagesAfterXMinutes: data.deleteMessagesAfterXMinutes.present
-          ? data.deleteMessagesAfterXMinutes.value
-          : this.deleteMessagesAfterXMinutes,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+  Group copyWithCompanion(GroupsCompanion data) {
+    return Group(
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      isGroupAdmin: data.isGroupAdmin.present
+          ? data.isGroupAdmin.value
+          : this.isGroupAdmin,
+      isDirectChat: data.isDirectChat.present
+          ? data.isDirectChat.value
+          : this.isDirectChat,
+      pinned: data.pinned.present ? data.pinned.value : this.pinned,
+      archived: data.archived.present ? data.archived.value : this.archived,
+      groupName: data.groupName.present ? data.groupName.value : this.groupName,
       totalMediaCounter: data.totalMediaCounter.present
           ? data.totalMediaCounter.value
           : this.totalMediaCounter,
+      alsoBestFriend: data.alsoBestFriend.present
+          ? data.alsoBestFriend.value
+          : this.alsoBestFriend,
+      deleteMessagesAfterMilliseconds:
+          data.deleteMessagesAfterMilliseconds.present
+              ? data.deleteMessagesAfterMilliseconds.value
+              : this.deleteMessagesAfterMilliseconds,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       lastMessageSend: data.lastMessageSend.present
           ? data.lastMessageSend.value
           : this.lastMessageSend,
@@ -658,199 +1130,166 @@ class Contact extends DataClass implements Insertable<Contact> {
       flameCounter: data.flameCounter.present
           ? data.flameCounter.value
           : this.flameCounter,
+      lastMessageExchange: data.lastMessageExchange.present
+          ? data.lastMessageExchange.value
+          : this.lastMessageExchange,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('Contact(')
-          ..write('userId: $userId, ')
-          ..write('username: $username, ')
-          ..write('displayName: $displayName, ')
-          ..write('nickName: $nickName, ')
-          ..write('avatarSvg: $avatarSvg, ')
-          ..write('senderProfileCounter: $senderProfileCounter, ')
-          ..write('accepted: $accepted, ')
-          ..write('requested: $requested, ')
-          ..write('hidden: $hidden, ')
-          ..write('blocked: $blocked, ')
-          ..write('verified: $verified, ')
-          ..write('deleted: $deleted, ')
-          ..write('alsoBestFriend: $alsoBestFriend, ')
-          ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
-          ..write('createdAt: $createdAt, ')
+    return (StringBuffer('Group(')
+          ..write('groupId: $groupId, ')
+          ..write('isGroupAdmin: $isGroupAdmin, ')
+          ..write('isDirectChat: $isDirectChat, ')
+          ..write('pinned: $pinned, ')
+          ..write('archived: $archived, ')
+          ..write('groupName: $groupName, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
+          ..write('alsoBestFriend: $alsoBestFriend, ')
+          ..write(
+              'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ')
+          ..write('createdAt: $createdAt, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
           ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
           ..write('lastFlameSync: $lastFlameSync, ')
-          ..write('flameCounter: $flameCounter')
+          ..write('flameCounter: $flameCounter, ')
+          ..write('lastMessageExchange: $lastMessageExchange')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hashAll([
-        userId,
-        username,
-        displayName,
-        nickName,
-        avatarSvg,
-        senderProfileCounter,
-        accepted,
-        requested,
-        hidden,
-        blocked,
-        verified,
-        deleted,
-        alsoBestFriend,
-        deleteMessagesAfterXMinutes,
-        createdAt,
-        totalMediaCounter,
-        lastMessageSend,
-        lastMessageReceived,
-        lastFlameCounterChange,
-        lastFlameSync,
-        flameCounter
-      ]);
+  int get hashCode => Object.hash(
+      groupId,
+      isGroupAdmin,
+      isDirectChat,
+      pinned,
+      archived,
+      groupName,
+      totalMediaCounter,
+      alsoBestFriend,
+      deleteMessagesAfterMilliseconds,
+      createdAt,
+      lastMessageSend,
+      lastMessageReceived,
+      lastFlameCounterChange,
+      lastFlameSync,
+      flameCounter,
+      lastMessageExchange);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Contact &&
-          other.userId == this.userId &&
-          other.username == this.username &&
-          other.displayName == this.displayName &&
-          other.nickName == this.nickName &&
-          other.avatarSvg == this.avatarSvg &&
-          other.senderProfileCounter == this.senderProfileCounter &&
-          other.accepted == this.accepted &&
-          other.requested == this.requested &&
-          other.hidden == this.hidden &&
-          other.blocked == this.blocked &&
-          other.verified == this.verified &&
-          other.deleted == this.deleted &&
-          other.alsoBestFriend == this.alsoBestFriend &&
-          other.deleteMessagesAfterXMinutes ==
-              this.deleteMessagesAfterXMinutes &&
-          other.createdAt == this.createdAt &&
+      (other is Group &&
+          other.groupId == this.groupId &&
+          other.isGroupAdmin == this.isGroupAdmin &&
+          other.isDirectChat == this.isDirectChat &&
+          other.pinned == this.pinned &&
+          other.archived == this.archived &&
+          other.groupName == this.groupName &&
           other.totalMediaCounter == this.totalMediaCounter &&
+          other.alsoBestFriend == this.alsoBestFriend &&
+          other.deleteMessagesAfterMilliseconds ==
+              this.deleteMessagesAfterMilliseconds &&
+          other.createdAt == this.createdAt &&
           other.lastMessageSend == this.lastMessageSend &&
           other.lastMessageReceived == this.lastMessageReceived &&
           other.lastFlameCounterChange == this.lastFlameCounterChange &&
           other.lastFlameSync == this.lastFlameSync &&
-          other.flameCounter == this.flameCounter);
+          other.flameCounter == this.flameCounter &&
+          other.lastMessageExchange == this.lastMessageExchange);
 }
 
-class ContactsCompanion extends UpdateCompanion<Contact> {
-  final Value<int> userId;
-  final Value<String> username;
-  final Value<String?> displayName;
-  final Value<String?> nickName;
-  final Value<String?> avatarSvg;
-  final Value<int> senderProfileCounter;
-  final Value<bool> accepted;
-  final Value<bool> requested;
-  final Value<bool> hidden;
-  final Value<bool> blocked;
-  final Value<bool> verified;
-  final Value<bool> deleted;
-  final Value<bool> alsoBestFriend;
-  final Value<int> deleteMessagesAfterXMinutes;
-  final Value<DateTime> createdAt;
+class GroupsCompanion extends UpdateCompanion<Group> {
+  final Value<String> groupId;
+  final Value<bool> isGroupAdmin;
+  final Value<bool> isDirectChat;
+  final Value<bool> pinned;
+  final Value<bool> archived;
+  final Value<String> groupName;
   final Value<int> totalMediaCounter;
+  final Value<bool> alsoBestFriend;
+  final Value<int> deleteMessagesAfterMilliseconds;
+  final Value<DateTime> createdAt;
   final Value<DateTime?> lastMessageSend;
   final Value<DateTime?> lastMessageReceived;
   final Value<DateTime?> lastFlameCounterChange;
   final Value<DateTime?> lastFlameSync;
   final Value<int> flameCounter;
-  const ContactsCompanion({
-    this.userId = const Value.absent(),
-    this.username = const Value.absent(),
-    this.displayName = const Value.absent(),
-    this.nickName = const Value.absent(),
-    this.avatarSvg = const Value.absent(),
-    this.senderProfileCounter = const Value.absent(),
-    this.accepted = const Value.absent(),
-    this.requested = const Value.absent(),
-    this.hidden = const Value.absent(),
-    this.blocked = const Value.absent(),
-    this.verified = const Value.absent(),
-    this.deleted = const Value.absent(),
-    this.alsoBestFriend = const Value.absent(),
-    this.deleteMessagesAfterXMinutes = const Value.absent(),
-    this.createdAt = const Value.absent(),
+  final Value<DateTime> lastMessageExchange;
+  final Value<int> rowid;
+  const GroupsCompanion({
+    this.groupId = const Value.absent(),
+    this.isGroupAdmin = const Value.absent(),
+    this.isDirectChat = const Value.absent(),
+    this.pinned = const Value.absent(),
+    this.archived = const Value.absent(),
+    this.groupName = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
+    this.alsoBestFriend = const Value.absent(),
+    this.deleteMessagesAfterMilliseconds = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.lastMessageSend = const Value.absent(),
     this.lastMessageReceived = const Value.absent(),
     this.lastFlameCounterChange = const Value.absent(),
     this.lastFlameSync = const Value.absent(),
     this.flameCounter = const Value.absent(),
+    this.lastMessageExchange = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
-  ContactsCompanion.insert({
-    this.userId = const Value.absent(),
-    required String username,
-    this.displayName = const Value.absent(),
-    this.nickName = const Value.absent(),
-    this.avatarSvg = const Value.absent(),
-    this.senderProfileCounter = const Value.absent(),
-    this.accepted = const Value.absent(),
-    this.requested = const Value.absent(),
-    this.hidden = const Value.absent(),
-    this.blocked = const Value.absent(),
-    this.verified = const Value.absent(),
-    this.deleted = const Value.absent(),
-    this.alsoBestFriend = const Value.absent(),
-    this.deleteMessagesAfterXMinutes = const Value.absent(),
-    this.createdAt = const Value.absent(),
+  GroupsCompanion.insert({
+    this.groupId = const Value.absent(),
+    required bool isGroupAdmin,
+    required bool isDirectChat,
+    this.pinned = const Value.absent(),
+    this.archived = const Value.absent(),
+    required String groupName,
     this.totalMediaCounter = const Value.absent(),
+    this.alsoBestFriend = const Value.absent(),
+    this.deleteMessagesAfterMilliseconds = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.lastMessageSend = const Value.absent(),
     this.lastMessageReceived = const Value.absent(),
     this.lastFlameCounterChange = const Value.absent(),
     this.lastFlameSync = const Value.absent(),
     this.flameCounter = const Value.absent(),
-  }) : username = Value(username);
-  static Insertable<Contact> custom({
-    Expression<int>? userId,
-    Expression<String>? username,
-    Expression<String>? displayName,
-    Expression<String>? nickName,
-    Expression<String>? avatarSvg,
-    Expression<int>? senderProfileCounter,
-    Expression<bool>? accepted,
-    Expression<bool>? requested,
-    Expression<bool>? hidden,
-    Expression<bool>? blocked,
-    Expression<bool>? verified,
-    Expression<bool>? deleted,
-    Expression<bool>? alsoBestFriend,
-    Expression<int>? deleteMessagesAfterXMinutes,
-    Expression<DateTime>? createdAt,
+    this.lastMessageExchange = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : isGroupAdmin = Value(isGroupAdmin),
+        isDirectChat = Value(isDirectChat),
+        groupName = Value(groupName);
+  static Insertable<Group> custom({
+    Expression<String>? groupId,
+    Expression<bool>? isGroupAdmin,
+    Expression<bool>? isDirectChat,
+    Expression<bool>? pinned,
+    Expression<bool>? archived,
+    Expression<String>? groupName,
     Expression<int>? totalMediaCounter,
+    Expression<bool>? alsoBestFriend,
+    Expression<int>? deleteMessagesAfterMilliseconds,
+    Expression<DateTime>? createdAt,
     Expression<DateTime>? lastMessageSend,
     Expression<DateTime>? lastMessageReceived,
     Expression<DateTime>? lastFlameCounterChange,
     Expression<DateTime>? lastFlameSync,
     Expression<int>? flameCounter,
+    Expression<DateTime>? lastMessageExchange,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (userId != null) 'user_id': userId,
-      if (username != null) 'username': username,
-      if (displayName != null) 'display_name': displayName,
-      if (nickName != null) 'nick_name': nickName,
-      if (avatarSvg != null) 'avatar_svg': avatarSvg,
-      if (senderProfileCounter != null)
-        'sender_profile_counter': senderProfileCounter,
-      if (accepted != null) 'accepted': accepted,
-      if (requested != null) 'requested': requested,
-      if (hidden != null) 'hidden': hidden,
-      if (blocked != null) 'blocked': blocked,
-      if (verified != null) 'verified': verified,
-      if (deleted != null) 'deleted': deleted,
-      if (alsoBestFriend != null) 'also_best_friend': alsoBestFriend,
-      if (deleteMessagesAfterXMinutes != null)
-        'delete_messages_after_x_minutes': deleteMessagesAfterXMinutes,
-      if (createdAt != null) 'created_at': createdAt,
+      if (groupId != null) 'group_id': groupId,
+      if (isGroupAdmin != null) 'is_group_admin': isGroupAdmin,
+      if (isDirectChat != null) 'is_direct_chat': isDirectChat,
+      if (pinned != null) 'pinned': pinned,
+      if (archived != null) 'archived': archived,
+      if (groupName != null) 'group_name': groupName,
       if (totalMediaCounter != null) 'total_media_counter': totalMediaCounter,
+      if (alsoBestFriend != null) 'also_best_friend': alsoBestFriend,
+      if (deleteMessagesAfterMilliseconds != null)
+        'delete_messages_after_milliseconds': deleteMessagesAfterMilliseconds,
+      if (createdAt != null) 'created_at': createdAt,
       if (lastMessageSend != null) 'last_message_send': lastMessageSend,
       if (lastMessageReceived != null)
         'last_message_received': lastMessageReceived,
@@ -858,109 +1297,86 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
         'last_flame_counter_change': lastFlameCounterChange,
       if (lastFlameSync != null) 'last_flame_sync': lastFlameSync,
       if (flameCounter != null) 'flame_counter': flameCounter,
+      if (lastMessageExchange != null)
+        'last_message_exchange': lastMessageExchange,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
-  ContactsCompanion copyWith(
-      {Value<int>? userId,
-      Value<String>? username,
-      Value<String?>? displayName,
-      Value<String?>? nickName,
-      Value<String?>? avatarSvg,
-      Value<int>? senderProfileCounter,
-      Value<bool>? accepted,
-      Value<bool>? requested,
-      Value<bool>? hidden,
-      Value<bool>? blocked,
-      Value<bool>? verified,
-      Value<bool>? deleted,
-      Value<bool>? alsoBestFriend,
-      Value<int>? deleteMessagesAfterXMinutes,
-      Value<DateTime>? createdAt,
+  GroupsCompanion copyWith(
+      {Value<String>? groupId,
+      Value<bool>? isGroupAdmin,
+      Value<bool>? isDirectChat,
+      Value<bool>? pinned,
+      Value<bool>? archived,
+      Value<String>? groupName,
       Value<int>? totalMediaCounter,
+      Value<bool>? alsoBestFriend,
+      Value<int>? deleteMessagesAfterMilliseconds,
+      Value<DateTime>? createdAt,
       Value<DateTime?>? lastMessageSend,
       Value<DateTime?>? lastMessageReceived,
       Value<DateTime?>? lastFlameCounterChange,
       Value<DateTime?>? lastFlameSync,
-      Value<int>? flameCounter}) {
-    return ContactsCompanion(
-      userId: userId ?? this.userId,
-      username: username ?? this.username,
-      displayName: displayName ?? this.displayName,
-      nickName: nickName ?? this.nickName,
-      avatarSvg: avatarSvg ?? this.avatarSvg,
-      senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
-      accepted: accepted ?? this.accepted,
-      requested: requested ?? this.requested,
-      hidden: hidden ?? this.hidden,
-      blocked: blocked ?? this.blocked,
-      verified: verified ?? this.verified,
-      deleted: deleted ?? this.deleted,
-      alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
-      deleteMessagesAfterXMinutes:
-          deleteMessagesAfterXMinutes ?? this.deleteMessagesAfterXMinutes,
-      createdAt: createdAt ?? this.createdAt,
+      Value<int>? flameCounter,
+      Value<DateTime>? lastMessageExchange,
+      Value<int>? rowid}) {
+    return GroupsCompanion(
+      groupId: groupId ?? this.groupId,
+      isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
+      isDirectChat: isDirectChat ?? this.isDirectChat,
+      pinned: pinned ?? this.pinned,
+      archived: archived ?? this.archived,
+      groupName: groupName ?? this.groupName,
       totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
+      alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
+      deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds ??
+          this.deleteMessagesAfterMilliseconds,
+      createdAt: createdAt ?? this.createdAt,
       lastMessageSend: lastMessageSend ?? this.lastMessageSend,
       lastMessageReceived: lastMessageReceived ?? this.lastMessageReceived,
       lastFlameCounterChange:
           lastFlameCounterChange ?? this.lastFlameCounterChange,
       lastFlameSync: lastFlameSync ?? this.lastFlameSync,
       flameCounter: flameCounter ?? this.flameCounter,
+      lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (userId.present) {
-      map['user_id'] = Variable<int>(userId.value);
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
     }
-    if (username.present) {
-      map['username'] = Variable<String>(username.value);
+    if (isGroupAdmin.present) {
+      map['is_group_admin'] = Variable<bool>(isGroupAdmin.value);
     }
-    if (displayName.present) {
-      map['display_name'] = Variable<String>(displayName.value);
+    if (isDirectChat.present) {
+      map['is_direct_chat'] = Variable<bool>(isDirectChat.value);
     }
-    if (nickName.present) {
-      map['nick_name'] = Variable<String>(nickName.value);
+    if (pinned.present) {
+      map['pinned'] = Variable<bool>(pinned.value);
     }
-    if (avatarSvg.present) {
-      map['avatar_svg'] = Variable<String>(avatarSvg.value);
+    if (archived.present) {
+      map['archived'] = Variable<bool>(archived.value);
     }
-    if (senderProfileCounter.present) {
-      map['sender_profile_counter'] = Variable<int>(senderProfileCounter.value);
+    if (groupName.present) {
+      map['group_name'] = Variable<String>(groupName.value);
     }
-    if (accepted.present) {
-      map['accepted'] = Variable<bool>(accepted.value);
-    }
-    if (requested.present) {
-      map['requested'] = Variable<bool>(requested.value);
-    }
-    if (hidden.present) {
-      map['hidden'] = Variable<bool>(hidden.value);
-    }
-    if (blocked.present) {
-      map['blocked'] = Variable<bool>(blocked.value);
-    }
-    if (verified.present) {
-      map['verified'] = Variable<bool>(verified.value);
-    }
-    if (deleted.present) {
-      map['deleted'] = Variable<bool>(deleted.value);
+    if (totalMediaCounter.present) {
+      map['total_media_counter'] = Variable<int>(totalMediaCounter.value);
     }
     if (alsoBestFriend.present) {
       map['also_best_friend'] = Variable<bool>(alsoBestFriend.value);
     }
-    if (deleteMessagesAfterXMinutes.present) {
-      map['delete_messages_after_x_minutes'] =
-          Variable<int>(deleteMessagesAfterXMinutes.value);
+    if (deleteMessagesAfterMilliseconds.present) {
+      map['delete_messages_after_milliseconds'] =
+          Variable<int>(deleteMessagesAfterMilliseconds.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (totalMediaCounter.present) {
-      map['total_media_counter'] = Variable<int>(totalMediaCounter.value);
     }
     if (lastMessageSend.present) {
       map['last_message_send'] = Variable<DateTime>(lastMessageSend.value);
@@ -979,464 +1395,9 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (flameCounter.present) {
       map['flame_counter'] = Variable<int>(flameCounter.value);
     }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ContactsCompanion(')
-          ..write('userId: $userId, ')
-          ..write('username: $username, ')
-          ..write('displayName: $displayName, ')
-          ..write('nickName: $nickName, ')
-          ..write('avatarSvg: $avatarSvg, ')
-          ..write('senderProfileCounter: $senderProfileCounter, ')
-          ..write('accepted: $accepted, ')
-          ..write('requested: $requested, ')
-          ..write('hidden: $hidden, ')
-          ..write('blocked: $blocked, ')
-          ..write('verified: $verified, ')
-          ..write('deleted: $deleted, ')
-          ..write('alsoBestFriend: $alsoBestFriend, ')
-          ..write('deleteMessagesAfterXMinutes: $deleteMessagesAfterXMinutes, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('totalMediaCounter: $totalMediaCounter, ')
-          ..write('lastMessageSend: $lastMessageSend, ')
-          ..write('lastMessageReceived: $lastMessageReceived, ')
-          ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
-          ..write('lastFlameSync: $lastFlameSync, ')
-          ..write('flameCounter: $flameCounter')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $GroupsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _groupIdMeta =
-      const VerificationMeta('groupId');
-  @override
-  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      clientDefault: () => uuid.v4());
-  static const VerificationMeta _isGroupAdminMeta =
-      const VerificationMeta('isGroupAdmin');
-  @override
-  late final GeneratedColumn<bool> isGroupAdmin = GeneratedColumn<bool>(
-      'is_group_admin', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_group_admin" IN (0, 1))'));
-  static const VerificationMeta _isGroupOfTwoMeta =
-      const VerificationMeta('isGroupOfTwo');
-  @override
-  late final GeneratedColumn<bool> isGroupOfTwo = GeneratedColumn<bool>(
-      'is_group_of_two', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_group_of_two" IN (0, 1))'));
-  static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
-  @override
-  late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
-      'pinned', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("pinned" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _archivedMeta =
-      const VerificationMeta('archived');
-  @override
-  late final GeneratedColumn<bool> archived = GeneratedColumn<bool>(
-      'archived', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _groupNameMeta =
-      const VerificationMeta('groupName');
-  @override
-  late final GeneratedColumn<String> groupName = GeneratedColumn<String>(
-      'group_name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _lastMessageExchangeMeta =
-      const VerificationMeta('lastMessageExchange');
-  @override
-  late final GeneratedColumn<DateTime> lastMessageExchange =
-      GeneratedColumn<DateTime>('last_message_exchange', aliasedName, false,
-          type: DriftSqlType.dateTime,
-          requiredDuringInsert: false,
-          defaultValue: currentDateAndTime);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  @override
-  List<GeneratedColumn> get $columns => [
-        groupId,
-        isGroupAdmin,
-        isGroupOfTwo,
-        pinned,
-        archived,
-        groupName,
-        lastMessageExchange,
-        createdAt
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'groups';
-  @override
-  VerificationContext validateIntegrity(Insertable<Group> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('group_id')) {
-      context.handle(_groupIdMeta,
-          groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
-    }
-    if (data.containsKey('is_group_admin')) {
-      context.handle(
-          _isGroupAdminMeta,
-          isGroupAdmin.isAcceptableOrUnknown(
-              data['is_group_admin']!, _isGroupAdminMeta));
-    } else if (isInserting) {
-      context.missing(_isGroupAdminMeta);
-    }
-    if (data.containsKey('is_group_of_two')) {
-      context.handle(
-          _isGroupOfTwoMeta,
-          isGroupOfTwo.isAcceptableOrUnknown(
-              data['is_group_of_two']!, _isGroupOfTwoMeta));
-    } else if (isInserting) {
-      context.missing(_isGroupOfTwoMeta);
-    }
-    if (data.containsKey('pinned')) {
-      context.handle(_pinnedMeta,
-          pinned.isAcceptableOrUnknown(data['pinned']!, _pinnedMeta));
-    }
-    if (data.containsKey('archived')) {
-      context.handle(_archivedMeta,
-          archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
-    }
-    if (data.containsKey('group_name')) {
-      context.handle(_groupNameMeta,
-          groupName.isAcceptableOrUnknown(data['group_name']!, _groupNameMeta));
-    } else if (isInserting) {
-      context.missing(_groupNameMeta);
-    }
-    if (data.containsKey('last_message_exchange')) {
-      context.handle(
-          _lastMessageExchangeMeta,
-          lastMessageExchange.isAcceptableOrUnknown(
-              data['last_message_exchange']!, _lastMessageExchangeMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {groupId};
-  @override
-  Group map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Group(
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      isGroupAdmin: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_group_admin'])!,
-      isGroupOfTwo: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_group_of_two'])!,
-      pinned: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
-      archived: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
-      groupName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_name'])!,
-      lastMessageExchange: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime,
-          data['${effectivePrefix}last_message_exchange'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-    );
-  }
-
-  @override
-  $GroupsTable createAlias(String alias) {
-    return $GroupsTable(attachedDatabase, alias);
-  }
-}
-
-class Group extends DataClass implements Insertable<Group> {
-  final String groupId;
-  final bool isGroupAdmin;
-  final bool isGroupOfTwo;
-  final bool pinned;
-  final bool archived;
-  final String groupName;
-  final DateTime lastMessageExchange;
-  final DateTime createdAt;
-  const Group(
-      {required this.groupId,
-      required this.isGroupAdmin,
-      required this.isGroupOfTwo,
-      required this.pinned,
-      required this.archived,
-      required this.groupName,
-      required this.lastMessageExchange,
-      required this.createdAt});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['group_id'] = Variable<String>(groupId);
-    map['is_group_admin'] = Variable<bool>(isGroupAdmin);
-    map['is_group_of_two'] = Variable<bool>(isGroupOfTwo);
-    map['pinned'] = Variable<bool>(pinned);
-    map['archived'] = Variable<bool>(archived);
-    map['group_name'] = Variable<String>(groupName);
-    map['last_message_exchange'] = Variable<DateTime>(lastMessageExchange);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  GroupsCompanion toCompanion(bool nullToAbsent) {
-    return GroupsCompanion(
-      groupId: Value(groupId),
-      isGroupAdmin: Value(isGroupAdmin),
-      isGroupOfTwo: Value(isGroupOfTwo),
-      pinned: Value(pinned),
-      archived: Value(archived),
-      groupName: Value(groupName),
-      lastMessageExchange: Value(lastMessageExchange),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory Group.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Group(
-      groupId: serializer.fromJson<String>(json['groupId']),
-      isGroupAdmin: serializer.fromJson<bool>(json['isGroupAdmin']),
-      isGroupOfTwo: serializer.fromJson<bool>(json['isGroupOfTwo']),
-      pinned: serializer.fromJson<bool>(json['pinned']),
-      archived: serializer.fromJson<bool>(json['archived']),
-      groupName: serializer.fromJson<String>(json['groupName']),
-      lastMessageExchange:
-          serializer.fromJson<DateTime>(json['lastMessageExchange']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'groupId': serializer.toJson<String>(groupId),
-      'isGroupAdmin': serializer.toJson<bool>(isGroupAdmin),
-      'isGroupOfTwo': serializer.toJson<bool>(isGroupOfTwo),
-      'pinned': serializer.toJson<bool>(pinned),
-      'archived': serializer.toJson<bool>(archived),
-      'groupName': serializer.toJson<String>(groupName),
-      'lastMessageExchange': serializer.toJson<DateTime>(lastMessageExchange),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  Group copyWith(
-          {String? groupId,
-          bool? isGroupAdmin,
-          bool? isGroupOfTwo,
-          bool? pinned,
-          bool? archived,
-          String? groupName,
-          DateTime? lastMessageExchange,
-          DateTime? createdAt}) =>
-      Group(
-        groupId: groupId ?? this.groupId,
-        isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
-        isGroupOfTwo: isGroupOfTwo ?? this.isGroupOfTwo,
-        pinned: pinned ?? this.pinned,
-        archived: archived ?? this.archived,
-        groupName: groupName ?? this.groupName,
-        lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
-        createdAt: createdAt ?? this.createdAt,
-      );
-  Group copyWithCompanion(GroupsCompanion data) {
-    return Group(
-      groupId: data.groupId.present ? data.groupId.value : this.groupId,
-      isGroupAdmin: data.isGroupAdmin.present
-          ? data.isGroupAdmin.value
-          : this.isGroupAdmin,
-      isGroupOfTwo: data.isGroupOfTwo.present
-          ? data.isGroupOfTwo.value
-          : this.isGroupOfTwo,
-      pinned: data.pinned.present ? data.pinned.value : this.pinned,
-      archived: data.archived.present ? data.archived.value : this.archived,
-      groupName: data.groupName.present ? data.groupName.value : this.groupName,
-      lastMessageExchange: data.lastMessageExchange.present
-          ? data.lastMessageExchange.value
-          : this.lastMessageExchange,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Group(')
-          ..write('groupId: $groupId, ')
-          ..write('isGroupAdmin: $isGroupAdmin, ')
-          ..write('isGroupOfTwo: $isGroupOfTwo, ')
-          ..write('pinned: $pinned, ')
-          ..write('archived: $archived, ')
-          ..write('groupName: $groupName, ')
-          ..write('lastMessageExchange: $lastMessageExchange, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(groupId, isGroupAdmin, isGroupOfTwo, pinned,
-      archived, groupName, lastMessageExchange, createdAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Group &&
-          other.groupId == this.groupId &&
-          other.isGroupAdmin == this.isGroupAdmin &&
-          other.isGroupOfTwo == this.isGroupOfTwo &&
-          other.pinned == this.pinned &&
-          other.archived == this.archived &&
-          other.groupName == this.groupName &&
-          other.lastMessageExchange == this.lastMessageExchange &&
-          other.createdAt == this.createdAt);
-}
-
-class GroupsCompanion extends UpdateCompanion<Group> {
-  final Value<String> groupId;
-  final Value<bool> isGroupAdmin;
-  final Value<bool> isGroupOfTwo;
-  final Value<bool> pinned;
-  final Value<bool> archived;
-  final Value<String> groupName;
-  final Value<DateTime> lastMessageExchange;
-  final Value<DateTime> createdAt;
-  final Value<int> rowid;
-  const GroupsCompanion({
-    this.groupId = const Value.absent(),
-    this.isGroupAdmin = const Value.absent(),
-    this.isGroupOfTwo = const Value.absent(),
-    this.pinned = const Value.absent(),
-    this.archived = const Value.absent(),
-    this.groupName = const Value.absent(),
-    this.lastMessageExchange = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  GroupsCompanion.insert({
-    this.groupId = const Value.absent(),
-    required bool isGroupAdmin,
-    required bool isGroupOfTwo,
-    this.pinned = const Value.absent(),
-    this.archived = const Value.absent(),
-    required String groupName,
-    this.lastMessageExchange = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  })  : isGroupAdmin = Value(isGroupAdmin),
-        isGroupOfTwo = Value(isGroupOfTwo),
-        groupName = Value(groupName);
-  static Insertable<Group> custom({
-    Expression<String>? groupId,
-    Expression<bool>? isGroupAdmin,
-    Expression<bool>? isGroupOfTwo,
-    Expression<bool>? pinned,
-    Expression<bool>? archived,
-    Expression<String>? groupName,
-    Expression<DateTime>? lastMessageExchange,
-    Expression<DateTime>? createdAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (groupId != null) 'group_id': groupId,
-      if (isGroupAdmin != null) 'is_group_admin': isGroupAdmin,
-      if (isGroupOfTwo != null) 'is_group_of_two': isGroupOfTwo,
-      if (pinned != null) 'pinned': pinned,
-      if (archived != null) 'archived': archived,
-      if (groupName != null) 'group_name': groupName,
-      if (lastMessageExchange != null)
-        'last_message_exchange': lastMessageExchange,
-      if (createdAt != null) 'created_at': createdAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  GroupsCompanion copyWith(
-      {Value<String>? groupId,
-      Value<bool>? isGroupAdmin,
-      Value<bool>? isGroupOfTwo,
-      Value<bool>? pinned,
-      Value<bool>? archived,
-      Value<String>? groupName,
-      Value<DateTime>? lastMessageExchange,
-      Value<DateTime>? createdAt,
-      Value<int>? rowid}) {
-    return GroupsCompanion(
-      groupId: groupId ?? this.groupId,
-      isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
-      isGroupOfTwo: isGroupOfTwo ?? this.isGroupOfTwo,
-      pinned: pinned ?? this.pinned,
-      archived: archived ?? this.archived,
-      groupName: groupName ?? this.groupName,
-      lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
-      createdAt: createdAt ?? this.createdAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (groupId.present) {
-      map['group_id'] = Variable<String>(groupId.value);
-    }
-    if (isGroupAdmin.present) {
-      map['is_group_admin'] = Variable<bool>(isGroupAdmin.value);
-    }
-    if (isGroupOfTwo.present) {
-      map['is_group_of_two'] = Variable<bool>(isGroupOfTwo.value);
-    }
-    if (pinned.present) {
-      map['pinned'] = Variable<bool>(pinned.value);
-    }
-    if (archived.present) {
-      map['archived'] = Variable<bool>(archived.value);
-    }
-    if (groupName.present) {
-      map['group_name'] = Variable<String>(groupName.value);
-    }
     if (lastMessageExchange.present) {
       map['last_message_exchange'] =
           Variable<DateTime>(lastMessageExchange.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1449,12 +1410,21 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     return (StringBuffer('GroupsCompanion(')
           ..write('groupId: $groupId, ')
           ..write('isGroupAdmin: $isGroupAdmin, ')
-          ..write('isGroupOfTwo: $isGroupOfTwo, ')
+          ..write('isDirectChat: $isDirectChat, ')
           ..write('pinned: $pinned, ')
           ..write('archived: $archived, ')
           ..write('groupName: $groupName, ')
-          ..write('lastMessageExchange: $lastMessageExchange, ')
+          ..write('totalMediaCounter: $totalMediaCounter, ')
+          ..write('alsoBestFriend: $alsoBestFriend, ')
+          ..write(
+              'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ')
           ..write('createdAt: $createdAt, ')
+          ..write('lastMessageSend: $lastMessageSend, ')
+          ..write('lastMessageReceived: $lastMessageReceived, ')
+          ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
+          ..write('lastFlameSync: $lastFlameSync, ')
+          ..write('flameCounter: $flameCounter, ')
+          ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2309,16 +2279,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_deleted_from_sender" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _isEditedMeta =
-      const VerificationMeta('isEdited');
+  static const VerificationMeta _openedAtMeta =
+      const VerificationMeta('openedAt');
   @override
-  late final GeneratedColumn<bool> isEdited = GeneratedColumn<bool>(
-      'is_edited', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_edited" IN (0, 1))'),
-      defaultValue: const Constant(false));
+  late final GeneratedColumn<DateTime> openedAt = GeneratedColumn<DateTime>(
+      'opened_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -2327,6 +2293,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _modifiedAtMeta =
+      const VerificationMeta('modifiedAt');
+  @override
+  late final GeneratedColumn<DateTime> modifiedAt = GeneratedColumn<DateTime>(
+      'modified_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         groupId,
@@ -2339,8 +2311,9 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         downloadToken,
         quotesMessageId,
         isDeletedFromSender,
-        isEdited,
-        createdAt
+        openedAt,
+        createdAt,
+        modifiedAt
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2398,13 +2371,19 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           isDeletedFromSender.isAcceptableOrUnknown(
               data['is_deleted_from_sender']!, _isDeletedFromSenderMeta));
     }
-    if (data.containsKey('is_edited')) {
-      context.handle(_isEditedMeta,
-          isEdited.isAcceptableOrUnknown(data['is_edited']!, _isEditedMeta));
+    if (data.containsKey('opened_at')) {
+      context.handle(_openedAtMeta,
+          openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('modified_at')) {
+      context.handle(
+          _modifiedAtMeta,
+          modifiedAt.isAcceptableOrUnknown(
+              data['modified_at']!, _modifiedAtMeta));
     }
     return context;
   }
@@ -2435,10 +2414,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           DriftSqlType.string, data['${effectivePrefix}quotes_message_id']),
       isDeletedFromSender: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}is_deleted_from_sender'])!,
-      isEdited: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_edited'])!,
+      openedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}opened_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      modifiedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}modified_at']),
     );
   }
 
@@ -2462,8 +2443,9 @@ class Message extends DataClass implements Insertable<Message> {
   final Uint8List? downloadToken;
   final String? quotesMessageId;
   final bool isDeletedFromSender;
-  final bool isEdited;
+  final DateTime? openedAt;
   final DateTime createdAt;
+  final DateTime? modifiedAt;
   const Message(
       {required this.groupId,
       required this.messageId,
@@ -2475,8 +2457,9 @@ class Message extends DataClass implements Insertable<Message> {
       this.downloadToken,
       this.quotesMessageId,
       required this.isDeletedFromSender,
-      required this.isEdited,
-      required this.createdAt});
+      this.openedAt,
+      required this.createdAt,
+      this.modifiedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2502,8 +2485,13 @@ class Message extends DataClass implements Insertable<Message> {
       map['quotes_message_id'] = Variable<String>(quotesMessageId);
     }
     map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender);
-    map['is_edited'] = Variable<bool>(isEdited);
+    if (!nullToAbsent || openedAt != null) {
+      map['opened_at'] = Variable<DateTime>(openedAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || modifiedAt != null) {
+      map['modified_at'] = Variable<DateTime>(modifiedAt);
+    }
     return map;
   }
 
@@ -2529,8 +2517,13 @@ class Message extends DataClass implements Insertable<Message> {
           ? const Value.absent()
           : Value(quotesMessageId),
       isDeletedFromSender: Value(isDeletedFromSender),
-      isEdited: Value(isEdited),
+      openedAt: openedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openedAt),
       createdAt: Value(createdAt),
+      modifiedAt: modifiedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(modifiedAt),
     );
   }
 
@@ -2550,8 +2543,9 @@ class Message extends DataClass implements Insertable<Message> {
       quotesMessageId: serializer.fromJson<String?>(json['quotesMessageId']),
       isDeletedFromSender:
           serializer.fromJson<bool>(json['isDeletedFromSender']),
-      isEdited: serializer.fromJson<bool>(json['isEdited']),
+      openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      modifiedAt: serializer.fromJson<DateTime?>(json['modifiedAt']),
     );
   }
   @override
@@ -2569,8 +2563,9 @@ class Message extends DataClass implements Insertable<Message> {
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
-      'isEdited': serializer.toJson<bool>(isEdited),
+      'openedAt': serializer.toJson<DateTime?>(openedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'modifiedAt': serializer.toJson<DateTime?>(modifiedAt),
     };
   }
 
@@ -2585,8 +2580,9 @@ class Message extends DataClass implements Insertable<Message> {
           Value<Uint8List?> downloadToken = const Value.absent(),
           Value<String?> quotesMessageId = const Value.absent(),
           bool? isDeletedFromSender,
-          bool? isEdited,
-          DateTime? createdAt}) =>
+          Value<DateTime?> openedAt = const Value.absent(),
+          DateTime? createdAt,
+          Value<DateTime?> modifiedAt = const Value.absent()}) =>
       Message(
         groupId: groupId ?? this.groupId,
         messageId: messageId ?? this.messageId,
@@ -2601,8 +2597,9 @@ class Message extends DataClass implements Insertable<Message> {
             ? quotesMessageId.value
             : this.quotesMessageId,
         isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
-        isEdited: isEdited ?? this.isEdited,
+        openedAt: openedAt.present ? openedAt.value : this.openedAt,
         createdAt: createdAt ?? this.createdAt,
+        modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
       );
   Message copyWithCompanion(MessagesCompanion data) {
     return Message(
@@ -2623,8 +2620,10 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender: data.isDeletedFromSender.present
           ? data.isDeletedFromSender.value
           : this.isDeletedFromSender,
-      isEdited: data.isEdited.present ? data.isEdited.value : this.isEdited,
+      openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      modifiedAt:
+          data.modifiedAt.present ? data.modifiedAt.value : this.modifiedAt,
     );
   }
 
@@ -2641,8 +2640,9 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
-          ..write('isEdited: $isEdited, ')
-          ..write('createdAt: $createdAt')
+          ..write('openedAt: $openedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('modifiedAt: $modifiedAt')
           ..write(')'))
         .toString();
   }
@@ -2659,8 +2659,9 @@ class Message extends DataClass implements Insertable<Message> {
       $driftBlobEquality.hash(downloadToken),
       quotesMessageId,
       isDeletedFromSender,
-      isEdited,
-      createdAt);
+      openedAt,
+      createdAt,
+      modifiedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2675,8 +2676,9 @@ class Message extends DataClass implements Insertable<Message> {
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
-          other.isEdited == this.isEdited &&
-          other.createdAt == this.createdAt);
+          other.openedAt == this.openedAt &&
+          other.createdAt == this.createdAt &&
+          other.modifiedAt == this.modifiedAt);
 }
 
 class MessagesCompanion extends UpdateCompanion<Message> {
@@ -2690,8 +2692,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<Uint8List?> downloadToken;
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
-  final Value<bool> isEdited;
+  final Value<DateTime?> openedAt;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> modifiedAt;
   final Value<int> rowid;
   const MessagesCompanion({
     this.groupId = const Value.absent(),
@@ -2704,8 +2707,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
-    this.isEdited = const Value.absent(),
+    this.openedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.modifiedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MessagesCompanion.insert({
@@ -2719,8 +2723,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
-    this.isEdited = const Value.absent(),
+    this.openedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.modifiedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : groupId = Value(groupId),
         type = Value(type);
@@ -2735,8 +2740,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<Uint8List>? downloadToken,
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
-    Expression<bool>? isEdited,
+    Expression<DateTime>? openedAt,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? modifiedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2751,8 +2757,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (quotesMessageId != null) 'quotes_message_id': quotesMessageId,
       if (isDeletedFromSender != null)
         'is_deleted_from_sender': isDeletedFromSender,
-      if (isEdited != null) 'is_edited': isEdited,
+      if (openedAt != null) 'opened_at': openedAt,
       if (createdAt != null) 'created_at': createdAt,
+      if (modifiedAt != null) 'modified_at': modifiedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2768,8 +2775,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<Uint8List?>? downloadToken,
       Value<String?>? quotesMessageId,
       Value<bool>? isDeletedFromSender,
-      Value<bool>? isEdited,
+      Value<DateTime?>? openedAt,
       Value<DateTime>? createdAt,
+      Value<DateTime?>? modifiedAt,
       Value<int>? rowid}) {
     return MessagesCompanion(
       groupId: groupId ?? this.groupId,
@@ -2782,8 +2790,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       downloadToken: downloadToken ?? this.downloadToken,
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
-      isEdited: isEdited ?? this.isEdited,
+      openedAt: openedAt ?? this.openedAt,
       createdAt: createdAt ?? this.createdAt,
+      modifiedAt: modifiedAt ?? this.modifiedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2822,11 +2831,14 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (isDeletedFromSender.present) {
       map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender.value);
     }
-    if (isEdited.present) {
-      map['is_edited'] = Variable<bool>(isEdited.value);
+    if (openedAt.present) {
+      map['opened_at'] = Variable<DateTime>(openedAt.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (modifiedAt.present) {
+      map['modified_at'] = Variable<DateTime>(modifiedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -2847,8 +2859,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
-          ..write('isEdited: $isEdited, ')
+          ..write('openedAt: $openedAt, ')
           ..write('createdAt: $createdAt, ')
+          ..write('modifiedAt: $modifiedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2883,8 +2896,8 @@ class $MessageHistoriesTable extends MessageHistories
       const VerificationMeta('contactId');
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      'contact_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _contentMeta =
       const VerificationMeta('content');
   @override
@@ -2924,8 +2937,6 @@ class $MessageHistoriesTable extends MessageHistories
     if (data.containsKey('contact_id')) {
       context.handle(_contactIdMeta,
           contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
-    } else if (isInserting) {
-      context.missing(_contactIdMeta);
     }
     if (data.containsKey('content')) {
       context.handle(_contentMeta,
@@ -2949,7 +2960,7 @@ class $MessageHistoriesTable extends MessageHistories
       messageId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
       contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
+          .read(DriftSqlType.int, data['${effectivePrefix}contact_id']),
       content: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}content']),
       createdAt: attachedDatabase.typeMapping
@@ -2966,13 +2977,13 @@ class $MessageHistoriesTable extends MessageHistories
 class MessageHistory extends DataClass implements Insertable<MessageHistory> {
   final int id;
   final String messageId;
-  final int contactId;
+  final int? contactId;
   final String? content;
   final DateTime createdAt;
   const MessageHistory(
       {required this.id,
       required this.messageId,
-      required this.contactId,
+      this.contactId,
       this.content,
       required this.createdAt});
   @override
@@ -2980,7 +2991,9 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['message_id'] = Variable<String>(messageId);
-    map['contact_id'] = Variable<int>(contactId);
+    if (!nullToAbsent || contactId != null) {
+      map['contact_id'] = Variable<int>(contactId);
+    }
     if (!nullToAbsent || content != null) {
       map['content'] = Variable<String>(content);
     }
@@ -2992,7 +3005,9 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
     return MessageHistoriesCompanion(
       id: Value(id),
       messageId: Value(messageId),
-      contactId: Value(contactId),
+      contactId: contactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactId),
       content: content == null && nullToAbsent
           ? const Value.absent()
           : Value(content),
@@ -3006,7 +3021,7 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
     return MessageHistory(
       id: serializer.fromJson<int>(json['id']),
       messageId: serializer.fromJson<String>(json['messageId']),
-      contactId: serializer.fromJson<int>(json['contactId']),
+      contactId: serializer.fromJson<int?>(json['contactId']),
       content: serializer.fromJson<String?>(json['content']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -3017,7 +3032,7 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'messageId': serializer.toJson<String>(messageId),
-      'contactId': serializer.toJson<int>(contactId),
+      'contactId': serializer.toJson<int?>(contactId),
       'content': serializer.toJson<String?>(content),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -3026,13 +3041,13 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
   MessageHistory copyWith(
           {int? id,
           String? messageId,
-          int? contactId,
+          Value<int?> contactId = const Value.absent(),
           Value<String?> content = const Value.absent(),
           DateTime? createdAt}) =>
       MessageHistory(
         id: id ?? this.id,
         messageId: messageId ?? this.messageId,
-        contactId: contactId ?? this.contactId,
+        contactId: contactId.present ? contactId.value : this.contactId,
         content: content.present ? content.value : this.content,
         createdAt: createdAt ?? this.createdAt,
       );
@@ -3074,7 +3089,7 @@ class MessageHistory extends DataClass implements Insertable<MessageHistory> {
 class MessageHistoriesCompanion extends UpdateCompanion<MessageHistory> {
   final Value<int> id;
   final Value<String> messageId;
-  final Value<int> contactId;
+  final Value<int?> contactId;
   final Value<String?> content;
   final Value<DateTime> createdAt;
   const MessageHistoriesCompanion({
@@ -3087,11 +3102,10 @@ class MessageHistoriesCompanion extends UpdateCompanion<MessageHistory> {
   MessageHistoriesCompanion.insert({
     this.id = const Value.absent(),
     required String messageId,
-    required int contactId,
+    this.contactId = const Value.absent(),
     this.content = const Value.absent(),
     this.createdAt = const Value.absent(),
-  })  : messageId = Value(messageId),
-        contactId = Value(contactId);
+  }) : messageId = Value(messageId);
   static Insertable<MessageHistory> custom({
     Expression<int>? id,
     Expression<String>? messageId,
@@ -3111,7 +3125,7 @@ class MessageHistoriesCompanion extends UpdateCompanion<MessageHistory> {
   MessageHistoriesCompanion copyWith(
       {Value<int>? id,
       Value<String>? messageId,
-      Value<int>? contactId,
+      Value<int?>? contactId,
       Value<String?>? content,
       Value<DateTime>? createdAt}) {
     return MessageHistoriesCompanion(
@@ -5827,15 +5841,6 @@ class $MessageActionsTable extends MessageActions
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $MessageActionsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
   static const VerificationMeta _messageIdMeta =
       const VerificationMeta('messageId');
   @override
@@ -5866,8 +5871,7 @@ class $MessageActionsTable extends MessageActions
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, messageId, contactId, type, actionAt];
+  List<GeneratedColumn> get $columns => [messageId, contactId, type, actionAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5878,9 +5882,6 @@ class $MessageActionsTable extends MessageActions
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
     if (data.containsKey('message_id')) {
       context.handle(_messageIdMeta,
           messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
@@ -5901,13 +5902,11 @@ class $MessageActionsTable extends MessageActions
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {messageId, contactId, type};
   @override
   MessageAction map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MessageAction(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       messageId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
       contactId: attachedDatabase.typeMapping
@@ -5930,21 +5929,18 @@ class $MessageActionsTable extends MessageActions
 }
 
 class MessageAction extends DataClass implements Insertable<MessageAction> {
-  final int id;
   final String messageId;
   final int contactId;
   final MessageActionType type;
   final DateTime actionAt;
   const MessageAction(
-      {required this.id,
-      required this.messageId,
+      {required this.messageId,
       required this.contactId,
       required this.type,
       required this.actionAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
     map['message_id'] = Variable<String>(messageId);
     map['contact_id'] = Variable<int>(contactId);
     {
@@ -5957,7 +5953,6 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
 
   MessageActionsCompanion toCompanion(bool nullToAbsent) {
     return MessageActionsCompanion(
-      id: Value(id),
       messageId: Value(messageId),
       contactId: Value(contactId),
       type: Value(type),
@@ -5969,7 +5964,6 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MessageAction(
-      id: serializer.fromJson<int>(json['id']),
       messageId: serializer.fromJson<String>(json['messageId']),
       contactId: serializer.fromJson<int>(json['contactId']),
       type: $MessageActionsTable.$convertertype
@@ -5981,7 +5975,6 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
       'messageId': serializer.toJson<String>(messageId),
       'contactId': serializer.toJson<int>(contactId),
       'type': serializer
@@ -5991,13 +5984,11 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
   }
 
   MessageAction copyWith(
-          {int? id,
-          String? messageId,
+          {String? messageId,
           int? contactId,
           MessageActionType? type,
           DateTime? actionAt}) =>
       MessageAction(
-        id: id ?? this.id,
         messageId: messageId ?? this.messageId,
         contactId: contactId ?? this.contactId,
         type: type ?? this.type,
@@ -6005,7 +5996,6 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
       );
   MessageAction copyWithCompanion(MessageActionsCompanion data) {
     return MessageAction(
-      id: data.id.present ? data.id.value : this.id,
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       type: data.type.present ? data.type.value : this.type,
@@ -6016,7 +6006,6 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
   @override
   String toString() {
     return (StringBuffer('MessageAction(')
-          ..write('id: $id, ')
           ..write('messageId: $messageId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
@@ -6026,12 +6015,11 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
   }
 
   @override
-  int get hashCode => Object.hash(id, messageId, contactId, type, actionAt);
+  int get hashCode => Object.hash(messageId, contactId, type, actionAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is MessageAction &&
-          other.id == this.id &&
           other.messageId == this.messageId &&
           other.contactId == this.contactId &&
           other.type == this.type &&
@@ -6039,64 +6027,61 @@ class MessageAction extends DataClass implements Insertable<MessageAction> {
 }
 
 class MessageActionsCompanion extends UpdateCompanion<MessageAction> {
-  final Value<int> id;
   final Value<String> messageId;
   final Value<int> contactId;
   final Value<MessageActionType> type;
   final Value<DateTime> actionAt;
+  final Value<int> rowid;
   const MessageActionsCompanion({
-    this.id = const Value.absent(),
     this.messageId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.type = const Value.absent(),
     this.actionAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   MessageActionsCompanion.insert({
-    this.id = const Value.absent(),
     required String messageId,
     required int contactId,
     required MessageActionType type,
     this.actionAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   })  : messageId = Value(messageId),
         contactId = Value(contactId),
         type = Value(type);
   static Insertable<MessageAction> custom({
-    Expression<int>? id,
     Expression<String>? messageId,
     Expression<int>? contactId,
     Expression<String>? type,
     Expression<DateTime>? actionAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
       if (messageId != null) 'message_id': messageId,
       if (contactId != null) 'contact_id': contactId,
       if (type != null) 'type': type,
       if (actionAt != null) 'action_at': actionAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   MessageActionsCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? messageId,
+      {Value<String>? messageId,
       Value<int>? contactId,
       Value<MessageActionType>? type,
-      Value<DateTime>? actionAt}) {
+      Value<DateTime>? actionAt,
+      Value<int>? rowid}) {
     return MessageActionsCompanion(
-      id: id ?? this.id,
       messageId: messageId ?? this.messageId,
       contactId: contactId ?? this.contactId,
       type: type ?? this.type,
       actionAt: actionAt ?? this.actionAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
     if (messageId.present) {
       map['message_id'] = Variable<String>(messageId.value);
     }
@@ -6110,17 +6095,20 @@ class MessageActionsCompanion extends UpdateCompanion<MessageAction> {
     if (actionAt.present) {
       map['action_at'] = Variable<DateTime>(actionAt.value);
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('MessageActionsCompanion(')
-          ..write('id: $id, ')
           ..write('messageId: $messageId, ')
           ..write('contactId: $contactId, ')
           ..write('type: $type, ')
-          ..write('actionAt: $actionAt')
+          ..write('actionAt: $actionAt, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -6266,19 +6254,10 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   Value<int> senderProfileCounter,
   Value<bool> accepted,
   Value<bool> requested,
-  Value<bool> hidden,
   Value<bool> blocked,
   Value<bool> verified,
   Value<bool> deleted,
-  Value<bool> alsoBestFriend,
-  Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
-  Value<int> totalMediaCounter,
-  Value<DateTime?> lastMessageSend,
-  Value<DateTime?> lastMessageReceived,
-  Value<DateTime?> lastFlameCounterChange,
-  Value<DateTime?> lastFlameSync,
-  Value<int> flameCounter,
 });
 typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<int> userId,
@@ -6289,19 +6268,10 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<int> senderProfileCounter,
   Value<bool> accepted,
   Value<bool> requested,
-  Value<bool> hidden,
   Value<bool> blocked,
   Value<bool> verified,
   Value<bool> deleted,
-  Value<bool> alsoBestFriend,
-  Value<int> deleteMessagesAfterXMinutes,
   Value<DateTime> createdAt,
-  Value<int> totalMediaCounter,
-  Value<DateTime?> lastMessageSend,
-  Value<DateTime?> lastMessageReceived,
-  Value<DateTime?> lastFlameCounterChange,
-  Value<DateTime?> lastFlameSync,
-  Value<int> flameCounter,
 });
 
 final class $$ContactsTableReferences
@@ -6444,9 +6414,6 @@ class $$ContactsTableFilterComposer
   ColumnFilters<bool> get requested => $composableBuilder(
       column: $table.requested, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get hidden => $composableBuilder(
-      column: $table.hidden, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<bool> get blocked => $composableBuilder(
       column: $table.blocked, builder: (column) => ColumnFilters(column));
 
@@ -6456,38 +6423,8 @@ class $$ContactsTableFilterComposer
   ColumnFilters<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get alsoBestFriend => $composableBuilder(
-      column: $table.alsoBestFriend,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get deleteMessagesAfterXMinutes => $composableBuilder(
-      column: $table.deleteMessagesAfterXMinutes,
-      builder: (column) => ColumnFilters(column));
-
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get totalMediaCounter => $composableBuilder(
-      column: $table.totalMediaCounter,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get lastMessageSend => $composableBuilder(
-      column: $table.lastMessageSend,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get lastMessageReceived => $composableBuilder(
-      column: $table.lastMessageReceived,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get lastFlameCounterChange => $composableBuilder(
-      column: $table.lastFlameCounterChange,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get lastFlameSync => $composableBuilder(
-      column: $table.lastFlameSync, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get flameCounter => $composableBuilder(
-      column: $table.flameCounter, builder: (column) => ColumnFilters(column));
 
   Expression<bool> messagesRefs(
       Expression<bool> Function($$MessagesTableFilterComposer f) f) {
@@ -6654,9 +6591,6 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<bool> get requested => $composableBuilder(
       column: $table.requested, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get hidden => $composableBuilder(
-      column: $table.hidden, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<bool> get blocked => $composableBuilder(
       column: $table.blocked, builder: (column) => ColumnOrderings(column));
 
@@ -6666,40 +6600,8 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<bool> get deleted => $composableBuilder(
       column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get alsoBestFriend => $composableBuilder(
-      column: $table.alsoBestFriend,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get deleteMessagesAfterXMinutes => $composableBuilder(
-      column: $table.deleteMessagesAfterXMinutes,
-      builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get totalMediaCounter => $composableBuilder(
-      column: $table.totalMediaCounter,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get lastMessageSend => $composableBuilder(
-      column: $table.lastMessageSend,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get lastMessageReceived => $composableBuilder(
-      column: $table.lastMessageReceived,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get lastFlameCounterChange => $composableBuilder(
-      column: $table.lastFlameCounterChange,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get lastFlameSync => $composableBuilder(
-      column: $table.lastFlameSync,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get flameCounter => $composableBuilder(
-      column: $table.flameCounter,
-      builder: (column) => ColumnOrderings(column));
 }
 
 class $$ContactsTableAnnotationComposer
@@ -6735,9 +6637,6 @@ class $$ContactsTableAnnotationComposer
   GeneratedColumn<bool> get requested =>
       $composableBuilder(column: $table.requested, builder: (column) => column);
 
-  GeneratedColumn<bool> get hidden =>
-      $composableBuilder(column: $table.hidden, builder: (column) => column);
-
   GeneratedColumn<bool> get blocked =>
       $composableBuilder(column: $table.blocked, builder: (column) => column);
 
@@ -6747,32 +6646,8 @@ class $$ContactsTableAnnotationComposer
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
 
-  GeneratedColumn<bool> get alsoBestFriend => $composableBuilder(
-      column: $table.alsoBestFriend, builder: (column) => column);
-
-  GeneratedColumn<int> get deleteMessagesAfterXMinutes => $composableBuilder(
-      column: $table.deleteMessagesAfterXMinutes, builder: (column) => column);
-
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<int> get totalMediaCounter => $composableBuilder(
-      column: $table.totalMediaCounter, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get lastMessageSend => $composableBuilder(
-      column: $table.lastMessageSend, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get lastMessageReceived => $composableBuilder(
-      column: $table.lastMessageReceived, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get lastFlameCounterChange => $composableBuilder(
-      column: $table.lastFlameCounterChange, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get lastFlameSync => $composableBuilder(
-      column: $table.lastFlameSync, builder: (column) => column);
-
-  GeneratedColumn<int> get flameCounter => $composableBuilder(
-      column: $table.flameCounter, builder: (column) => column);
 
   Expression<T> messagesRefs<T extends Object>(
       Expression<T> Function($$MessagesTableAnnotationComposer a) f) {
@@ -6943,19 +6818,10 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<int> senderProfileCounter = const Value.absent(),
             Value<bool> accepted = const Value.absent(),
             Value<bool> requested = const Value.absent(),
-            Value<bool> hidden = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
-            Value<bool> alsoBestFriend = const Value.absent(),
-            Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
-            Value<int> totalMediaCounter = const Value.absent(),
-            Value<DateTime?> lastMessageSend = const Value.absent(),
-            Value<DateTime?> lastMessageReceived = const Value.absent(),
-            Value<DateTime?> lastFlameCounterChange = const Value.absent(),
-            Value<DateTime?> lastFlameSync = const Value.absent(),
-            Value<int> flameCounter = const Value.absent(),
           }) =>
               ContactsCompanion(
             userId: userId,
@@ -6966,19 +6832,10 @@ class $$ContactsTableTableManager extends RootTableManager<
             senderProfileCounter: senderProfileCounter,
             accepted: accepted,
             requested: requested,
-            hidden: hidden,
             blocked: blocked,
             verified: verified,
             deleted: deleted,
-            alsoBestFriend: alsoBestFriend,
-            deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
-            totalMediaCounter: totalMediaCounter,
-            lastMessageSend: lastMessageSend,
-            lastMessageReceived: lastMessageReceived,
-            lastFlameCounterChange: lastFlameCounterChange,
-            lastFlameSync: lastFlameSync,
-            flameCounter: flameCounter,
           ),
           createCompanionCallback: ({
             Value<int> userId = const Value.absent(),
@@ -6989,19 +6846,10 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<int> senderProfileCounter = const Value.absent(),
             Value<bool> accepted = const Value.absent(),
             Value<bool> requested = const Value.absent(),
-            Value<bool> hidden = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
             Value<bool> deleted = const Value.absent(),
-            Value<bool> alsoBestFriend = const Value.absent(),
-            Value<int> deleteMessagesAfterXMinutes = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
-            Value<int> totalMediaCounter = const Value.absent(),
-            Value<DateTime?> lastMessageSend = const Value.absent(),
-            Value<DateTime?> lastMessageReceived = const Value.absent(),
-            Value<DateTime?> lastFlameCounterChange = const Value.absent(),
-            Value<DateTime?> lastFlameSync = const Value.absent(),
-            Value<int> flameCounter = const Value.absent(),
           }) =>
               ContactsCompanion.insert(
             userId: userId,
@@ -7012,19 +6860,10 @@ class $$ContactsTableTableManager extends RootTableManager<
             senderProfileCounter: senderProfileCounter,
             accepted: accepted,
             requested: requested,
-            hidden: hidden,
             blocked: blocked,
             verified: verified,
             deleted: deleted,
-            alsoBestFriend: alsoBestFriend,
-            deleteMessagesAfterXMinutes: deleteMessagesAfterXMinutes,
             createdAt: createdAt,
-            totalMediaCounter: totalMediaCounter,
-            lastMessageSend: lastMessageSend,
-            lastMessageReceived: lastMessageReceived,
-            lastFlameCounterChange: lastFlameCounterChange,
-            lastFlameSync: lastFlameSync,
-            flameCounter: flameCounter,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
@@ -7155,23 +6994,39 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
 typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   Value<String> groupId,
   required bool isGroupAdmin,
-  required bool isGroupOfTwo,
+  required bool isDirectChat,
   Value<bool> pinned,
   Value<bool> archived,
   required String groupName,
-  Value<DateTime> lastMessageExchange,
+  Value<int> totalMediaCounter,
+  Value<bool> alsoBestFriend,
+  Value<int> deleteMessagesAfterMilliseconds,
   Value<DateTime> createdAt,
+  Value<DateTime?> lastMessageSend,
+  Value<DateTime?> lastMessageReceived,
+  Value<DateTime?> lastFlameCounterChange,
+  Value<DateTime?> lastFlameSync,
+  Value<int> flameCounter,
+  Value<DateTime> lastMessageExchange,
   Value<int> rowid,
 });
 typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<String> groupId,
   Value<bool> isGroupAdmin,
-  Value<bool> isGroupOfTwo,
+  Value<bool> isDirectChat,
   Value<bool> pinned,
   Value<bool> archived,
   Value<String> groupName,
-  Value<DateTime> lastMessageExchange,
+  Value<int> totalMediaCounter,
+  Value<bool> alsoBestFriend,
+  Value<int> deleteMessagesAfterMilliseconds,
   Value<DateTime> createdAt,
+  Value<DateTime?> lastMessageSend,
+  Value<DateTime?> lastMessageReceived,
+  Value<DateTime?> lastFlameCounterChange,
+  Value<DateTime?> lastFlameSync,
+  Value<int> flameCounter,
+  Value<DateTime> lastMessageExchange,
   Value<int> rowid,
 });
 
@@ -7209,8 +7064,8 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
   ColumnFilters<bool> get isGroupAdmin => $composableBuilder(
       column: $table.isGroupAdmin, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get isGroupOfTwo => $composableBuilder(
-      column: $table.isGroupOfTwo, builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get isDirectChat => $composableBuilder(
+      column: $table.isDirectChat, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get pinned => $composableBuilder(
       column: $table.pinned, builder: (column) => ColumnFilters(column));
@@ -7221,12 +7076,42 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
   ColumnFilters<String> get groupName => $composableBuilder(
       column: $table.groupName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get lastMessageExchange => $composableBuilder(
-      column: $table.lastMessageExchange,
+  ColumnFilters<int> get totalMediaCounter => $composableBuilder(
+      column: $table.totalMediaCounter,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get alsoBestFriend => $composableBuilder(
+      column: $table.alsoBestFriend,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get deleteMessagesAfterMilliseconds => $composableBuilder(
+      column: $table.deleteMessagesAfterMilliseconds,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastMessageSend => $composableBuilder(
+      column: $table.lastMessageSend,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastMessageReceived => $composableBuilder(
+      column: $table.lastMessageReceived,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastFlameCounterChange => $composableBuilder(
+      column: $table.lastFlameCounterChange,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastFlameSync => $composableBuilder(
+      column: $table.lastFlameSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get flameCounter => $composableBuilder(
+      column: $table.flameCounter, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastMessageExchange => $composableBuilder(
+      column: $table.lastMessageExchange,
+      builder: (column) => ColumnFilters(column));
 
   Expression<bool> messagesRefs(
       Expression<bool> Function($$MessagesTableFilterComposer f) f) {
@@ -7265,8 +7150,8 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
       column: $table.isGroupAdmin,
       builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get isGroupOfTwo => $composableBuilder(
-      column: $table.isGroupOfTwo,
+  ColumnOrderings<bool> get isDirectChat => $composableBuilder(
+      column: $table.isDirectChat,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<bool> get pinned => $composableBuilder(
@@ -7278,12 +7163,45 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
   ColumnOrderings<String> get groupName => $composableBuilder(
       column: $table.groupName, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get lastMessageExchange => $composableBuilder(
-      column: $table.lastMessageExchange,
+  ColumnOrderings<int> get totalMediaCounter => $composableBuilder(
+      column: $table.totalMediaCounter,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get alsoBestFriend => $composableBuilder(
+      column: $table.alsoBestFriend,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get deleteMessagesAfterMilliseconds =>
+      $composableBuilder(
+          column: $table.deleteMessagesAfterMilliseconds,
+          builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastMessageSend => $composableBuilder(
+      column: $table.lastMessageSend,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastMessageReceived => $composableBuilder(
+      column: $table.lastMessageReceived,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastFlameCounterChange => $composableBuilder(
+      column: $table.lastFlameCounterChange,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastFlameSync => $composableBuilder(
+      column: $table.lastFlameSync,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get flameCounter => $composableBuilder(
+      column: $table.flameCounter,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastMessageExchange => $composableBuilder(
+      column: $table.lastMessageExchange,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$GroupsTableAnnotationComposer
@@ -7301,8 +7219,8 @@ class $$GroupsTableAnnotationComposer
   GeneratedColumn<bool> get isGroupAdmin => $composableBuilder(
       column: $table.isGroupAdmin, builder: (column) => column);
 
-  GeneratedColumn<bool> get isGroupOfTwo => $composableBuilder(
-      column: $table.isGroupOfTwo, builder: (column) => column);
+  GeneratedColumn<bool> get isDirectChat => $composableBuilder(
+      column: $table.isDirectChat, builder: (column) => column);
 
   GeneratedColumn<bool> get pinned =>
       $composableBuilder(column: $table.pinned, builder: (column) => column);
@@ -7313,11 +7231,37 @@ class $$GroupsTableAnnotationComposer
   GeneratedColumn<String> get groupName =>
       $composableBuilder(column: $table.groupName, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get lastMessageExchange => $composableBuilder(
-      column: $table.lastMessageExchange, builder: (column) => column);
+  GeneratedColumn<int> get totalMediaCounter => $composableBuilder(
+      column: $table.totalMediaCounter, builder: (column) => column);
+
+  GeneratedColumn<bool> get alsoBestFriend => $composableBuilder(
+      column: $table.alsoBestFriend, builder: (column) => column);
+
+  GeneratedColumn<int> get deleteMessagesAfterMilliseconds =>
+      $composableBuilder(
+          column: $table.deleteMessagesAfterMilliseconds,
+          builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastMessageSend => $composableBuilder(
+      column: $table.lastMessageSend, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastMessageReceived => $composableBuilder(
+      column: $table.lastMessageReceived, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastFlameCounterChange => $composableBuilder(
+      column: $table.lastFlameCounterChange, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastFlameSync => $composableBuilder(
+      column: $table.lastFlameSync, builder: (column) => column);
+
+  GeneratedColumn<int> get flameCounter => $composableBuilder(
+      column: $table.flameCounter, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastMessageExchange => $composableBuilder(
+      column: $table.lastMessageExchange, builder: (column) => column);
 
   Expression<T> messagesRefs<T extends Object>(
       Expression<T> Function($$MessagesTableAnnotationComposer a) f) {
@@ -7366,45 +7310,77 @@ class $$GroupsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> groupId = const Value.absent(),
             Value<bool> isGroupAdmin = const Value.absent(),
-            Value<bool> isGroupOfTwo = const Value.absent(),
+            Value<bool> isDirectChat = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
             Value<bool> archived = const Value.absent(),
             Value<String> groupName = const Value.absent(),
-            Value<DateTime> lastMessageExchange = const Value.absent(),
+            Value<int> totalMediaCounter = const Value.absent(),
+            Value<bool> alsoBestFriend = const Value.absent(),
+            Value<int> deleteMessagesAfterMilliseconds = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime?> lastMessageSend = const Value.absent(),
+            Value<DateTime?> lastMessageReceived = const Value.absent(),
+            Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+            Value<DateTime?> lastFlameSync = const Value.absent(),
+            Value<int> flameCounter = const Value.absent(),
+            Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               GroupsCompanion(
             groupId: groupId,
             isGroupAdmin: isGroupAdmin,
-            isGroupOfTwo: isGroupOfTwo,
+            isDirectChat: isDirectChat,
             pinned: pinned,
             archived: archived,
             groupName: groupName,
-            lastMessageExchange: lastMessageExchange,
+            totalMediaCounter: totalMediaCounter,
+            alsoBestFriend: alsoBestFriend,
+            deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds,
             createdAt: createdAt,
+            lastMessageSend: lastMessageSend,
+            lastMessageReceived: lastMessageReceived,
+            lastFlameCounterChange: lastFlameCounterChange,
+            lastFlameSync: lastFlameSync,
+            flameCounter: flameCounter,
+            lastMessageExchange: lastMessageExchange,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             Value<String> groupId = const Value.absent(),
             required bool isGroupAdmin,
-            required bool isGroupOfTwo,
+            required bool isDirectChat,
             Value<bool> pinned = const Value.absent(),
             Value<bool> archived = const Value.absent(),
             required String groupName,
-            Value<DateTime> lastMessageExchange = const Value.absent(),
+            Value<int> totalMediaCounter = const Value.absent(),
+            Value<bool> alsoBestFriend = const Value.absent(),
+            Value<int> deleteMessagesAfterMilliseconds = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime?> lastMessageSend = const Value.absent(),
+            Value<DateTime?> lastMessageReceived = const Value.absent(),
+            Value<DateTime?> lastFlameCounterChange = const Value.absent(),
+            Value<DateTime?> lastFlameSync = const Value.absent(),
+            Value<int> flameCounter = const Value.absent(),
+            Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               GroupsCompanion.insert(
             groupId: groupId,
             isGroupAdmin: isGroupAdmin,
-            isGroupOfTwo: isGroupOfTwo,
+            isDirectChat: isDirectChat,
             pinned: pinned,
             archived: archived,
             groupName: groupName,
-            lastMessageExchange: lastMessageExchange,
+            totalMediaCounter: totalMediaCounter,
+            alsoBestFriend: alsoBestFriend,
+            deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds,
             createdAt: createdAt,
+            lastMessageSend: lastMessageSend,
+            lastMessageReceived: lastMessageReceived,
+            lastFlameCounterChange: lastFlameCounterChange,
+            lastFlameSync: lastFlameSync,
+            flameCounter: flameCounter,
+            lastMessageExchange: lastMessageExchange,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -7871,8 +7847,9 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<Uint8List?> downloadToken,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
-  Value<bool> isEdited,
+  Value<DateTime?> openedAt,
   Value<DateTime> createdAt,
+  Value<DateTime?> modifiedAt,
   Value<int> rowid,
 });
 typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
@@ -7886,8 +7863,9 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<Uint8List?> downloadToken,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
-  Value<bool> isEdited,
+  Value<DateTime?> openedAt,
   Value<DateTime> createdAt,
+  Value<DateTime?> modifiedAt,
   Value<int> rowid,
 });
 
@@ -8051,11 +8029,14 @@ class $$MessagesTableFilterComposer
       column: $table.isDeletedFromSender,
       builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get isEdited => $composableBuilder(
-      column: $table.isEdited, builder: (column) => ColumnFilters(column));
+  ColumnFilters<DateTime> get openedAt => $composableBuilder(
+      column: $table.openedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get modifiedAt => $composableBuilder(
+      column: $table.modifiedAt, builder: (column) => ColumnFilters(column));
 
   $$GroupsTableFilterComposer get groupId {
     final $$GroupsTableFilterComposer composer = $composerBuilder(
@@ -8251,11 +8232,14 @@ class $$MessagesTableOrderingComposer
       column: $table.isDeletedFromSender,
       builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get isEdited => $composableBuilder(
-      column: $table.isEdited, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<DateTime> get openedAt => $composableBuilder(
+      column: $table.openedAt, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get modifiedAt => $composableBuilder(
+      column: $table.modifiedAt, builder: (column) => ColumnOrderings(column));
 
   $$GroupsTableOrderingComposer get groupId {
     final $$GroupsTableOrderingComposer composer = $composerBuilder(
@@ -8365,11 +8349,14 @@ class $$MessagesTableAnnotationComposer
   GeneratedColumn<bool> get isDeletedFromSender => $composableBuilder(
       column: $table.isDeletedFromSender, builder: (column) => column);
 
-  GeneratedColumn<bool> get isEdited =>
-      $composableBuilder(column: $table.isEdited, builder: (column) => column);
+  GeneratedColumn<DateTime> get openedAt =>
+      $composableBuilder(column: $table.openedAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get modifiedAt => $composableBuilder(
+      column: $table.modifiedAt, builder: (column) => column);
 
   $$GroupsTableAnnotationComposer get groupId {
     final $$GroupsTableAnnotationComposer composer = $composerBuilder(
@@ -8577,8 +8564,9 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
-            Value<bool> isEdited = const Value.absent(),
+            Value<DateTime?> openedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime?> modifiedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MessagesCompanion(
@@ -8592,8 +8580,9 @@ class $$MessagesTableTableManager extends RootTableManager<
             downloadToken: downloadToken,
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
-            isEdited: isEdited,
+            openedAt: openedAt,
             createdAt: createdAt,
+            modifiedAt: modifiedAt,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -8607,8 +8596,9 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
-            Value<bool> isEdited = const Value.absent(),
+            Value<DateTime?> openedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime?> modifiedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MessagesCompanion.insert(
@@ -8622,8 +8612,9 @@ class $$MessagesTableTableManager extends RootTableManager<
             downloadToken: downloadToken,
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
-            isEdited: isEdited,
+            openedAt: openedAt,
             createdAt: createdAt,
+            modifiedAt: modifiedAt,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -8788,7 +8779,7 @@ typedef $$MessageHistoriesTableCreateCompanionBuilder
     = MessageHistoriesCompanion Function({
   Value<int> id,
   required String messageId,
-  required int contactId,
+  Value<int?> contactId,
   Value<String?> content,
   Value<DateTime> createdAt,
 });
@@ -8796,7 +8787,7 @@ typedef $$MessageHistoriesTableUpdateCompanionBuilder
     = MessageHistoriesCompanion Function({
   Value<int> id,
   Value<String> messageId,
-  Value<int> contactId,
+  Value<int?> contactId,
   Value<String?> content,
   Value<DateTime> createdAt,
 });
@@ -8974,7 +8965,7 @@ class $$MessageHistoriesTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<String> messageId = const Value.absent(),
-            Value<int> contactId = const Value.absent(),
+            Value<int?> contactId = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
@@ -8988,7 +8979,7 @@ class $$MessageHistoriesTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String messageId,
-            required int contactId,
+            Value<int?> contactId = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
@@ -11220,19 +11211,19 @@ typedef $$SignalContactSignedPreKeysTableProcessedTableManager
         PrefetchHooks Function({bool contactId})>;
 typedef $$MessageActionsTableCreateCompanionBuilder = MessageActionsCompanion
     Function({
-  Value<int> id,
   required String messageId,
   required int contactId,
   required MessageActionType type,
   Value<DateTime> actionAt,
+  Value<int> rowid,
 });
 typedef $$MessageActionsTableUpdateCompanionBuilder = MessageActionsCompanion
     Function({
-  Value<int> id,
   Value<String> messageId,
   Value<int> contactId,
   Value<MessageActionType> type,
   Value<DateTime> actionAt,
+  Value<int> rowid,
 });
 
 final class $$MessageActionsTableReferences
@@ -11265,9 +11256,6 @@ class $$MessageActionsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
   ColumnFilters<int> get contactId => $composableBuilder(
       column: $table.contactId, builder: (column) => ColumnFilters(column));
 
@@ -11309,9 +11297,6 @@ class $$MessageActionsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<int> get contactId => $composableBuilder(
       column: $table.contactId, builder: (column) => ColumnOrderings(column));
 
@@ -11351,9 +11336,6 @@ class $$MessageActionsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
   GeneratedColumn<int> get contactId =>
       $composableBuilder(column: $table.contactId, builder: (column) => column);
 
@@ -11407,32 +11389,32 @@ class $$MessageActionsTableTableManager extends RootTableManager<
           createComputedFieldComposer: () =>
               $$MessageActionsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
             Value<String> messageId = const Value.absent(),
             Value<int> contactId = const Value.absent(),
             Value<MessageActionType> type = const Value.absent(),
             Value<DateTime> actionAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               MessageActionsCompanion(
-            id: id,
             messageId: messageId,
             contactId: contactId,
             type: type,
             actionAt: actionAt,
+            rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
             required String messageId,
             required int contactId,
             required MessageActionType type,
             Value<DateTime> actionAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
           }) =>
               MessageActionsCompanion.insert(
-            id: id,
             messageId: messageId,
             contactId: contactId,
             type: type,
             actionAt: actionAt,
+            rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (

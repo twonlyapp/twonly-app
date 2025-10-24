@@ -119,6 +119,15 @@ Future<void> _createUploadRequest(MediaFileService media) async {
   for (final message in messages) {
     final groupMembers =
         await twonlyDB.groupsDao.getGroupMembers(message.groupId);
+
+    if (media.mediaFile.reuploadRequestedBy == null) {
+      await twonlyDB.groupsDao.incFlameCounter(
+        message.groupId,
+        false,
+        message.createdAt,
+      );
+    }
+
     for (final groupMember in groupMembers) {
       /// only send the upload to the users
       if (media.mediaFile.reuploadRequestedBy != null) {
@@ -127,12 +136,6 @@ Future<void> _createUploadRequest(MediaFileService media) async {
           continue;
         }
       }
-
-      await twonlyDB.contactsDao.incFlameCounter(
-        groupMember.contactId,
-        false,
-        message.createdAt,
-      );
 
       final downloadToken = getRandomUint8List(32);
 
@@ -169,7 +172,8 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
       if (cipherText == null) {
         Log.error(
-            'Could not generate ciphertext message for ${groupMember.contactId}');
+          'Could not generate ciphertext message for ${groupMember.contactId}',
+        );
       }
 
       final messageOnSuccess = TextMessage()

@@ -88,7 +88,7 @@ Future<void> handleMediaError(MediaFile media) async {
     EncryptedContent(
       mediaUpdate: EncryptedContent_MediaUpdate(
         type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
-        targetMessageId: message.messageId,
+        targetMediaId: message.mediaId,
       ),
     ),
   );

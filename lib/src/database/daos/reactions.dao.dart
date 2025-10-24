@@ -43,4 +43,15 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
       Log.error(e);
     }
   }
+
+  Stream<List<Reaction>> watchReactions(String messageId) {
+    return (select(reactions)
+          ..where((t) => t.messageId.equals(messageId))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .watch();
+  }
+
+  Future<void> insertReaction(ReactionsCompanion reaction) async {
+    await into(reactions).insert(reaction);
+  }
 }

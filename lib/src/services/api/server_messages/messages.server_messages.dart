@@ -10,7 +10,8 @@ Future<void> handleMessageUpdate(
   switch (messageUpdate.type) {
     case EncryptedContent_MessageUpdate_Type.OPENED:
       Log.info(
-          'Opened message ${messageUpdate.multipleSenderMessageIds.length}');
+        'Opened message ${messageUpdate.multipleSenderMessageIds.length}',
+      );
       for (final senderMessageId in messageUpdate.multipleSenderMessageIds) {
         await twonlyDB.messagesDao.handleMessageOpened(
           contactId,

@@ -5,8 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
 import 'package:twonly/src/views/settings/account.view.dart';
 import 'package:twonly/src/views/settings/appearance.view.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
@@ -72,7 +72,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                             color: context.color.surface.withAlpha(0),
                             child: Row(
                               children: [
-                                ContactAvatar(
+                                AvatarIcon(
                                   userData: userData,
                                   fontSize: 30,
                                 ),

@@ -42,7 +42,7 @@ part 'twonly.db.g.dart';
     SignalSessionStores,
     SignalContactPreKeys,
     SignalContactSignedPreKeys,
-    MessageActions
+    MessageActions,
   ],
   daos: [
     MessagesDao,

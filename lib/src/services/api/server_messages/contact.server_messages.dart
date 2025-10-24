@@ -82,24 +82,22 @@ Future<void> handleFlameSync(
   EncryptedContent_FlameSync flameSync,
 ) async {
   Log.info('Got a flameSync from $contactId');
-  final contact = await twonlyDB.contactsDao
-      .getContactByUserId(contactId)
-      .getSingleOrNull();
 
-  if (contact == null || contact.lastFlameCounterChange != null) return;
+  final group = await twonlyDB.groupsDao.getDirectChat(contactId);
+  if (group == null || group.lastFlameCounterChange != null) return;
 
-  var updates = ContactsCompanion(
+  var updates = GroupsCompanion(
     alsoBestFriend: Value(flameSync.bestFriend),
   );
-  if (isToday(contact.lastFlameCounterChange!) &&
+  if (isToday(group.lastFlameCounterChange!) &&
       isToday(fromTimestamp(flameSync.lastFlameCounterChange))) {
-    if (flameSync.flameCounter > contact.flameCounter) {
-      updates = ContactsCompanion(
+    if (flameSync.flameCounter > group.flameCounter) {
+      updates = GroupsCompanion(
         flameCounter: Value(flameSync.flameCounter.toInt()),
       );
     }
   }
-  await twonlyDB.contactsDao.updateContact(contactId, updates);
+  await twonlyDB.groupsDao.updateGroup(group.groupId, updates);
 }
 
 Future<int?> checkForProfileUpdate(

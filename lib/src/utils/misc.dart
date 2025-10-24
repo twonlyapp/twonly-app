@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -8,11 +7,14 @@ import 'package:intl/intl.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
@@ -283,4 +285,29 @@ PieTheme getPieCanvasTheme(BuildContext context) {
       fontWeight: FontWeight.w600,
     ),
   );
+}
+
+Color getMessageColorFromType(
+  Message message,
+  MediaFile? mediaFile,
+  BuildContext context,
+) {
+  Color color;
+
+  if (message.type == MessageType.text) {
+    color = Colors.blueAccent;
+  } else if (mediaFile != null) {
+    if (mediaFile.requiresAuthentication) {
+      color = context.color.primary;
+    } else {
+      if (mediaFile.type == MediaType.video) {
+        color = const Color.fromARGB(255, 243, 33, 208);
+      } else {
+        color = Colors.redAccent;
+      }
+    }
+  } else {
+    return (isDarkMode(context)) ? Colors.white : Colors.black;
+  }
+  return color;
 }

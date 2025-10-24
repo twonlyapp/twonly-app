@@ -7,15 +7,31 @@ class Groups extends Table {
   TextColumn get groupId => text().clientDefault(() => uuid.v4())();
 
   BoolColumn get isGroupAdmin => boolean()();
-  BoolColumn get isGroupOfTwo => boolean()();
+  BoolColumn get isDirectChat => boolean()();
   BoolColumn get pinned => boolean().withDefault(const Constant(false))();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
 
   TextColumn get groupName => text()();
 
+  IntColumn get totalMediaCounter => integer().withDefault(const Constant(0))();
+
+  BoolColumn get alsoBestFriend =>
+      boolean().withDefault(const Constant(false))();
+
+  IntColumn get deleteMessagesAfterMilliseconds =>
+      integer().withDefault(const Constant(1000 * 60 * 24))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  DateTimeColumn get lastMessageSend => dateTime().nullable()();
+  DateTimeColumn get lastMessageReceived => dateTime().nullable()();
+  DateTimeColumn get lastFlameCounterChange => dateTime().nullable()();
+  DateTimeColumn get lastFlameSync => dateTime().nullable()();
+
+  IntColumn get flameCounter => integer().withDefault(const Constant(0))();
+
   DateTimeColumn get lastMessageExchange =>
       dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {groupId};

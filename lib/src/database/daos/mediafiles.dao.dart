@@ -46,6 +46,11 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         .getSingleOrNull();
   }
 
+  Stream<MediaFile?> watchMedia(String mediaId) {
+    return (select(mediaFiles)..where((t) => t.mediaId.equals(mediaId)))
+        .watchSingleOrNull();
+  }
+
   Future<void> resetPendingDownloadState() async {
     await (update(mediaFiles)
           ..where(

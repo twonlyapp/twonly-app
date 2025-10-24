@@ -1,14 +1,14 @@
 // ignore_for_file: inference_failure_on_function_invocation
 
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/message_old.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
+    as pb;
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
@@ -48,24 +48,22 @@ class MessageContextMenu extends StatelessWidget {
             ) as EmojiLayerData?;
             if (layer == null) return;
 
-            await sendTextMessage(
-              message.contactId,
-              TextMessageContent(
-                text: layer.text,
-                responseToMessageId: message.messageOtherId,
-                responseToOtherMessageId:
-                    (message.messageOtherId == null) ? message.messageId : null,
+            await twonlyDB.reactionsDao.insertReaction(
+              ReactionsCompanion(
+                messageId: Value(message.messageId),
+                emoji: Value(layer.text),
               ),
-              (message.messageOtherId != null)
-                  ? PushNotification(
-                      kind: (message.kind == MessageKind.textMessage)
-                          ? PushKind.reactionToText
-                          : (getMediaContent(message)!.isVideo)
-                              ? PushKind.reactionToVideo
-                              : PushKind.reactionToImage,
-                      reactionContent: layer.text,
-                    )
-                  : null,
+            );
+
+            await sendCipherTextToGroup(
+              message.groupId,
+              pb.EncryptedContent(
+                reaction: pb.EncryptedContent_Reaction(
+                  targetMessageId: message.messageId,
+                  emoji: layer.text,
+                  remove: false,
+                ),
+              ),
             );
           },
           child: const FaIcon(FontAwesomeIcons.faceLaugh),
@@ -75,15 +73,15 @@ class MessageContextMenu extends StatelessWidget {
           onSelect: onResponseTriggered,
           child: const FaIcon(FontAwesomeIcons.reply),
         ),
-        PieAction(
-          tooltip: Text(context.lang.copy),
-          onSelect: () async {
-            final text = getMessageText(message);
-            await Clipboard.setData(ClipboardData(text: text));
-            await HapticFeedback.heavyImpact();
-          },
-          child: const FaIcon(FontAwesomeIcons.solidCopy),
-        ),
+        if (message.content != null)
+          PieAction(
+            tooltip: Text(context.lang.copy),
+            onSelect: () async {
+              await Clipboard.setData(ClipboardData(text: message.content!));
+              await HapticFeedback.heavyImpact();
+            },
+            child: const FaIcon(FontAwesomeIcons.solidCopy),
+          ),
         PieAction(
           tooltip: Text(context.lang.delete),
           onSelect: () async {
@@ -94,8 +92,7 @@ class MessageContextMenu extends StatelessWidget {
               customOk: context.lang.deleteOkBtn,
             );
             if (delete) {
-              await twonlyDB.messagesDao
-                  .deleteMessagesByMessageId(message.messageId);
+              await twonlyDB.messagesDao.deleteMessagesById(message.messageId);
             }
           },
           child: const FaIcon(FontAwesomeIcons.trash),

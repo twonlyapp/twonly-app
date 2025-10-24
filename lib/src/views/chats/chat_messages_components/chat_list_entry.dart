@@ -1,10 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:twonly/src/database/tables/messages.table.dart'
+    hide MessageActions;
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_media_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_reaction_row.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_text_entry.dart';
@@ -14,21 +13,19 @@ import 'package:twonly/src/views/chats/chat_messages_components/response_contain
 
 class ChatListEntry extends StatefulWidget {
   const ChatListEntry(
-    this.msg,
-    this.contact,
+    this.message,
+    this.group,
     this.galleryItems,
-    this.lastMessageFromSameUser,
-    this.otherReactions, {
+    this.lastMessageFromSameUser, {
     required this.onResponseTriggered,
     required this.scrollToMessage,
     super.key,
   });
-  final ChatMessage msg;
-  final Contact contact;
+  final Message message;
+  final Group group;
   final bool lastMessageFromSameUser;
-  final List<Message> otherReactions;
   final List<MemoryItem> galleryItems;
-  final void Function(int) scrollToMessage;
+  final void Function(String) scrollToMessage;
   final void Function() onResponseTriggered;
 
   @override
@@ -36,26 +33,22 @@ class ChatListEntry extends StatefulWidget {
 }
 
 class _ChatListEntryState extends State<ChatListEntry> {
-  MessageContent? content;
-  String? textMessage;
+  MediaFileService? mediaService;
 
   @override
   void initState() {
+    initAsync();
     super.initState();
-    final msgContent = MessageContent.fromJson(
-      widget.msg.message.kind,
-      jsonDecode(widget.msg.message.contentJson!) as Map,
-    );
-    if (msgContent is TextMessageContent) {
-      textMessage = msgContent.text;
-    }
-    content = msgContent;
+  }
+
+  Future<void> initAsync() async {
+    mediaService = await MediaFileService.fromMediaId(widget.message.messageId);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (content == null) return Container();
-    final right = widget.msg.message.messageOtherId == null;
+    final right = widget.message.senderId == null;
 
     return Align(
       alignment: right ? Alignment.centerRight : Alignment.centerLeft,
@@ -64,7 +57,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
             ? const EdgeInsets.only(top: 5, right: 10, left: 10)
             : const EdgeInsets.only(top: 5, bottom: 20, right: 10, left: 10),
         child: MessageContextMenu(
-          message: widget.msg.message,
+          message: widget.message,
           onResponseTriggered: widget.onResponseTriggered,
           child: Column(
             mainAxisAlignment:
@@ -73,36 +66,36 @@ class _ChatListEntryState extends State<ChatListEntry> {
                 right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               MessageActions(
-                message: widget.msg.message,
+                message: widget.message,
                 onResponseTriggered: widget.onResponseTriggered,
                 child: Stack(
                   alignment:
                       right ? Alignment.centerRight : Alignment.centerLeft,
                   children: [
                     ResponseContainer(
-                      msg: widget.msg,
-                      contact: widget.contact,
+                      msg: widget.message,
+                      group: widget.group,
+                      mediaService: mediaService,
                       scrollToMessage: widget.scrollToMessage,
-                      child: (textMessage != null)
+                      child: (widget.message.type == MessageType.text)
                           ? ChatTextEntry(
-                              message: widget.msg,
-                              text: textMessage!,
-                              hasReaction: widget.otherReactions.isNotEmpty,
+                              message: widget.message,
                             )
-                          : ChatMediaEntry(
-                              message: widget.msg.message,
-                              contact: widget.contact,
-                              galleryItems: widget.galleryItems,
-                              content: content!,
-                            ),
+                          : (mediaService == null)
+                              ? null
+                              : ChatMediaEntry(
+                                  message: widget.message,
+                                  group: widget.group,
+                                  mediaService: mediaService!,
+                                  galleryItems: widget.galleryItems,
+                                ),
                     ),
                     Positioned(
                       bottom: 5,
                       left: 5,
                       right: 5,
                       child: ReactionRow(
-                        otherReactions: widget.otherReactions,
-                        message: widget.msg.message,
+                        message: widget.message,
                       ),
                     ),
                   ],

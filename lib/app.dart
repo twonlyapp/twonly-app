@@ -43,18 +43,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future<void> setUserPlan() async {
     final user = await getUser();
-    globalBestFriendUserId = -1;
     if (user != null && mounted) {
-      if (user.myBestFriendContactId != null) {
-        final contact = await twonlyDB.contactsDao
-            .getContactByUserId(user.myBestFriendContactId!)
-            .getSingleOrNull();
-        if (contact != null) {
-          if (contact.alsoBestFriend) {
-            globalBestFriendUserId = user.myBestFriendContactId ?? 0;
-          }
-        }
-      }
       if (mounted) {
         await context
             .read<CustomChangeProvider>()

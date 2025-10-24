@@ -8,7 +8,9 @@ mixin _$MessagesDaoMixin on DatabaseAccessor<TwonlyDB> {
   $ContactsTable get contacts => attachedDatabase.contacts;
   $MediaFilesTable get mediaFiles => attachedDatabase.mediaFiles;
   $MessagesTable get messages => attachedDatabase.messages;
+  $ReactionsTable get reactions => attachedDatabase.reactions;
   $MessageHistoriesTable get messageHistories =>
       attachedDatabase.messageHistories;
+  $GroupMembersTable get groupMembers => attachedDatabase.groupMembers;
   $MessageActionsTable get messageActions => attachedDatabase.messageActions;
 }

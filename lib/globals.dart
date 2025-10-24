@@ -27,4 +27,3 @@ void Function() globalCallbackNewDeviceRegistered = () {};
 void Function(String planId) globalCallbackUpdatePlan = (String planId) {};
 
 bool globalIsAppInBackground = true;
-int globalBestFriendUserId = -1;

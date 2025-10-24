@@ -20,79 +20,6 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     }
   }
 
-  Future<int> incFlameCounter(
-    int contactId,
-    bool received,
-    DateTime timestamp,
-  ) async {
-    final contact = (await (select(contacts)
-              ..where((t) => t.userId.equals(contactId)))
-            .get())
-        .first;
-
-    final totalMediaCounter = contact.totalMediaCounter + 1;
-    var flameCounter = contact.flameCounter;
-
-    if (contact.lastMessageReceived != null &&
-        contact.lastMessageSend != null) {
-      final now = DateTime.now();
-      final startOfToday = DateTime(now.year, now.month, now.day);
-      final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
-      if (contact.lastMessageSend!.isBefore(twoDaysAgo) ||
-          contact.lastMessageReceived!.isBefore(twoDaysAgo)) {
-        flameCounter = 0;
-      }
-    }
-
-    var lastMessageSend = const Value<DateTime?>.absent();
-    var lastMessageReceived = const Value<DateTime?>.absent();
-    var lastFlameCounterChange = const Value<DateTime?>.absent();
-
-    if (contact.lastFlameCounterChange != null) {
-      final now = DateTime.now();
-      final startOfToday = DateTime(now.year, now.month, now.day);
-
-      if (contact.lastFlameCounterChange!.isBefore(startOfToday)) {
-        // last flame update was yesterday. check if it can be updated.
-        var updateFlame = false;
-        if (received) {
-          if (contact.lastMessageSend != null &&
-              contact.lastMessageSend!.isAfter(startOfToday)) {
-            // today a message was already send -> update flame
-            updateFlame = true;
-          }
-        } else if (contact.lastMessageReceived != null &&
-            contact.lastMessageReceived!.isAfter(startOfToday)) {
-          // today a message was already received -> update flame
-          updateFlame = true;
-        }
-        if (updateFlame) {
-          flameCounter += 1;
-          lastFlameCounterChange = Value(timestamp);
-        }
-      }
-    } else {
-      // There where no message until no...
-      lastFlameCounterChange = Value(timestamp);
-    }
-
-    if (received) {
-      lastMessageReceived = Value(timestamp);
-    } else {
-      lastMessageSend = Value(timestamp);
-    }
-
-    return (update(contacts)..where((t) => t.userId.equals(contactId))).write(
-      ContactsCompanion(
-        totalMediaCounter: Value(totalMediaCounter),
-        lastFlameCounterChange: lastFlameCounterChange,
-        lastMessageReceived: lastMessageReceived,
-        lastMessageSend: lastMessageSend,
-        flameCounter: Value(flameCounter),
-      ),
-    );
-  }
-
   SingleOrNullSelectable<Contact> getContactByUserId(int userId) {
     return select(contacts)..where((t) => t.userId.equals(userId));
   }
@@ -135,37 +62,6 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
         .watchSingleOrNull();
   }
 
-  // Stream<List<Contact>> watchContactsForShareView() {
-  //   return (select(contacts)
-  //         ..where(
-  //           (t) =>
-  //               t.accepted.equals(true) &
-  //               t.blocked.equals(false) &
-  //               t.deleted.equals(false),
-  //         )
-  //         ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
-  //       .watch();
-  // }
-
-  // Stream<List<Contact>> watchContactsForStartNewChat() {
-  //   return (select(contacts)
-  //         ..where((t) => t.accepted.equals(true) & t.blocked.equals(false))
-  //         ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
-  //       .watch();
-  // }
-
-  // Stream<List<Contact>> watchContactsForChatList() {
-  //   return (select(contacts)
-  //         ..where(
-  //           (t) =>
-  //               t.accepted.equals(true) &
-  //               t.blocked.equals(false) &
-  //               t.archived.equals(false),
-  //         )
-  //         ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
-  //       .watch();
-  // }
-
   Future<List<Contact>> getAllNotBlockedContacts() {
     return (select(contacts)..where((t) => t.blocked.equals(false))).get();
   }
@@ -188,30 +84,14 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     return query.map((row) => row.read(count)).watchSingle();
   }
 
+  Stream<List<Contact>> watchAllAcceptedContacts() {
+    return (select(contacts)
+          ..where((t) => t.blocked.equals(false) & t.accepted.equals(true)))
+        .watch();
+  }
+
   Stream<List<Contact>> watchAllContacts() {
     return select(contacts).watch();
-  }
-
-  Future<void> modifyFlameCounterForTesting() async {
-    await update(contacts).write(
-      ContactsCompanion(
-        lastFlameCounterChange: Value(DateTime.now()),
-        flameCounter: const Value(1337),
-        lastFlameSync: const Value(null),
-      ),
-    );
-  }
-
-  Stream<int> watchFlameCounter(int userId) {
-    return (select(contacts)
-          ..where(
-            (u) =>
-                u.userId.equals(userId) &
-                u.lastMessageReceived.isNotNull() &
-                u.lastMessageSend.isNotNull(),
-          ))
-        .watchSingle()
-        .asyncMap(getFlameCounterFromContact);
   }
 }
 
@@ -233,19 +113,4 @@ String getContactDisplayName(Contact user) {
 
 String applyStrikethrough(String text) {
   return text.split('').map((char) => '$char\u0336').join();
-}
-
-int getFlameCounterFromContact(Contact contact) {
-  if (contact.lastMessageSend == null || contact.lastMessageReceived == null) {
-    return 0;
-  }
-  final now = DateTime.now();
-  final startOfToday = DateTime(now.year, now.month, now.day);
-  final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
-  if (contact.lastMessageSend!.isAfter(twoDaysAgo) &&
-      contact.lastMessageReceived!.isAfter(twoDaysAgo)) {
-    return contact.flameCounter + 1;
-  } else {
-    return 0;
-  }
 }

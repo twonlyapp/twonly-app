@@ -5,8 +5,8 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
 
-class UserContextMenuBlocked extends StatefulWidget {
-  const UserContextMenuBlocked({
+class UserContextMenu extends StatefulWidget {
+  const UserContextMenu({
     required this.contact,
     required this.child,
     super.key,
@@ -15,10 +15,10 @@ class UserContextMenuBlocked extends StatefulWidget {
   final Contact contact;
 
   @override
-  State<UserContextMenuBlocked> createState() => _UserContextMenuBlocked();
+  State<UserContextMenu> createState() => _UserContextMenuBlocked();
 }
 
-class _UserContextMenuBlocked extends State<UserContextMenuBlocked> {
+class _UserContextMenuBlocked extends State<UserContextMenu> {
   @override
   Widget build(BuildContext context) {
     return PieMenu(

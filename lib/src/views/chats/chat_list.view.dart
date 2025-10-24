@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,27 +6,18 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
-import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_list_components/backup_notice.card.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/chats/chat_list_components/feedback_btn.dart';
-import 'package:twonly/src/views/chats/chat_list_components/last_message_time.dart';
-import 'package:twonly/src/views/chats/chat_messages.view.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/message_send_state_icon.dart';
-import 'package:twonly/src/views/chats/media_viewer.view.dart';
+import 'package:twonly/src/views/chats/chat_list_components/group_list_item.dart';
 import 'package:twonly/src/views/chats/start_new_chat.view.dart';
-import 'package:twonly/src/views/components/flame.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
-import 'package:twonly/src/views/components/user_context_menu.component.dart';
 import 'package:twonly/src/views/settings/help/changelog.view.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
@@ -41,10 +31,9 @@ class ChatListView extends StatefulWidget {
 }
 
 class _ChatListViewState extends State<ChatListView> {
-  late StreamSubscription<List<Contact>> _contactsSub;
-  List<Contact> _contacts = [];
-  List<Contact> _pinnedContacts = [];
-  UserData? _user;
+  late StreamSubscription<List<Group>> _contactsSub;
+  List<Group> _groupsNotPinned = [];
+  List<Group> _groupsPinned = [];
 
   GlobalKey firstUserListItemKey = GlobalKey();
   GlobalKey searchForOtherUsers = GlobalKey();
@@ -58,11 +47,11 @@ class _ChatListViewState extends State<ChatListView> {
   }
 
   Future<void> initAsync() async {
-    final stream = twonlyDB.contactsDao.watchContactsForChatList();
-    _contactsSub = stream.listen((contacts) {
+    final stream = twonlyDB.groupsDao.watchGroups();
+    _contactsSub = stream.listen((groups) {
       setState(() {
-        _contacts = contacts.where((x) => !x.pinned).toList();
-        _pinnedContacts = contacts.where((x) => x.pinned).toList();
+        _groupsNotPinned = groups.where((x) => !x.pinned).toList();
+        _groupsPinned = groups.where((x) => x.pinned).toList();
       });
     });
 
@@ -71,21 +60,16 @@ class _ChatListViewState extends State<ChatListView> {
       if (!mounted) return;
       await showChatListTutorialSearchOtherUsers(context, searchForOtherUsers);
       if (!mounted) return;
-      if (_contacts.isNotEmpty) {
+      if (_groupsNotPinned.isNotEmpty) {
         await showChatListTutorialContextMenu(context, firstUserListItemKey);
       }
     });
 
-    final user = await getUser();
-    if (user == null) return;
-    setState(() {
-      _user = user;
-    });
     final changeLog = await rootBundle.loadString('CHANGELOG.md');
     final changeLogHash =
         (await compute(Sha256().hash, changeLog.codeUnits)).bytes;
-    if (!user.hideChangeLog &&
-        user.lastChangeLogHash.toString() != changeLogHash.toString()) {
+    if (!gUser.hideChangeLog &&
+        gUser.lastChangeLogHash.toString() != changeLogHash.toString()) {
       await updateUserdata((u) {
         u.lastChangeLogHash = changeLogHash;
         return u;
@@ -93,7 +77,7 @@ class _ChatListViewState extends State<ChatListView> {
       if (!mounted) return;
       // only show changelog to people who already have contacts
       // this prevents that this is shown directly after the user registered
-      if (_contacts.isNotEmpty) {
+      if (_groupsNotPinned.isNotEmpty) {
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -133,12 +117,11 @@ class _ChatListViewState extends State<ChatListView> {
                     },
                   ),
                 );
-                _user = await getUser();
                 if (!mounted) return;
-                setState(() {});
+                setState(() {}); // gUser has updated
               },
-              child: ContactAvatar(
-                userData: _user,
+              child: AvatarIcon(
+                userData: gUser,
                 fontSize: 14,
                 color: context.color.onSurface.withAlpha(20),
               ),
@@ -210,9 +193,8 @@ class _ChatListViewState extends State<ChatListView> {
                   builder: (context) => const SettingsMainView(),
                 ),
               );
-              _user = await getUser();
               if (!mounted) return;
-              setState(() {});
+              setState(() {}); // gUser may has changed...
             },
             icon: const FaIcon(FontAwesomeIcons.gear, size: 19),
           ),
@@ -227,7 +209,7 @@ class _ChatListViewState extends State<ChatListView> {
             child: isConnected ? Container() : const ConnectionInfo(),
           ),
           Positioned.fill(
-            child: (_contacts.isEmpty && _pinnedContacts.isEmpty)
+            child: (_groupsNotPinned.isEmpty && _groupsPinned.isEmpty)
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(10),
@@ -252,9 +234,9 @@ class _ChatListViewState extends State<ChatListView> {
                       await Future.delayed(const Duration(seconds: 1));
                     },
                     child: ListView.builder(
-                      itemCount: _pinnedContacts.length +
-                          (_pinnedContacts.isNotEmpty ? 1 : 0) +
-                          _contacts.length +
+                      itemCount: _groupsPinned.length +
+                          (_groupsPinned.isNotEmpty ? 1 : 0) +
+                          _groupsNotPinned.length +
                           1,
                       itemBuilder: (context, index) {
                         if (index == 0) {
@@ -262,11 +244,11 @@ class _ChatListViewState extends State<ChatListView> {
                         }
                         index -= 1;
                         // Check if the index is for the pinned users
-                        if (index < _pinnedContacts.length) {
-                          final contact = _pinnedContacts[index];
-                          return UserListItem(
-                            key: ValueKey(contact.userId),
-                            user: contact,
+                        if (index < _groupsPinned.length) {
+                          final group = _groupsPinned[index];
+                          return GroupListItem(
+                            key: ValueKey(group.groupId),
+                            group: group,
                             firstUserListItemKey: (index == 0 || index == 1)
                                 ? firstUserListItemKey
                                 : null,
@@ -274,21 +256,21 @@ class _ChatListViewState extends State<ChatListView> {
                         }
 
                         // If there are pinned users, account for the Divider
-                        var adjustedIndex = index - _pinnedContacts.length;
-                        if (_pinnedContacts.isNotEmpty && adjustedIndex == 0) {
+                        var adjustedIndex = index - _groupsPinned.length;
+                        if (_groupsPinned.isNotEmpty && adjustedIndex == 0) {
                           return const Divider();
                         }
 
                         // Adjust the index for the contacts list
-                        adjustedIndex -= (_pinnedContacts.isNotEmpty ? 1 : 0);
+                        adjustedIndex -= (_groupsPinned.isNotEmpty ? 1 : 0);
 
                         // Get the contacts that are not pinned
-                        final contact = _contacts.elementAt(
+                        final group = _groupsNotPinned.elementAt(
                           adjustedIndex,
                         );
-                        return UserListItem(
-                          key: ValueKey(contact.userId),
-                          user: contact,
+                        return GroupListItem(
+                          key: ValueKey(group.groupId),
+                          group: group,
                           firstUserListItemKey:
                               (index == 0) ? firstUserListItemKey : null,
                         );
@@ -314,222 +296,6 @@ class _ChatListViewState extends State<ChatListView> {
           child: const FaIcon(FontAwesomeIcons.penToSquare),
         ),
       ),
-    );
-  }
-}
-
-class UserListItem extends StatefulWidget {
-  const UserListItem({
-    required this.user,
-    required this.firstUserListItemKey,
-    super.key,
-  });
-  final Contact user;
-  final GlobalKey? firstUserListItemKey;
-
-  @override
-  State<UserListItem> createState() => _UserListItem();
-}
-
-class _UserListItem extends State<UserListItem> {
-  MessageSendState state = MessageSendState.send;
-  Message? currentMessage;
-
-  List<Message> messagesNotOpened = [];
-  late StreamSubscription<List<Message>> messagesNotOpenedStream;
-
-  List<Message> lastMessages = [];
-  late StreamSubscription<List<Message>> lastMessageStream;
-
-  List<Message> previewMessages = [];
-  bool hasNonOpenedMediaFile = false;
-
-  @override
-  void initState() {
-    super.initState();
-    initStreams();
-  }
-
-  @override
-  void dispose() {
-    messagesNotOpenedStream.cancel();
-    lastMessageStream.cancel();
-    super.dispose();
-  }
-
-  void initStreams() {
-    lastMessageStream = twonlyDB.messagesDao
-        .watchLastMessage(widget.user.userId)
-        .listen((update) {
-      updateState(update, messagesNotOpened);
-    });
-
-    messagesNotOpenedStream = twonlyDB.messagesDao
-        .watchMessageNotOpened(widget.user.userId)
-        .listen((update) {
-      updateState(lastMessages, update);
-    });
-  }
-
-  void updateState(
-    List<Message> newLastMessages,
-    List<Message> newMessagesNotOpened,
-  ) {
-    if (newLastMessages.isEmpty) {
-      // there are no messages at all
-      currentMessage = null;
-      previewMessages = [];
-    } else if (newMessagesNotOpened.isEmpty) {
-      // there are no not opened messages show just the last message in the table
-      currentMessage = newLastMessages.last;
-      previewMessages = newLastMessages;
-    } else {
-      // filter first for received messages
-      final receivedMessages =
-          newMessagesNotOpened.where((x) => x.messageOtherId != null).toList();
-
-      if (receivedMessages.isNotEmpty) {
-        previewMessages = receivedMessages;
-        currentMessage = receivedMessages.first;
-      } else {
-        previewMessages = newMessagesNotOpened;
-        currentMessage = newMessagesNotOpened.first;
-      }
-    }
-
-    final msgs =
-        previewMessages.where((x) => x.kind == MessageKind.media).toList();
-    if (msgs.isNotEmpty &&
-        msgs.first.kind == MessageKind.media &&
-        msgs.first.messageOtherId != null &&
-        msgs.first.openedAt == null) {
-      hasNonOpenedMediaFile = true;
-    } else {
-      hasNonOpenedMediaFile = false;
-    }
-
-    lastMessages = newLastMessages;
-    messagesNotOpened = newMessagesNotOpened;
-    setState(() {
-      // sets lastMessages, messagesNotOpened and currentMessage
-    });
-  }
-
-  Future<void> onTap() async {
-    if (currentMessage == null) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return CameraSendToView(widget.user);
-          },
-        ),
-      );
-      return;
-    }
-
-    if (hasNonOpenedMediaFile) {
-      final msgs =
-          previewMessages.where((x) => x.kind == MessageKind.media).toList();
-      switch (msgs.first.downloadState) {
-        case DownloadState.pending:
-          await startDownloadMedia(msgs.first, true);
-          return;
-        case DownloadState.downloaded:
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                return MediaViewerView(widget.user);
-              },
-            ),
-          );
-          return;
-        case DownloadState.downloading:
-          return;
-      }
-    }
-    if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return ChatMessagesView(widget.user);
-        },
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final flameCounter = getFlameCounterFromContact(widget.user);
-
-    return Stack(
-      children: [
-        Positioned(
-          top: 0,
-          bottom: 0,
-          left: 50,
-          child: SizedBox(
-            key: widget.firstUserListItemKey,
-            height: 20,
-            width: 20,
-          ),
-        ),
-        UserContextMenu(
-          contact: widget.user,
-          child: ListTile(
-            title: Text(
-              getContactDisplayName(widget.user),
-            ),
-            subtitle: (widget.user.deleted)
-                ? Text(context.lang.userDeletedAccount)
-                : (currentMessage == null)
-                    ? Text(context.lang.chatsTapToSend)
-                    : Row(
-                        children: [
-                          MessageSendStateIcon(previewMessages),
-                          const Text('•'),
-                          const SizedBox(width: 5),
-                          if (currentMessage != null)
-                            LastMessageTime(message: currentMessage!),
-                          if (flameCounter > 0)
-                            FlameCounterWidget(
-                              widget.user,
-                              flameCounter,
-                              prefix: true,
-                            ),
-                        ],
-                      ),
-            leading: ContactAvatar(contact: widget.user),
-            trailing: (widget.user.deleted)
-                ? null
-                : IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            if (hasNonOpenedMediaFile) {
-                              return ChatMessagesView(widget.user);
-                            } else {
-                              return CameraSendToView(widget.user);
-                            }
-                          },
-                        ),
-                      );
-                    },
-                    icon: FaIcon(
-                      hasNonOpenedMediaFile
-                          ? FontAwesomeIcons.solidComments
-                          : FontAwesomeIcons.camera,
-                      color: context.color.outline.withAlpha(150),
-                    ),
-                  ),
-            onTap: onTap,
-          ),
-        ),
-      ],
     );
   }
 }

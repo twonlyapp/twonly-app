@@ -207,7 +207,8 @@ Future<void> requestMediaReupload(String mediaId) async {
   final messages = await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
   if (messages.length != 1 || messages.first.senderId == null) {
     Log.error(
-        'Media file has none or more than one sender. That is not possible');
+      'Media file has none or more than one sender. That is not possible',
+    );
     return;
   }
 
@@ -216,7 +217,7 @@ Future<void> requestMediaReupload(String mediaId) async {
     EncryptedContent(
       mediaUpdate: EncryptedContent_MediaUpdate(
         type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
-        targetMessageId: mediaId,
+        targetMediaId: mediaId,
       ),
     ),
   );

@@ -48,7 +48,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..tutorialDisplayed = (json['tutorialDisplayed'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList()
-      ..myBestFriendContactId = (json['myBestFriendContactId'] as num?)?.toInt()
+      ..myBestFriendGroupId = json['myBestFriendGroupId'] as String?
       ..signalLastSignedPreKeyUpdated =
           json['signalLastSignedPreKeyUpdated'] == null
               ? null
@@ -97,7 +97,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'lastPlanBallance': instance.lastPlanBallance,
       'additionalUserInvites': instance.additionalUserInvites,
       'tutorialDisplayed': instance.tutorialDisplayed,
-      'myBestFriendContactId': instance.myBestFriendContactId,
+      'myBestFriendGroupId': instance.myBestFriendGroupId,
       'signalLastSignedPreKeyUpdated':
           instance.signalLastSignedPreKeyUpdated?.toIso8601String(),
       'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,

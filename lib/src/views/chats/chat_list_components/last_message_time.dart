@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -21,10 +22,13 @@ class _LastMessageTimeState extends State<LastMessageTime> {
   void initState() {
     super.initState();
     // Change the color every 200 milliseconds
-    updateTime = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    updateTime =
+        Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+      final lastAction = await twonlyDB.messagesDao
+          .getLastMessageAction(widget.message.messageId);
       setState(() {
         lastMessageInSeconds = DateTime.now()
-            .difference(widget.message.openedAt ?? widget.message.sendAt)
+            .difference(lastAction?.actionAt ?? widget.message.createdAt)
             .inSeconds;
         if (lastMessageInSeconds < 0) {
           lastMessageInSeconds = 0;

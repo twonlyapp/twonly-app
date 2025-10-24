@@ -161,11 +161,13 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
 Future<void> insertAndSendTextMessage(
   String groupId,
   String textMessage,
+  String? quotesMessageId,
 ) async {
   final message = await twonlyDB.messagesDao.insertMessage(
     MessagesCompanion(
       groupId: Value(groupId),
       content: Value(textMessage),
+      quotesMessageId: Value(quotesMessageId),
     ),
   );
   if (message == null) {
@@ -173,19 +175,40 @@ Future<void> insertAndSendTextMessage(
     return;
   }
 
+  final encryptedContent = pb.EncryptedContent(
+    textMessage: pb.EncryptedContent_TextMessage(
+      senderMessageId: message.messageId,
+      text: textMessage,
+      timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
+    ),
+  );
+
+  if (quotesMessageId != null) {
+    encryptedContent.textMessage.quoteMessageId = quotesMessageId;
+  }
+
+  await sendCipherTextToGroup(groupId, encryptedContent);
+}
+
+Future<void> sendCipherTextToGroup(
+  String groupId,
+  pb.EncryptedContent encryptedContent,
+) async {
   final groupMembers = await twonlyDB.groupsDao.getGroupMembers(groupId);
+  final group = await twonlyDB.groupsDao.getGroup(groupId);
+  if (group == null) return;
+
+  encryptedContent
+    ..groupId = groupId
+    ..isDirectChat = group.isDirectChat;
 
   for (final groupMember in groupMembers) {
-    unawaited(sendCipherText(
-      groupMember.contactId,
-      pb.EncryptedContent(
-        textMessage: pb.EncryptedContent_TextMessage(
-          senderMessageId: message.messageId,
-          text: textMessage,
-          timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
-        ),
+    unawaited(
+      sendCipherText(
+        groupMember.contactId,
+        encryptedContent,
       ),
-    ));
+    );
   }
 }
 

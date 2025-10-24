@@ -208,7 +208,8 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 4.1,
             heroAttributes: PhotoViewHeroAttributes(
-                tag: item.mediaService.mediaFile.mediaId),
+              tag: item.mediaService.mediaFile.mediaId,
+            ),
           )
         : PhotoViewGalleryPageOptions(
             imageProvider: FileImage(item.mediaService.storedPath),
@@ -216,7 +217,8 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 4.1,
             heroAttributes: PhotoViewHeroAttributes(
-                tag: item.mediaService.mediaFile.mediaId),
+              tag: item.mediaService.mediaFile.mediaId,
+            ),
           );
   }
 }

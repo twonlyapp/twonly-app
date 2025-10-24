@@ -2,23 +2,19 @@
 
 import 'dart:async';
 import 'dart:collection';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/daos/groups.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_components/best_friends_selector.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/headline.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/verified_shield.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class ShareImageView extends StatefulWidget {
   const ShareImageView({
@@ -38,28 +34,27 @@ class ShareImageView extends StatefulWidget {
 }
 
 class _ShareImageView extends State<ShareImageView> {
-  List<Contact> contacts = [];
-  List<Contact> _otherUsers = [];
-  List<Contact> _bestFriends = [];
-  List<Contact> _pinnedContacts = [];
-  Uint8List? imageBytes;
+  List<Group> contacts = [];
+  List<Group> _otherUsers = [];
+  List<Group> _bestFriends = [];
+  List<Group> _pinnedContacts = [];
+
   bool sendingImage = false;
+  bool mediaStoreFutureReady = false;
   bool hideArchivedUsers = true;
   final TextEditingController searchUserName = TextEditingController();
-  late StreamSubscription<List<Contact>> contactSub;
+  late StreamSubscription<List<Group>> allGroupSub;
   String lastQuery = '';
 
   @override
   void initState() {
     super.initState();
 
-    final allContacts = twonlyDB.contactsDao.watchContactsForShareView();
-
-    contactSub = allContacts.listen((allContacts) async {
+    allGroupSub = twonlyDB.groupsDao.watchGroups().listen((allGroups) async {
       setState(() {
-        contacts = allContacts;
+        contacts = allGroups;
       });
-      await updateUsers(allContacts.where((x) => !x.archived).toList());
+      await updateGroups(allGroups.where((x) => !x.archived).toList());
     });
 
     unawaited(initAsync());
@@ -69,6 +64,7 @@ class _ShareImageView extends State<ShareImageView> {
     if (widget.mediaStoreFuture != null) {
       await widget.mediaStoreFuture;
     }
+    mediaStoreFutureReady = true;
     await widget.mediaFileService.setUploadState(UploadState.preprocessing);
     unawaited(startBackgroundMediaUpload(widget.mediaFileService));
     if (!mounted) return;
@@ -77,16 +73,17 @@ class _ShareImageView extends State<ShareImageView> {
 
   @override
   void dispose() {
-    unawaited(contactSub.cancel());
+    unawaited(allGroupSub.cancel());
     super.dispose();
   }
 
-  Future<void> updateUsers(List<Contact> users) async {
+  Future<void> updateGroups(List<Group> groups) async {
     // Sort contacts by flameCounter and then by totalMediaCounter
-    users.sort((a, b) {
+    groups.sort((a, b) {
       // First, compare by flameCounter
-      final flameComparison = getFlameCounterFromContact(b)
-          .compareTo(getFlameCounterFromContact(a));
+
+      final flameComparison =
+          getFlameCounterFromGroup(b).compareTo(getFlameCounterFromGroup(a));
       if (flameComparison != 0) {
         return flameComparison; // Sort by flameCounter in descending order
       }
@@ -97,18 +94,18 @@ class _ShareImageView extends State<ShareImageView> {
     });
 
     // Separate best friends and other users
-    final bestFriends = <Contact>[];
-    final otherUsers = <Contact>[];
-    final pinnedContacts = users.where((c) => c.pinned).toList();
+    final bestFriends = <Group>[];
+    final otherUsers = <Group>[];
+    final pinnedContacts = groups.where((c) => c.pinned).toList();
 
-    for (final contact in users) {
-      if (contact.pinned) continue;
-      if (!contact.archived &&
-          (getFlameCounterFromContact(contact)) > 0 &&
+    for (final group in groups) {
+      if (group.pinned) continue;
+      if (!group.archived &&
+          (getFlameCounterFromGroup(group)) > 0 &&
           bestFriends.length < 6) {
-        bestFriends.add(contact);
+        bestFriends.add(group);
       } else {
-        otherUsers.add(contact);
+        otherUsers.add(group);
       }
     }
 
@@ -122,13 +119,13 @@ class _ShareImageView extends State<ShareImageView> {
   Future<void> _filterUsers(String query) async {
     lastQuery = query;
     if (query.isEmpty) {
-      await updateUsers(
+      await updateGroups(
         contacts
             .where(
               (x) =>
                   !x.archived ||
                   !hideArchivedUsers ||
-                  widget.selectedUserIds.contains(x.userId),
+                  widget.selectedGroupIds.contains(x.groupId),
             )
             .toList(),
       );
@@ -136,16 +133,14 @@ class _ShareImageView extends State<ShareImageView> {
     }
     final usersFiltered = contacts
         .where(
-          (user) => getContactDisplayName(user)
-              .toLowerCase()
-              .contains(query.toLowerCase()),
+          (user) => user.groupName.toLowerCase().contains(query.toLowerCase()),
         )
         .toList();
-    await updateUsers(usersFiltered);
+    await updateGroups(usersFiltered);
   }
 
-  void updateStatus(int userId, bool checked) {
-    widget.updateStatus(userId, checked);
+  void updateSelectedGroupIds(String groupId, bool checked) {
+    widget.updateSelectedGroupIds(groupId, checked);
     setState(() {});
   }
 
@@ -173,19 +168,21 @@ class _ShareImageView extends State<ShareImageView> {
               ),
               if (_pinnedContacts.isNotEmpty) const SizedBox(height: 10),
               BestFriendsSelector(
-                users: _pinnedContacts,
-                selectedUserIds: widget.selectedUserIds,
-                isRealTwonly: widget.isRealTwonly,
-                updateStatus: updateStatus,
+                groups: _pinnedContacts,
+                selectedGroupIds: widget.selectedGroupIds,
+                updateSelectedGroupIds: updateSelectedGroupIds,
                 title: context.lang.shareImagePinnedContacts,
+                showSelectAll:
+                    !widget.mediaFileService.mediaFile.requiresAuthentication,
               ),
               const SizedBox(height: 10),
               BestFriendsSelector(
-                users: _bestFriends,
-                selectedUserIds: widget.selectedUserIds,
-                isRealTwonly: widget.isRealTwonly,
-                updateStatus: updateStatus,
+                groups: _bestFriends,
+                selectedGroupIds: widget.selectedGroupIds,
+                updateSelectedGroupIds: updateSelectedGroupIds,
                 title: context.lang.shareImageBestFriends,
+                showSelectAll:
+                    !widget.mediaFileService.mediaFile.requiresAuthentication,
               ),
               const SizedBox(height: 10),
               if (_otherUsers.isNotEmpty)
@@ -229,9 +226,8 @@ class _ShareImageView extends State<ShareImageView> {
               Expanded(
                 child: UserList(
                   List.from(_otherUsers),
-                  selectedUserIds: widget.selectedUserIds,
-                  isRealTwonly: widget.isRealTwonly,
-                  updateStatus: updateStatus,
+                  selectedGroupIds: widget.selectedGroupIds,
+                  updateSelectedGroupIds: updateSelectedGroupIds,
                 ),
               ),
             ],
@@ -246,7 +242,7 @@ class _ShareImageView extends State<ShareImageView> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FilledButton.icon(
-                icon: imageBytes == null || sendingImage
+                icon: !mediaStoreFutureReady || sendingImage
                     ? SizedBox(
                         height: 12,
                         width: 12,
@@ -257,50 +253,28 @@ class _ShareImageView extends State<ShareImageView> {
                       )
                     : const FaIcon(FontAwesomeIcons.solidPaperPlane),
                 onPressed: () async {
-                  if (imageBytes == null || widget.selectedUserIds.isEmpty) {
+                  if (!mediaStoreFutureReady ||
+                      widget.selectedGroupIds.isEmpty) {
                     return;
                   }
 
-                  final err = await isAllowedToSend();
-                  if (!context.mounted) return;
+                  setState(() {
+                    sendingImage = true;
+                  });
 
-                  if (err != null) {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return SubscriptionView(
-                            redirectError: err,
-                          );
-                        },
-                      ),
-                    );
-                  } else {
-                    setState(() {
-                      sendingImage = true;
-                    });
+                  await insertMediaFileInMessagesTable(
+                    widget.mediaFileService,
+                    widget.selectedGroupIds.toList(),
+                  );
 
-                    await finalizeUpload(
-                      widget.mediaUploadId,
-                      widget.selectedUserIds.toList(),
-                      widget.isRealTwonly,
-                      widget.videoUploadHandler != null,
-                      widget.mirrorVideo,
-                      widget.maxShowTime,
-                    );
-
-                    /// trigger the upload of the media file.
-                    unawaited(handleNextMediaUploadSteps(widget.mediaUploadId));
-
-                    if (context.mounted) {
-                      Navigator.pop(context, true);
-                      // if (widget.preselectedUser != null) {
-                      //   Navigator.pop(context, true);
-                      // } else {
-                      // Navigator.popUntil(context, (route) => route.isFirst, true);
-                      // globalUpdateOfHomeViewPageIndex(1);
-                      // }
-                    }
+                  if (context.mounted) {
+                    Navigator.pop(context, true);
+                    // if (widget.preselectedUser != null) {
+                    //   Navigator.pop(context, true);
+                    // } else {
+                    // Navigator.popUntil(context, (route) => route.isFirst, true);
+                    // globalUpdateOfHomeViewPageIndex(1);
+                    // }
                   }
                 },
                 style: ButtonStyle(
@@ -308,7 +282,7 @@ class _ShareImageView extends State<ShareImageView> {
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
                   ),
                   backgroundColor: WidgetStateProperty.all<Color>(
-                    imageBytes == null || widget.selectedUserIds.isEmpty
+                    mediaStoreFutureReady || widget.selectedGroupIds.isEmpty
                         ? Theme.of(context).colorScheme.secondary
                         : Theme.of(context).colorScheme.primary,
                   ),
@@ -328,52 +302,42 @@ class _ShareImageView extends State<ShareImageView> {
 
 class UserList extends StatelessWidget {
   const UserList(
-    this.users, {
-    required this.selectedUserIds,
-    required this.updateStatus,
-    required this.isRealTwonly,
+    this.groups, {
+    required this.selectedGroupIds,
+    required this.updateSelectedGroupIds,
     super.key,
   });
-  final void Function(int, bool) updateStatus;
-  final List<Contact> users;
-  final bool isRealTwonly;
-  final HashSet<int> selectedUserIds;
+  final void Function(String, bool) updateSelectedGroupIds;
+  final List<Group> groups;
+  final HashSet<String> selectedGroupIds;
 
   @override
   Widget build(BuildContext context) {
     // Step 1: Sort the users alphabetically
-    users
+    groups
         .sort((a, b) => b.lastMessageExchange.compareTo(a.lastMessageExchange));
 
     return ListView.builder(
       restorationId: 'new_message_users_list',
-      itemCount: users.length,
+      itemCount: groups.length,
       itemBuilder: (BuildContext context, int i) {
-        final user = users[i];
-        final flameCounter = getFlameCounterFromContact(user);
+        final group = groups[i];
         return ListTile(
           title: Row(
             children: [
-              if (isRealTwonly)
-                Padding(
-                  padding: const EdgeInsets.only(right: 1),
-                  child: VerifiedShield(user),
-                ),
-              Text(getContactDisplayName(user)),
-              if (flameCounter >= 1)
-                FlameCounterWidget(
-                  user,
-                  flameCounter,
-                  prefix: true,
-                ),
+              Text(group.groupName),
+              FlameCounterWidget(
+                groupId: group.groupId,
+                prefix: true,
+              ),
             ],
           ),
-          leading: ContactAvatar(
-            contact: user,
+          leading: AvatarIcon(
+            group: group,
             fontSize: 15,
           ),
           trailing: Checkbox(
-            value: selectedUserIds.contains(user.userId),
+            value: selectedGroupIds.contains(group.groupId),
             side: WidgetStateBorderSide.resolveWith(
               (Set states) {
                 if (states.contains(WidgetState.selected)) {
@@ -384,11 +348,14 @@ class UserList extends StatelessWidget {
             ),
             onChanged: (bool? value) {
               if (value == null) return;
-              updateStatus(user.userId, value);
+              updateSelectedGroupIds(group.groupId, value);
             },
           ),
           onTap: () {
-            updateStatus(user.userId, !selectedUserIds.contains(user.userId));
+            updateSelectedGroupIds(
+              group.groupId,
+              !selectedGroupIds.contains(group.groupId),
+            );
           },
         );
       },

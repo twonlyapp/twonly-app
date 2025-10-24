@@ -1,35 +1,33 @@
 import 'dart:async';
-
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    hide Message;
 import 'package:twonly/src/services/api/mediafiles/download.service.dart'
     as received;
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/in_chat_media_viewer.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
-import 'package:twonly/src/views/tutorial/tutorials.dart';
 
 class ChatMediaEntry extends StatefulWidget {
   const ChatMediaEntry({
     required this.message,
-    required this.contact,
-    required this.content,
+    required this.group,
     required this.galleryItems,
+    required this.mediaService,
     super.key,
   });
 
   final Message message;
-  final Contact contact;
-  final MessageContent content;
+  final Group group;
   final List<MemoryItem> galleryItems;
+  final MediaFileService mediaService;
 
   @override
   State<ChatMediaEntry> createState() => _ChatMediaEntryState();
@@ -39,97 +37,58 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
   GlobalKey reopenMediaFile = GlobalKey();
   bool canBeReopened = false;
 
-  @override
-  void initState() {
-    super.initState();
-    unawaited(checkIfTutorialCanBeShown());
-  }
-
-  Future<void> checkIfTutorialCanBeShown() async {
-    if (widget.message.openedAt == null &&
-            widget.message.messageOtherId != null ||
-        widget.message.mediaStored) {
-      return;
-    }
-    final content = getMediaContent(widget.message);
-    if (content == null ||
-        content.isRealTwonly ||
-        content.maxShowTime != gMediaShowInfinite) {
-      return;
-    }
-    if (await received.existsMediaFile(widget.message.messageId, 'png')) {
-      if (mounted) {
-        setState(() {
-          canBeReopened = true;
-        });
-      }
-      Future.delayed(const Duration(seconds: 1), () async {
-        if (!mounted) return;
-        await showReopenMediaFilesTutorial(context, reopenMediaFile);
-      });
-    }
-  }
-
   Future<void> onDoubleTap() async {
-    if (widget.message.openedAt == null &&
-            widget.message.messageOtherId != null ||
-        widget.message.mediaStored) {
+    if (widget.message.openedAt == null || widget.message.mediaStored) {
       return;
     }
-    if (await received.existsMediaFile(widget.message.messageId, 'png')) {
-      await encryptAndSendMessageAsync(
-        null,
-        widget.contact.userId,
-        MessageJson(
-          kind: MessageKind.reopenedMedia,
-          messageSenderId: widget.message.messageId,
-          content: ReopenedMediaFileContent(
-            messageId: widget.message.messageOtherId!,
+    if (widget.mediaService.tempPath.existsSync()) {
+      await sendCipherTextToGroup(
+        widget.message.groupId,
+        EncryptedContent(
+          mediaUpdate: EncryptedContent_MediaUpdate(
+            type: EncryptedContent_MediaUpdate_Type.REOPENED,
+            targetMediaId: widget.message.mediaId,
           ),
-          timestamp: DateTime.now(),
-        ),
-        pushNotification: PushNotification(
-          kind: PushKind.reopenedMedia,
         ),
       );
-      await twonlyDB.messagesDao.updateMessageByMessageId(
-        widget.message.messageId,
-        const MessagesCompanion(openedAt: Value(null)),
-      );
+      await twonlyDB.messagesDao.reopenedMedia(widget.message.messageId);
     }
   }
 
   Future<void> onTap() async {
-    if (widget.message.downloadState == DownloadState.downloaded &&
+    if (widget.mediaService.mediaFile.downloadState ==
+            DownloadState.downloaded &&
         widget.message.openedAt == null) {
+      if (!mounted) return;
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) {
             return MediaViewerView(
-              widget.contact,
+              widget.group,
               initialMessage: widget.message,
             );
           },
         ),
       );
-      await checkIfTutorialCanBeShown();
-    } else if (widget.message.downloadState == DownloadState.pending) {
-      await received.startDownloadMedia(widget.message, true);
+    } else if (widget.mediaService.mediaFile.downloadState ==
+        DownloadState.pending) {
+      await received.startDownloadMedia(widget.mediaService.mediaFile, true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final color = getMessageColorFromType(
-      widget.content,
+      widget.message,
+      widget.mediaService.mediaFile,
       context,
     );
 
     return GestureDetector(
       key: reopenMediaFile,
       onDoubleTap: onDoubleTap,
-      onTap: widget.message.kind == MessageKind.media ? onTap : null,
+      onTap: (widget.message.type == MessageType.media) ? onTap : null,
       child: SizedBox(
         width: 150,
         height: widget.message.mediaStored ? 271 : null,
@@ -139,7 +98,8 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
             borderRadius: BorderRadius.circular(12),
             child: InChatMediaViewer(
               message: widget.message,
-              contact: widget.contact,
+              group: widget.group,
+              mediaService: widget.mediaService,
               color: color,
               galleryItems: widget.galleryItems,
               canBeReopened: canBeReopened,

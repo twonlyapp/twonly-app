@@ -1,19 +1,13 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/message_old.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -21,23 +15,15 @@ import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_date_chip.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
-import 'package:twonly/src/views/components/animate_icon.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/user_context_menu.component.dart';
-import 'package:twonly/src/views/components/verified_shield.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
+import 'package:twonly/src/views/groups/group.view.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
 
 Color getMessageColor(Message message) {
-  return (message.messageOtherId == null)
+  return (message.senderId == null)
       ? const Color.fromARGB(255, 58, 136, 102)
       : const Color.fromARGB(233, 68, 137, 255);
-}
-
-class ChatMessage {
-  ChatMessage({required this.message, required this.responseTo});
-  final Message message;
-  final Message? responseTo;
 }
 
 class ChatItem {
@@ -48,10 +34,10 @@ class ChatItem {
   factory ChatItem.time(DateTime time) {
     return ChatItem._(time: time);
   }
-  factory ChatItem.message(ChatMessage message) {
+  factory ChatItem.message(Message message) {
     return ChatItem._(message: message);
   }
-  final ChatMessage? message;
+  final Message? message;
   final DateTime? date;
   final DateTime? time;
   bool get isMessage => message != null;
@@ -72,14 +58,13 @@ class ChatMessagesView extends StatefulWidget {
 class _ChatMessagesViewState extends State<ChatMessagesView> {
   TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
-  late Contact user;
+  late Group group;
   String currentInputText = '';
-  late StreamSubscription<Contact?> userSub;
+  late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
   List<ChatItem> messages = [];
   List<MemoryItem> galleryItems = [];
-  Map<int, List<Message>> emojiReactionsToMessageId = {};
-  Message? responseToMessage;
+  Message? quotesMessage;
   GlobalKey verifyShieldKey = GlobalKey();
   late FocusNode textFieldFocus;
   Timer? tutorial;
@@ -89,7 +74,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   @override
   void initState() {
     super.initState();
-    user = widget.contact;
+    group = widget.group;
     textFieldFocus = FocusNode();
     initStreams();
 
@@ -110,118 +95,59 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   }
 
   Future<void> initStreams() async {
-    await twonlyDB.messagesDao.removeOldMessages();
-    final contact = twonlyDB.contactsDao.watchContact(widget.contact.userId);
-    userSub = contact.listen((contact) {
-      if (contact == null) return;
+    final groupStream = twonlyDB.groupsDao.watchGroup(group.groupId);
+    userSub = groupStream.listen((newGroup) {
+      if (newGroup == null) return;
       setState(() {
-        user = contact;
+        group = newGroup;
       });
     });
 
-    final msgStream =
-        twonlyDB.messagesDao.watchAllMessagesFrom(widget.contact.userId);
+    final msgStream = twonlyDB.messagesDao.watchByGroupId(group.groupId);
     messageSub = msgStream.listen((newMessages) async {
-      // if (!context.mounted) return;
-      if (Platform.isAndroid) {
-        await flutterLocalNotificationsPlugin.cancel(widget.contact.userId);
-      } else {
-        await flutterLocalNotificationsPlugin.cancelAll();
-      }
+      await flutterLocalNotificationsPlugin.cancelAll();
+
       final chatItems = <ChatItem>[];
       final storedMediaFiles = <Message>[];
+
       DateTime? lastDate;
-      final tmpEmojiReactionsToMessageId = <int, List<Message>>{};
 
-      // only send openedMessage to one text message, as receiver will then set all as read...
-      List<int> openedTextMessageOtherIds;
-
-      final messageOtherMessageIdToMyMessageId = <int, int>{};
-      final messageIdToMessage = <int, Message>{};
-
-      /// there is probably a better way...
-      for (final msg in newMessages) {
-        if (msg.messageOtherId != null) {
-          messageOtherMessageIdToMyMessageId[msg.messageOtherId!] =
-              msg.messageId;
-        }
-        messageIdToMessage[msg.messageId] = msg;
-      }
+      final openedMessages = <int, List<String>>{};
 
       for (final msg in newMessages) {
-        if (msg.kind == MessageKind.textMessage &&
-            msg.messageOtherId != null &&
-            msg.openedAt == null &&
-            (openedTextMessageOtherIds == null ||
-                openedTextMessageOtherIds < msg.messageOtherId!)) {
-          openedTextMessageOtherIds.add(msg.messageOtherId);
+        if (msg.type == MessageType.text &&
+            msg.senderId != null &&
+            msg.openedAt == null) {
+          openedMessages[msg.senderId!]!.add(msg.messageId);
         }
 
-        Message? responseTo;
-
-        if (msg.kind == MessageKind.media && msg.mediaStored) {
+        if (msg.type == MessageType.media && msg.mediaStored) {
           storedMediaFiles.add(msg);
         }
 
-        final responseId = msg.responseToMessageId ??
-            messageOtherMessageIdToMyMessageId[msg.responseToOtherMessageId];
-
-        var isReaction = false;
-        if (responseId != null) {
-          responseTo = messageIdToMessage[responseId];
-          final content = MessageContent.fromJson(
-            msg.kind,
-            jsonDecode(msg.contentJson!) as Map,
-          );
-          if (content is TextMessageContent) {
-            if (isEmoji(content.text)) {
-              isReaction = true;
-              tmpEmojiReactionsToMessageId
-                  .putIfAbsent(responseId, () => [])
-                  .add(msg);
-            }
-          }
-          if (msg.kind == MessageKind.reopenedMedia) {
-            isReaction = true;
-            tmpEmojiReactionsToMessageId
-                .putIfAbsent(responseId, () => [])
-                .add(msg);
-          }
+        if (lastDate == null ||
+            msg.createdAt.day != lastDate.day ||
+            msg.createdAt.month != lastDate.month ||
+            msg.createdAt.year != lastDate.year) {
+          chatItems.add(ChatItem.date(msg.createdAt));
+          lastDate = msg.createdAt;
+        } else if (msg.createdAt.difference(lastDate).inMinutes >= 20) {
+          chatItems.add(ChatItem.time(msg.createdAt));
+          lastDate = msg.createdAt;
         }
-        if (!isReaction) {
-          if (lastDate == null ||
-              msg.sendAt.day != lastDate.day ||
-              msg.sendAt.month != lastDate.month ||
-              msg.sendAt.year != lastDate.year) {
-            chatItems.add(ChatItem.date(msg.sendAt));
-            lastDate = msg.sendAt;
-          } else if (msg.sendAt.difference(lastDate).inMinutes >= 20) {
-            chatItems.add(ChatItem.time(msg.sendAt));
-            lastDate = msg.sendAt;
-          }
-          chatItems.add(
-            ChatItem.message(
-              ChatMessage(
-                message: msg,
-                responseTo: responseTo,
-              ),
-            ),
-          );
-        }
+        chatItems.add(ChatItem.message(msg));
       }
 
-      if (openedTextMessageOtherIds.isNotEmpty) {
+      for (final contactId in openedMessages.keys) {
         await notifyContactAboutOpeningMessage(
-          widget.contact.userId,
-          openedTextMessageOtherIds,
+          contactId,
+          openedMessages[contactId]!,
         );
       }
 
-      await twonlyDB.messagesDao
-          .openedAllNonMediaMessages(widget.contact.userId);
+      await twonlyDB.messagesDao.openedAllTextMessages(widget.group.groupId);
 
       setState(() {
-        emojiReactionsToMessageId = tmpEmojiReactionsToMessageId;
         messages = chatItems.reversed.toList();
       });
 
@@ -234,33 +160,21 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   Future<void> _sendMessage() async {
     if (newMessageController.text == '') return;
 
-    await sendTextMessage(
-      user.userId,
-      TextMessageContent(
-        text: newMessageController.text,
-        responseToMessageId: responseToMessage?.messageOtherId,
-        responseToOtherMessageId: responseToMessage?.messageId,
-      ),
-      PushNotification(
-        kind: (responseToMessage == null)
-            ? PushKind.text
-            : (isEmoji(newMessageController.text))
-                ? PushKind.reaction
-                : PushKind.response,
-        reactionContent: (isEmoji(newMessageController.text))
-            ? newMessageController.text
-            : null,
-      ),
+    await insertAndSendTextMessage(
+      group.groupId,
+      newMessageController.text,
+      quotesMessage?.messageId,
     );
+
     newMessageController.clear();
     currentInputText = '';
-    responseToMessage = null;
+    quotesMessage = null;
     setState(() {});
   }
 
-  Future<void> scrollToMessage(int messageId) async {
+  Future<void> scrollToMessage(String messageId) async {
     final index = messages.indexWhere(
-      (x) => x.isMessage && x.message!.message.messageId == messageId,
+      (x) => x.isMessage && x.message!.messageId == messageId,
     );
     if (index == -1) return;
     setState(() {
@@ -286,20 +200,34 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       child: Scaffold(
         appBar: AppBar(
           title: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return ContactView(widget.contact.userId);
-                  },
-                ),
-              );
+            onTap: () async {
+              if (widget.group.isDirectChat) {
+                final member = await twonlyDB.groupsDao
+                    .getGroupMembers(widget.group.groupId);
+                if (!context.mounted) return;
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return ContactView(member.first.contactId);
+                    },
+                  ),
+                );
+              } else {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return GroupView(widget.group);
+                    },
+                  ),
+                );
+              }
             },
             child: Row(
               children: [
-                ContactAvatar(
-                  contact: user,
+                AvatarIcon(
+                  group: group,
                   fontSize: 19,
                 ),
                 const SizedBox(width: 10),
@@ -308,10 +236,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     color: Colors.transparent,
                     child: Row(
                       children: [
-                        Text(getContactDisplayName(user)),
+                        Text(group.groupName),
                         const SizedBox(width: 10),
-                        if (user.verified)
-                          VerifiedShield(key: verifyShieldKey, user),
+                        // if (group.verified)
+                        //   VerifiedShield(key: verifyShieldKey, group),
                       ],
                     ),
                   ),
@@ -345,7 +273,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                         return Transform.translate(
                           offset: Offset(
                             (focusedScrollItem == i)
-                                ? (chatMessage.message.messageOtherId == null)
+                                ? (chatMessage.quotesMessageId == null)
                                     ? -8
                                     : 8
                                 : 0,
@@ -354,19 +282,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                           child: Transform.scale(
                             scale: (focusedScrollItem == i) ? 1.05 : 1,
                             child: ChatListEntry(
-                              key:
-                                  Key(chatMessage.message.messageId.toString()),
+                              key: Key(chatMessage.messageId),
                               chatMessage,
-                              user,
+                              group,
                               galleryItems,
                               isLastMessageFromSameUser(messages, i),
-                              emojiReactionsToMessageId[
-                                      chatMessage.message.messageId] ??
-                                  [],
                               scrollToMessage: scrollToMessage,
                               onResponseTriggered: () {
                                 setState(() {
-                                  responseToMessage = chatMessage.message;
+                                  quotesMessage = chatMessage;
                                 });
                                 textFieldFocus.requestFocus();
                               },
@@ -377,7 +301,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     },
                   ),
                 ),
-                if (responseToMessage != null && !user.deleted)
+                if (quotesMessage != null)
                   Container(
                     padding: const EdgeInsets.only(
                       left: 20,
@@ -388,15 +312,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                       children: [
                         Expanded(
                           child: ResponsePreview(
-                            message: responseToMessage!,
+                            message: quotesMessage,
                             showBorder: true,
-                            contact: user,
+                            group: group,
                           ),
                         ),
                         IconButton(
                           onPressed: () {
                             setState(() {
-                              responseToMessage = null;
+                              quotesMessage = null;
                             });
                           },
                           icon: const FaIcon(
@@ -415,50 +339,48 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     top: 10,
                   ),
                   child: Row(
-                    children: (user.deleted)
-                        ? []
-                        : [
-                            Expanded(
-                              child: TextField(
-                                controller: newMessageController,
-                                focusNode: textFieldFocus,
-                                keyboardType: TextInputType.multiline,
-                                maxLines: 4,
-                                minLines: 1,
-                                onChanged: (value) {
-                                  currentInputText = value;
-                                  setState(() {});
-                                },
-                                onSubmitted: (_) {
-                                  _sendMessage();
-                                },
-                                decoration: inputTextMessageDeco(context),
-                              ),
-                            ),
-                            if (currentInputText != '')
-                              IconButton(
-                                padding: const EdgeInsets.all(15),
-                                icon: const FaIcon(
-                                  FontAwesomeIcons.solidPaperPlane,
-                                ),
-                                onPressed: _sendMessage,
-                              )
-                            else
-                              IconButton(
-                                icon: const FaIcon(FontAwesomeIcons.camera),
-                                padding: const EdgeInsets.all(15),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) {
-                                        return CameraSendToView(widget.contact);
-                                      },
-                                    ),
-                                  );
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: newMessageController,
+                          focusNode: textFieldFocus,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 4,
+                          minLines: 1,
+                          onChanged: (value) {
+                            currentInputText = value;
+                            setState(() {});
+                          },
+                          onSubmitted: (_) {
+                            _sendMessage();
+                          },
+                          decoration: inputTextMessageDeco(context),
+                        ),
+                      ),
+                      if (currentInputText != '')
+                        IconButton(
+                          padding: const EdgeInsets.all(15),
+                          icon: const FaIcon(
+                            FontAwesomeIcons.solidPaperPlane,
+                          ),
+                          onPressed: _sendMessage,
+                        )
+                      else
+                        IconButton(
+                          icon: const FaIcon(FontAwesomeIcons.camera),
+                          padding: const EdgeInsets.all(15),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return CameraSendToView(widget.group);
                                 },
                               ),
-                          ],
+                            );
+                          },
+                        ),
+                    ],
                   ),
                 ),
               ],
@@ -479,11 +401,11 @@ bool isLastMessageFromSameUser(List<ChatItem> messages, int index) {
   final currentMessage = messages[index];
 
   if (lastMessage.isMessage && currentMessage.isMessage) {
-    // Check if both messages have the same messageOtherId (or both are null)
-    return (lastMessage.message!.message.messageOtherId == null &&
-            currentMessage.message!.message.messageOtherId == null) ||
-        (lastMessage.message!.message.messageOtherId != null &&
-            currentMessage.message!.message.messageOtherId != null);
+    // Check if both messages have the same quotesMessageId (or both are null)
+    return (lastMessage.message!.quotesMessageId == null &&
+            currentMessage.message!.quotesMessageId == null) ||
+        (lastMessage.message!.quotesMessageId != null &&
+            currentMessage.message!.quotesMessageId != null);
   }
   return false;
 }

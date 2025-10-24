@@ -100,8 +100,8 @@ Future<void> handleMedia(
   );
   if (message != null) {
     Log.info('Inserted a new media message with ID: ${message.messageId}');
-    await twonlyDB.contactsDao.incFlameCounter(
-      fromUserId,
+    await twonlyDB.groupsDao.incFlameCounter(
+      message.groupId,
       true,
       fromTimestamp(media.timestamp),
     );
@@ -115,15 +115,17 @@ Future<void> handleMediaUpdate(
   String groupId,
   EncryptedContent_MediaUpdate mediaUpdate,
 ) async {
-  final message = await twonlyDB.messagesDao
-      .getMessageById(mediaUpdate.targetMessageId)
-      .getSingleOrNull();
-  if (message == null || message.mediaId == null) return;
+  final messages = await twonlyDB.messagesDao
+      .getMessagesByMediaId(mediaUpdate.targetMediaId);
+  if (messages.length != 1) return;
+  final message = messages.first;
+  if (message.senderId != fromUserId) return;
   final mediaFile =
       await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
   if (mediaFile == null) {
     Log.info(
-        'Got media file update, but media file was not found ${message.mediaId}');
+      'Got media file update, but media file was not found ${message.mediaId}',
+    );
     return;
   }
 

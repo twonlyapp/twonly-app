@@ -119,7 +119,7 @@ class MediaFileService {
       originalPath,
       storedPath,
       thumbnailPath,
-      uploadRequestPath
+      uploadRequestPath,
     ];
 
     for (final path in pathsToRemove) {
@@ -146,11 +146,13 @@ class MediaFileService {
     String namePrefix = '',
     String extensionParam = '',
   }) {
-    final mediaBaseDir = Directory(join(
-      applicationSupportDirectory.path,
-      'mediafiles',
-      directory,
-    ));
+    final mediaBaseDir = Directory(
+      join(
+        applicationSupportDirectory.path,
+        'mediafiles',
+        directory,
+      ),
+    );
     if (!mediaBaseDir.existsSync()) {
       mediaBaseDir.createSync(recursive: true);
     }
