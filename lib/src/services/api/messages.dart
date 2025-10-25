@@ -4,6 +4,7 @@ import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
@@ -35,7 +36,6 @@ Future<void> tryTransmitMessages() async {
 Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   String? receiptId,
   Receipt? receipt,
-  bool reupload = false,
   bool onlyReturnEncryptedData = false,
 }) async {
   try {
@@ -48,15 +48,6 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
       }
     }
     receiptId = receipt.receiptId;
-
-    if (reupload) {
-      await twonlyDB.receiptsDao.updateReceipt(
-        receiptId,
-        const ReceiptsCompanion(
-          ackByServerAt: Value(null),
-        ),
-      );
-    }
 
     if (!onlyReturnEncryptedData && receipt.ackByServerAt != null) {
       Log.error('$receiptId message already uploaded!');
@@ -71,11 +62,17 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     final encryptedContent =
         pb.EncryptedContent.fromBuffer(message.encryptedContent);
 
-    var pushData = await getPushDataFromEncryptedContent(
+    final pushNotification = await getPushNotificationFromEncryptedContent(
       receipt.contactId,
       receipt.messageId,
       encryptedContent,
     );
+
+    Uint8List? pushData;
+    if (pushNotification != null) {
+      pushData =
+          await encryptPushNotification(receipt.contactId, pushNotification);
+    }
 
     if (message.type == pb.Message_Type.TEST_NOTIFICATION) {
       pushData = (PushNotification()..kind = PushKind.testNotification)
@@ -167,6 +164,7 @@ Future<void> insertAndSendTextMessage(
     MessagesCompanion(
       groupId: Value(groupId),
       content: Value(textMessage),
+      type: const Value(MessageType.text),
       quotesMessageId: Value(quotesMessageId),
     ),
   );
@@ -187,26 +185,24 @@ Future<void> insertAndSendTextMessage(
     encryptedContent.textMessage.quoteMessageId = quotesMessageId;
   }
 
-  await sendCipherTextToGroup(groupId, encryptedContent);
+  await sendCipherTextToGroup(groupId, encryptedContent, message.messageId);
 }
 
 Future<void> sendCipherTextToGroup(
   String groupId,
   pb.EncryptedContent encryptedContent,
+  String? messageId,
 ) async {
   final groupMembers = await twonlyDB.groupsDao.getGroupMembers(groupId);
-  final group = await twonlyDB.groupsDao.getGroup(groupId);
-  if (group == null) return;
 
-  encryptedContent
-    ..groupId = groupId
-    ..isDirectChat = group.isDirectChat;
+  encryptedContent.groupId = groupId;
 
   for (final groupMember in groupMembers) {
     unawaited(
       sendCipherText(
         groupMember.contactId,
         encryptedContent,
+        messageId: messageId,
       ),
     );
   }
@@ -216,6 +212,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   int contactId,
   pb.EncryptedContent encryptedContent, {
   bool onlyReturnEncryptedData = false,
+  String? messageId,
 }) async {
   final response = pb.Message()
     ..type = pb.Message_Type.CIPHERTEXT
@@ -225,6 +222,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
     ReceiptsCompanion(
       contactId: Value(contactId),
       message: Value(response.writeToBuffer()),
+      messageId: Value(messageId),
       ackByServerAt: Value(onlyReturnEncryptedData ? DateTime.now() : null),
     ),
   );
@@ -249,15 +247,23 @@ Future<void> notifyContactAboutOpeningMessage(
       biggestMessageId = messageOtherId;
     }
   }
+  Log.info('Opened messages: $messageOtherIds');
+
   await sendCipherText(
     contactId,
     pb.EncryptedContent(
       messageUpdate: pb.EncryptedContent_MessageUpdate(
         type: pb.EncryptedContent_MessageUpdate_Type.OPENED,
-        multipleSenderMessageIds: messageOtherIds,
+        multipleTargetMessageIds: messageOtherIds,
       ),
     ),
   );
+  for (final messageId in messageOtherIds) {
+    await twonlyDB.messagesDao.updateMessageId(
+      messageId,
+      MessagesCompanion(openedAt: Value(DateTime.now())),
+    );
+  }
   await updateLastMessageId(contactId, biggestMessageId);
 }
 

@@ -388,7 +388,7 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
   factory EncryptedContent_MessageUpdate({
     EncryptedContent_MessageUpdate_Type? type,
     $core.String? senderMessageId,
-    $core.Iterable<$core.String>? multipleSenderMessageIds,
+    $core.Iterable<$core.String>? multipleTargetMessageIds,
     $core.String? text,
     $fixnum.Int64? timestamp,
   }) {
@@ -399,8 +399,8 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
     if (senderMessageId != null) {
       $result.senderMessageId = senderMessageId;
     }
-    if (multipleSenderMessageIds != null) {
-      $result.multipleSenderMessageIds.addAll(multipleSenderMessageIds);
+    if (multipleTargetMessageIds != null) {
+      $result.multipleTargetMessageIds.addAll(multipleTargetMessageIds);
     }
     if (text != null) {
       $result.text = text;
@@ -417,7 +417,7 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.MessageUpdate', createEmptyInstance: create)
     ..e<EncryptedContent_MessageUpdate_Type>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedContent_MessageUpdate_Type.DELETE, valueOf: EncryptedContent_MessageUpdate_Type.valueOf, enumValues: EncryptedContent_MessageUpdate_Type.values)
     ..aOS(2, _omitFieldNames ? '' : 'senderMessageId', protoName: 'senderMessageId')
-    ..pPS(3, _omitFieldNames ? '' : 'multipleSenderMessageIds', protoName: 'multipleSenderMessageIds')
+    ..pPS(3, _omitFieldNames ? '' : 'multipleTargetMessageIds', protoName: 'multipleTargetMessageIds')
     ..aOS(4, _omitFieldNames ? '' : 'text')
     ..aInt64(5, _omitFieldNames ? '' : 'timestamp')
     ..hasRequiredFields = false
@@ -463,7 +463,7 @@ class EncryptedContent_MessageUpdate extends $pb.GeneratedMessage {
   void clearSenderMessageId() => clearField(2);
 
   @$pb.TagNumber(3)
-  $core.List<$core.String> get multipleSenderMessageIds => $_getList(2);
+  $core.List<$core.String> get multipleTargetMessageIds => $_getList(2);
 
   @$pb.TagNumber(4)
   $core.String get text => $_getSZ(3);
@@ -663,14 +663,14 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
 class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
   factory EncryptedContent_MediaUpdate({
     EncryptedContent_MediaUpdate_Type? type,
-    $core.String? targetMediaId,
+    $core.String? targetMessageId,
   }) {
     final $result = create();
     if (type != null) {
       $result.type = type;
     }
-    if (targetMediaId != null) {
-      $result.targetMediaId = targetMediaId;
+    if (targetMessageId != null) {
+      $result.targetMessageId = targetMessageId;
     }
     return $result;
   }
@@ -680,7 +680,7 @@ class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.MediaUpdate', createEmptyInstance: create)
     ..e<EncryptedContent_MediaUpdate_Type>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedContent_MediaUpdate_Type.REOPENED, valueOf: EncryptedContent_MediaUpdate_Type.valueOf, enumValues: EncryptedContent_MediaUpdate_Type.values)
-    ..aOS(2, _omitFieldNames ? '' : 'targetMediaId', protoName: 'targetMediaId')
+    ..aOS(2, _omitFieldNames ? '' : 'targetMessageId', protoName: 'targetMessageId')
     ..hasRequiredFields = false
   ;
 
@@ -715,13 +715,13 @@ class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
   void clearType() => clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get targetMediaId => $_getSZ(1);
+  $core.String get targetMessageId => $_getSZ(1);
   @$pb.TagNumber(2)
-  set targetMediaId($core.String v) { $_setString(1, v); }
+  set targetMessageId($core.String v) { $_setString(1, v); }
   @$pb.TagNumber(2)
-  $core.bool hasTargetMediaId() => $_has(1);
+  $core.bool hasTargetMessageId() => $_has(1);
   @$pb.TagNumber(2)
-  void clearTargetMediaId() => clearField(2);
+  void clearTargetMessageId() => clearField(2);
 }
 
 class EncryptedContent_ContactRequest extends $pb.GeneratedMessage {

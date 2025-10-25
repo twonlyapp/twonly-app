@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class AutomatedTestingView extends StatefulWidget {
@@ -38,11 +39,13 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
               onTap: () async {
                 final username = await showUserNameDialog(context);
                 if (username == null) return;
+                Log.info('Requested to send to $username');
 
-                final contacts =
-                    await twonlyDB.contactsDao.getContactsByUsername(username);
+                final contacts = await twonlyDB.contactsDao
+                    .getContactsByUsername(username.toLowerCase());
 
                 for (final contact in contacts) {
+                  Log.info('Sending to ${contact.username}');
                   final group =
                       await twonlyDB.groupsDao.getDirectChat(contact.userId);
                   for (var i = 0; i < 200; i++) {
@@ -67,10 +70,10 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
 
 Future<String?> showUserNameDialog(
   BuildContext context,
-) {
+) async {
   final controller = TextEditingController();
 
-  return showDialog<String>(
+  await showDialog<String>(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
@@ -97,4 +100,5 @@ Future<String?> showUserNameDialog(
       );
     },
   );
+  return controller.text;
 }

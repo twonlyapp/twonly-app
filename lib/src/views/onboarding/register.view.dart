@@ -84,7 +84,7 @@ class _RegisterViewState extends State<RegisterView> {
       username: username,
       displayName: username,
       subscriptionPlan: 'Preview',
-    );
+    )..appVersion = 62;
 
     await const FlutterSecureStorage()
         .write(key: SecureStorageKeys.userData, value: jsonEncode(userData));

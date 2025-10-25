@@ -36,6 +36,7 @@ part 'twonly.db.g.dart';
     Groups,
     GroupMembers,
     Receipts,
+    ReceivedReceipts,
     SignalIdentityKeyStores,
     SignalPreKeyStores,
     SignalSenderKeyStores,

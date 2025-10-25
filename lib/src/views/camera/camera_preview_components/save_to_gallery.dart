@@ -1,20 +1,20 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class SaveToGalleryButton extends StatefulWidget {
   const SaveToGalleryButton({
-    required this.getMergedImage,
+    required this.storeImageAsOriginal,
     required this.isLoading,
     required this.displayButtonLabel,
     required this.mediaService,
     super.key,
   });
-  final Future<Uint8List?> Function() getMergedImage;
+  final Future<bool> Function() storeImageAsOriginal;
   final bool displayButtonLabel;
   final MediaFileService mediaService;
   final bool isLoading;
@@ -44,6 +44,10 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
               setState(() {
                 _imageSaving = true;
               });
+
+              if (widget.mediaService.mediaFile.type == MediaType.image) {
+                await widget.storeImageAsOriginal();
+              }
 
               String? res;
 

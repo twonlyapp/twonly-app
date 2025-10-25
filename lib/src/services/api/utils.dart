@@ -26,7 +26,7 @@ class Result<T, E> {
 }
 
 DateTime fromTimestamp(Int64 timeStamp) {
-  return DateTime.fromMillisecondsSinceEpoch(timeStamp.toInt() * 1000);
+  return DateTime.fromMillisecondsSinceEpoch(timeStamp.toInt());
 }
 
 // ignore: strict_raw_type
@@ -88,7 +88,7 @@ Future<void> handleMediaError(MediaFile media) async {
     EncryptedContent(
       mediaUpdate: EncryptedContent_MediaUpdate(
         type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
-        targetMediaId: message.mediaId,
+        targetMessageId: message.messageId,
       ),
     ),
   );

@@ -58,6 +58,12 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
   final mediaId = update.task.taskId.replaceAll('upload_', '');
   final media = await twonlyDB.mediaFilesDao.getMediaFileById(mediaId);
 
+  if (update.status == TaskStatus.enqueued ||
+      update.status == TaskStatus.running) {
+    // Ignore these updates
+    return;
+  }
+
   if (media == null) {
     Log.error(
       'Got an upload task but no upload media in the media upload database',
@@ -115,7 +121,7 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
 
   final mediaService = await MediaFileService.fromMedia(media);
 
-  await mediaService.setUploadState(UploadState.uploading);
+  await mediaService.setUploadState(UploadState.uploaded);
   // In all other cases just try the upload again...
   await startBackgroundMediaUpload(mediaService);
 }

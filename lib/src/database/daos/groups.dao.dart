@@ -1,7 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 part 'groups.dao.g.dart';
 
@@ -33,12 +36,46 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .get();
   }
 
-  Future<void> insertGroup(GroupsCompanion group) async {
-    await into(groups).insert(
-      group.copyWith(
-        groupId: Value(uuid.v4()),
-      ),
+  Future<Group?> createNewGroup(GroupsCompanion group) async {
+    final insertGroup = group.copyWith(
+      groupId: Value(uuid.v4()),
+      isGroupAdmin: const Value(true),
     );
+    return _insertGroup(insertGroup);
+  }
+
+  Future<Group?> createNewDirectChat(
+    int contactId,
+    GroupsCompanion group,
+  ) async {
+    final groupIdDirectChat = getUUIDforDirectChat(contactId, gUser.userId);
+    final insertGroup = group.copyWith(
+      groupId: Value(groupIdDirectChat),
+      isDirectChat: const Value(true),
+      isGroupAdmin: const Value(true),
+    );
+
+    final result = await _insertGroup(insertGroup);
+    if (result != null) {
+      await into(groupMembers).insert(GroupMembersCompanion(
+        groupId: Value(result.groupId),
+        contactId: Value(
+          contactId,
+        ),
+      ));
+    }
+    return result;
+  }
+
+  Future<Group?> _insertGroup(GroupsCompanion group) async {
+    try {
+      final rowId = await into(groups).insert(group);
+      return await (select(groups)..where((t) => t.rowId.equals(rowId)))
+          .getSingle();
+    } catch (e) {
+      Log.error('Could not insert group: $e');
+      return null;
+    }
   }
 
   Future<List<Contact>> getGroupContact(String groupId) async {

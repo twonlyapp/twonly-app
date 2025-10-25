@@ -167,9 +167,9 @@ class UserList extends StatelessWidget {
               var directChat =
                   await twonlyDB.groupsDao.getDirectChat(user.userId);
               if (directChat == null) {
-                await twonlyDB.groupsDao.insertGroup(
+                await twonlyDB.groupsDao.createNewDirectChat(
+                  user.userId,
                   GroupsCompanion(
-                    isDirectChat: const Value(true),
                     groupName: Value(
                       getContactDisplayName(user),
                     ),

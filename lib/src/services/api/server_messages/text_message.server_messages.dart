@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/utils.dart';
@@ -20,6 +21,7 @@ Future<void> handleTextMessage(
       senderId: Value(fromUserId),
       groupId: Value(groupId),
       content: Value(textMessage.text),
+      type: const Value(MessageType.text),
       quotesMessageId: Value(
         textMessage.hasQuoteMessageId() ? textMessage.quoteMessageId : null,
       ),

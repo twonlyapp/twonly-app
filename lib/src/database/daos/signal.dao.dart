@@ -57,7 +57,7 @@ class SignalDao extends DatabaseAccessor<TwonlyDB> with _$SignalDaoMixin {
                   tbl.preKeyId.equals(preKey.preKeyId),
             ))
           .go();
-      Log.info('Using prekey ${preKey.preKeyId} for $contactId');
+      Log.info('[PREKEY] Using prekey ${preKey.preKeyId} for $contactId');
       return preKey;
     }
     return null;
@@ -68,6 +68,7 @@ class SignalDao extends DatabaseAccessor<TwonlyDB> with _$SignalDaoMixin {
     List<SignalContactPreKeysCompanion> preKeys,
   ) async {
     for (final preKey in preKeys) {
+      Log.info('[PREKEY] Inserting others ${preKey.preKeyId}');
       try {
         await into(signalContactPreKeys).insert(preKey);
       } catch (e) {

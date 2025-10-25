@@ -209,31 +209,32 @@ class _ChatListViewState extends State<ChatListView> {
             child: isConnected ? Container() : const ConnectionInfo(),
           ),
           Positioned.fill(
-            child: (_groupsNotPinned.isEmpty && _groupsPinned.isEmpty)
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.person_add),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AddNewUserView(),
-                            ),
-                          );
-                        },
-                        label: Text(context.lang.chatListViewSearchUserNameBtn),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await apiService.close(() {});
+                await apiService.connect(force: true);
+                await Future.delayed(const Duration(seconds: 1));
+              },
+              child: (_groupsNotPinned.isEmpty && _groupsPinned.isEmpty)
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.person_add),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AddNewUserView(),
+                              ),
+                            );
+                          },
+                          label:
+                              Text(context.lang.chatListViewSearchUserNameBtn),
+                        ),
                       ),
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: () async {
-                      await apiService.close(() {});
-                      await apiService.connect(force: true);
-                      await Future.delayed(const Duration(seconds: 1));
-                    },
-                    child: ListView.builder(
+                    )
+                  : ListView.builder(
                       itemCount: _groupsPinned.length +
                           (_groupsPinned.isNotEmpty ? 1 : 0) +
                           _groupsNotPinned.length +
@@ -276,7 +277,7 @@ class _ChatListViewState extends State<ChatListView> {
                         );
                       },
                     ),
-                  ),
+            ),
           ),
         ],
       ),

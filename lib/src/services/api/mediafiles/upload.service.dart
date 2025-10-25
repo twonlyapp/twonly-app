@@ -6,9 +6,11 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
@@ -47,6 +49,7 @@ Future<void> insertMediaFileInMessagesTable(
       MessagesCompanion(
         groupId: Value(groupId),
         mediaId: Value(mediaService.mediaFile.mediaId),
+        type: const Value(MessageType.media),
       ),
     );
     if (message != null) {
@@ -147,12 +150,13 @@ Future<void> _createUploadRequest(MediaFileService media) async {
       }
 
       final notEncryptedContent = EncryptedContent(
+        groupId: message.groupId,
         media: EncryptedContent_Media(
           senderMessageId: message.messageId,
           type: type,
           requiresAuthentication: media.mediaFile.requiresAuthentication,
           timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
-          downloadToken: media.mediaFile.downloadToken,
+          downloadToken: downloadToken.toList(),
           encryptionKey: media.mediaFile.encryptionKey,
           encryptionNonce: media.mediaFile.encryptionNonce,
           encryptionMac: media.mediaFile.encryptionMac,
@@ -202,36 +206,50 @@ Future<void> _createUploadRequest(MediaFileService media) async {
   await media.uploadRequestPath.writeAsBytes(uploadRequestBytes);
 }
 
+Mutex protectUpload = Mutex();
+
 Future<void> _uploadUploadRequest(MediaFileService media) async {
-  final apiAuthTokenRaw = await const FlutterSecureStorage()
-      .read(key: SecureStorageKeys.apiAuthToken);
-  if (apiAuthTokenRaw == null) {
-    Log.error('api auth token not defined.');
-    return;
-  }
-  final apiAuthToken = uint8ListToHex(base64Decode(apiAuthTokenRaw));
+  await protectUpload.protect(() async {
+    final currentMedia =
+        await twonlyDB.mediaFilesDao.getMediaFileById(media.mediaFile.mediaId);
 
-  final apiUrl =
-      'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
+    if (currentMedia == null ||
+        currentMedia.uploadState == UploadState.backgroundUploadTaskStarted) {
+      Log.info('Download for ${media.mediaFile.mediaId} already started.');
+      return null;
+    }
 
-  // try {
-  Log.info('Starting upload from ${media.mediaFile.mediaId}');
+    final apiAuthTokenRaw = await const FlutterSecureStorage()
+        .read(key: SecureStorageKeys.apiAuthToken);
 
-  final task = UploadTask.fromFile(
-    taskId: 'upload_${media.mediaFile.mediaId}',
-    displayName: media.mediaFile.type.name,
-    file: media.uploadRequestPath,
-    url: apiUrl,
-    priority: 0,
-    retries: 10,
-    headers: {
-      'x-twonly-auth-token': apiAuthToken,
-    },
-  );
+    if (apiAuthTokenRaw == null) {
+      Log.error('api auth token not defined.');
+      return null;
+    }
+    final apiAuthToken = uint8ListToHex(base64Decode(apiAuthTokenRaw));
 
-  Log.info('Enqueue upload task: ${task.taskId}');
+    final apiUrl =
+        'http${apiService.apiSecure}://${apiService.apiHost}/api/upload';
 
-  await FileDownloader().enqueue(task);
+    // try {
+    Log.info('Starting upload from ${media.mediaFile.mediaId}');
 
-  await media.setUploadState(UploadState.backgroundUploadTaskStarted);
+    final task = UploadTask.fromFile(
+      taskId: 'upload_${media.mediaFile.mediaId}',
+      displayName: media.mediaFile.type.name,
+      file: media.uploadRequestPath,
+      url: apiUrl,
+      priority: 0,
+      retries: 10,
+      headers: {
+        'x-twonly-auth-token': apiAuthToken,
+      },
+    );
+
+    Log.info('Enqueue upload task: ${task.taskId}');
+
+    await FileDownloader().enqueue(task);
+
+    await media.setUploadState(UploadState.backgroundUploadTaskStarted);
+  });
 }

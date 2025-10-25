@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
@@ -36,10 +37,12 @@ class _UserListItem extends State<GroupListItem> {
   List<Message> messagesNotOpened = [];
   late StreamSubscription<List<Message>> messagesNotOpenedStream;
 
-  List<Message> lastMessages = [];
-  late StreamSubscription<List<Message>> lastMessageStream;
+  Message? lastMessage;
+  late StreamSubscription<Message?> lastMessageStream;
+  late StreamSubscription<List<MediaFile>> lastMediaFilesStream;
 
   List<Message> previewMessages = [];
+  List<MediaFile> previewMediaFiles = [];
   bool hasNonOpenedMediaFile = false;
 
   @override
@@ -52,6 +55,7 @@ class _UserListItem extends State<GroupListItem> {
   void dispose() {
     messagesNotOpenedStream.cancel();
     lastMessageStream.cancel();
+    lastMediaFilesStream.cancel();
     super.dispose();
   }
 
@@ -59,30 +63,44 @@ class _UserListItem extends State<GroupListItem> {
     lastMessageStream = twonlyDB.messagesDao
         .watchLastMessage(widget.group.groupId)
         .listen((update) {
-      updateState(update, messagesNotOpened);
+      protectUpdateState.protect(() async {
+        await updateState(update, messagesNotOpened);
+      });
     });
 
     messagesNotOpenedStream = twonlyDB.messagesDao
         .watchMessageNotOpened(widget.group.groupId)
         .listen((update) {
-      updateState(lastMessages, update);
+      protectUpdateState.protect(() async {
+        await updateState(lastMessage, update);
+      });
+    });
+
+    lastMediaFilesStream =
+        twonlyDB.mediaFilesDao.watchNewestMediaFiles().listen((mediaFiles) {
+      for (final mediaFile in mediaFiles) {
+        final index =
+            previewMediaFiles.indexWhere((t) => t.mediaId == mediaFile.mediaId);
+        if (index >= 0) {
+          previewMediaFiles[index] = mediaFile;
+        }
+      }
+      setState(() {});
     });
   }
 
-  void updateState(
-    List<Message> newLastMessages,
+  Mutex protectUpdateState = Mutex();
+
+  Future<void> updateState(
+    Message? newLastMessage,
     List<Message> newMessagesNotOpened,
-  ) {
-    if (newLastMessages.isEmpty) {
+  ) async {
+    if (newLastMessage == null) {
       // there are no messages at all
       currentMessage = null;
       previewMessages = [];
-    } else if (newMessagesNotOpened.isEmpty) {
-      // there are no not opened messages show just the last message in the table
-      currentMessage = newLastMessages.last;
-      previewMessages = newLastMessages;
-    } else {
-      // filter first for received messages
+    } else if (newMessagesNotOpened.isNotEmpty) {
+      // Filter for the preview non opened messages. First messages which where send but not yet opened by the other side.
       final receivedMessages =
           newMessagesNotOpened.where((x) => x.senderId != null).toList();
 
@@ -93,6 +111,10 @@ class _UserListItem extends State<GroupListItem> {
         previewMessages = newMessagesNotOpened;
         currentMessage = newMessagesNotOpened.first;
       }
+    } else {
+      // there are no not opened messages show just the last message in the table
+      currentMessage = newLastMessage;
+      previewMessages = [newLastMessage];
     }
 
     final msgs =
@@ -106,7 +128,18 @@ class _UserListItem extends State<GroupListItem> {
       hasNonOpenedMediaFile = false;
     }
 
-    lastMessages = newLastMessages;
+    for (final message in previewMessages) {
+      if (message.mediaId != null &&
+          !previewMediaFiles.any((t) => t.mediaId == message.mediaId)) {
+        final mediaFile =
+            await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+        if (mediaFile != null) {
+          previewMediaFiles.add(mediaFile);
+        }
+      }
+    }
+
+    lastMessage = newLastMessage;
     messagesNotOpened = newMessagesNotOpened;
     setState(() {
       // sets lastMessages, messagesNotOpened and currentMessage
@@ -136,7 +169,7 @@ class _UserListItem extends State<GroupListItem> {
         await startDownloadMedia(mediaFile, true);
         return;
       }
-      if (mediaFile.downloadState! == DownloadState.downloaded) {
+      if (mediaFile.downloadState! == DownloadState.ready) {
         if (!mounted) return;
         await Navigator.push(
           context,
@@ -184,7 +217,7 @@ class _UserListItem extends State<GroupListItem> {
                 ? Text(context.lang.chatsTapToSend)
                 : Row(
                     children: [
-                      MessageSendStateIcon(previewMessages),
+                      MessageSendStateIcon(previewMessages, previewMediaFiles),
                       const Text('•'),
                       const SizedBox(width: 5),
                       if (currentMessage != null)

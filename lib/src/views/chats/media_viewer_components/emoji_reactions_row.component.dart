@@ -52,6 +52,7 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
                 emoji: widget.emoji,
               ),
             ),
+            null,
           );
 
           setState(() {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mutex/mutex.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:twonly/globals.dart';
@@ -94,6 +95,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     super.dispose();
   }
 
+  Mutex protectMessageUpdating = Mutex();
+
   Future<void> initStreams() async {
     final groupStream = twonlyDB.groupsDao.watchGroup(group.groupId);
     userSub = groupStream.listen((newGroup) {
@@ -105,55 +108,64 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
 
     final msgStream = twonlyDB.messagesDao.watchByGroupId(group.groupId);
     messageSub = msgStream.listen((newMessages) async {
-      await flutterLocalNotificationsPlugin.cancelAll();
-
-      final chatItems = <ChatItem>[];
-      final storedMediaFiles = <Message>[];
-
-      DateTime? lastDate;
-
-      final openedMessages = <int, List<String>>{};
-
-      for (final msg in newMessages) {
-        if (msg.type == MessageType.text &&
-            msg.senderId != null &&
-            msg.openedAt == null) {
-          openedMessages[msg.senderId!]!.add(msg.messageId);
-        }
-
-        if (msg.type == MessageType.media && msg.mediaStored) {
-          storedMediaFiles.add(msg);
-        }
-
-        if (lastDate == null ||
-            msg.createdAt.day != lastDate.day ||
-            msg.createdAt.month != lastDate.month ||
-            msg.createdAt.year != lastDate.year) {
-          chatItems.add(ChatItem.date(msg.createdAt));
-          lastDate = msg.createdAt;
-        } else if (msg.createdAt.difference(lastDate).inMinutes >= 20) {
-          chatItems.add(ChatItem.time(msg.createdAt));
-          lastDate = msg.createdAt;
-        }
-        chatItems.add(ChatItem.message(msg));
+      /// In case a message is not open yet the message is updated, which will trigger this watch to be called again.
+      /// So as long as the Mutex is locked just return...
+      if (protectMessageUpdating.isLocked) {
+        return;
       }
+      await protectMessageUpdating.protect(() async {
+        await flutterLocalNotificationsPlugin.cancelAll();
 
-      for (final contactId in openedMessages.keys) {
-        await notifyContactAboutOpeningMessage(
-          contactId,
-          openedMessages[contactId]!,
-        );
-      }
+        final chatItems = <ChatItem>[];
+        final storedMediaFiles = <Message>[];
 
-      await twonlyDB.messagesDao.openedAllTextMessages(widget.group.groupId);
+        DateTime? lastDate;
 
-      setState(() {
-        messages = chatItems.reversed.toList();
+        final openedMessages = <int, List<String>>{};
+
+        for (final msg in newMessages) {
+          if (msg.type == MessageType.text &&
+              msg.senderId != null &&
+              msg.openedAt == null) {
+            if (openedMessages[msg.senderId!] == null) {
+              openedMessages[msg.senderId!] = [];
+            }
+            openedMessages[msg.senderId!]!.add(msg.messageId);
+          }
+
+          if (msg.type == MessageType.media && msg.mediaStored) {
+            storedMediaFiles.add(msg);
+          }
+
+          if (lastDate == null ||
+              msg.createdAt.day != lastDate.day ||
+              msg.createdAt.month != lastDate.month ||
+              msg.createdAt.year != lastDate.year) {
+            chatItems.add(ChatItem.date(msg.createdAt));
+            lastDate = msg.createdAt;
+          } else if (msg.createdAt.difference(lastDate).inMinutes >= 20) {
+            chatItems.add(ChatItem.time(msg.createdAt));
+            lastDate = msg.createdAt;
+          }
+          chatItems.add(ChatItem.message(msg));
+        }
+
+        for (final contactId in openedMessages.keys) {
+          await notifyContactAboutOpeningMessage(
+            contactId,
+            openedMessages[contactId]!,
+          );
+        }
+
+        if (!mounted) return;
+        setState(() {
+          messages = chatItems.reversed.toList();
+        });
+
+        final items = await MemoryItem.convertFromMessages(storedMediaFiles);
+        galleryItems = items.values.toList();
+        setState(() {});
       });
-
-      final items = await MemoryItem.convertFromMessages(storedMediaFiles);
-      galleryItems = items.values.toList();
-      setState(() {});
     });
   }
 
@@ -396,18 +408,8 @@ bool isLastMessageFromSameUser(List<ChatItem> messages, int index) {
   if (index <= 0) {
     return true; // If there is no previous message, return true
   }
-
-  final lastMessage = messages[index - 1];
-  final currentMessage = messages[index];
-
-  if (lastMessage.isMessage && currentMessage.isMessage) {
-    // Check if both messages have the same quotesMessageId (or both are null)
-    return (lastMessage.message!.quotesMessageId == null &&
-            currentMessage.message!.quotesMessageId == null) ||
-        (lastMessage.message!.quotesMessageId != null &&
-            currentMessage.message!.quotesMessageId != null);
-  }
-  return false;
+  return (messages[index - 1].message?.senderId ==
+      messages[index].message?.senderId);
 }
 
 double calculateNumberOfLines(String text, double width, double fontSize) {

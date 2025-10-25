@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -47,17 +48,20 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
         EncryptedContent(
           mediaUpdate: EncryptedContent_MediaUpdate(
             type: EncryptedContent_MediaUpdate_Type.REOPENED,
-            targetMediaId: widget.message.mediaId,
+            targetMessageId: widget.message.messageId,
           ),
         ),
+        null,
       );
-      await twonlyDB.messagesDao.reopenedMedia(widget.message.messageId);
+      await twonlyDB.messagesDao.updateMessageId(
+        widget.message.messageId,
+        const MessagesCompanion(openedAt: Value(null)),
+      );
     }
   }
 
   Future<void> onTap() async {
-    if (widget.mediaService.mediaFile.downloadState ==
-            DownloadState.downloaded &&
+    if (widget.mediaService.mediaFile.downloadState == DownloadState.ready &&
         widget.message.openedAt == null) {
       if (!mounted) return;
       await Navigator.push(
@@ -91,7 +95,10 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       onTap: (widget.message.type == MessageType.media) ? onTap : null,
       child: SizedBox(
         width: 150,
-        height: widget.message.mediaStored ? 271 : null,
+        height: (widget.message.mediaStored &&
+                widget.mediaService.imagePreviewAvailable)
+            ? 271
+            : null,
         child: Align(
           alignment: Alignment.centerRight,
           child: ClipRRect(

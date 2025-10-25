@@ -1,7 +1,14 @@
 import 'dart:async';
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    as pb;
+import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 
 class RetransmissionDataView extends StatefulWidget {
   const RetransmissionDataView({super.key});
@@ -101,10 +108,47 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
                           Text(
                             'Server-Ack: ${retrans.receipt.ackByServerAt}',
                           ),
+                          if (retrans.receipt.messageId != null)
+                            Text(
+                              'MessageId: ${retrans.receipt.messageId}',
+                            ),
+                          if (retrans.receipt.messageId != null)
+                            FutureBuilder(
+                              future: getPushNotificationFromEncryptedContent(
+                                retrans.receipt.contactId,
+                                retrans.receipt.messageId,
+                                pb.EncryptedContent.fromBuffer(
+                                  pb.Message.fromBuffer(retrans.receipt.message)
+                                      .encryptedContent,
+                                ),
+                              ),
+                              builder: (d, a) {
+                                if (!a.hasData) return Container();
+                                return Text(
+                                  'PushKind: ${a.data?.kind}',
+                                );
+                              },
+                            ),
                           Text(
                             'Retry: ${retrans.receipt.retryCount} : ${retrans.receipt.lastRetry}',
                           ),
                         ],
+                      ),
+                      trailing: FilledButton.icon(
+                        onPressed: () async {
+                          final newReceiptId = uuid.v4();
+                          await twonlyDB.receiptsDao.updateReceipt(
+                            retrans.receipt.receiptId,
+                            ReceiptsCompanion(
+                              receiptId: Value(newReceiptId),
+                              ackByServerAt: const Value(null),
+                            ),
+                          );
+                          await tryToSendCompleteMessage(
+                            receiptId: newReceiptId,
+                          );
+                        },
+                        label: const FaIcon(FontAwesomeIcons.arrowRotateRight),
                       ),
                     ),
                   )

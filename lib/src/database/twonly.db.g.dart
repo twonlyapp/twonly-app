@@ -2299,6 +2299,18 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   late final GeneratedColumn<DateTime> modifiedAt = GeneratedColumn<DateTime>(
       'modified_at', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _ackByUserMeta =
+      const VerificationMeta('ackByUser');
+  @override
+  late final GeneratedColumn<DateTime> ackByUser = GeneratedColumn<DateTime>(
+      'ack_by_user', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _ackByServerMeta =
+      const VerificationMeta('ackByServer');
+  @override
+  late final GeneratedColumn<DateTime> ackByServer = GeneratedColumn<DateTime>(
+      'ack_by_server', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         groupId,
@@ -2313,7 +2325,9 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         isDeletedFromSender,
         openedAt,
         createdAt,
-        modifiedAt
+        modifiedAt,
+        ackByUser,
+        ackByServer
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2387,6 +2401,18 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           modifiedAt.isAcceptableOrUnknown(
               data['modified_at']!, _modifiedAtMeta));
     }
+    if (data.containsKey('ack_by_user')) {
+      context.handle(
+          _ackByUserMeta,
+          ackByUser.isAcceptableOrUnknown(
+              data['ack_by_user']!, _ackByUserMeta));
+    }
+    if (data.containsKey('ack_by_server')) {
+      context.handle(
+          _ackByServerMeta,
+          ackByServer.isAcceptableOrUnknown(
+              data['ack_by_server']!, _ackByServerMeta));
+    }
     return context;
   }
 
@@ -2422,6 +2448,10 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       modifiedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}modified_at']),
+      ackByUser: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}ack_by_user']),
+      ackByServer: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}ack_by_server']),
     );
   }
 
@@ -2448,6 +2478,8 @@ class Message extends DataClass implements Insertable<Message> {
   final DateTime? openedAt;
   final DateTime createdAt;
   final DateTime? modifiedAt;
+  final DateTime? ackByUser;
+  final DateTime? ackByServer;
   const Message(
       {required this.groupId,
       required this.messageId,
@@ -2461,7 +2493,9 @@ class Message extends DataClass implements Insertable<Message> {
       required this.isDeletedFromSender,
       this.openedAt,
       required this.createdAt,
-      this.modifiedAt});
+      this.modifiedAt,
+      this.ackByUser,
+      this.ackByServer});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2493,6 +2527,12 @@ class Message extends DataClass implements Insertable<Message> {
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || modifiedAt != null) {
       map['modified_at'] = Variable<DateTime>(modifiedAt);
+    }
+    if (!nullToAbsent || ackByUser != null) {
+      map['ack_by_user'] = Variable<DateTime>(ackByUser);
+    }
+    if (!nullToAbsent || ackByServer != null) {
+      map['ack_by_server'] = Variable<DateTime>(ackByServer);
     }
     return map;
   }
@@ -2526,6 +2566,12 @@ class Message extends DataClass implements Insertable<Message> {
       modifiedAt: modifiedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(modifiedAt),
+      ackByUser: ackByUser == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ackByUser),
+      ackByServer: ackByServer == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ackByServer),
     );
   }
 
@@ -2548,6 +2594,8 @@ class Message extends DataClass implements Insertable<Message> {
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       modifiedAt: serializer.fromJson<DateTime?>(json['modifiedAt']),
+      ackByUser: serializer.fromJson<DateTime?>(json['ackByUser']),
+      ackByServer: serializer.fromJson<DateTime?>(json['ackByServer']),
     );
   }
   @override
@@ -2568,6 +2616,8 @@ class Message extends DataClass implements Insertable<Message> {
       'openedAt': serializer.toJson<DateTime?>(openedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'modifiedAt': serializer.toJson<DateTime?>(modifiedAt),
+      'ackByUser': serializer.toJson<DateTime?>(ackByUser),
+      'ackByServer': serializer.toJson<DateTime?>(ackByServer),
     };
   }
 
@@ -2584,7 +2634,9 @@ class Message extends DataClass implements Insertable<Message> {
           bool? isDeletedFromSender,
           Value<DateTime?> openedAt = const Value.absent(),
           DateTime? createdAt,
-          Value<DateTime?> modifiedAt = const Value.absent()}) =>
+          Value<DateTime?> modifiedAt = const Value.absent(),
+          Value<DateTime?> ackByUser = const Value.absent(),
+          Value<DateTime?> ackByServer = const Value.absent()}) =>
       Message(
         groupId: groupId ?? this.groupId,
         messageId: messageId ?? this.messageId,
@@ -2602,6 +2654,8 @@ class Message extends DataClass implements Insertable<Message> {
         openedAt: openedAt.present ? openedAt.value : this.openedAt,
         createdAt: createdAt ?? this.createdAt,
         modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
+        ackByUser: ackByUser.present ? ackByUser.value : this.ackByUser,
+        ackByServer: ackByServer.present ? ackByServer.value : this.ackByServer,
       );
   Message copyWithCompanion(MessagesCompanion data) {
     return Message(
@@ -2626,6 +2680,9 @@ class Message extends DataClass implements Insertable<Message> {
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       modifiedAt:
           data.modifiedAt.present ? data.modifiedAt.value : this.modifiedAt,
+      ackByUser: data.ackByUser.present ? data.ackByUser.value : this.ackByUser,
+      ackByServer:
+          data.ackByServer.present ? data.ackByServer.value : this.ackByServer,
     );
   }
 
@@ -2644,7 +2701,9 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('openedAt: $openedAt, ')
           ..write('createdAt: $createdAt, ')
-          ..write('modifiedAt: $modifiedAt')
+          ..write('modifiedAt: $modifiedAt, ')
+          ..write('ackByUser: $ackByUser, ')
+          ..write('ackByServer: $ackByServer')
           ..write(')'))
         .toString();
   }
@@ -2663,7 +2722,9 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender,
       openedAt,
       createdAt,
-      modifiedAt);
+      modifiedAt,
+      ackByUser,
+      ackByServer);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2680,7 +2741,9 @@ class Message extends DataClass implements Insertable<Message> {
           other.isDeletedFromSender == this.isDeletedFromSender &&
           other.openedAt == this.openedAt &&
           other.createdAt == this.createdAt &&
-          other.modifiedAt == this.modifiedAt);
+          other.modifiedAt == this.modifiedAt &&
+          other.ackByUser == this.ackByUser &&
+          other.ackByServer == this.ackByServer);
 }
 
 class MessagesCompanion extends UpdateCompanion<Message> {
@@ -2697,6 +2760,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<DateTime?> openedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime?> modifiedAt;
+  final Value<DateTime?> ackByUser;
+  final Value<DateTime?> ackByServer;
   final Value<int> rowid;
   const MessagesCompanion({
     this.groupId = const Value.absent(),
@@ -2712,6 +2777,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.openedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.modifiedAt = const Value.absent(),
+    this.ackByUser = const Value.absent(),
+    this.ackByServer = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MessagesCompanion.insert({
@@ -2728,6 +2795,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.openedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.modifiedAt = const Value.absent(),
+    this.ackByUser = const Value.absent(),
+    this.ackByServer = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : groupId = Value(groupId),
         messageId = Value(messageId),
@@ -2746,6 +2815,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<DateTime>? openedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? modifiedAt,
+    Expression<DateTime>? ackByUser,
+    Expression<DateTime>? ackByServer,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2763,6 +2834,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (openedAt != null) 'opened_at': openedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (modifiedAt != null) 'modified_at': modifiedAt,
+      if (ackByUser != null) 'ack_by_user': ackByUser,
+      if (ackByServer != null) 'ack_by_server': ackByServer,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2781,6 +2854,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<DateTime?>? openedAt,
       Value<DateTime>? createdAt,
       Value<DateTime?>? modifiedAt,
+      Value<DateTime?>? ackByUser,
+      Value<DateTime?>? ackByServer,
       Value<int>? rowid}) {
     return MessagesCompanion(
       groupId: groupId ?? this.groupId,
@@ -2796,6 +2871,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       openedAt: openedAt ?? this.openedAt,
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? this.modifiedAt,
+      ackByUser: ackByUser ?? this.ackByUser,
+      ackByServer: ackByServer ?? this.ackByServer,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2843,6 +2920,12 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (modifiedAt.present) {
       map['modified_at'] = Variable<DateTime>(modifiedAt.value);
     }
+    if (ackByUser.present) {
+      map['ack_by_user'] = Variable<DateTime>(ackByUser.value);
+    }
+    if (ackByServer.present) {
+      map['ack_by_server'] = Variable<DateTime>(ackByServer.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2865,6 +2948,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('openedAt: $openedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('modifiedAt: $modifiedAt, ')
+          ..write('ackByUser: $ackByUser, ')
+          ..write('ackByServer: $ackByServer, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4236,6 +4321,200 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
           ..write('ackByServerAt: $ackByServerAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastRetry: $lastRetry, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ReceivedReceiptsTable extends ReceivedReceipts
+    with TableInfo<$ReceivedReceiptsTable, ReceivedReceipt> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReceivedReceiptsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _receiptIdMeta =
+      const VerificationMeta('receiptId');
+  @override
+  late final GeneratedColumn<String> receiptId = GeneratedColumn<String>(
+      'receipt_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [receiptId, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'received_receipts';
+  @override
+  VerificationContext validateIntegrity(Insertable<ReceivedReceipt> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('receipt_id')) {
+      context.handle(_receiptIdMeta,
+          receiptId.isAcceptableOrUnknown(data['receipt_id']!, _receiptIdMeta));
+    } else if (isInserting) {
+      context.missing(_receiptIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {receiptId};
+  @override
+  ReceivedReceipt map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReceivedReceipt(
+      receiptId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}receipt_id'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $ReceivedReceiptsTable createAlias(String alias) {
+    return $ReceivedReceiptsTable(attachedDatabase, alias);
+  }
+}
+
+class ReceivedReceipt extends DataClass implements Insertable<ReceivedReceipt> {
+  final String receiptId;
+  final DateTime createdAt;
+  const ReceivedReceipt({required this.receiptId, required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['receipt_id'] = Variable<String>(receiptId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ReceivedReceiptsCompanion toCompanion(bool nullToAbsent) {
+    return ReceivedReceiptsCompanion(
+      receiptId: Value(receiptId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory ReceivedReceipt.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReceivedReceipt(
+      receiptId: serializer.fromJson<String>(json['receiptId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'receiptId': serializer.toJson<String>(receiptId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  ReceivedReceipt copyWith({String? receiptId, DateTime? createdAt}) =>
+      ReceivedReceipt(
+        receiptId: receiptId ?? this.receiptId,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  ReceivedReceipt copyWithCompanion(ReceivedReceiptsCompanion data) {
+    return ReceivedReceipt(
+      receiptId: data.receiptId.present ? data.receiptId.value : this.receiptId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReceivedReceipt(')
+          ..write('receiptId: $receiptId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(receiptId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReceivedReceipt &&
+          other.receiptId == this.receiptId &&
+          other.createdAt == this.createdAt);
+}
+
+class ReceivedReceiptsCompanion extends UpdateCompanion<ReceivedReceipt> {
+  final Value<String> receiptId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const ReceivedReceiptsCompanion({
+    this.receiptId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReceivedReceiptsCompanion.insert({
+    required String receiptId,
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : receiptId = Value(receiptId);
+  static Insertable<ReceivedReceipt> custom({
+    Expression<String>? receiptId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (receiptId != null) 'receipt_id': receiptId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReceivedReceiptsCompanion copyWith(
+      {Value<String>? receiptId,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
+    return ReceivedReceiptsCompanion(
+      receiptId: receiptId ?? this.receiptId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (receiptId.present) {
+      map['receipt_id'] = Variable<String>(receiptId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReceivedReceiptsCompanion(')
+          ..write('receiptId: $receiptId, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6130,6 +6409,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final $ReactionsTable reactions = $ReactionsTable(this);
   late final $GroupMembersTable groupMembers = $GroupMembersTable(this);
   late final $ReceiptsTable receipts = $ReceiptsTable(this);
+  late final $ReceivedReceiptsTable receivedReceipts =
+      $ReceivedReceiptsTable(this);
   late final $SignalIdentityKeyStoresTable signalIdentityKeyStores =
       $SignalIdentityKeyStoresTable(this);
   late final $SignalPreKeyStoresTable signalPreKeyStores =
@@ -6163,6 +6444,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
         reactions,
         groupMembers,
         receipts,
+        receivedReceipts,
         signalIdentityKeyStores,
         signalPreKeyStores,
         signalSenderKeyStores,
@@ -7854,6 +8136,8 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<DateTime?> openedAt,
   Value<DateTime> createdAt,
   Value<DateTime?> modifiedAt,
+  Value<DateTime?> ackByUser,
+  Value<DateTime?> ackByServer,
   Value<int> rowid,
 });
 typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
@@ -7870,6 +8154,8 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<DateTime?> openedAt,
   Value<DateTime> createdAt,
   Value<DateTime?> modifiedAt,
+  Value<DateTime?> ackByUser,
+  Value<DateTime?> ackByServer,
   Value<int> rowid,
 });
 
@@ -8041,6 +8327,12 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<DateTime> get modifiedAt => $composableBuilder(
       column: $table.modifiedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get ackByUser => $composableBuilder(
+      column: $table.ackByUser, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get ackByServer => $composableBuilder(
+      column: $table.ackByServer, builder: (column) => ColumnFilters(column));
 
   $$GroupsTableFilterComposer get groupId {
     final $$GroupsTableFilterComposer composer = $composerBuilder(
@@ -8245,6 +8537,12 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<DateTime> get modifiedAt => $composableBuilder(
       column: $table.modifiedAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get ackByUser => $composableBuilder(
+      column: $table.ackByUser, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get ackByServer => $composableBuilder(
+      column: $table.ackByServer, builder: (column) => ColumnOrderings(column));
+
   $$GroupsTableOrderingComposer get groupId {
     final $$GroupsTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -8361,6 +8659,12 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get modifiedAt => $composableBuilder(
       column: $table.modifiedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get ackByUser =>
+      $composableBuilder(column: $table.ackByUser, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get ackByServer => $composableBuilder(
+      column: $table.ackByServer, builder: (column) => column);
 
   $$GroupsTableAnnotationComposer get groupId {
     final $$GroupsTableAnnotationComposer composer = $composerBuilder(
@@ -8571,6 +8875,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<DateTime?> openedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> modifiedAt = const Value.absent(),
+            Value<DateTime?> ackByUser = const Value.absent(),
+            Value<DateTime?> ackByServer = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MessagesCompanion(
@@ -8587,6 +8893,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             openedAt: openedAt,
             createdAt: createdAt,
             modifiedAt: modifiedAt,
+            ackByUser: ackByUser,
+            ackByServer: ackByServer,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -8603,6 +8911,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<DateTime?> openedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> modifiedAt = const Value.absent(),
+            Value<DateTime?> ackByUser = const Value.absent(),
+            Value<DateTime?> ackByServer = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               MessagesCompanion.insert(
@@ -8619,6 +8929,8 @@ class $$MessagesTableTableManager extends RootTableManager<
             openedAt: openedAt,
             createdAt: createdAt,
             modifiedAt: modifiedAt,
+            ackByUser: ackByUser,
+            ackByServer: ackByServer,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -10060,6 +10372,135 @@ typedef $$ReceiptsTableProcessedTableManager = ProcessedTableManager<
     (Receipt, $$ReceiptsTableReferences),
     Receipt,
     PrefetchHooks Function({bool contactId, bool messageId})>;
+typedef $$ReceivedReceiptsTableCreateCompanionBuilder
+    = ReceivedReceiptsCompanion Function({
+  required String receiptId,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+typedef $$ReceivedReceiptsTableUpdateCompanionBuilder
+    = ReceivedReceiptsCompanion Function({
+  Value<String> receiptId,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+class $$ReceivedReceiptsTableFilterComposer
+    extends Composer<_$TwonlyDB, $ReceivedReceiptsTable> {
+  $$ReceivedReceiptsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get receiptId => $composableBuilder(
+      column: $table.receiptId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$ReceivedReceiptsTableOrderingComposer
+    extends Composer<_$TwonlyDB, $ReceivedReceiptsTable> {
+  $$ReceivedReceiptsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get receiptId => $composableBuilder(
+      column: $table.receiptId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ReceivedReceiptsTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $ReceivedReceiptsTable> {
+  $$ReceivedReceiptsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get receiptId =>
+      $composableBuilder(column: $table.receiptId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$ReceivedReceiptsTableTableManager extends RootTableManager<
+    _$TwonlyDB,
+    $ReceivedReceiptsTable,
+    ReceivedReceipt,
+    $$ReceivedReceiptsTableFilterComposer,
+    $$ReceivedReceiptsTableOrderingComposer,
+    $$ReceivedReceiptsTableAnnotationComposer,
+    $$ReceivedReceiptsTableCreateCompanionBuilder,
+    $$ReceivedReceiptsTableUpdateCompanionBuilder,
+    (
+      ReceivedReceipt,
+      BaseReferences<_$TwonlyDB, $ReceivedReceiptsTable, ReceivedReceipt>
+    ),
+    ReceivedReceipt,
+    PrefetchHooks Function()> {
+  $$ReceivedReceiptsTableTableManager(
+      _$TwonlyDB db, $ReceivedReceiptsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReceivedReceiptsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReceivedReceiptsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReceivedReceiptsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> receiptId = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ReceivedReceiptsCompanion(
+            receiptId: receiptId,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String receiptId,
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ReceivedReceiptsCompanion.insert(
+            receiptId: receiptId,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ReceivedReceiptsTableProcessedTableManager = ProcessedTableManager<
+    _$TwonlyDB,
+    $ReceivedReceiptsTable,
+    ReceivedReceipt,
+    $$ReceivedReceiptsTableFilterComposer,
+    $$ReceivedReceiptsTableOrderingComposer,
+    $$ReceivedReceiptsTableAnnotationComposer,
+    $$ReceivedReceiptsTableCreateCompanionBuilder,
+    $$ReceivedReceiptsTableUpdateCompanionBuilder,
+    (
+      ReceivedReceipt,
+      BaseReferences<_$TwonlyDB, $ReceivedReceiptsTable, ReceivedReceipt>
+    ),
+    ReceivedReceipt,
+    PrefetchHooks Function()>;
 typedef $$SignalIdentityKeyStoresTableCreateCompanionBuilder
     = SignalIdentityKeyStoresCompanion Function({
   required int deviceId,
@@ -11497,6 +11938,8 @@ class $TwonlyDBManager {
       $$GroupMembersTableTableManager(_db, _db.groupMembers);
   $$ReceiptsTableTableManager get receipts =>
       $$ReceiptsTableTableManager(_db, _db.receipts);
+  $$ReceivedReceiptsTableTableManager get receivedReceipts =>
+      $$ReceivedReceiptsTableTableManager(_db, _db.receivedReceipts);
   $$SignalIdentityKeyStoresTableTableManager get signalIdentityKeyStores =>
       $$SignalIdentityKeyStoresTableTableManager(
           _db, _db.signalIdentityKeyStores);

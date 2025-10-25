@@ -16,11 +16,15 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
 
   Future<MediaFile?> insertMedia(MediaFilesCompanion mediaFile) async {
     try {
-      final rowId = await into(mediaFiles).insert(
-        mediaFile.copyWith(
+      var insertMediaFile = mediaFile;
+
+      if (insertMediaFile.mediaId == const Value.absent()) {
+        insertMediaFile = mediaFile.copyWith(
           mediaId: Value(uuid.v7()),
-        ),
-      );
+        );
+      }
+
+      final rowId = await into(mediaFiles).insert(insertMediaFile);
 
       return await (select(mediaFiles)..where((t) => t.rowId.equals(rowId)))
           .getSingle();
@@ -72,11 +76,22 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
 
   Future<List<MediaFile>> getAllMediaFilesPendingDownload() async {
     return (select(mediaFiles)
-          ..where((t) => t.downloadState.equals(DownloadState.pending.name)))
+          ..where(
+            (t) =>
+                t.downloadState.equals(DownloadState.pending.name) |
+                t.downloadState.equals(DownloadState.downloading.name),
+          ))
         .get();
   }
 
   Stream<List<MediaFile>> watchAllStoredMediaFiles() {
     return (select(mediaFiles)..where((t) => t.stored.equals(true))).watch();
+  }
+
+  Stream<List<MediaFile>> watchNewestMediaFiles() {
+    return (select(mediaFiles)
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
+          ..limit(100))
+        .watch();
   }
 }

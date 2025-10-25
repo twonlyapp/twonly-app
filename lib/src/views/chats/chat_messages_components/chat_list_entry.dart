@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages.table.dart'
     hide MessageActions;
 import 'package:twonly/src/database/twonly.db.dart';
@@ -35,14 +38,31 @@ class ChatListEntry extends StatefulWidget {
 class _ChatListEntryState extends State<ChatListEntry> {
   MediaFileService? mediaService;
 
+  StreamSubscription<MediaFile?>? mediaFileSub;
+
   @override
   void initState() {
     initAsync();
     super.initState();
   }
 
+  @override
+  void dispose() {
+    mediaFileSub?.cancel();
+    super.dispose();
+  }
+
   Future<void> initAsync() async {
-    mediaService = await MediaFileService.fromMediaId(widget.message.messageId);
+    if (widget.message.mediaId != null) {
+      final mediaFileStream =
+          twonlyDB.mediaFilesDao.watchMedia(widget.message.mediaId!);
+      mediaFileSub = mediaFileStream.listen((mediaFiles) async {
+        if (mediaFiles != null) {
+          mediaService = await MediaFileService.fromMedia(mediaFiles);
+          if (mounted) setState(() {});
+        }
+      });
+    }
     setState(() {});
   }
 

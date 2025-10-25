@@ -23,6 +23,9 @@ class UserData {
   String? avatarJson;
 
   @JsonKey(defaultValue: 0)
+  int appVersion = 0;
+
+  @JsonKey(defaultValue: 0)
   int avatarCounter = 0;
 
   @JsonKey(defaultValue: false)

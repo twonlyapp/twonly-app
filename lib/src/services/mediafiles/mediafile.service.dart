@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart';
@@ -129,6 +130,9 @@ class MediaFileService {
     }
   }
 
+  bool get imagePreviewAvailable =>
+      thumbnailPath.existsSync() || storedPath.existsSync();
+
   Future<void> storeMediaFile() async {
     Log.info('Storing media file ${mediaFile.mediaId}');
     await twonlyDB.mediaFilesDao.updateMedia(
@@ -137,7 +141,25 @@ class MediaFileService {
         stored: Value(true),
       ),
     );
-    await tempPath.copy(storedPath.path);
+    await twonlyDB.messagesDao.updateMessagesByMediaId(
+      mediaFile.mediaId,
+      const MessagesCompanion(
+        mediaStored: Value(true),
+      ),
+    );
+
+    if (originalPath.existsSync()) {
+      await originalPath.copy(tempPath.path);
+      await compressMedia();
+    }
+    if (tempPath.existsSync()) {
+      await tempPath.copy(storedPath.path);
+    } else {
+      Log.error(
+        'Could not store image neither tempPath nor originalPath exists.',
+      );
+    }
+    unawaited(createThumbnail());
     await updateFromDB();
   }
 

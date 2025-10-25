@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
@@ -92,6 +93,7 @@ Future<void> handleMedia(
       senderId: Value(fromUserId),
       groupId: Value(groupId),
       mediaId: Value(mediaFile.mediaId),
+      type: const Value(MessageType.media),
       quotesMessageId: Value(
         media.hasQuoteMessageId() ? media.quoteMessageId : null,
       ),
@@ -112,16 +114,17 @@ Future<void> handleMedia(
 
 Future<void> handleMediaUpdate(
   int fromUserId,
-  String groupId,
   EncryptedContent_MediaUpdate mediaUpdate,
 ) async {
-  final messages = await twonlyDB.messagesDao
-      .getMessagesByMediaId(mediaUpdate.targetMediaId);
-  if (messages.length != 1) return;
-  final message = messages.first;
-  if (message.senderId != fromUserId) return;
+  final message = await twonlyDB.messagesDao
+      .getMessageById(mediaUpdate.targetMessageId)
+      .getSingleOrNull();
+  if (message == null) {
+    Log.error(
+        'Got media update to  message ${mediaUpdate.targetMessageId} but message not found.');
+  }
   final mediaFile =
-      await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+      await twonlyDB.mediaFilesDao.getMediaFileById(message!.mediaId!);
   if (mediaFile == null) {
     Log.info(
       'Got media file update, but media file was not found ${message.mediaId}',
@@ -140,15 +143,8 @@ Future<void> handleMediaUpdate(
       );
     case EncryptedContent_MediaUpdate_Type.STORED:
       Log.info('Got media file stored ${mediaFile.mediaId}');
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaFile.mediaId,
-        const MediaFilesCompanion(
-          stored: Value(true),
-        ),
-      );
-
       final mediaService = await MediaFileService.fromMedia(mediaFile);
-      unawaited(mediaService.createThumbnail());
+      await mediaService.storeMediaFile();
 
     case EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR:
       Log.info('Got media file decryption error ${mediaFile.mediaId}');

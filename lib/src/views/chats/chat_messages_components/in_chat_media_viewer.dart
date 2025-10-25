@@ -58,7 +58,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
   bool loadIndex() {
     if (widget.message.mediaStored) {
       final index = widget.galleryItems.indexWhere(
-        (x) => x.mediaService.mediaFile.mediaId == (widget.message.messageId),
+        (x) => x.mediaService.mediaFile.mediaId == (widget.message.mediaId),
       );
       if (index != -1) {
         galleryItemIndex = index;
@@ -112,7 +112,8 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.message.mediaStored) {
+    if (!widget.message.mediaStored ||
+        !widget.mediaService.imagePreviewAvailable) {
       return Container(
         constraints: const BoxConstraints(
           minHeight: 39,
@@ -130,6 +131,7 @@ class _InChatMediaViewerState extends State<InChatMediaViewer> {
           ),
           child: MessageSendStateIcon(
             [widget.message],
+            [widget.mediaService.mediaFile],
             mainAxisAlignment: MainAxisAlignment.center,
             canBeReopened: widget.canBeReopened,
           ),

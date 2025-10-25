@@ -1,11 +1,10 @@
 import 'dart:collection';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
@@ -18,49 +17,37 @@ enum MessageSendState {
   sending,
 }
 
-Future<MessageSendState> messageSendStateFromMessage(Message msg) async {
-  MessageSendState state;
-
-  final ackByServer = await twonlyDB.messagesDao.haveAllMembers(
-    msg.groupId,
-    msg.messageId,
-    MessageActionType.ackByServerAt,
-  );
-
-  if (!ackByServer) {
-    if (msg.senderId == null) {
-      state = MessageSendState.sending;
-    } else {
-      state = MessageSendState.receiving;
+MessageSendState messageSendStateFromMessage(Message msg) {
+  if (msg.senderId == null) {
+    /// messages was send by me, look up if every messages was received by the server...
+    if (msg.ackByServer == null) {
+      return MessageSendState.sending;
     }
-  } else {
-    if (msg.senderId == null) {
-      // message send
-      if (msg.openedAt == null) {
-        state = MessageSendState.send;
-      } else {
-        state = MessageSendState.sendOpened;
-      }
+    if (msg.openedAt != null) {
+      return MessageSendState.sendOpened;
     } else {
-      // message received
-      if (msg.openedAt == null) {
-        state = MessageSendState.received;
-      } else {
-        state = MessageSendState.receivedOpened;
-      }
+      return MessageSendState.send;
     }
   }
-  return state;
+
+  // message received
+  if (msg.openedAt == null) {
+    return MessageSendState.received;
+  } else {
+    return MessageSendState.receivedOpened;
+  }
 }
 
 class MessageSendStateIcon extends StatefulWidget {
   const MessageSendStateIcon(
-    this.messages, {
+    this.messages,
+    this.mediaFiles, {
     super.key,
     this.canBeReopened = false,
     this.mainAxisAlignment = MainAxisAlignment.end,
   });
   final List<Message> messages;
+  final List<MediaFile> mediaFiles;
   final MainAxisAlignment mainAxisAlignment;
   final bool canBeReopened;
 
@@ -69,17 +56,30 @@ class MessageSendStateIcon extends StatefulWidget {
 }
 
 class _MessageSendStateIconState extends State<MessageSendStateIcon> {
-  List<Widget> icons = <Widget>[];
-  String text = '';
-  Widget? textWidget;
-
   @override
   void initState() {
     super.initState();
-    initAsync();
   }
 
-  Future<void> initAsync() async {
+  Widget getLoaderIcon(Color color) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 10,
+          height: 10,
+          child: CircularProgressIndicator(strokeWidth: 1, color: color),
+        ),
+        const SizedBox(width: 2),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final icons = <Widget>[];
+    var text = '';
+    Widget? textWidget;
+    textWidget = null;
     final kindsAlreadyShown = HashSet<MessageType>();
 
     for (final message in widget.messages) {
@@ -87,16 +87,14 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       if (kindsAlreadyShown.contains(message.type)) continue;
       kindsAlreadyShown.add(message.type);
 
-      final state = await messageSendStateFromMessage(message);
+      final state = messageSendStateFromMessage(message);
 
       final mediaFile = message.mediaId == null
           ? null
-          : await MediaFileService.fromMediaId(message.mediaId!);
+          : widget.mediaFiles
+              .firstWhereOrNull((t) => t.mediaId == message.mediaId);
 
-      if (!mounted) return;
-
-      final color =
-          getMessageColorFromType(message, mediaFile?.mediaFile, context);
+      final color = getMessageColorFromType(message, mediaFile, context);
 
       Widget icon = const Placeholder();
       textWidget = null;
@@ -126,11 +124,10 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
           icon = Icon(Icons.square_rounded, size: 14, color: color);
           text = context.lang.messageSendState_Received;
           if (message.type == MessageType.media) {
-            if (mediaFile!.mediaFile.downloadState == DownloadState.pending) {
+            if (mediaFile!.downloadState == DownloadState.pending) {
               text = context.lang.messageSendState_TapToLoad;
             }
-            if (mediaFile.mediaFile.downloadState ==
-                DownloadState.downloading) {
+            if (mediaFile.downloadState == DownloadState.downloading) {
               text = context.lang.messageSendState_Loading;
               icon = getLoaderIcon(color);
             }
@@ -153,12 +150,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       }
 
       if (mediaFile != null) {
-        if (mediaFile.mediaFile.stored) {
+        if (mediaFile.reopenByContact) {
           icon = FaIcon(FontAwesomeIcons.repeat, size: 12, color: color);
           text = context.lang.messageReopened;
         }
 
-        if (mediaFile.mediaFile.reuploadRequestedBy != null) {
+        if (mediaFile.downloadState == DownloadState.reuploadRequested) {
           icon =
               FaIcon(FontAwesomeIcons.clockRotateLeft, size: 12, color: color);
           textWidget = Text(
@@ -175,24 +172,6 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       }
     }
 
-    setState(() {});
-  }
-
-  Widget getLoaderIcon(Color color) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 10,
-          height: 10,
-          child: CircularProgressIndicator(strokeWidth: 1, color: color),
-        ),
-        const SizedBox(width: 2),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
     if (icons.isEmpty) return Container();
 
     var icon = icons[0];
@@ -201,18 +180,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       icon = Stack(
         alignment: Alignment.center,
         children: <Widget>[
-          // First icon (bottom icon)
-          icons[0],
-
-          Transform(
-            transform: Matrix4.identity()
-              ..scaleByDouble(0.7, 0.7, 0.7, 0.7) // Scale to half
-              ..translateByDouble(3, 5, 0, 1),
-            // Move down by 10 pixels (adjust as needed)
-            alignment: Alignment.center,
+          Transform.scale(
+            scale: 1.3,
             child: icons[1],
           ),
-          // Second icon (top icon, slightly offset)
+          icons[0],
         ],
       );
     }
@@ -223,7 +195,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         icon,
         const SizedBox(width: 3),
         if (textWidget != null)
-          textWidget!
+          textWidget
         else
           Text(
             text,

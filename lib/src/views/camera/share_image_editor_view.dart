@@ -171,20 +171,20 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
       const SizedBox(height: 8),
       NotificationBadge(
-        count: (media.type != MediaType.video)
+        count: (media.type == MediaType.video)
             ? '0'
             : media.displayLimitInMilliseconds == null
                 ? '∞'
                 : media.displayLimitInMilliseconds.toString(),
         child: ActionButton(
-          (media.type != MediaType.video)
+          (media.type == MediaType.video)
               ? media.displayLimitInMilliseconds == null
                   ? Icons.repeat_rounded
                   : Icons.repeat_one_rounded
               : Icons.timer_outlined,
           tooltipText: context.lang.protectAsARealTwonly,
           onPressed: () async {
-            if (media.type != MediaType.video) {
+            if (media.type == MediaType.video) {
               await mediaService.setDisplayLimit(
                 (media.displayLimitInMilliseconds == null) ? 0 : null,
               );
@@ -311,7 +311,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       }
     }
 
-    if (layers.length > 1 || media.type != MediaType.video) {
+    if (layers.length > 1 || media.type == MediaType.video) {
       for (final x in layers) {
         x.showCustomButtons = false;
       }
@@ -434,7 +434,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SaveToGalleryButton(
-                      getMergedImage: getEditedImageBytes,
+                      storeImageAsOriginal: storeImageAsOriginal,
                       mediaService: mediaService,
                       displayButtonLabel: widget.sendToGroup == null,
                       isLoading: loadingImage,

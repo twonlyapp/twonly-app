@@ -38,30 +38,44 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   }
 
   Stream<List<Message>> watchMediaNotOpened(String groupId) {
-    return (select(messages)
-          ..where(
-            (t) =>
-                t.openedAt.isNull() &
-                t.groupId.equals(groupId) &
-                t.senderId.isNotNull() &
-                t.type.equals(MessageType.media.name),
-          )
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-        .watch();
+    final query = select(messages).join([
+      leftOuterJoin(mediaFiles, mediaFiles.mediaId.equalsExp(messages.mediaId)),
+    ])
+      ..where(
+        mediaFiles.downloadState
+                .equals(DownloadState.reuploadRequested.name)
+                .not() &
+            messages.openedAt.isNull() &
+            messages.groupId.equals(groupId) &
+            messages.mediaId.isNotNull() &
+            messages.senderId.isNotNull() &
+            messages.type.equals(MessageType.media.name),
+      );
+    return query.map((row) => row.readTable(messages)).watch();
   }
 
-  Stream<List<Message>> watchLastMessage(String groupId) {
+  Stream<Message?> watchLastMessage(String groupId) {
     return (select(messages)
           ..where((t) => t.groupId.equals(groupId))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
           ..limit(1))
-        .watch();
+        .watchSingleOrNull();
   }
 
   Stream<List<Message>> watchByGroupId(String groupId) {
     return ((select(messages)..where((t) => t.groupId.equals(groupId)))
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .watch();
+  }
+
+  Stream<List<MessageAction>> watchMessageActionChanges(String messageId) {
+    return (select(messageActions)..where((t) => t.messageId.equals(messageId)))
+        .watch();
+  }
+
+  Stream<Message?> watchMessageById(String messageId) {
+    return (select(messages)..where((t) => t.messageId.equals(messageId)))
+        .watchSingleOrNull();
   }
 
   // Future<void> removeOldMessages() {
@@ -206,14 +220,20 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String messageId,
     DateTime timestamp,
   ) async {
-    await into(messageActions).insert(
+    await into(messageActions).insertOnConflictUpdate(
       MessageActionsCompanion(
         messageId: Value(messageId),
         contactId: Value(contactId),
-        type: const Value(MessageActionType.ackByUserAt),
+        type: const Value(MessageActionType.openedAt),
         actionAt: Value(timestamp),
       ),
     );
+    if (await haveAllMembers(messageId, MessageActionType.openedAt)) {
+      await twonlyDB.messagesDao.updateMessageId(
+        messageId,
+        MessagesCompanion(openedAt: Value(DateTime.now())),
+      );
+    }
   }
 
   Future<void> handleMessageAckByServer(
@@ -221,7 +241,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     String messageId,
     DateTime timestamp,
   ) async {
-    await into(messageActions).insert(
+    await into(messageActions).insertOnConflictUpdate(
       MessageActionsCompanion(
         messageId: Value(messageId),
         contactId: Value(contactId),
@@ -229,14 +249,22 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         actionAt: Value(timestamp),
       ),
     );
+    if (await haveAllMembers(messageId, MessageActionType.ackByServerAt)) {
+      await twonlyDB.messagesDao.updateMessageId(
+        messageId,
+        MessagesCompanion(ackByServer: Value(DateTime.now())),
+      );
+    }
   }
 
   Future<bool> haveAllMembers(
-    String groupId,
     String messageId,
     MessageActionType action,
   ) async {
-    final members = await twonlyDB.groupsDao.getGroupMembers(groupId);
+    final message =
+        await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
+    if (message == null) return true;
+    final members = await twonlyDB.groupsDao.getGroupMembers(message.groupId);
 
     final actions = await (select(messageActions)
           ..where(
@@ -291,11 +319,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
   Future<Message?> insertMessage(MessagesCompanion message) async {
     try {
-      final rowId = await into(messages).insert(
-        message.copyWith(
+      var insertMessage = message;
+
+      if (message.messageId == const Value.absent()) {
+        insertMessage = message.copyWith(
           messageId: Value(uuid.v7()),
-        ),
-      );
+        );
+      }
+
+      final rowId = await into(messages).insert(insertMessage);
 
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,
@@ -321,19 +353,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
           ..limit(1))
         .getSingleOrNull();
-  }
-
-  Future<void> reopenedMedia(String messageId) async {
-    await (delete(messageActions)
-          ..where(
-            (t) =>
-                t.messageId.equals(messageId) &
-                t.contactId.isNull() &
-                t.type.equals(
-                  MessageActionType.openedAt.name,
-                ),
-          ))
-        .go();
   }
 
   // Future<void> deleteMessagesByContactId(int contactId) {

@@ -49,12 +49,14 @@ class MemoriesViewState extends State<MemoriesView> {
       final applicationSupportDirectory =
           await getApplicationSupportDirectory();
       for (final mediaFile in mediaFiles) {
+        final mediaService = MediaFileService(
+          mediaFile,
+          applicationSupportDirectory: applicationSupportDirectory,
+        );
+        if (!mediaService.imagePreviewAvailable) continue;
         galleryItems.add(
           MemoryItem(
-            mediaService: MediaFileService(
-              mediaFile,
-              applicationSupportDirectory: applicationSupportDirectory,
-            ),
+            mediaService: mediaService,
             messages: [],
           ),
         );

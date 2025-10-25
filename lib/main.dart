@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -34,6 +37,15 @@ void main() async {
   // unawaited(setupPushNotification());
 
   gCameras = await availableCameras();
+
+  // try {
+  //   File(join((await getApplicationSupportDirectory()).path, 'twonly.sqlite'))
+  //       .deleteSync();
+  // } catch (e) {}
+  // await updateUserdata((u) {
+  //   u.appVersion = 0;
+  //   return u;
+  // });
 
   apiService = ApiService();
   twonlyDB = TwonlyDB();

@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:path/path.dart' show join;
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
@@ -160,14 +157,14 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   }
 
   Future<void> initAsync() async {
-    _showDatabaseMigration = File(
-      join(
-        (await getApplicationSupportDirectory()).path,
-        'twonly_database.sqlite',
-      ),
-    ).existsSync();
-
     _isUserCreated = await isUserCreated();
+
+    if (_isUserCreated) {
+      if (gUser.appVersion < 62) {
+        _showDatabaseMigration = true;
+      }
+    }
+
     setState(() {
       _isLoaded = true;
     });

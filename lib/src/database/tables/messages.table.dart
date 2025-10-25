@@ -35,6 +35,8 @@ class Messages extends Table {
   DateTimeColumn get openedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get modifiedAt => dateTime().nullable()();
+  DateTimeColumn get ackByUser => dateTime().nullable()();
+  DateTimeColumn get ackByServer => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {messageId};

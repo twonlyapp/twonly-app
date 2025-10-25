@@ -66,7 +66,7 @@ message EncryptedContent {
         }
         Type type = 1;
         optional string senderMessageId = 2;
-        repeated string multipleSenderMessageIds = 3;
+        repeated string multipleTargetMessageIds = 3;
         optional string text = 4;
         int64 timestamp = 5;
     }
@@ -99,7 +99,7 @@ message EncryptedContent {
             DECRYPTION_ERROR = 2;
         }
         Type type = 1;
-        string targetMediaId = 2;
+        string targetMessageId = 2;
     }
 
     message ContactRequest {

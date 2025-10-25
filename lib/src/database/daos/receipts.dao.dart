@@ -7,7 +7,7 @@ import 'package:twonly/src/utils/log.dart';
 
 part 'receipts.dao.g.dart';
 
-@DriftAccessor(tables: [Receipts, Messages, MessageActions])
+@DriftAccessor(tables: [Receipts, Messages, MessageActions, ReceivedReceipts])
 class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -52,11 +52,13 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
 
   Future<Receipt?> insertReceipt(ReceiptsCompanion entry) async {
     try {
-      final id = await into(receipts).insert(
-        entry.copyWith(
+      var insertEntry = entry;
+      if (entry.receiptId == const Value.absent()) {
+        insertEntry = entry.copyWith(
           receiptId: Value(uuid.v4()),
-        ),
-      );
+        );
+      }
+      final id = await into(receipts).insert(insertEntry);
       return await (select(receipts)..where((t) => t.rowId.equals(id)))
           .getSingle();
     } catch (e) {
@@ -96,5 +98,27 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   ) async {
     await (update(receipts)..where((c) => c.receiptId.equals(receiptId)))
         .write(updates);
+  }
+
+  Future<bool> isDuplicated(String receiptId) async {
+    return await (select(receivedReceipts)
+              ..where((t) => t.receiptId.equals(receiptId)))
+            .getSingleOrNull() !=
+        null;
+    // try {
+    //   return await (select()
+    //         ..where(
+    //           (t) => t.receiptId.equals(receiptId),
+    //         ))
+    //       .getSingleOrNull();
+    // } catch (e) {
+    //   Log.error(e);
+    //   return null;
+    // }
+  }
+
+  Future<void> gotReceipt(String receiptId) async {
+    await into(receivedReceipts)
+        .insert(ReceivedReceiptsCompanion(receiptId: Value(receiptId)));
   }
 }

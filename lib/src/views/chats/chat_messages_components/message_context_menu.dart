@@ -64,6 +64,7 @@ class MessageContextMenu extends StatelessWidget {
                   remove: false,
                 ),
               ),
+              null,
             );
           },
           child: const FaIcon(FontAwesomeIcons.faceLaugh),

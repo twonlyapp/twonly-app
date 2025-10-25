@@ -30,3 +30,13 @@ class Receipts extends Table {
   @override
   Set<Column> get primaryKey => {receiptId};
 }
+
+@DataClassName('ReceivedReceipt')
+class ReceivedReceipts extends Table {
+  TextColumn get receiptId => text()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {receiptId};
+}

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
+import 'package:hashlib/random.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart' hide Message;
@@ -50,9 +51,19 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
 
 DateTime lastPushKeyRequest = DateTime.now().subtract(const Duration(hours: 1));
 
+Mutex protectReceiptCheck = Mutex();
+
 Future<void> handleNewMessage(int fromUserId, Uint8List body) async {
   final message = Message.fromBuffer(body);
   final receiptId = message.receiptId;
+
+  await protectReceiptCheck.protect(() async {
+    if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
+      Log.error('Got duplicated message from the server. Ignoring it.');
+      return;
+    }
+    await twonlyDB.receiptsDao.gotReceipt(receiptId);
+  });
 
   switch (message.type) {
     case Message_Type.SENDER_DELIVERY_RECEIPT:
@@ -65,7 +76,15 @@ Future<void> handleNewMessage(int fromUserId, Uint8List body) async {
         Log.info(
           'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
         );
-        await tryToSendCompleteMessage(receiptId: receiptId, reupload: true);
+        final newReceiptId = uuid.v4();
+        await twonlyDB.receiptsDao.updateReceipt(
+          receiptId,
+          ReceiptsCompanion(
+            receiptId: Value(newReceiptId),
+            ackByServerAt: const Value(null),
+          ),
+        );
+        await tryToSendCompleteMessage(receiptId: newReceiptId);
       }
 
     case Message_Type.CIPHERTEXT:
@@ -112,7 +131,7 @@ Future<PlaintextContent?> handleEncryptedMessage(
   final (content, decryptionErrorType) = await signalDecryptMessage(
     fromUserId,
     encryptedContentRaw,
-    messageType as int,
+    messageType.value,
   );
 
   if (content == null) {
@@ -147,21 +166,30 @@ Future<PlaintextContent?> handleEncryptedMessage(
     return null;
   }
 
+  if (content.hasMessageUpdate()) {
+    await handleMessageUpdate(
+      fromUserId,
+      content.messageUpdate,
+    );
+    return null;
+  }
+
+  if (content.hasMediaUpdate()) {
+    await handleMediaUpdate(
+      fromUserId,
+      content.mediaUpdate,
+    );
+    return null;
+  }
+
   if (!content.hasGroupId()) {
+    Log.error('Messages should have a groupId $fromUserId.');
     return null;
   }
 
   /// Verify that the user is (still) in that group...
   if (!await twonlyDB.groupsDao.isContactInGroup(fromUserId, content.groupId)) {
     Log.error('User $fromUserId tried to access group ${content.groupId}.');
-    return null;
-  }
-
-  if (content.hasMessageUpdate()) {
-    await handleMessageUpdate(
-      fromUserId,
-      content.messageUpdate,
-    );
     return null;
   }
 
@@ -188,15 +216,6 @@ Future<PlaintextContent?> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.media,
-    );
-    return null;
-  }
-
-  if (content.hasMediaUpdate()) {
-    await handleMediaUpdate(
-      fromUserId,
-      content.groupId,
-      content.mediaUpdate,
     );
     return null;
   }

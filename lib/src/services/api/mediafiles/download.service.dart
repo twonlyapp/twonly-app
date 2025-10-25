@@ -95,6 +95,7 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
   }
 
   if (failed) {
+    Log.error('Background media upload failed: ${update.status}');
     await requestMediaReupload(mediaId);
   } else {
     await handleEncryptedFile(mediaId);
@@ -194,6 +195,9 @@ Future<void> downloadFileFast(
     if (response.statusCode == 404 ||
         response.statusCode == 403 ||
         response.statusCode == 400) {
+      Log.error(
+        'Got ${response.statusCode} from server. Requesting upload again',
+      );
       // Message was deleted from the server. Requesting it again from the sender to upload it again...
       await requestMediaReupload(media.mediaId);
       return;
@@ -217,7 +221,7 @@ Future<void> requestMediaReupload(String mediaId) async {
     EncryptedContent(
       mediaUpdate: EncryptedContent_MediaUpdate(
         type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
-        targetMediaId: mediaId,
+        targetMessageId: messages.first.messageId,
       ),
     ),
   );

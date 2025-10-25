@@ -195,12 +195,12 @@ Future<void> updateLastMessageId(int fromUserId, String messageId) async {
   }
 }
 
-Future<Uint8List?> getPushDataFromEncryptedContent(
+Future<PushNotification?> getPushNotificationFromEncryptedContent(
   int toUserId,
   String? messageId,
   EncryptedContent content,
 ) async {
-  late PushKind kind;
+  PushKind? kind;
   String? reactionContent;
 
   if (content.hasReaction()) {
@@ -270,6 +270,8 @@ Future<Uint8List?> getPushDataFromEncryptedContent(
     }
   }
 
+  if (kind == null) return null;
+
   final pushNotification = PushNotification()..kind = kind;
   if (reactionContent != null) {
     pushNotification.reactionContent = reactionContent;
@@ -277,7 +279,7 @@ Future<Uint8List?> getPushDataFromEncryptedContent(
   if (messageId != null) {
     pushNotification.messageId = messageId;
   }
-  return encryptPushNotification(toUserId, pushNotification);
+  return pushNotification;
 }
 
 /// this will trigger a push notification

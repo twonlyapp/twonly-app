@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
@@ -163,17 +162,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     // }
 
     final stream =
-        twonlyDB.mediaFilesDao.watchMedia(currentMedia!.mediaFile.mediaId);
+        twonlyDB.mediaFilesDao.watchMedia(allMediaFiles.first.mediaId!);
 
     var downloadTriggered = false;
 
     await downloadStateListener?.cancel();
     downloadStateListener = stream.listen((updated) async {
       if (updated == null) return;
-      if (updated.downloadState != DownloadState.downloaded) {
+      if (updated.downloadState != DownloadState.ready) {
         if (!downloadTriggered) {
           downloadTriggered = true;
-          await startDownloadMedia(currentMedia!.mediaFile, true);
+          final mediaFile = await twonlyDB.mediaFilesDao
+              .getMediaFileById(allMediaFiles.first.mediaId!);
+          await startDownloadMedia(mediaFile!, true);
           unawaited(tryDownloadAllMediaFiles(force: true));
         }
         return;
@@ -209,11 +210,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     await notifyContactAboutOpeningMessage(
       currentMessage!.senderId!,
       [currentMessage!.messageId],
-    );
-
-    await twonlyDB.messagesDao.updateMessageId(
-      currentMessage!.messageId,
-      MessagesCompanion(openedAt: Value(DateTime.now())),
     );
 
     if (!currentMediaLocal.tempPath.existsSync()) {
@@ -289,9 +285,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       pb.EncryptedContent(
         mediaUpdate: pb.EncryptedContent_MediaUpdate(
           type: pb.EncryptedContent_MediaUpdate_Type.STORED,
-          targetMediaId: currentMedia!.mediaFile.mediaId,
+          targetMessageId: currentMessage!.messageId,
         ),
       ),
+      null,
     );
     setState(() {
       imageSaved = true;
@@ -537,8 +534,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 ],
               ),
             ),
-            if (currentMedia?.mediaFile.downloadState !=
-                DownloadState.downloaded)
+            if (currentMedia?.mediaFile.downloadState != DownloadState.ready)
               const Positioned.fill(
                 child: Center(
                   child: SizedBox(

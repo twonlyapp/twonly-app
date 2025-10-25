@@ -19,6 +19,10 @@ class MemoryItem {
       final mediaService = await MediaFileService.fromMediaId(message.mediaId!);
       if (mediaService == null) continue;
 
+      if (!mediaService.imagePreviewAvailable) {
+        continue;
+      }
+
       items
           .putIfAbsent(
             message.mediaId!,

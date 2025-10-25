@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:pie_menu/pie_menu.dart';
 import 'package:provider/provider.dart';
@@ -246,11 +247,14 @@ String formatBytes(int bytes, {int decimalPlaces = 2}) {
 }
 
 bool isUUIDNewer(String uuid1, String uuid2) {
-  final timestamp1 = int.parse(uuid1.substring(0, 8), radix: 16);
-  final timestamp2 = int.parse(uuid2.substring(0, 8), radix: 16);
-  print(timestamp1);
-  print(timestamp2);
-  return timestamp1 > timestamp2;
+  try {
+    final timestamp1 = int.parse(uuid1.substring(0, 8), radix: 16);
+    final timestamp2 = int.parse(uuid2.substring(0, 8), radix: 16);
+    return timestamp1 > timestamp2;
+  } catch (e) {
+    Log.error(e);
+    return true;
+  }
 }
 
 String uint8ListToHex(List<int> bytes) {
@@ -312,4 +316,35 @@ Color getMessageColorFromType(
     return (isDarkMode(context)) ? Colors.white : Colors.black;
   }
   return color;
+}
+
+String getUUIDforDirectChat(int a, int b) {
+  if (a < 0 || b < 0) {
+    throw ArgumentError('Inputs must be non-negative integers.');
+  }
+  if (a > integerMax || b > integerMax) {
+    throw ArgumentError('Inputs must be <= 0x7fffffff.');
+  }
+
+  // Mask to 64 bits in case inputs exceed 64 bits
+  final mask64 = (BigInt.one << 64) - BigInt.one;
+  final ai = BigInt.from(a) & mask64;
+  final bi = BigInt.from(b) & mask64;
+
+  // Ensure the bigger integer is in front (high 64 bits)
+  final hi = ai >= bi ? ai : bi;
+  final lo = ai >= bi ? bi : ai;
+
+  final combined = (hi << 64) | lo;
+
+  final hex = combined.toRadixString(16).padLeft(32, '0');
+
+  final parts = [
+    hex.substring(0, 8),
+    hex.substring(8, 12),
+    hex.substring(12, 16),
+    hex.substring(16, 20),
+    hex.substring(20, 32),
+  ];
+  return parts.join('-');
 }

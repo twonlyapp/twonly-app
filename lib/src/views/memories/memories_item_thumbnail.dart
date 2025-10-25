@@ -37,13 +37,19 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
 
   @override
   Widget build(BuildContext context) {
+    final media = widget.galleryItem.mediaService;
     return GestureDetector(
       onTap: widget.onTap,
       child: Hero(
-        tag: widget.galleryItem.mediaService.mediaFile.mediaId,
+        tag: media.mediaFile.mediaId,
         child: Stack(
           children: [
-            Image.file(widget.galleryItem.mediaService.thumbnailPath),
+            if (media.thumbnailPath.existsSync())
+              Image.file(media.thumbnailPath)
+            else if (media.storedPath.existsSync())
+              Image.file(media.storedPath)
+            else
+              const Text('Media file removed.'),
             if (widget.galleryItem.mediaService.mediaFile.type ==
                 MediaType.video)
               const Positioned.fill(

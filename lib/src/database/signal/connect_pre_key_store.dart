@@ -19,15 +19,17 @@ class ConnectPreKeyStore extends PreKeyStore {
           ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
         .get();
     if (preKeyRecord.isEmpty) {
-      throw InvalidKeyIdException('No such preKey record! - $preKeyId');
+      throw InvalidKeyIdException(
+          '[PREKEY] No such preKey record! - $preKeyId');
     }
-    Log.info('Contact used preKey $preKeyId');
+    Log.info('[PREKEY] Contact used my preKey $preKeyId');
     final preKey = preKeyRecord.first.preKey;
     return PreKeyRecord.fromBuffer(preKey);
   }
 
   @override
   Future<void> removePreKey(int preKeyId) async {
+    Log.info('[PREKEY] Removing $preKeyId from my own storage.');
     await (twonlyDB.delete(twonlyDB.signalPreKeyStores)
           ..where((tbl) => tbl.preKeyId.equals(preKeyId)))
         .go();
@@ -40,6 +42,7 @@ class ConnectPreKeyStore extends PreKeyStore {
       preKey: Value(record.serialize()),
     );
 
+    Log.info('[PREKEY] Storing $preKeyId from my own storage.');
     try {
       await twonlyDB.into(twonlyDB.signalPreKeyStores).insert(preKeyCompanion);
     } catch (e) {

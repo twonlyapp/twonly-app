@@ -156,11 +156,6 @@ class ApiService {
     }
     reconnectionTimer?.cancel();
     reconnectionTimer = null;
-    final user = await getUser();
-    if (user != null) {
-      globalCallbackConnectionState(isConnected: true);
-      return false;
-    }
     return lockConnecting.protect<bool>(() async {
       if (_channel != null) {
         return true;
