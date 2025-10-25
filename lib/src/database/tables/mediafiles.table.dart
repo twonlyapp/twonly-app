@@ -1,7 +1,5 @@
 import 'dart:convert';
-
 import 'package:drift/drift.dart';
-import 'package:hashlib/random.dart';
 
 enum MediaType {
   image,
@@ -36,7 +34,7 @@ enum DownloadState {
 
 @DataClassName('MediaFile')
 class MediaFiles extends Table {
-  TextColumn get mediaId => text().clientDefault(() => uuid.v7())();
+  TextColumn get mediaId => text()();
 
   TextColumn get type => textEnum<MediaType>()();
 

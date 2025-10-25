@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +10,6 @@ import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api.service.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
-import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -27,9 +24,6 @@ void main() async {
   final user = await getUser();
   if (user != null) {
     gUser = user;
-    if (user.isDemoUser) {
-      await deleteLocalUserData();
-    }
   }
 
   final settingsController = SettingsChangeProvider();
@@ -37,7 +31,7 @@ void main() async {
   await settingsController.loadSettings();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  unawaited(setupPushNotification());
+  // unawaited(setupPushNotification());
 
   gCameras = await availableCameras();
 

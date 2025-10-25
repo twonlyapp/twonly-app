@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:path/path.dart' show join;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
@@ -11,6 +14,7 @@ import 'package:twonly/src/views/components/app_outdated.dart';
 import 'package:twonly/src/views/home.view.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/onboarding/register.view.dart';
+import 'package:twonly/src/views/updates/62_database_migration.view.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -144,36 +148,60 @@ class AppMainWidget extends StatefulWidget {
 }
 
 class _AppMainWidgetState extends State<AppMainWidget> {
-  Future<bool> userCreated = isUserCreated();
-  bool showOnboarding = true;
+  bool _isUserCreated = false;
+  bool _showDatabaseMigration = false;
+  bool _showOnboarding = true;
+  bool _isLoaded = false;
+
+  @override
+  void initState() {
+    initAsync();
+    super.initState();
+  }
+
+  Future<void> initAsync() async {
+    _showDatabaseMigration = File(
+      join(
+        (await getApplicationSupportDirectory()).path,
+        'twonly_database.sqlite',
+      ),
+    ).existsSync();
+
+    _isUserCreated = await isUserCreated();
+    setState(() {
+      _isLoaded = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isLoaded) {
+      return Center(child: Container());
+    }
+
+    late Widget child;
+
+    if (_showDatabaseMigration) {
+      child = const DatabaseMigrationView();
+    } else if (_isUserCreated) {
+      child = HomeView(
+        initialPage: widget.initialPage,
+      );
+    } else if (_showOnboarding) {
+      child = OnboardingView(
+        callbackOnSuccess: () => setState(() {
+          _showOnboarding = false;
+        }),
+      );
+    } else {
+      child = RegisterView(
+        callbackOnSuccess: initAsync,
+      );
+    }
+
     return Stack(
       children: [
-        FutureBuilder<bool>(
-          future: userCreated,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return Center(child: Container());
-            } else if (snapshot.data!) {
-              return HomeView(
-                initialPage: widget.initialPage,
-              );
-            } else if (showOnboarding) {
-              return OnboardingView(
-                callbackOnSuccess: () => setState(() {
-                  showOnboarding = false;
-                }),
-              );
-            }
-            return RegisterView(
-              callbackOnSuccess: () => setState(() {
-                userCreated = isUserCreated();
-              }),
-            );
-          },
-        ),
+        child,
         const AppOutdated(),
       ],
     );

@@ -606,9 +606,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
   @override
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
       'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      clientDefault: () => uuid.v4());
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _isGroupAdminMeta =
       const VerificationMeta('isGroupAdmin');
   @override
@@ -759,6 +757,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
     if (data.containsKey('group_id')) {
       context.handle(_groupIdMeta,
           groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
     }
     if (data.containsKey('is_group_admin')) {
       context.handle(
@@ -1239,7 +1239,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.rowid = const Value.absent(),
   });
   GroupsCompanion.insert({
-    this.groupId = const Value.absent(),
+    required String groupId,
     required bool isGroupAdmin,
     required bool isDirectChat,
     this.pinned = const Value.absent(),
@@ -1256,7 +1256,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.flameCounter = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : isGroupAdmin = Value(isGroupAdmin),
+  })  : groupId = Value(groupId),
+        isGroupAdmin = Value(isGroupAdmin),
         isDirectChat = Value(isDirectChat),
         groupName = Value(groupName);
   static Insertable<Group> custom({
@@ -1442,9 +1443,7 @@ class $MediaFilesTable extends MediaFiles
   @override
   late final GeneratedColumn<String> mediaId = GeneratedColumn<String>(
       'media_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      clientDefault: () => uuid.v7());
+      type: DriftSqlType.string, requiredDuringInsert: true);
   @override
   late final GeneratedColumnWithTypeConverter<MediaType, String> type =
       GeneratedColumn<String>('type', aliasedName, false,
@@ -1566,6 +1565,8 @@ class $MediaFilesTable extends MediaFiles
     if (data.containsKey('media_id')) {
       context.handle(_mediaIdMeta,
           mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta));
+    } else if (isInserting) {
+      context.missing(_mediaIdMeta);
     }
     if (data.containsKey('requires_authentication')) {
       context.handle(
@@ -2020,7 +2021,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.rowid = const Value.absent(),
   });
   MediaFilesCompanion.insert({
-    this.mediaId = const Value.absent(),
+    required String mediaId,
     required MediaType type,
     this.uploadState = const Value.absent(),
     this.downloadState = const Value.absent(),
@@ -2035,7 +2036,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionNonce = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : type = Value(type);
+  })  : mediaId = Value(mediaId),
+        type = Value(type);
   static Insertable<MediaFile> custom({
     Expression<String>? mediaId,
     Expression<String>? type,
@@ -2212,9 +2214,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   @override
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
       'message_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      clientDefault: () => uuid.v7());
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _senderIdMeta =
       const VerificationMeta('senderId');
   @override
@@ -2334,6 +2334,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     if (data.containsKey('message_id')) {
       context.handle(_messageIdMeta,
           messageId.isAcceptableOrUnknown(data['message_id']!, _messageIdMeta));
+    } else if (isInserting) {
+      context.missing(_messageIdMeta);
     }
     if (data.containsKey('sender_id')) {
       context.handle(_senderIdMeta,
@@ -2714,7 +2716,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   });
   MessagesCompanion.insert({
     required String groupId,
-    this.messageId = const Value.absent(),
+    required String messageId,
     this.senderId = const Value.absent(),
     required MessageType type,
     this.content = const Value.absent(),
@@ -2728,6 +2730,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.modifiedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : groupId = Value(groupId),
+        messageId = Value(messageId),
         type = Value(type);
   static Insertable<Message> custom({
     Expression<String>? groupId,
@@ -3744,9 +3747,7 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
   @override
   late final GeneratedColumn<String> receiptId = GeneratedColumn<String>(
       'receipt_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      clientDefault: () => uuid.v4());
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _contactIdMeta =
       const VerificationMeta('contactId');
   @override
@@ -3834,6 +3835,8 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
     if (data.containsKey('receipt_id')) {
       context.handle(_receiptIdMeta,
           receiptId.isAcceptableOrUnknown(data['receipt_id']!, _receiptIdMeta));
+    } else if (isInserting) {
+      context.missing(_receiptIdMeta);
     }
     if (data.containsKey('contact_id')) {
       context.handle(_contactIdMeta,
@@ -4119,7 +4122,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.rowid = const Value.absent(),
   });
   ReceiptsCompanion.insert({
-    this.receiptId = const Value.absent(),
+    required String receiptId,
     required int contactId,
     this.messageId = const Value.absent(),
     required Uint8List message,
@@ -4129,7 +4132,8 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.lastRetry = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : contactId = Value(contactId),
+  })  : receiptId = Value(receiptId),
+        contactId = Value(contactId),
         message = Value(message);
   static Insertable<Receipt> custom({
     Expression<String>? receiptId,
@@ -6992,7 +6996,7 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
         bool signalContactPreKeysRefs,
         bool signalContactSignedPreKeysRefs})>;
 typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
-  Value<String> groupId,
+  required String groupId,
   required bool isGroupAdmin,
   required bool isDirectChat,
   Value<bool> pinned,
@@ -7346,7 +7350,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<String> groupId = const Value.absent(),
+            required String groupId,
             required bool isGroupAdmin,
             required bool isDirectChat,
             Value<bool> pinned = const Value.absent(),
@@ -7425,7 +7429,7 @@ typedef $$GroupsTableProcessedTableManager = ProcessedTableManager<
     Group,
     PrefetchHooks Function({bool messagesRefs})>;
 typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
-  Value<String> mediaId,
+  required String mediaId,
   required MediaType type,
   Value<UploadState?> uploadState,
   Value<DownloadState?> downloadState,
@@ -7758,7 +7762,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<String> mediaId = const Value.absent(),
+            required String mediaId,
             required MediaType type,
             Value<UploadState?> uploadState = const Value.absent(),
             Value<DownloadState?> downloadState = const Value.absent(),
@@ -7838,7 +7842,7 @@ typedef $$MediaFilesTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function({bool messagesRefs})>;
 typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   required String groupId,
-  Value<String> messageId,
+  required String messageId,
   Value<int?> senderId,
   required MessageType type,
   Value<String?> content,
@@ -8587,7 +8591,7 @@ class $$MessagesTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             required String groupId,
-            Value<String> messageId = const Value.absent(),
+            required String messageId,
             Value<int?> senderId = const Value.absent(),
             required MessageType type,
             Value<String?> content = const Value.absent(),
@@ -9647,7 +9651,7 @@ typedef $$GroupMembersTableProcessedTableManager = ProcessedTableManager<
     GroupMember,
     PrefetchHooks Function({bool contactId})>;
 typedef $$ReceiptsTableCreateCompanionBuilder = ReceiptsCompanion Function({
-  Value<String> receiptId,
+  required String receiptId,
   required int contactId,
   Value<String?> messageId,
   required Uint8List message,
@@ -9969,7 +9973,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           createCompanionCallback: ({
-            Value<String> receiptId = const Value.absent(),
+            required String receiptId,
             required int contactId,
             Value<String?> messageId = const Value.absent(),
             required Uint8List message,

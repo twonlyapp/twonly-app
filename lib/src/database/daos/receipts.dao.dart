@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -51,7 +52,11 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
 
   Future<Receipt?> insertReceipt(ReceiptsCompanion entry) async {
     try {
-      final id = await into(receipts).insert(entry);
+      final id = await into(receipts).insert(
+        entry.copyWith(
+          receiptId: Value(uuid.v4()),
+        ),
+      );
       return await (select(receipts)..where((t) => t.rowId.equals(id)))
           .getSingle();
     } catch (e) {

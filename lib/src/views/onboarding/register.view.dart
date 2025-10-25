@@ -84,7 +84,6 @@ class _RegisterViewState extends State<RegisterView> {
       username: username,
       displayName: username,
       subscriptionPlan: 'Preview',
-      isDemoUser: false,
     );
 
     await const FlutterSecureStorage()

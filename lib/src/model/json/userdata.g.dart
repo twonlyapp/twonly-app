@@ -11,7 +11,6 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       username: json['username'] as String,
       displayName: json['displayName'] as String,
       subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Free',
-      isDemoUser: json['isDemoUser'] as bool? ?? false,
     )
       ..avatarSvg = json['avatarSvg'] as String?
       ..avatarJson = json['avatarJson'] as String?
@@ -74,7 +73,6 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'userId': instance.userId,
-      'isDemoUser': instance.isDemoUser,
       'username': instance.username,
       'displayName': instance.displayName,
       'avatarSvg': instance.avatarSvg,

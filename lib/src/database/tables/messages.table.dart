@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -10,7 +9,7 @@ enum MessageType { media, text }
 class Messages extends Table {
   TextColumn get groupId =>
       text().references(Groups, #groupId, onDelete: KeyAction.cascade)();
-  TextColumn get messageId => text().clientDefault(() => uuid.v7())();
+  TextColumn get messageId => text()();
 
   // in case senderId is null, it was send by user itself
   IntColumn get senderId =>

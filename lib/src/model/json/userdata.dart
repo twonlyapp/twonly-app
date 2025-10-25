@@ -9,15 +9,11 @@ class UserData {
     required this.username,
     required this.displayName,
     required this.subscriptionPlan,
-    required this.isDemoUser,
   });
   factory UserData.fromJson(Map<String, dynamic> json) =>
       _$UserDataFromJson(json);
 
   final int userId;
-
-  @JsonKey(defaultValue: false)
-  bool isDemoUser = false;
 
   // -- USER PROFILE --
 

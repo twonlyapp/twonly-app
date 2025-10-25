@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -15,7 +16,11 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
 
   Future<MediaFile?> insertMedia(MediaFilesCompanion mediaFile) async {
     try {
-      final rowId = await into(mediaFiles).insert(mediaFile);
+      final rowId = await into(mediaFiles).insert(
+        mediaFile.copyWith(
+          mediaId: Value(uuid.v7()),
+        ),
+      );
 
       return await (select(mediaFiles)..where((t) => t.rowId.equals(rowId)))
           .getSingle();

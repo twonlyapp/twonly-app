@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 
@@ -33,7 +34,11 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Future<void> insertGroup(GroupsCompanion group) async {
-    await into(groups).insert(group);
+    await into(groups).insert(
+      group.copyWith(
+        groupId: Value(uuid.v4()),
+      ),
+    );
   }
 
   Future<List<Contact>> getGroupContact(String groupId) async {

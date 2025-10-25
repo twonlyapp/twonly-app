@@ -1,10 +1,9 @@
 import 'package:drift/drift.dart';
-import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 
 @DataClassName('Group')
 class Groups extends Table {
-  TextColumn get groupId => text().clientDefault(() => uuid.v4())();
+  TextColumn get groupId => text()();
 
   BoolColumn get isGroupAdmin => boolean()();
   BoolColumn get isDirectChat => boolean()();

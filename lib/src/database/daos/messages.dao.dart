@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
@@ -290,7 +291,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
   Future<Message?> insertMessage(MessagesCompanion message) async {
     try {
-      final rowId = await into(messages).insert(message);
+      final rowId = await into(messages).insert(
+        message.copyWith(
+          messageId: Value(uuid.v7()),
+        ),
+      );
 
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,

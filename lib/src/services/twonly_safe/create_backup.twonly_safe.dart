@@ -23,7 +23,7 @@ import 'package:twonly/src/views/settings/backup/backup.view.dart';
 Future<void> performTwonlySafeBackup({bool force = false}) async {
   final user = await getUser();
 
-  if (user == null || user.twonlySafeBackup == null || user.isDemoUser) {
+  if (user == null || user.twonlySafeBackup == null) {
     return;
   }
 

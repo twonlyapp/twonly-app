@@ -1,11 +1,10 @@
 import 'package:drift/drift.dart';
-import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 
 @DataClassName('Receipt')
 class Receipts extends Table {
-  TextColumn get receiptId => text().clientDefault(() => uuid.v4())();
+  TextColumn get receiptId => text()();
 
   IntColumn get contactId =>
       integer().references(Contacts, #userId, onDelete: KeyAction.cascade)();
