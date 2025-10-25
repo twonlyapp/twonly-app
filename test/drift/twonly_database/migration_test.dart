@@ -2,7 +2,7 @@
 // ignore_for_file: unused_local_variable, unused_import
 import 'package:drift/drift.dart';
 import 'package:drift_dev/api/migrations_native.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly_database_old.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'generated/schema.dart';
 
@@ -27,7 +27,7 @@ void main() {
         for (final toVersion in versions.skip(i + 1)) {
           test('to $toVersion', () async {
             final schema = await verifier.schemaAt(fromVersion);
-            final db = TwonlyDatabase(schema.newConnection());
+            final db = TwonlyDatabaseOld(schema.newConnection());
             await verifier.migrateAndValidate(db, toVersion);
             await db.close();
           });
@@ -70,7 +70,7 @@ void main() {
       newVersion: 2,
       createOld: v1.DatabaseAtV1.new,
       createNew: v2.DatabaseAtV2.new,
-      openTestedDatabase: TwonlyDatabase.new,
+      openTestedDatabase: TwonlyDatabaseOld.new,
       createItems: (batch, oldDb) {
         batch.insertAll(oldDb.contacts, oldContactsData);
         batch.insertAll(oldDb.messages, oldMessagesData);

@@ -248,6 +248,8 @@ String formatBytes(int bytes, {int decimalPlaces = 2}) {
 bool isUUIDNewer(String uuid1, String uuid2) {
   final timestamp1 = int.parse(uuid1.substring(0, 8), radix: 16);
   final timestamp2 = int.parse(uuid2.substring(0, 8), radix: 16);
+  print(timestamp1);
+  print(timestamp2);
   return timestamp1 > timestamp2;
 }
 
