@@ -185,7 +185,8 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
     for (final oldSignalSessionStore in oldSignalSessionStores) {
       try {
         await twonlyDB.into(twonlyDB.signalSessionStores).insert(
-            SignalSessionStore.fromJson(oldSignalSessionStore.toJson()));
+              SignalSessionStore.fromJson(oldSignalSessionStore.toJson()),
+            );
       } catch (e) {
         Log.error(e);
       }
@@ -221,7 +222,8 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
       try {
         await twonlyDB.into(twonlyDB.signalIdentityKeyStores).insert(
               SignalIdentityKeyStore.fromJson(
-                  oldSignalIdentityKeyStore.toJson()),
+                oldSignalIdentityKeyStore.toJson(),
+              ),
             );
       } catch (e) {
         Log.error(e);
@@ -271,8 +273,8 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
                   ),
                   const SizedBox(height: 40),
                   ...[
-                    '${_contactsMigrated} Kontakte',
-                    '${_storedMediaFiles} gespeicherte Mediendateien',
+                    '$_contactsMigrated Kontakte',
+                    '$_storedMediaFiles gespeicherte Mediendateien',
                   ].map(
                     (e) => Text(
                       e,
@@ -333,8 +335,8 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
                         style: TextStyle(fontSize: 20),
                       ),
                       ...[
-                        '${_contactsMigrated} Kontakte',
-                        '${_storedMediaFiles} gespeicherte Mediendateien',
+                        '$_contactsMigrated Kontakte',
+                        '$_storedMediaFiles gespeicherte Mediendateien',
                       ].map(
                         (e) => Text(
                           e,

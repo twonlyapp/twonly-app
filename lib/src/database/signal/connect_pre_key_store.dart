@@ -20,7 +20,8 @@ class ConnectPreKeyStore extends PreKeyStore {
         .get();
     if (preKeyRecord.isEmpty) {
       throw InvalidKeyIdException(
-          '[PREKEY] No such preKey record! - $preKeyId');
+        '[PREKEY] No such preKey record! - $preKeyId',
+      );
     }
     Log.info('[PREKEY] Contact used my preKey $preKeyId');
     final preKey = preKeyRecord.first.preKey;

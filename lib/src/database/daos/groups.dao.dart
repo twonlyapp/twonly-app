@@ -57,12 +57,14 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
     final result = await _insertGroup(insertGroup);
     if (result != null) {
-      await into(groupMembers).insert(GroupMembersCompanion(
-        groupId: Value(result.groupId),
-        contactId: Value(
-          contactId,
+      await into(groupMembers).insert(
+        GroupMembersCompanion(
+          groupId: Value(result.groupId),
+          contactId: Value(
+            contactId,
+          ),
         ),
-      ));
+      );
     }
     return result;
   }

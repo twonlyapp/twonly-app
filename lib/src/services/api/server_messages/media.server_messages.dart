@@ -121,7 +121,8 @@ Future<void> handleMediaUpdate(
       .getSingleOrNull();
   if (message == null) {
     Log.error(
-        'Got media update to  message ${mediaUpdate.targetMessageId} but message not found.');
+      'Got media update to  message ${mediaUpdate.targetMessageId} but message not found.',
+    );
   }
   final mediaFile =
       await twonlyDB.mediaFilesDao.getMediaFileById(message!.mediaId!);
