@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -128,22 +129,34 @@ class ResponsePreview extends StatefulWidget {
 }
 
 class _ResponsePreviewState extends State<ResponsePreview> {
-  Message? message;
-  MediaFileService? mediaService;
+  Message? _message;
+  MediaFileService? _mediaService;
+  String _username = '';
 
   @override
   void initState() {
-    message = widget.message;
+    _message = widget.message;
     initAsync();
     super.initState();
   }
 
   Future<void> initAsync() async {
-    message ??= await twonlyDB.messagesDao
+    _message ??= await twonlyDB.messagesDao
         .getMessageById(widget.messageId!)
         .getSingleOrNull();
-    if (message?.mediaId != null) {
-      mediaService = await MediaFileService.fromMediaId(message!.mediaId!);
+    if (_message?.mediaId != null) {
+      _mediaService = await MediaFileService.fromMediaId(_message!.mediaId!);
+    }
+    if (_message?.senderId != null) {
+      final contact = await twonlyDB.contactsDao
+          .getContactByUserId(_message!.senderId!)
+          .getSingleOrNull();
+      if (contact != null) {
+        _username = getContactDisplayName(contact);
+      }
+    }
+    if (_message == null && mounted) {
+      _username = context.lang.quotedMessageWasDeleted;
     }
     if (mounted) setState(() {});
   }
@@ -152,28 +165,27 @@ class _ResponsePreviewState extends State<ResponsePreview> {
   Widget build(BuildContext context) {
     String? subtitle;
     var color = const Color.fromARGB(233, 68, 137, 255);
-    var username = '';
 
-    if (message != null) {
-      if (message!.type == MessageType.text) {
-        if (message!.content != null) {
-          subtitle = truncateString(message!.content!);
+    if (_message != null) {
+      if (_message!.type == MessageType.text) {
+        if (_message!.content != null) {
+          subtitle = truncateString(_message!.content!);
         }
       }
-      if (message!.type == MessageType.media && mediaService != null) {
-        subtitle = mediaService!.mediaFile.type == MediaType.video
+      if (_message!.type == MessageType.media && _mediaService != null) {
+        subtitle = _mediaService!.mediaFile.type == MediaType.video
             ? context.lang.video
             : context.lang.image;
       }
 
-      username = context.lang.you;
-      if (message!.senderId != null) {
-        username = message!.senderId.toString();
+      if (_message!.senderId == null) {
+        _username = context.lang.you;
+        // _username = _message!.senderId.toString();
       }
 
-      color = getMessageColor(message!);
+      color = getMessageColor(_message!);
 
-      if (!message!.mediaStored) {
+      if (!_message!.mediaStored) {
         return Container(
           padding: widget.showBorder
               ? const EdgeInsets.only(left: 10, right: 10)
@@ -192,7 +204,7 @@ class _ResponsePreviewState extends State<ResponsePreview> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                username,
+                _username,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               if (subtitle != null) Text(subtitle),
@@ -200,8 +212,6 @@ class _ResponsePreviewState extends State<ResponsePreview> {
           ),
         );
       }
-    } else {
-      username = context.lang.quotedMessageWasDeleted;
     }
 
     return Container(
@@ -222,20 +232,20 @@ class _ResponsePreviewState extends State<ResponsePreview> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  username,
+                  _username,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 if (subtitle != null) Text(subtitle),
               ],
             ),
           ),
-          if (mediaService != null)
+          if (_mediaService != null)
             SizedBox(
               height: widget.showBorder ? 100 : 210,
               child: Image.file(
-                mediaService!.mediaFile.type == MediaType.video
-                    ? mediaService!.thumbnailPath
-                    : mediaService!.storedPath,
+                _mediaService!.mediaFile.type == MediaType.video
+                    ? _mediaService!.thumbnailPath
+                    : _mediaService!.storedPath,
               ),
             ),
         ],

@@ -10,13 +10,13 @@ This repository contains the complete source code of the [twonly](https://twonly
 - End-to-End encryption using the [Signal Protocol](https://de.wikipedia.org/wiki/Signal-Protokoll)
 - No email or phone number required to register
 - Privacy friendly - Everything is stored on the device
+- Open-Source
 
 ## In work
 
 - For Android: Using [UnifiedPush](https://unifiedpush.org/) instead of FCM 
-- For Android: Reproducible Builds + Publishing on Github/F-Droid
+- For Android: Reproducible Builds + Publishing F-Droid
 - Implementing [Sealed Sender](https://signal.org/blog/sealed-sender/) to minimize metadata
-- Maybe: Switching from the Signal Protocol to [MLS](https://openmls.tech/).
 
 ## Security Issues
 If you discover a security issue in twonly, please adhere to the coordinated vulnerability disclosure model. Please send
@@ -32,8 +32,6 @@ guarantee a bounty currently :/
 
 Some dependencies are downloaded directly from the source as there are some new changes which are not yet published on
 pub.dev or because they require some special installation.
-
-- `flutter_secure_storage`: We need the 10.0.0-beta version, but this version has some issues which are fixed but [not yet published](https://github.com/juliansteenbakker/flutter_secure_storage/issues/866):
 
 ```bash
 git submodule update --init --recursive

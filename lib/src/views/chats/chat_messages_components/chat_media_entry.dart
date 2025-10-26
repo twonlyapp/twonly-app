@@ -36,7 +36,30 @@ class ChatMediaEntry extends StatefulWidget {
 
 class _ChatMediaEntryState extends State<ChatMediaEntry> {
   GlobalKey reopenMediaFile = GlobalKey();
-  bool canBeReopened = false;
+  bool _canBeReopened = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(initAsync());
+  }
+
+  Future<void> initAsync() async {
+    if (widget.message.senderId == null || widget.message.mediaStored) {
+      return;
+    }
+    if (widget.mediaService.mediaFile.requiresAuthentication ||
+        widget.mediaService.mediaFile.displayLimitInMilliseconds != null) {
+      return;
+    }
+    if (widget.mediaService.tempPath.existsSync()) {
+      if (mounted) {
+        setState(() {
+          _canBeReopened = true;
+        });
+      }
+    }
+  }
 
   Future<void> onDoubleTap() async {
     if (widget.message.openedAt == null || widget.message.mediaStored) {
@@ -109,7 +132,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
               mediaService: widget.mediaService,
               color: color,
               galleryItems: widget.galleryItems,
-              canBeReopened: canBeReopened,
+              canBeReopened: _canBeReopened,
             ),
           ),
         ),
