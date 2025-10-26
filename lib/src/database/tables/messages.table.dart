@@ -20,7 +20,7 @@ class Messages extends Table {
   TextColumn get content => text().nullable()();
   TextColumn get mediaId => text()
       .nullable()
-      .references(MediaFiles, #mediaId, onDelete: KeyAction.cascade)();
+      .references(MediaFiles, #mediaId, onDelete: KeyAction.setNull)();
 
   BoolColumn get mediaStored => boolean().withDefault(const Constant(false))();
 

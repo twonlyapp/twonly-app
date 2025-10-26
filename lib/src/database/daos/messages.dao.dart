@@ -155,12 +155,15 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   }
 
   Future<void> handleMessageDeletion(
-    int contactId,
+    int? contactId,
     String messageId,
     DateTime timestamp,
   ) async {
     final msg = await getMessageById(messageId).getSingleOrNull();
-    if (msg == null || msg.senderId != contactId) return;
+    if (msg == null || msg.senderId != contactId) {
+      Log.error('Message does not exists or contact is not owner.');
+      return;
+    }
     if (msg.mediaId != null) {
       await (delete(mediaFiles)..where((t) => t.mediaId.equals(msg.mediaId!)))
           .go();
@@ -176,7 +179,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
     await (update(messages)
           ..where(
-            (t) => t.messageId.equals(messageId) & t.senderId.equals(contactId),
+            (t) => t.messageId.equals(messageId),
           ))
         .write(
       const MessagesCompanion(

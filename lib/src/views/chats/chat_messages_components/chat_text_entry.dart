@@ -23,7 +23,12 @@ class ChatTextEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = message.content ?? '';
+    var text = message.content ?? '';
+
+    if (message.isDeletedFromSender) {
+      text = 'Nachricht wurde gelöscht.';
+    }
+
     if (EmojiAnimation.supported(text)) {
       return Container(
         constraints: const BoxConstraints(
@@ -37,10 +42,23 @@ class ChatTextEntry extends StatelessWidget {
       );
     }
 
-    final displayTime = !combineTextMessageWithNext(message, nextMessage);
+    var displayTime = !combineTextMessageWithNext(message, nextMessage);
 
     var spacerWidth = minWidth - measureTextWidth(text) - 53;
     if (spacerWidth < 0) spacerWidth = 0;
+
+    Color? color;
+    var expanded = false;
+    if (message.quotesMessageId == null) {
+      color = getMessageColor(message);
+    }
+    if (message.isDeletedFromSender) {
+      color = context.color.surfaceBright;
+      displayTime = false;
+    } else if (measureTextWidth(text) > 270 ||
+        message.quotesMessageId != null) {
+      expanded = true;
+    }
 
     return Container(
       constraints: BoxConstraints(
@@ -49,15 +67,14 @@ class ChatTextEntry extends StatelessWidget {
       ),
       padding: const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
       decoration: BoxDecoration(
-        color:
-            message.quotesMessageId == null ? getMessageColor(message) : null,
+        color: color,
         borderRadius: borderRadius,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (measureTextWidth(text) > 270 || message.quotesMessageId != null)
+          if (expanded)
             Expanded(
               child: BetterText(text: text),
             )

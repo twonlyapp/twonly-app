@@ -924,7 +924,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteTitle => 'Are you sure?';
 
   @override
-  String get deleteOkBtn => 'Delete for me';
+  String get deleteOkBtnForAll => 'Delete for all';
+
+  @override
+  String get deleteOkBtnForMe => 'Delete for me';
 
   @override
   String get deleteImageTitle => 'Are you sure?';

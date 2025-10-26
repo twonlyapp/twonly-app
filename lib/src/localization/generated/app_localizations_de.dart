@@ -930,7 +930,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteTitle => 'Bist du dir sicher?';
 
   @override
-  String get deleteOkBtn => 'Für mich löschen';
+  String get deleteOkBtnForAll => 'Für alle löschen';
+
+  @override
+  String get deleteOkBtnForMe => 'Für mich löschen';
 
   @override
   String get deleteImageTitle => 'Bist du dir sicher?';

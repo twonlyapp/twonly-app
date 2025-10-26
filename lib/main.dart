@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/app.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
@@ -18,8 +19,6 @@ import 'package:twonly/src/services/api/mediafiles/media_background.service.dart
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
-
-import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

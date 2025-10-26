@@ -1760,11 +1760,17 @@ abstract class AppLocalizations {
   /// **'Are you sure?'**
   String get deleteTitle;
 
-  /// No description provided for @deleteOkBtn.
+  /// No description provided for @deleteOkBtnForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for all'**
+  String get deleteOkBtnForAll;
+
+  /// No description provided for @deleteOkBtnForMe.
   ///
   /// In en, this message translates to:
   /// **'Delete for me'**
-  String get deleteOkBtn;
+  String get deleteOkBtnForMe;
 
   /// No description provided for @deleteImageTitle.
   ///

@@ -118,43 +118,52 @@ class _ChatListEntryState extends State<ChatListEntry> {
                   alignment:
                       right ? Alignment.centerRight : Alignment.centerLeft,
                   children: [
-                    Column(
-                      children: [
-                        ResponseContainer(
-                          msg: widget.message,
-                          group: widget.group,
-                          mediaService: mediaService,
-                          borderRadius: borderRadius,
-                          scrollToMessage: widget.scrollToMessage,
-                          child: (widget.message.type == MessageType.text)
-                              ? ChatTextEntry(
-                                  message: widget.message,
-                                  nextMessage: widget.nextMessage,
-                                  borderRadius: borderRadius,
-                                  minWidth: reactionsForWidth * 43,
-                                )
-                              : (mediaService == null)
-                                  ? null
-                                  : ChatMediaEntry(
-                                      message: widget.message,
-                                      group: widget.group,
-                                      mediaService: mediaService!,
-                                      galleryItems: widget.galleryItems,
-                                    ),
-                        ),
-                        if (reactionsForWidth > 0)
-                          const SizedBox(height: 20, width: 10),
-                      ],
-                    ),
-                    Positioned(
-                      bottom: -20,
-                      left: 5,
-                      right: 5,
-                      child: ReactionRow(
+                    if (widget.message.isDeletedFromSender)
+                      ChatTextEntry(
                         message: widget.message,
-                        reactions: reactions,
+                        nextMessage: widget.nextMessage,
+                        borderRadius: borderRadius,
+                        minWidth: reactionsForWidth * 43,
+                      )
+                    else
+                      Column(
+                        children: [
+                          ResponseContainer(
+                            msg: widget.message,
+                            group: widget.group,
+                            mediaService: mediaService,
+                            borderRadius: borderRadius,
+                            scrollToMessage: widget.scrollToMessage,
+                            child: (widget.message.type == MessageType.text)
+                                ? ChatTextEntry(
+                                    message: widget.message,
+                                    nextMessage: widget.nextMessage,
+                                    borderRadius: borderRadius,
+                                    minWidth: reactionsForWidth * 43,
+                                  )
+                                : (mediaService == null)
+                                    ? null
+                                    : ChatMediaEntry(
+                                        message: widget.message,
+                                        group: widget.group,
+                                        mediaService: mediaService!,
+                                        galleryItems: widget.galleryItems,
+                                      ),
+                          ),
+                          if (reactionsForWidth > 0)
+                            const SizedBox(height: 20, width: 10),
+                        ],
                       ),
-                    ),
+                    if (!widget.message.isDeletedFromSender)
+                      Positioned(
+                        bottom: -20,
+                        left: 5,
+                        right: 5,
+                        child: ReactionRow(
+                          message: widget.message,
+                          reactions: reactions,
+                        ),
+                      ),
                   ],
                 ),
               ),

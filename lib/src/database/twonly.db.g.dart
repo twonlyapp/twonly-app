@@ -2243,7 +2243,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES media_files (media_id) ON DELETE CASCADE'));
+          'REFERENCES media_files (media_id) ON DELETE SET NULL'));
   static const VerificationMeta _mediaStoredMeta =
       const VerificationMeta('mediaStored');
   @override
@@ -6464,7 +6464,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
             on: TableUpdateQuery.onTableName('media_files',
                 limitUpdateKind: UpdateKind.delete),
             result: [
-              TableUpdate('messages', kind: UpdateKind.delete),
+              TableUpdate('messages', kind: UpdateKind.update),
             ],
           ),
           WritePropagation(

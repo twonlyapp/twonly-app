@@ -85,10 +85,32 @@ class MessageContextMenu extends StatelessWidget {
               context,
               context.lang.deleteTitle,
               null,
-              customOk: context.lang.deleteOkBtn,
+              customOk:
+                  (message.senderId == null && !message.isDeletedFromSender)
+                      ? context.lang.deleteOkBtnForAll
+                      : context.lang.deleteOkBtnForMe,
             );
             if (delete) {
-              await twonlyDB.messagesDao.deleteMessagesById(message.messageId);
+              if (message.senderId == null && !message.isDeletedFromSender) {
+                await twonlyDB.messagesDao.handleMessageDeletion(
+                  null,
+                  message.messageId,
+                  DateTime.now(),
+                );
+                await sendCipherTextToGroup(
+                  message.groupId,
+                  pb.EncryptedContent(
+                    messageUpdate: pb.EncryptedContent_MessageUpdate(
+                      type: pb.EncryptedContent_MessageUpdate_Type.DELETE,
+                      senderMessageId: message.messageId,
+                    ),
+                  ),
+                  null,
+                );
+              } else {
+                await twonlyDB.messagesDao
+                    .deleteMessagesById(message.messageId);
+              }
             }
           },
           child: const FaIcon(FontAwesomeIcons.trash),
