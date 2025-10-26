@@ -341,5 +341,6 @@
     "reportUserReason": "Meldegrund",
     "reportUser": "Benutzer melden",
     "newDeviceRegistered": "Du hast dich auf einem anderen Gerät angemeldet. Daher wurdest du hier abgemeldet.",
-    "tabToRemoveEmoji": "Tippen um zu entfernen"
+    "tabToRemoveEmoji": "Tippen um zu entfernen",
+    "quotedMessageWasDeleted": "Die zitierte Nachricht wurde gelöscht."
 }

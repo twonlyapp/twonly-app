@@ -106,19 +106,21 @@ Future<int?> checkForProfileUpdate(
 ) async {
   int? senderProfileCounter;
 
-  if (content.hasSenderProfileCounter() && !content.hasContactUpdate()) {
+  if (content.hasSenderProfileCounter()) {
     senderProfileCounter = content.senderProfileCounter.toInt();
-    final contact = await twonlyDB.contactsDao
-        .getContactByUserId(fromUserId)
-        .getSingleOrNull();
-    if (contact != null) {
-      if (contact.senderProfileCounter < senderProfileCounter) {
-        await sendCipherText(
-          fromUserId,
-          EncryptedContent()
-            ..contactUpdate = (EncryptedContent_ContactUpdate()
-              ..type = EncryptedContent_ContactUpdate_Type.REQUEST),
-        );
+    if (!content.hasContactUpdate()) {
+      final contact = await twonlyDB.contactsDao
+          .getContactByUserId(fromUserId)
+          .getSingleOrNull();
+      if (contact != null) {
+        if (contact.senderProfileCounter < senderProfileCounter) {
+          await sendCipherText(
+            fromUserId,
+            EncryptedContent()
+              ..contactUpdate = (EncryptedContent_ContactUpdate()
+                ..type = EncryptedContent_ContactUpdate_Type.REQUEST),
+          );
+        }
       }
     }
   }

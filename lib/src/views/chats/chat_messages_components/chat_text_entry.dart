@@ -57,7 +57,7 @@ class ChatTextEntry extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (measureTextWidth(text) > 270)
+          if (measureTextWidth(text) > 270 || message.quotesMessageId != null)
             Expanded(
               child: BetterText(text: text),
             )

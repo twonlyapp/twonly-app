@@ -277,7 +277,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                         return Transform.translate(
                           offset: Offset(
                             (focusedScrollItem == i)
-                                ? (chatMessage.quotesMessageId == null)
+                                ? (chatMessage.senderId == null)
                                     ? -8
                                     : 8
                                 : 0,

@@ -1103,4 +1103,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabToRemoveEmoji => 'Tab to remove';
+
+  @override
+  String get quotedMessageWasDeleted => 'The quoted message has been deleted.';
 }

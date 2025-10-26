@@ -2089,6 +2089,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tab to remove'**
   String get tabToRemoveEmoji;
+
+  /// No description provided for @quotedMessageWasDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'The quoted message has been deleted.'**
+  String get quotedMessageWasDeleted;
 }
 
 class _AppLocalizationsDelegate

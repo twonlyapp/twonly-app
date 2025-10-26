@@ -497,5 +497,6 @@
   "reportUserReason": "Reporting reason",
   "reportUser": "Report user",
   "newDeviceRegistered": "You have logged in on another device. You have therefore been logged out here.",
-  "tabToRemoveEmoji": "Tab to remove"
+  "tabToRemoveEmoji": "Tab to remove",
+  "quotedMessageWasDeleted": "The quoted message has been deleted."
 }

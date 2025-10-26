@@ -2265,10 +2265,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   @override
   late final GeneratedColumn<String> quotesMessageId = GeneratedColumn<String>(
       'quotes_message_id', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES messages (message_id)'));
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _isDeletedFromSenderMeta =
       const VerificationMeta('isDeletedFromSender');
   @override
@@ -8207,21 +8204,6 @@ final class $$MessagesTableReferences
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $MessagesTable _quotesMessageIdTable(_$TwonlyDB db) =>
-      db.messages.createAlias($_aliasNameGenerator(
-          db.messages.quotesMessageId, db.messages.messageId));
-
-  $$MessagesTableProcessedTableManager? get quotesMessageId {
-    final $_column = $_itemColumn<String>('quotes_message_id');
-    if ($_column == null) return null;
-    final manager = $$MessagesTableTableManager($_db, $_db.messages)
-        .filter((f) => f.messageId.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_quotesMessageIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
   static MultiTypedResultKey<$MessageHistoriesTable, List<MessageHistory>>
       _messageHistoriesRefsTable(_$TwonlyDB db) =>
           MultiTypedResultKey.fromTable(db.messageHistories,
@@ -8315,6 +8297,10 @@ class $$MessagesTableFilterComposer
   ColumnFilters<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get quotesMessageId => $composableBuilder(
+      column: $table.quotesMessageId,
+      builder: (column) => ColumnFilters(column));
+
   ColumnFilters<bool> get isDeletedFromSender => $composableBuilder(
       column: $table.isDeletedFromSender,
       builder: (column) => ColumnFilters(column));
@@ -8386,26 +8372,6 @@ class $$MessagesTableFilterComposer
             $$MediaFilesTableFilterComposer(
               $db: $db,
               $table: $db.mediaFiles,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$MessagesTableFilterComposer get quotesMessageId {
-    final $$MessagesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.quotesMessageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableFilterComposer(
-              $db: $db,
-              $table: $db.messages,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -8524,6 +8490,10 @@ class $$MessagesTableOrderingComposer
       column: $table.downloadToken,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get quotesMessageId => $composableBuilder(
+      column: $table.quotesMessageId,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get isDeletedFromSender => $composableBuilder(
       column: $table.isDeletedFromSender,
       builder: (column) => ColumnOrderings(column));
@@ -8602,26 +8572,6 @@ class $$MessagesTableOrderingComposer
             ));
     return composer;
   }
-
-  $$MessagesTableOrderingComposer get quotesMessageId {
-    final $$MessagesTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.quotesMessageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableOrderingComposer(
-              $db: $db,
-              $table: $db.messages,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 }
 
 class $$MessagesTableAnnotationComposer
@@ -8647,6 +8597,9 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken, builder: (column) => column);
+
+  GeneratedColumn<String> get quotesMessageId => $composableBuilder(
+      column: $table.quotesMessageId, builder: (column) => column);
 
   GeneratedColumn<bool> get isDeletedFromSender => $composableBuilder(
       column: $table.isDeletedFromSender, builder: (column) => column);
@@ -8718,26 +8671,6 @@ class $$MessagesTableAnnotationComposer
             $$MediaFilesTableAnnotationComposer(
               $db: $db,
               $table: $db.mediaFiles,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$MessagesTableAnnotationComposer get quotesMessageId {
-    final $$MessagesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.quotesMessageId,
-        referencedTable: $db.messages,
-        getReferencedColumn: (t) => t.messageId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$MessagesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.messages,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -8846,7 +8779,6 @@ class $$MessagesTableTableManager extends RootTableManager<
         {bool groupId,
         bool senderId,
         bool mediaId,
-        bool quotesMessageId,
         bool messageHistoriesRefs,
         bool reactionsRefs,
         bool receiptsRefs,
@@ -8941,7 +8873,6 @@ class $$MessagesTableTableManager extends RootTableManager<
               {groupId = false,
               senderId = false,
               mediaId = false,
-              quotesMessageId = false,
               messageHistoriesRefs = false,
               reactionsRefs = false,
               receiptsRefs = false,
@@ -8995,17 +8926,6 @@ class $$MessagesTableTableManager extends RootTableManager<
                         $$MessagesTableReferences._mediaIdTable(db),
                     referencedColumn:
                         $$MessagesTableReferences._mediaIdTable(db).mediaId,
-                  ) as T;
-                }
-                if (quotesMessageId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.quotesMessageId,
-                    referencedTable:
-                        $$MessagesTableReferences._quotesMessageIdTable(db),
-                    referencedColumn: $$MessagesTableReferences
-                        ._quotesMessageIdTable(db)
-                        .messageId,
                   ) as T;
                 }
 
@@ -9086,7 +9006,6 @@ typedef $$MessagesTableProcessedTableManager = ProcessedTableManager<
         {bool groupId,
         bool senderId,
         bool mediaId,
-        bool quotesMessageId,
         bool messageHistoriesRefs,
         bool reactionsRefs,
         bool receiptsRefs,

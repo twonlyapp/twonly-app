@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/database/twonly_database_old.dart' as old;
@@ -45,6 +46,15 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
       final contact = await getContactByUserId(userId).getSingleOrNull();
       if (contact != null) {
         await updatePushUser(contact);
+        final group = await twonlyDB.groupsDao.getDirectChat(userId);
+        if (group != null) {
+          await twonlyDB.groupsDao.updateGroup(
+            group.groupId,
+            GroupsCompanion(
+              groupName: Value(getContactDisplayName(contact)),
+            ),
+          );
+        }
       }
     }
   }

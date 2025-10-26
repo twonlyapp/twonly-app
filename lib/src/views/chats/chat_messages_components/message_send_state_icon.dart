@@ -76,11 +76,13 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
   @override
   Widget build(BuildContext context) {
-    final icons = <Widget>[];
+    var icons = <Widget>[];
     var text = '';
     Widget? textWidget;
     textWidget = null;
     final kindsAlreadyShown = HashSet<MessageType>();
+
+    var hasLoader = false;
 
     for (final message in widget.messages) {
       if (icons.length == 2) break;
@@ -130,6 +132,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             if (mediaFile.downloadState == DownloadState.downloading) {
               text = context.lang.messageSendState_Loading;
               icon = getLoaderIcon(color);
+              hasLoader = true;
             }
           }
         case MessageSendState.send:
@@ -139,9 +142,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.sending:
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Sending;
+          hasLoader = true;
         case MessageSendState.receiving:
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Received;
+          hasLoader = true;
       }
 
       if (message.mediaStored) {
@@ -163,6 +168,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             style: const TextStyle(fontSize: 9),
           );
         }
+      }
+
+      if (hasLoader) {
+        icons = [icon];
+        break;
       }
 
       if (message.type == MessageType.media) {

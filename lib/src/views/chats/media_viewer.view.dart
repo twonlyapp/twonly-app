@@ -469,27 +469,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           child: Image.file(
                             currentMedia!.tempPath,
                             fit: BoxFit.contain,
-                            frameBuilder: (
-                              context,
-                              child,
-                              frame,
-                              wasSynchronouslyLoaded,
-                            ) {
-                              if (wasSynchronouslyLoaded) return child;
-                              return AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
-                                child: frame != null
-                                    ? child
-                                    : Container(
-                                        height: 60,
-                                        color: Colors.transparent,
-                                        width: 60,
-                                        child: const CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                              );
-                            },
                           ),
                         ),
                     ],
@@ -534,13 +513,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 ],
               ),
             ),
-            if (currentMedia?.mediaFile.downloadState != DownloadState.ready)
+            if (currentMedia != null &&
+                currentMedia?.mediaFile.downloadState != DownloadState.ready)
               const Positioned.fill(
                 child: Center(
                   child: SizedBox(
                     height: 60,
                     width: 60,
-                    child: CircularProgressIndicator(strokeWidth: 6),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 6,
+                    ),
                   ),
                 ),
               ),

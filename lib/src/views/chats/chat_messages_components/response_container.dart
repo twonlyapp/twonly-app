@@ -150,53 +150,58 @@ class _ResponsePreviewState extends State<ResponsePreview> {
 
   @override
   Widget build(BuildContext context) {
-    if (message == null) return Container();
     String? subtitle;
+    var color = const Color.fromARGB(233, 68, 137, 255);
+    var username = '';
 
-    if (message!.type == MessageType.text) {
-      if (message!.content != null) {
-        subtitle = truncateString(message!.content!);
+    if (message != null) {
+      if (message!.type == MessageType.text) {
+        if (message!.content != null) {
+          subtitle = truncateString(message!.content!);
+        }
       }
-    }
-    if (message!.type == MessageType.media && mediaService != null) {
-      subtitle = mediaService!.mediaFile.type == MediaType.video
-          ? context.lang.video
-          : context.lang.image;
-    }
+      if (message!.type == MessageType.media && mediaService != null) {
+        subtitle = mediaService!.mediaFile.type == MediaType.video
+            ? context.lang.video
+            : context.lang.image;
+      }
 
-    var username = context.lang.you;
-    if (message!.senderId != null) {
-      username = message!.senderId.toString();
-    }
+      username = context.lang.you;
+      if (message!.senderId != null) {
+        username = message!.senderId.toString();
+      }
 
-    final color = getMessageColor(message!);
+      color = getMessageColor(message!);
 
-    if (!message!.mediaStored) {
-      return Container(
-        padding: widget.showBorder
-            ? const EdgeInsets.only(left: 10, right: 10)
-            : const EdgeInsets.symmetric(horizontal: 5),
-        decoration: (widget.showBorder)
-            ? BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                    color: color,
-                    width: 2,
+      if (!message!.mediaStored) {
+        return Container(
+          padding: widget.showBorder
+              ? const EdgeInsets.only(left: 10, right: 10)
+              : const EdgeInsets.symmetric(horizontal: 5),
+          decoration: (widget.showBorder)
+              ? BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: color,
+                      width: 2,
+                    ),
                   ),
-                ),
-              )
-            : null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              username,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            if (subtitle != null) Text(subtitle),
-          ],
-        ),
-      );
+                )
+              : null,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                username,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              if (subtitle != null) Text(subtitle),
+            ],
+          ),
+        );
+      }
+    } else {
+      username = context.lang.quotedMessageWasDeleted;
     }
 
     return Container(
@@ -227,7 +232,11 @@ class _ResponsePreviewState extends State<ResponsePreview> {
           if (mediaService != null)
             SizedBox(
               height: widget.showBorder ? 100 : 210,
-              child: Image.file(mediaService!.thumbnailPath),
+              child: Image.file(
+                mediaService!.mediaFile.type == MediaType.video
+                    ? mediaService!.thumbnailPath
+                    : mediaService!.storedPath,
+              ),
             ),
         ],
       ),

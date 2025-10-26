@@ -26,8 +26,7 @@ class Messages extends Table {
 
   BlobColumn get downloadToken => blob().nullable()();
 
-  TextColumn get quotesMessageId =>
-      text().nullable().references(Messages, #messageId)();
+  TextColumn get quotesMessageId => text().nullable()();
 
   BoolColumn get isDeletedFromSender =>
       boolean().withDefault(const Constant(false))();

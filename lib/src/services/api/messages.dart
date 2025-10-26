@@ -214,6 +214,8 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   bool onlyReturnEncryptedData = false,
   String? messageId,
 }) async {
+  encryptedContent.senderProfileCounter = Int64(gUser.avatarCounter);
+
   final response = pb.Message()
     ..type = pb.Message_Type.CIPHERTEXT
     ..encryptedContent = encryptedContent.writeToBuffer();
