@@ -100,7 +100,9 @@ class _AllReactionsViewState extends State<AllReactionsView> {
                     onTap: (entry.$2 != null) ? null : removeReaction,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 30),
+                        vertical: 5,
+                        horizontal: 30,
+                      ),
                       margin: const EdgeInsets.only(left: 4),
                       child: Row(
                         children: [
