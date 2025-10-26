@@ -1106,4 +1106,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get newDeviceRegistered =>
       'Du hast dich auf einem anderen Gerät angemeldet. Daher wurdest du hier abgemeldet.';
+
+  @override
+  String get tabToRemoveEmoji => 'Tippen um zu entfernen';
 }

@@ -1,9 +1,7 @@
 // ignore_for_file: avoid_dynamic_calls
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
@@ -37,12 +35,8 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
       curve: Curves.linearToEaseOut,
       child: GestureDetector(
         onTap: () async {
-          await twonlyDB.reactionsDao.insertReaction(
-            ReactionsCompanion(
-              messageId: Value(widget.messageId),
-              emoji: Value(widget.emoji),
-            ),
-          );
+          await twonlyDB.reactionsDao
+              .updateMyReaction(widget.messageId, widget.emoji);
 
           await sendCipherTextToGroup(
             widget.groupId,

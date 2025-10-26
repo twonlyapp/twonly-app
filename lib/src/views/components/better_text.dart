@@ -63,6 +63,7 @@ class BetterText extends StatelessWidget {
         children: spans,
       ),
       softWrap: true,
+      textAlign: TextAlign.start,
       overflow: TextOverflow.visible,
       style: const TextStyle(
         color: Colors.white,

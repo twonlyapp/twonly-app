@@ -12,12 +12,14 @@ class ChatTextEntry extends StatelessWidget {
     required this.message,
     required this.nextMessage,
     required this.borderRadius,
+    required this.minWidth,
     super.key,
   });
 
   final Message message;
   final Message? nextMessage;
   final BorderRadius borderRadius;
+  final double minWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +39,13 @@ class ChatTextEntry extends StatelessWidget {
 
     final displayTime = !combineTextMessageWithNext(message, nextMessage);
 
+    var spacerWidth = minWidth - measureTextWidth(text) - 53;
+    if (spacerWidth < 0) spacerWidth = 0;
+
     return Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.8,
+        minWidth: minWidth,
       ),
       padding: const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
       decoration: BoxDecoration(
@@ -49,26 +55,32 @@ class ChatTextEntry extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (measureTextWidth(text) > 270)
             Expanded(
               child: BetterText(text: text),
             )
-          else
+          else ...[
             BetterText(text: text),
+            SizedBox(
+              width: spacerWidth,
+            ),
+          ],
           if (displayTime)
-            Padding(
-              padding: const EdgeInsets.only(left: 6),
-              child: Text(
-                friendlyTime(context, message.createdAt),
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.white.withAlpha(150),
+            Align(
+              alignment: AlignmentGeometry.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 6),
+                child: Text(
+                  friendlyTime(context, message.createdAt),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white.withAlpha(150),
+                  ),
                 ),
               ),
-            )
+            ),
         ],
       ),
     );

@@ -12,8 +12,8 @@ Future<void> handleReaction(
     if (reaction.remove) {
       await twonlyDB.reactionsDao
           .updateReaction(fromUserId, reaction.targetMessageId, groupId, null);
+      return;
     }
-    return;
   }
   if (reaction.hasEmoji()) {
     await twonlyDB.reactionsDao.updateReaction(

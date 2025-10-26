@@ -40,6 +40,9 @@ class ChatListEntry extends StatefulWidget {
 class _ChatListEntryState extends State<ChatListEntry> {
   MediaFileService? mediaService;
 
+  List<Reaction> reactions = [];
+  StreamSubscription<List<Reaction>>? reactionsSub;
+
   StreamSubscription<MediaFile?>? mediaFileSub;
 
   @override
@@ -51,6 +54,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
   @override
   void dispose() {
     mediaFileSub?.cancel();
+    reactionsSub?.cancel();
     super.dispose();
   }
 
@@ -65,6 +69,14 @@ class _ChatListEntryState extends State<ChatListEntry> {
         }
       });
     }
+    final stream =
+        twonlyDB.reactionsDao.watchReactions(widget.message.messageId);
+
+    reactionsSub = stream.listen((update) {
+      setState(() {
+        reactions = update;
+      });
+    });
     setState(() {});
   }
 
@@ -76,7 +88,13 @@ class _ChatListEntryState extends State<ChatListEntry> {
       widget.message,
       widget.prevMessage,
       widget.nextMessage,
+      reactions.isNotEmpty,
     );
+
+    final seen = <String>{};
+    var reactionsForWidth =
+        reactions.where((t) => seen.add(t.emoji)).toList().length;
+    if (reactionsForWidth > 4) reactionsForWidth = 4;
 
     return Align(
       alignment: right ? Alignment.centerRight : Alignment.centerLeft,
@@ -95,36 +113,46 @@ class _ChatListEntryState extends State<ChatListEntry> {
                 message: widget.message,
                 onResponseTriggered: widget.onResponseTriggered,
                 child: Stack(
+                  // overflow: Overflow.visible,
+                  // clipBehavior: Clip.none,
                   alignment:
                       right ? Alignment.centerRight : Alignment.centerLeft,
                   children: [
-                    ResponseContainer(
-                      msg: widget.message,
-                      group: widget.group,
-                      mediaService: mediaService,
-                      borderRadius: borderRadius,
-                      scrollToMessage: widget.scrollToMessage,
-                      child: (widget.message.type == MessageType.text)
-                          ? ChatTextEntry(
-                              message: widget.message,
-                              nextMessage: widget.nextMessage,
-                              borderRadius: borderRadius,
-                            )
-                          : (mediaService == null)
-                              ? null
-                              : ChatMediaEntry(
+                    Column(
+                      children: [
+                        ResponseContainer(
+                          msg: widget.message,
+                          group: widget.group,
+                          mediaService: mediaService,
+                          borderRadius: borderRadius,
+                          scrollToMessage: widget.scrollToMessage,
+                          child: (widget.message.type == MessageType.text)
+                              ? ChatTextEntry(
                                   message: widget.message,
-                                  group: widget.group,
-                                  mediaService: mediaService!,
-                                  galleryItems: widget.galleryItems,
-                                ),
+                                  nextMessage: widget.nextMessage,
+                                  borderRadius: borderRadius,
+                                  minWidth: reactionsForWidth * 43,
+                                )
+                              : (mediaService == null)
+                                  ? null
+                                  : ChatMediaEntry(
+                                      message: widget.message,
+                                      group: widget.group,
+                                      mediaService: mediaService!,
+                                      galleryItems: widget.galleryItems,
+                                    ),
+                        ),
+                        if (reactionsForWidth > 0)
+                          const SizedBox(height: 20, width: 10),
+                      ],
                     ),
                     Positioned(
-                      bottom: 5,
+                      bottom: -20,
                       left: 5,
                       right: 5,
                       child: ReactionRow(
                         message: widget.message,
+                        reactions: reactions,
                       ),
                     ),
                   ],
@@ -142,6 +170,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
   Message message,
   Message? prevMessage,
   Message? nextMessage,
+  bool hasReactions,
 ) {
   var bottom = 30.0;
   var top = 0.0;

@@ -1100,4 +1100,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get newDeviceRegistered =>
       'You have logged in on another device. You have therefore been logged out here.';
+
+  @override
+  String get tabToRemoveEmoji => 'Tab to remove';
 }

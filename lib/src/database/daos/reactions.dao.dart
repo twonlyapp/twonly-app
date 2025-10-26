@@ -1,12 +1,13 @@
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'reactions.dao.g.dart';
 
-@DriftAccessor(tables: [Reactions])
+@DriftAccessor(tables: [Reactions, Contacts])
 class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -51,7 +52,36 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
         .watch();
   }
 
-  Future<void> insertReaction(ReactionsCompanion reaction) async {
-    await into(reactions).insert(reaction);
+  Stream<List<(Reaction, Contact?)>> watchReactionWithContacts(
+    String messageId,
+  ) {
+    final query = (select(reactions)).join(
+      [leftOuterJoin(contacts, contacts.userId.equalsExp(reactions.senderId))],
+    )..where(reactions.messageId.equals(messageId));
+
+    return query
+        .map((row) => (row.readTable(reactions), row.readTableOrNull(contacts)))
+        .watch();
+  }
+
+  Future<void> updateMyReaction(String messageId, String? emoji) async {
+    try {
+      await (delete(reactions)
+            ..where(
+              (t) => t.senderId.isNull() & t.messageId.equals(messageId),
+            ))
+          .go();
+      if (emoji != null) {
+        await into(reactions).insert(
+          ReactionsCompanion(
+            messageId: Value(messageId),
+            emoji: Value(emoji),
+            senderId: const Value(null),
+          ),
+        );
+      }
+    } catch (e) {
+      Log.error(e);
+    }
   }
 }

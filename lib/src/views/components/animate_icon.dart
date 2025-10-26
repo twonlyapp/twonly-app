@@ -33,7 +33,7 @@ class EmojiAnimation extends StatelessWidget {
     '😭': 'loudly-crying.json',
     '🤯': 'mind-blown.json',
     '❤️‍🔥': 'red_heart_fire.json',
-    '😁': 'grinning.json',
+    //'😁': 'grinning.json',
     '😆': 'laughing.json',
     '😅': 'grin-sweat.json',
     '🤣': 'rofl.json',

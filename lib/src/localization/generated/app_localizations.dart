@@ -2083,6 +2083,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have logged in on another device. You have therefore been logged out here.'**
   String get newDeviceRegistered;
+
+  /// No description provided for @tabToRemoveEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab to remove'**
+  String get tabToRemoveEmoji;
 }
 
 class _AppLocalizationsDelegate

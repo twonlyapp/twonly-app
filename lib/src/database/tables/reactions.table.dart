@@ -17,5 +17,5 @@ class Reactions extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
-  Set<Column> get primaryKey => {messageId, senderId, createdAt};
+  Set<Column> get primaryKey => {messageId, senderId, emoji};
 }

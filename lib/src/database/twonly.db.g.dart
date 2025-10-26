@@ -3332,7 +3332,7 @@ class $ReactionsTable extends Reactions
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {messageId, senderId, createdAt};
+  Set<GeneratedColumn> get $primaryKey => {messageId, senderId, emoji};
   @override
   Reaction map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';

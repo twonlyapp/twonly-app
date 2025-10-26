@@ -1,6 +1,5 @@
 // ignore_for_file: inference_failure_on_function_invocation
 
-import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -48,12 +47,8 @@ class MessageContextMenu extends StatelessWidget {
             ) as EmojiLayerData?;
             if (layer == null) return;
 
-            await twonlyDB.reactionsDao.insertReaction(
-              ReactionsCompanion(
-                messageId: Value(message.messageId),
-                emoji: Value(layer.text),
-              ),
-            );
+            await twonlyDB.reactionsDao
+                .updateMyReaction(message.messageId, layer.text);
 
             await sendCipherTextToGroup(
               message.groupId,

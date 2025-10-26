@@ -496,5 +496,6 @@
   "reportUserTitle": "Report {username}",
   "reportUserReason": "Reporting reason",
   "reportUser": "Report user",
-  "newDeviceRegistered": "You have logged in on another device. You have therefore been logged out here."
+  "newDeviceRegistered": "You have logged in on another device. You have therefore been logged out here.",
+  "tabToRemoveEmoji": "Tab to remove"
 }
