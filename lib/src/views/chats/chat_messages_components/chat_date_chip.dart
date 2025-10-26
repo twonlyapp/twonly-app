@@ -9,10 +9,8 @@ class ChatDateChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = item.isTime
-        ? DateFormat.Hm(Localizations.localeOf(context).toLanguageTag())
-            .format(item.time!)
-        : '${DateFormat.Hm(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}\n${DateFormat.yMd(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}';
+    final formattedDate =
+        '${DateFormat.Hm(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}\n${DateFormat.yMd(Localizations.localeOf(context).toLanguageTag()).format(item.date!)}';
 
     return Center(
       child: Container(
@@ -23,6 +21,7 @@ class ChatDateChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        margin: const EdgeInsets.only(bottom: 20),
         child: Text(
           formattedDate,
           textAlign: TextAlign.center,

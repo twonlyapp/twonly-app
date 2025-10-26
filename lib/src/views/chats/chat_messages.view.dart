@@ -28,22 +28,17 @@ Color getMessageColor(Message message) {
 }
 
 class ChatItem {
-  const ChatItem._({this.message, this.date, this.time});
+  const ChatItem._({this.message, this.date});
   factory ChatItem.date(DateTime date) {
     return ChatItem._(date: date);
-  }
-  factory ChatItem.time(DateTime time) {
-    return ChatItem._(time: time);
   }
   factory ChatItem.message(Message message) {
     return ChatItem._(message: message);
   }
   final Message? message;
   final DateTime? date;
-  final DateTime? time;
   bool get isMessage => message != null;
   bool get isDate => date != null;
-  bool get isTime => time != null;
 }
 
 /// Displays detailed information about a SampleItem.
@@ -142,9 +137,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
               msg.createdAt.month != lastDate.month ||
               msg.createdAt.year != lastDate.year) {
             chatItems.add(ChatItem.date(msg.createdAt));
-            lastDate = msg.createdAt;
-          } else if (msg.createdAt.difference(lastDate).inMinutes >= 20) {
-            chatItems.add(ChatItem.time(msg.createdAt));
             lastDate = msg.createdAt;
           }
           chatItems.add(ChatItem.message(msg));
@@ -276,7 +268,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                           padding: EdgeInsetsGeometry.only(top: 10),
                         );
                       }
-                      if (messages[i].isDate || messages[i].isTime) {
+                      if (messages[i].isDate) {
                         return ChatDateChip(
                           item: messages[i],
                         );
@@ -295,10 +287,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                             scale: (focusedScrollItem == i) ? 1.05 : 1,
                             child: ChatListEntry(
                               key: Key(chatMessage.messageId),
-                              chatMessage,
-                              group,
-                              galleryItems,
-                              isLastMessageFromSameUser(messages, i),
+                              message: messages[i].message!,
+                              nextMessage:
+                                  (i > 0) ? messages[i - 1].message : null,
+                              prevMessage: ((i + 1) < messages.length)
+                                  ? messages[i + 1].message
+                                  : null,
+                              group: group,
+                              galleryItems: galleryItems,
                               scrollToMessage: scrollToMessage,
                               onResponseTriggered: () {
                                 setState(() {
@@ -402,23 +398,4 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       ),
     );
   }
-}
-
-bool isLastMessageFromSameUser(List<ChatItem> messages, int index) {
-  if (index <= 0) {
-    return true; // If there is no previous message, return true
-  }
-  return (messages[index - 1].message?.senderId ==
-      messages[index].message?.senderId);
-}
-
-double calculateNumberOfLines(String text, double width, double fontSize) {
-  final textPainter = TextPainter(
-    text: TextSpan(
-      text: text,
-      style: TextStyle(fontSize: fontSize),
-    ),
-    textDirection: TextDirection.ltr,
-  )..layout(maxWidth: width - 32);
-  return textPainter.computeLineMetrics().length.toDouble();
 }

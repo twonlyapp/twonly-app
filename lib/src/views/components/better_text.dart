@@ -51,13 +51,19 @@ class BetterText extends StatelessWidget {
     }
 
     if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastMatchEnd)));
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
+        ),
+      );
     }
 
     return Text.rich(
       TextSpan(
         children: spans,
       ),
+      softWrap: true,
+      overflow: TextOverflow.visible,
       style: const TextStyle(
         color: Colors.white,
         fontSize: 17,

@@ -15,18 +15,20 @@ import 'package:twonly/src/views/chats/chat_messages_components/message_context_
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 
 class ChatListEntry extends StatefulWidget {
-  const ChatListEntry(
-    this.message,
-    this.group,
-    this.galleryItems,
-    this.lastMessageFromSameUser, {
+  const ChatListEntry({
+    required this.group,
+    required this.galleryItems,
+    required this.prevMessage,
+    required this.message,
+    required this.nextMessage,
     required this.onResponseTriggered,
     required this.scrollToMessage,
     super.key,
   });
+  final Message? prevMessage;
+  final Message? nextMessage;
   final Message message;
   final Group group;
-  final bool lastMessageFromSameUser;
   final List<MemoryItem> galleryItems;
   final void Function(String) scrollToMessage;
   final void Function() onResponseTriggered;
@@ -70,12 +72,16 @@ class _ChatListEntryState extends State<ChatListEntry> {
   Widget build(BuildContext context) {
     final right = widget.message.senderId == null;
 
+    final (padding, borderRadius) = getMessageLayout(
+      widget.message,
+      widget.prevMessage,
+      widget.nextMessage,
+    );
+
     return Align(
       alignment: right ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
-        padding: widget.lastMessageFromSameUser
-            ? const EdgeInsets.only(top: 5, right: 10, left: 10)
-            : const EdgeInsets.only(top: 5, bottom: 20, right: 10, left: 10),
+        padding: padding,
         child: MessageContextMenu(
           message: widget.message,
           onResponseTriggered: widget.onResponseTriggered,
@@ -96,10 +102,13 @@ class _ChatListEntryState extends State<ChatListEntry> {
                       msg: widget.message,
                       group: widget.group,
                       mediaService: mediaService,
+                      borderRadius: borderRadius,
                       scrollToMessage: widget.scrollToMessage,
                       child: (widget.message.type == MessageType.text)
                           ? ChatTextEntry(
                               message: widget.message,
+                              nextMessage: widget.nextMessage,
+                              borderRadius: borderRadius,
                             )
                           : (mediaService == null)
                               ? null
@@ -127,4 +136,58 @@ class _ChatListEntryState extends State<ChatListEntry> {
       ),
     );
   }
+}
+
+(EdgeInsetsGeometry, BorderRadius) getMessageLayout(
+  Message message,
+  Message? prevMessage,
+  Message? nextMessage,
+) {
+  var bottom = 30.0;
+  var top = 0.0;
+
+  var topLeft = 12.0;
+  var topRight = 12.0;
+  var bottomRight = 12.0;
+  var bottomLeft = 12.0;
+
+  if (nextMessage != null) {
+    if (message.senderId == nextMessage.senderId) {
+      bottom = 10;
+    }
+  }
+
+  if (prevMessage != null) {
+    final combinesWidthNext = combineTextMessageWithNext(prevMessage, message);
+    if (combinesWidthNext) {
+      top = 1;
+      topLeft = 5.0;
+    }
+  }
+
+  final combinesWidthNext = combineTextMessageWithNext(message, nextMessage);
+  if (combinesWidthNext) {
+    bottom = 1;
+    bottomLeft = 5.0;
+  }
+
+  if (message.senderId == null) {
+    final tmp = topLeft;
+    topLeft = topRight;
+    topRight = tmp;
+
+    final tmp2 = bottomLeft;
+    bottomLeft = bottomRight;
+    bottomRight = tmp2;
+  }
+
+  return (
+    EdgeInsets.only(top: top, bottom: bottom, right: 10, left: 10),
+    BorderRadius.only(
+      topLeft: Radius.circular(topLeft),
+      topRight: Radius.circular(topRight),
+      bottomRight: Radius.circular(bottomRight),
+      bottomLeft: Radius.circular(bottomLeft),
+    )
+  );
 }

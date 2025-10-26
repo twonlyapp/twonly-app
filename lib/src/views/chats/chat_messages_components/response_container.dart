@@ -14,6 +14,7 @@ class ResponseContainer extends StatefulWidget {
     required this.child,
     required this.scrollToMessage,
     required this.mediaService,
+    required this.borderRadius,
     super.key,
   });
 
@@ -21,6 +22,7 @@ class ResponseContainer extends StatefulWidget {
   final Widget? child;
   final Group group;
   final MediaFileService? mediaService;
+  final BorderRadius borderRadius;
   final void Function(String) scrollToMessage;
 
   @override
@@ -69,7 +71,7 @@ class _ResponseContainerState extends State<ResponseContainer> {
         ),
         decoration: BoxDecoration(
           color: getMessageColor(widget.msg),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: widget.borderRadius,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,11 +159,12 @@ class _ResponsePreviewState extends State<ResponsePreview> {
       }
     }
     if (message!.type == MessageType.media && mediaService != null) {
-      subtitle =
-          mediaService!.mediaFile.type == MediaType.video ? 'Video' : 'Image';
+      subtitle = mediaService!.mediaFile.type == MediaType.video
+          ? context.lang.video
+          : context.lang.image;
     }
 
-    var username = 'You';
+    var username = context.lang.you;
     if (message!.senderId != null) {
       username = message!.senderId.toString();
     }

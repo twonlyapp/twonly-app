@@ -532,6 +532,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get now => 'Now';
+
+  @override
+  String get you => 'You';
+
+  @override
+  String get minutesShort => 'min.';
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get video => 'Video';
+
+  @override
   String get react => 'React';
 
   @override
