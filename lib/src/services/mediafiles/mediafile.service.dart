@@ -199,7 +199,7 @@ class MediaFileService {
   File get thumbnailPath => _buildFilePath(
         'stored',
         namePrefix: '.thumbnail',
-        extensionParam: 'webp',
+        extensionParam: 'png',
       );
   File get encryptedPath => _buildFilePath(
         'tmp',

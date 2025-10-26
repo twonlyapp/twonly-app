@@ -159,6 +159,7 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
         MediaFilesCompanion(
           type: Value(type),
           createdAt: Value(stat.modified),
+          stored: const Value(true),
         ),
       );
       final mediaService = await MediaFileService.fromMedia(mediaFile!);

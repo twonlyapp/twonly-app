@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -54,6 +55,11 @@ class MemoriesViewState extends State<MemoriesView> {
           applicationSupportDirectory: applicationSupportDirectory,
         );
         if (!mediaService.imagePreviewAvailable) continue;
+        if (mediaService.mediaFile.type == MediaType.video) {
+          if (!mediaService.thumbnailPath.existsSync()) {
+            await mediaService.createThumbnail();
+          }
+        }
         galleryItems.add(
           MemoryItem(
             mediaService: mediaService,
@@ -146,7 +152,5 @@ class MemoriesViewState extends State<MemoriesView> {
       ),
     ) as bool?;
     setState(() {});
-
-    await initAsync();
   }
 }
