@@ -501,5 +501,11 @@
   "newDeviceRegistered": "You have logged in on another device. You have therefore been logged out here.",
   "tabToRemoveEmoji": "Tab to remove",
   "quotedMessageWasDeleted": "The quoted message has been deleted.",
-  "messageWasDeleted": "Message has been deleted."
+  "messageWasDeleted": "Message has been deleted.",
+  "sent": "Delivered",
+  "sentTo": "Delivered to",
+  "received": "Received",
+  "opened": "Opened",
+  "waitingForInternet": "Waiting for internet",
+  "editHistory": "Edit history"
 }

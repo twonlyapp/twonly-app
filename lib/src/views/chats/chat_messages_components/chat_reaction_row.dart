@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/bottom_sheets/all_reactions.bottom_sheet.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
@@ -26,7 +27,6 @@ class ReactionRow extends StatelessWidget {
         );
       },
     );
-    // if (layer == null) return;
   }
 
   @override
@@ -99,7 +99,9 @@ class ReactionRow extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border.all(),
                 borderRadius: BorderRadius.circular(12),
-                color: const Color.fromARGB(255, 74, 74, 74),
+                color: isDarkMode(context)
+                    ? const Color.fromARGB(255, 74, 74, 74)
+                    : const Color.fromARGB(255, 197, 197, 197),
               ),
               child: Row(
                 children: [
@@ -107,8 +109,16 @@ class ReactionRow extends StatelessWidget {
                   if (entry.$2 > 1)
                     SizedBox(
                       height: 19,
+                      width: 13,
                       child: Text(
                         entry.$2.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: Colors.black,
+                          decoration: TextDecoration.none,
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
                     ),
                 ],

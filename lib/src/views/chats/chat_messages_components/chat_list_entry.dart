@@ -17,23 +17,23 @@ import 'package:twonly/src/views/chats/chat_messages_components/response_contain
 class ChatListEntry extends StatefulWidget {
   const ChatListEntry({
     required this.group,
-    required this.galleryItems,
-    required this.prevMessage,
     required this.message,
-    required this.nextMessage,
-    required this.onResponseTriggered,
-    required this.scrollToMessage,
-    this.disableContextMenu = false,
+    this.galleryItems = const [],
+    this.scrollToMessage,
+    this.onResponseTriggered,
+    this.prevMessage,
+    this.nextMessage,
+    this.hideReactions = false,
     super.key,
   });
   final Message? prevMessage;
   final Message? nextMessage;
   final Message message;
   final Group group;
+  final bool hideReactions;
   final List<MemoryItem> galleryItems;
-  final void Function(String) scrollToMessage;
-  final void Function() onResponseTriggered;
-  final bool disableContextMenu;
+  final void Function(String)? scrollToMessage;
+  final void Function()? onResponseTriggered;
 
   @override
   State<ChatListEntry> createState() => _ChatListEntryState();
@@ -98,77 +98,70 @@ class _ChatListEntryState extends State<ChatListEntry> {
         reactions.where((t) => seen.add(t.emoji)).toList().length;
     if (reactionsForWidth > 4) reactionsForWidth = 4;
 
-    Widget child = Column(
-      mainAxisAlignment:
-          right ? MainAxisAlignment.end : MainAxisAlignment.start,
-      crossAxisAlignment:
-          right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+    Widget child = Stack(
+      // overflow: Overflow.visible,
+      // clipBehavior: Clip.none,
+      alignment: right ? Alignment.centerRight : Alignment.centerLeft,
       children: [
-        MessageActions(
-          message: widget.message,
-          onResponseTriggered: widget.onResponseTriggered,
-          child: Stack(
-            // overflow: Overflow.visible,
-            // clipBehavior: Clip.none,
-            alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+        if (widget.message.isDeletedFromSender)
+          ChatTextEntry(
+            message: widget.message,
+            nextMessage: widget.nextMessage,
+            borderRadius: borderRadius,
+            minWidth: reactionsForWidth * 43,
+          )
+        else
+          Column(
             children: [
-              if (widget.message.isDeletedFromSender)
-                ChatTextEntry(
-                  message: widget.message,
-                  nextMessage: widget.nextMessage,
-                  borderRadius: borderRadius,
-                  minWidth: reactionsForWidth * 43,
-                )
-              else
-                Column(
-                  children: [
-                    ResponseContainer(
-                      msg: widget.message,
-                      group: widget.group,
-                      mediaService: mediaService,
-                      borderRadius: borderRadius,
-                      scrollToMessage: widget.scrollToMessage,
-                      child: (widget.message.type == MessageType.text)
-                          ? ChatTextEntry(
-                              message: widget.message,
-                              nextMessage: widget.nextMessage,
-                              borderRadius: borderRadius,
-                              minWidth: reactionsForWidth * 43,
-                            )
-                          : (mediaService == null)
-                              ? null
-                              : ChatMediaEntry(
-                                  message: widget.message,
-                                  group: widget.group,
-                                  mediaService: mediaService!,
-                                  galleryItems: widget.galleryItems,
-                                ),
-                    ),
-                    if (reactionsForWidth > 0)
-                      const SizedBox(height: 20, width: 10),
-                  ],
-                ),
-              if (!widget.message.isDeletedFromSender)
-                Positioned(
-                  bottom: -20,
-                  left: 5,
-                  right: 5,
-                  child: ReactionRow(
-                    message: widget.message,
-                    reactions: reactions,
-                  ),
-                ),
+              ResponseContainer(
+                msg: widget.message,
+                group: widget.group,
+                mediaService: mediaService,
+                borderRadius: borderRadius,
+                scrollToMessage: widget.scrollToMessage,
+                child: (widget.message.type == MessageType.text)
+                    ? ChatTextEntry(
+                        message: widget.message,
+                        nextMessage: widget.nextMessage,
+                        borderRadius: borderRadius,
+                        minWidth: reactionsForWidth * 43,
+                      )
+                    : (mediaService == null)
+                        ? null
+                        : ChatMediaEntry(
+                            message: widget.message,
+                            group: widget.group,
+                            mediaService: mediaService!,
+                            galleryItems: widget.galleryItems,
+                          ),
+              ),
+              if (reactionsForWidth > 0) const SizedBox(height: 20, width: 10),
             ],
           ),
-        ),
+        if (!widget.message.isDeletedFromSender && !widget.hideReactions)
+          Positioned(
+            bottom: -20,
+            left: 5,
+            right: 5,
+            child: ReactionRow(
+              message: widget.message,
+              reactions: reactions,
+            ),
+          ),
       ],
     );
 
-    if (!widget.disableContextMenu) {
+    if (widget.onResponseTriggered != null) {
+      child = MessageActions(
+        message: widget.message,
+        onResponseTriggered: widget.onResponseTriggered!,
+        child: child,
+      );
+
       child = MessageContextMenu(
         message: widget.message,
         group: widget.group,
-        onResponseTriggered: widget.onResponseTriggered,
+        onResponseTriggered: widget.onResponseTriggered!,
         child: child,
       );
     }

@@ -251,19 +251,22 @@ Future<void> notifyContactAboutOpeningMessage(
   }
   Log.info('Opened messages: $messageOtherIds');
 
+  final actionAt = DateTime.now();
+
   await sendCipherText(
     contactId,
     pb.EncryptedContent(
       messageUpdate: pb.EncryptedContent_MessageUpdate(
         type: pb.EncryptedContent_MessageUpdate_Type.OPENED,
         multipleTargetMessageIds: messageOtherIds,
+        timestamp: Int64(actionAt.millisecondsSinceEpoch),
       ),
     ),
   );
   for (final messageId in messageOtherIds) {
     await twonlyDB.messagesDao.updateMessageId(
       messageId,
-      MessagesCompanion(openedAt: Value(DateTime.now())),
+      MessagesCompanion(openedAt: Value(actionAt)),
     );
   }
   await updateLastMessageId(contactId, biggestMessageId);

@@ -2113,6 +2113,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message has been deleted.'**
   String get messageWasDeleted;
+
+  /// No description provided for @sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get sent;
+
+  /// No description provided for @sentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered to'**
+  String get sentTo;
+
+  /// No description provided for @received.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get received;
+
+  /// No description provided for @opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened'**
+  String get opened;
+
+  /// No description provided for @waitingForInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for internet'**
+  String get waitingForInternet;
+
+  /// No description provided for @editHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit history'**
+  String get editHistory;
 }
 
 class _AppLocalizationsDelegate

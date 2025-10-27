@@ -1122,4 +1122,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get messageWasDeleted => 'Nachricht wurde gelöscht.';
+
+  @override
+  String get sent => 'Versendet';
+
+  @override
+  String get sentTo => 'Zugestellt an';
+
+  @override
+  String get received => 'Empfangen';
+
+  @override
+  String get opened => 'Geöffnet';
+
+  @override
+  String get waitingForInternet => 'Warten auf Internet';
+
+  @override
+  String get editHistory => 'Bearbeitungshistorie';
 }

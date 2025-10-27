@@ -348,3 +348,27 @@ String getUUIDforDirectChat(int a, int b) {
   ];
   return parts.join('-');
 }
+
+String friendlyDateTime(
+  BuildContext context,
+  DateTime dt, {
+  bool includeSeconds = false,
+  Locale? locale,
+}) {
+  // Build date part
+  final datePart =
+      DateFormat.yMd(Localizations.localeOf(context).toString()).format(dt);
+
+  final use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
+
+  var timePart = '';
+  if (use24Hour) {
+    timePart =
+        DateFormat.jm(Localizations.localeOf(context).toString()).format(dt);
+  } else {
+    timePart =
+        DateFormat.Hm(Localizations.localeOf(context).toString()).format(dt);
+  }
+
+  return '$timePart $datePart';
+}

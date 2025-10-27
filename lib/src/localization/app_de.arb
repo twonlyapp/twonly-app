@@ -345,5 +345,11 @@
     "newDeviceRegistered": "Du hast dich auf einem anderen Gerät angemeldet. Daher wurdest du hier abgemeldet.",
     "tabToRemoveEmoji": "Tippen um zu entfernen",
     "quotedMessageWasDeleted": "Die zitierte Nachricht wurde gelöscht.",
-    "messageWasDeleted": "Nachricht wurde gelöscht."
+    "messageWasDeleted": "Nachricht wurde gelöscht.",
+    "sent": "Versendet",
+    "sentTo": "Zugestellt an",
+    "received": "Empfangen",
+    "opened": "Geöffnet",
+    "waitingForInternet": "Warten auf Internet",
+    "editHistory": "Bearbeitungshistorie"
 }

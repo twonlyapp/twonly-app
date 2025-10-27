@@ -26,6 +26,7 @@ Future<void> handleTextMessage(
         textMessage.hasQuoteMessageId() ? textMessage.quoteMessageId : null,
       ),
       createdAt: Value(fromTimestamp(textMessage.timestamp)),
+      ackByServer: Value(DateTime.now()),
     ),
   );
   if (message != null) {

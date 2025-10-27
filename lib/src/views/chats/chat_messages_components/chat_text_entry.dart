@@ -26,10 +26,6 @@ class ChatTextEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     var text = message.content ?? '';
 
-    if (message.isDeletedFromSender) {
-      text = context.lang.messageWasDeleted;
-    }
-
     if (EmojiAnimation.supported(text)) {
       return Container(
         constraints: const BoxConstraints(
@@ -59,6 +55,11 @@ class ChatTextEntry extends StatelessWidget {
     } else if (measureTextWidth(text) > 270 ||
         message.quotesMessageId != null) {
       expanded = true;
+    }
+
+    if (message.isDeletedFromSender) {
+      text = context.lang.messageWasDeleted;
+      color = Colors.grey;
     }
 
     return Container(
@@ -109,6 +110,8 @@ class ChatTextEntry extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 10,
                         color: Colors.white.withAlpha(150),
+                        decoration: TextDecoration.none,
+                        fontWeight: FontWeight.normal,
                       ),
                     ),
                   ],

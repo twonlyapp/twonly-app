@@ -68,6 +68,8 @@ class BetterText extends StatelessWidget {
       style: const TextStyle(
         color: Colors.white,
         fontSize: 17,
+        decoration: TextDecoration.none,
+        fontWeight: FontWeight.normal,
       ),
     );
   }

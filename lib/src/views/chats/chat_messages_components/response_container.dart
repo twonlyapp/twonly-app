@@ -13,9 +13,9 @@ class ResponseContainer extends StatefulWidget {
     required this.msg,
     required this.group,
     required this.child,
-    required this.scrollToMessage,
     required this.mediaService,
     required this.borderRadius,
+    this.scrollToMessage,
     super.key,
   });
 
@@ -24,7 +24,7 @@ class ResponseContainer extends StatefulWidget {
   final Group group;
   final MediaFileService? mediaService;
   final BorderRadius borderRadius;
-  final void Function(String) scrollToMessage;
+  final void Function(String)? scrollToMessage;
 
   @override
   State<ResponseContainer> createState() => _ResponseContainerState();
@@ -65,7 +65,9 @@ class _ResponseContainerState extends State<ResponseContainer> {
       return widget.child!;
     }
     return GestureDetector(
-      onTap: () => widget.scrollToMessage(widget.msg.quotesMessageId!),
+      onTap: widget.scrollToMessage == null
+          ? null
+          : () => widget.scrollToMessage!(widget.msg.quotesMessageId!),
       child: Container(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.8,

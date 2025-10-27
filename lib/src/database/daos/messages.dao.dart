@@ -68,6 +68,24 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .watch();
   }
 
+  // Stream<List<GroupMember>> watchMembersByGroupId(String groupId) {
+  //   return (select(groupMembers)..where((t) => t.groupId.equals(groupId)))
+  //       .watch();
+  // }
+
+  Stream<List<(GroupMember, Contact)>> watchMembersByGroupId(String groupId) {
+    final query = (select(groupMembers).join([
+      leftOuterJoin(
+        contacts,
+        contacts.userId.equalsExp(groupMembers.contactId),
+      ),
+    ])
+      ..where(groupMembers.groupId.equals(groupId)));
+    return query
+        .map((row) => (row.readTable(groupMembers), row.readTable(contacts)))
+        .watch();
+  }
+
   Stream<List<MessageAction>> watchMessageActionChanges(String messageId) {
     return (select(messageActions)..where((t) => t.messageId.equals(messageId)))
         .watch();
@@ -408,6 +426,26 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
   Future<List<Message>> getMessagesByMediaId(String mediaId) async {
     return (select(messages)..where((t) => t.mediaId.equals(mediaId))).get();
+  }
+
+  Stream<List<(MessageAction, Contact)>> watchMessageActions(String messageId) {
+    final query = (select(messageActions).join([
+      leftOuterJoin(
+        contacts,
+        contacts.userId.equalsExp(messageActions.contactId),
+      ),
+    ])
+      ..where(messageActions.messageId.equals(messageId)));
+    return query
+        .map((row) => (row.readTable(messageActions), row.readTable(contacts)))
+        .watch();
+  }
+
+  Stream<List<MessageHistory>> watchMessageHistory(String messageId) {
+    return (select(messageHistories)
+          ..where((t) => t.messageId.equals(messageId))
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .watch();
   }
 
   // Future<List<Message>> getMessagesByMediaUploadId(int mediaUploadId) async {
