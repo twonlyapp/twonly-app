@@ -52,6 +52,8 @@ Future<void> insertMediaFileInMessagesTable(
         type: const Value(MessageType.media),
       ),
     );
+    await twonlyDB.groupsDao
+        .increaseLastMessageExchange(groupId, DateTime.now());
     if (message != null) {
       // de-archive contact when sending a new message
       await twonlyDB.groupsDao.updateGroup(

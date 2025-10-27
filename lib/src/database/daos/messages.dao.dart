@@ -32,7 +32,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
   Stream<List<Message>> watchMessageNotOpened(String groupId) {
     return (select(messages)
-          ..where((t) => t.openedAt.isNull() & t.groupId.equals(groupId))
+          ..where((t) =>
+              t.openedAt.isNull() &
+              t.groupId.equals(groupId) &
+              t.isDeletedFromSender.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch();
   }
@@ -182,7 +185,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       Log.error('Message does not exists or contact is not owner.');
       return;
     }
-    if (msg.mediaId != null) {
+    if (msg.mediaId != null && contactId != null) {
+      // contactId -> When a image is send to multiple and one message is delete the image should be still available...
       await (delete(mediaFiles)..where((t) => t.mediaId.equals(msg.mediaId!)))
           .go();
 
@@ -326,8 +330,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   Future<void> updateMessageId(
     String messageId,
     MessagesCompanion updatedValues,
-  ) {
-    return (update(messages)..where((c) => c.messageId.equals(messageId)))
+  ) async {
+    await (update(messages)..where((c) => c.messageId.equals(messageId)))
         .write(updatedValues);
   }
 

@@ -9,7 +9,7 @@ Future<void> createThumbnailsForImage(
 ) async {
   final fileExtension = sourceFile.path.split('.').last.toLowerCase();
   if (fileExtension != 'png') {
-    Log.error('Could not create thumbnail for image. $fileExtension != .png');
+    Log.error('Could not create thumbnail for image. $fileExtension != png');
     return;
   }
 

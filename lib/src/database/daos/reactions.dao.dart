@@ -52,6 +52,24 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
         .watch();
   }
 
+  Stream<Reaction?> watchLastReactions(String groupId) {
+    final query = (select(reactions)
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .join(
+      [
+        innerJoin(
+          messages,
+          messages.messageId.equalsExp(reactions.messageId),
+          useColumns: false,
+        )
+      ],
+    )
+      ..where(messages.groupId.equals(groupId))
+      // ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+      ..limit(1);
+    return query.map((row) => row.readTable(reactions)).watchSingleOrNull();
+  }
+
   Stream<List<(Reaction, Contact?)>> watchReactionWithContacts(
     String messageId,
   ) {

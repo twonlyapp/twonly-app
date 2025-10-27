@@ -47,7 +47,7 @@ class _ChatListViewState extends State<ChatListView> {
   }
 
   Future<void> initAsync() async {
-    final stream = twonlyDB.groupsDao.watchGroups();
+    final stream = twonlyDB.groupsDao.watchGroupsForChatList();
     _contactsSub = stream.listen((groups) {
       setState(() {
         _groupsNotPinned = groups.where((x) => !x.pinned).toList();

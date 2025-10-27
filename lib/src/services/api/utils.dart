@@ -12,7 +12,6 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     hide Message;
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
 
 class Result<T, E> {
   Result.error(this.error) : value = null;
@@ -57,7 +56,7 @@ ClientToServer createClientToServerFromApplicationData(
   return ClientToServer()..v0 = v0;
 }
 
-Future<void> rejectAndDeleteContact(int contactId) async {
+Future<void> rejectAndHideContact(int contactId) async {
   await sendCipherText(
     contactId,
     EncryptedContent(
@@ -66,9 +65,14 @@ Future<void> rejectAndDeleteContact(int contactId) async {
       ),
     ),
   );
-  await twonlyDB.signalDao.deleteAllByContactId(contactId);
-  await deleteSessionWithTarget(contactId);
-  await twonlyDB.contactsDao.deleteContactByUserId(contactId);
+  await twonlyDB.contactsDao.updateContact(
+    contactId,
+    const ContactsCompanion(
+      accepted: Value(false),
+      requested: Value(false),
+      deletedByUser: Value(true),
+    ),
+  );
 }
 
 Future<void> handleMediaError(MediaFile media) async {

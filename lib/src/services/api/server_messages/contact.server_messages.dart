@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart' hide Message;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
@@ -25,11 +26,12 @@ Future<void> handleContactRequest(
       if (username.isSuccess) {
         // ignore: avoid_dynamic_calls
         final name = username.value.userdata.username as Uint8List;
-        await twonlyDB.contactsDao.insertContact(
+        await twonlyDB.contactsDao.insertOnConflictUpdate(
           ContactsCompanion(
             username: Value(utf8.decode(name)),
             userId: Value(fromUserId),
             requested: const Value(true),
+            deletedByUser: const Value(false),
           ),
         );
       }
@@ -43,9 +45,25 @@ Future<void> handleContactRequest(
           accepted: Value(true),
         ),
       );
+      final contact = await twonlyDB.contactsDao
+          .getContactByUserId(fromUserId)
+          .getSingleOrNull();
+      await twonlyDB.groupsDao.createNewDirectChat(
+        fromUserId,
+        GroupsCompanion(
+          groupName: Value(getContactDisplayName(contact!)),
+        ),
+      );
     case EncryptedContent_ContactRequest_Type.REJECT:
       Log.info('Got a contact reject from $fromUserId');
-      await twonlyDB.contactsDao.deleteContactByUserId(fromUserId);
+      await twonlyDB.contactsDao.updateContact(
+        fromUserId,
+        const ContactsCompanion(
+          accepted: Value(false),
+          requested: Value(false),
+          deletedByUser: Value(true),
+        ),
+      );
   }
 }
 
@@ -61,13 +79,14 @@ Future<void> handleContactUpdate(
 
     case EncryptedContent_ContactUpdate_Type.UPDATE:
       Log.info('Got a contact update $fromUserId');
-      if (contactUpdate.hasAvatarSvg() &&
+      if (contactUpdate.hasAvatarSvgCompressed() &&
           contactUpdate.hasDisplayName() &&
           senderProfileCounter != null) {
         await twonlyDB.contactsDao.updateContact(
           fromUserId,
           ContactsCompanion(
-            avatarSvg: Value(contactUpdate.avatarSvg),
+            avatarSvgCompressed:
+                Value(Uint8List.fromList(contactUpdate.avatarSvgCompressed)),
             displayName: Value(contactUpdate.displayName),
             senderProfileCounter: Value(senderProfileCounter),
           ),

@@ -1117,6 +1117,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messageWasDeleted => 'Message has been deleted.';
 
   @override
+  String get messageWasDeletedShort => 'Deleted';
+
+  @override
   String get sent => 'Delivered';
 
   @override

@@ -29,6 +29,10 @@ Future<void> handleTextMessage(
       ackByServer: Value(DateTime.now()),
     ),
   );
+  await twonlyDB.groupsDao.increaseLastMessageExchange(
+    groupId,
+    fromTimestamp(textMessage.timestamp),
+  );
   if (message != null) {
     Log.info('Inserted a new text message with ID: ${message.messageId}');
   }

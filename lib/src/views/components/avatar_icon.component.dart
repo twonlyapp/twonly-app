@@ -4,6 +4,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class AvatarIcon extends StatefulWidget {
   const AvatarIcon({
@@ -38,21 +39,21 @@ class _AvatarIconState extends State<AvatarIcon> {
       final contacts =
           await twonlyDB.groupsDao.getGroupContact(widget.group!.groupId);
       if (contacts.length == 1) {
-        if (contacts.first.avatarSvg != null) {
-          avatarSVGs.add(contacts.first.avatarSvg!);
+        if (contacts.first.avatarSvgCompressed != null) {
+          avatarSVGs.add(getAvatarSvg(contacts.first.avatarSvgCompressed!));
         }
       } else {
         for (final contact in contacts) {
-          if (contact.avatarSvg != null) {
-            avatarSVGs.add(contact.avatarSvg!);
+          if (contact.avatarSvgCompressed != null) {
+            avatarSVGs.add(getAvatarSvg(contact.avatarSvgCompressed!));
           }
         }
       }
       // avatarSvg = group!.avatarSvg;
     } else if (widget.userData?.avatarSvg != null) {
       avatarSVGs.add(widget.userData!.avatarSvg!);
-    } else if (widget.contact?.avatarSvg != null) {
-      avatarSVGs.add(widget.contact!.avatarSvg!);
+    } else if (widget.contact?.avatarSvgCompressed != null) {
+      avatarSVGs.add(getAvatarSvg(widget.contact!.avatarSvgCompressed!));
     }
     if (mounted) setState(() {});
   }

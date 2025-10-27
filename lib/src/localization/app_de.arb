@@ -346,6 +346,7 @@
     "tabToRemoveEmoji": "Tippen um zu entfernen",
     "quotedMessageWasDeleted": "Die zitierte Nachricht wurde gelöscht.",
     "messageWasDeleted": "Nachricht wurde gelöscht.",
+    "messageWasDeletedShort": "Gelöscht",
     "sent": "Versendet",
     "sentTo": "Zugestellt an",
     "received": "Empfangen",

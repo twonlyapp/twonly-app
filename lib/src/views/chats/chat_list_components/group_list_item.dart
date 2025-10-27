@@ -38,7 +38,9 @@ class _UserListItem extends State<GroupListItem> {
   late StreamSubscription<List<Message>> messagesNotOpenedStream;
 
   Message? lastMessage;
+  Reaction? lastReaction;
   late StreamSubscription<Message?> lastMessageStream;
+  late StreamSubscription<Reaction?> lastReactionStream;
   late StreamSubscription<List<MediaFile>> lastMediaFilesStream;
 
   List<Message> previewMessages = [];
@@ -54,6 +56,7 @@ class _UserListItem extends State<GroupListItem> {
   @override
   void dispose() {
     messagesNotOpenedStream.cancel();
+    lastReactionStream.cancel();
     lastMessageStream.cancel();
     lastMediaFilesStream.cancel();
     super.dispose();
@@ -66,6 +69,17 @@ class _UserListItem extends State<GroupListItem> {
       protectUpdateState.protect(() async {
         await updateState(update, messagesNotOpened);
       });
+    });
+
+    lastReactionStream = twonlyDB.reactionsDao
+        .watchLastReactions(widget.group.groupId)
+        .listen((update) {
+      setState(() {
+        lastReaction = update;
+      });
+      // protectUpdateState.protect(() async {
+      //   await updateState(lastMessage, update, messagesNotOpened);
+      // });
     });
 
     messagesNotOpenedStream = twonlyDB.messagesDao
@@ -141,9 +155,7 @@ class _UserListItem extends State<GroupListItem> {
 
     lastMessage = newLastMessage;
     messagesNotOpened = newMessagesNotOpened;
-    setState(() {
-      // sets lastMessages, messagesNotOpened and currentMessage
-    });
+    if (mounted) setState(() {});
   }
 
   Future<void> onTap() async {
@@ -217,7 +229,11 @@ class _UserListItem extends State<GroupListItem> {
                 ? Text(context.lang.chatsTapToSend)
                 : Row(
                     children: [
-                      MessageSendStateIcon(previewMessages, previewMediaFiles),
+                      MessageSendStateIcon(
+                        previewMessages,
+                        previewMediaFiles,
+                        lastReaction: lastReaction,
+                      ),
                       const Text('•'),
                       const SizedBox(width: 5),
                       if (currentMessage != null)

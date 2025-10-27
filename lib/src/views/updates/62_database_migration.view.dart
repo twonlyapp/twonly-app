@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
@@ -39,134 +40,139 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
     final oldMessages = await oldDatabase.messages.select().get();
 
     for (final oldContact in oldContacts) {
+      if (oldContact.deleted) continue;
+      Uint8List? avatarSvg;
+      if (oldContact.avatarSvg != null) {
+        avatarSvg =
+            Uint8List.fromList(gzip.encode(utf8.encode(oldContact.avatarSvg!)));
+      }
       await twonlyDB.contactsDao.insertContact(
         ContactsCompanion(
           userId: Value(oldContact.userId),
           username: Value(oldContact.username),
           displayName: Value(oldContact.displayName),
           nickName: Value(oldContact.nickName),
-          avatarSvg: Value(oldContact.avatarSvg),
+          avatarSvgCompressed: Value(avatarSvg),
           senderProfileCounter: const Value(0),
           accepted: Value(oldContact.accepted),
           requested: Value(oldContact.requested),
           blocked: Value(oldContact.blocked),
           verified: Value(oldContact.verified),
-          deleted: Value(oldContact.deleted),
           createdAt: Value(oldContact.createdAt),
         ),
       );
       setState(() {
         _contactsMigrated += 1;
       });
-      if (!oldContact.deleted) {
-        final group = await twonlyDB.groupsDao.createNewDirectChat(
-          oldContact.userId,
-          GroupsCompanion(
-            pinned: Value(oldContact.pinned),
-            archived: Value(oldContact.archived),
-            groupName: Value(getContactDisplayNameOld(oldContact)),
-            totalMediaCounter: Value(oldContact.totalMediaCounter),
-            alsoBestFriend: Value(oldContact.alsoBestFriend),
-            createdAt: Value(oldContact.createdAt),
-            lastFlameCounterChange: Value(oldContact.lastFlameCounterChange),
-            lastFlameSync: Value(oldContact.lastFlameSync),
-            lastMessageExchange: Value(oldContact.lastMessageExchange),
-            lastMessageReceived: Value(oldContact.lastMessageReceived),
-            lastMessageSend: Value(oldContact.lastMessageSend),
-            flameCounter: Value(oldContact.flameCounter),
+      final group = await twonlyDB.groupsDao.createNewDirectChat(
+        oldContact.userId,
+        GroupsCompanion(
+          pinned: Value(oldContact.pinned),
+          archived: Value(oldContact.archived),
+          groupName: Value(getContactDisplayNameOld(oldContact)),
+          totalMediaCounter: Value(oldContact.totalMediaCounter),
+          alsoBestFriend: Value(oldContact.alsoBestFriend),
+          createdAt: Value(oldContact.createdAt),
+          lastFlameCounterChange: Value(oldContact.lastFlameCounterChange),
+          lastFlameSync: Value(oldContact.lastFlameSync),
+          lastMessageExchange: Value(oldContact.lastMessageExchange),
+          lastMessageReceived: Value(oldContact.lastMessageReceived),
+          lastMessageSend: Value(oldContact.lastMessageSend),
+          flameCounter: Value(oldContact.flameCounter),
+        ),
+      );
+      if (group == null) continue;
+      for (final oldMessage in oldMessages) {
+        if (oldMessage.mediaUploadId == null &&
+            oldMessage.mediaDownloadId == null) {
+          /// only interested in media files...
+          continue;
+        }
+        if (oldMessage.contactId != oldContact.userId) continue;
+        if (!oldMessage.mediaStored) continue;
+
+        var storedMediaPath =
+            join((await getApplicationSupportDirectory()).path, 'media');
+        if (oldMessage.mediaDownloadId != null) {
+          storedMediaPath =
+              '${join(storedMediaPath, 'received')}/${oldMessage.mediaDownloadId}';
+        } else {
+          storedMediaPath =
+              '${join(storedMediaPath, 'send')}/${oldMessage.mediaDownloadId}';
+        }
+
+        var type = MediaType.image;
+        if (File('$storedMediaPath.mp4').existsSync()) {
+          type = MediaType.video;
+          storedMediaPath = '$storedMediaPath.mp4';
+        } else if (File('$storedMediaPath.png').existsSync()) {
+          type = MediaType.image;
+          storedMediaPath = '$storedMediaPath.png';
+        } else if (File('$storedMediaPath.webp').existsSync()) {
+          type = MediaType.image;
+          storedMediaPath = '$storedMediaPath.webp';
+        } else {
+          continue;
+        }
+
+        final uniqueId = Value(
+          getUUIDforDirectChat(
+            oldMessage.messageOtherId ?? oldMessage.messageId,
+            oldMessage.contactId ^ gUser.userId,
           ),
         );
-        if (group == null) continue;
-        for (final oldMessage in oldMessages) {
-          if (oldMessage.mediaUploadId == null &&
-              oldMessage.mediaDownloadId == null) {
-            /// only interested in media files...
-            continue;
-          }
-          if (oldMessage.contactId != oldContact.userId) continue;
-          if (!oldMessage.mediaStored) continue;
 
-          var storedMediaPath =
-              join((await getApplicationSupportDirectory()).path, 'media');
-          if (oldMessage.mediaDownloadId != null) {
-            storedMediaPath =
-                '${join(storedMediaPath, 'received')}/${oldMessage.mediaDownloadId}';
-          } else {
-            storedMediaPath =
-                '${join(storedMediaPath, 'send')}/${oldMessage.mediaDownloadId}';
-          }
+        final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+          MediaFilesCompanion(
+            mediaId: uniqueId,
+            stored: const Value(true),
+            type: Value(type),
+            createdAt: Value(oldMessage.sendAt),
+          ),
+        );
+        if (mediaFile == null) continue;
 
-          var type = MediaType.image;
-          if (File('$storedMediaPath.mp4').existsSync()) {
-            type = MediaType.video;
-            storedMediaPath = '$storedMediaPath.mp4';
-          } else if (File('$storedMediaPath.png').existsSync()) {
-            type = MediaType.image;
-            storedMediaPath = '$storedMediaPath.png';
-          } else if (File('$storedMediaPath.webp').existsSync()) {
-            type = MediaType.image;
-            storedMediaPath = '$storedMediaPath.webp';
-          } else {
-            continue;
-          }
+        final message = await twonlyDB.messagesDao.insertMessage(
+          MessagesCompanion(
+            messageId: uniqueId,
+            groupId: Value(group.groupId),
+            mediaId: uniqueId,
+            type: const Value(MessageType.media),
+          ),
+        );
+        if (message == null) continue;
 
-          final uniqueId = Value(
-            getUUIDforDirectChat(
-              oldMessage.messageOtherId ?? oldMessage.messageId,
-              oldMessage.contactId ^ gUser.userId,
-            ),
-          );
-
-          final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
-            MediaFilesCompanion(
-              mediaId: uniqueId,
-              stored: const Value(true),
-              type: Value(type),
-              createdAt: Value(oldMessage.sendAt),
-            ),
-          );
-          if (mediaFile == null) continue;
-
-          final message = await twonlyDB.messagesDao.insertMessage(
-            MessagesCompanion(
-              messageId: uniqueId,
-              groupId: Value(group.groupId),
-              mediaId: uniqueId,
-              type: const Value(MessageType.media),
-            ),
-          );
-          if (message == null) continue;
-
-          final mediaService = await MediaFileService.fromMedia(mediaFile);
-          File(storedMediaPath).copySync(mediaService.storedPath.path);
-          setState(() {
-            _storedMediaFiles += 1;
-          });
-        }
+        final mediaService = await MediaFileService.fromMedia(mediaFile);
+        File(storedMediaPath).copySync(mediaService.storedPath.path);
+        setState(() {
+          _storedMediaFiles += 1;
+        });
       }
     }
 
     final memoriesPath = Directory(
       join((await getApplicationSupportDirectory()).path, 'media', 'memories'),
     );
-    final files = memoriesPath.listSync();
-    for (final file in files) {
-      if (file.path.contains('thumbnail')) continue;
-      final type =
-          file.path.contains('mp4') ? MediaType.video : MediaType.image;
-      final stat = FileStat.statSync(file.path);
-      final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
-        MediaFilesCompanion(
-          type: Value(type),
-          createdAt: Value(stat.modified),
-          stored: const Value(true),
-        ),
-      );
-      final mediaService = await MediaFileService.fromMedia(mediaFile!);
-      File(file.path).copySync(mediaService.storedPath.path);
-      setState(() {
-        _storedMediaFiles += 1;
-      });
+    if (memoriesPath.existsSync()) {
+      final files = memoriesPath.listSync();
+      for (final file in files) {
+        if (file.path.contains('thumbnail')) continue;
+        final type =
+            file.path.contains('mp4') ? MediaType.video : MediaType.image;
+        final stat = FileStat.statSync(file.path);
+        final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+          MediaFilesCompanion(
+            type: Value(type),
+            createdAt: Value(stat.modified),
+            stored: const Value(true),
+          ),
+        );
+        final mediaService = await MediaFileService.fromMedia(mediaFile!);
+        File(file.path).copySync(mediaService.storedPath.path);
+        setState(() {
+          _storedMediaFiles += 1;
+        });
+      }
     }
 
     final oldContactPreKeys =

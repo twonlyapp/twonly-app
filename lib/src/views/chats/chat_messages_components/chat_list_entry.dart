@@ -179,7 +179,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
   Message? nextMessage,
   bool hasReactions,
 ) {
-  var bottom = 30.0;
+  var bottom = 20.0;
   var top = 0.0;
 
   var topLeft = 12.0;
@@ -189,7 +189,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
 
   if (nextMessage != null) {
     if (message.senderId == nextMessage.senderId) {
-      bottom = 10;
+      bottom = 3;
     }
   }
 
@@ -203,7 +203,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
 
   final combinesWidthNext = combineTextMessageWithNext(message, nextMessage);
   if (combinesWidthNext) {
-    bottom = 1;
+    bottom = 0;
     bottomLeft = 5.0;
   }
 

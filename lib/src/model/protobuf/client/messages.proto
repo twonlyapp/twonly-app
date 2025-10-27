@@ -118,7 +118,7 @@ message EncryptedContent {
         }
 
         Type type = 1;
-        optional string avatarSvg = 2;
+        optional bytes avatarSvgCompressed = 2;
         optional string displayName = 3;
     }
 

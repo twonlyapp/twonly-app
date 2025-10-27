@@ -502,6 +502,7 @@
   "tabToRemoveEmoji": "Tab to remove",
   "quotedMessageWasDeleted": "The quoted message has been deleted.",
   "messageWasDeleted": "Message has been deleted.",
+  "messageWasDeletedShort": "Deleted",
   "sent": "Delivered",
   "sentTo": "Delivered to",
   "received": "Received",

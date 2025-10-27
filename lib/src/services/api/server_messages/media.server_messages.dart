@@ -101,6 +101,8 @@ Future<void> handleMedia(
     ),
   );
   if (message != null) {
+    await twonlyDB.groupsDao
+        .increaseLastMessageExchange(groupId, fromTimestamp(media.timestamp));
     Log.info('Inserted a new media message with ID: ${message.messageId}');
     await twonlyDB.groupsDao.incFlameCounter(
       message.groupId,

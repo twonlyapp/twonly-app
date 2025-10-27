@@ -12,7 +12,6 @@ import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/headline.dart';
@@ -49,8 +48,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
   }
 
   Future<void> _addNewUser(BuildContext context) async {
-    final user = await getUser();
-    if (user == null || user.username == searchUserName.text || !mounted) {
+    if (gUser.username == searchUserName.text) {
       return;
     }
 
@@ -84,11 +82,13 @@ class _SearchUsernameView extends State<AddNewUserView> {
       return;
     }
 
-    final added = await twonlyDB.contactsDao.insertContact(
+    final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion(
         username: Value(searchUserName.text),
         userId: Value(userdata.userId.toInt()),
         requested: const Value(false),
+        blocked: const Value(false),
+        deletedByUser: const Value(false),
       ),
     );
 
@@ -223,18 +223,26 @@ class ContactsListView extends StatelessWidget {
         child: IconButton(
           icon: const Icon(Icons.close, color: Colors.red),
           onPressed: () async {
-            await rejectAndDeleteContact(contact.userId);
+            await rejectAndHideContact(contact.userId);
           },
         ),
       ),
       IconButton(
         icon: const Icon(Icons.check, color: Colors.green),
         onPressed: () async {
-          const update = ContactsCompanion(
-            accepted: Value(true),
-            requested: Value(false),
+          await twonlyDB.contactsDao.updateContact(
+            contact.userId,
+            const ContactsCompanion(
+              accepted: Value(true),
+              requested: Value(false),
+            ),
           );
-          await twonlyDB.contactsDao.updateContact(contact.userId, update);
+          await twonlyDB.groupsDao.createNewDirectChat(
+            contact.userId,
+            GroupsCompanion(
+              groupName: Value(getContactDisplayName(contact)),
+            ),
+          );
           await sendCipherText(
             contact.userId,
             EncryptedContent(

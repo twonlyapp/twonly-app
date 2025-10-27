@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
@@ -44,10 +45,12 @@ class MessageSendStateIcon extends StatefulWidget {
     this.mediaFiles, {
     super.key,
     this.canBeReopened = false,
+    this.lastReaction,
     this.mainAxisAlignment = MainAxisAlignment.end,
   });
   final List<Message> messages;
   final List<MediaFile> mediaFiles;
+  final Reaction? lastReaction;
   final MainAxisAlignment mainAxisAlignment;
   final bool canBeReopened;
 
@@ -125,8 +128,8 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.received:
           icon = Icon(Icons.square_rounded, size: 14, color: color);
           text = context.lang.messageSendState_Received;
-          if (message.type == MessageType.media) {
-            if (mediaFile!.downloadState == DownloadState.pending) {
+          if (message.type == MessageType.media && mediaFile != null) {
+            if (mediaFile.downloadState == DownloadState.pending) {
               text = context.lang.messageSendState_TapToLoad;
             }
             if (mediaFile.downloadState == DownloadState.downloading) {
@@ -170,6 +173,11 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         }
       }
 
+      if (message.isDeletedFromSender) {
+        icon = FaIcon(FontAwesomeIcons.trash, size: 10, color: color);
+        text = context.lang.messageWasDeletedShort;
+      }
+
       if (hasLoader) {
         icons = [icon];
         break;
@@ -179,6 +187,41 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         icons.insert(0, icon);
       } else {
         icons.add(icon);
+      }
+    }
+
+    if (widget.lastReaction != null &&
+        !widget.messages.any((t) => t.openedAt == null)) {
+      /// No messages are still open, so check if the reaction is the last message received.
+
+      if (!widget.messages
+          .any((m) => m.createdAt.isAfter(widget.lastReaction!.createdAt))) {
+        if (EmojiAnimation.animatedIcons
+            .containsKey(widget.lastReaction!.emoji)) {
+          icons = [
+            SizedBox(
+              height: 18,
+              child: EmojiAnimation(emoji: widget.lastReaction!.emoji),
+            )
+          ];
+        } else {
+          icons = [
+            SizedBox(
+              height: 18,
+              child: Center(
+                child: Text(
+                  widget.lastReaction!.emoji,
+                  style: const TextStyle(fontSize: 18),
+                  strutStyle: const StrutStyle(
+                    forceStrutHeight: true,
+                    height: 1.6,
+                  ),
+                ),
+              ),
+            )
+          ];
+        }
+        // Log.info("DISPLAY REACTION");
       }
     }
 

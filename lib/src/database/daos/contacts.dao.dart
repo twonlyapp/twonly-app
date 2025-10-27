@@ -4,6 +4,7 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/database/twonly_database_old.dart' as old;
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
+import 'package:twonly/src/utils/log.dart';
 
 part 'contacts.dao.g.dart';
 
@@ -14,10 +15,20 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   // ignore: matching_super_parameters
   ContactsDao(super.db);
 
-  Future<int> insertContact(ContactsCompanion contact) async {
+  Future<int?> insertContact(ContactsCompanion contact) async {
     try {
       return await into(contacts).insert(contact);
     } catch (e) {
+      Log.error(e);
+      return null;
+    }
+  }
+
+  Future<int> insertOnConflictUpdate(ContactsCompanion contact) async {
+    try {
+      return await into(contacts).insertOnConflictUpdate(contact);
+    } catch (e) {
+      Log.error(e);
       return 0;
     }
   }
@@ -62,10 +73,12 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   Stream<List<Contact>> watchNotAcceptedContacts() {
     return (select(contacts)
           ..where(
-            (t) => t.accepted.equals(false) & t.blocked.equals(false),
+            (t) =>
+                t.accepted.equals(false) &
+                t.blocked.equals(false) &
+                t.deletedByUser.equals(false),
           ))
         .watch();
-    // return (select(contacts)).watch();
   }
 
   Stream<Contact?> watchContact(int userid) {
@@ -74,7 +87,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   }
 
   Future<List<Contact>> getAllNotBlockedContacts() {
-    return (select(contacts)..where((t) => t.blocked.equals(false))).get();
+    return select(contacts).get();
   }
 
   Stream<int?> watchContactsBlocked() {
@@ -89,7 +102,9 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
     final count = contacts.requested.count(distinct: true);
     final query = selectOnly(contacts)
       ..where(
-        contacts.requested.equals(true) & contacts.accepted.equals(true).not(),
+        contacts.requested.equals(true) &
+            contacts.accepted.equals(false) &
+            contacts.blocked.equals(false),
       )
       ..addColumns([count]);
     return query.map((row) => row.read(count)).watchSingle();
@@ -113,7 +128,7 @@ String getContactDisplayName(Contact user) {
   } else if (user.displayName != null) {
     name = user.displayName!;
   }
-  if (user.deleted) {
+  if (user.accountDeleted) {
     name = applyStrikethrough(name);
   }
   if (name.length > 12) {

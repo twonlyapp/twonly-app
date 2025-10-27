@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -116,7 +118,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
         await twonlyDB.receiptsDao.deleteReceipt(receiptId);
         await twonlyDB.contactsDao.updateContact(
           receipt.contactId,
-          const ContactsCompanion(deleted: Value(true)),
+          const ContactsCompanion(accountDeleted: Value(true)),
         );
         return null;
       }
@@ -194,6 +196,8 @@ Future<void> sendCipherTextToGroup(
   String? messageId,
 ) async {
   final groupMembers = await twonlyDB.groupsDao.getGroupMembers(groupId);
+
+  await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, DateTime.now());
 
   encryptedContent.groupId = groupId;
 
@@ -280,7 +284,7 @@ Future<void> notifyContactsAboutProfileChange({int? onlyToContact}) async {
   final encryptedContent = pb.EncryptedContent(
     contactUpdate: pb.EncryptedContent_ContactUpdate(
       type: pb.EncryptedContent_ContactUpdate_Type.UPDATE,
-      avatarSvg: user.avatarSvg,
+      avatarSvgCompressed: gzip.encode(utf8.encode(user.avatarSvg!)),
       displayName: user.displayName,
     ),
   );

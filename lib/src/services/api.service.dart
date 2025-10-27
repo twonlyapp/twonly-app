@@ -339,7 +339,7 @@ class ApiService {
           await twonlyDB.contactsDao.updateContact(
             contactId,
             ContactsCompanion(
-              deleted: const Value(true),
+              accountDeleted: const Value(true),
               username: Value('${contact.username} (${contact.userId})'),
             ),
           );

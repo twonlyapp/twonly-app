@@ -2114,6 +2114,12 @@ abstract class AppLocalizations {
   /// **'Message has been deleted.'**
   String get messageWasDeleted;
 
+  /// No description provided for @messageWasDeletedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get messageWasDeletedShort;
+
   /// No description provided for @sent.
   ///
   /// In en, this message translates to:

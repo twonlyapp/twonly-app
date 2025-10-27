@@ -81,13 +81,13 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Future<List<Contact>> getGroupContact(String groupId) async {
-    final query = select(contacts).join([
+    final query = (select(contacts).join([
       leftOuterJoin(
         groupMembers,
-        groupMembers.contactId.equalsExp(contacts.userId) &
-            groupMembers.groupId.equals(groupId),
+        groupMembers.contactId.equalsExp(contacts.userId),
       ),
-    ]);
+    ])
+      ..where(groupMembers.groupId.equals(groupId)));
     return query.map((row) => row.readTable(contacts)).get();
   }
 
@@ -101,7 +101,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Stream<List<Group>> watchGroupsForChatList() {
-    return (select(groups)..where((t) => t.archived.equals(false))).watch();
+    return (select(groups)
+          ..where((t) => t.archived.equals(false))
+          ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
+        .watch();
   }
 
   Future<Group?> getGroup(String groupId) {
@@ -117,7 +120,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
                 u.lastMessageReceived.isNotNull() &
                 u.lastMessageSend.isNotNull(),
           ))
-        .watchSingle()
+        .watchSingleOrNull()
         .asyncMap(getFlameCounterFromGroup);
   }
 
@@ -126,14 +129,14 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Future<Group?> getDirectChat(int userId) async {
-    final query = (select(groups).join([
+    final query =
+        ((select(groups)..where((t) => t.isDirectChat.equals(true))).join([
       leftOuterJoin(
         groupMembers,
-        groupMembers.groupId.equalsExp(groups.groupId) &
-            groupMembers.contactId.equals(userId),
+        groupMembers.groupId.equalsExp(groups.groupId),
       ),
     ])
-      ..where(groups.isDirectChat.equals(true)));
+          ..where(groupMembers.contactId.equals(userId)));
 
     return query.map((row) => row.readTable(groups)).getSingleOrNull();
   }
@@ -208,9 +211,23 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
       ),
     );
   }
+
+  Future<void> increaseLastMessageExchange(
+    String groupId,
+    DateTime newLastMessage,
+  ) async {
+    await (update(groups)
+          ..where(
+            (t) =>
+                t.groupId.equals(groupId) &
+                (t.lastMessageExchange.isSmallerThanValue(newLastMessage)),
+          ))
+        .write(GroupsCompanion(lastMessageExchange: Value(newLastMessage)));
+  }
 }
 
-int getFlameCounterFromGroup(Group group) {
+int getFlameCounterFromGroup(Group? group) {
+  if (group == null) return 0;
   if (group.lastMessageSend == null || group.lastMessageReceived == null) {
     return 0;
   }

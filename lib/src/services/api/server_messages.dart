@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart' hide Message;
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart'
     as client;
@@ -20,6 +21,7 @@ import 'package:twonly/src/services/api/server_messages/reaction.server_message.
 import 'package:twonly/src/services/api/server_messages/text_message.server_messages.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 final lockHandleServerMessage = Mutex();
 
@@ -28,19 +30,19 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
   final ok = client.Response_Ok()..none = true;
   var response = client.Response()..ok = ok;
 
-  try {
-    if (msg.v0.hasRequestNewPreKeys()) {
-      response = await handleRequestNewPreKey();
-    } else if (msg.v0.hasNewMessage()) {
-      final body = Uint8List.fromList(msg.v0.newMessage.body);
-      final fromUserId = msg.v0.newMessage.fromUserId.toInt();
-      await handleNewMessage(fromUserId, body);
-    } else {
-      Log.error('Unknown server message: $msg');
-    }
-  } catch (e) {
-    Log.error(e);
+  // try {
+  if (msg.v0.hasRequestNewPreKeys()) {
+    response = await handleRequestNewPreKey();
+  } else if (msg.v0.hasNewMessage()) {
+    final body = Uint8List.fromList(msg.v0.newMessage.body);
+    final fromUserId = msg.v0.newMessage.fromUserId.toInt();
+    await handleNewMessage(fromUserId, body);
+  } else {
+    Log.error('Unknown server message: $msg');
   }
+  // } catch (e) {
+  // Log.error(e);
+  // }
 
   final v0 = client.V0()
     ..seq = msg.v0.seq
@@ -93,6 +95,21 @@ Future<void> handleNewMessage(int fromUserId, Uint8List body) async {
         final encryptedContentRaw =
             Uint8List.fromList(message.encryptedContent);
 
+        if (await twonlyDB.contactsDao
+                .getContactByUserId(fromUserId)
+                .getSingleOrNull() ==
+            null) {
+          /// In case the user does not exists, just create a dummy user which was deleted by the user, so the message
+          /// can be inserted into the receipts database
+          await twonlyDB.contactsDao.insertContact(
+            ContactsCompanion(
+              userId: Value(fromUserId),
+              deletedByUser: const Value(true),
+              username: const Value('[deleted]'),
+            ),
+          );
+        }
+
         final responsePlaintextContent = await handleEncryptedMessage(
           fromUserId,
           encryptedContentRaw,
@@ -108,6 +125,7 @@ Future<void> handleNewMessage(int fromUserId, Uint8List body) async {
         } else {
           response = Message()..type = Message_Type.SENDER_DELIVERY_RECEIPT;
         }
+
         await twonlyDB.receiptsDao.insertReceipt(
           ReceiptsCompanion(
             receiptId: Value(receiptId),
@@ -189,8 +207,29 @@ Future<PlaintextContent?> handleEncryptedMessage(
 
   /// Verify that the user is (still) in that group...
   if (!await twonlyDB.groupsDao.isContactInGroup(fromUserId, content.groupId)) {
-    Log.error('User $fromUserId tried to access group ${content.groupId}.');
-    return null;
+    if (getUUIDforDirectChat(gUser.userId, fromUserId) == content.groupId) {
+      final contact = await twonlyDB.contactsDao
+          .getContactByUserId(fromUserId)
+          .getSingleOrNull();
+      if (contact == null || contact.deletedByUser) {
+        Log.error(
+          'User tries to send message to direct chat while the user does not exists !',
+        );
+        return null;
+      }
+      Log.info(
+        'Creating new DirectChat between two users',
+      );
+      await twonlyDB.groupsDao.createNewDirectChat(
+        fromUserId,
+        GroupsCompanion(
+          groupName: Value(getContactDisplayName(contact)),
+        ),
+      );
+    } else {
+      Log.error('User $fromUserId tried to access group ${content.groupId}.');
+      return null;
+    }
   }
 
   if (content.hasTextMessage()) {

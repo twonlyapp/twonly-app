@@ -31,12 +31,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
   late final GeneratedColumn<String> nickName = GeneratedColumn<String>(
       'nick_name', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _avatarSvgMeta =
-      const VerificationMeta('avatarSvg');
+  static const VerificationMeta _avatarSvgCompressedMeta =
+      const VerificationMeta('avatarSvgCompressed');
   @override
-  late final GeneratedColumn<String> avatarSvg = GeneratedColumn<String>(
-      'avatar_svg', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+  late final GeneratedColumn<Uint8List> avatarSvgCompressed =
+      GeneratedColumn<Uint8List>('avatar_svg_compressed', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   static const VerificationMeta _senderProfileCounterMeta =
       const VerificationMeta('senderProfileCounter');
   @override
@@ -54,6 +54,16 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("accepted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _deletedByUserMeta =
+      const VerificationMeta('deletedByUser');
+  @override
+  late final GeneratedColumn<bool> deletedByUser = GeneratedColumn<bool>(
+      'deleted_by_user', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("deleted_by_user" IN (0, 1))'),
       defaultValue: const Constant(false));
   static const VerificationMeta _requestedMeta =
       const VerificationMeta('requested');
@@ -85,15 +95,15 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("verified" IN (0, 1))'),
       defaultValue: const Constant(false));
-  static const VerificationMeta _deletedMeta =
-      const VerificationMeta('deleted');
+  static const VerificationMeta _accountDeletedMeta =
+      const VerificationMeta('accountDeleted');
   @override
-  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
-      'deleted', aliasedName, false,
+  late final GeneratedColumn<bool> accountDeleted = GeneratedColumn<bool>(
+      'account_deleted', aliasedName, false,
       type: DriftSqlType.bool,
       requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("account_deleted" IN (0, 1))'),
       defaultValue: const Constant(false));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
@@ -109,13 +119,14 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
         username,
         displayName,
         nickName,
-        avatarSvg,
+        avatarSvgCompressed,
         senderProfileCounter,
         accepted,
+        deletedByUser,
         requested,
         blocked,
         verified,
-        deleted,
+        accountDeleted,
         createdAt
       ];
   @override
@@ -148,9 +159,11 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       context.handle(_nickNameMeta,
           nickName.isAcceptableOrUnknown(data['nick_name']!, _nickNameMeta));
     }
-    if (data.containsKey('avatar_svg')) {
-      context.handle(_avatarSvgMeta,
-          avatarSvg.isAcceptableOrUnknown(data['avatar_svg']!, _avatarSvgMeta));
+    if (data.containsKey('avatar_svg_compressed')) {
+      context.handle(
+          _avatarSvgCompressedMeta,
+          avatarSvgCompressed.isAcceptableOrUnknown(
+              data['avatar_svg_compressed']!, _avatarSvgCompressedMeta));
     }
     if (data.containsKey('sender_profile_counter')) {
       context.handle(
@@ -161,6 +174,12 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
     if (data.containsKey('accepted')) {
       context.handle(_acceptedMeta,
           accepted.isAcceptableOrUnknown(data['accepted']!, _acceptedMeta));
+    }
+    if (data.containsKey('deleted_by_user')) {
+      context.handle(
+          _deletedByUserMeta,
+          deletedByUser.isAcceptableOrUnknown(
+              data['deleted_by_user']!, _deletedByUserMeta));
     }
     if (data.containsKey('requested')) {
       context.handle(_requestedMeta,
@@ -174,9 +193,11 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
       context.handle(_verifiedMeta,
           verified.isAcceptableOrUnknown(data['verified']!, _verifiedMeta));
     }
-    if (data.containsKey('deleted')) {
-      context.handle(_deletedMeta,
-          deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
+    if (data.containsKey('account_deleted')) {
+      context.handle(
+          _accountDeletedMeta,
+          accountDeleted.isAcceptableOrUnknown(
+              data['account_deleted']!, _accountDeletedMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -199,20 +220,22 @@ class $ContactsTable extends Contacts with TableInfo<$ContactsTable, Contact> {
           .read(DriftSqlType.string, data['${effectivePrefix}display_name']),
       nickName: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}nick_name']),
-      avatarSvg: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}avatar_svg']),
+      avatarSvgCompressed: attachedDatabase.typeMapping.read(
+          DriftSqlType.blob, data['${effectivePrefix}avatar_svg_compressed']),
       senderProfileCounter: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}sender_profile_counter'])!,
       accepted: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}accepted'])!,
+      deletedByUser: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}deleted_by_user'])!,
       requested: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}requested'])!,
       blocked: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}blocked'])!,
       verified: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}verified'])!,
-      deleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      accountDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}account_deleted'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -229,26 +252,28 @@ class Contact extends DataClass implements Insertable<Contact> {
   final String username;
   final String? displayName;
   final String? nickName;
-  final String? avatarSvg;
+  final Uint8List? avatarSvgCompressed;
   final int senderProfileCounter;
   final bool accepted;
+  final bool deletedByUser;
   final bool requested;
   final bool blocked;
   final bool verified;
-  final bool deleted;
+  final bool accountDeleted;
   final DateTime createdAt;
   const Contact(
       {required this.userId,
       required this.username,
       this.displayName,
       this.nickName,
-      this.avatarSvg,
+      this.avatarSvgCompressed,
       required this.senderProfileCounter,
       required this.accepted,
+      required this.deletedByUser,
       required this.requested,
       required this.blocked,
       required this.verified,
-      required this.deleted,
+      required this.accountDeleted,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -261,15 +286,16 @@ class Contact extends DataClass implements Insertable<Contact> {
     if (!nullToAbsent || nickName != null) {
       map['nick_name'] = Variable<String>(nickName);
     }
-    if (!nullToAbsent || avatarSvg != null) {
-      map['avatar_svg'] = Variable<String>(avatarSvg);
+    if (!nullToAbsent || avatarSvgCompressed != null) {
+      map['avatar_svg_compressed'] = Variable<Uint8List>(avatarSvgCompressed);
     }
     map['sender_profile_counter'] = Variable<int>(senderProfileCounter);
     map['accepted'] = Variable<bool>(accepted);
+    map['deleted_by_user'] = Variable<bool>(deletedByUser);
     map['requested'] = Variable<bool>(requested);
     map['blocked'] = Variable<bool>(blocked);
     map['verified'] = Variable<bool>(verified);
-    map['deleted'] = Variable<bool>(deleted);
+    map['account_deleted'] = Variable<bool>(accountDeleted);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -284,15 +310,16 @@ class Contact extends DataClass implements Insertable<Contact> {
       nickName: nickName == null && nullToAbsent
           ? const Value.absent()
           : Value(nickName),
-      avatarSvg: avatarSvg == null && nullToAbsent
+      avatarSvgCompressed: avatarSvgCompressed == null && nullToAbsent
           ? const Value.absent()
-          : Value(avatarSvg),
+          : Value(avatarSvgCompressed),
       senderProfileCounter: Value(senderProfileCounter),
       accepted: Value(accepted),
+      deletedByUser: Value(deletedByUser),
       requested: Value(requested),
       blocked: Value(blocked),
       verified: Value(verified),
-      deleted: Value(deleted),
+      accountDeleted: Value(accountDeleted),
       createdAt: Value(createdAt),
     );
   }
@@ -305,14 +332,16 @@ class Contact extends DataClass implements Insertable<Contact> {
       username: serializer.fromJson<String>(json['username']),
       displayName: serializer.fromJson<String?>(json['displayName']),
       nickName: serializer.fromJson<String?>(json['nickName']),
-      avatarSvg: serializer.fromJson<String?>(json['avatarSvg']),
+      avatarSvgCompressed:
+          serializer.fromJson<Uint8List?>(json['avatarSvgCompressed']),
       senderProfileCounter:
           serializer.fromJson<int>(json['senderProfileCounter']),
       accepted: serializer.fromJson<bool>(json['accepted']),
+      deletedByUser: serializer.fromJson<bool>(json['deletedByUser']),
       requested: serializer.fromJson<bool>(json['requested']),
       blocked: serializer.fromJson<bool>(json['blocked']),
       verified: serializer.fromJson<bool>(json['verified']),
-      deleted: serializer.fromJson<bool>(json['deleted']),
+      accountDeleted: serializer.fromJson<bool>(json['accountDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -324,13 +353,14 @@ class Contact extends DataClass implements Insertable<Contact> {
       'username': serializer.toJson<String>(username),
       'displayName': serializer.toJson<String?>(displayName),
       'nickName': serializer.toJson<String?>(nickName),
-      'avatarSvg': serializer.toJson<String?>(avatarSvg),
+      'avatarSvgCompressed': serializer.toJson<Uint8List?>(avatarSvgCompressed),
       'senderProfileCounter': serializer.toJson<int>(senderProfileCounter),
       'accepted': serializer.toJson<bool>(accepted),
+      'deletedByUser': serializer.toJson<bool>(deletedByUser),
       'requested': serializer.toJson<bool>(requested),
       'blocked': serializer.toJson<bool>(blocked),
       'verified': serializer.toJson<bool>(verified),
-      'deleted': serializer.toJson<bool>(deleted),
+      'accountDeleted': serializer.toJson<bool>(accountDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -340,26 +370,30 @@ class Contact extends DataClass implements Insertable<Contact> {
           String? username,
           Value<String?> displayName = const Value.absent(),
           Value<String?> nickName = const Value.absent(),
-          Value<String?> avatarSvg = const Value.absent(),
+          Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
           int? senderProfileCounter,
           bool? accepted,
+          bool? deletedByUser,
           bool? requested,
           bool? blocked,
           bool? verified,
-          bool? deleted,
+          bool? accountDeleted,
           DateTime? createdAt}) =>
       Contact(
         userId: userId ?? this.userId,
         username: username ?? this.username,
         displayName: displayName.present ? displayName.value : this.displayName,
         nickName: nickName.present ? nickName.value : this.nickName,
-        avatarSvg: avatarSvg.present ? avatarSvg.value : this.avatarSvg,
+        avatarSvgCompressed: avatarSvgCompressed.present
+            ? avatarSvgCompressed.value
+            : this.avatarSvgCompressed,
         senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
         accepted: accepted ?? this.accepted,
+        deletedByUser: deletedByUser ?? this.deletedByUser,
         requested: requested ?? this.requested,
         blocked: blocked ?? this.blocked,
         verified: verified ?? this.verified,
-        deleted: deleted ?? this.deleted,
+        accountDeleted: accountDeleted ?? this.accountDeleted,
         createdAt: createdAt ?? this.createdAt,
       );
   Contact copyWithCompanion(ContactsCompanion data) {
@@ -369,15 +403,22 @@ class Contact extends DataClass implements Insertable<Contact> {
       displayName:
           data.displayName.present ? data.displayName.value : this.displayName,
       nickName: data.nickName.present ? data.nickName.value : this.nickName,
-      avatarSvg: data.avatarSvg.present ? data.avatarSvg.value : this.avatarSvg,
+      avatarSvgCompressed: data.avatarSvgCompressed.present
+          ? data.avatarSvgCompressed.value
+          : this.avatarSvgCompressed,
       senderProfileCounter: data.senderProfileCounter.present
           ? data.senderProfileCounter.value
           : this.senderProfileCounter,
       accepted: data.accepted.present ? data.accepted.value : this.accepted,
+      deletedByUser: data.deletedByUser.present
+          ? data.deletedByUser.value
+          : this.deletedByUser,
       requested: data.requested.present ? data.requested.value : this.requested,
       blocked: data.blocked.present ? data.blocked.value : this.blocked,
       verified: data.verified.present ? data.verified.value : this.verified,
-      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      accountDeleted: data.accountDeleted.present
+          ? data.accountDeleted.value
+          : this.accountDeleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -389,13 +430,14 @@ class Contact extends DataClass implements Insertable<Contact> {
           ..write('username: $username, ')
           ..write('displayName: $displayName, ')
           ..write('nickName: $nickName, ')
-          ..write('avatarSvg: $avatarSvg, ')
+          ..write('avatarSvgCompressed: $avatarSvgCompressed, ')
           ..write('senderProfileCounter: $senderProfileCounter, ')
           ..write('accepted: $accepted, ')
+          ..write('deletedByUser: $deletedByUser, ')
           ..write('requested: $requested, ')
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
-          ..write('deleted: $deleted, ')
+          ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -407,13 +449,14 @@ class Contact extends DataClass implements Insertable<Contact> {
       username,
       displayName,
       nickName,
-      avatarSvg,
+      $driftBlobEquality.hash(avatarSvgCompressed),
       senderProfileCounter,
       accepted,
+      deletedByUser,
       requested,
       blocked,
       verified,
-      deleted,
+      accountDeleted,
       createdAt);
   @override
   bool operator ==(Object other) =>
@@ -423,13 +466,15 @@ class Contact extends DataClass implements Insertable<Contact> {
           other.username == this.username &&
           other.displayName == this.displayName &&
           other.nickName == this.nickName &&
-          other.avatarSvg == this.avatarSvg &&
+          $driftBlobEquality.equals(
+              other.avatarSvgCompressed, this.avatarSvgCompressed) &&
           other.senderProfileCounter == this.senderProfileCounter &&
           other.accepted == this.accepted &&
+          other.deletedByUser == this.deletedByUser &&
           other.requested == this.requested &&
           other.blocked == this.blocked &&
           other.verified == this.verified &&
-          other.deleted == this.deleted &&
+          other.accountDeleted == this.accountDeleted &&
           other.createdAt == this.createdAt);
 }
 
@@ -438,26 +483,28 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
   final Value<String> username;
   final Value<String?> displayName;
   final Value<String?> nickName;
-  final Value<String?> avatarSvg;
+  final Value<Uint8List?> avatarSvgCompressed;
   final Value<int> senderProfileCounter;
   final Value<bool> accepted;
+  final Value<bool> deletedByUser;
   final Value<bool> requested;
   final Value<bool> blocked;
   final Value<bool> verified;
-  final Value<bool> deleted;
+  final Value<bool> accountDeleted;
   final Value<DateTime> createdAt;
   const ContactsCompanion({
     this.userId = const Value.absent(),
     this.username = const Value.absent(),
     this.displayName = const Value.absent(),
     this.nickName = const Value.absent(),
-    this.avatarSvg = const Value.absent(),
+    this.avatarSvgCompressed = const Value.absent(),
     this.senderProfileCounter = const Value.absent(),
     this.accepted = const Value.absent(),
+    this.deletedByUser = const Value.absent(),
     this.requested = const Value.absent(),
     this.blocked = const Value.absent(),
     this.verified = const Value.absent(),
-    this.deleted = const Value.absent(),
+    this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   ContactsCompanion.insert({
@@ -465,13 +512,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     required String username,
     this.displayName = const Value.absent(),
     this.nickName = const Value.absent(),
-    this.avatarSvg = const Value.absent(),
+    this.avatarSvgCompressed = const Value.absent(),
     this.senderProfileCounter = const Value.absent(),
     this.accepted = const Value.absent(),
+    this.deletedByUser = const Value.absent(),
     this.requested = const Value.absent(),
     this.blocked = const Value.absent(),
     this.verified = const Value.absent(),
-    this.deleted = const Value.absent(),
+    this.accountDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : username = Value(username);
   static Insertable<Contact> custom({
@@ -479,13 +527,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     Expression<String>? username,
     Expression<String>? displayName,
     Expression<String>? nickName,
-    Expression<String>? avatarSvg,
+    Expression<Uint8List>? avatarSvgCompressed,
     Expression<int>? senderProfileCounter,
     Expression<bool>? accepted,
+    Expression<bool>? deletedByUser,
     Expression<bool>? requested,
     Expression<bool>? blocked,
     Expression<bool>? verified,
-    Expression<bool>? deleted,
+    Expression<bool>? accountDeleted,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -493,14 +542,16 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       if (username != null) 'username': username,
       if (displayName != null) 'display_name': displayName,
       if (nickName != null) 'nick_name': nickName,
-      if (avatarSvg != null) 'avatar_svg': avatarSvg,
+      if (avatarSvgCompressed != null)
+        'avatar_svg_compressed': avatarSvgCompressed,
       if (senderProfileCounter != null)
         'sender_profile_counter': senderProfileCounter,
       if (accepted != null) 'accepted': accepted,
+      if (deletedByUser != null) 'deleted_by_user': deletedByUser,
       if (requested != null) 'requested': requested,
       if (blocked != null) 'blocked': blocked,
       if (verified != null) 'verified': verified,
-      if (deleted != null) 'deleted': deleted,
+      if (accountDeleted != null) 'account_deleted': accountDeleted,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -510,26 +561,28 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
       Value<String>? username,
       Value<String?>? displayName,
       Value<String?>? nickName,
-      Value<String?>? avatarSvg,
+      Value<Uint8List?>? avatarSvgCompressed,
       Value<int>? senderProfileCounter,
       Value<bool>? accepted,
+      Value<bool>? deletedByUser,
       Value<bool>? requested,
       Value<bool>? blocked,
       Value<bool>? verified,
-      Value<bool>? deleted,
+      Value<bool>? accountDeleted,
       Value<DateTime>? createdAt}) {
     return ContactsCompanion(
       userId: userId ?? this.userId,
       username: username ?? this.username,
       displayName: displayName ?? this.displayName,
       nickName: nickName ?? this.nickName,
-      avatarSvg: avatarSvg ?? this.avatarSvg,
+      avatarSvgCompressed: avatarSvgCompressed ?? this.avatarSvgCompressed,
       senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
       accepted: accepted ?? this.accepted,
+      deletedByUser: deletedByUser ?? this.deletedByUser,
       requested: requested ?? this.requested,
       blocked: blocked ?? this.blocked,
       verified: verified ?? this.verified,
-      deleted: deleted ?? this.deleted,
+      accountDeleted: accountDeleted ?? this.accountDeleted,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -549,14 +602,18 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (nickName.present) {
       map['nick_name'] = Variable<String>(nickName.value);
     }
-    if (avatarSvg.present) {
-      map['avatar_svg'] = Variable<String>(avatarSvg.value);
+    if (avatarSvgCompressed.present) {
+      map['avatar_svg_compressed'] =
+          Variable<Uint8List>(avatarSvgCompressed.value);
     }
     if (senderProfileCounter.present) {
       map['sender_profile_counter'] = Variable<int>(senderProfileCounter.value);
     }
     if (accepted.present) {
       map['accepted'] = Variable<bool>(accepted.value);
+    }
+    if (deletedByUser.present) {
+      map['deleted_by_user'] = Variable<bool>(deletedByUser.value);
     }
     if (requested.present) {
       map['requested'] = Variable<bool>(requested.value);
@@ -567,8 +624,8 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
     if (verified.present) {
       map['verified'] = Variable<bool>(verified.value);
     }
-    if (deleted.present) {
-      map['deleted'] = Variable<bool>(deleted.value);
+    if (accountDeleted.present) {
+      map['account_deleted'] = Variable<bool>(accountDeleted.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -583,13 +640,14 @@ class ContactsCompanion extends UpdateCompanion<Contact> {
           ..write('username: $username, ')
           ..write('displayName: $displayName, ')
           ..write('nickName: $nickName, ')
-          ..write('avatarSvg: $avatarSvg, ')
+          ..write('avatarSvgCompressed: $avatarSvgCompressed, ')
           ..write('senderProfileCounter: $senderProfileCounter, ')
           ..write('accepted: $accepted, ')
+          ..write('deletedByUser: $deletedByUser, ')
           ..write('requested: $requested, ')
           ..write('blocked: $blocked, ')
           ..write('verified: $verified, ')
-          ..write('deleted: $deleted, ')
+          ..write('accountDeleted: $accountDeleted, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -6533,13 +6591,14 @@ typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   required String username,
   Value<String?> displayName,
   Value<String?> nickName,
-  Value<String?> avatarSvg,
+  Value<Uint8List?> avatarSvgCompressed,
   Value<int> senderProfileCounter,
   Value<bool> accepted,
+  Value<bool> deletedByUser,
   Value<bool> requested,
   Value<bool> blocked,
   Value<bool> verified,
-  Value<bool> deleted,
+  Value<bool> accountDeleted,
   Value<DateTime> createdAt,
 });
 typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
@@ -6547,13 +6606,14 @@ typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
   Value<String> username,
   Value<String?> displayName,
   Value<String?> nickName,
-  Value<String?> avatarSvg,
+  Value<Uint8List?> avatarSvgCompressed,
   Value<int> senderProfileCounter,
   Value<bool> accepted,
+  Value<bool> deletedByUser,
   Value<bool> requested,
   Value<bool> blocked,
   Value<bool> verified,
-  Value<bool> deleted,
+  Value<bool> accountDeleted,
   Value<DateTime> createdAt,
 });
 
@@ -6684,8 +6744,9 @@ class $$ContactsTableFilterComposer
   ColumnFilters<String> get nickName => $composableBuilder(
       column: $table.nickName, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get avatarSvg => $composableBuilder(
-      column: $table.avatarSvg, builder: (column) => ColumnFilters(column));
+  ColumnFilters<Uint8List> get avatarSvgCompressed => $composableBuilder(
+      column: $table.avatarSvgCompressed,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get senderProfileCounter => $composableBuilder(
       column: $table.senderProfileCounter,
@@ -6693,6 +6754,9 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<bool> get accepted => $composableBuilder(
       column: $table.accepted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deletedByUser => $composableBuilder(
+      column: $table.deletedByUser, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get requested => $composableBuilder(
       column: $table.requested, builder: (column) => ColumnFilters(column));
@@ -6703,8 +6767,9 @@ class $$ContactsTableFilterComposer
   ColumnFilters<bool> get verified => $composableBuilder(
       column: $table.verified, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get deleted => $composableBuilder(
-      column: $table.deleted, builder: (column) => ColumnFilters(column));
+  ColumnFilters<bool> get accountDeleted => $composableBuilder(
+      column: $table.accountDeleted,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -6861,8 +6926,9 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<String> get nickName => $composableBuilder(
       column: $table.nickName, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get avatarSvg => $composableBuilder(
-      column: $table.avatarSvg, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<Uint8List> get avatarSvgCompressed => $composableBuilder(
+      column: $table.avatarSvgCompressed,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get senderProfileCounter => $composableBuilder(
       column: $table.senderProfileCounter,
@@ -6870,6 +6936,10 @@ class $$ContactsTableOrderingComposer
 
   ColumnOrderings<bool> get accepted => $composableBuilder(
       column: $table.accepted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get deletedByUser => $composableBuilder(
+      column: $table.deletedByUser,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<bool> get requested => $composableBuilder(
       column: $table.requested, builder: (column) => ColumnOrderings(column));
@@ -6880,8 +6950,9 @@ class $$ContactsTableOrderingComposer
   ColumnOrderings<bool> get verified => $composableBuilder(
       column: $table.verified, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get deleted => $composableBuilder(
-      column: $table.deleted, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<bool> get accountDeleted => $composableBuilder(
+      column: $table.accountDeleted,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
@@ -6908,14 +6979,17 @@ class $$ContactsTableAnnotationComposer
   GeneratedColumn<String> get nickName =>
       $composableBuilder(column: $table.nickName, builder: (column) => column);
 
-  GeneratedColumn<String> get avatarSvg =>
-      $composableBuilder(column: $table.avatarSvg, builder: (column) => column);
+  GeneratedColumn<Uint8List> get avatarSvgCompressed => $composableBuilder(
+      column: $table.avatarSvgCompressed, builder: (column) => column);
 
   GeneratedColumn<int> get senderProfileCounter => $composableBuilder(
       column: $table.senderProfileCounter, builder: (column) => column);
 
   GeneratedColumn<bool> get accepted =>
       $composableBuilder(column: $table.accepted, builder: (column) => column);
+
+  GeneratedColumn<bool> get deletedByUser => $composableBuilder(
+      column: $table.deletedByUser, builder: (column) => column);
 
   GeneratedColumn<bool> get requested =>
       $composableBuilder(column: $table.requested, builder: (column) => column);
@@ -6926,8 +7000,8 @@ class $$ContactsTableAnnotationComposer
   GeneratedColumn<bool> get verified =>
       $composableBuilder(column: $table.verified, builder: (column) => column);
 
-  GeneratedColumn<bool> get deleted =>
-      $composableBuilder(column: $table.deleted, builder: (column) => column);
+  GeneratedColumn<bool> get accountDeleted => $composableBuilder(
+      column: $table.accountDeleted, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -7097,13 +7171,14 @@ class $$ContactsTableTableManager extends RootTableManager<
             Value<String> username = const Value.absent(),
             Value<String?> displayName = const Value.absent(),
             Value<String?> nickName = const Value.absent(),
-            Value<String?> avatarSvg = const Value.absent(),
+            Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
             Value<int> senderProfileCounter = const Value.absent(),
             Value<bool> accepted = const Value.absent(),
+            Value<bool> deletedByUser = const Value.absent(),
             Value<bool> requested = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
-            Value<bool> deleted = const Value.absent(),
+            Value<bool> accountDeleted = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               ContactsCompanion(
@@ -7111,13 +7186,14 @@ class $$ContactsTableTableManager extends RootTableManager<
             username: username,
             displayName: displayName,
             nickName: nickName,
-            avatarSvg: avatarSvg,
+            avatarSvgCompressed: avatarSvgCompressed,
             senderProfileCounter: senderProfileCounter,
             accepted: accepted,
+            deletedByUser: deletedByUser,
             requested: requested,
             blocked: blocked,
             verified: verified,
-            deleted: deleted,
+            accountDeleted: accountDeleted,
             createdAt: createdAt,
           ),
           createCompanionCallback: ({
@@ -7125,13 +7201,14 @@ class $$ContactsTableTableManager extends RootTableManager<
             required String username,
             Value<String?> displayName = const Value.absent(),
             Value<String?> nickName = const Value.absent(),
-            Value<String?> avatarSvg = const Value.absent(),
+            Value<Uint8List?> avatarSvgCompressed = const Value.absent(),
             Value<int> senderProfileCounter = const Value.absent(),
             Value<bool> accepted = const Value.absent(),
+            Value<bool> deletedByUser = const Value.absent(),
             Value<bool> requested = const Value.absent(),
             Value<bool> blocked = const Value.absent(),
             Value<bool> verified = const Value.absent(),
-            Value<bool> deleted = const Value.absent(),
+            Value<bool> accountDeleted = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               ContactsCompanion.insert(
@@ -7139,13 +7216,14 @@ class $$ContactsTableTableManager extends RootTableManager<
             username: username,
             displayName: displayName,
             nickName: nickName,
-            avatarSvg: avatarSvg,
+            avatarSvgCompressed: avatarSvgCompressed,
             senderProfileCounter: senderProfileCounter,
             accepted: accepted,
+            deletedByUser: deletedByUser,
             requested: requested,
             blocked: blocked,
             verified: verified,
-            deleted: deleted,
+            accountDeleted: accountDeleted,
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -371,4 +373,9 @@ String friendlyDateTime(
   }
 
   return '$timePart $datePart';
+}
+
+String getAvatarSvg(Uint8List avatarSvgCompressed) {
+  final raw = gzip.decode(avatarSvgCompressed);
+  return utf8.decode(raw);
 }
