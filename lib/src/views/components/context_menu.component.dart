@@ -66,7 +66,7 @@ class _ContextMenuState extends State<ContextMenu> {
               leading: _getIcon(item.icon),
             ),
           ),
-        )
+        ),
       ],
       position: RelativeRect.fromRect(
         _tapPosition! & const Size(40, 40),

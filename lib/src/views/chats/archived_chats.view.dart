@@ -40,7 +40,7 @@ class _ArchivedChatsViewState extends State<ArchivedChatsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Archivierte Chats"),
+        title: const Text('Archivierte Chats'),
       ),
       body: ListView(
         children: _groupsArchived.map((group) {
