@@ -32,6 +32,61 @@ class MediaFileService {
     );
   }
 
+  static Future<void> purgeTempFolder() async {
+    final tempDirectory = MediaFileService._buildDirectoryPath(
+      'tmp',
+      await getApplicationSupportDirectory(),
+    );
+
+    final files = tempDirectory.listSync();
+    for (final file in files) {
+      final mediaId = basename(file.path).split('.').first;
+
+      var delete = true;
+
+      final service = await MediaFileService.fromMediaId(mediaId);
+      if (service == null) {
+        Log.error(
+          'Purging media file, as it is not in the database $mediaId.',
+        );
+      } else {
+        final messages =
+            await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
+
+        for (final message in messages) {
+          if (message.senderId == null) {
+            // Media was send by me
+            if (message.openedAt == null) {
+              // Message was not yet opened from all persons, so wait...
+              delete = false;
+            } else if (service.mediaFile.requiresAuthentication ||
+                service.mediaFile.displayLimitInMilliseconds != null) {
+              // Message was opened by all persons, and they can not reopen the image.
+              // delete = true; // do not overwrite a previous delete = false
+              // this is just to make it easier to understand :)
+            } else if (message.openedAt!
+                .isAfter(DateTime.now().subtract(const Duration(days: 2)))) {
+              // Message was opened by all persons, as it can be reopened and then stored by a other person keep it for
+              // two day just to be sure.
+              delete = false;
+            }
+          } else {
+            // this media was received from another person
+            if (message.openedAt == null) {
+              // Message was not yet opened, so do not remove it.
+              delete = false;
+            }
+          }
+        }
+      }
+
+      if (delete) {
+        Log.info('Purging media file $mediaId');
+        file.deleteSync();
+      }
+    }
+  }
+
   Future<void> updateFromDB() async {
     final updated =
         await twonlyDB.mediaFilesDao.getMediaFileById(mediaFile.mediaId);
@@ -89,7 +144,8 @@ class MediaFileService {
     }
     switch (mediaFile.type) {
       case MediaType.image:
-        await createThumbnailsForImage(storedPath, thumbnailPath);
+        // all images are already compress..
+        break;
       case MediaType.video:
         await createThumbnailsForVideo(storedPath, thumbnailPath);
       case MediaType.gif:
@@ -163,11 +219,10 @@ class MediaFileService {
     await updateFromDB();
   }
 
-  File _buildFilePath(
-    String directory, {
-    String namePrefix = '',
-    String extensionParam = '',
-  }) {
+  static Directory _buildDirectoryPath(
+    String directory,
+    Directory applicationSupportDirectory,
+  ) {
     final mediaBaseDir = Directory(
       join(
         applicationSupportDirectory.path,
@@ -178,6 +233,14 @@ class MediaFileService {
     if (!mediaBaseDir.existsSync()) {
       mediaBaseDir.createSync(recursive: true);
     }
+    return mediaBaseDir;
+  }
+
+  File _buildFilePath(
+    String directory, {
+    String namePrefix = '',
+    String extensionParam = '',
+  }) {
     var extension = extensionParam;
     if (extension == '') {
       switch (mediaFile.type) {
@@ -189,6 +252,8 @@ class MediaFileService {
           extension = 'gif';
       }
     }
+    final mediaBaseDir =
+        _buildDirectoryPath(directory, applicationSupportDirectory);
     return File(
       join(mediaBaseDir.path, '${mediaFile.mediaId}$namePrefix.$extension'),
     );

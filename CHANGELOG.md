@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.0.62
+
+- Support for Groups
+- Editing of text messages
+- Deletion of messages
+- Various UI improvements like a new context-menu
+- Client-to-client (C2C) protocol converted to ProtoBuf
+- Use of UUIDs in the database
+- Completely new database schema
+- Improved reliability of C2C messages
+- Improved video handling
+- Various bug fixes
+
 ## 0.0.61
 
 - Improving image editor when changing colors

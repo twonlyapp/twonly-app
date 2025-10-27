@@ -1,5 +1,6 @@
 // ignore_for_file: unused_import
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -17,6 +18,7 @@ import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api.service.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -53,6 +55,8 @@ void main() async {
   twonlyDB = TwonlyDB();
 
   await initFileDownloader();
+
+  unawaited(MediaFileService.purgeTempFolder());
 
   // await twonlyDB.messagesDao.resetPendingDownloadState();
   // await twonlyDB.messageRetransmissionDao.purgeOldRetransmissions();

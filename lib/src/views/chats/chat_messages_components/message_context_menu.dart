@@ -4,10 +4,10 @@ import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     as pb;
 import 'package:twonly/src/services/api/messages.dart';
@@ -16,6 +16,7 @@ import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:twonly/src/views/chats/message_info.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/components/context_menu.component.dart';
 
 class MessageContextMenu extends StatelessWidget {
   const MessageContextMenu({
@@ -23,27 +24,23 @@ class MessageContextMenu extends StatelessWidget {
     required this.group,
     required this.child,
     required this.onResponseTriggered,
+    required this.galleryItems,
     super.key,
   });
   final Group group;
   final Widget child;
   final Message message;
+  final List<MemoryItem> galleryItems;
   final VoidCallback onResponseTriggered;
 
   @override
   Widget build(BuildContext context) {
-    return PieMenu(
-      onPressed: () => (),
-      onToggle: (menuOpen) async {
-        if (menuOpen) {
-          await HapticFeedback.heavyImpact();
-        }
-      },
-      actions: [
+    return ContextMenu(
+      items: [
         if (!message.isDeletedFromSender)
-          PieAction(
-            tooltip: Text(context.lang.react),
-            onSelect: () async {
+          ContextMenuItem(
+            title: context.lang.react,
+            onTap: () async {
               final layer = await showModalBottomSheet(
                 context: context,
                 backgroundColor: Colors.black,
@@ -68,36 +65,38 @@ class MessageContextMenu extends StatelessWidget {
                 null,
               );
             },
-            child: const FaIcon(FontAwesomeIcons.faceLaugh),
+            icon: FontAwesomeIcons.faceLaugh,
           ),
         if (!message.isDeletedFromSender)
-          PieAction(
-            tooltip: Text(context.lang.reply),
-            onSelect: onResponseTriggered,
-            child: const FaIcon(FontAwesomeIcons.reply),
+          ContextMenuItem(
+            title: context.lang.reply,
+            onTap: () async {
+              onResponseTriggered();
+            },
+            icon: FontAwesomeIcons.reply,
           ),
         if (!message.isDeletedFromSender &&
             message.senderId == null &&
             message.type == MessageType.text)
-          PieAction(
-            tooltip: Text(context.lang.edit),
-            onSelect: () async {
+          ContextMenuItem(
+            title: context.lang.edit,
+            onTap: () async {
               await editTextMessage(context, message);
             },
-            child: const FaIcon(FontAwesomeIcons.pencil),
+            icon: FontAwesomeIcons.pencil,
           ),
         if (message.content != null)
-          PieAction(
-            tooltip: Text(context.lang.copy),
-            onSelect: () async {
+          ContextMenuItem(
+            title: context.lang.copy,
+            onTap: () async {
               await Clipboard.setData(ClipboardData(text: message.content!));
               await HapticFeedback.heavyImpact();
             },
-            child: const FaIcon(FontAwesomeIcons.solidCopy),
+            icon: FontAwesomeIcons.solidCopy,
           ),
-        PieAction(
-          tooltip: Text(context.lang.delete),
-          onSelect: () async {
+        ContextMenuItem(
+          title: context.lang.delete,
+          onTap: () async {
             final delete = await showAlertDialog(
               context,
               context.lang.deleteTitle,
@@ -130,12 +129,12 @@ class MessageContextMenu extends StatelessWidget {
               }
             }
           },
-          child: const FaIcon(FontAwesomeIcons.trash),
+          icon: FontAwesomeIcons.trash,
         ),
         if (!message.isDeletedFromSender)
-          PieAction(
-            tooltip: Text(context.lang.info),
-            onSelect: () async {
+          ContextMenuItem(
+            title: context.lang.info,
+            onTap: () async {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -143,12 +142,13 @@ class MessageContextMenu extends StatelessWidget {
                     return MessageInfoView(
                       message: message,
                       group: group,
+                      galleryItems: galleryItems,
                     );
                   },
                 ),
               );
             },
-            child: const FaIcon(FontAwesomeIcons.circleInfo),
+            icon: FontAwesomeIcons.circleInfo,
           ),
       ],
       child: child,

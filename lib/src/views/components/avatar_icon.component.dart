@@ -26,7 +26,7 @@ class AvatarIcon extends StatefulWidget {
 }
 
 class _AvatarIconState extends State<AvatarIcon> {
-  List<String> avatarSVGs = [];
+  final List<String> _avatarSVGs = [];
 
   @override
   void initState() {
@@ -40,20 +40,20 @@ class _AvatarIconState extends State<AvatarIcon> {
           await twonlyDB.groupsDao.getGroupContact(widget.group!.groupId);
       if (contacts.length == 1) {
         if (contacts.first.avatarSvgCompressed != null) {
-          avatarSVGs.add(getAvatarSvg(contacts.first.avatarSvgCompressed!));
+          _avatarSVGs.add(getAvatarSvg(contacts.first.avatarSvgCompressed!));
         }
       } else {
         for (final contact in contacts) {
           if (contact.avatarSvgCompressed != null) {
-            avatarSVGs.add(getAvatarSvg(contact.avatarSvgCompressed!));
+            _avatarSVGs.add(getAvatarSvg(contact.avatarSvgCompressed!));
           }
         }
       }
       // avatarSvg = group!.avatarSvg;
     } else if (widget.userData?.avatarSvg != null) {
-      avatarSVGs.add(widget.userData!.avatarSvg!);
+      _avatarSVGs.add(widget.userData!.avatarSvg!);
     } else if (widget.contact?.avatarSvgCompressed != null) {
-      avatarSVGs.add(getAvatarSvg(widget.contact!.avatarSvgCompressed!));
+      _avatarSVGs.add(getAvatarSvg(widget.contact!.avatarSvgCompressed!));
     }
     if (mounted) setState(() {});
   }
@@ -77,10 +77,10 @@ class _AvatarIconState extends State<AvatarIcon> {
             width: proSize,
             color: widget.color,
             child: Center(
-              child: avatarSVGs.isEmpty
+              child: _avatarSVGs.isEmpty
                   ? SvgPicture.asset('assets/images/default_avatar.svg')
                   : SvgPicture.string(
-                      avatarSVGs.first,
+                      _avatarSVGs.first,
                       errorBuilder: (context, error, stackTrace) {
                         Log.error('$error');
                         return Container();

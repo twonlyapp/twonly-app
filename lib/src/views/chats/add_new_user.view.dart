@@ -8,7 +8,6 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -223,7 +222,22 @@ class ContactsListView extends StatelessWidget {
         child: IconButton(
           icon: const Icon(Icons.close, color: Colors.red),
           onPressed: () async {
-            await rejectAndHideContact(contact.userId);
+            await sendCipherText(
+              contact.userId,
+              EncryptedContent(
+                contactRequest: EncryptedContent_ContactRequest(
+                  type: EncryptedContent_ContactRequest_Type.REJECT,
+                ),
+              ),
+            );
+            await twonlyDB.contactsDao.updateContact(
+              contact.userId,
+              const ContactsCompanion(
+                accepted: Value(false),
+                requested: Value(false),
+                deletedByUser: Value(true),
+              ),
+            );
           },
         ),
       ),

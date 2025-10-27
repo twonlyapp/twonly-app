@@ -3,7 +3,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -155,92 +154,89 @@ class HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return PieCanvas(
-      theme: getPieCanvasTheme(context),
-      child: Scaffold(
-        body: GestureDetector(
-          onDoubleTap: offsetRatio == 0 ? toggleSelectedCamera : null,
-          child: Stack(
-            children: <Widget>[
-              HomeViewCameraPreview(
-                controller: cameraController,
-                screenshotController: screenshotController,
-              ),
-              Shade(
-                opacity: offsetRatio,
-              ),
-              NotificationListener<ScrollNotification>(
-                onNotification: onPageView,
-                child: Positioned.fill(
-                  child: PageView(
-                    controller: homeViewPageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        activePageIdx = index;
-                      });
-                    },
-                    children: [
-                      const ChatListView(),
-                      Container(),
-                      const MemoriesView(),
-                    ],
-                  ),
+    return Scaffold(
+      body: GestureDetector(
+        onDoubleTap: offsetRatio == 0 ? toggleSelectedCamera : null,
+        child: Stack(
+          children: <Widget>[
+            HomeViewCameraPreview(
+              controller: cameraController,
+              screenshotController: screenshotController,
+            ),
+            Shade(
+              opacity: offsetRatio,
+            ),
+            NotificationListener<ScrollNotification>(
+              onNotification: onPageView,
+              child: Positioned.fill(
+                child: PageView(
+                  controller: homeViewPageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      activePageIdx = index;
+                    });
+                  },
+                  children: [
+                    const ChatListView(),
+                    Container(),
+                    const MemoriesView(),
+                  ],
                 ),
               ),
-              Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                bottom: (offsetRatio > 0.25)
-                    ? MediaQuery.sizeOf(context).height * 2
-                    : 0,
-                child: Opacity(
-                  opacity: 1 - (offsetRatio * 4) % 1,
-                  child: CameraPreviewControllerView(
-                    cameraController: cameraController,
-                    screenshotController: screenshotController,
-                    selectedCameraDetails: selectedCameraDetails,
-                    selectCamera: selectCamera,
-                  ),
+            ),
+            Positioned(
+              left: 0,
+              top: 0,
+              right: 0,
+              bottom: (offsetRatio > 0.25)
+                  ? MediaQuery.sizeOf(context).height * 2
+                  : 0,
+              child: Opacity(
+                opacity: 1 - (offsetRatio * 4) % 1,
+                child: CameraPreviewControllerView(
+                  cameraController: cameraController,
+                  screenshotController: screenshotController,
+                  selectedCameraDetails: selectedCameraDetails,
+                  selectCamera: selectCamera,
                 ),
               ),
-            ],
-          ),
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          unselectedIconTheme: IconThemeData(
-            color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150),
-          ),
-          selectedIconTheme: IconThemeData(
-            color: Theme.of(context).colorScheme.inverseSurface,
-          ),
-          items: const [
-            BottomNavigationBarItem(
-              icon: FaIcon(FontAwesomeIcons.solidComments),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: FaIcon(FontAwesomeIcons.camera),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: FaIcon(FontAwesomeIcons.photoFilm),
-              label: '',
             ),
           ],
-          onTap: (int index) async {
-            activePageIdx = index;
-            await homeViewPageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 100),
-              curve: Curves.bounceIn,
-            );
-            if (mounted) setState(() {});
-          },
-          currentIndex: activePageIdx,
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        unselectedIconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.inverseSurface.withAlpha(150),
+        ),
+        selectedIconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.inverseSurface,
+        ),
+        items: const [
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.solidComments),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.camera),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.photoFilm),
+            label: '',
+          ),
+        ],
+        onTap: (int index) async {
+          activePageIdx = index;
+          await homeViewPageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.bounceIn,
+          );
+          if (mounted) setState(() {});
+        },
+        currentIndex: activePageIdx,
       ),
     );
   }

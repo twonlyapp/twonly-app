@@ -3,7 +3,6 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mutex/mutex.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
@@ -255,96 +254,64 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
             ),
           ),
         ),
-        body: PieCanvas(
-          theme: getPieCanvasTheme(context),
-          child: SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: ScrollablePositionedList.builder(
-                    reverse: true,
-                    itemCount: messages.length + 1,
-                    itemScrollController: itemScrollController,
-                    itemBuilder: (context, i) {
-                      if (i == messages.length) {
-                        return const Padding(
-                          padding: EdgeInsetsGeometry.only(top: 10),
-                        );
-                      }
-                      if (messages[i].isDate) {
-                        return ChatDateChip(
-                          item: messages[i],
-                        );
-                      } else {
-                        final chatMessage = messages[i].message!;
-                        return Transform.translate(
-                          offset: Offset(
-                            (focusedScrollItem == i)
-                                ? (chatMessage.senderId == null)
-                                    ? -8
-                                    : 8
-                                : 0,
-                            0,
-                          ),
-                          child: Transform.scale(
-                            scale: (focusedScrollItem == i) ? 1.05 : 1,
-                            child: ChatListEntry(
-                              key: Key(chatMessage.messageId),
-                              message: messages[i].message!,
-                              nextMessage:
-                                  (i > 0) ? messages[i - 1].message : null,
-                              prevMessage: ((i + 1) < messages.length)
-                                  ? messages[i + 1].message
-                                  : null,
-                              group: group,
-                              galleryItems: galleryItems,
-                              scrollToMessage: scrollToMessage,
-                              onResponseTriggered: () {
-                                setState(() {
-                                  quotesMessage = chatMessage;
-                                });
-                                textFieldFocus.requestFocus();
-                              },
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ),
-                if (quotesMessage != null)
-                  Container(
-                    padding: const EdgeInsets.only(
-                      left: 20,
-                      right: 20,
-                      top: 10,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ResponsePreview(
-                            message: quotesMessage,
-                            showBorder: true,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: ScrollablePositionedList.builder(
+                  reverse: true,
+                  itemCount: messages.length + 1,
+                  itemScrollController: itemScrollController,
+                  itemBuilder: (context, i) {
+                    if (i == messages.length) {
+                      return const Padding(
+                        padding: EdgeInsetsGeometry.only(top: 10),
+                      );
+                    }
+                    if (messages[i].isDate) {
+                      return ChatDateChip(
+                        item: messages[i],
+                      );
+                    } else {
+                      final chatMessage = messages[i].message!;
+                      return Transform.translate(
+                        offset: Offset(
+                          (focusedScrollItem == i)
+                              ? (chatMessage.senderId == null)
+                                  ? -8
+                                  : 8
+                              : 0,
+                          0,
+                        ),
+                        child: Transform.scale(
+                          scale: (focusedScrollItem == i) ? 1.05 : 1,
+                          child: ChatListEntry(
+                            key: Key(chatMessage.messageId),
+                            message: messages[i].message!,
+                            nextMessage:
+                                (i > 0) ? messages[i - 1].message : null,
+                            prevMessage: ((i + 1) < messages.length)
+                                ? messages[i + 1].message
+                                : null,
                             group: group,
+                            galleryItems: galleryItems,
+                            scrollToMessage: scrollToMessage,
+                            onResponseTriggered: () {
+                              setState(() {
+                                quotesMessage = chatMessage;
+                              });
+                              textFieldFocus.requestFocus();
+                            },
                           ),
                         ),
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              quotesMessage = null;
-                            });
-                          },
-                          icon: const FaIcon(
-                            FontAwesomeIcons.xmark,
-                            size: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                Padding(
+                      );
+                    }
+                  },
+                ),
+              ),
+              if (quotesMessage != null)
+                Container(
                   padding: const EdgeInsets.only(
-                    bottom: 30,
                     left: 20,
                     right: 20,
                     top: 10,
@@ -352,50 +319,79 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: newMessageController,
-                          focusNode: textFieldFocus,
-                          keyboardType: TextInputType.multiline,
-                          maxLines: 4,
-                          minLines: 1,
-                          onChanged: (value) {
-                            currentInputText = value;
-                            setState(() {});
-                          },
-                          onSubmitted: (_) {
-                            _sendMessage();
-                          },
-                          decoration: inputTextMessageDeco(context),
+                        child: ResponsePreview(
+                          message: quotesMessage,
+                          showBorder: true,
+                          group: group,
                         ),
                       ),
-                      if (currentInputText != '')
-                        IconButton(
-                          padding: const EdgeInsets.all(15),
-                          icon: const FaIcon(
-                            FontAwesomeIcons.solidPaperPlane,
-                          ),
-                          onPressed: _sendMessage,
-                        )
-                      else
-                        IconButton(
-                          icon: const FaIcon(FontAwesomeIcons.camera),
-                          padding: const EdgeInsets.all(15),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) {
-                                  return CameraSendToView(widget.group);
-                                },
-                              ),
-                            );
-                          },
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            quotesMessage = null;
+                          });
+                        },
+                        icon: const FaIcon(
+                          FontAwesomeIcons.xmark,
+                          size: 16,
                         ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 30,
+                  left: 20,
+                  right: 20,
+                  top: 10,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: newMessageController,
+                        focusNode: textFieldFocus,
+                        keyboardType: TextInputType.multiline,
+                        maxLines: 4,
+                        minLines: 1,
+                        onChanged: (value) {
+                          currentInputText = value;
+                          setState(() {});
+                        },
+                        onSubmitted: (_) {
+                          _sendMessage();
+                        },
+                        decoration: inputTextMessageDeco(context),
+                      ),
+                    ),
+                    if (currentInputText != '')
+                      IconButton(
+                        padding: const EdgeInsets.all(15),
+                        icon: const FaIcon(
+                          FontAwesomeIcons.solidPaperPlane,
+                        ),
+                        onPressed: _sendMessage,
+                      )
+                    else
+                      IconButton(
+                        icon: const FaIcon(FontAwesomeIcons.camera),
+                        padding: const EdgeInsets.all(15),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return CameraSendToView(widget.group);
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

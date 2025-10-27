@@ -1,14 +1,13 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/components/context_menu.component.dart';
 
-class GroupContextMenu extends StatefulWidget {
+class GroupContextMenu extends StatelessWidget {
   const GroupContextMenu({
     required this.group,
     required this.child,
@@ -18,79 +17,62 @@ class GroupContextMenu extends StatefulWidget {
   final Group group;
 
   @override
-  State<GroupContextMenu> createState() => _GroupContextMenuState();
-}
-
-class _GroupContextMenuState extends State<GroupContextMenu> {
-  @override
   Widget build(BuildContext context) {
-    return PieMenu(
-      onPressed: () => (),
-      onToggle: (menuOpen) async {
-        if (menuOpen) {
-          await HapticFeedback.heavyImpact();
-        }
-      },
-      actions: [
-        if (!widget.group.archived)
-          PieAction(
-            tooltip: Text(context.lang.contextMenuArchiveUser),
-            onSelect: () async {
+    return ContextMenu(
+      items: [
+        if (!group.archived)
+          ContextMenuItem(
+            title: context.lang.contextMenuArchiveUser,
+            onTap: () async {
               const update = GroupsCompanion(archived: Value(true));
               if (context.mounted) {
-                await twonlyDB.groupsDao
-                    .updateGroup(widget.group.groupId, update);
+                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
               }
             },
-            child: const FaIcon(FontAwesomeIcons.boxArchive),
+            icon: FontAwesomeIcons.boxArchive,
           ),
-        if (widget.group.archived)
-          PieAction(
-            tooltip: Text(context.lang.contextMenuUndoArchiveUser),
-            onSelect: () async {
+        if (group.archived)
+          ContextMenuItem(
+            title: context.lang.contextMenuUndoArchiveUser,
+            onTap: () async {
               const update = GroupsCompanion(archived: Value(false));
               if (context.mounted) {
-                await twonlyDB.groupsDao
-                    .updateGroup(widget.group.groupId, update);
+                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
               }
             },
-            child: const FaIcon(FontAwesomeIcons.boxOpen),
+            icon: FontAwesomeIcons.boxOpen,
           ),
-        PieAction(
-          tooltip: Text(context.lang.contextMenuOpenChat),
-          onSelect: () async {
+        ContextMenuItem(
+          title: context.lang.contextMenuOpenChat,
+          onTap: () async {
             await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) {
-                  return ChatMessagesView(widget.group);
+                  return ChatMessagesView(group);
                 },
               ),
             );
           },
-          child: const FaIcon(FontAwesomeIcons.solidComments),
+          icon: FontAwesomeIcons.comments,
         ),
-        PieAction(
-          tooltip: Text(
-            widget.group.pinned
+        if (!group.archived)
+          ContextMenuItem(
+            title: group.pinned
                 ? context.lang.contextMenuUnpin
                 : context.lang.contextMenuPin,
-          ),
-          onSelect: () async {
-            final update = GroupsCompanion(pinned: Value(!widget.group.pinned));
-            if (context.mounted) {
-              await twonlyDB.groupsDao
-                  .updateGroup(widget.group.groupId, update);
-            }
-          },
-          child: FaIcon(
-            widget.group.pinned
+            onTap: () async {
+              final update = GroupsCompanion(pinned: Value(!group.pinned));
+              if (context.mounted) {
+                await twonlyDB.groupsDao.updateGroup(group.groupId, update);
+              }
+            },
+            icon: group.pinned
                 ? FontAwesomeIcons.thumbtackSlash
                 : FontAwesomeIcons.thumbtack,
           ),
-        ),
       ],
-      child: widget.child,
+      child: child,
     );
   }
 }

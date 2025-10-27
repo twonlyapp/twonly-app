@@ -131,8 +131,8 @@ String getContactDisplayName(Contact user) {
   if (user.accountDeleted) {
     name = applyStrikethrough(name);
   }
-  if (name.length > 12) {
-    return '${name.substring(0, 12)}...';
+  if (name.length > 27) {
+    return '${name.substring(0, 27 - 3)}...';
   }
   return name;
 }

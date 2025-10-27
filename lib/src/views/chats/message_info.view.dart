@@ -6,6 +6,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/bottom_sheets/message_history.bottom_sheet.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.dart';
@@ -16,11 +17,13 @@ class MessageInfoView extends StatefulWidget {
   const MessageInfoView({
     required this.message,
     required this.group,
+    required this.galleryItems,
     super.key,
   });
 
   final Message message;
   final Group group;
+  final List<MemoryItem> galleryItems;
 
   @override
   State<MessageInfoView> createState() => _MessageInfoViewState();
@@ -164,9 +167,24 @@ class _MessageInfoViewState extends State<MessageInfoView> {
         child: ListView(
           children: [
             const SizedBox(height: 20),
-            ChatListEntry(
-              group: widget.group,
-              message: widget.message,
+            Stack(
+              children: [
+                ChatListEntry(
+                  group: widget.group,
+                  message: widget.message,
+                  galleryItems: widget.galleryItems,
+                ),
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {
+                      // In case in ChatListEntry is a image, this prevents to open the image preview.
+                    },
+                    child: Container(
+                      color: Colors.transparent,
+                    ),
+                  ),
+                ),
+              ],
             ),
             Text(
               '${context.lang.sent}: ${friendlyDateTime(context, widget.message.createdAt)}',

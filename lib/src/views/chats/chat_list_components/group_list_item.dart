@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mutex/mutex.dart';
@@ -20,32 +21,29 @@ import 'package:twonly/src/views/components/group_context_menu.component.dart';
 class GroupListItem extends StatefulWidget {
   const GroupListItem({
     required this.group,
-    required this.firstUserListItemKey,
     super.key,
   });
   final Group group;
-  final GlobalKey? firstUserListItemKey;
 
   @override
   State<GroupListItem> createState() => _UserListItem();
 }
 
 class _UserListItem extends State<GroupListItem> {
-  MessageSendState state = MessageSendState.send;
-  Message? currentMessage;
+  Message? _currentMessage;
 
-  List<Message> messagesNotOpened = [];
-  late StreamSubscription<List<Message>> messagesNotOpenedStream;
+  List<Message> _messagesNotOpened = [];
+  late StreamSubscription<List<Message>> _messagesNotOpenedStream;
 
-  Message? lastMessage;
-  Reaction? lastReaction;
-  late StreamSubscription<Message?> lastMessageStream;
-  late StreamSubscription<Reaction?> lastReactionStream;
-  late StreamSubscription<List<MediaFile>> lastMediaFilesStream;
+  Message? _lastMessage;
+  Reaction? _lastReaction;
+  late StreamSubscription<Message?> _lastMessageStream;
+  late StreamSubscription<Reaction?> _lastReactionStream;
+  late StreamSubscription<List<MediaFile>> _lastMediaFilesStream;
 
-  List<Message> previewMessages = [];
-  List<MediaFile> previewMediaFiles = [];
-  bool hasNonOpenedMediaFile = false;
+  List<Message> _previewMessages = [];
+  final List<MediaFile> _previewMediaFiles = [];
+  bool _hasNonOpenedMediaFile = false;
 
   @override
   void initState() {
@@ -55,48 +53,48 @@ class _UserListItem extends State<GroupListItem> {
 
   @override
   void dispose() {
-    messagesNotOpenedStream.cancel();
-    lastReactionStream.cancel();
-    lastMessageStream.cancel();
-    lastMediaFilesStream.cancel();
+    _messagesNotOpenedStream.cancel();
+    _lastReactionStream.cancel();
+    _lastMessageStream.cancel();
+    _lastMediaFilesStream.cancel();
     super.dispose();
   }
 
   void initStreams() {
-    lastMessageStream = twonlyDB.messagesDao
+    _lastMessageStream = twonlyDB.messagesDao
         .watchLastMessage(widget.group.groupId)
         .listen((update) {
       protectUpdateState.protect(() async {
-        await updateState(update, messagesNotOpened);
+        await updateState(update, _messagesNotOpened);
       });
     });
 
-    lastReactionStream = twonlyDB.reactionsDao
+    _lastReactionStream = twonlyDB.reactionsDao
         .watchLastReactions(widget.group.groupId)
         .listen((update) {
       setState(() {
-        lastReaction = update;
+        _lastReaction = update;
       });
       // protectUpdateState.protect(() async {
       //   await updateState(lastMessage, update, messagesNotOpened);
       // });
     });
 
-    messagesNotOpenedStream = twonlyDB.messagesDao
+    _messagesNotOpenedStream = twonlyDB.messagesDao
         .watchMessageNotOpened(widget.group.groupId)
         .listen((update) {
       protectUpdateState.protect(() async {
-        await updateState(lastMessage, update);
+        await updateState(_lastMessage, update);
       });
     });
 
-    lastMediaFilesStream =
+    _lastMediaFilesStream =
         twonlyDB.mediaFilesDao.watchNewestMediaFiles().listen((mediaFiles) {
       for (final mediaFile in mediaFiles) {
-        final index =
-            previewMediaFiles.indexWhere((t) => t.mediaId == mediaFile.mediaId);
+        final index = _previewMediaFiles
+            .indexWhere((t) => t.mediaId == mediaFile.mediaId);
         if (index >= 0) {
-          previewMediaFiles[index] = mediaFile;
+          _previewMediaFiles[index] = mediaFile;
         }
       }
       setState(() {});
@@ -111,55 +109,55 @@ class _UserListItem extends State<GroupListItem> {
   ) async {
     if (newLastMessage == null) {
       // there are no messages at all
-      currentMessage = null;
-      previewMessages = [];
+      _currentMessage = null;
+      _previewMessages = [];
     } else if (newMessagesNotOpened.isNotEmpty) {
       // Filter for the preview non opened messages. First messages which where send but not yet opened by the other side.
       final receivedMessages =
           newMessagesNotOpened.where((x) => x.senderId != null).toList();
 
       if (receivedMessages.isNotEmpty) {
-        previewMessages = receivedMessages;
-        currentMessage = receivedMessages.first;
+        _previewMessages = receivedMessages;
+        _currentMessage = receivedMessages.first;
       } else {
-        previewMessages = newMessagesNotOpened;
-        currentMessage = newMessagesNotOpened.first;
+        _previewMessages = newMessagesNotOpened;
+        _currentMessage = newMessagesNotOpened.first;
       }
     } else {
       // there are no not opened messages show just the last message in the table
-      currentMessage = newLastMessage;
-      previewMessages = [newLastMessage];
+      _currentMessage = newLastMessage;
+      _previewMessages = [newLastMessage];
     }
 
     final msgs =
-        previewMessages.where((x) => x.type == MessageType.media).toList();
+        _previewMessages.where((x) => x.type == MessageType.media).toList();
     if (msgs.isNotEmpty &&
         msgs.first.type == MessageType.media &&
         msgs.first.senderId != null &&
         msgs.first.openedAt == null) {
-      hasNonOpenedMediaFile = true;
+      _hasNonOpenedMediaFile = true;
     } else {
-      hasNonOpenedMediaFile = false;
+      _hasNonOpenedMediaFile = false;
     }
 
-    for (final message in previewMessages) {
+    for (final message in _previewMessages) {
       if (message.mediaId != null &&
-          !previewMediaFiles.any((t) => t.mediaId == message.mediaId)) {
+          !_previewMediaFiles.any((t) => t.mediaId == message.mediaId)) {
         final mediaFile =
             await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
         if (mediaFile != null) {
-          previewMediaFiles.add(mediaFile);
+          _previewMediaFiles.add(mediaFile);
         }
       }
     }
 
-    lastMessage = newLastMessage;
-    messagesNotOpened = newMessagesNotOpened;
+    _lastMessage = newLastMessage;
+    _messagesNotOpened = newMessagesNotOpened;
     if (mounted) setState(() {});
   }
 
   Future<void> onTap() async {
-    if (currentMessage == null) {
+    if (_currentMessage == null) {
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -171,9 +169,9 @@ class _UserListItem extends State<GroupListItem> {
       return;
     }
 
-    if (hasNonOpenedMediaFile) {
+    if (_hasNonOpenedMediaFile) {
       final msgs =
-          previewMessages.where((x) => x.type == MessageType.media).toList();
+          _previewMessages.where((x) => x.type == MessageType.media).toList();
       final mediaFile =
           await twonlyDB.mediaFilesDao.getMediaFileById(msgs.first.mediaId!);
       if (mediaFile?.downloadState == null) return;
@@ -207,70 +205,56 @@ class _UserListItem extends State<GroupListItem> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          top: 0,
-          bottom: 0,
-          left: 50,
-          child: SizedBox(
-            key: widget.firstUserListItemKey,
-            height: 20,
-            width: 20,
-          ),
+    return GroupContextMenu(
+      group: widget.group,
+      child: ListTile(
+        title: Text(
+          widget.group.groupName,
         ),
-        GroupContextMenu(
-          group: widget.group,
-          child: ListTile(
-            title: Text(
-              widget.group.groupName,
-            ),
-            subtitle: (currentMessage == null)
-                ? Text(context.lang.chatsTapToSend)
-                : Row(
-                    children: [
-                      MessageSendStateIcon(
-                        previewMessages,
-                        previewMediaFiles,
-                        lastReaction: lastReaction,
-                      ),
-                      const Text('•'),
-                      const SizedBox(width: 5),
-                      if (currentMessage != null)
-                        LastMessageTime(message: currentMessage!),
-                      FlameCounterWidget(
-                        groupId: widget.group.groupId,
-                        prefix: true,
-                      ),
-                    ],
+        subtitle: (_currentMessage == null)
+            ? Text(context.lang.chatsTapToSend)
+            : Row(
+                children: [
+                  MessageSendStateIcon(
+                    _previewMessages,
+                    _previewMediaFiles,
+                    lastReaction: _lastReaction,
                   ),
-            leading: AvatarIcon(group: widget.group),
-            trailing: IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      if (hasNonOpenedMediaFile) {
-                        return ChatMessagesView(widget.group);
-                      } else {
-                        return CameraSendToView(widget.group);
-                      }
-                    },
+                  const Text('•'),
+                  const SizedBox(width: 5),
+                  if (_currentMessage != null)
+                    LastMessageTime(message: _currentMessage!),
+                  FlameCounterWidget(
+                    groupId: widget.group.groupId,
+                    prefix: true,
                   ),
-                );
-              },
-              icon: FaIcon(
-                hasNonOpenedMediaFile
-                    ? FontAwesomeIcons.solidComments
-                    : FontAwesomeIcons.camera,
-                color: context.color.outline.withAlpha(150),
+                ],
               ),
-            ),
-            onTap: onTap,
+        leading: AvatarIcon(group: widget.group),
+        trailing: IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  if (_hasNonOpenedMediaFile) {
+                    return ChatMessagesView(widget.group);
+                  } else {
+                    return CameraSendToView(widget.group);
+                  }
+                },
+              ),
+            );
+          },
+          icon: FaIcon(
+            _hasNonOpenedMediaFile
+                ? FontAwesomeIcons.solidComments
+                : FontAwesomeIcons.camera,
+            color: context.color.outline.withAlpha(150),
           ),
         ),
-      ],
+        onTap: onTap,
+      ),
     );
   }
 }

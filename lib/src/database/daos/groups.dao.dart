@@ -113,7 +113,6 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
   Stream<List<Group>> watchGroupsForChatList() {
     return (select(groups)
-          ..where((t) => t.archived.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
         .watch();
   }

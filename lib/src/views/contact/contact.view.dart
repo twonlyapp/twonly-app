@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
@@ -29,8 +28,14 @@ class _ContactViewState extends State<ContactView> {
       context.lang.contactRemoveBody,
     );
     if (remove) {
-      // trigger deletion for the other user...
-      await rejectAndHideContact(contact.userId);
+      await twonlyDB.contactsDao.updateContact(
+        contact.userId,
+        const ContactsCompanion(
+          accepted: Value(false),
+          requested: Value(false),
+          deletedByUser: Value(true),
+        ),
+      );
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
@@ -192,13 +197,13 @@ class _ContactViewState extends State<ContactView> {
                 text: context.lang.contactBlock,
                 onTap: () => handleUserBlockRequest(contact),
               ),
-              BetterListTile(
-                icon: FontAwesomeIcons.userMinus,
-                iconSize: 16,
-                color: Colors.red,
-                text: context.lang.contactRemove,
-                onTap: () => handleUserRemoveRequest(contact),
-              ),
+              // BetterListTile(
+              //   icon: FontAwesomeIcons.userMinus,
+              //   iconSize: 16,
+              //   color: Colors.red,
+              //   text: context.lang.contactRemove,
+              //   onTap: () => handleUserRemoveRequest(contact),
+              // ),
             ],
           );
         },

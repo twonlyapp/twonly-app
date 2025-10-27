@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -74,34 +73,31 @@ class _StartNewChatView extends State<StartNewChatView> {
         title: Text(context.lang.startNewChatTitle),
       ),
       body: SafeArea(
-        child: PieCanvas(
-          theme: getPieCanvasTheme(context),
-          child: Padding(
-            padding:
-                const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: TextField(
-                    onChanged: (_) async {
-                      await filterUsers();
-                    },
-                    controller: searchUserName,
-                    decoration: getInputDecoration(
-                      context,
-                      context.lang.shareImageSearchAllContacts,
-                    ),
+        child: Padding(
+          padding:
+              const EdgeInsets.only(bottom: 40, left: 10, top: 20, right: 10),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: TextField(
+                  onChanged: (_) async {
+                    await filterUsers();
+                  },
+                  controller: searchUserName,
+                  decoration: getInputDecoration(
+                    context,
+                    context.lang.shareImageSearchAllContacts,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: UserList(
-                    contacts,
-                  ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: UserList(
+                  contacts,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

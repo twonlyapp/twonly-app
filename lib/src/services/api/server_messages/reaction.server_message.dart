@@ -22,6 +22,7 @@ Future<void> handleReaction(
       groupId,
       reaction.emoji,
     );
-    return;
+    await twonlyDB.groupsDao
+        .increaseLastMessageExchange(groupId, DateTime.now());
   }
 }

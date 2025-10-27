@@ -162,7 +162,10 @@ class _ChatListEntryState extends State<ChatListEntry> {
         message: widget.message,
         group: widget.group,
         onResponseTriggered: widget.onResponseTriggered!,
-        child: child,
+        galleryItems: widget.galleryItems,
+        child: Container(
+          child: child,
+        ),
       );
     }
 

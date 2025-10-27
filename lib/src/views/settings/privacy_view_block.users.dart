@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -32,53 +31,50 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
       appBar: AppBar(
         title: Text(context.lang.settingsPrivacyBlockUsers),
       ),
-      body: PieCanvas(
-        theme: getPieCanvasTheme(context),
-        child: Padding(
-          padding:
-              const EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                  onChanged: (value) => setState(() {
-                    filter = value;
-                  }),
-                  decoration: getInputDecoration(
-                    context,
-                    context.lang.searchUsernameInput,
-                  ),
+      body: Padding(
+        padding:
+            const EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: TextField(
+                onChanged: (value) => setState(() {
+                  filter = value;
+                }),
+                decoration: getInputDecoration(
+                  context,
+                  context.lang.searchUsernameInput,
                 ),
               ),
-              const SizedBox(height: 20),
-              Text(
-                context.lang.settingsPrivacyBlockUsersDesc,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 30),
-              Expanded(
-                child: StreamBuilder(
-                  stream: allUsers,
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return Container();
-                    }
+            ),
+            const SizedBox(height: 20),
+            Text(
+              context.lang.settingsPrivacyBlockUsersDesc,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 30),
+            Expanded(
+              child: StreamBuilder(
+                stream: allUsers,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container();
+                  }
 
-                    final filteredContacts = snapshot.data!.where((contact) {
-                      return getContactDisplayName(contact)
-                          .toLowerCase()
-                          .contains(filter.toLowerCase());
-                    }).toList();
+                  final filteredContacts = snapshot.data!.where((contact) {
+                    return getContactDisplayName(contact)
+                        .toLowerCase()
+                        .contains(filter.toLowerCase());
+                  }).toList();
 
-                    return UserList(
-                      List.from(filteredContacts),
-                    );
-                  },
-                ),
+                  return UserList(
+                    List.from(filteredContacts),
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

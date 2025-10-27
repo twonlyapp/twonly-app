@@ -56,25 +56,6 @@ ClientToServer createClientToServerFromApplicationData(
   return ClientToServer()..v0 = v0;
 }
 
-Future<void> rejectAndHideContact(int contactId) async {
-  await sendCipherText(
-    contactId,
-    EncryptedContent(
-      contactRequest: EncryptedContent_ContactRequest(
-        type: EncryptedContent_ContactRequest_Type.REJECT,
-      ),
-    ),
-  );
-  await twonlyDB.contactsDao.updateContact(
-    contactId,
-    const ContactsCompanion(
-      accepted: Value(false),
-      requested: Value(false),
-      deletedByUser: Value(true),
-    ),
-  );
-}
-
 Future<void> handleMediaError(MediaFile media) async {
   await twonlyDB.mediaFilesDao.updateMedia(
     media.mediaId,
