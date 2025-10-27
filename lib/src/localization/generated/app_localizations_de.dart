@@ -1119,4 +1119,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get quotedMessageWasDeleted =>
       'Die zitierte Nachricht wurde gelöscht.';
+
+  @override
+  String get messageWasDeleted => 'Nachricht wurde gelöscht.';
 }

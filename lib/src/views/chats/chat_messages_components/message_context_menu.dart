@@ -183,7 +183,6 @@ Future<void> editTextMessage(BuildContext context, Message message) async {
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                       ),
-                      textCapitalization: TextCapitalization.characters,
                     ),
                   ),
                 ],

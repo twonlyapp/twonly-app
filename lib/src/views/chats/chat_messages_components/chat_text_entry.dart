@@ -27,7 +27,7 @@ class ChatTextEntry extends StatelessWidget {
     var text = message.content ?? '';
 
     if (message.isDeletedFromSender) {
-      text = 'Nachricht wurde gelöscht.';
+      text = context.lang.messageWasDeleted;
     }
 
     if (EmojiAnimation.supported(text)) {

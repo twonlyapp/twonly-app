@@ -2107,6 +2107,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The quoted message has been deleted.'**
   String get quotedMessageWasDeleted;
+
+  /// No description provided for @messageWasDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message has been deleted.'**
+  String get messageWasDeleted;
 }
 
 class _AppLocalizationsDelegate

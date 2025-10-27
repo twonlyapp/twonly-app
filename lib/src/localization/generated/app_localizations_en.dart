@@ -1112,4 +1112,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quotedMessageWasDeleted => 'The quoted message has been deleted.';
+
+  @override
+  String get messageWasDeleted => 'Message has been deleted.';
 }
