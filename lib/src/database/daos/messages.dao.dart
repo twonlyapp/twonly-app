@@ -191,13 +191,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   }
 
   Future<void> handleTextEdit(
-    int contactId,
+    int? contactId,
     String messageId,
     String text,
     DateTime timestamp,
   ) async {
     final msg = await getMessageById(messageId).getSingleOrNull();
-    if (msg == null || msg.content == null || msg.senderId == contactId) {
+    if (msg == null || msg.content == null || msg.senderId != contactId) {
       return;
     }
     await into(messageHistories).insert(
@@ -209,11 +209,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     );
     await (update(messages)
           ..where(
-            (t) => t.messageId.equals(messageId) & t.senderId.equals(contactId),
+            (t) => t.messageId.equals(messageId),
           ))
         .write(
       MessagesCompanion(
         content: Value(text),
+        modifiedAt: Value(timestamp),
       ),
     );
   }

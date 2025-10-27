@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -89,12 +90,28 @@ class ChatTextEntry extends StatelessWidget {
               alignment: AlignmentGeometry.centerRight,
               child: Padding(
                 padding: const EdgeInsets.only(left: 6),
-                child: Text(
-                  friendlyTime(context, message.createdAt),
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.white.withAlpha(150),
-                  ),
+                child: Row(
+                  children: [
+                    if (message.modifiedAt != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: SizedBox(
+                          height: 10,
+                          child: FaIcon(
+                            FontAwesomeIcons.pencil,
+                            color: Colors.white.withAlpha(150),
+                            size: 10,
+                          ),
+                        ),
+                      ),
+                    Text(
+                      friendlyTime(context, message.createdAt),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white.withAlpha(150),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

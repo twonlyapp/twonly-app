@@ -23,6 +23,7 @@ class ChatListEntry extends StatefulWidget {
     required this.nextMessage,
     required this.onResponseTriggered,
     required this.scrollToMessage,
+    this.disableContextMenu = false,
     super.key,
   });
   final Message? prevMessage;
@@ -32,6 +33,7 @@ class ChatListEntry extends StatefulWidget {
   final List<MemoryItem> galleryItems;
   final void Function(String) scrollToMessage;
   final void Function() onResponseTriggered;
+  final bool disableContextMenu;
 
   @override
   State<ChatListEntry> createState() => _ChatListEntryState();
@@ -96,81 +98,84 @@ class _ChatListEntryState extends State<ChatListEntry> {
         reactions.where((t) => seen.add(t.emoji)).toList().length;
     if (reactionsForWidth > 4) reactionsForWidth = 4;
 
-    return Align(
-      alignment: right ? Alignment.centerRight : Alignment.centerLeft,
-      child: Padding(
-        padding: padding,
-        child: MessageContextMenu(
+    Widget child = Column(
+      mainAxisAlignment:
+          right ? MainAxisAlignment.end : MainAxisAlignment.start,
+      crossAxisAlignment:
+          right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        MessageActions(
           message: widget.message,
           onResponseTriggered: widget.onResponseTriggered,
-          child: Column(
-            mainAxisAlignment:
-                right ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment:
-                right ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          child: Stack(
+            // overflow: Overflow.visible,
+            // clipBehavior: Clip.none,
+            alignment: right ? Alignment.centerRight : Alignment.centerLeft,
             children: [
-              MessageActions(
-                message: widget.message,
-                onResponseTriggered: widget.onResponseTriggered,
-                child: Stack(
-                  // overflow: Overflow.visible,
-                  // clipBehavior: Clip.none,
-                  alignment:
-                      right ? Alignment.centerRight : Alignment.centerLeft,
+              if (widget.message.isDeletedFromSender)
+                ChatTextEntry(
+                  message: widget.message,
+                  nextMessage: widget.nextMessage,
+                  borderRadius: borderRadius,
+                  minWidth: reactionsForWidth * 43,
+                )
+              else
+                Column(
                   children: [
-                    if (widget.message.isDeletedFromSender)
-                      ChatTextEntry(
-                        message: widget.message,
-                        nextMessage: widget.nextMessage,
-                        borderRadius: borderRadius,
-                        minWidth: reactionsForWidth * 43,
-                      )
-                    else
-                      Column(
-                        children: [
-                          ResponseContainer(
-                            msg: widget.message,
-                            group: widget.group,
-                            mediaService: mediaService,
-                            borderRadius: borderRadius,
-                            scrollToMessage: widget.scrollToMessage,
-                            child: (widget.message.type == MessageType.text)
-                                ? ChatTextEntry(
-                                    message: widget.message,
-                                    nextMessage: widget.nextMessage,
-                                    borderRadius: borderRadius,
-                                    minWidth: reactionsForWidth * 43,
-                                  )
-                                : (mediaService == null)
-                                    ? null
-                                    : ChatMediaEntry(
-                                        message: widget.message,
-                                        group: widget.group,
-                                        mediaService: mediaService!,
-                                        galleryItems: widget.galleryItems,
-                                      ),
-                          ),
-                          if (reactionsForWidth > 0)
-                            const SizedBox(height: 20, width: 10),
-                        ],
-                      ),
-                    if (!widget.message.isDeletedFromSender)
-                      Positioned(
-                        bottom: -20,
-                        left: 5,
-                        right: 5,
-                        child: ReactionRow(
-                          message: widget.message,
-                          reactions: reactions,
-                        ),
-                      ),
+                    ResponseContainer(
+                      msg: widget.message,
+                      group: widget.group,
+                      mediaService: mediaService,
+                      borderRadius: borderRadius,
+                      scrollToMessage: widget.scrollToMessage,
+                      child: (widget.message.type == MessageType.text)
+                          ? ChatTextEntry(
+                              message: widget.message,
+                              nextMessage: widget.nextMessage,
+                              borderRadius: borderRadius,
+                              minWidth: reactionsForWidth * 43,
+                            )
+                          : (mediaService == null)
+                              ? null
+                              : ChatMediaEntry(
+                                  message: widget.message,
+                                  group: widget.group,
+                                  mediaService: mediaService!,
+                                  galleryItems: widget.galleryItems,
+                                ),
+                    ),
+                    if (reactionsForWidth > 0)
+                      const SizedBox(height: 20, width: 10),
                   ],
                 ),
-              ),
+              if (!widget.message.isDeletedFromSender)
+                Positioned(
+                  bottom: -20,
+                  left: 5,
+                  right: 5,
+                  child: ReactionRow(
+                    message: widget.message,
+                    reactions: reactions,
+                  ),
+                ),
             ],
           ),
         ),
-      ),
+      ],
+    );
+
+    if (!widget.disableContextMenu) {
+      child = MessageContextMenu(
+        message: widget.message,
+        group: widget.group,
+        onResponseTriggered: widget.onResponseTriggered,
+        child: child,
+      );
+    }
+
+    return Align(
+      alignment: right ? Alignment.centerRight : Alignment.centerLeft,
+      child: Padding(padding: padding, child: child),
     );
   }
 }

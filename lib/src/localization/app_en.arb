@@ -307,6 +307,7 @@
   "react": "React",
   "reply": "Reply",
   "copy": "Copy",
+  "edit": "Edit",
   "delete": "Delete",
   "info": "Info",
   "ok": "Ok",

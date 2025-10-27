@@ -556,6 +556,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copy => 'Copy';
 
   @override
+  String get edit => 'Edit';
+
+  @override
   String get delete => 'Delete';
 
   @override
