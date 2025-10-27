@@ -32,10 +32,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
   Stream<List<Message>> watchMessageNotOpened(String groupId) {
     return (select(messages)
-          ..where((t) =>
-              t.openedAt.isNull() &
-              t.groupId.equals(groupId) &
-              t.isDeletedFromSender.equals(false))
+          ..where(
+            (t) =>
+                t.openedAt.isNull() &
+                t.groupId.equals(groupId) &
+                t.isDeletedFromSender.equals(false),
+          )
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch();
   }

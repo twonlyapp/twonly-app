@@ -116,7 +116,7 @@ class _ContactViewState extends State<ContactView> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(right: 10),
-                    child: VerifiedShield(contact),
+                    child: VerifiedShield(key: GlobalKey(), contact: contact),
                   ),
                   Text(
                     getContactDisplayName(contact),

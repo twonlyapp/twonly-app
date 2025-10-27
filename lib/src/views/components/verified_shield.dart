@@ -1,38 +1,82 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
 
-class VerifiedShield extends StatelessWidget {
-  const VerifiedShield(this.contact, {super.key, this.size = 18});
-  final Contact contact;
+class VerifiedShield extends StatefulWidget {
+  const VerifiedShield({
+    this.contact,
+    this.group,
+    super.key,
+    this.size = 18,
+  });
+  final Group? group;
+  final Contact? contact;
   final double size;
+
+  @override
+  State<VerifiedShield> createState() => _VerifiedShieldState();
+}
+
+class _VerifiedShieldState extends State<VerifiedShield> {
+  bool isVerified = false;
+  Contact? contact;
+
+  StreamSubscription<List<Contact>>? stream;
+
+  @override
+  void initState() {
+    if (widget.group != null) {
+      stream = twonlyDB.groupsDao
+          .watchGroupContact(widget.group!.groupId)
+          .listen((contacts) {
+        if (contacts.length == 1) {
+          contact = contacts.first;
+        }
+        setState(() {
+          isVerified = contacts.any((t) => t.verified);
+        });
+      });
+    } else if (widget.contact != null) {
+      isVerified = widget.contact!.verified;
+      contact = widget.contact;
+    }
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    stream?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return ContactVerifyView(contact);
+      onTap: (contact == null)
+          ? null
+          : () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ContactVerifyView(contact!);
+                  },
+                ),
+              );
             },
-          ),
-        );
-      },
       child: Tooltip(
-        message: contact.verified
+        message: isVerified
             ? 'You verified this contact'
             : 'You have not verifies this contact.',
         child: FaIcon(
-          contact.verified
-              ? FontAwesomeIcons.shieldHeart
-              : Icons.gpp_maybe_rounded,
-          color: contact.verified
-              ? Theme.of(context).colorScheme.primary
-              : Colors.red,
-          size: size,
+          isVerified ? FontAwesomeIcons.shieldHeart : Icons.gpp_maybe_rounded,
+          color:
+              isVerified ? Theme.of(context).colorScheme.primary : Colors.red,
+          size: widget.size,
         ),
       ),
     );

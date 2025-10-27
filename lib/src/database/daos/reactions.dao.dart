@@ -61,7 +61,7 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
           messages,
           messages.messageId.equalsExp(reactions.messageId),
           useColumns: false,
-        )
+        ),
       ],
     )
       ..where(messages.groupId.equals(groupId))

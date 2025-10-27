@@ -16,7 +16,6 @@ import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 final lockRetransmission = Mutex();
 
@@ -277,15 +276,13 @@ Future<void> notifyContactAboutOpeningMessage(
 }
 
 Future<void> notifyContactsAboutProfileChange({int? onlyToContact}) async {
-  final user = await getUser();
-  if (user == null) return;
-  if (user.avatarSvg == null) return;
+  if (gUser.avatarSvg == null) return;
 
   final encryptedContent = pb.EncryptedContent(
     contactUpdate: pb.EncryptedContent_ContactUpdate(
       type: pb.EncryptedContent_ContactUpdate_Type.UPDATE,
-      avatarSvgCompressed: gzip.encode(utf8.encode(user.avatarSvg!)),
-      displayName: user.displayName,
+      avatarSvgCompressed: gzip.encode(utf8.encode(gUser.avatarSvg!)),
+      displayName: gUser.displayName,
     ),
   );
 

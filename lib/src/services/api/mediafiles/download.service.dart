@@ -16,7 +16,6 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<void> tryDownloadAllMediaFiles({bool force = false}) async {
   // This is called when WebSocket is newly connected, so allow all downloads to be restarted.
@@ -44,8 +43,7 @@ Map<String, List<String>> defaultAutoDownloadOptions = {
 Future<bool> isAllowedToDownload({required bool isVideo}) async {
   final connectivityResult = await Connectivity().checkConnectivity();
 
-  final user = await getUser();
-  final options = user!.autoDownloadOptions ?? defaultAutoDownloadOptions;
+  final options = gUser.autoDownloadOptions ?? defaultAutoDownloadOptions;
 
   if (connectivityResult.contains(ConnectivityResult.mobile)) {
     if (isVideo) {

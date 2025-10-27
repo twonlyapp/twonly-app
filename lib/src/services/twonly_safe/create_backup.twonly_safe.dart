@@ -10,6 +10,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
@@ -21,19 +22,17 @@ import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
 
 Future<void> performTwonlySafeBackup({bool force = false}) async {
-  final user = await getUser();
-
-  if (user == null || user.twonlySafeBackup == null) {
+  if (gUser.twonlySafeBackup == null) {
     return;
   }
 
-  if (user.twonlySafeBackup!.backupUploadState ==
+  if (gUser.twonlySafeBackup!.backupUploadState ==
       LastBackupUploadState.pending) {
     Log.warn('Backup upload is already pending.');
     return;
   }
 
-  final lastUpdateTime = user.twonlySafeBackup!.lastBackupDone;
+  final lastUpdateTime = gUser.twonlySafeBackup!.lastBackupDone;
   if (!force && lastUpdateTime != null) {
     if (lastUpdateTime
         .isAfter(DateTime.now().subtract(const Duration(days: 1)))) {
@@ -117,8 +116,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final backupHash = uint8ListToHex((await Sha256().hash(backupBytes)).bytes);
 
-  if (user.twonlySafeBackup!.lastBackupDone == null ||
-      user.twonlySafeBackup!.lastBackupDone!
+  if (gUser.twonlySafeBackup!.lastBackupDone == null ||
+      gUser.twonlySafeBackup!.lastBackupDone!
           .isAfter(DateTime.now().subtract(const Duration(days: 90)))) {
     force = true;
   }
@@ -144,7 +143,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final secretBox = await chacha20.encrypt(
     backupBytes,
-    secretKey: SecretKey(user.twonlySafeBackup!.encryptionKey),
+    secretKey: SecretKey(gUser.twonlySafeBackup!.encryptionKey),
     nonce: nonce,
   );
 
@@ -165,8 +164,8 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     'Create twonly Safe backup with a size of ${encryptedBackupBytes.length} bytes.',
   );
 
-  if (user.backupServer != null) {
-    if (encryptedBackupBytes.length > user.backupServer!.maxBackupBytes) {
+  if (gUser.backupServer != null) {
+    if (encryptedBackupBytes.length > gUser.backupServer!.maxBackupBytes) {
       Log.error('Backup is to big for the alternative backup server.');
       await updateUserdata((user) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;

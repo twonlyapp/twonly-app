@@ -17,6 +17,8 @@ import 'package:twonly/src/views/chats/chat_messages_components/chat_date_chip.d
 import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
+import 'package:twonly/src/views/components/flame.dart';
+import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
 import 'package:twonly/src/views/tutorial/tutorials.dart';
@@ -242,8 +244,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                       children: [
                         Text(group.groupName),
                         const SizedBox(width: 10),
-                        // if (group.verified)
-                        //   VerifiedShield(key: verifyShieldKey, group),
+                        VerifiedShield(key: verifyShieldKey, group: group),
+                        const SizedBox(width: 10),
+                        FlameCounterWidget(groupId: group.groupId),
                       ],
                     ),
                   ),

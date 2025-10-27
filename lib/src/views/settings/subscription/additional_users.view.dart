@@ -23,10 +23,9 @@ Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
     });
     return ballance;
   }
-  final user = await getUser();
-  if (user != null && user.lastPlanBallance != null) {
+  if (gUser.lastPlanBallance != null) {
     try {
-      final decoded = jsonDecode(user.additionalUserInvites!) as List<String>;
+      final decoded = jsonDecode(gUser.additionalUserInvites!) as List<String>;
       return decoded.map(Response_AddAccountsInvite.fromJson).toList();
     } catch (e) {
       Log.error('could not parse additional user json: $e');

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -30,9 +31,8 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
   }
 
   Future<void> initAsync() async {
-    final user = await getUser();
-    if (user?.backupServer != null) {
-      final uri = Uri.parse(user!.backupServer!.serverUrl);
+    if (gUser.backupServer != null) {
+      final uri = Uri.parse(gUser.backupServer!.serverUrl);
       // remove user auth data
       final serverUrl = Uri(
         scheme: uri.scheme,

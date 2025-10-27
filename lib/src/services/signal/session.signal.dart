@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 Future<bool> createNewSignalSession(Response_UserData userData) async {
   final SignalProtocolStore? signalStore = await getSignalStore();
@@ -84,8 +84,7 @@ Future<void> deleteSessionWithTarget(int target) async {
 
 Future<Fingerprint?> generateSessionFingerPrint(int target) async {
   final signalStore = await getSignalStore();
-  final user = await getUser();
-  if (signalStore == null || user == null) return null;
+  if (signalStore == null) return null;
   try {
     final targetIdentity = await signalStore
         .getIdentity(SignalProtocolAddress(target.toString(), defaultDeviceId));
@@ -93,7 +92,7 @@ Future<Fingerprint?> generateSessionFingerPrint(int target) async {
       final generator = NumericFingerprintGenerator(5200);
       final localFingerprint = generator.createFor(
         1,
-        Uint8List.fromList([user.userId]),
+        Uint8List.fromList([gUser.userId]),
         (await signalStore.getIdentityKeyPair()).getPublicKey(),
         Uint8List.fromList([target]),
         targetIdentity,

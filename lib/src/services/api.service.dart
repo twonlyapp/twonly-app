@@ -94,7 +94,6 @@ class ApiService {
       unawaited(retransmitRawBytes());
       unawaited(tryTransmitMessages());
       unawaited(tryDownloadAllMediaFiles());
-      unawaited(notifyContactsAboutProfileChange());
       twonlyDB.markUpdated();
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());

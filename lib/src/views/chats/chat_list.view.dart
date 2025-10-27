@@ -11,7 +11,6 @@ import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
-import 'package:twonly/src/views/chats/chat_list_components/backup_notice.card.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/chats/chat_list_components/feedback_btn.dart';
 import 'package:twonly/src/views/chats/chat_list_components/group_list_item.dart';
@@ -237,13 +236,8 @@ class _ChatListViewState extends State<ChatListView> {
                   : ListView.builder(
                       itemCount: _groupsPinned.length +
                           (_groupsPinned.isNotEmpty ? 1 : 0) +
-                          _groupsNotPinned.length +
-                          1,
+                          _groupsNotPinned.length,
                       itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return const BackupNoticeCard();
-                        }
-                        index -= 1;
                         // Check if the index is for the pinned users
                         if (index < _groupsPinned.length) {
                           final group = _groupsPinned[index];

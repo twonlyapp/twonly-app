@@ -1,12 +1,11 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
 
@@ -48,11 +47,10 @@ class _BackupViewState extends State<BackupView> {
   }
 
   Future<void> initAsync() async {
-    final user = await getUser();
-    twonlySafeBackup = user?.twonlySafeBackup;
+    twonlySafeBackup = gUser.twonlySafeBackup;
     backupServer = defaultBackupServer;
-    if (user?.backupServer != null) {
-      backupServer = user!.backupServer!;
+    if (gUser.backupServer != null) {
+      backupServer = gUser.backupServer!;
     }
     setState(() {});
   }

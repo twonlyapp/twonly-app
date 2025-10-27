@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/image_editor/data/data.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
@@ -22,10 +23,8 @@ class _EmojisState extends State<Emojis> {
   }
 
   Future<void> initAsync() async {
-    final user = await getUser();
-    if (user == null) return;
     setState(() {
-      lastUsed = user.lastUsedEditorEmojis ?? [];
+      lastUsed = gUser.lastUsedEditorEmojis ?? [];
       lastUsed.addAll(emojis);
     });
   }

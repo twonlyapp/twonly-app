@@ -55,6 +55,7 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (flameCounter < 1) return Container();
     return Row(
       children: [
         if (widget.prefix) const SizedBox(width: 5),

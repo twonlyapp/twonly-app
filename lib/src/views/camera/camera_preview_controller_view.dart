@@ -181,17 +181,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Future<void> initAsync() async {
     hasAudioPermission = await Permission.microphone.isGranted;
 
-    if (!hasAudioPermission) {
-      final user = await getUser();
-      if (user != null) {
-        if (!user.requestedAudioPermission) {
-          await updateUserdata((u) {
-            u.requestedAudioPermission = true;
-            return u;
-          });
-          await requestMicrophonePermission();
-        }
-      }
+    if (!hasAudioPermission && !gUser.requestedAudioPermission) {
+      await updateUserdata((u) {
+        u.requestedAudioPermission = true;
+        return u;
+      });
+      await requestMicrophonePermission();
     }
     if (!mounted) return;
     setState(() {});

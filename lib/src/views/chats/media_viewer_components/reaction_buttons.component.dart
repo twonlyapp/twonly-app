@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/views/chats/media_viewer_components/emoji_reactions_row.component.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
@@ -39,9 +39,8 @@ class _ReactionButtonsState extends State<ReactionButtons> {
   }
 
   Future<void> initAsync() async {
-    final user = await getUser();
-    if (user != null && user.preSelectedEmojies != null) {
-      selectedEmojis = user.preSelectedEmojies!;
+    if (gUser.preSelectedEmojies != null) {
+      selectedEmojis = gUser.preSelectedEmojies!;
     }
     setState(() {});
   }

@@ -5,7 +5,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
@@ -202,7 +201,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
             SizedBox(
               height: 18,
               child: EmojiAnimation(emoji: widget.lastReaction!.emoji),
-            )
+            ),
           ];
         } else {
           icons = [
@@ -218,7 +217,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
                   ),
                 ),
               ),
-            )
+            ),
           ];
         }
         // Log.info("DISPLAY REACTION");
