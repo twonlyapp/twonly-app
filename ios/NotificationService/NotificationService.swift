@@ -35,6 +35,7 @@ class NotificationService: UNNotificationServiceExtension {
                 bestAttemptContent.body = data!.body
                 bestAttemptContent.threadIdentifier = String(format: "%d", data!.notificationId)
             } else {
+                NSLog("Could not decrypt message. Show default.")
                 bestAttemptContent.title = "\(bestAttemptContent.title)"
             }
 
@@ -81,7 +82,8 @@ func getPushNotificationData(pushData: String) -> (
                                 key: pushKey.key, pushData: pushData)
                             if pushNotification != nil {
                                 pushUser = tryPushUser
-                                if pushNotification!.messageID <= pushUser!.lastMessageID {
+                                if isUUIDNewer(pushUser!.lastMessageID, pushNotification!.messageID)
+                                {
                                     return ("blocked", "blocked", 0)
                                 }
                                 break
@@ -125,6 +127,16 @@ func getPushNotificationData(pushData: String) -> (
     }
 }
 
+func isUUIDNewer(_ uuid1: String, _ uuid2: String) -> Bool {
+    guard uuid1.count >= 8, uuid2.count >= 8 else { return true }
+    let hex1 = String(uuid1.prefix(8))
+    let hex2 = String(uuid2.prefix(8))
+    guard let timestamp1 = UInt32(hex1, radix: 16),
+        let timestamp2 = UInt32(hex2, radix: 16)
+    else { return true }
+    return timestamp1 > timestamp2
+}
+
 func tryDecryptMessage(key: Data, pushData: EncryptedPushNotification) -> PushNotification? {
 
     do {
@@ -152,8 +164,8 @@ func tryDecryptMessage(key: Data, pushData: EncryptedPushNotification) -> PushNo
 
 func getPushUsers() -> [PushUser]? {
     // Retrieve the data from secure storage (Keychain)
-    guard let pushUsersB64 = readFromKeychain(key: "receiving_push_keys") else {
-        NSLog("No data found for key: receiving_push_keys")
+    guard let pushUsersB64 = readFromKeychain(key: "push_keys_receiving") else {
+        NSLog("No data found for key: push_keys_receiving")
         return nil
     }
     guard let pushUsersBytes = Data(base64Encoded: pushUsersB64) else {
