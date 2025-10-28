@@ -57,13 +57,12 @@ void main() async {
   await initFileDownloader();
 
   unawaited(MediaFileService.purgeTempFolder());
+  await twonlyDB.messagesDao.purgeMessageTable();
 
   // await twonlyDB.messagesDao.resetPendingDownloadState();
   // await twonlyDB.messageRetransmissionDao.purgeOldRetransmissions();
   // await twonlyDB.signalDao.purgeOutDatedPreKeys();
 
-  // Purge media files in the background
-  // unawaited(purgeReceivedMediaFiles());
   // unawaited(purgeSendMediaFiles());
 
   // unawaited(performTwonlySafeBackup());

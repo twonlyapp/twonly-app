@@ -1136,4 +1136,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editHistory => 'Edit history';
+
+  @override
+  String get archivedChats => 'Archived chats';
+
+  @override
+  String get durationShortSecond => 'Sec.';
+
+  @override
+  String get durationShortMinute => 'Min.';
+
+  @override
+  String get durationShortHour => 'Hrs.';
+
+  @override
+  String get durationShortDays => 'Days';
 }

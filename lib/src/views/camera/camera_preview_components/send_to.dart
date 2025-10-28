@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class SendToWidget extends StatelessWidget {
@@ -40,17 +41,12 @@ class SendToWidget extends StatelessWidget {
             style: textStyle,
           ),
           Text(
-            sendTo,
+            substringBy(sendTo, 20),
             textAlign: TextAlign.center,
             style: boldTextStyle, // Use the bold text style here
           ),
         ],
       ),
     );
-  }
-
-  String getContactDisplayName(String contact) {
-    // Replace this with your actual logic to get the contact display name
-    return contact; // Placeholder implementation
   }
 }

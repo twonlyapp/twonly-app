@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -208,10 +209,12 @@ class _UserListItem extends State<GroupListItem> {
       group: widget.group,
       child: ListTile(
         title: Text(
-          widget.group.groupName,
+          substringBy(widget.group.groupName, 30),
         ),
         subtitle: (_currentMessage == null)
-            ? Text(context.lang.chatsTapToSend)
+            ? (widget.group.totalMediaCounter == 0)
+                ? Text(context.lang.chatsTapToSend)
+                : LastMessageTime(dateTime: widget.group.lastMessageExchange)
             : Row(
                 children: [
                   MessageSendStateIcon(
@@ -222,7 +225,7 @@ class _UserListItem extends State<GroupListItem> {
                   const Text('•'),
                   const SizedBox(width: 5),
                   if (_currentMessage != null)
-                    LastMessageTime(message: _currentMessage!),
+                    LastMessageTime(message: _currentMessage),
                   FlameCounterWidget(
                     groupId: widget.group.groupId,
                     prefix: true,

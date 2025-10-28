@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mutex/mutex.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
@@ -241,7 +242,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     color: Colors.transparent,
                     child: Row(
                       children: [
-                        Text(group.groupName),
+                        Text(
+                          substringBy(widget.group.groupName, 20),
+                        ),
                         const SizedBox(width: 10),
                         VerifiedShield(key: verifyShieldKey, group: group),
                         const SizedBox(width: 10),

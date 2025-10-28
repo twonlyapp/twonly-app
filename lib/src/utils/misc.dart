@@ -89,27 +89,26 @@ String errorCodeToText(BuildContext context, ErrorCode code) {
     case ErrorCode.PlanUpgradeNotYearly:
       return context.lang.errorPlanUpgradeNotYearly;
   }
-  return code.toString(); // Fallback for unrecognized keys
+  return code.toString();
 }
 
-String formatDuration(int seconds) {
+String formatDuration(BuildContext context, int seconds) {
   if (seconds < 60) {
-    return '$seconds Sec.';
+    return '$seconds ${context.lang.durationShortSecond}';
   } else if (seconds < 3600) {
     final minutes = seconds ~/ 60;
-    return '$minutes Min.';
+    return '$minutes ${context.lang.durationShortMinute}';
   } else if (seconds < 86400) {
     final hours = seconds ~/ 3600;
-    return '$hours Hrs.'; // Assuming "Stu." is for hours
+    return '$hours ${context.lang.durationShortHour}';
   } else {
     final days = seconds ~/ 86400;
-    return '$days Days';
+    return '$days ${context.lang.durationShortDays}';
   }
 }
 
 InputDecoration getInputDecoration(BuildContext context, String hintText) {
-  final primaryColor =
-      Theme.of(context).colorScheme.primary; // Get the primary color
+  final primaryColor = Theme.of(context).colorScheme.primary;
   return InputDecoration(
     hintText: hintText,
     focusedBorder: OutlineInputBorder(

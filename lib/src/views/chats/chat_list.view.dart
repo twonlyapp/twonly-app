@@ -252,7 +252,7 @@ class _ChatListViewState extends State<ChatListView> {
                           if (_groupsArchived.isEmpty) return Container();
                           return ListTile(
                             title: Text(
-                              'Archivierte Chats (${_groupsArchived.length})',
+                              '${context.lang.archivedChats} (${_groupsArchived.length})',
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontSize: 13),
                             ),

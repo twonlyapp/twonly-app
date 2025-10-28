@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
@@ -63,7 +64,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                gUser.displayName,
+                                substringBy(gUser.displayName, 27),
                                 style: const TextStyle(fontSize: 20),
                                 textAlign: TextAlign.left,
                               ),

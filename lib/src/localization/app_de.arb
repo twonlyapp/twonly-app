@@ -352,5 +352,10 @@
     "received": "Empfangen",
     "opened": "Geöffnet",
     "waitingForInternet": "Warten auf Internet",
-    "editHistory": "Bearbeitungshistorie"
+    "editHistory": "Bearbeitungshistorie",
+    "archivedChats": "Archivierte Chats",
+    "durationShortSecond": "Sek.",
+    "durationShortMinute": "Min.",
+    "durationShortHour": "Std",
+    "durationShortDays": "Tagen"
 }

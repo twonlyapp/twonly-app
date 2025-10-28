@@ -144,6 +144,16 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.sending:
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Sending;
+
+          if (mediaFile != null) {
+            if (mediaFile.uploadState == UploadState.uploadLimitReached) {
+              text = 'Upload Limit erreicht';
+            }
+            if (mediaFile.uploadState == UploadState.preprocessing) {
+              text = 'Wird verarbeitet';
+            }
+          }
+
           hasLoader = true;
         case MessageSendState.receiving:
           icon = getLoaderIcon(color);

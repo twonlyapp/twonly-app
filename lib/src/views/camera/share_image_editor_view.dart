@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hashlib/random.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
@@ -75,8 +76,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       if (widget.imageBytesFuture != null) {
         loadImage(widget.imageBytesFuture!);
       } else {
-        if (widget.mediaFileService.storedPath.existsSync()) {
-          loadImage(widget.mediaFileService.storedPath.readAsBytes());
+        if (widget.mediaFileService.tempPath.existsSync()) {
+          loadImage(widget.mediaFileService.tempPath.readAsBytes());
         }
       }
     }
@@ -482,7 +483,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                       label: Text(
                         (widget.sendToGroup == null)
                             ? context.lang.shareImagedEditorShareWith
-                            : widget.sendToGroup!.groupName,
+                            : substringBy(widget.sendToGroup!.groupName, 15),
                         style: const TextStyle(fontSize: 17),
                       ),
                     ),

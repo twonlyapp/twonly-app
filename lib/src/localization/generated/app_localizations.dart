@@ -2155,6 +2155,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit history'**
   String get editHistory;
+
+  /// No description provided for @archivedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived chats'**
+  String get archivedChats;
+
+  /// No description provided for @durationShortSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Sec.'**
+  String get durationShortSecond;
+
+  /// No description provided for @durationShortMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Min.'**
+  String get durationShortMinute;
+
+  /// No description provided for @durationShortHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Hrs.'**
+  String get durationShortHour;
+
+  /// No description provided for @durationShortDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get durationShortDays;
 }
 
 class _AppLocalizationsDelegate

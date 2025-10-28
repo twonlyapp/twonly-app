@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_list_components/group_list_item.dart';
 
 class ArchivedChatsView extends StatefulWidget {
@@ -40,7 +41,7 @@ class _ArchivedChatsViewState extends State<ArchivedChatsView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Archivierte Chats'),
+        title: Text(context.lang.archivedChats),
       ),
       body: ListView(
         children: _groupsArchived.map((group) {

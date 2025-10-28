@@ -508,5 +508,10 @@
   "received": "Received",
   "opened": "Opened",
   "waitingForInternet": "Waiting for internet",
-  "editHistory": "Edit history"
+  "editHistory": "Edit history",
+  "archivedChats": "Archived chats",
+  "durationShortSecond": "Sec.",
+  "durationShortMinute": "Min.",
+  "durationShortHour": "Hrs.",
+  "durationShortDays": "Days"
 }

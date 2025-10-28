@@ -68,15 +68,19 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   }
 
   Stream<List<Message>> watchByGroupId(String groupId) {
-    return ((select(messages)..where((t) => t.groupId.equals(groupId)))
+    return ((select(messages)
+          ..where(
+            (t) =>
+                t.groupId.equals(groupId) &
+                (t.isDeletedFromSender.equals(true) |
+                    ((t.type.equals(MessageType.text.name) &
+                            t.content.isNotNull()) |
+                        (t.type.equals(MessageType.media.name) &
+                            t.mediaId.isNotNull()))),
+          ))
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .watch();
   }
-
-  // Stream<List<GroupMember>> watchMembersByGroupId(String groupId) {
-  //   return (select(groupMembers)..where((t) => t.groupId.equals(groupId)))
-  //       .watch();
-  // }
 
   Stream<List<(GroupMember, Contact)>> watchMembersByGroupId(String groupId) {
     final query = (select(groupMembers).join([
@@ -101,21 +105,31 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .watchSingleOrNull();
   }
 
-  // Future<void> removeOldMessages() {
-  //   return (update(messages)
-  //         ..where(
-  //           (t) =>
-  //               (t.openedAt.isSmallerThanValue(
-  //                     DateTime.now().subtract(const Duration(days: 1)),
-  //                   ) |
-  //                   (t.sendAt.isSmallerThanValue(
-  //                         DateTime.now().subtract(const Duration(days: 3)),
-  //                       ) &
-  //                       t.errorWhileSending.equals(true))) &
-  //               t.kind.equals(MessageKind.textMessage.name),
-  //         ))
-  //       .write(const MessagesCompanion(contentJson: Value(null)));
-  // }
+  Future<void> purgeMessageTable() async {
+    final allGroups = await select(groups).get();
+
+    for (final group in allGroups) {
+      final deletionTime = DateTime.now().subtract(
+        Duration(
+          milliseconds: group.deleteMessagesAfterMilliseconds,
+        ),
+      );
+      final affected = await (delete(messages)
+            ..where(
+              (m) =>
+                  m.groupId.equals(group.groupId) &
+                  // m.messageId.equals(lastMessage.messageId).not() &
+                  (m.mediaStored.equals(true) &
+                          m.isDeletedFromSender.equals(true) |
+                      m.mediaStored.equals(false)) &
+                  (m.openedAt.isSmallerThanValue(deletionTime) |
+                      (m.isDeletedFromSender.equals(true) &
+                          m.createdAt.isSmallerThanValue(deletionTime))),
+            ))
+          .go();
+      Log.info('Deleted $affected messages.');
+    }
+  }
 
   // Future<List<Message>> getAllMessagesPendingDownloading() {
   //   return (select(messages)

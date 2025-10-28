@@ -24,7 +24,8 @@ class _ContactViewState extends State<ContactView> {
   Future<void> handleUserRemoveRequest(Contact contact) async {
     final remove = await showAlertDialog(
       context,
-      context.lang.contactRemoveTitle(getContactDisplayName(contact)),
+      context.lang
+          .contactRemoveTitle(getContactDisplayName(contact, maxLength: 20)),
       context.lang.contactRemoveBody,
     );
     if (remove) {
@@ -124,7 +125,7 @@ class _ContactViewState extends State<ContactView> {
                     child: VerifiedShield(key: GlobalKey(), contact: contact),
                   ),
                   Text(
-                    getContactDisplayName(contact),
+                    getContactDisplayName(contact, maxLength: 20),
                     style: const TextStyle(fontSize: 20),
                   ),
                   // if (flameCounter > 0)

@@ -114,6 +114,7 @@ Future<String?> showDisplayNameChangeDialog(
         content: TextField(
           controller: controller,
           autofocus: true,
+          maxLength: 30,
           decoration: InputDecoration(
             hintText: context.lang.settingsProfileEditDisplayNameNew,
           ),

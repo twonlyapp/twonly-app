@@ -71,7 +71,8 @@ Future<void> insertMediaFileInMessagesTable(
 }
 
 Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
-  if (mediaService.mediaFile.uploadState == UploadState.initialized) {
+  if (mediaService.mediaFile.uploadState == UploadState.initialized ||
+      mediaService.mediaFile.uploadState == UploadState.preprocessing) {
     await mediaService.setUploadState(UploadState.preprocessing);
     if (!mediaService.tempPath.existsSync()) {
       await mediaService.compressMedia();
@@ -84,7 +85,9 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
     if (!mediaService.uploadRequestPath.existsSync()) {
       await _createUploadRequest(mediaService);
     }
-    await mediaService.setUploadState(UploadState.uploading);
+    if (mediaService.uploadRequestPath.existsSync()) {
+      await mediaService.setUploadState(UploadState.uploading);
+    }
   }
 
   if (mediaService.mediaFile.uploadState == UploadState.uploading) {
@@ -109,8 +112,6 @@ Future<void> _encryptMediaFiles(MediaFileService mediaService) async {
 
   mediaService.encryptedPath
       .writeAsBytesSync(Uint8List.fromList(secretBox.cipherText));
-
-  await mediaService.setUploadState(UploadState.uploading);
 }
 
 Future<void> _createUploadRequest(MediaFileService media) async {
@@ -120,6 +121,11 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
   final messages =
       await twonlyDB.messagesDao.getMessagesByMediaId(media.mediaFile.mediaId);
+
+  if (messages.isEmpty) {
+    // There where no user selected who should receive the image, so waiting with this step...
+    return;
+  }
 
   for (final message in messages) {
     final groupMembers =

@@ -5,6 +5,8 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -117,12 +119,28 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                       FilledButton.icon(
                         icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
                         onPressed: () async {
+                          final orgMediaService =
+                              widget.galleryItems[currentIndex].mediaService;
+
+                          final newMediaService = await initializeMediaUpload(
+                            orgMediaService.mediaFile.type,
+                            gUser.defaultShowTime,
+                          );
+                          if (newMediaService == null) {
+                            Log.error('Could not create new mediaFIle');
+                            return;
+                          }
+
+                          orgMediaService.storedPath
+                              .copySync(newMediaService.tempPath.path);
+
+                          if (!context.mounted) return;
+
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ShareImageEditorView(
-                                mediaFileService: widget
-                                    .galleryItems[currentIndex].mediaService,
+                                mediaFileService: newMediaService,
                                 sharedFromGallery: true,
                               ),
                             ),

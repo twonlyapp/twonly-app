@@ -53,6 +53,8 @@ class MediaFileService {
         final messages =
             await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
 
+        // in case messages in empty the file will be deleted, as delete is true by default
+
         for (final message in messages) {
           if (message.senderId == null) {
             // Media was send by me

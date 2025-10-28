@@ -121,7 +121,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
   }
 }
 
-String getContactDisplayName(Contact user) {
+String getContactDisplayName(Contact user, {int? maxLength}) {
   var name = user.username;
   if (user.nickName != null && user.nickName != '') {
     name = user.nickName!;
@@ -131,10 +131,17 @@ String getContactDisplayName(Contact user) {
   if (user.accountDeleted) {
     name = applyStrikethrough(name);
   }
-  if (name.length > 27) {
-    return '${name.substring(0, 27 - 3)}...';
+  if (maxLength != null) {
+    name = substringBy(name, maxLength);
   }
   return name;
+}
+
+String substringBy(String string, int maxLength) {
+  if (string.length > maxLength) {
+    return '${string.substring(0, maxLength - 3)}...';
+  }
+  return string;
 }
 
 String getContactDisplayNameOld(old.Contact user) {

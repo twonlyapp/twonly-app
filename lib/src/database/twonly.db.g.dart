@@ -734,7 +734,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           'delete_messages_after_milliseconds', aliasedName, false,
           type: DriftSqlType.int,
           requiredDuringInsert: false,
-          defaultValue: const Constant(1000 * 60 * 24));
+          defaultValue: const Constant(1000 * 60 * 60 * 24));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
