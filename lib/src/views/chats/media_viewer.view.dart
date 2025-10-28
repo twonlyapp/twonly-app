@@ -189,6 +189,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   Future<void> handleNextDownloadedMedia(
     bool showTwonly,
   ) async {
+    if (allMediaFiles.isEmpty) return;
     currentMessage = allMediaFiles.removeAt(0);
     final currentMediaLocal =
         await MediaFileService.fromMediaId(currentMessage!.mediaId!);
@@ -224,7 +225,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         currentMediaLocal.mediaFile.displayLimitInMilliseconds == null,
       );
       await videoController?.initialize().then((_) {
-        videoController!.play();
+        if (videoController == null) return;
+        videoController?.play();
         videoController?.addListener(() {
           setState(() {
             progress = 1 -
@@ -259,20 +261,20 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   void startTimer() {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
-    nextMediaTimer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
-      if (context.mounted) {
-        nextMediaOrExit();
-      }
-    });
-    progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-      if (canBeSeenUntil != null) {
+    if (canBeSeenUntil != null) {
+      nextMediaTimer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
+        if (context.mounted) {
+          nextMediaOrExit();
+        }
+      });
+      progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
         final difference = canBeSeenUntil!.difference(DateTime.now());
         // Calculate the progress as a value between 0.0 and 1.0
         progress = difference.inMilliseconds /
             (currentMedia!.mediaFile.displayLimitInMilliseconds!);
         setState(() {});
-      }
-    });
+      });
+    }
   }
 
   Future<void> onPressedSaveToGallery() async {
@@ -464,7 +466,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         Positioned.fill(
                           child: VideoPlayer(videoController!),
                         ),
-                      if (currentMedia!.mediaFile.type == MediaType.image)
+                      if (currentMedia != null &&
+                          currentMedia!.mediaFile.type == MediaType.image)
                         Positioned.fill(
                           child: Image.file(
                             currentMedia!.tempPath,
