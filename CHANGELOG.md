@@ -5,9 +5,9 @@
 - Support for groups  
 - Edit & Delete messages
 - Switched to FFmpeg for improved video compression 
-    - Video max. length increased to 60 seconds 
-    - Removing audio after recording is possible
-    - Edited image is now embedded into the video
+- Video max. length increased to 60 seconds 
+- Removing audio after recording is possible
+- Edited image is now embedded into the video
 - New context menu and other UI enhancements  
 - Client-to-client protocol migrated to Protocol Buffers (Protobuf)
 - Database identifiers converted to UUIDs  
