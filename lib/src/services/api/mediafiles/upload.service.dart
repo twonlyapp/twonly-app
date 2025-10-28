@@ -74,6 +74,7 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
   if (mediaService.mediaFile.uploadState == UploadState.initialized ||
       mediaService.mediaFile.uploadState == UploadState.preprocessing) {
     await mediaService.setUploadState(UploadState.preprocessing);
+
     if (!mediaService.tempPath.existsSync()) {
       await mediaService.compressMedia();
     }
@@ -87,6 +88,8 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
     }
     if (mediaService.uploadRequestPath.existsSync()) {
       await mediaService.setUploadState(UploadState.uploading);
+      // at this point the original file is not used any more, so it can be deleted
+      mediaService.originalPath.deleteSync();
     }
   }
 

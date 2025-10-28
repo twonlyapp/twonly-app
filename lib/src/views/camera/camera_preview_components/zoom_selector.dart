@@ -23,8 +23,7 @@ class CameraZoomButtons extends StatefulWidget {
   final double scaleFactor;
   final Function updateScaleFactor;
   final SelectedCameraDetails selectedCameraDetails;
-  final Future<void> Function(int sCameraId, bool init, bool enableAudio)
-      selectCamera;
+  final Future<void> Function(int sCameraId, bool init) selectCamera;
 
   @override
   State<CameraZoomButtons> createState() => _CameraZoomButtonsState();
@@ -106,7 +105,7 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                   ),
                   onPressed: () async {
                     if (showWideAngleZoomIOS) {
-                      await widget.selectCamera(2, true, false);
+                      await widget.selectCamera(2, true);
                     } else {
                       final level = await widget.controller.getMinZoomLevel();
                       widget.updateScaleFactor(level);
@@ -130,7 +129,7 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                 onPressed: () async {
                   if (showWideAngleZoomIOS &&
                       widget.selectedCameraDetails.cameraId == 2) {
-                    await widget.selectCamera(0, true, false);
+                    await widget.selectCamera(0, true);
                   } else {
                     widget.updateScaleFactor(1.0);
                   }

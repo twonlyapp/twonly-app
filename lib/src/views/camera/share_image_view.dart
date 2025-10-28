@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
@@ -64,7 +65,7 @@ class _ShareImageView extends State<ShareImageView> {
       await widget.mediaStoreFuture;
     }
     mediaStoreFutureReady = true;
-    unawaited(startBackgroundMediaUpload(widget.mediaFileService));
+    // unawaited(startBackgroundMediaUpload(widget.mediaFileService));
     if (!mounted) return;
     setState(() {});
   }
@@ -323,7 +324,7 @@ class UserList extends StatelessWidget {
         return ListTile(
           title: Row(
             children: [
-              Text(group.groupName),
+              Text(substringBy(group.groupName, 12)),
               FlameCounterWidget(
                 groupId: group.groupId,
                 prefix: true,

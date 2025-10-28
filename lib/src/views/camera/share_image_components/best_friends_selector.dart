@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
@@ -148,9 +149,7 @@ class UserCheckbox extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        group.groupName.length > 12
-                            ? '${group.groupName.substring(0, 9)}...'
-                            : group.groupName,
+                        substringBy(group.groupName, 12),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],

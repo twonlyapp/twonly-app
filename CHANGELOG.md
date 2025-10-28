@@ -2,16 +2,18 @@
 
 ## 0.0.62
 
-- Support for Groups
-- Editing of text messages
-- Deletion of messages
-- Various UI improvements like a new context-menu
-- Client-to-client (C2C) protocol converted to ProtoBuf
-- Use of UUIDs in the database
-- Completely new database schema
-- Improved reliability of C2C messages
-- Improved video handling
-- Various bug fixes
+- Support for groups  
+- Edit & Delete messages
+- Switched to FFmpeg for improved video compression 
+    - Video max. length increased to 60 seconds 
+    - Removing audio after recording is possible
+    - Edited image is now embedded into the video
+- New context menu and other UI enhancements  
+- Client-to-client protocol migrated to Protocol Buffers (Protobuf)
+- Database identifiers converted to UUIDs  
+- Completely redesigned database schema
+- Improved reliability of client-to-client messaging
+- Multiple bug fixes
 
 ## 0.0.61
 

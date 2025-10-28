@@ -107,6 +107,22 @@ class MediaFileService {
     await updateFromDB();
   }
 
+  bool get removeAudio => mediaFile.removeAudio ?? false;
+
+  Future<void> toggleRemoveAudio() async {
+    // var removeAudio = false;
+    // if (mediaFile.removeAudio != null) {
+    //   removeAudio = !mediaFile.removeAudio!;
+    // }
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaFile.mediaId,
+      MediaFilesCompanion(
+        removeAudio: Value(!removeAudio),
+      ),
+    );
+    await updateFromDB();
+  }
+
   Future<void> setUploadState(UploadState uploadState) async {
     await twonlyDB.mediaFilesDao.updateMedia(
       mediaFile.mediaId,
@@ -160,11 +176,12 @@ class MediaFileService {
       Log.error('Could not compress as original media does not exists.');
       return;
     }
+
     switch (mediaFile.type) {
       case MediaType.image:
         await compressImage(originalPath, tempPath);
       case MediaType.video:
-        await compressVideo(originalPath, tempPath);
+        await compressAndOverlayVideo(this);
       case MediaType.gif:
         originalPath.renameSync(tempPath.path);
         Log.error('Compression for .gif is not implemented yet.');
@@ -266,7 +283,7 @@ class MediaFileService {
   File get thumbnailPath => _buildFilePath(
         'stored',
         namePrefix: '.thumbnail',
-        extensionParam: 'png',
+        extensionParam: 'webp',
       );
   File get encryptedPath => _buildFilePath(
         'tmp',
@@ -279,5 +296,10 @@ class MediaFileService {
   File get originalPath => _buildFilePath(
         'tmp',
         namePrefix: '.original',
+      );
+  File get overlayImagePath => _buildFilePath(
+        'tmp',
+        namePrefix: '.overlay',
+        extensionParam: 'png',
       );
 }

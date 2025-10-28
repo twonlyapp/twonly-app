@@ -23,13 +23,12 @@ import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/home.view.dart';
 
-int maxVideoRecordingTime = 15;
+int maxVideoRecordingTime = 60;
 
 Future<(SelectedCameraDetails, CameraController)?> initializeCameraController(
   SelectedCameraDetails details,
   int sCameraId,
   bool init,
-  bool enableAudio,
 ) async {
   var cameraId = sCameraId;
   if (cameraId >= gCameras.length) return null;
@@ -49,7 +48,7 @@ Future<(SelectedCameraDetails, CameraController)?> initializeCameraController(
   final cameraController = CameraController(
     gCameras[cameraId],
     ResolutionPreset.high,
-    enableAudio: enableAudio,
+    enableAudio: await Permission.microphone.isGranted,
   );
 
   await cameraController.initialize().then((_) async {
@@ -93,11 +92,8 @@ class CameraPreviewControllerView extends StatelessWidget {
     this.sendToGroup,
   });
   final Group? sendToGroup;
-  final Future<CameraController?> Function(
-    int sCameraId,
-    bool init,
-    bool enableAudio,
-  ) selectCamera;
+  final Future<CameraController?> Function(int sCameraId, bool init)
+      selectCamera;
   final CameraController? cameraController;
   final SelectedCameraDetails selectedCameraDetails;
   final ScreenshotController screenshotController;
@@ -119,8 +115,7 @@ class CameraPreviewControllerView extends StatelessWidget {
           } else {
             return PermissionHandlerView(
               onSuccess: () {
-                // setState(() {});
-                selectCamera(0, true, false);
+                selectCamera(0, true);
               },
             );
           }
@@ -145,7 +140,6 @@ class CameraPreviewView extends StatefulWidget {
   final Future<CameraController?> Function(
     int sCameraId,
     bool init,
-    bool enableAudio,
   ) selectCamera;
   final CameraController? cameraController;
   final SelectedCameraDetails selectedCameraDetails;
@@ -156,19 +150,17 @@ class CameraPreviewView extends StatefulWidget {
 }
 
 class _CameraPreviewViewState extends State<CameraPreviewView> {
-  bool sharePreviewIsShown = false;
-  bool galleryLoadedImageIsShown = false;
-  bool showSelfieFlash = false;
-  double basePanY = 0;
-  double baseScaleFactor = 0;
-  bool cameraLoaded = false;
-  bool isVideoRecording = false;
-  bool hasAudioPermission = true;
-  bool videoWithAudio = true;
-  DateTime? videoRecordingStarted;
-  Timer? videoRecordingTimer;
+  bool _sharePreviewIsShown = false;
+  bool _galleryLoadedImageIsShown = false;
+  bool _showSelfieFlash = false;
+  double _basePanY = 0;
+  double _baseScaleFactor = 0;
+  bool _isVideoRecording = false;
+  bool _hasAudioPermission = true;
+  DateTime? _videoRecordingStarted;
+  Timer? _videoRecordingTimer;
 
-  DateTime currentTime = DateTime.now();
+  DateTime _currentTime = DateTime.now();
   final GlobalKey keyTriggerButton = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -179,9 +171,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> initAsync() async {
-    hasAudioPermission = await Permission.microphone.isGranted;
+    _hasAudioPermission = await Permission.microphone.isGranted;
 
-    if (!hasAudioPermission && !gUser.requestedAudioPermission) {
+    if (!_hasAudioPermission && !gUser.requestedAudioPermission) {
       await updateUserdata((u) {
         u.requestedAudioPermission = true;
         return u;
@@ -194,7 +186,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   void dispose() {
-    videoRecordingTimer?.cancel();
+    _videoRecordingTimer?.cancel();
     super.dispose();
   }
 
@@ -205,7 +197,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     if (statuses[Permission.microphone]!.isPermanentlyDenied) {
       await openAppSettings();
     } else {
-      hasAudioPermission = await Permission.microphone.isGranted;
+      _hasAudioPermission = await Permission.microphone.isGranted;
       setState(() {});
     }
   }
@@ -248,16 +240,16 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> takePicture() async {
-    if (sharePreviewIsShown || isVideoRecording) return;
+    if (_sharePreviewIsShown || _isVideoRecording) return;
     late Future<Uint8List?> imageBytes;
 
     setState(() {
-      sharePreviewIsShown = true;
+      _sharePreviewIsShown = true;
     });
     if (widget.selectedCameraDetails.isFlashOn) {
       if (isFront) {
         setState(() {
-          showSelfieFlash = true;
+          _showSelfieFlash = true;
         });
       } else {
         await widget.cameraController?.setFlashMode(FlashMode.torch);
@@ -285,7 +277,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
     setState(() {
-      sharePreviewIsShown = false;
+      _sharePreviewIsShown = false;
     });
   }
 
@@ -311,7 +303,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         ..deleteSync();
 
       // Start with compressing the video, to speed up the process in case the video is not changed.
-      unawaited(mediaFileService.compressMedia());
+      // unawaited(mediaFileService.compressMedia());
     }
 
     final shouldReturn = await Navigator.push(
@@ -333,8 +325,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     ) as bool?;
     if (mounted) {
       setState(() {
-        sharePreviewIsShown = false;
-        showSelfieFlash = false;
+        _sharePreviewIsShown = false;
+        _showSelfieFlash = false;
       });
     }
     if (!mounted) return true;
@@ -349,7 +341,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
     await widget.selectCamera(
       widget.selectedCameraDetails.cameraId,
-      false,
       false,
     );
     return false;
@@ -368,9 +359,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
-    widget.selectedCameraDetails.scaleFactor = (baseScaleFactor +
+    widget.selectedCameraDetails.scaleFactor = (_baseScaleFactor +
             // ignore: avoid_dynamic_calls
-            (basePanY - (details.localPosition.dy as double)) / 30)
+            (_basePanY - (details.localPosition.dy as double)) / 30)
         .clamp(1, widget.selectedCameraDetails.maxAvailableZoom);
 
     await widget.cameraController!
@@ -382,8 +373,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   Future<void> pickImageFromGallery() async {
     setState(() {
-      galleryLoadedImageIsShown = true;
-      sharePreviewIsShown = true;
+      _galleryLoadedImageIsShown = true;
+      _sharePreviewIsShown = true;
     });
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -397,8 +388,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       );
     }
     setState(() {
-      galleryLoadedImageIsShown = false;
-      sharePreviewIsShown = false;
+      _galleryLoadedImageIsShown = false;
+      _sharePreviewIsShown = false;
     });
   }
 
@@ -407,41 +398,32 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         widget.cameraController!.value.isRecordingVideo) {
       return;
     }
-    var cameraController = widget.cameraController;
-    if (hasAudioPermission && videoWithAudio) {
-      cameraController = await widget.selectCamera(
-        widget.selectedCameraDetails.cameraId,
-        false,
-        await Permission.microphone.isGranted && videoWithAudio,
-      );
-    }
-
     setState(() {
-      isVideoRecording = true;
+      _isVideoRecording = true;
     });
 
     try {
-      await cameraController?.startVideoRecording();
-      videoRecordingTimer =
+      await widget.cameraController?.startVideoRecording();
+      _videoRecordingTimer =
           Timer.periodic(const Duration(milliseconds: 15), (timer) {
         setState(() {
-          currentTime = DateTime.now();
+          _currentTime = DateTime.now();
         });
-        if (videoRecordingStarted != null &&
-            currentTime.difference(videoRecordingStarted!).inSeconds >=
+        if (_videoRecordingStarted != null &&
+            _currentTime.difference(_videoRecordingStarted!).inSeconds >=
                 maxVideoRecordingTime) {
           timer.cancel();
-          videoRecordingTimer = null;
+          _videoRecordingTimer = null;
           stopVideoRecording();
         }
       });
       setState(() {
-        videoRecordingStarted = DateTime.now();
-        isVideoRecording = true;
+        _videoRecordingStarted = DateTime.now();
+        _isVideoRecording = true;
       });
     } on CameraException catch (e) {
       setState(() {
-        isVideoRecording = false;
+        _isVideoRecording = false;
       });
       _showCameraException(e);
       return;
@@ -449,14 +431,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> stopVideoRecording() async {
-    if (videoRecordingTimer != null) {
-      videoRecordingTimer?.cancel();
-      videoRecordingTimer = null;
+    if (_videoRecordingTimer != null) {
+      _videoRecordingTimer?.cancel();
+      _videoRecordingTimer = null;
     }
 
     setState(() {
-      videoRecordingStarted = null;
-      isVideoRecording = false;
+      _videoRecordingStarted = null;
+      _isVideoRecording = false;
     });
 
     if (widget.cameraController == null ||
@@ -465,7 +447,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
 
     setState(() {
-      sharePreviewIsShown = true;
+      _sharePreviewIsShown = true;
     });
 
     try {
@@ -509,15 +491,15 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
             return;
           }
           setState(() {
-            basePanY = details.localPosition.dy;
-            baseScaleFactor = widget.selectedCameraDetails.scaleFactor;
+            _basePanY = details.localPosition.dy;
+            _baseScaleFactor = widget.selectedCameraDetails.scaleFactor;
           });
         },
         onLongPressMoveUpdate: onPanUpdate,
         onLongPressStart: (details) {
           setState(() {
-            basePanY = details.localPosition.dy;
-            baseScaleFactor = widget.selectedCameraDetails.scaleFactor;
+            _basePanY = details.localPosition.dy;
+            _baseScaleFactor = widget.selectedCameraDetails.scaleFactor;
           });
           // Get the position of the pointer
           final renderBox =
@@ -540,7 +522,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         onPanUpdate: onPanUpdate,
         child: Stack(
           children: [
-            if (galleryLoadedImageIsShown)
+            if (_galleryLoadedImageIsShown)
               Center(
                 child: SizedBox(
                   width: 20,
@@ -551,11 +533,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   ),
                 ),
               ),
-            if (!sharePreviewIsShown &&
+            if (!_sharePreviewIsShown &&
                 widget.sendToGroup != null &&
-                !isVideoRecording)
+                !_isVideoRecording)
               SendToWidget(sendTo: widget.sendToGroup!.groupName),
-            if (!sharePreviewIsShown && !isVideoRecording)
+            if (!_sharePreviewIsShown && !_isVideoRecording)
               Positioned(
                 right: 5,
                 top: 0,
@@ -572,7 +554,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           onPressed: () async {
                             await widget.selectCamera(
                               (widget.selectedCameraDetails.cameraId + 1) % 2,
-                              false,
                               false,
                             );
                           },
@@ -598,7 +579,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                             setState(() {});
                           },
                         ),
-                        if (!hasAudioPermission)
+                        if (!_hasAudioPermission)
                           ActionButton(
                             Icons.mic_off_rounded,
                             color: Colors.white.withAlpha(160),
@@ -606,27 +587,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                 'Allow microphone access for video recording.',
                             onPressed: requestMicrophonePermission,
                           ),
-                        if (hasAudioPermission)
-                          ActionButton(
-                            videoWithAudio
-                                ? Icons.volume_up_rounded
-                                : Icons.volume_off_rounded,
-                            tooltipText: 'Record video with audio.',
-                            color: videoWithAudio
-                                ? Colors.white
-                                : Colors.white.withAlpha(160),
-                            onPressed: () async {
-                              setState(() {
-                                videoWithAudio = !videoWithAudio;
-                              });
-                            },
-                          ),
                       ],
                     ),
                   ),
                 ),
               ),
-            if (!sharePreviewIsShown)
+            if (!_sharePreviewIsShown)
               Positioned(
                 bottom: 30,
                 left: 0,
@@ -638,7 +604,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       if (widget.cameraController!.value.isInitialized &&
                           widget.selectedCameraDetails.isZoomAble &&
                           !isFront &&
-                          !isVideoRecording)
+                          !_isVideoRecording)
                         SizedBox(
                           width: 120,
                           child: CameraZoomButtons(
@@ -655,7 +621,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (!isVideoRecording)
+                          if (!_isVideoRecording)
                             GestureDetector(
                               onTap: pickImageFromGallery,
                               child: Align(
@@ -687,7 +653,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     width: 7,
-                                    color: isVideoRecording
+                                    color: _isVideoRecording
                                         ? Colors.red
                                         : Colors.white,
                                   ),
@@ -695,7 +661,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               ),
                             ),
                           ),
-                          if (!isVideoRecording) const SizedBox(width: 80),
+                          if (!_isVideoRecording) const SizedBox(width: 80),
                         ],
                       ),
                     ],
@@ -703,10 +669,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 ),
               ),
             VideoRecordingTimer(
-              videoRecordingStarted: videoRecordingStarted,
+              videoRecordingStarted: _videoRecordingStarted,
               maxVideoRecordingTime: maxVideoRecordingTime,
             ),
-            if (!sharePreviewIsShown && widget.sendToGroup != null)
+            if (!_sharePreviewIsShown && widget.sendToGroup != null)
               Positioned(
                 left: 5,
                 top: 10,
@@ -718,7 +684,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   },
                 ),
               ),
-            if (showSelfieFlash)
+            if (_showSelfieFlash)
               Positioned.fill(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(22),

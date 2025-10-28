@@ -5,8 +5,9 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BetterText extends StatelessWidget {
-  const BetterText({required this.text, super.key});
+  const BetterText({required this.text, required this.textColor, super.key});
   final String text;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +66,8 @@ class BetterText extends StatelessWidget {
       softWrap: true,
       textAlign: TextAlign.start,
       overflow: TextOverflow.visible,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: textColor,
         fontSize: 17,
         decoration: TextDecoration.none,
         fontWeight: FontWeight.normal,

@@ -20,6 +20,23 @@ Future<void> handleContactRequest(
   switch (contactRequest.type) {
     case EncryptedContent_ContactRequest_Type.REQUEST:
       Log.info('Got a contact request from $fromUserId');
+      final contact = await twonlyDB.contactsDao
+          .getContactByUserId(fromUserId)
+          .getSingleOrNull();
+      if (contact != null) {
+        if (contact.accepted) {
+          // contact was already accepted, so just accept the request in the background.
+          await sendCipherText(
+            contact.userId,
+            EncryptedContent(
+              contactRequest: EncryptedContent_ContactRequest(
+                type: EncryptedContent_ContactRequest_Type.ACCEPT,
+              ),
+            ),
+          );
+          return;
+        }
+      }
       // Request the username by the server so an attacker can not
       // forge the displayed username in the contact request
       final username = await apiService.getUsername(fromUserId);

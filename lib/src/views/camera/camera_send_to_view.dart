@@ -22,7 +22,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
   @override
   void initState() {
     super.initState();
-    unawaited(selectCamera(0, true, false));
+    unawaited(selectCamera(0, true));
   }
 
   @override
@@ -36,13 +36,11 @@ class CameraSendToViewState extends State<CameraSendToView> {
   Future<CameraController?> selectCamera(
     int sCameraId,
     bool init,
-    bool enableAudio,
   ) async {
     final opts = await initializeCameraController(
       selectedCameraDetails,
       sCameraId,
       init,
-      enableAudio,
     );
     if (opts != null) {
       selectedCameraDetails = opts.$1;
@@ -61,7 +59,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
     }
     await cameraController!.dispose();
     cameraController = null;
-    await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
+    await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
   }
 
   @override

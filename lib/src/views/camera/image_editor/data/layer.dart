@@ -34,7 +34,9 @@ class BackgroundLayerData extends Layer {
   ImageItem image;
 }
 
-class FilterLayerData extends Layer {}
+class FilterLayerData extends Layer {
+  int page = 1;
+}
 
 /// Attributes used by [EmojiLayer]
 class EmojiLayerData extends Layer {

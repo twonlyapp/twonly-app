@@ -52,6 +52,7 @@ class MediaFiles extends Table {
       text().map(IntListTypeConverter()).nullable()();
 
   IntColumn get displayLimitInMilliseconds => integer().nullable()();
+  BoolColumn get removeAudio => boolean().nullable()();
 
   BlobColumn get downloadToken => blob().nullable()();
   BlobColumn get encryptionKey => blob().nullable()();

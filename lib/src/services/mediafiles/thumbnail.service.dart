@@ -1,25 +1,29 @@
 import 'dart:io';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
 
 Future<void> createThumbnailsForVideo(
   File sourceFile,
   File destinationFile,
 ) async {
-  final fileExtension = sourceFile.path.split('.').last.toLowerCase();
-  if (fileExtension != 'mp4') {
-    Log.error('Could not create thumbnail for video. $fileExtension != .mp4');
-    return;
-  }
+  final stopwatch = Stopwatch()..start();
 
-  try {
-    await VideoThumbnail.thumbnailFile(
-      video: sourceFile.path,
-      thumbnailPath: destinationFile.path,
-      maxWidth: 450,
-      quality: 75,
+  final command =
+      '-i ${sourceFile.path} -ss 00:00:00 -vframes 1 -vf "scale=iw:ih:flags=lanczos" -c:v libwebp  -q:v 100 -compression_level 6 ${destinationFile.path}';
+
+  final session = await FFmpegKit.execute(command);
+  final returnCode = await session.getReturnCode();
+
+  if (ReturnCode.isSuccess(returnCode)) {
+    stopwatch.stop();
+    Log.info(
+      'It took ${stopwatch.elapsedMilliseconds}ms to create the thumbnail.',
     );
-  } catch (e) {
-    Log.error('Could not create the video thumbnail: $e');
+  } else {
+    Log.info(command);
+    Log.error('Compression failed for the video with exit code $returnCode.');
+    Log.error(await session.getAllLogsAsString());
+    // Report this error to the user?
   }
 }

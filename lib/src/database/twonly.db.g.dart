@@ -1561,6 +1561,15 @@ class $MediaFilesTable extends MediaFiles
   late final GeneratedColumn<int> displayLimitInMilliseconds =
       GeneratedColumn<int>('display_limit_in_milliseconds', aliasedName, true,
           type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _removeAudioMeta =
+      const VerificationMeta('removeAudio');
+  @override
+  late final GeneratedColumn<bool> removeAudio = GeneratedColumn<bool>(
+      'remove_audio', aliasedName, true,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("remove_audio" IN (0, 1))'));
   static const VerificationMeta _downloadTokenMeta =
       const VerificationMeta('downloadToken');
   @override
@@ -1604,6 +1613,7 @@ class $MediaFilesTable extends MediaFiles
         stored,
         reuploadRequestedBy,
         displayLimitInMilliseconds,
+        removeAudio,
         downloadToken,
         encryptionKey,
         encryptionMac,
@@ -1648,6 +1658,12 @@ class $MediaFilesTable extends MediaFiles
           displayLimitInMilliseconds.isAcceptableOrUnknown(
               data['display_limit_in_milliseconds']!,
               _displayLimitInMillisecondsMeta));
+    }
+    if (data.containsKey('remove_audio')) {
+      context.handle(
+          _removeAudioMeta,
+          removeAudio.isAcceptableOrUnknown(
+              data['remove_audio']!, _removeAudioMeta));
     }
     if (data.containsKey('download_token')) {
       context.handle(
@@ -1709,6 +1725,8 @@ class $MediaFilesTable extends MediaFiles
       displayLimitInMilliseconds: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}display_limit_in_milliseconds']),
+      removeAudio: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}remove_audio']),
       downloadToken: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}download_token']),
       encryptionKey: attachedDatabase.typeMapping
@@ -1756,6 +1774,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final bool stored;
   final List<int>? reuploadRequestedBy;
   final int? displayLimitInMilliseconds;
+  final bool? removeAudio;
   final Uint8List? downloadToken;
   final Uint8List? encryptionKey;
   final Uint8List? encryptionMac;
@@ -1771,6 +1790,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       required this.stored,
       this.reuploadRequestedBy,
       this.displayLimitInMilliseconds,
+      this.removeAudio,
       this.downloadToken,
       this.encryptionKey,
       this.encryptionMac,
@@ -1803,6 +1823,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     if (!nullToAbsent || displayLimitInMilliseconds != null) {
       map['display_limit_in_milliseconds'] =
           Variable<int>(displayLimitInMilliseconds);
+    }
+    if (!nullToAbsent || removeAudio != null) {
+      map['remove_audio'] = Variable<bool>(removeAudio);
     }
     if (!nullToAbsent || downloadToken != null) {
       map['download_token'] = Variable<Uint8List>(downloadToken);
@@ -1840,6 +1863,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           displayLimitInMilliseconds == null && nullToAbsent
               ? const Value.absent()
               : Value(displayLimitInMilliseconds),
+      removeAudio: removeAudio == null && nullToAbsent
+          ? const Value.absent()
+          : Value(removeAudio),
       downloadToken: downloadToken == null && nullToAbsent
           ? const Value.absent()
           : Value(downloadToken),
@@ -1875,6 +1901,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           serializer.fromJson<List<int>?>(json['reuploadRequestedBy']),
       displayLimitInMilliseconds:
           serializer.fromJson<int?>(json['displayLimitInMilliseconds']),
+      removeAudio: serializer.fromJson<bool?>(json['removeAudio']),
       downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
       encryptionKey: serializer.fromJson<Uint8List?>(json['encryptionKey']),
       encryptionMac: serializer.fromJson<Uint8List?>(json['encryptionMac']),
@@ -1899,6 +1926,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'reuploadRequestedBy': serializer.toJson<List<int>?>(reuploadRequestedBy),
       'displayLimitInMilliseconds':
           serializer.toJson<int?>(displayLimitInMilliseconds),
+      'removeAudio': serializer.toJson<bool?>(removeAudio),
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'encryptionKey': serializer.toJson<Uint8List?>(encryptionKey),
       'encryptionMac': serializer.toJson<Uint8List?>(encryptionMac),
@@ -1917,6 +1945,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           bool? stored,
           Value<List<int>?> reuploadRequestedBy = const Value.absent(),
           Value<int?> displayLimitInMilliseconds = const Value.absent(),
+          Value<bool?> removeAudio = const Value.absent(),
           Value<Uint8List?> downloadToken = const Value.absent(),
           Value<Uint8List?> encryptionKey = const Value.absent(),
           Value<Uint8List?> encryptionMac = const Value.absent(),
@@ -1938,6 +1967,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         displayLimitInMilliseconds: displayLimitInMilliseconds.present
             ? displayLimitInMilliseconds.value
             : this.displayLimitInMilliseconds,
+        removeAudio: removeAudio.present ? removeAudio.value : this.removeAudio,
         downloadToken:
             downloadToken.present ? downloadToken.value : this.downloadToken,
         encryptionKey:
@@ -1971,6 +2001,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       displayLimitInMilliseconds: data.displayLimitInMilliseconds.present
           ? data.displayLimitInMilliseconds.value
           : this.displayLimitInMilliseconds,
+      removeAudio:
+          data.removeAudio.present ? data.removeAudio.value : this.removeAudio,
       downloadToken: data.downloadToken.present
           ? data.downloadToken.value
           : this.downloadToken,
@@ -1999,6 +2031,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('stored: $stored, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
+          ..write('removeAudio: $removeAudio, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
@@ -2019,6 +2052,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       stored,
       reuploadRequestedBy,
       displayLimitInMilliseconds,
+      removeAudio,
       $driftBlobEquality.hash(downloadToken),
       $driftBlobEquality.hash(encryptionKey),
       $driftBlobEquality.hash(encryptionMac),
@@ -2037,6 +2071,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.stored == this.stored &&
           other.reuploadRequestedBy == this.reuploadRequestedBy &&
           other.displayLimitInMilliseconds == this.displayLimitInMilliseconds &&
+          other.removeAudio == this.removeAudio &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           $driftBlobEquality.equals(other.encryptionKey, this.encryptionKey) &&
           $driftBlobEquality.equals(other.encryptionMac, this.encryptionMac) &&
@@ -2055,6 +2090,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<bool> stored;
   final Value<List<int>?> reuploadRequestedBy;
   final Value<int?> displayLimitInMilliseconds;
+  final Value<bool?> removeAudio;
   final Value<Uint8List?> downloadToken;
   final Value<Uint8List?> encryptionKey;
   final Value<Uint8List?> encryptionMac;
@@ -2071,6 +2107,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.stored = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
+    this.removeAudio = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
@@ -2088,6 +2125,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.stored = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
+    this.removeAudio = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
@@ -2106,6 +2144,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<bool>? stored,
     Expression<String>? reuploadRequestedBy,
     Expression<int>? displayLimitInMilliseconds,
+    Expression<bool>? removeAudio,
     Expression<Uint8List>? downloadToken,
     Expression<Uint8List>? encryptionKey,
     Expression<Uint8List>? encryptionMac,
@@ -2126,6 +2165,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
         'reupload_requested_by': reuploadRequestedBy,
       if (displayLimitInMilliseconds != null)
         'display_limit_in_milliseconds': displayLimitInMilliseconds,
+      if (removeAudio != null) 'remove_audio': removeAudio,
       if (downloadToken != null) 'download_token': downloadToken,
       if (encryptionKey != null) 'encryption_key': encryptionKey,
       if (encryptionMac != null) 'encryption_mac': encryptionMac,
@@ -2145,6 +2185,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       Value<bool>? stored,
       Value<List<int>?>? reuploadRequestedBy,
       Value<int?>? displayLimitInMilliseconds,
+      Value<bool?>? removeAudio,
       Value<Uint8List?>? downloadToken,
       Value<Uint8List?>? encryptionKey,
       Value<Uint8List?>? encryptionMac,
@@ -2163,6 +2204,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       reuploadRequestedBy: reuploadRequestedBy ?? this.reuploadRequestedBy,
       displayLimitInMilliseconds:
           displayLimitInMilliseconds ?? this.displayLimitInMilliseconds,
+      removeAudio: removeAudio ?? this.removeAudio,
       downloadToken: downloadToken ?? this.downloadToken,
       encryptionKey: encryptionKey ?? this.encryptionKey,
       encryptionMac: encryptionMac ?? this.encryptionMac,
@@ -2209,6 +2251,9 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       map['display_limit_in_milliseconds'] =
           Variable<int>(displayLimitInMilliseconds.value);
     }
+    if (removeAudio.present) {
+      map['remove_audio'] = Variable<bool>(removeAudio.value);
+    }
     if (downloadToken.present) {
       map['download_token'] = Variable<Uint8List>(downloadToken.value);
     }
@@ -2242,6 +2287,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('stored: $stored, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
+          ..write('removeAudio: $removeAudio, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
@@ -7795,6 +7841,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   Value<bool> stored,
   Value<List<int>?> reuploadRequestedBy,
   Value<int?> displayLimitInMilliseconds,
+  Value<bool?> removeAudio,
   Value<Uint8List?> downloadToken,
   Value<Uint8List?> encryptionKey,
   Value<Uint8List?> encryptionMac,
@@ -7812,6 +7859,7 @@ typedef $$MediaFilesTableUpdateCompanionBuilder = MediaFilesCompanion Function({
   Value<bool> stored,
   Value<List<int>?> reuploadRequestedBy,
   Value<int?> displayLimitInMilliseconds,
+  Value<bool?> removeAudio,
   Value<Uint8List?> downloadToken,
   Value<Uint8List?> encryptionKey,
   Value<Uint8List?> encryptionMac,
@@ -7886,6 +7934,9 @@ class $$MediaFilesTableFilterComposer
   ColumnFilters<int> get displayLimitInMilliseconds => $composableBuilder(
       column: $table.displayLimitInMilliseconds,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get removeAudio => $composableBuilder(
+      column: $table.removeAudio, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken, builder: (column) => ColumnFilters(column));
@@ -7966,6 +8017,9 @@ class $$MediaFilesTableOrderingComposer
       column: $table.displayLimitInMilliseconds,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get removeAudio => $composableBuilder(
+      column: $table.removeAudio, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken,
       builder: (column) => ColumnOrderings(column));
@@ -8024,6 +8078,9 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<int> get displayLimitInMilliseconds => $composableBuilder(
       column: $table.displayLimitInMilliseconds, builder: (column) => column);
+
+  GeneratedColumn<bool> get removeAudio => $composableBuilder(
+      column: $table.removeAudio, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken, builder: (column) => column);
@@ -8094,6 +8151,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<bool> stored = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
             Value<int?> displayLimitInMilliseconds = const Value.absent(),
+            Value<bool?> removeAudio = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<Uint8List?> encryptionKey = const Value.absent(),
             Value<Uint8List?> encryptionMac = const Value.absent(),
@@ -8111,6 +8169,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             stored: stored,
             reuploadRequestedBy: reuploadRequestedBy,
             displayLimitInMilliseconds: displayLimitInMilliseconds,
+            removeAudio: removeAudio,
             downloadToken: downloadToken,
             encryptionKey: encryptionKey,
             encryptionMac: encryptionMac,
@@ -8128,6 +8187,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<bool> stored = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
             Value<int?> displayLimitInMilliseconds = const Value.absent(),
+            Value<bool?> removeAudio = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<Uint8List?> encryptionKey = const Value.absent(),
             Value<Uint8List?> encryptionMac = const Value.absent(),
@@ -8145,6 +8205,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             stored: stored,
             reuploadRequestedBy: reuploadRequestedBy,
             displayLimitInMilliseconds: displayLimitInMilliseconds,
+            removeAudio: removeAudio,
             downloadToken: downloadToken,
             encryptionKey: encryptionKey,
             encryptionMac: encryptionMac,

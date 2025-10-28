@@ -357,7 +357,7 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
                     children: [
                       const SizedBox(height: 40),
                       const Text(
-                        'twonly. Jetzt besser als je zuvor.',
+                        'twonly. Besser als je zuvor.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 35,

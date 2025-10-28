@@ -1,14 +1,22 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:drift/drift.dart' show Value;
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:video_compress/video_compress.dart';
 
 Future<void> compressImage(
   File sourceFile,
   File destinationFile,
 ) async {
   final stopwatch = Stopwatch()..start();
+
+  //   // ffmpeg -i input.png -vcodec libwebp -lossless 1 -preset default output.webp
 
   try {
     var compressedBytes = await FlutterImageCompress.compressWithFile(
@@ -53,42 +61,40 @@ Future<void> compressImage(
   );
 }
 
-Future<void> compressVideo(
-  File sourceFile,
-  File destinationFile,
-) async {
-  final stopwatch = Stopwatch()..start();
-
-  MediaInfo? mediaInfo;
-  try {
-    mediaInfo = await VideoCompress.compressVideo(
-      sourceFile.path,
-      quality: VideoQuality.Res1280x720Quality,
-      includeAudio:
-          true, // https://github.com/jonataslaw/VideoCompress/issues/184
-    );
-
-    Log.info('Video has now size of ${mediaInfo!.filesize} bytes.');
-
-    if (mediaInfo.filesize! >= 30 * 1000 * 1000) {
-      // if the media file is over 20MB compress it with low quality
-      mediaInfo = await VideoCompress.compressVideo(
-        sourceFile.path,
-        quality: VideoQuality.Res960x540Quality,
-        includeAudio: true,
-      );
-    }
-  } catch (e) {
-    Log.error('during video compression: $e');
+Future<void> compressAndOverlayVideo(MediaFileService media) async {
+  if (media.tempPath.existsSync()) {
+    media.tempPath.deleteSync();
   }
-  stopwatch.stop();
-  Log.info('It took ${stopwatch.elapsedMilliseconds}ms to compress the video');
 
-  if (mediaInfo == null) {
-    Log.error('Could not compress video using original video.');
-    // as a fall back use the non compressed version
-    sourceFile.copySync(destinationFile.path);
+  final stopwatch = Stopwatch()..start();
+  var command =
+      '-i "${media.originalPath.path}" -i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0" -map "0:a?" -preset veryfast -crf 28 -c:a aac -b:a 64k "${media.tempPath.path}"';
+
+  if (media.removeAudio) {
+    command =
+        '-i "${media.originalPath.path}" -i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0" -preset veryfast -crf 28 -an "${media.tempPath.path}"';
+  }
+
+  final session = await FFmpegKit.execute(command);
+  final returnCode = await session.getReturnCode();
+
+  if (ReturnCode.isSuccess(returnCode)) {
+    stopwatch.stop();
+    Log.info(
+      'It took ${stopwatch.elapsedMilliseconds}ms to compress the video',
+    );
   } else {
-    await mediaInfo.file!.copy(destinationFile.path);
+    Log.info(command);
+    Log.error('Compression failed for the video with exit code $returnCode.');
+    Log.error(await session.getAllLogsAsString());
+    // This should not happen, but in case "notify" the user that the video was not send... This is absolutely bad, but
+    // better this way then sending an uncompressed media file which potentially is 100MB big :/
+    // Hopefully the user will report the strange behavior <3
+    await twonlyDB.messagesDao.updateMessagesByMediaId(
+      media.mediaFile.mediaId,
+      const MessagesCompanion(isDeletedFromSender: Value(true)),
+    );
+    media.fullMediaRemoval();
+    await media.setUploadState(UploadState.uploaded);
   }
 }

@@ -70,7 +70,7 @@ class HomeViewState extends State<HomeView> {
     }
     if (cameraController == null && !initCameraStarted && offsetRatio < 1) {
       initCameraStarted = true;
-      unawaited(selectCamera(selectedCameraDetails.cameraId, false, false));
+      unawaited(selectCamera(selectedCameraDetails.cameraId, false));
     }
     if (offsetRatio == 1) {
       disableCameraTimer = Timer(const Duration(milliseconds: 500), () async {
@@ -97,7 +97,7 @@ class HomeViewState extends State<HomeView> {
         .listen((NotificationResponse? response) async {
       globalUpdateOfHomeViewPageIndex(0);
     });
-    unawaited(selectCamera(0, true, false));
+    unawaited(selectCamera(0, true));
     unawaited(initAsync());
   }
 
@@ -109,16 +109,11 @@ class HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
-  Future<CameraController?> selectCamera(
-    int sCameraId,
-    bool init,
-    bool enableAudio,
-  ) async {
+  Future<CameraController?> selectCamera(int sCameraId, bool init) async {
     final opts = await initializeCameraController(
       selectedCameraDetails,
       sCameraId,
       init,
-      enableAudio,
     );
     if (opts != null) {
       selectedCameraDetails = opts.$1;
@@ -138,7 +133,7 @@ class HomeViewState extends State<HomeView> {
     }
     await cameraController!.dispose();
     cameraController = null;
-    await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false, false);
+    await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
   }
 
   Future<void> initAsync() async {

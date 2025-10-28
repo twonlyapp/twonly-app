@@ -211,6 +211,25 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           },
         ),
       ),
+      if (media.type == MediaType.video)
+        ActionButton(
+          (mediaService.removeAudio)
+              ? Icons.volume_off_rounded
+              : Icons.volume_up_rounded,
+          tooltipText: 'Enable Audio in Video',
+          color: (mediaService.removeAudio)
+              ? Colors.white.withAlpha(160)
+              : Colors.white,
+          onPressed: () async {
+            await mediaService.toggleRemoveAudio();
+            if (mediaService.removeAudio) {
+              await videoController?.setVolume(0);
+            } else {
+              await videoController?.setVolume(100);
+            }
+            if (mounted) setState(() {});
+          },
+        ),
       const SizedBox(height: 8),
       ActionButton(
         FontAwesomeIcons.shieldHeart,
@@ -281,8 +300,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future<void> pushShareImageView() async {
-    final mediaStoreFuture =
-        (media.type == MediaType.image) ? storeImageAsOriginal() : null;
+    final mediaStoreFuture = storeImageAsOriginal();
 
     await videoController?.pause();
     if (isDisposed || !mounted) return;
@@ -312,33 +330,39 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       }
     }
 
-    if (layers.length > 1 || media.type == MediaType.video) {
-      for (final x in layers) {
-        x.showCustomButtons = false;
-      }
-      setState(() {});
-      final image = await screenshotController.capture(
-        pixelRatio: pixelRatio,
-      );
-      if (image == null) {
-        Log.error('screenshotController did not return image bytes');
-        return null;
-      }
-
-      for (final x in layers) {
-        x.showCustomButtons = true;
-      }
-      setState(() {});
-      return image;
+    for (final x in layers) {
+      x.showCustomButtons = false;
+    }
+    setState(() {});
+    final image = await screenshotController.capture(
+      pixelRatio: pixelRatio,
+    );
+    if (image == null) {
+      Log.error('screenshotController did not return image bytes');
+      return null;
     }
 
-    return null;
+    for (final x in layers) {
+      x.showCustomButtons = true;
+    }
+    setState(() {});
+    return image;
   }
 
   Future<bool> storeImageAsOriginal() async {
+    if (mediaService.overlayImagePath.existsSync()) {
+      mediaService.overlayImagePath.deleteSync();
+    }
+    if (mediaService.tempPath.existsSync()) {
+      mediaService.tempPath.deleteSync();
+    }
     final imageBytes = await getEditedImageBytes();
     if (imageBytes == null) return false;
-    mediaService.originalPath.writeAsBytesSync(imageBytes);
+    if (media.type == MediaType.image) {
+      mediaService.originalPath.writeAsBytesSync(imageBytes);
+    } else {
+      mediaService.overlayImagePath.writeAsBytesSync(imageBytes);
+    }
 
     // In case the image was already stored, then rename the stored image.
     if (mediaService.storedPath.existsSync()) {
@@ -373,12 +397,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       sendingOrLoadingImage = true;
     });
 
-    if (media.type == MediaType.image) {
-      await storeImageAsOriginal();
-    }
-    if (media.type == MediaType.video) {
-      Log.error('TODO: COMBINE VIDEO AND IMAGE!!!');
-    }
+    await storeImageAsOriginal();
 
     if (!context.mounted) return;
 

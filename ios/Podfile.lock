@@ -9,6 +9,11 @@ PODS:
     - Flutter
   - device_info_plus (0.0.1):
     - Flutter
+  - ffmpeg_kit_flutter_new_min_gpl (7.1.1):
+    - ffmpeg_kit_flutter_new_min_gpl/min-gpl (= 7.1.1)
+    - Flutter
+  - ffmpeg_kit_flutter_new_min_gpl/min-gpl (7.1.1):
+    - Flutter
   - Firebase (12.4.0):
     - Firebase/Core (= 12.4.0)
   - Firebase/Core (12.4.0):
@@ -233,8 +238,6 @@ PODS:
   - SwiftProtobuf (1.32.0)
   - url_launcher_ios (0.0.1):
     - Flutter
-  - video_compress (0.3.0):
-    - Flutter
   - video_player_avfoundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -248,6 +251,7 @@ DEPENDENCIES:
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - cryptography_flutter_plus (from `.symlinks/plugins/cryptography_flutter_plus/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - ffmpeg_kit_flutter_new_min_gpl (from `.symlinks/plugins/ffmpeg_kit_flutter_new_min_gpl/ios`)
   - Firebase
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
@@ -275,7 +279,6 @@ DEPENDENCIES:
   - sqlite3_flutter_libs (from `.symlinks/plugins/sqlite3_flutter_libs/darwin`)
   - SwiftProtobuf
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
-  - video_compress (from `.symlinks/plugins/video_compress/ios`)
   - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
   - video_thumbnail (from `.symlinks/plugins/video_thumbnail/ios`)
 
@@ -312,6 +315,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/cryptography_flutter_plus/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
+  ffmpeg_kit_flutter_new_min_gpl:
+    :path: ".symlinks/plugins/ffmpeg_kit_flutter_new_min_gpl/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
   firebase_messaging:
@@ -354,8 +359,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sqlite3_flutter_libs/darwin"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
-  video_compress:
-    :path: ".symlinks/plugins/video_compress/ios"
   video_player_avfoundation:
     :path: ".symlinks/plugins/video_player_avfoundation/darwin"
   video_thumbnail:
@@ -367,6 +370,7 @@ SPEC CHECKSUMS:
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   cryptography_flutter_plus: 44f4e9e4079395fcbb3e7809c0ac2c6ae2d9576f
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
+  ffmpeg_kit_flutter_new_min_gpl: 79212bc20869b4e12ec06705724c26b016e9d58e
   Firebase: f07b15ae5a6ec0f93713e30b923d9970d144af3e
   firebase_core: 744984dbbed8b3036abf34f0b98d80f130a7e464
   firebase_messaging: 82c70650c426a0a14873e1acdb9ec2b443c4e8b4
@@ -407,7 +411,6 @@ SPEC CHECKSUMS:
   sqlite3_flutter_libs: 83f8e9f5b6554077f1d93119fe20ebaa5f3a9ef1
   SwiftProtobuf: 81e341191afbddd64aa031bd12862dccfab2f639
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
-  video_compress: f2133a07762889d67f0711ac831faa26f956980e
   video_player_avfoundation: dd410b52df6d2466a42d28550e33e4146928280a
   video_thumbnail: b637e0ad5f588ca9945f6e2c927f73a69a661140
 

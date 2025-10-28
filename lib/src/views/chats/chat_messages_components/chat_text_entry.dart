@@ -25,6 +25,7 @@ class ChatTextEntry extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var text = message.content ?? '';
+    var textColor = Colors.white;
 
     if (EmojiAnimation.supported(text)) {
       return Container(
@@ -59,7 +60,10 @@ class ChatTextEntry extends StatelessWidget {
 
     if (message.isDeletedFromSender) {
       text = context.lang.messageWasDeleted;
-      color = Colors.grey;
+      color = isDarkMode(context) ? Colors.black : Colors.grey;
+      if (isDarkMode(context)) {
+        textColor = const Color.fromARGB(255, 99, 99, 99);
+      }
     }
 
     return Container(
@@ -78,10 +82,10 @@ class ChatTextEntry extends StatelessWidget {
         children: [
           if (expanded)
             Expanded(
-              child: BetterText(text: text),
+              child: BetterText(text: text, textColor: textColor),
             )
           else ...[
-            BetterText(text: text),
+            BetterText(text: text, textColor: textColor),
             SizedBox(
               width: spacerWidth,
             ),
