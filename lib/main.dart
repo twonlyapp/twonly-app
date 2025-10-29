@@ -17,6 +17,7 @@ import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api.service.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -55,6 +56,7 @@ void main() async {
   twonlyDB = TwonlyDB();
 
   await initFileDownloader();
+  unawaited(finishStartedPreprocessing());
 
   unawaited(MediaFileService.purgeTempFolder());
   await twonlyDB.messagesDao.purgeMessageTable();

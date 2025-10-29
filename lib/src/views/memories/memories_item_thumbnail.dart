@@ -20,7 +20,17 @@ class MemoriesItemThumbnail extends StatefulWidget {
 class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
   @override
   void initState() {
+    initAsync();
     super.initState();
+  }
+
+  Future<void> initAsync() async {
+    if (!widget.galleryItem.mediaService.thumbnailPath.existsSync()) {
+      if (widget.galleryItem.mediaService.storedPath.existsSync()) {
+        await widget.galleryItem.mediaService.createThumbnail();
+        if (mounted) setState(() {});
+      }
+    }
   }
 
   @override
@@ -46,7 +56,8 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
           children: [
             if (media.thumbnailPath.existsSync())
               Image.file(media.thumbnailPath)
-            else if (media.storedPath.existsSync())
+            else if (media.storedPath.existsSync() &&
+                media.mediaFile.type == MediaType.image)
               Image.file(media.storedPath)
             else
               const Text('Media file removed.'),

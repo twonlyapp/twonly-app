@@ -10,7 +10,7 @@ Future<void> createThumbnailsForVideo(
   final stopwatch = Stopwatch()..start();
 
   final command =
-      '-i ${sourceFile.path} -ss 00:00:00 -vframes 1 -vf "scale=iw:ih:flags=lanczos" -c:v libwebp  -q:v 100 -compression_level 6 ${destinationFile.path}';
+      '-i "${sourceFile.path}" -ss 00:00:00 -vframes 1 -vf "scale=iw:ih:flags=lanczos" -c:v libwebp  -q:v 100 -compression_level 6 "${destinationFile.path}"';
 
   final session = await FFmpegKit.execute(command);
   final returnCode = await session.getReturnCode();
@@ -22,8 +22,9 @@ Future<void> createThumbnailsForVideo(
     );
   } else {
     Log.info(command);
-    Log.error('Compression failed for the video with exit code $returnCode.');
+    Log.error(
+      'Thumbnail creation failed for the video with exit code $returnCode.',
+    );
     Log.error(await session.getAllLogsAsString());
-    // Report this error to the user?
   }
 }

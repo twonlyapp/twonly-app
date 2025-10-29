@@ -108,7 +108,6 @@ class ChatTextEntry extends StatelessWidget {
                           ),
                         ),
                       ),
-                    // if (displayTime)
                     Text(
                       friendlyTime(
                         context,

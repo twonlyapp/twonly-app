@@ -84,6 +84,16 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         .get();
   }
 
+  Future<List<MediaFile>> getAllMediaFilesPendingUpload() async {
+    return (select(mediaFiles)
+          ..where(
+            (t) =>
+                t.uploadState.equals(UploadState.initialized.name) |
+                t.uploadState.equals(UploadState.preprocessing.name),
+          ))
+        .get();
+  }
+
   Stream<List<MediaFile>> watchAllStoredMediaFiles() {
     return (select(mediaFiles)..where((t) => t.stored.equals(true))).watch();
   }

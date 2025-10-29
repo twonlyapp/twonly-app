@@ -19,6 +19,20 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
+Future<void> finishStartedPreprocessing() async {
+  final mediaFiles =
+      await twonlyDB.mediaFilesDao.getAllMediaFilesPendingUpload();
+
+  for (final mediaFile in mediaFiles) {
+    try {
+      final service = await MediaFileService.fromMedia(mediaFile);
+      await startBackgroundMediaUpload(service);
+    } catch (e) {
+      Log.error(e);
+    }
+  }
+}
+
 Future<MediaFileService?> initializeMediaUpload(
   MediaType type,
   int? displayLimitInMilliseconds,
@@ -77,15 +91,22 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
 
     if (!mediaService.tempPath.existsSync()) {
       await mediaService.compressMedia();
+      if (!mediaService.tempPath.existsSync()) {
+        return;
+      }
     }
 
     if (!mediaService.encryptedPath.existsSync()) {
       await _encryptMediaFiles(mediaService);
+      if (!mediaService.encryptedPath.existsSync()) {
+        return;
+      }
     }
 
     if (!mediaService.uploadRequestPath.existsSync()) {
       await _createUploadRequest(mediaService);
     }
+
     if (mediaService.uploadRequestPath.existsSync()) {
       await mediaService.setUploadState(UploadState.uploading);
       // at this point the original file is not used any more, so it can be deleted
@@ -100,6 +121,11 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
 
 Future<void> _encryptMediaFiles(MediaFileService mediaService) async {
   /// if there is a video wait until it is finished with compression
+
+  if (!mediaService.tempPath.existsSync()) {
+    Log.error('Could not encrypted image as it does not exists');
+    return;
+  }
 
   final dataToEncrypt = await mediaService.tempPath.readAsBytes();
 
