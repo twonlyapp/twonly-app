@@ -107,7 +107,7 @@ class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('twonly Safe Server'),
+        title: const Text('twonly Backup Server'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(40),

@@ -311,7 +311,9 @@ class ApiService {
       }
       if (res.error == ErrorCode.NewDeviceRegistered) {
         globalCallbackNewDeviceRegistered();
-        Log.error('Device is disabled, as a newer device restore twonly Safe.');
+        Log.error(
+          'Device is disabled, as a newer device restore twonly Backup.',
+        );
         appIsOutdated = true;
         await close(() {});
         return Result.error(ErrorCode.InternalError);

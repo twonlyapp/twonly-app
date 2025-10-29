@@ -974,6 +974,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Sichere deine twonly-Identität, da dies die einzige Möglichkeit ist, dein Konto wiederherzustellen, wenn du die App deinstallierst oder dein Handy verlierst.';
 
   @override
+  String get backupNoPasswordRecovery =>
+      'Aufgrund des Sicherheitssystems von twonly gibt es (derzeit) keine Funktion zur Wiederherstellung des Passworts. Daher musst du dir dein Passwort merken oder, besser noch, aufschreiben.';
+
+  @override
   String get backupServer => 'Server';
 
   @override
@@ -1020,11 +1024,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupTwonlySafeLongDesc =>
-      'twonly hat keine zentralen Benutzerkonten. Während der Installation wird ein Schlüsselpaar erstellt, das aus einem öffentlichen und einem privaten Schlüssel besteht. Der private Schlüssel wird nur auf deinem Gerät gespeichert, um ihn vor unbefugtem Zugriff zu schützen. Der öffentliche Schlüssel wird auf den Server hochgeladen und mit deinem gewählten Benutzernamen verknüpft, damit andere dich finden können.\n\ntwonly Safe erstellt regelmäßig ein verschlüsseltes, anonymes Backup deines privaten Schlüssels zusammen mit deinen Kontakten und Einstellungen. Dein Benutzername und das gewählte Passwort reichen aus, um diese Daten auf einem anderen Gerät wiederherzustellen.';
+      'twonly hat keine zentralen Benutzerkonten. Während der Installation wird ein Schlüsselpaar erstellt, das aus einem öffentlichen und einem privaten Schlüssel besteht. Der private Schlüssel wird nur auf deinem Gerät gespeichert, um ihn vor unbefugtem Zugriff zu schützen. Der öffentliche Schlüssel wird auf den Server hochgeladen und mit deinem gewählten Benutzernamen verknüpft, damit andere dich finden können.\n\ntwonly Backup erstellt regelmäßig ein verschlüsseltes, anonymes Backup deines privaten Schlüssels zusammen mit deinen Kontakten und Einstellungen. Dein Benutzername und das gewählte Passwort reichen aus, um diese Daten auf einem anderen Gerät wiederherzustellen.';
 
   @override
   String get backupSelectStrongPassword =>
-      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein twonly Safe-Backup wiederherstellen möchtest.';
+      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein twonly Backup wiederherstellen möchtest.';
 
   @override
   String get password => 'Passwort';
@@ -1047,7 +1051,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupOwnServerDesc =>
-      'Speichere dein twonly Safe-Backups auf einem Server deiner Wahl.';
+      'Speichere dein twonly Backup auf einem Server deiner Wahl.';
 
   @override
   String get backupUseOwnServer => 'Server verwenden';
@@ -1059,11 +1063,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupTwonlySaveNow => 'Jetzt speichern';
 
   @override
+  String get backupChangePassword => 'Password ändern';
+
+  @override
   String get twonlySafeRecoverTitle => 'Recovery';
 
   @override
   String get twonlySafeRecoverDesc =>
-      'If you have created a backup with twonly Safe, you can restore it here.';
+      'If you have created a backup with twonly Backup, you can restore it here.';
 
   @override
   String get twonlySafeRecoverBtn => 'Restore backup';

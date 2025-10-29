@@ -40,7 +40,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     }
   }
 
-  Log.info('Starting new twonly Safe-Backup!');
+  Log.info('Starting new twonly Backup!');
 
   final baseDir = (await getApplicationSupportDirectory()).path;
 
@@ -161,7 +161,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
   await encryptedBackupBytesFile.writeAsBytes(encryptedBackupBytes);
 
   Log.info(
-    'Create twonly Safe backup with a size of ${encryptedBackupBytes.length} bytes.',
+    'Create twonly Backup with a size of ${encryptedBackupBytes.length} bytes.',
   );
 
   if (gUser.backupServer != null) {
@@ -187,7 +187,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     },
   );
   if (await FileDownloader().enqueue(task)) {
-    Log.info('Starting upload from twonly Safe backup.');
+    Log.info('Starting upload from twonly Backup.');
     await updateUserdata((user) {
       user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.pending;
       user.twonlySafeBackup!.lastBackupDone = DateTime.now();
@@ -196,7 +196,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     });
     gUpdateBackupView();
   } else {
-    Log.error('Error starting UploadTask for twonly Safe.');
+    Log.error('Error starting UploadTask for twonly Backup.');
   }
 }
 
@@ -204,7 +204,7 @@ Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
     Log.error(
-      'twonly Safe upload failed. ${update.responseStatusCode} ${update.responseBody} ${update.responseHeaders} ${update.exception}',
+      'twonly Backup upload failed. ${update.responseStatusCode} ${update.responseBody} ${update.responseHeaders} ${update.exception}',
     );
     await updateUserdata((user) {
       if (user.twonlySafeBackup != null) {
@@ -214,7 +214,7 @@ Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
     });
   } else if (update.status == TaskStatus.complete) {
     Log.error(
-      'twonly Safe uploaded with status code ${update.responseStatusCode}',
+      'twonly Backup uploaded with status code ${update.responseStatusCode}',
     );
     await updateUserdata((user) {
       if (user.twonlySafeBackup != null) {

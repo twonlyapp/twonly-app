@@ -166,30 +166,6 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              // const SizedBox(height: 5),
-              // Center(
-              //   child: Padding(
-              //     padding: EdgeInsets.only(left: 10, right: 10),
-              //     child: Text(
-              //       context.lang.registerUsernameLimits,
-              //       textAlign: TextAlign.center,
-              //       style: const TextStyle(fontSize: 9),
-              //     ),
-              //   ),
-              // ),
-              // const SizedBox(height: 30),
-              // Center(
-              //   child: Text(
-              //     context.lang.registerTwonlyCodeText,
-              //     textAlign: TextAlign.center,
-              //   ),
-              // ),
-              // const SizedBox(height: 10),
-              // TextField(
-              //   controller: inviteCodeController,
-              //   decoration:
-              //       getInputDecoration(context.lang.registerTwonlyCodeLabel),
-              // ),
               const SizedBox(height: 30),
               Column(
                 children: [

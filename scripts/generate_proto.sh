@@ -7,7 +7,7 @@ if [ ! -f "pubspec.yaml" ]; then
   exit 1
 fi
 
-# Definitions for twonly Safe
+# Definitions for twonly Backup
 GENERATED_DIR="./lib/src/model/protobuf/client/generated/"
 CLIENT_DIR="./lib/src/model/protobuf/client/"
 

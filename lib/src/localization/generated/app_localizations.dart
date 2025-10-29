@@ -1844,6 +1844,12 @@ abstract class AppLocalizations {
   /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
   String get backupTwonlySafeDesc;
 
+  /// No description provided for @backupNoPasswordRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.'**
+  String get backupNoPasswordRecovery;
+
   /// No description provided for @backupServer.
   ///
   /// In en, this message translates to:
@@ -1931,13 +1937,13 @@ abstract class AppLocalizations {
   /// No description provided for @backupTwonlySafeLongDesc.
   ///
   /// In en, this message translates to:
-  /// **'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Safe regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.'**
+  /// **'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Backup regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.'**
   String get backupTwonlySafeLongDesc;
 
   /// No description provided for @backupSelectStrongPassword.
   ///
   /// In en, this message translates to:
-  /// **'Choose a secure password. This is required if you want to restore your twonly Safe backup.'**
+  /// **'Choose a secure password. This is required if you want to restore your twonly Backup.'**
   String get backupSelectStrongPassword;
 
   /// No description provided for @password.
@@ -1979,7 +1985,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupOwnServerDesc.
   ///
   /// In en, this message translates to:
-  /// **'Save your twonly safe backups at twonly or on any server of your choice.'**
+  /// **'Save your twonly Backup at twonly or on any server of your choice.'**
   String get backupOwnServerDesc;
 
   /// No description provided for @backupUseOwnServer.
@@ -2000,6 +2006,12 @@ abstract class AppLocalizations {
   /// **'Save now'**
   String get backupTwonlySaveNow;
 
+  /// No description provided for @backupChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get backupChangePassword;
+
   /// No description provided for @twonlySafeRecoverTitle.
   ///
   /// In en, this message translates to:
@@ -2009,7 +2021,7 @@ abstract class AppLocalizations {
   /// No description provided for @twonlySafeRecoverDesc.
   ///
   /// In en, this message translates to:
-  /// **'If you have created a backup with twonly Safe, you can restore it here.'**
+  /// **'If you have created a backup with twonly Backup, you can restore it here.'**
   String get twonlySafeRecoverDesc;
 
   /// No description provided for @twonlySafeRecoverBtn.

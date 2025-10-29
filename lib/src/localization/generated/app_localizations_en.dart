@@ -968,6 +968,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
 
   @override
+  String get backupNoPasswordRecovery =>
+      'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.';
+
+  @override
   String get backupServer => 'Server';
 
   @override
@@ -1014,11 +1018,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupTwonlySafeLongDesc =>
-      'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Safe regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.';
+      'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Backup regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.';
 
   @override
   String get backupSelectStrongPassword =>
-      'Choose a secure password. This is required if you want to restore your twonly Safe backup.';
+      'Choose a secure password. This is required if you want to restore your twonly Backup.';
 
   @override
   String get password => 'Password';
@@ -1041,7 +1045,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupOwnServerDesc =>
-      'Save your twonly safe backups at twonly or on any server of your choice.';
+      'Save your twonly Backup at twonly or on any server of your choice.';
 
   @override
   String get backupUseOwnServer => 'Use server';
@@ -1053,11 +1057,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupTwonlySaveNow => 'Save now';
 
   @override
+  String get backupChangePassword => 'Change password';
+
+  @override
   String get twonlySafeRecoverTitle => 'Recovery';
 
   @override
   String get twonlySafeRecoverDesc =>
-      'If you have created a backup with twonly Safe, you can restore it here.';
+      'If you have created a backup with twonly Backup, you can restore it here.';
 
   @override
   String get twonlySafeRecoverBtn => 'Restore backup';

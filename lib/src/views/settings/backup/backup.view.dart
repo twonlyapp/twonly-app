@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
 
 void Function() gUpdateBackupView = () {};
@@ -25,8 +23,6 @@ BackupServer defaultBackupServer = BackupServer(
 );
 
 class _BackupViewState extends State<BackupView> {
-  TwonlySafeBackup? twonlySafeBackup;
-  BackupServer backupServer = defaultBackupServer;
   bool isLoading = false;
 
   int activePageIdx = 0;
@@ -47,11 +43,6 @@ class _BackupViewState extends State<BackupView> {
   }
 
   Future<void> initAsync() async {
-    twonlySafeBackup = gUser.twonlySafeBackup;
-    backupServer = defaultBackupServer;
-    if (gUser.backupServer != null) {
-      backupServer = gUser.backupServer!;
-    }
     setState(() {});
   }
 
@@ -68,8 +59,25 @@ class _BackupViewState extends State<BackupView> {
     }
   }
 
+  Future<void> changeTwonlySafePassword() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return const TwonlyIdentityBackupView(
+            isPasswordChangeOnly: true,
+          );
+        },
+      ),
+    );
+    setState(() {
+      // gUser was updated
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final backupServer = gUser.backupServer ?? defaultBackupServer;
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsBackup),
@@ -83,10 +91,13 @@ class _BackupViewState extends State<BackupView> {
         },
         children: [
           BackupOption(
-            title: 'twonly Safe',
+            title: 'twonly Backup',
             description: context.lang.backupTwonlySafeDesc,
-            autoBackupEnabled: twonlySafeBackup != null,
-            child: (twonlySafeBackup == null)
+            bottomButton: FilledButton(
+              onPressed: changeTwonlySafePassword,
+              child: Text(context.lang.backupChangePassword),
+            ),
+            child: (gUser.twonlySafeBackup == null)
                 ? null
                 : Column(
                     children: [
@@ -114,16 +125,20 @@ class _BackupViewState extends State<BackupView> {
                               context.lang.backupLastBackupDate,
                               formatDateTime(
                                 context,
-                                twonlySafeBackup!.lastBackupDone,
+                                gUser.twonlySafeBackup!.lastBackupDone,
                               )
                             ),
                             (
                               context.lang.backupLastBackupSize,
-                              formatBytes(twonlySafeBackup!.lastBackupSize)
+                              formatBytes(
+                                gUser.twonlySafeBackup!.lastBackupSize,
+                              )
                             ),
                             (
                               context.lang.backupLastBackupResult,
-                              backupStatus(twonlySafeBackup!.backupUploadState)
+                              backupStatus(
+                                gUser.twonlySafeBackup!.backupUploadState,
+                              )
                             ),
                           ].map((pair) {
                             return TableRow(
@@ -134,8 +149,9 @@ class _BackupViewState extends State<BackupView> {
                                 ),
                                 TableCell(
                                   child: Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
                                     child: Text(
                                       pair.$2,
                                       textAlign: TextAlign.right,
@@ -148,7 +164,7 @@ class _BackupViewState extends State<BackupView> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      FilledButton(
+                      OutlinedButton(
                         onPressed: isLoading
                             ? null
                             : () async {
@@ -164,37 +180,10 @@ class _BackupViewState extends State<BackupView> {
                       ),
                     ],
                   ),
-            onTap: () async {
-              if (twonlySafeBackup != null) {
-                final disable = await showAlertDialog(
-                  context,
-                  context.lang.deleteBackupTitle,
-                  context.lang.deleteBackupBody,
-                );
-                if (disable) {
-                  await disableTwonlySafe();
-                }
-              } else {
-                setState(() {
-                  isLoading = true;
-                });
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const TwonlyIdentityBackupView();
-                    },
-                  ),
-                );
-              }
-              await initAsync();
-            },
           ),
           BackupOption(
             title: '${context.lang.backupData} (Coming Soon)',
             description: context.lang.backupDataDesc,
-            autoBackupEnabled: false,
-            onTap: null,
           ),
         ],
       ),
@@ -209,7 +198,7 @@ class _BackupViewState extends State<BackupView> {
         items: [
           const BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.vault, size: 17),
-            label: 'twonly Safe',
+            label: 'twonly Backup',
           ),
           BottomNavigationBarItem(
             icon: const FaIcon(FontAwesomeIcons.boxArchive, size: 17),
@@ -236,51 +225,35 @@ class BackupOption extends StatelessWidget {
   const BackupOption({
     required this.title,
     required this.description,
-    required this.autoBackupEnabled,
-    required this.onTap,
+    this.bottomButton,
     super.key,
     this.child,
   });
   final String title;
   final String description;
   final Widget? child;
-  final bool autoBackupEnabled;
-  final void Function()? onTap;
+  final Widget? bottomButton;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: autoBackupEnabled ? null : onTap,
-      child: Card(
-        margin: const EdgeInsets.all(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(description),
-              const SizedBox(height: 8),
-              if (child != null) child! else Container(),
-              Expanded(child: Container()),
-              Center(
-                child: autoBackupEnabled
-                    ? OutlinedButton(
-                        onPressed: onTap,
-                        child: Text(context.lang.disable),
-                      )
-                    : FilledButton(
-                        onPressed: onTap,
-                        child: Text(context.lang.enable),
-                      ),
-              ),
-            ],
-          ),
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(description),
+            const SizedBox(height: 8),
+            if (child != null) child! else Container(),
+            Expanded(child: Container()),
+            if (bottomButton != null) Center(child: bottomButton),
+          ],
         ),
       ),
     );

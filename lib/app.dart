@@ -11,6 +11,7 @@ import 'package:twonly/src/views/components/app_outdated.dart';
 import 'package:twonly/src/views/home.view.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/onboarding/register.view.dart';
+import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
 import 'package:twonly/src/views/updates/62_database_migration.view.dart';
 
 class App extends StatefulWidget {
@@ -181,9 +182,17 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_showDatabaseMigration) {
       child = const DatabaseMigrationView();
     } else if (_isUserCreated) {
-      child = HomeView(
-        initialPage: widget.initialPage,
-      );
+      if (gUser.twonlySafeBackup == null) {
+        child = TwonlyIdentityBackupView(
+          callBack: () {
+            setState(() {});
+          },
+        );
+      } else {
+        child = HomeView(
+          initialPage: widget.initialPage,
+        );
+      }
     } else if (_showOnboarding) {
       child = OnboardingView(
         callbackOnSuccess: () => setState(() {
