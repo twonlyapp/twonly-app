@@ -22,10 +22,12 @@ class ChatMediaEntry extends StatefulWidget {
     required this.group,
     required this.galleryItems,
     required this.mediaService,
+    required this.minWidth,
     super.key,
   });
 
   final Message message;
+  final double minWidth;
   final Group group;
   final List<MemoryItem> galleryItems;
   final MediaFileService mediaService;
@@ -117,7 +119,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       onDoubleTap: onDoubleTap,
       onTap: (widget.message.type == MessageType.media) ? onTap : null,
       child: SizedBox(
-        width: 150,
+        width: (widget.minWidth > 150) ? widget.minWidth : 150,
         height: (widget.message.mediaStored &&
                 widget.mediaService.imagePreviewAvailable)
             ? 271

@@ -113,9 +113,10 @@ class ReactionRow extends StatelessWidget {
                       child: Text(
                         entry.$2.toString(),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
-                          color: Colors.black,
+                          color:
+                              isDarkMode(context) ? Colors.white : Colors.black,
                           decoration: TextDecoration.none,
                           fontWeight: FontWeight.normal,
                         ),

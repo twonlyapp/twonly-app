@@ -36,7 +36,7 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
       child: GestureDetector(
         onTap: () async {
           await twonlyDB.reactionsDao
-              .updateMyReaction(widget.messageId, widget.emoji);
+              .updateMyReaction(widget.messageId, widget.emoji, false);
 
           await sendCipherTextToGroup(
             widget.groupId,
@@ -44,6 +44,7 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
               reaction: EncryptedContent_Reaction(
                 targetMessageId: widget.messageId,
                 emoji: widget.emoji,
+                remove: false,
               ),
             ),
             null,

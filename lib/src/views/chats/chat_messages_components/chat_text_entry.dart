@@ -53,8 +53,7 @@ class ChatTextEntry extends StatelessWidget {
     if (message.isDeletedFromSender) {
       color = context.color.surfaceBright;
       displayTime = false;
-    } else if (measureTextWidth(text) > 270 ||
-        message.quotesMessageId != null) {
+    } else if (measureTextWidth(text) > 270) {
       expanded = true;
     }
 

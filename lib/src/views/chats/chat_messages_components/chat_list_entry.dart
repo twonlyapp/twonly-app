@@ -133,6 +133,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
                             group: widget.group,
                             mediaService: mediaService!,
                             galleryItems: widget.galleryItems,
+                            minWidth: reactionsForWidth * 43,
                           ),
               ),
               if (reactionsForWidth > 0) const SizedBox(height: 20, width: 10),

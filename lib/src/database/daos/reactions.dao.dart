@@ -4,6 +4,7 @@ import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 
 part 'reactions.dao.g.dart';
 
@@ -18,25 +19,69 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
     int contactId,
     String messageId,
     String groupId,
-    String? emoji,
+    String emoji,
+    bool remove,
   ) async {
+    if (!isEmoji(emoji)) {
+      Log.error('Did not update reaction as it is not an emoji!');
+      return;
+    }
     final msg =
         await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
     if (msg == null || msg.groupId != groupId) return;
 
     try {
-      await (delete(reactions)
-            ..where(
-              (t) =>
-                  t.senderId.equals(contactId) & t.messageId.equals(messageId),
-            ))
-          .go();
-      if (emoji != null) {
-        await into(reactions).insert(
+      if (remove) {
+        await (delete(reactions)
+              ..where(
+                (t) =>
+                    t.senderId.equals(contactId) &
+                    t.messageId.equals(messageId) &
+                    t.emoji.equals(emoji),
+              ))
+            .go();
+      } else {
+        await into(reactions).insertOnConflictUpdate(
           ReactionsCompanion(
             messageId: Value(messageId),
             emoji: Value(emoji),
             senderId: Value(contactId),
+          ),
+        );
+      }
+    } catch (e) {
+      Log.error(e);
+    }
+  }
+
+  Future<void> updateMyReaction(
+    String messageId,
+    String emoji,
+    bool remove,
+  ) async {
+    if (!isEmoji(emoji)) {
+      Log.error('Did not update reaction as it is not an emoji!');
+      return;
+    }
+    final msg =
+        await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
+    if (msg == null) return;
+
+    try {
+      await (delete(reactions)
+            ..where(
+              (t) =>
+                  t.senderId.isNull() &
+                  t.messageId.equals(messageId) &
+                  t.emoji.equals(emoji),
+            ))
+          .go();
+      if (!remove) {
+        await into(reactions).insert(
+          ReactionsCompanion(
+            messageId: Value(messageId),
+            emoji: Value(emoji),
+            senderId: const Value(null),
           ),
         );
       }
@@ -80,26 +125,5 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
     return query
         .map((row) => (row.readTable(reactions), row.readTableOrNull(contacts)))
         .watch();
-  }
-
-  Future<void> updateMyReaction(String messageId, String? emoji) async {
-    try {
-      await (delete(reactions)
-            ..where(
-              (t) => t.senderId.isNull() & t.messageId.equals(messageId),
-            ))
-          .go();
-      if (emoji != null) {
-        await into(reactions).insert(
-          ReactionsCompanion(
-            messageId: Value(messageId),
-            emoji: Value(emoji),
-            senderId: const Value(null),
-          ),
-        );
-      }
-    } catch (e) {
-      Log.error(e);
-    }
   }
 }

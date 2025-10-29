@@ -54,8 +54,8 @@ message EncryptedContent {
 
     message Reaction {
         string targetMessageId = 1;
-        optional string emoji = 2;
-        optional bool remove = 3;
+        string emoji = 2;
+        bool remove = 3;
     }
 
     message MessageUpdate {

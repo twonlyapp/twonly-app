@@ -8,6 +8,7 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 
 class AllReactionsView extends StatefulWidget {
@@ -47,14 +48,18 @@ class _AllReactionsViewState extends State<AllReactionsView> {
     setState(() {});
   }
 
-  Future<void> removeReaction() async {
-    await twonlyDB.reactionsDao
-        .updateMyReaction(widget.message.messageId, null);
+  Future<void> removeReaction(String emoji) async {
+    await twonlyDB.reactionsDao.updateMyReaction(
+      widget.message.messageId,
+      emoji,
+      true,
+    );
     await sendCipherTextToGroup(
       widget.message.groupId,
       pb.EncryptedContent(
         reaction: pb.EncryptedContent_Reaction(
           targetMessageId: widget.message.messageId,
+          emoji: emoji,
           remove: true,
         ),
       ),
@@ -97,12 +102,17 @@ class _AllReactionsViewState extends State<AllReactionsView> {
               child: ListView(
                 children: reactionsUsers.map((entry) {
                   return GestureDetector(
-                    onTap: (entry.$2 != null) ? null : removeReaction,
+                    onTap: (entry.$2 != null)
+                        ? null
+                        : () {
+                            removeReaction(entry.$1.emoji);
+                          },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         vertical: 5,
                         horizontal: 30,
                       ),
+                      color: Colors.transparent,
                       margin: const EdgeInsets.only(left: 4),
                       child: Row(
                         children: [
@@ -130,10 +140,30 @@ class _AllReactionsViewState extends State<AllReactionsView> {
                               ],
                             ),
                           ),
-                          Text(
-                            entry.$1.emoji,
-                            style: const TextStyle(fontSize: 25),
-                          ),
+                          if (EmojiAnimation.animatedIcons
+                              .containsKey(entry.$1.emoji))
+                            SizedBox(
+                              height: 25,
+                              child: EmojiAnimation(emoji: entry.$1.emoji),
+                            )
+                          else
+                            SizedBox(
+                              height: 24,
+                              child: Center(
+                                child: Text(
+                                  entry.$1.emoji,
+                                  style: const TextStyle(fontSize: 22),
+                                  strutStyle: const StrutStyle(
+                                    forceStrutHeight: true,
+                                    height: 1.6,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Text(
+                          //   entry.$1.emoji,
+                          //   style: const TextStyle(fontSize: 25),
+                          // ),
                         ],
                       ),
                     ),

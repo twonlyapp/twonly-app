@@ -50,8 +50,11 @@ class MessageContextMenu extends StatelessWidget {
               ) as EmojiLayerData?;
               if (layer == null) return;
 
-              await twonlyDB.reactionsDao
-                  .updateMyReaction(message.messageId, layer.text);
+              await twonlyDB.reactionsDao.updateMyReaction(
+                message.messageId,
+                layer.text,
+                false,
+              );
 
               await sendCipherTextToGroup(
                 message.groupId,
