@@ -44,6 +44,31 @@ message EncryptedContent {
     optional PushKeys pushKeys = 11;
     optional Reaction reaction  = 12;
     optional TextMessage textMessage  = 13;
+    optional NewGroup newGroup  = 14;
+    optional JoinGroup joinGroup  = 15;
+    optional GroupUpdate groupUpdate  = 16;
+
+
+    message NewGroup {
+        // key for the state stored on the server
+        string groupId = 1;
+        string stateId = 2;
+        bytes stateKey = 3;
+        bytes groupPublicKey = 4;
+    }
+
+    message JoinGroup {
+        // key for the state stored on the server
+        string groupId = 1;
+        bytes groupPublicKey = 4;
+    }
+
+    message GroupUpdate {
+        optional int64 removedAdmin = 1;
+        optional int64 removedUser = 2;
+        optional int64 groupName = 3;
+        optional int64 deleteMessagesAfterMilliseconds = 4;
+    }
 
     message TextMessage {
         string senderMessageId = 1;

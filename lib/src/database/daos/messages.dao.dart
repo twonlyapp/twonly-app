@@ -270,12 +270,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         actionAt: Value(timestamp),
       ),
     );
-    if (await haveAllMembers(messageId, MessageActionType.openedAt)) {
-      await twonlyDB.messagesDao.updateMessageId(
-        messageId,
-        MessagesCompanion(openedAt: Value(DateTime.now())),
-      );
-    }
+    // Directly show as message opened as soon as one person has opened it
+    // if (await haveAllMembers(messageId, MessageActionType.openedAt)) {
+    await twonlyDB.messagesDao.updateMessageId(
+      messageId,
+      MessagesCompanion(openedAt: Value(DateTime.now())),
+    );
+    // }
   }
 
   Future<void> handleMessageAckByServer(
@@ -291,12 +292,13 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         actionAt: Value(timestamp),
       ),
     );
-    if (await haveAllMembers(messageId, MessageActionType.ackByServerAt)) {
-      await twonlyDB.messagesDao.updateMessageId(
-        messageId,
-        MessagesCompanion(ackByServer: Value(DateTime.now())),
-      );
-    }
+    // if (await haveAllMembers(messageId, MessageActionType.ackByServerAt)) {
+    /// always update the state, so it will be shown as soon as one member gets the message
+    await twonlyDB.messagesDao.updateMessageId(
+      messageId,
+      MessagesCompanion(ackByServer: Value(DateTime.now())),
+    );
+    // }
   }
 
   Future<bool> haveAllMembers(
