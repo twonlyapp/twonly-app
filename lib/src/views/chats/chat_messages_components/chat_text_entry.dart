@@ -89,7 +89,7 @@ class ChatTextEntry extends StatelessWidget {
               width: spacerWidth,
             ),
           ],
-          if (displayTime)
+          if (displayTime || message.modifiedAt != null)
             Align(
               alignment: AlignmentGeometry.centerRight,
               child: Padding(
@@ -108,8 +108,14 @@ class ChatTextEntry extends StatelessWidget {
                           ),
                         ),
                       ),
+                    // if (displayTime)
                     Text(
-                      friendlyTime(context, message.createdAt),
+                      friendlyTime(
+                        context,
+                        (message.modifiedAt != null)
+                            ? message.modifiedAt!
+                            : message.createdAt,
+                      ),
                       style: TextStyle(
                         fontSize: 10,
                         color: Colors.white.withAlpha(150),
