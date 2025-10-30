@@ -775,6 +775,20 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _maxFlameCounterMeta =
+      const VerificationMeta('maxFlameCounter');
+  @override
+  late final GeneratedColumn<int> maxFlameCounter = GeneratedColumn<int>(
+      'max_flame_counter', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _maxFlameCounterFromMeta =
+      const VerificationMeta('maxFlameCounterFrom');
+  @override
+  late final GeneratedColumn<DateTime> maxFlameCounterFrom =
+      GeneratedColumn<DateTime>('max_flame_counter_from', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _lastMessageExchangeMeta =
       const VerificationMeta('lastMessageExchange');
   @override
@@ -800,6 +814,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         lastFlameCounterChange,
         lastFlameSync,
         flameCounter,
+        maxFlameCounter,
+        maxFlameCounterFrom,
         lastMessageExchange
       ];
   @override
@@ -901,6 +917,18 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           flameCounter.isAcceptableOrUnknown(
               data['flame_counter']!, _flameCounterMeta));
     }
+    if (data.containsKey('max_flame_counter')) {
+      context.handle(
+          _maxFlameCounterMeta,
+          maxFlameCounter.isAcceptableOrUnknown(
+              data['max_flame_counter']!, _maxFlameCounterMeta));
+    }
+    if (data.containsKey('max_flame_counter_from')) {
+      context.handle(
+          _maxFlameCounterFromMeta,
+          maxFlameCounterFrom.isAcceptableOrUnknown(
+              data['max_flame_counter_from']!, _maxFlameCounterFromMeta));
+    }
     if (data.containsKey('last_message_exchange')) {
       context.handle(
           _lastMessageExchangeMeta,
@@ -949,6 +977,11 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           DriftSqlType.dateTime, data['${effectivePrefix}last_flame_sync']),
       flameCounter: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}flame_counter'])!,
+      maxFlameCounter: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}max_flame_counter'])!,
+      maxFlameCounterFrom: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}max_flame_counter_from']),
       lastMessageExchange: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
           data['${effectivePrefix}last_message_exchange'])!,
@@ -977,6 +1010,8 @@ class Group extends DataClass implements Insertable<Group> {
   final DateTime? lastFlameCounterChange;
   final DateTime? lastFlameSync;
   final int flameCounter;
+  final int maxFlameCounter;
+  final DateTime? maxFlameCounterFrom;
   final DateTime lastMessageExchange;
   const Group(
       {required this.groupId,
@@ -994,6 +1029,8 @@ class Group extends DataClass implements Insertable<Group> {
       this.lastFlameCounterChange,
       this.lastFlameSync,
       required this.flameCounter,
+      required this.maxFlameCounter,
+      this.maxFlameCounterFrom,
       required this.lastMessageExchange});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1023,6 +1060,10 @@ class Group extends DataClass implements Insertable<Group> {
       map['last_flame_sync'] = Variable<DateTime>(lastFlameSync);
     }
     map['flame_counter'] = Variable<int>(flameCounter);
+    map['max_flame_counter'] = Variable<int>(maxFlameCounter);
+    if (!nullToAbsent || maxFlameCounterFrom != null) {
+      map['max_flame_counter_from'] = Variable<DateTime>(maxFlameCounterFrom);
+    }
     map['last_message_exchange'] = Variable<DateTime>(lastMessageExchange);
     return map;
   }
@@ -1052,6 +1093,10 @@ class Group extends DataClass implements Insertable<Group> {
           ? const Value.absent()
           : Value(lastFlameSync),
       flameCounter: Value(flameCounter),
+      maxFlameCounter: Value(maxFlameCounter),
+      maxFlameCounterFrom: maxFlameCounterFrom == null && nullToAbsent
+          ? const Value.absent()
+          : Value(maxFlameCounterFrom),
       lastMessageExchange: Value(lastMessageExchange),
     );
   }
@@ -1078,6 +1123,9 @@ class Group extends DataClass implements Insertable<Group> {
           serializer.fromJson<DateTime?>(json['lastFlameCounterChange']),
       lastFlameSync: serializer.fromJson<DateTime?>(json['lastFlameSync']),
       flameCounter: serializer.fromJson<int>(json['flameCounter']),
+      maxFlameCounter: serializer.fromJson<int>(json['maxFlameCounter']),
+      maxFlameCounterFrom:
+          serializer.fromJson<DateTime?>(json['maxFlameCounterFrom']),
       lastMessageExchange:
           serializer.fromJson<DateTime>(json['lastMessageExchange']),
     );
@@ -1103,6 +1151,8 @@ class Group extends DataClass implements Insertable<Group> {
           serializer.toJson<DateTime?>(lastFlameCounterChange),
       'lastFlameSync': serializer.toJson<DateTime?>(lastFlameSync),
       'flameCounter': serializer.toJson<int>(flameCounter),
+      'maxFlameCounter': serializer.toJson<int>(maxFlameCounter),
+      'maxFlameCounterFrom': serializer.toJson<DateTime?>(maxFlameCounterFrom),
       'lastMessageExchange': serializer.toJson<DateTime>(lastMessageExchange),
     };
   }
@@ -1123,6 +1173,8 @@ class Group extends DataClass implements Insertable<Group> {
           Value<DateTime?> lastFlameCounterChange = const Value.absent(),
           Value<DateTime?> lastFlameSync = const Value.absent(),
           int? flameCounter,
+          int? maxFlameCounter,
+          Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
           DateTime? lastMessageExchange}) =>
       Group(
         groupId: groupId ?? this.groupId,
@@ -1148,6 +1200,10 @@ class Group extends DataClass implements Insertable<Group> {
         lastFlameSync:
             lastFlameSync.present ? lastFlameSync.value : this.lastFlameSync,
         flameCounter: flameCounter ?? this.flameCounter,
+        maxFlameCounter: maxFlameCounter ?? this.maxFlameCounter,
+        maxFlameCounterFrom: maxFlameCounterFrom.present
+            ? maxFlameCounterFrom.value
+            : this.maxFlameCounterFrom,
         lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
       );
   Group copyWithCompanion(GroupsCompanion data) {
@@ -1188,6 +1244,12 @@ class Group extends DataClass implements Insertable<Group> {
       flameCounter: data.flameCounter.present
           ? data.flameCounter.value
           : this.flameCounter,
+      maxFlameCounter: data.maxFlameCounter.present
+          ? data.maxFlameCounter.value
+          : this.maxFlameCounter,
+      maxFlameCounterFrom: data.maxFlameCounterFrom.present
+          ? data.maxFlameCounterFrom.value
+          : this.maxFlameCounterFrom,
       lastMessageExchange: data.lastMessageExchange.present
           ? data.lastMessageExchange.value
           : this.lastMessageExchange,
@@ -1213,6 +1275,8 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
           ..write('lastFlameSync: $lastFlameSync, ')
           ..write('flameCounter: $flameCounter, ')
+          ..write('maxFlameCounter: $maxFlameCounter, ')
+          ..write('maxFlameCounterFrom: $maxFlameCounterFrom, ')
           ..write('lastMessageExchange: $lastMessageExchange')
           ..write(')'))
         .toString();
@@ -1235,6 +1299,8 @@ class Group extends DataClass implements Insertable<Group> {
       lastFlameCounterChange,
       lastFlameSync,
       flameCounter,
+      maxFlameCounter,
+      maxFlameCounterFrom,
       lastMessageExchange);
   @override
   bool operator ==(Object other) =>
@@ -1256,6 +1322,8 @@ class Group extends DataClass implements Insertable<Group> {
           other.lastFlameCounterChange == this.lastFlameCounterChange &&
           other.lastFlameSync == this.lastFlameSync &&
           other.flameCounter == this.flameCounter &&
+          other.maxFlameCounter == this.maxFlameCounter &&
+          other.maxFlameCounterFrom == this.maxFlameCounterFrom &&
           other.lastMessageExchange == this.lastMessageExchange);
 }
 
@@ -1275,6 +1343,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<DateTime?> lastFlameCounterChange;
   final Value<DateTime?> lastFlameSync;
   final Value<int> flameCounter;
+  final Value<int> maxFlameCounter;
+  final Value<DateTime?> maxFlameCounterFrom;
   final Value<DateTime> lastMessageExchange;
   final Value<int> rowid;
   const GroupsCompanion({
@@ -1293,6 +1363,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.lastFlameCounterChange = const Value.absent(),
     this.lastFlameSync = const Value.absent(),
     this.flameCounter = const Value.absent(),
+    this.maxFlameCounter = const Value.absent(),
+    this.maxFlameCounterFrom = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1312,6 +1384,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.lastFlameCounterChange = const Value.absent(),
     this.lastFlameSync = const Value.absent(),
     this.flameCounter = const Value.absent(),
+    this.maxFlameCounter = const Value.absent(),
+    this.maxFlameCounterFrom = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : groupId = Value(groupId),
@@ -1334,6 +1408,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<DateTime>? lastFlameCounterChange,
     Expression<DateTime>? lastFlameSync,
     Expression<int>? flameCounter,
+    Expression<int>? maxFlameCounter,
+    Expression<DateTime>? maxFlameCounterFrom,
     Expression<DateTime>? lastMessageExchange,
     Expression<int>? rowid,
   }) {
@@ -1356,6 +1432,9 @@ class GroupsCompanion extends UpdateCompanion<Group> {
         'last_flame_counter_change': lastFlameCounterChange,
       if (lastFlameSync != null) 'last_flame_sync': lastFlameSync,
       if (flameCounter != null) 'flame_counter': flameCounter,
+      if (maxFlameCounter != null) 'max_flame_counter': maxFlameCounter,
+      if (maxFlameCounterFrom != null)
+        'max_flame_counter_from': maxFlameCounterFrom,
       if (lastMessageExchange != null)
         'last_message_exchange': lastMessageExchange,
       if (rowid != null) 'rowid': rowid,
@@ -1378,6 +1457,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       Value<DateTime?>? lastFlameCounterChange,
       Value<DateTime?>? lastFlameSync,
       Value<int>? flameCounter,
+      Value<int>? maxFlameCounter,
+      Value<DateTime?>? maxFlameCounterFrom,
       Value<DateTime>? lastMessageExchange,
       Value<int>? rowid}) {
     return GroupsCompanion(
@@ -1398,6 +1479,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           lastFlameCounterChange ?? this.lastFlameCounterChange,
       lastFlameSync: lastFlameSync ?? this.lastFlameSync,
       flameCounter: flameCounter ?? this.flameCounter,
+      maxFlameCounter: maxFlameCounter ?? this.maxFlameCounter,
+      maxFlameCounterFrom: maxFlameCounterFrom ?? this.maxFlameCounterFrom,
       lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
       rowid: rowid ?? this.rowid,
     );
@@ -1454,6 +1537,13 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     if (flameCounter.present) {
       map['flame_counter'] = Variable<int>(flameCounter.value);
     }
+    if (maxFlameCounter.present) {
+      map['max_flame_counter'] = Variable<int>(maxFlameCounter.value);
+    }
+    if (maxFlameCounterFrom.present) {
+      map['max_flame_counter_from'] =
+          Variable<DateTime>(maxFlameCounterFrom.value);
+    }
     if (lastMessageExchange.present) {
       map['last_message_exchange'] =
           Variable<DateTime>(lastMessageExchange.value);
@@ -1483,6 +1573,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('lastFlameCounterChange: $lastFlameCounterChange, ')
           ..write('lastFlameSync: $lastFlameSync, ')
           ..write('flameCounter: $flameCounter, ')
+          ..write('maxFlameCounter: $maxFlameCounter, ')
+          ..write('maxFlameCounterFrom: $maxFlameCounterFrom, ')
           ..write('lastMessageExchange: $lastMessageExchange, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -7414,6 +7506,8 @@ typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   Value<DateTime?> lastFlameCounterChange,
   Value<DateTime?> lastFlameSync,
   Value<int> flameCounter,
+  Value<int> maxFlameCounter,
+  Value<DateTime?> maxFlameCounterFrom,
   Value<DateTime> lastMessageExchange,
   Value<int> rowid,
 });
@@ -7433,6 +7527,8 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<DateTime?> lastFlameCounterChange,
   Value<DateTime?> lastFlameSync,
   Value<int> flameCounter,
+  Value<int> maxFlameCounter,
+  Value<DateTime?> maxFlameCounterFrom,
   Value<DateTime> lastMessageExchange,
   Value<int> rowid,
 });
@@ -7515,6 +7611,14 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
 
   ColumnFilters<int> get flameCounter => $composableBuilder(
       column: $table.flameCounter, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get maxFlameCounter => $composableBuilder(
+      column: $table.maxFlameCounter,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get maxFlameCounterFrom => $composableBuilder(
+      column: $table.maxFlameCounterFrom,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange,
@@ -7606,6 +7710,14 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
       column: $table.flameCounter,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get maxFlameCounter => $composableBuilder(
+      column: $table.maxFlameCounter,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get maxFlameCounterFrom => $composableBuilder(
+      column: $table.maxFlameCounterFrom,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange,
       builder: (column) => ColumnOrderings(column));
@@ -7666,6 +7778,12 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<int> get flameCounter => $composableBuilder(
       column: $table.flameCounter, builder: (column) => column);
+
+  GeneratedColumn<int> get maxFlameCounter => $composableBuilder(
+      column: $table.maxFlameCounter, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get maxFlameCounterFrom => $composableBuilder(
+      column: $table.maxFlameCounterFrom, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastMessageExchange => $composableBuilder(
       column: $table.lastMessageExchange, builder: (column) => column);
@@ -7730,6 +7848,8 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<DateTime?> lastFlameCounterChange = const Value.absent(),
             Value<DateTime?> lastFlameSync = const Value.absent(),
             Value<int> flameCounter = const Value.absent(),
+            Value<int> maxFlameCounter = const Value.absent(),
+            Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
             Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -7749,6 +7869,8 @@ class $$GroupsTableTableManager extends RootTableManager<
             lastFlameCounterChange: lastFlameCounterChange,
             lastFlameSync: lastFlameSync,
             flameCounter: flameCounter,
+            maxFlameCounter: maxFlameCounter,
+            maxFlameCounterFrom: maxFlameCounterFrom,
             lastMessageExchange: lastMessageExchange,
             rowid: rowid,
           ),
@@ -7768,6 +7890,8 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<DateTime?> lastFlameCounterChange = const Value.absent(),
             Value<DateTime?> lastFlameSync = const Value.absent(),
             Value<int> flameCounter = const Value.absent(),
+            Value<int> maxFlameCounter = const Value.absent(),
+            Value<DateTime?> maxFlameCounterFrom = const Value.absent(),
             Value<DateTime> lastMessageExchange = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -7787,6 +7911,8 @@ class $$GroupsTableTableManager extends RootTableManager<
             lastFlameCounterChange: lastFlameCounterChange,
             lastFlameSync: lastFlameSync,
             flameCounter: flameCounter,
+            maxFlameCounter: maxFlameCounter,
+            maxFlameCounterFrom: maxFlameCounterFrom,
             lastMessageExchange: lastMessageExchange,
             rowid: rowid,
           ),

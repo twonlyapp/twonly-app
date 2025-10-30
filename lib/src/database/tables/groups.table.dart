@@ -29,6 +29,9 @@ class Groups extends Table {
 
   IntColumn get flameCounter => integer().withDefault(const Constant(0))();
 
+  IntColumn get maxFlameCounter => integer().withDefault(const Constant(0))();
+  DateTimeColumn get maxFlameCounterFrom => dateTime().nullable()();
+
   DateTimeColumn get lastMessageExchange =>
       dateTime().withDefault(currentDateAndTime)();
 

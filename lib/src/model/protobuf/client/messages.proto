@@ -68,6 +68,7 @@ message EncryptedContent {
         optional int64 removedUser = 2;
         optional int64 groupName = 3;
         optional int64 deleteMessagesAfterMilliseconds = 4;
+        bytes stateKey = 5;
     }
 
     message TextMessage {

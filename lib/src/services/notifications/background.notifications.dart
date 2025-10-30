@@ -16,16 +16,17 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 Future<void> customLocalPushNotification(String title, String msg) async {
-  const androidNotificationDetails = AndroidNotificationDetails(
+  final androidNotificationDetails = AndroidNotificationDetails(
     '1',
     'System',
     channelDescription: 'System messages.',
     importance: Importance.max,
     priority: Priority.max,
+    styleInformation: BigTextStyleInformation(msg),
   );
 
   const darwinNotificationDetails = DarwinNotificationDetails();
-  const notificationDetails = NotificationDetails(
+  final notificationDetails = NotificationDetails(
     android: androidNotificationDetails,
     iOS: darwinNotificationDetails,
   );

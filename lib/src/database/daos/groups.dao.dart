@@ -162,6 +162,8 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
     final totalMediaCounter = group.totalMediaCounter + 1;
     var flameCounter = group.flameCounter;
+    var maxFlameCounter = group.maxFlameCounter;
+    var maxFlameCounterFrom = group.maxFlameCounterFrom;
 
     if (group.lastMessageReceived != null && group.lastMessageSend != null) {
       final now = DateTime.now();
@@ -198,6 +200,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         if (updateFlame) {
           flameCounter += 1;
           lastFlameCounterChange = Value(timestamp);
+          if (flameCounter > maxFlameCounter) {
+            maxFlameCounter = flameCounter;
+            maxFlameCounterFrom = DateTime.now();
+          }
         }
       }
     } else {
@@ -218,6 +224,8 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         lastMessageReceived: lastMessageReceived,
         lastMessageSend: lastMessageSend,
         flameCounter: Value(flameCounter),
+        maxFlameCounter: Value(maxFlameCounter),
+        maxFlameCounterFrom: Value(maxFlameCounterFrom),
       ),
     );
   }
