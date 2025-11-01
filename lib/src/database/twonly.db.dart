@@ -44,7 +44,7 @@ part 'twonly.db.g.dart';
     SignalContactPreKeys,
     SignalContactSignedPreKeys,
     MessageActions,
-    GroupHistories
+    GroupHistories,
   ],
   daos: [
     MessagesDao,

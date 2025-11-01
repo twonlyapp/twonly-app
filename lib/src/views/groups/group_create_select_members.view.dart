@@ -138,19 +138,20 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                             ),
                             child: SingleChildScrollView(
                               child: LayoutBuilder(
-                                  builder: (context, constraints) {
-                                // Wrap will use the available width from constraints.maxWidth
-                                return Wrap(
-                                  spacing: 8,
-                                  children: selected.map((w) {
-                                    return _Chip(
-                                      contact: allContacts
-                                          .firstWhere((t) => t.userId == w),
-                                      onTap: toggleSelectedUser,
-                                    );
-                                  }).toList(),
-                                );
-                              }),
+                                builder: (context, constraints) {
+                                  // Wrap will use the available width from constraints.maxWidth
+                                  return Wrap(
+                                    spacing: 8,
+                                    children: selected.map((w) {
+                                      return _Chip(
+                                        contact: allContacts
+                                            .firstWhere((t) => t.userId == w),
+                                        onTap: toggleSelectedUser,
+                                      );
+                                    }).toList(),
+                                  );
+                                },
+                              ),
                             ),
                           );
                         }
@@ -241,7 +242,7 @@ class _Chip extends StatelessWidget {
               FontAwesomeIcons.xmark,
               color: Colors.grey,
               size: 12,
-            )
+            ),
           ],
         ),
       ),

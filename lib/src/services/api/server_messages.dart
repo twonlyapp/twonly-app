@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:mutex/mutex.dart';
@@ -11,15 +12,15 @@ import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
-import 'package:twonly/src/services/api/client2client/groups.c2c.dart';
-import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/client2client/contact.c2c.dart';
+import 'package:twonly/src/services/api/client2client/groups.c2c.dart';
 import 'package:twonly/src/services/api/client2client/media.c2c.dart';
 import 'package:twonly/src/services/api/client2client/messages.c2c.dart';
 import 'package:twonly/src/services/api/client2client/prekeys.c2c.dart';
 import 'package:twonly/src/services/api/client2client/pushkeys.c2c.dart';
 import 'package:twonly/src/services/api/client2client/reaction.c2c.dart';
 import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';

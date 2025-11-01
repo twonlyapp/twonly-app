@@ -67,14 +67,16 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   ) async {
     await (update(groupMembers)
           ..where(
-              (c) => c.groupId.equals(groupId) & c.contactId.equals(contactId)))
+            (c) => c.groupId.equals(groupId) & c.contactId.equals(contactId),
+          ))
         .write(updates);
   }
 
   Future<void> removeMember(String groupId, int contactId) async {
     await (delete(groupMembers)
           ..where(
-              (c) => c.groupId.equals(groupId) & c.contactId.equals(contactId)))
+            (c) => c.groupId.equals(groupId) & c.contactId.equals(contactId),
+          ))
         .go();
   }
 

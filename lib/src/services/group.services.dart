@@ -161,14 +161,20 @@ Future<bool> fetchGroupState(Group group) async {
 
     final groupStateServer = GroupState.fromBuffer(response.bodyBytes);
     final envelope = EncryptedGroupStateEnvelop.fromBuffer(
-        groupStateServer.encryptedGroupState);
+      groupStateServer.encryptedGroupState,
+    );
     final chacha20 = FlutterChacha20.poly1305Aead();
 
-    final secretBox = SecretBox(envelope.encryptedGroupState,
-        nonce: envelope.nonce, mac: Mac(envelope.mac));
+    final secretBox = SecretBox(
+      envelope.encryptedGroupState,
+      nonce: envelope.nonce,
+      mac: Mac(envelope.mac),
+    );
 
-    final encryptedGroupStateRaw = await chacha20.decrypt(secretBox,
-        secretKey: SecretKey(group.stateEncryptionKey!));
+    final encryptedGroupStateRaw = await chacha20.decrypt(
+      secretBox,
+      secretKey: SecretKey(group.stateEncryptionKey!),
+    );
 
     final encryptedGroupState =
         EncryptedGroupState.fromBuffer(encryptedGroupStateRaw);
