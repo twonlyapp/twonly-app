@@ -12,7 +12,7 @@ This repository contains the complete source code of the [twonly](https://twonly
 - Developed by humans not by AI or Vibe Coding
 - No email or phone number required to register
 - Privacy friendly - Everything is stored on the device
-- Backend is exclusively hosted in European
+- The backend is hosted exclusively in Europe
 
 ## Planned
 
