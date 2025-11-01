@@ -2197,6 +2197,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Days'**
   String get durationShortDays;
+
+  /// No description provided for @newGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get newGroup;
+
+  /// No description provided for @selectMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Select members'**
+  String get selectMembers;
+
+  /// No description provided for @selectGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Select group name'**
+  String get selectGroupName;
+
+  /// No description provided for @groupNameInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupNameInput;
+
+  /// No description provided for @groupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get groupMembers;
+
+  /// No description provided for @createGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create group'**
+  String get createGroup;
 }
 
 class _AppLocalizationsDelegate

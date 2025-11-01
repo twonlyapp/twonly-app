@@ -8,7 +8,7 @@ import 'package:twonly/src/utils/misc.dart';
 
 part 'groups.dao.g.dart';
 
-@DriftAccessor(tables: [Groups, GroupMembers])
+@DriftAccessor(tables: [Groups, GroupMembers, GroupHistories])
 class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -37,11 +37,21 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Future<Group?> createNewGroup(GroupsCompanion group) async {
-    final insertGroup = group.copyWith(
-      groupId: Value(uuid.v4()),
-      isGroupAdmin: const Value(true),
-    );
-    return _insertGroup(insertGroup);
+    return _insertGroup(group);
+  }
+
+  Future<void> insertGroupMember(GroupMembersCompanion members) async {
+    await into(groupMembers).insert(members);
+  }
+
+  Future<void> insertGroupAction(GroupHistoriesCompanion action) async {
+    var insertAction = action;
+    if (!action.groupHistoryId.present) {
+      insertAction = action.copyWith(
+        groupHistoryId: Value(uuid.v4()),
+      );
+    }
+    await into(groupHistories).insert(insertAction);
   }
 
   Future<Group?> createNewDirectChat(
@@ -53,6 +63,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
       groupId: Value(groupIdDirectChat),
       isDirectChat: const Value(true),
       isGroupAdmin: const Value(true),
+      joinedGroup: const Value(true),
     );
 
     final result = await _insertGroup(insertGroup);
@@ -136,6 +147,14 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
   Future<List<Group>> getAllDirectChats() {
     return (select(groups)..where((t) => t.isDirectChat.equals(true))).get();
+  }
+
+  Future<List<Group>> getAllNotJoinedGroups() {
+    return (select(groups)
+          ..where(
+            (t) => t.joinedGroup.equals(false) & t.isDirectChat.equals(false),
+          ))
+        .get();
   }
 
   Future<Group?> getDirectChat(int userId) async {

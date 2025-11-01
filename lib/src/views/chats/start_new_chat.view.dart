@@ -11,6 +11,7 @@ import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/user_context_menu.component.dart';
+import 'package:twonly/src/views/groups/group_create_select_members.view.dart';
 
 class StartNewChatView extends StatefulWidget {
   const StartNewChatView({super.key});
@@ -116,11 +117,10 @@ class UserList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       restorationId: 'new_message_users_list',
-      itemCount: users.length + 2,
+      itemCount: users.length + 3,
       itemBuilder: (BuildContext context, int i) {
-        if (i == 0) {
+        if (i == 1) {
           return ListTile(
-            key: const Key('add_new_contact'),
             title: Text(context.lang.startNewChatNewContact),
             leading: const CircleAvatar(
               child: FaIcon(
@@ -138,10 +138,29 @@ class UserList extends StatelessWidget {
             },
           );
         }
-        if (i == 1) {
+        if (i == 0) {
+          return ListTile(
+            title: Text(context.lang.newGroup),
+            leading: const CircleAvatar(
+              child: FaIcon(
+                FontAwesomeIcons.userGroup,
+                size: 13,
+              ),
+            ),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GroupCreateSelectMembersView(),
+                ),
+              );
+            },
+          );
+        }
+        if (i == 2) {
           return const Divider();
         }
-        final user = users[i - 2];
+        final user = users[i - 3];
         return UserContextMenu(
           key: Key(user.userId.toString()),
           contact: user,

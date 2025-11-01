@@ -13,20 +13,19 @@ CLIENT_DIR="./lib/src/model/protobuf/client/"
 
 protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "backup.proto"
 protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "messages.proto"
+protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "groups.proto"
 
 protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "push_notification.proto"
 protoc --proto_path="$CLIENT_DIR" --swift_out="./ios/NotificationService/" "push_notification.proto"
 
-exit
-
 
 # Definitions for the Server API
 
-SRC_DIR="../twonly-server/twonly/src/"
+SRC_DIR="../twonly-server/twonly-api/src/"
 
 DST_DIR="$(pwd)/lib/src/model/protobuf/"
 
-mkdir $DST_DIR
+mkdir $DST_DIR &>/dev/null
 
 ORIGINAL_DIR=$(pwd)
 
@@ -37,9 +36,7 @@ cd "$SRC_DIR" || {
 
 for proto_file in "api/"**/*.proto; do
   if [[ -f "$proto_file" ]]; then
-    # Run the protoc command
     protoc --proto_path="." --dart_out="$DST_DIR" "$proto_file"
-    echo "Processed: $proto_file"
   else
     echo "No .proto files found in $SRC_DIR"
   fi
@@ -50,4 +47,4 @@ cd "$ORIGINAL_DIR" || {
   exit 1
 }
 
-echo "Finished processing .proto files."
+echo "Finished processing .proto files :)"

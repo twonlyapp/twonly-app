@@ -1165,4 +1165,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get durationShortDays => 'Tagen';
+
+  @override
+  String get newGroup => 'Neue Gruppe';
+
+  @override
+  String get selectMembers => 'Mitglieder auswählen';
+
+  @override
+  String get selectGroupName => 'Gruppennamen wählen';
+
+  @override
+  String get groupNameInput => 'Gruppennamen';
+
+  @override
+  String get groupMembers => 'Mitglieder';
+
+  @override
+  String get createGroup => 'Gruppe erstellen';
 }

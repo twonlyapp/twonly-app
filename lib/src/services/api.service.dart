@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
@@ -283,6 +284,10 @@ class ApiService {
     request.v0.seq = seq;
     final requestBytes = request.writeToBuffer();
 
+    Log.info(
+      'Sending ${requestBytes.length} bytes to the server via WebSocket.',
+    );
+
     if (ensureRetransmission) {
       await addToRetransmissionBuffer(seq, requestBytes);
     }
@@ -467,6 +472,7 @@ class ApiService {
       ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
       ..signedPrekeySignature = signedPreKey.signature
       ..signedPrekeyId = Int64(signedPreKey.id)
+      ..langCode = ui.PlatformDispatcher.instance.locale.languageCode
       ..isIos = Platform.isIOS;
 
     if (inviteCode != null && inviteCode != '') {

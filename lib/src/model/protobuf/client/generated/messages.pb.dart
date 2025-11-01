@@ -214,6 +214,200 @@ class PlaintextContent extends $pb.GeneratedMessage {
   PlaintextContent_DecryptionErrorMessage ensureDecryptionErrorMessage() => $_ensure(0);
 }
 
+class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {
+  factory EncryptedContent_GroupCreate({
+    $core.List<$core.int>? stateKey,
+    $core.List<$core.int>? groupPublicKey,
+  }) {
+    final $result = create();
+    if (stateKey != null) {
+      $result.stateKey = stateKey;
+    }
+    if (groupPublicKey != null) {
+      $result.groupPublicKey = groupPublicKey;
+    }
+    return $result;
+  }
+  EncryptedContent_GroupCreate._() : super();
+  factory EncryptedContent_GroupCreate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory EncryptedContent_GroupCreate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.GroupCreate', createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'stateKey', $pb.PbFieldType.OY, protoName: 'stateKey')
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY, protoName: 'groupPublicKey')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  EncryptedContent_GroupCreate clone() => EncryptedContent_GroupCreate()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  EncryptedContent_GroupCreate copyWith(void Function(EncryptedContent_GroupCreate) updates) => super.copyWith((message) => updates(message as EncryptedContent_GroupCreate)) as EncryptedContent_GroupCreate;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_GroupCreate create() => EncryptedContent_GroupCreate._();
+  EncryptedContent_GroupCreate createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_GroupCreate> createRepeated() => $pb.PbList<EncryptedContent_GroupCreate>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_GroupCreate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EncryptedContent_GroupCreate>(create);
+  static EncryptedContent_GroupCreate? _defaultInstance;
+
+  /// key for the state stored on the server
+  @$pb.TagNumber(3)
+  $core.List<$core.int> get stateKey => $_getN(0);
+  @$pb.TagNumber(3)
+  set stateKey($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasStateKey() => $_has(0);
+  @$pb.TagNumber(3)
+  void clearStateKey() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get groupPublicKey => $_getN(1);
+  @$pb.TagNumber(4)
+  set groupPublicKey($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasGroupPublicKey() => $_has(1);
+  @$pb.TagNumber(4)
+  void clearGroupPublicKey() => clearField(4);
+}
+
+class EncryptedContent_GroupJoin extends $pb.GeneratedMessage {
+  factory EncryptedContent_GroupJoin({
+    $core.List<$core.int>? groupPublicKey,
+  }) {
+    final $result = create();
+    if (groupPublicKey != null) {
+      $result.groupPublicKey = groupPublicKey;
+    }
+    return $result;
+  }
+  EncryptedContent_GroupJoin._() : super();
+  factory EncryptedContent_GroupJoin.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory EncryptedContent_GroupJoin.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.GroupJoin', createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY, protoName: 'groupPublicKey')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  EncryptedContent_GroupJoin clone() => EncryptedContent_GroupJoin()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  EncryptedContent_GroupJoin copyWith(void Function(EncryptedContent_GroupJoin) updates) => super.copyWith((message) => updates(message as EncryptedContent_GroupJoin)) as EncryptedContent_GroupJoin;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_GroupJoin create() => EncryptedContent_GroupJoin._();
+  EncryptedContent_GroupJoin createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_GroupJoin> createRepeated() => $pb.PbList<EncryptedContent_GroupJoin>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_GroupJoin getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EncryptedContent_GroupJoin>(create);
+  static EncryptedContent_GroupJoin? _defaultInstance;
+
+  /// key for the state stored on the server
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get groupPublicKey => $_getN(0);
+  @$pb.TagNumber(4)
+  set groupPublicKey($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasGroupPublicKey() => $_has(0);
+  @$pb.TagNumber(4)
+  void clearGroupPublicKey() => clearField(4);
+}
+
+class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
+  factory EncryptedContent_GroupUpdate({
+    $core.String? groupActionType,
+    $fixnum.Int64? affectedContactId,
+    $core.String? newGroupName,
+  }) {
+    final $result = create();
+    if (groupActionType != null) {
+      $result.groupActionType = groupActionType;
+    }
+    if (affectedContactId != null) {
+      $result.affectedContactId = affectedContactId;
+    }
+    if (newGroupName != null) {
+      $result.newGroupName = newGroupName;
+    }
+    return $result;
+  }
+  EncryptedContent_GroupUpdate._() : super();
+  factory EncryptedContent_GroupUpdate.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory EncryptedContent_GroupUpdate.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.GroupUpdate', createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'groupActionType', protoName: 'groupActionType')
+    ..aInt64(2, _omitFieldNames ? '' : 'affectedContactId', protoName: 'affectedContactId')
+    ..aOS(3, _omitFieldNames ? '' : 'newGroupName', protoName: 'newGroupName')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  EncryptedContent_GroupUpdate clone() => EncryptedContent_GroupUpdate()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  EncryptedContent_GroupUpdate copyWith(void Function(EncryptedContent_GroupUpdate) updates) => super.copyWith((message) => updates(message as EncryptedContent_GroupUpdate)) as EncryptedContent_GroupUpdate;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_GroupUpdate create() => EncryptedContent_GroupUpdate._();
+  EncryptedContent_GroupUpdate createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_GroupUpdate> createRepeated() => $pb.PbList<EncryptedContent_GroupUpdate>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_GroupUpdate getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EncryptedContent_GroupUpdate>(create);
+  static EncryptedContent_GroupUpdate? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get groupActionType => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set groupActionType($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasGroupActionType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearGroupActionType() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get affectedContactId => $_getI64(1);
+  @$pb.TagNumber(2)
+  set affectedContactId($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasAffectedContactId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAffectedContactId() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get newGroupName => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set newGroupName($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasNewGroupName() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearNewGroupName() => clearField(3);
+}
+
 class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
   factory EncryptedContent_TextMessage({
     $core.String? senderMessageId,
@@ -1036,6 +1230,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_PushKeys? pushKeys,
     EncryptedContent_Reaction? reaction,
     EncryptedContent_TextMessage? textMessage,
+    EncryptedContent_GroupCreate? groupCreate,
+    EncryptedContent_GroupJoin? groupJoin,
+    EncryptedContent_GroupUpdate? groupUpdate,
   }) {
     final $result = create();
     if (groupId != null) {
@@ -1074,6 +1271,15 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (textMessage != null) {
       $result.textMessage = textMessage;
     }
+    if (groupCreate != null) {
+      $result.groupCreate = groupCreate;
+    }
+    if (groupJoin != null) {
+      $result.groupJoin = groupJoin;
+    }
+    if (groupUpdate != null) {
+      $result.groupUpdate = groupUpdate;
+    }
     return $result;
   }
   EncryptedContent._() : super();
@@ -1093,6 +1299,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_PushKeys>(11, _omitFieldNames ? '' : 'pushKeys', protoName: 'pushKeys', subBuilder: EncryptedContent_PushKeys.create)
     ..aOM<EncryptedContent_Reaction>(12, _omitFieldNames ? '' : 'reaction', subBuilder: EncryptedContent_Reaction.create)
     ..aOM<EncryptedContent_TextMessage>(13, _omitFieldNames ? '' : 'textMessage', protoName: 'textMessage', subBuilder: EncryptedContent_TextMessage.create)
+    ..aOM<EncryptedContent_GroupCreate>(14, _omitFieldNames ? '' : 'groupCreate', protoName: 'groupCreate', subBuilder: EncryptedContent_GroupCreate.create)
+    ..aOM<EncryptedContent_GroupJoin>(15, _omitFieldNames ? '' : 'groupJoin', protoName: 'groupJoin', subBuilder: EncryptedContent_GroupJoin.create)
+    ..aOM<EncryptedContent_GroupUpdate>(16, _omitFieldNames ? '' : 'groupUpdate', protoName: 'groupUpdate', subBuilder: EncryptedContent_GroupUpdate.create)
     ..hasRequiredFields = false
   ;
 
@@ -1243,6 +1452,39 @@ class EncryptedContent extends $pb.GeneratedMessage {
   void clearTextMessage() => clearField(13);
   @$pb.TagNumber(13)
   EncryptedContent_TextMessage ensureTextMessage() => $_ensure(11);
+
+  @$pb.TagNumber(14)
+  EncryptedContent_GroupCreate get groupCreate => $_getN(12);
+  @$pb.TagNumber(14)
+  set groupCreate(EncryptedContent_GroupCreate v) { setField(14, v); }
+  @$pb.TagNumber(14)
+  $core.bool hasGroupCreate() => $_has(12);
+  @$pb.TagNumber(14)
+  void clearGroupCreate() => clearField(14);
+  @$pb.TagNumber(14)
+  EncryptedContent_GroupCreate ensureGroupCreate() => $_ensure(12);
+
+  @$pb.TagNumber(15)
+  EncryptedContent_GroupJoin get groupJoin => $_getN(13);
+  @$pb.TagNumber(15)
+  set groupJoin(EncryptedContent_GroupJoin v) { setField(15, v); }
+  @$pb.TagNumber(15)
+  $core.bool hasGroupJoin() => $_has(13);
+  @$pb.TagNumber(15)
+  void clearGroupJoin() => clearField(15);
+  @$pb.TagNumber(15)
+  EncryptedContent_GroupJoin ensureGroupJoin() => $_ensure(13);
+
+  @$pb.TagNumber(16)
+  EncryptedContent_GroupUpdate get groupUpdate => $_getN(14);
+  @$pb.TagNumber(16)
+  set groupUpdate(EncryptedContent_GroupUpdate v) { setField(16, v); }
+  @$pb.TagNumber(16)
+  $core.bool hasGroupUpdate() => $_has(14);
+  @$pb.TagNumber(16)
+  void clearGroupUpdate() => clearField(16);
+  @$pb.TagNumber(16)
+  EncryptedContent_GroupUpdate ensureGroupUpdate() => $_ensure(14);
 }
 
 

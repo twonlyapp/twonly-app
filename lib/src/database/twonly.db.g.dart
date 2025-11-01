@@ -671,18 +671,20 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
   late final GeneratedColumn<bool> isGroupAdmin = GeneratedColumn<bool>(
       'is_group_admin', aliasedName, false,
       type: DriftSqlType.bool,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_group_admin" IN (0, 1))'));
+          'CHECK ("is_group_admin" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _isDirectChatMeta =
       const VerificationMeta('isDirectChat');
   @override
   late final GeneratedColumn<bool> isDirectChat = GeneratedColumn<bool>(
       'is_direct_chat', aliasedName, false,
       type: DriftSqlType.bool,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_direct_chat" IN (0, 1))'));
+          'CHECK ("is_direct_chat" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _pinnedMeta = const VerificationMeta('pinned');
   @override
   late final GeneratedColumn<bool> pinned = GeneratedColumn<bool>(
@@ -702,6 +704,46 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("archived" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _joinedGroupMeta =
+      const VerificationMeta('joinedGroup');
+  @override
+  late final GeneratedColumn<bool> joinedGroup = GeneratedColumn<bool>(
+      'joined_group', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("joined_group" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _leftGroupMeta =
+      const VerificationMeta('leftGroup');
+  @override
+  late final GeneratedColumn<bool> leftGroup = GeneratedColumn<bool>(
+      'left_group', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("left_group" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _stateVersionIdMeta =
+      const VerificationMeta('stateVersionId');
+  @override
+  late final GeneratedColumn<int> stateVersionId = GeneratedColumn<int>(
+      'state_version_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _stateEncryptionKeyMeta =
+      const VerificationMeta('stateEncryptionKey');
+  @override
+  late final GeneratedColumn<Uint8List> stateEncryptionKey =
+      GeneratedColumn<Uint8List>('state_encryption_key', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _myGroupPrivateKeyMeta =
+      const VerificationMeta('myGroupPrivateKey');
+  @override
+  late final GeneratedColumn<Uint8List> myGroupPrivateKey =
+      GeneratedColumn<Uint8List>('my_group_private_key', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   static const VerificationMeta _groupNameMeta =
       const VerificationMeta('groupName');
   @override
@@ -734,7 +776,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           'delete_messages_after_milliseconds', aliasedName, false,
           type: DriftSqlType.int,
           requiredDuringInsert: false,
-          defaultValue: const Constant(1000 * 60 * 60 * 24));
+          defaultValue: const Constant(defaultDeleteMessagesAfterMilliseconds));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -804,6 +846,11 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         isDirectChat,
         pinned,
         archived,
+        joinedGroup,
+        leftGroup,
+        stateVersionId,
+        stateEncryptionKey,
+        myGroupPrivateKey,
         groupName,
         totalMediaCounter,
         alsoBestFriend,
@@ -839,16 +886,12 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           _isGroupAdminMeta,
           isGroupAdmin.isAcceptableOrUnknown(
               data['is_group_admin']!, _isGroupAdminMeta));
-    } else if (isInserting) {
-      context.missing(_isGroupAdminMeta);
     }
     if (data.containsKey('is_direct_chat')) {
       context.handle(
           _isDirectChatMeta,
           isDirectChat.isAcceptableOrUnknown(
               data['is_direct_chat']!, _isDirectChatMeta));
-    } else if (isInserting) {
-      context.missing(_isDirectChatMeta);
     }
     if (data.containsKey('pinned')) {
       context.handle(_pinnedMeta,
@@ -857,6 +900,34 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
     if (data.containsKey('archived')) {
       context.handle(_archivedMeta,
           archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta));
+    }
+    if (data.containsKey('joined_group')) {
+      context.handle(
+          _joinedGroupMeta,
+          joinedGroup.isAcceptableOrUnknown(
+              data['joined_group']!, _joinedGroupMeta));
+    }
+    if (data.containsKey('left_group')) {
+      context.handle(_leftGroupMeta,
+          leftGroup.isAcceptableOrUnknown(data['left_group']!, _leftGroupMeta));
+    }
+    if (data.containsKey('state_version_id')) {
+      context.handle(
+          _stateVersionIdMeta,
+          stateVersionId.isAcceptableOrUnknown(
+              data['state_version_id']!, _stateVersionIdMeta));
+    }
+    if (data.containsKey('state_encryption_key')) {
+      context.handle(
+          _stateEncryptionKeyMeta,
+          stateEncryptionKey.isAcceptableOrUnknown(
+              data['state_encryption_key']!, _stateEncryptionKeyMeta));
+    }
+    if (data.containsKey('my_group_private_key')) {
+      context.handle(
+          _myGroupPrivateKeyMeta,
+          myGroupPrivateKey.isAcceptableOrUnknown(
+              data['my_group_private_key']!, _myGroupPrivateKeyMeta));
     }
     if (data.containsKey('group_name')) {
       context.handle(_groupNameMeta,
@@ -954,6 +1025,16 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           .read(DriftSqlType.bool, data['${effectivePrefix}pinned'])!,
       archived: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}archived'])!,
+      joinedGroup: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}joined_group'])!,
+      leftGroup: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}left_group'])!,
+      stateVersionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}state_version_id'])!,
+      stateEncryptionKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.blob, data['${effectivePrefix}state_encryption_key']),
+      myGroupPrivateKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.blob, data['${effectivePrefix}my_group_private_key']),
       groupName: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}group_name'])!,
       totalMediaCounter: attachedDatabase.typeMapping.read(
@@ -1000,6 +1081,11 @@ class Group extends DataClass implements Insertable<Group> {
   final bool isDirectChat;
   final bool pinned;
   final bool archived;
+  final bool joinedGroup;
+  final bool leftGroup;
+  final int stateVersionId;
+  final Uint8List? stateEncryptionKey;
+  final Uint8List? myGroupPrivateKey;
   final String groupName;
   final int totalMediaCounter;
   final bool alsoBestFriend;
@@ -1019,6 +1105,11 @@ class Group extends DataClass implements Insertable<Group> {
       required this.isDirectChat,
       required this.pinned,
       required this.archived,
+      required this.joinedGroup,
+      required this.leftGroup,
+      required this.stateVersionId,
+      this.stateEncryptionKey,
+      this.myGroupPrivateKey,
       required this.groupName,
       required this.totalMediaCounter,
       required this.alsoBestFriend,
@@ -1040,6 +1131,15 @@ class Group extends DataClass implements Insertable<Group> {
     map['is_direct_chat'] = Variable<bool>(isDirectChat);
     map['pinned'] = Variable<bool>(pinned);
     map['archived'] = Variable<bool>(archived);
+    map['joined_group'] = Variable<bool>(joinedGroup);
+    map['left_group'] = Variable<bool>(leftGroup);
+    map['state_version_id'] = Variable<int>(stateVersionId);
+    if (!nullToAbsent || stateEncryptionKey != null) {
+      map['state_encryption_key'] = Variable<Uint8List>(stateEncryptionKey);
+    }
+    if (!nullToAbsent || myGroupPrivateKey != null) {
+      map['my_group_private_key'] = Variable<Uint8List>(myGroupPrivateKey);
+    }
     map['group_name'] = Variable<String>(groupName);
     map['total_media_counter'] = Variable<int>(totalMediaCounter);
     map['also_best_friend'] = Variable<bool>(alsoBestFriend);
@@ -1075,6 +1175,15 @@ class Group extends DataClass implements Insertable<Group> {
       isDirectChat: Value(isDirectChat),
       pinned: Value(pinned),
       archived: Value(archived),
+      joinedGroup: Value(joinedGroup),
+      leftGroup: Value(leftGroup),
+      stateVersionId: Value(stateVersionId),
+      stateEncryptionKey: stateEncryptionKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stateEncryptionKey),
+      myGroupPrivateKey: myGroupPrivateKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(myGroupPrivateKey),
       groupName: Value(groupName),
       totalMediaCounter: Value(totalMediaCounter),
       alsoBestFriend: Value(alsoBestFriend),
@@ -1110,6 +1219,13 @@ class Group extends DataClass implements Insertable<Group> {
       isDirectChat: serializer.fromJson<bool>(json['isDirectChat']),
       pinned: serializer.fromJson<bool>(json['pinned']),
       archived: serializer.fromJson<bool>(json['archived']),
+      joinedGroup: serializer.fromJson<bool>(json['joinedGroup']),
+      leftGroup: serializer.fromJson<bool>(json['leftGroup']),
+      stateVersionId: serializer.fromJson<int>(json['stateVersionId']),
+      stateEncryptionKey:
+          serializer.fromJson<Uint8List?>(json['stateEncryptionKey']),
+      myGroupPrivateKey:
+          serializer.fromJson<Uint8List?>(json['myGroupPrivateKey']),
       groupName: serializer.fromJson<String>(json['groupName']),
       totalMediaCounter: serializer.fromJson<int>(json['totalMediaCounter']),
       alsoBestFriend: serializer.fromJson<bool>(json['alsoBestFriend']),
@@ -1139,6 +1255,11 @@ class Group extends DataClass implements Insertable<Group> {
       'isDirectChat': serializer.toJson<bool>(isDirectChat),
       'pinned': serializer.toJson<bool>(pinned),
       'archived': serializer.toJson<bool>(archived),
+      'joinedGroup': serializer.toJson<bool>(joinedGroup),
+      'leftGroup': serializer.toJson<bool>(leftGroup),
+      'stateVersionId': serializer.toJson<int>(stateVersionId),
+      'stateEncryptionKey': serializer.toJson<Uint8List?>(stateEncryptionKey),
+      'myGroupPrivateKey': serializer.toJson<Uint8List?>(myGroupPrivateKey),
       'groupName': serializer.toJson<String>(groupName),
       'totalMediaCounter': serializer.toJson<int>(totalMediaCounter),
       'alsoBestFriend': serializer.toJson<bool>(alsoBestFriend),
@@ -1163,6 +1284,11 @@ class Group extends DataClass implements Insertable<Group> {
           bool? isDirectChat,
           bool? pinned,
           bool? archived,
+          bool? joinedGroup,
+          bool? leftGroup,
+          int? stateVersionId,
+          Value<Uint8List?> stateEncryptionKey = const Value.absent(),
+          Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
           String? groupName,
           int? totalMediaCounter,
           bool? alsoBestFriend,
@@ -1182,6 +1308,15 @@ class Group extends DataClass implements Insertable<Group> {
         isDirectChat: isDirectChat ?? this.isDirectChat,
         pinned: pinned ?? this.pinned,
         archived: archived ?? this.archived,
+        joinedGroup: joinedGroup ?? this.joinedGroup,
+        leftGroup: leftGroup ?? this.leftGroup,
+        stateVersionId: stateVersionId ?? this.stateVersionId,
+        stateEncryptionKey: stateEncryptionKey.present
+            ? stateEncryptionKey.value
+            : this.stateEncryptionKey,
+        myGroupPrivateKey: myGroupPrivateKey.present
+            ? myGroupPrivateKey.value
+            : this.myGroupPrivateKey,
         groupName: groupName ?? this.groupName,
         totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
         alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
@@ -1217,6 +1352,18 @@ class Group extends DataClass implements Insertable<Group> {
           : this.isDirectChat,
       pinned: data.pinned.present ? data.pinned.value : this.pinned,
       archived: data.archived.present ? data.archived.value : this.archived,
+      joinedGroup:
+          data.joinedGroup.present ? data.joinedGroup.value : this.joinedGroup,
+      leftGroup: data.leftGroup.present ? data.leftGroup.value : this.leftGroup,
+      stateVersionId: data.stateVersionId.present
+          ? data.stateVersionId.value
+          : this.stateVersionId,
+      stateEncryptionKey: data.stateEncryptionKey.present
+          ? data.stateEncryptionKey.value
+          : this.stateEncryptionKey,
+      myGroupPrivateKey: data.myGroupPrivateKey.present
+          ? data.myGroupPrivateKey.value
+          : this.myGroupPrivateKey,
       groupName: data.groupName.present ? data.groupName.value : this.groupName,
       totalMediaCounter: data.totalMediaCounter.present
           ? data.totalMediaCounter.value
@@ -1264,6 +1411,11 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('isDirectChat: $isDirectChat, ')
           ..write('pinned: $pinned, ')
           ..write('archived: $archived, ')
+          ..write('joinedGroup: $joinedGroup, ')
+          ..write('leftGroup: $leftGroup, ')
+          ..write('stateVersionId: $stateVersionId, ')
+          ..write('stateEncryptionKey: $stateEncryptionKey, ')
+          ..write('myGroupPrivateKey: $myGroupPrivateKey, ')
           ..write('groupName: $groupName, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
@@ -1283,25 +1435,31 @@ class Group extends DataClass implements Insertable<Group> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      groupId,
-      isGroupAdmin,
-      isDirectChat,
-      pinned,
-      archived,
-      groupName,
-      totalMediaCounter,
-      alsoBestFriend,
-      deleteMessagesAfterMilliseconds,
-      createdAt,
-      lastMessageSend,
-      lastMessageReceived,
-      lastFlameCounterChange,
-      lastFlameSync,
-      flameCounter,
-      maxFlameCounter,
-      maxFlameCounterFrom,
-      lastMessageExchange);
+  int get hashCode => Object.hashAll([
+        groupId,
+        isGroupAdmin,
+        isDirectChat,
+        pinned,
+        archived,
+        joinedGroup,
+        leftGroup,
+        stateVersionId,
+        $driftBlobEquality.hash(stateEncryptionKey),
+        $driftBlobEquality.hash(myGroupPrivateKey),
+        groupName,
+        totalMediaCounter,
+        alsoBestFriend,
+        deleteMessagesAfterMilliseconds,
+        createdAt,
+        lastMessageSend,
+        lastMessageReceived,
+        lastFlameCounterChange,
+        lastFlameSync,
+        flameCounter,
+        maxFlameCounter,
+        maxFlameCounterFrom,
+        lastMessageExchange
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1311,6 +1469,13 @@ class Group extends DataClass implements Insertable<Group> {
           other.isDirectChat == this.isDirectChat &&
           other.pinned == this.pinned &&
           other.archived == this.archived &&
+          other.joinedGroup == this.joinedGroup &&
+          other.leftGroup == this.leftGroup &&
+          other.stateVersionId == this.stateVersionId &&
+          $driftBlobEquality.equals(
+              other.stateEncryptionKey, this.stateEncryptionKey) &&
+          $driftBlobEquality.equals(
+              other.myGroupPrivateKey, this.myGroupPrivateKey) &&
           other.groupName == this.groupName &&
           other.totalMediaCounter == this.totalMediaCounter &&
           other.alsoBestFriend == this.alsoBestFriend &&
@@ -1333,6 +1498,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<bool> isDirectChat;
   final Value<bool> pinned;
   final Value<bool> archived;
+  final Value<bool> joinedGroup;
+  final Value<bool> leftGroup;
+  final Value<int> stateVersionId;
+  final Value<Uint8List?> stateEncryptionKey;
+  final Value<Uint8List?> myGroupPrivateKey;
   final Value<String> groupName;
   final Value<int> totalMediaCounter;
   final Value<bool> alsoBestFriend;
@@ -1353,6 +1523,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.isDirectChat = const Value.absent(),
     this.pinned = const Value.absent(),
     this.archived = const Value.absent(),
+    this.joinedGroup = const Value.absent(),
+    this.leftGroup = const Value.absent(),
+    this.stateVersionId = const Value.absent(),
+    this.stateEncryptionKey = const Value.absent(),
+    this.myGroupPrivateKey = const Value.absent(),
     this.groupName = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
     this.alsoBestFriend = const Value.absent(),
@@ -1370,10 +1545,15 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   });
   GroupsCompanion.insert({
     required String groupId,
-    required bool isGroupAdmin,
-    required bool isDirectChat,
+    this.isGroupAdmin = const Value.absent(),
+    this.isDirectChat = const Value.absent(),
     this.pinned = const Value.absent(),
     this.archived = const Value.absent(),
+    this.joinedGroup = const Value.absent(),
+    this.leftGroup = const Value.absent(),
+    this.stateVersionId = const Value.absent(),
+    this.stateEncryptionKey = const Value.absent(),
+    this.myGroupPrivateKey = const Value.absent(),
     required String groupName,
     this.totalMediaCounter = const Value.absent(),
     this.alsoBestFriend = const Value.absent(),
@@ -1389,8 +1569,6 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.lastMessageExchange = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : groupId = Value(groupId),
-        isGroupAdmin = Value(isGroupAdmin),
-        isDirectChat = Value(isDirectChat),
         groupName = Value(groupName);
   static Insertable<Group> custom({
     Expression<String>? groupId,
@@ -1398,6 +1576,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<bool>? isDirectChat,
     Expression<bool>? pinned,
     Expression<bool>? archived,
+    Expression<bool>? joinedGroup,
+    Expression<bool>? leftGroup,
+    Expression<int>? stateVersionId,
+    Expression<Uint8List>? stateEncryptionKey,
+    Expression<Uint8List>? myGroupPrivateKey,
     Expression<String>? groupName,
     Expression<int>? totalMediaCounter,
     Expression<bool>? alsoBestFriend,
@@ -1419,6 +1602,12 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       if (isDirectChat != null) 'is_direct_chat': isDirectChat,
       if (pinned != null) 'pinned': pinned,
       if (archived != null) 'archived': archived,
+      if (joinedGroup != null) 'joined_group': joinedGroup,
+      if (leftGroup != null) 'left_group': leftGroup,
+      if (stateVersionId != null) 'state_version_id': stateVersionId,
+      if (stateEncryptionKey != null)
+        'state_encryption_key': stateEncryptionKey,
+      if (myGroupPrivateKey != null) 'my_group_private_key': myGroupPrivateKey,
       if (groupName != null) 'group_name': groupName,
       if (totalMediaCounter != null) 'total_media_counter': totalMediaCounter,
       if (alsoBestFriend != null) 'also_best_friend': alsoBestFriend,
@@ -1447,6 +1636,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       Value<bool>? isDirectChat,
       Value<bool>? pinned,
       Value<bool>? archived,
+      Value<bool>? joinedGroup,
+      Value<bool>? leftGroup,
+      Value<int>? stateVersionId,
+      Value<Uint8List?>? stateEncryptionKey,
+      Value<Uint8List?>? myGroupPrivateKey,
       Value<String>? groupName,
       Value<int>? totalMediaCounter,
       Value<bool>? alsoBestFriend,
@@ -1467,6 +1661,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       isDirectChat: isDirectChat ?? this.isDirectChat,
       pinned: pinned ?? this.pinned,
       archived: archived ?? this.archived,
+      joinedGroup: joinedGroup ?? this.joinedGroup,
+      leftGroup: leftGroup ?? this.leftGroup,
+      stateVersionId: stateVersionId ?? this.stateVersionId,
+      stateEncryptionKey: stateEncryptionKey ?? this.stateEncryptionKey,
+      myGroupPrivateKey: myGroupPrivateKey ?? this.myGroupPrivateKey,
       groupName: groupName ?? this.groupName,
       totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
       alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
@@ -1503,6 +1702,23 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     }
     if (archived.present) {
       map['archived'] = Variable<bool>(archived.value);
+    }
+    if (joinedGroup.present) {
+      map['joined_group'] = Variable<bool>(joinedGroup.value);
+    }
+    if (leftGroup.present) {
+      map['left_group'] = Variable<bool>(leftGroup.value);
+    }
+    if (stateVersionId.present) {
+      map['state_version_id'] = Variable<int>(stateVersionId.value);
+    }
+    if (stateEncryptionKey.present) {
+      map['state_encryption_key'] =
+          Variable<Uint8List>(stateEncryptionKey.value);
+    }
+    if (myGroupPrivateKey.present) {
+      map['my_group_private_key'] =
+          Variable<Uint8List>(myGroupPrivateKey.value);
     }
     if (groupName.present) {
       map['group_name'] = Variable<String>(groupName.value);
@@ -1562,6 +1778,11 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('isDirectChat: $isDirectChat, ')
           ..write('pinned: $pinned, ')
           ..write('archived: $archived, ')
+          ..write('joinedGroup: $joinedGroup, ')
+          ..write('leftGroup: $leftGroup, ')
+          ..write('stateVersionId: $stateVersionId, ')
+          ..write('stateEncryptionKey: $stateEncryptionKey, ')
+          ..write('myGroupPrivateKey: $myGroupPrivateKey, ')
           ..write('groupName: $groupName, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
@@ -3741,7 +3962,10 @@ class $GroupMembersTable extends GroupMembers
   @override
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
       'group_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES "groups" (group_id) ON DELETE CASCADE'));
   static const VerificationMeta _contactIdMeta =
       const VerificationMeta('contactId');
   @override
@@ -3757,6 +3981,12 @@ class $GroupMembersTable extends GroupMembers
               type: DriftSqlType.string, requiredDuringInsert: false)
           .withConverter<MemberState?>(
               $GroupMembersTable.$convertermemberStaten);
+  static const VerificationMeta _groupPublicKeyMeta =
+      const VerificationMeta('groupPublicKey');
+  @override
+  late final GeneratedColumn<Uint8List> groupPublicKey =
+      GeneratedColumn<Uint8List>('group_public_key', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -3767,7 +3997,7 @@ class $GroupMembersTable extends GroupMembers
       defaultValue: currentDateAndTime);
   @override
   List<GeneratedColumn> get $columns =>
-      [groupId, contactId, memberState, createdAt];
+      [groupId, contactId, memberState, groupPublicKey, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3790,6 +4020,12 @@ class $GroupMembersTable extends GroupMembers
     } else if (isInserting) {
       context.missing(_contactIdMeta);
     }
+    if (data.containsKey('group_public_key')) {
+      context.handle(
+          _groupPublicKeyMeta,
+          groupPublicKey.isAcceptableOrUnknown(
+              data['group_public_key']!, _groupPublicKeyMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -3810,6 +4046,8 @@ class $GroupMembersTable extends GroupMembers
       memberState: $GroupMembersTable.$convertermemberStaten.fromSql(
           attachedDatabase.typeMapping.read(
               DriftSqlType.string, data['${effectivePrefix}member_state'])),
+      groupPublicKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}group_public_key']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -3831,11 +4069,13 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
   final String groupId;
   final int contactId;
   final MemberState? memberState;
+  final Uint8List? groupPublicKey;
   final DateTime createdAt;
   const GroupMember(
       {required this.groupId,
       required this.contactId,
       this.memberState,
+      this.groupPublicKey,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3845,6 +4085,9 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     if (!nullToAbsent || memberState != null) {
       map['member_state'] = Variable<String>(
           $GroupMembersTable.$convertermemberStaten.toSql(memberState));
+    }
+    if (!nullToAbsent || groupPublicKey != null) {
+      map['group_public_key'] = Variable<Uint8List>(groupPublicKey);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -3857,6 +4100,9 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       memberState: memberState == null && nullToAbsent
           ? const Value.absent()
           : Value(memberState),
+      groupPublicKey: groupPublicKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupPublicKey),
       createdAt: Value(createdAt),
     );
   }
@@ -3869,6 +4115,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       contactId: serializer.fromJson<int>(json['contactId']),
       memberState: $GroupMembersTable.$convertermemberStaten
           .fromJson(serializer.fromJson<String?>(json['memberState'])),
+      groupPublicKey: serializer.fromJson<Uint8List?>(json['groupPublicKey']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -3880,6 +4127,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       'contactId': serializer.toJson<int>(contactId),
       'memberState': serializer.toJson<String?>(
           $GroupMembersTable.$convertermemberStaten.toJson(memberState)),
+      'groupPublicKey': serializer.toJson<Uint8List?>(groupPublicKey),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -3888,11 +4136,14 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
           {String? groupId,
           int? contactId,
           Value<MemberState?> memberState = const Value.absent(),
+          Value<Uint8List?> groupPublicKey = const Value.absent(),
           DateTime? createdAt}) =>
       GroupMember(
         groupId: groupId ?? this.groupId,
         contactId: contactId ?? this.contactId,
         memberState: memberState.present ? memberState.value : this.memberState,
+        groupPublicKey:
+            groupPublicKey.present ? groupPublicKey.value : this.groupPublicKey,
         createdAt: createdAt ?? this.createdAt,
       );
   GroupMember copyWithCompanion(GroupMembersCompanion data) {
@@ -3901,6 +4152,9 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       memberState:
           data.memberState.present ? data.memberState.value : this.memberState,
+      groupPublicKey: data.groupPublicKey.present
+          ? data.groupPublicKey.value
+          : this.groupPublicKey,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -3911,13 +4165,15 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
           ..write('groupId: $groupId, ')
           ..write('contactId: $contactId, ')
           ..write('memberState: $memberState, ')
+          ..write('groupPublicKey: $groupPublicKey, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(groupId, contactId, memberState, createdAt);
+  int get hashCode => Object.hash(groupId, contactId, memberState,
+      $driftBlobEquality.hash(groupPublicKey), createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3925,6 +4181,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
           other.groupId == this.groupId &&
           other.contactId == this.contactId &&
           other.memberState == this.memberState &&
+          $driftBlobEquality.equals(
+              other.groupPublicKey, this.groupPublicKey) &&
           other.createdAt == this.createdAt);
 }
 
@@ -3932,12 +4190,14 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
   final Value<String> groupId;
   final Value<int> contactId;
   final Value<MemberState?> memberState;
+  final Value<Uint8List?> groupPublicKey;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const GroupMembersCompanion({
     this.groupId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.memberState = const Value.absent(),
+    this.groupPublicKey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -3945,6 +4205,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     required String groupId,
     required int contactId,
     this.memberState = const Value.absent(),
+    this.groupPublicKey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : groupId = Value(groupId),
@@ -3953,6 +4214,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     Expression<String>? groupId,
     Expression<int>? contactId,
     Expression<String>? memberState,
+    Expression<Uint8List>? groupPublicKey,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -3960,6 +4222,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
       if (groupId != null) 'group_id': groupId,
       if (contactId != null) 'contact_id': contactId,
       if (memberState != null) 'member_state': memberState,
+      if (groupPublicKey != null) 'group_public_key': groupPublicKey,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -3969,12 +4232,14 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
       {Value<String>? groupId,
       Value<int>? contactId,
       Value<MemberState?>? memberState,
+      Value<Uint8List?>? groupPublicKey,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
     return GroupMembersCompanion(
       groupId: groupId ?? this.groupId,
       contactId: contactId ?? this.contactId,
       memberState: memberState ?? this.memberState,
+      groupPublicKey: groupPublicKey ?? this.groupPublicKey,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -3993,6 +4258,9 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
       map['member_state'] = Variable<String>(
           $GroupMembersTable.$convertermemberStaten.toSql(memberState.value));
     }
+    if (groupPublicKey.present) {
+      map['group_public_key'] = Variable<Uint8List>(groupPublicKey.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -4008,6 +4276,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
           ..write('groupId: $groupId, ')
           ..write('contactId: $contactId, ')
           ..write('memberState: $memberState, ')
+          ..write('groupPublicKey: $groupPublicKey, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6590,6 +6859,430 @@ class MessageActionsCompanion extends UpdateCompanion<MessageAction> {
   }
 }
 
+class $GroupHistoriesTable extends GroupHistories
+    with TableInfo<$GroupHistoriesTable, GroupHistory> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroupHistoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _groupHistoryIdMeta =
+      const VerificationMeta('groupHistoryId');
+  @override
+  late final GeneratedColumn<String> groupHistoryId = GeneratedColumn<String>(
+      'group_history_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _groupIdMeta =
+      const VerificationMeta('groupId');
+  @override
+  late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
+      'group_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES "groups" (group_id) ON DELETE CASCADE'));
+  static const VerificationMeta _affectedContactIdMeta =
+      const VerificationMeta('affectedContactId');
+  @override
+  late final GeneratedColumn<int> affectedContactId = GeneratedColumn<int>(
+      'affected_contact_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
+  static const VerificationMeta _oldGroupNameMeta =
+      const VerificationMeta('oldGroupName');
+  @override
+  late final GeneratedColumn<String> oldGroupName = GeneratedColumn<String>(
+      'old_group_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _newGroupNameMeta =
+      const VerificationMeta('newGroupName');
+  @override
+  late final GeneratedColumn<String> newGroupName = GeneratedColumn<String>(
+      'new_group_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  late final GeneratedColumnWithTypeConverter<GroupActionType, String> type =
+      GeneratedColumn<String>('type', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<GroupActionType>($GroupHistoriesTable.$convertertype);
+  static const VerificationMeta _actionAtMeta =
+      const VerificationMeta('actionAt');
+  @override
+  late final GeneratedColumn<DateTime> actionAt = GeneratedColumn<DateTime>(
+      'action_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        groupHistoryId,
+        groupId,
+        affectedContactId,
+        oldGroupName,
+        newGroupName,
+        type,
+        actionAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'group_histories';
+  @override
+  VerificationContext validateIntegrity(Insertable<GroupHistory> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('group_history_id')) {
+      context.handle(
+          _groupHistoryIdMeta,
+          groupHistoryId.isAcceptableOrUnknown(
+              data['group_history_id']!, _groupHistoryIdMeta));
+    } else if (isInserting) {
+      context.missing(_groupHistoryIdMeta);
+    }
+    if (data.containsKey('group_id')) {
+      context.handle(_groupIdMeta,
+          groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
+    } else if (isInserting) {
+      context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('affected_contact_id')) {
+      context.handle(
+          _affectedContactIdMeta,
+          affectedContactId.isAcceptableOrUnknown(
+              data['affected_contact_id']!, _affectedContactIdMeta));
+    }
+    if (data.containsKey('old_group_name')) {
+      context.handle(
+          _oldGroupNameMeta,
+          oldGroupName.isAcceptableOrUnknown(
+              data['old_group_name']!, _oldGroupNameMeta));
+    }
+    if (data.containsKey('new_group_name')) {
+      context.handle(
+          _newGroupNameMeta,
+          newGroupName.isAcceptableOrUnknown(
+              data['new_group_name']!, _newGroupNameMeta));
+    }
+    if (data.containsKey('action_at')) {
+      context.handle(_actionAtMeta,
+          actionAt.isAcceptableOrUnknown(data['action_at']!, _actionAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {groupHistoryId};
+  @override
+  GroupHistory map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroupHistory(
+      groupHistoryId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}group_history_id'])!,
+      groupId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
+      affectedContactId: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}affected_contact_id']),
+      oldGroupName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}old_group_name']),
+      newGroupName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}new_group_name']),
+      type: $GroupHistoriesTable.$convertertype.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
+      actionAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}action_at'])!,
+    );
+  }
+
+  @override
+  $GroupHistoriesTable createAlias(String alias) {
+    return $GroupHistoriesTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<GroupActionType, String, String> $convertertype =
+      const EnumNameConverter<GroupActionType>(GroupActionType.values);
+}
+
+class GroupHistory extends DataClass implements Insertable<GroupHistory> {
+  final String groupHistoryId;
+  final String groupId;
+  final int? affectedContactId;
+  final String? oldGroupName;
+  final String? newGroupName;
+  final GroupActionType type;
+  final DateTime actionAt;
+  const GroupHistory(
+      {required this.groupHistoryId,
+      required this.groupId,
+      this.affectedContactId,
+      this.oldGroupName,
+      this.newGroupName,
+      required this.type,
+      required this.actionAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['group_history_id'] = Variable<String>(groupHistoryId);
+    map['group_id'] = Variable<String>(groupId);
+    if (!nullToAbsent || affectedContactId != null) {
+      map['affected_contact_id'] = Variable<int>(affectedContactId);
+    }
+    if (!nullToAbsent || oldGroupName != null) {
+      map['old_group_name'] = Variable<String>(oldGroupName);
+    }
+    if (!nullToAbsent || newGroupName != null) {
+      map['new_group_name'] = Variable<String>(newGroupName);
+    }
+    {
+      map['type'] =
+          Variable<String>($GroupHistoriesTable.$convertertype.toSql(type));
+    }
+    map['action_at'] = Variable<DateTime>(actionAt);
+    return map;
+  }
+
+  GroupHistoriesCompanion toCompanion(bool nullToAbsent) {
+    return GroupHistoriesCompanion(
+      groupHistoryId: Value(groupHistoryId),
+      groupId: Value(groupId),
+      affectedContactId: affectedContactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(affectedContactId),
+      oldGroupName: oldGroupName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(oldGroupName),
+      newGroupName: newGroupName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(newGroupName),
+      type: Value(type),
+      actionAt: Value(actionAt),
+    );
+  }
+
+  factory GroupHistory.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroupHistory(
+      groupHistoryId: serializer.fromJson<String>(json['groupHistoryId']),
+      groupId: serializer.fromJson<String>(json['groupId']),
+      affectedContactId: serializer.fromJson<int?>(json['affectedContactId']),
+      oldGroupName: serializer.fromJson<String?>(json['oldGroupName']),
+      newGroupName: serializer.fromJson<String?>(json['newGroupName']),
+      type: $GroupHistoriesTable.$convertertype
+          .fromJson(serializer.fromJson<String>(json['type'])),
+      actionAt: serializer.fromJson<DateTime>(json['actionAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'groupHistoryId': serializer.toJson<String>(groupHistoryId),
+      'groupId': serializer.toJson<String>(groupId),
+      'affectedContactId': serializer.toJson<int?>(affectedContactId),
+      'oldGroupName': serializer.toJson<String?>(oldGroupName),
+      'newGroupName': serializer.toJson<String?>(newGroupName),
+      'type': serializer
+          .toJson<String>($GroupHistoriesTable.$convertertype.toJson(type)),
+      'actionAt': serializer.toJson<DateTime>(actionAt),
+    };
+  }
+
+  GroupHistory copyWith(
+          {String? groupHistoryId,
+          String? groupId,
+          Value<int?> affectedContactId = const Value.absent(),
+          Value<String?> oldGroupName = const Value.absent(),
+          Value<String?> newGroupName = const Value.absent(),
+          GroupActionType? type,
+          DateTime? actionAt}) =>
+      GroupHistory(
+        groupHistoryId: groupHistoryId ?? this.groupHistoryId,
+        groupId: groupId ?? this.groupId,
+        affectedContactId: affectedContactId.present
+            ? affectedContactId.value
+            : this.affectedContactId,
+        oldGroupName:
+            oldGroupName.present ? oldGroupName.value : this.oldGroupName,
+        newGroupName:
+            newGroupName.present ? newGroupName.value : this.newGroupName,
+        type: type ?? this.type,
+        actionAt: actionAt ?? this.actionAt,
+      );
+  GroupHistory copyWithCompanion(GroupHistoriesCompanion data) {
+    return GroupHistory(
+      groupHistoryId: data.groupHistoryId.present
+          ? data.groupHistoryId.value
+          : this.groupHistoryId,
+      groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      affectedContactId: data.affectedContactId.present
+          ? data.affectedContactId.value
+          : this.affectedContactId,
+      oldGroupName: data.oldGroupName.present
+          ? data.oldGroupName.value
+          : this.oldGroupName,
+      newGroupName: data.newGroupName.present
+          ? data.newGroupName.value
+          : this.newGroupName,
+      type: data.type.present ? data.type.value : this.type,
+      actionAt: data.actionAt.present ? data.actionAt.value : this.actionAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupHistory(')
+          ..write('groupHistoryId: $groupHistoryId, ')
+          ..write('groupId: $groupId, ')
+          ..write('affectedContactId: $affectedContactId, ')
+          ..write('oldGroupName: $oldGroupName, ')
+          ..write('newGroupName: $newGroupName, ')
+          ..write('type: $type, ')
+          ..write('actionAt: $actionAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(groupHistoryId, groupId, affectedContactId,
+      oldGroupName, newGroupName, type, actionAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroupHistory &&
+          other.groupHistoryId == this.groupHistoryId &&
+          other.groupId == this.groupId &&
+          other.affectedContactId == this.affectedContactId &&
+          other.oldGroupName == this.oldGroupName &&
+          other.newGroupName == this.newGroupName &&
+          other.type == this.type &&
+          other.actionAt == this.actionAt);
+}
+
+class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
+  final Value<String> groupHistoryId;
+  final Value<String> groupId;
+  final Value<int?> affectedContactId;
+  final Value<String?> oldGroupName;
+  final Value<String?> newGroupName;
+  final Value<GroupActionType> type;
+  final Value<DateTime> actionAt;
+  final Value<int> rowid;
+  const GroupHistoriesCompanion({
+    this.groupHistoryId = const Value.absent(),
+    this.groupId = const Value.absent(),
+    this.affectedContactId = const Value.absent(),
+    this.oldGroupName = const Value.absent(),
+    this.newGroupName = const Value.absent(),
+    this.type = const Value.absent(),
+    this.actionAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GroupHistoriesCompanion.insert({
+    required String groupHistoryId,
+    required String groupId,
+    this.affectedContactId = const Value.absent(),
+    this.oldGroupName = const Value.absent(),
+    this.newGroupName = const Value.absent(),
+    required GroupActionType type,
+    this.actionAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : groupHistoryId = Value(groupHistoryId),
+        groupId = Value(groupId),
+        type = Value(type);
+  static Insertable<GroupHistory> custom({
+    Expression<String>? groupHistoryId,
+    Expression<String>? groupId,
+    Expression<int>? affectedContactId,
+    Expression<String>? oldGroupName,
+    Expression<String>? newGroupName,
+    Expression<String>? type,
+    Expression<DateTime>? actionAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (groupHistoryId != null) 'group_history_id': groupHistoryId,
+      if (groupId != null) 'group_id': groupId,
+      if (affectedContactId != null) 'affected_contact_id': affectedContactId,
+      if (oldGroupName != null) 'old_group_name': oldGroupName,
+      if (newGroupName != null) 'new_group_name': newGroupName,
+      if (type != null) 'type': type,
+      if (actionAt != null) 'action_at': actionAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GroupHistoriesCompanion copyWith(
+      {Value<String>? groupHistoryId,
+      Value<String>? groupId,
+      Value<int?>? affectedContactId,
+      Value<String?>? oldGroupName,
+      Value<String?>? newGroupName,
+      Value<GroupActionType>? type,
+      Value<DateTime>? actionAt,
+      Value<int>? rowid}) {
+    return GroupHistoriesCompanion(
+      groupHistoryId: groupHistoryId ?? this.groupHistoryId,
+      groupId: groupId ?? this.groupId,
+      affectedContactId: affectedContactId ?? this.affectedContactId,
+      oldGroupName: oldGroupName ?? this.oldGroupName,
+      newGroupName: newGroupName ?? this.newGroupName,
+      type: type ?? this.type,
+      actionAt: actionAt ?? this.actionAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (groupHistoryId.present) {
+      map['group_history_id'] = Variable<String>(groupHistoryId.value);
+    }
+    if (groupId.present) {
+      map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (affectedContactId.present) {
+      map['affected_contact_id'] = Variable<int>(affectedContactId.value);
+    }
+    if (oldGroupName.present) {
+      map['old_group_name'] = Variable<String>(oldGroupName.value);
+    }
+    if (newGroupName.present) {
+      map['new_group_name'] = Variable<String>(newGroupName.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(
+          $GroupHistoriesTable.$convertertype.toSql(type.value));
+    }
+    if (actionAt.present) {
+      map['action_at'] = Variable<DateTime>(actionAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroupHistoriesCompanion(')
+          ..write('groupHistoryId: $groupHistoryId, ')
+          ..write('groupId: $groupId, ')
+          ..write('affectedContactId: $affectedContactId, ')
+          ..write('oldGroupName: $oldGroupName, ')
+          ..write('newGroupName: $newGroupName, ')
+          ..write('type: $type, ')
+          ..write('actionAt: $actionAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$TwonlyDB extends GeneratedDatabase {
   _$TwonlyDB(QueryExecutor e) : super(e);
   $TwonlyDBManager get managers => $TwonlyDBManager(this);
@@ -6617,6 +7310,7 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
   late final $SignalContactSignedPreKeysTable signalContactSignedPreKeys =
       $SignalContactSignedPreKeysTable(this);
   late final $MessageActionsTable messageActions = $MessageActionsTable(this);
+  late final $GroupHistoriesTable groupHistories = $GroupHistoriesTable(this);
   late final MessagesDao messagesDao = MessagesDao(this as TwonlyDB);
   late final ContactsDao contactsDao = ContactsDao(this as TwonlyDB);
   late final SignalDao signalDao = SignalDao(this as TwonlyDB);
@@ -6644,7 +7338,8 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
         signalSessionStores,
         signalContactPreKeys,
         signalContactSignedPreKeys,
-        messageActions
+        messageActions,
+        groupHistories
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -6685,6 +7380,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
             ],
           ),
           WritePropagation(
+            on: TableUpdateQuery.onTableName('groups',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('group_members', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
             on: TableUpdateQuery.onTableName('contacts',
                 limitUpdateKind: UpdateKind.delete),
             result: [
@@ -6718,6 +7420,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('message_actions', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('groups',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('group_histories', kind: UpdateKind.delete),
             ],
           ),
         ],
@@ -6856,6 +7565,22 @@ final class $$ContactsTableReferences
 
     final cache = $_typedResult
         .readTableOrNull(_signalContactSignedPreKeysRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
+      _groupHistoriesRefsTable(_$TwonlyDB db) =>
+          MultiTypedResultKey.fromTable(db.groupHistories,
+              aliasName: $_aliasNameGenerator(
+                  db.contacts.userId, db.groupHistories.affectedContactId));
+
+  $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
+    final manager = $$GroupHistoriesTableTableManager($_db, $_db.groupHistories)
+        .filter((f) => f.affectedContactId.userId
+            .sqlEquals($_itemColumn<int>('user_id')!));
+
+    final cache = $_typedResult.readTableOrNull(_groupHistoriesRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -7039,6 +7764,27 @@ class $$ContactsTableFilterComposer
                   $removeJoinBuilderFromRootComposer:
                       $removeJoinBuilderFromRootComposer,
                 ));
+    return f(composer);
+  }
+
+  Expression<bool> groupHistoriesRefs(
+      Expression<bool> Function($$GroupHistoriesTableFilterComposer f) f) {
+    final $$GroupHistoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.groupHistories,
+        getReferencedColumn: (t) => t.affectedContactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupHistoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.groupHistories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
@@ -7274,6 +8020,27 @@ class $$ContactsTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> groupHistoriesRefs<T extends Object>(
+      Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f) {
+    final $$GroupHistoriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.groupHistories,
+        getReferencedColumn: (t) => t.affectedContactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupHistoriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.groupHistories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$ContactsTableTableManager extends RootTableManager<
@@ -7293,7 +8060,8 @@ class $$ContactsTableTableManager extends RootTableManager<
         bool groupMembersRefs,
         bool receiptsRefs,
         bool signalContactPreKeysRefs,
-        bool signalContactSignedPreKeysRefs})> {
+        bool signalContactSignedPreKeysRefs,
+        bool groupHistoriesRefs})> {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
       : super(TableManagerState(
           db: db,
@@ -7374,7 +8142,8 @@ class $$ContactsTableTableManager extends RootTableManager<
               groupMembersRefs = false,
               receiptsRefs = false,
               signalContactPreKeysRefs = false,
-              signalContactSignedPreKeysRefs = false}) {
+              signalContactSignedPreKeysRefs = false,
+              groupHistoriesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -7384,7 +8153,8 @@ class $$ContactsTableTableManager extends RootTableManager<
                 if (receiptsRefs) db.receipts,
                 if (signalContactPreKeysRefs) db.signalContactPreKeys,
                 if (signalContactSignedPreKeysRefs)
-                  db.signalContactSignedPreKeys
+                  db.signalContactSignedPreKeys,
+                if (groupHistoriesRefs) db.groupHistories
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -7464,6 +8234,19 @@ class $$ContactsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.contactId == item.userId),
+                        typedResults: items),
+                  if (groupHistoriesRefs)
+                    await $_getPrefetchedData<Contact, $ContactsTable,
+                            GroupHistory>(
+                        currentTable: table,
+                        referencedTable: $$ContactsTableReferences
+                            ._groupHistoriesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ContactsTableReferences(db, table, p0)
+                                .groupHistoriesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                                (e) => e.affectedContactId == item.userId),
                         typedResults: items)
                 ];
               },
@@ -7489,13 +8272,19 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
         bool groupMembersRefs,
         bool receiptsRefs,
         bool signalContactPreKeysRefs,
-        bool signalContactSignedPreKeysRefs})>;
+        bool signalContactSignedPreKeysRefs,
+        bool groupHistoriesRefs})>;
 typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   required String groupId,
-  required bool isGroupAdmin,
-  required bool isDirectChat,
+  Value<bool> isGroupAdmin,
+  Value<bool> isDirectChat,
   Value<bool> pinned,
   Value<bool> archived,
+  Value<bool> joinedGroup,
+  Value<bool> leftGroup,
+  Value<int> stateVersionId,
+  Value<Uint8List?> stateEncryptionKey,
+  Value<Uint8List?> myGroupPrivateKey,
   required String groupName,
   Value<int> totalMediaCounter,
   Value<bool> alsoBestFriend,
@@ -7517,6 +8306,11 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<bool> isDirectChat,
   Value<bool> pinned,
   Value<bool> archived,
+  Value<bool> joinedGroup,
+  Value<bool> leftGroup,
+  Value<int> stateVersionId,
+  Value<Uint8List?> stateEncryptionKey,
+  Value<Uint8List?> myGroupPrivateKey,
   Value<String> groupName,
   Value<int> totalMediaCounter,
   Value<bool> alsoBestFriend,
@@ -7551,6 +8345,38 @@ final class $$GroupsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$GroupMembersTable, List<GroupMember>>
+      _groupMembersRefsTable(_$TwonlyDB db) => MultiTypedResultKey.fromTable(
+          db.groupMembers,
+          aliasName:
+              $_aliasNameGenerator(db.groups.groupId, db.groupMembers.groupId));
+
+  $$GroupMembersTableProcessedTableManager get groupMembersRefs {
+    final manager = $$GroupMembersTableTableManager($_db, $_db.groupMembers)
+        .filter((f) =>
+            f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!));
+
+    final cache = $_typedResult.readTableOrNull(_groupMembersRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
+      _groupHistoriesRefsTable(_$TwonlyDB db) =>
+          MultiTypedResultKey.fromTable(db.groupHistories,
+              aliasName: $_aliasNameGenerator(
+                  db.groups.groupId, db.groupHistories.groupId));
+
+  $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
+    final manager = $$GroupHistoriesTableTableManager($_db, $_db.groupHistories)
+        .filter((f) =>
+            f.groupId.groupId.sqlEquals($_itemColumn<String>('group_id')!));
+
+    final cache = $_typedResult.readTableOrNull(_groupHistoriesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
@@ -7575,6 +8401,24 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
 
   ColumnFilters<bool> get archived => $composableBuilder(
       column: $table.archived, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get joinedGroup => $composableBuilder(
+      column: $table.joinedGroup, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get leftGroup => $composableBuilder(
+      column: $table.leftGroup, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stateVersionId => $composableBuilder(
+      column: $table.stateVersionId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get stateEncryptionKey => $composableBuilder(
+      column: $table.stateEncryptionKey,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get myGroupPrivateKey => $composableBuilder(
+      column: $table.myGroupPrivateKey,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get groupName => $composableBuilder(
       column: $table.groupName, builder: (column) => ColumnFilters(column));
@@ -7644,6 +8488,48 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
             ));
     return f(composer);
   }
+
+  Expression<bool> groupMembersRefs(
+      Expression<bool> Function($$GroupMembersTableFilterComposer f) f) {
+    final $$GroupMembersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groupMembers,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupMembersTableFilterComposer(
+              $db: $db,
+              $table: $db.groupMembers,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> groupHistoriesRefs(
+      Expression<bool> Function($$GroupHistoriesTableFilterComposer f) f) {
+    final $$GroupHistoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groupHistories,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupHistoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.groupHistories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
@@ -7670,6 +8556,24 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
 
   ColumnOrderings<bool> get archived => $composableBuilder(
       column: $table.archived, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get joinedGroup => $composableBuilder(
+      column: $table.joinedGroup, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get leftGroup => $composableBuilder(
+      column: $table.leftGroup, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stateVersionId => $composableBuilder(
+      column: $table.stateVersionId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<Uint8List> get stateEncryptionKey => $composableBuilder(
+      column: $table.stateEncryptionKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<Uint8List> get myGroupPrivateKey => $composableBuilder(
+      column: $table.myGroupPrivateKey,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get groupName => $composableBuilder(
       column: $table.groupName, builder: (column) => ColumnOrderings(column));
@@ -7747,6 +8651,21 @@ class $$GroupsTableAnnotationComposer
   GeneratedColumn<bool> get archived =>
       $composableBuilder(column: $table.archived, builder: (column) => column);
 
+  GeneratedColumn<bool> get joinedGroup => $composableBuilder(
+      column: $table.joinedGroup, builder: (column) => column);
+
+  GeneratedColumn<bool> get leftGroup =>
+      $composableBuilder(column: $table.leftGroup, builder: (column) => column);
+
+  GeneratedColumn<int> get stateVersionId => $composableBuilder(
+      column: $table.stateVersionId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get stateEncryptionKey => $composableBuilder(
+      column: $table.stateEncryptionKey, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get myGroupPrivateKey => $composableBuilder(
+      column: $table.myGroupPrivateKey, builder: (column) => column);
+
   GeneratedColumn<String> get groupName =>
       $composableBuilder(column: $table.groupName, builder: (column) => column);
 
@@ -7808,6 +8727,48 @@ class $$GroupsTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> groupMembersRefs<T extends Object>(
+      Expression<T> Function($$GroupMembersTableAnnotationComposer a) f) {
+    final $$GroupMembersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groupMembers,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupMembersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.groupMembers,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> groupHistoriesRefs<T extends Object>(
+      Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f) {
+    final $$GroupHistoriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groupHistories,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupHistoriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.groupHistories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$GroupsTableTableManager extends RootTableManager<
@@ -7821,7 +8782,8 @@ class $$GroupsTableTableManager extends RootTableManager<
     $$GroupsTableUpdateCompanionBuilder,
     (Group, $$GroupsTableReferences),
     Group,
-    PrefetchHooks Function({bool messagesRefs})> {
+    PrefetchHooks Function(
+        {bool messagesRefs, bool groupMembersRefs, bool groupHistoriesRefs})> {
   $$GroupsTableTableManager(_$TwonlyDB db, $GroupsTable table)
       : super(TableManagerState(
           db: db,
@@ -7838,6 +8800,11 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<bool> isDirectChat = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
             Value<bool> archived = const Value.absent(),
+            Value<bool> joinedGroup = const Value.absent(),
+            Value<bool> leftGroup = const Value.absent(),
+            Value<int> stateVersionId = const Value.absent(),
+            Value<Uint8List?> stateEncryptionKey = const Value.absent(),
+            Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
             Value<String> groupName = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
             Value<bool> alsoBestFriend = const Value.absent(),
@@ -7859,6 +8826,11 @@ class $$GroupsTableTableManager extends RootTableManager<
             isDirectChat: isDirectChat,
             pinned: pinned,
             archived: archived,
+            joinedGroup: joinedGroup,
+            leftGroup: leftGroup,
+            stateVersionId: stateVersionId,
+            stateEncryptionKey: stateEncryptionKey,
+            myGroupPrivateKey: myGroupPrivateKey,
             groupName: groupName,
             totalMediaCounter: totalMediaCounter,
             alsoBestFriend: alsoBestFriend,
@@ -7876,10 +8848,15 @@ class $$GroupsTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             required String groupId,
-            required bool isGroupAdmin,
-            required bool isDirectChat,
+            Value<bool> isGroupAdmin = const Value.absent(),
+            Value<bool> isDirectChat = const Value.absent(),
             Value<bool> pinned = const Value.absent(),
             Value<bool> archived = const Value.absent(),
+            Value<bool> joinedGroup = const Value.absent(),
+            Value<bool> leftGroup = const Value.absent(),
+            Value<int> stateVersionId = const Value.absent(),
+            Value<Uint8List?> stateEncryptionKey = const Value.absent(),
+            Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
             required String groupName,
             Value<int> totalMediaCounter = const Value.absent(),
             Value<bool> alsoBestFriend = const Value.absent(),
@@ -7901,6 +8878,11 @@ class $$GroupsTableTableManager extends RootTableManager<
             isDirectChat: isDirectChat,
             pinned: pinned,
             archived: archived,
+            joinedGroup: joinedGroup,
+            leftGroup: leftGroup,
+            stateVersionId: stateVersionId,
+            stateEncryptionKey: stateEncryptionKey,
+            myGroupPrivateKey: myGroupPrivateKey,
             groupName: groupName,
             totalMediaCounter: totalMediaCounter,
             alsoBestFriend: alsoBestFriend,
@@ -7920,10 +8902,17 @@ class $$GroupsTableTableManager extends RootTableManager<
               .map((e) =>
                   (e.readTable(table), $$GroupsTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({messagesRefs = false}) {
+          prefetchHooksCallback: (
+              {messagesRefs = false,
+              groupMembersRefs = false,
+              groupHistoriesRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (messagesRefs) db.messages],
+              explicitlyWatchedTables: [
+                if (messagesRefs) db.messages,
+                if (groupMembersRefs) db.groupMembers,
+                if (groupHistoriesRefs) db.groupHistories
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
@@ -7934,6 +8923,31 @@ class $$GroupsTableTableManager extends RootTableManager<
                             $$GroupsTableReferences._messagesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$GroupsTableReferences(db, table, p0).messagesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.groupId == item.groupId),
+                        typedResults: items),
+                  if (groupMembersRefs)
+                    await $_getPrefetchedData<Group, $GroupsTable, GroupMember>(
+                        currentTable: table,
+                        referencedTable:
+                            $$GroupsTableReferences._groupMembersRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$GroupsTableReferences(db, table, p0)
+                                .groupMembersRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.groupId == item.groupId),
+                        typedResults: items),
+                  if (groupHistoriesRefs)
+                    await $_getPrefetchedData<Group, $GroupsTable,
+                            GroupHistory>(
+                        currentTable: table,
+                        referencedTable: $$GroupsTableReferences
+                            ._groupHistoriesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$GroupsTableReferences(db, table, p0)
+                                .groupHistoriesRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.groupId == item.groupId),
@@ -7956,7 +8970,8 @@ typedef $$GroupsTableProcessedTableManager = ProcessedTableManager<
     $$GroupsTableUpdateCompanionBuilder,
     (Group, $$GroupsTableReferences),
     Group,
-    PrefetchHooks Function({bool messagesRefs})>;
+    PrefetchHooks Function(
+        {bool messagesRefs, bool groupMembersRefs, bool groupHistoriesRefs})>;
 typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   required String mediaId,
   required MediaType type,
@@ -9887,6 +10902,7 @@ typedef $$GroupMembersTableCreateCompanionBuilder = GroupMembersCompanion
   required String groupId,
   required int contactId,
   Value<MemberState?> memberState,
+  Value<Uint8List?> groupPublicKey,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -9895,6 +10911,7 @@ typedef $$GroupMembersTableUpdateCompanionBuilder = GroupMembersCompanion
   Value<String> groupId,
   Value<int> contactId,
   Value<MemberState?> memberState,
+  Value<Uint8List?> groupPublicKey,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -9902,6 +10919,20 @@ typedef $$GroupMembersTableUpdateCompanionBuilder = GroupMembersCompanion
 final class $$GroupMembersTableReferences
     extends BaseReferences<_$TwonlyDB, $GroupMembersTable, GroupMember> {
   $$GroupMembersTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
+      $_aliasNameGenerator(db.groupMembers.groupId, db.groups.groupId));
+
+  $$GroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<String>('group_id')!;
+
+    final manager = $$GroupsTableTableManager($_db, $_db.groups)
+        .filter((f) => f.groupId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
 
   static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
       db.contacts.createAlias(
@@ -9928,16 +10959,37 @@ class $$GroupMembersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get groupId => $composableBuilder(
-      column: $table.groupId, builder: (column) => ColumnFilters(column));
-
   ColumnWithTypeConverterFilters<MemberState?, MemberState, String>
       get memberState => $composableBuilder(
           column: $table.memberState,
           builder: (column) => ColumnWithTypeConverterFilters(column));
 
+  ColumnFilters<Uint8List> get groupPublicKey => $composableBuilder(
+      column: $table.groupPublicKey,
+      builder: (column) => ColumnFilters(column));
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$GroupsTableFilterComposer get groupId {
+    final $$GroupsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groups,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupsTableFilterComposer(
+              $db: $db,
+              $table: $db.groups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 
   $$ContactsTableFilterComposer get contactId {
     final $$ContactsTableFilterComposer composer = $composerBuilder(
@@ -9969,14 +11021,35 @@ class $$GroupMembersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get groupId => $composableBuilder(
-      column: $table.groupId, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<String> get memberState => $composableBuilder(
       column: $table.memberState, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<Uint8List> get groupPublicKey => $composableBuilder(
+      column: $table.groupPublicKey,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$GroupsTableOrderingComposer get groupId {
+    final $$GroupsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groups,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupsTableOrderingComposer(
+              $db: $db,
+              $table: $db.groups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 
   $$ContactsTableOrderingComposer get contactId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
@@ -10008,15 +11081,35 @@ class $$GroupMembersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get groupId =>
-      $composableBuilder(column: $table.groupId, builder: (column) => column);
-
   GeneratedColumnWithTypeConverter<MemberState?, String> get memberState =>
       $composableBuilder(
           column: $table.memberState, builder: (column) => column);
 
+  GeneratedColumn<Uint8List> get groupPublicKey => $composableBuilder(
+      column: $table.groupPublicKey, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$GroupsTableAnnotationComposer get groupId {
+    final $$GroupsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groups,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.groups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 
   $$ContactsTableAnnotationComposer get contactId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
@@ -10050,7 +11143,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
     $$GroupMembersTableUpdateCompanionBuilder,
     (GroupMember, $$GroupMembersTableReferences),
     GroupMember,
-    PrefetchHooks Function({bool contactId})> {
+    PrefetchHooks Function({bool groupId, bool contactId})> {
   $$GroupMembersTableTableManager(_$TwonlyDB db, $GroupMembersTable table)
       : super(TableManagerState(
           db: db,
@@ -10065,6 +11158,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
             Value<String> groupId = const Value.absent(),
             Value<int> contactId = const Value.absent(),
             Value<MemberState?> memberState = const Value.absent(),
+            Value<Uint8List?> groupPublicKey = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -10072,6 +11166,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
             groupId: groupId,
             contactId: contactId,
             memberState: memberState,
+            groupPublicKey: groupPublicKey,
             createdAt: createdAt,
             rowid: rowid,
           ),
@@ -10079,6 +11174,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
             required String groupId,
             required int contactId,
             Value<MemberState?> memberState = const Value.absent(),
+            Value<Uint8List?> groupPublicKey = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -10086,6 +11182,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
             groupId: groupId,
             contactId: contactId,
             memberState: memberState,
+            groupPublicKey: groupPublicKey,
             createdAt: createdAt,
             rowid: rowid,
           ),
@@ -10095,7 +11192,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
                     $$GroupMembersTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({contactId = false}) {
+          prefetchHooksCallback: ({groupId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -10112,6 +11209,16 @@ class $$GroupMembersTableTableManager extends RootTableManager<
                       dynamic,
                       dynamic,
                       dynamic>>(state) {
+                if (groupId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.groupId,
+                    referencedTable:
+                        $$GroupMembersTableReferences._groupIdTable(db),
+                    referencedColumn:
+                        $$GroupMembersTableReferences._groupIdTable(db).groupId,
+                  ) as T;
+                }
                 if (contactId) {
                   state = state.withJoin(
                     currentTable: table,
@@ -10145,7 +11252,7 @@ typedef $$GroupMembersTableProcessedTableManager = ProcessedTableManager<
     $$GroupMembersTableUpdateCompanionBuilder,
     (GroupMember, $$GroupMembersTableReferences),
     GroupMember,
-    PrefetchHooks Function({bool contactId})>;
+    PrefetchHooks Function({bool groupId, bool contactId})>;
 typedef $$ReceiptsTableCreateCompanionBuilder = ReceiptsCompanion Function({
   required String receiptId,
   required int contactId,
@@ -12102,6 +13209,396 @@ typedef $$MessageActionsTableProcessedTableManager = ProcessedTableManager<
     (MessageAction, $$MessageActionsTableReferences),
     MessageAction,
     PrefetchHooks Function({bool messageId})>;
+typedef $$GroupHistoriesTableCreateCompanionBuilder = GroupHistoriesCompanion
+    Function({
+  required String groupHistoryId,
+  required String groupId,
+  Value<int?> affectedContactId,
+  Value<String?> oldGroupName,
+  Value<String?> newGroupName,
+  required GroupActionType type,
+  Value<DateTime> actionAt,
+  Value<int> rowid,
+});
+typedef $$GroupHistoriesTableUpdateCompanionBuilder = GroupHistoriesCompanion
+    Function({
+  Value<String> groupHistoryId,
+  Value<String> groupId,
+  Value<int?> affectedContactId,
+  Value<String?> oldGroupName,
+  Value<String?> newGroupName,
+  Value<GroupActionType> type,
+  Value<DateTime> actionAt,
+  Value<int> rowid,
+});
+
+final class $$GroupHistoriesTableReferences
+    extends BaseReferences<_$TwonlyDB, $GroupHistoriesTable, GroupHistory> {
+  $$GroupHistoriesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $GroupsTable _groupIdTable(_$TwonlyDB db) => db.groups.createAlias(
+      $_aliasNameGenerator(db.groupHistories.groupId, db.groups.groupId));
+
+  $$GroupsTableProcessedTableManager get groupId {
+    final $_column = $_itemColumn<String>('group_id')!;
+
+    final manager = $$GroupsTableTableManager($_db, $_db.groups)
+        .filter((f) => f.groupId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ContactsTable _affectedContactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias($_aliasNameGenerator(
+          db.groupHistories.affectedContactId, db.contacts.userId));
+
+  $$ContactsTableProcessedTableManager? get affectedContactId {
+    final $_column = $_itemColumn<int>('affected_contact_id');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
+        .filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_affectedContactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$GroupHistoriesTableFilterComposer
+    extends Composer<_$TwonlyDB, $GroupHistoriesTable> {
+  $$GroupHistoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get groupHistoryId => $composableBuilder(
+      column: $table.groupHistoryId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get oldGroupName => $composableBuilder(
+      column: $table.oldGroupName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get newGroupName => $composableBuilder(
+      column: $table.newGroupName, builder: (column) => ColumnFilters(column));
+
+  ColumnWithTypeConverterFilters<GroupActionType, GroupActionType, String>
+      get type => $composableBuilder(
+          column: $table.type,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
+
+  ColumnFilters<DateTime> get actionAt => $composableBuilder(
+      column: $table.actionAt, builder: (column) => ColumnFilters(column));
+
+  $$GroupsTableFilterComposer get groupId {
+    final $$GroupsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groups,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupsTableFilterComposer(
+              $db: $db,
+              $table: $db.groups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get affectedContactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.affectedContactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableFilterComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$GroupHistoriesTableOrderingComposer
+    extends Composer<_$TwonlyDB, $GroupHistoriesTable> {
+  $$GroupHistoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get groupHistoryId => $composableBuilder(
+      column: $table.groupHistoryId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get oldGroupName => $composableBuilder(
+      column: $table.oldGroupName,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get newGroupName => $composableBuilder(
+      column: $table.newGroupName,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get actionAt => $composableBuilder(
+      column: $table.actionAt, builder: (column) => ColumnOrderings(column));
+
+  $$GroupsTableOrderingComposer get groupId {
+    final $$GroupsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groups,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupsTableOrderingComposer(
+              $db: $db,
+              $table: $db.groups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ContactsTableOrderingComposer get affectedContactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.affectedContactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableOrderingComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$GroupHistoriesTableAnnotationComposer
+    extends Composer<_$TwonlyDB, $GroupHistoriesTable> {
+  $$GroupHistoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get groupHistoryId => $composableBuilder(
+      column: $table.groupHistoryId, builder: (column) => column);
+
+  GeneratedColumn<String> get oldGroupName => $composableBuilder(
+      column: $table.oldGroupName, builder: (column) => column);
+
+  GeneratedColumn<String> get newGroupName => $composableBuilder(
+      column: $table.newGroupName, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<GroupActionType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get actionAt =>
+      $composableBuilder(column: $table.actionAt, builder: (column) => column);
+
+  $$GroupsTableAnnotationComposer get groupId {
+    final $$GroupsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupId,
+        referencedTable: $db.groups,
+        getReferencedColumn: (t) => t.groupId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.groups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ContactsTableAnnotationComposer get affectedContactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.affectedContactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$GroupHistoriesTableTableManager extends RootTableManager<
+    _$TwonlyDB,
+    $GroupHistoriesTable,
+    GroupHistory,
+    $$GroupHistoriesTableFilterComposer,
+    $$GroupHistoriesTableOrderingComposer,
+    $$GroupHistoriesTableAnnotationComposer,
+    $$GroupHistoriesTableCreateCompanionBuilder,
+    $$GroupHistoriesTableUpdateCompanionBuilder,
+    (GroupHistory, $$GroupHistoriesTableReferences),
+    GroupHistory,
+    PrefetchHooks Function({bool groupId, bool affectedContactId})> {
+  $$GroupHistoriesTableTableManager(_$TwonlyDB db, $GroupHistoriesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroupHistoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroupHistoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroupHistoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> groupHistoryId = const Value.absent(),
+            Value<String> groupId = const Value.absent(),
+            Value<int?> affectedContactId = const Value.absent(),
+            Value<String?> oldGroupName = const Value.absent(),
+            Value<String?> newGroupName = const Value.absent(),
+            Value<GroupActionType> type = const Value.absent(),
+            Value<DateTime> actionAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              GroupHistoriesCompanion(
+            groupHistoryId: groupHistoryId,
+            groupId: groupId,
+            affectedContactId: affectedContactId,
+            oldGroupName: oldGroupName,
+            newGroupName: newGroupName,
+            type: type,
+            actionAt: actionAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String groupHistoryId,
+            required String groupId,
+            Value<int?> affectedContactId = const Value.absent(),
+            Value<String?> oldGroupName = const Value.absent(),
+            Value<String?> newGroupName = const Value.absent(),
+            required GroupActionType type,
+            Value<DateTime> actionAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              GroupHistoriesCompanion.insert(
+            groupHistoryId: groupHistoryId,
+            groupId: groupId,
+            affectedContactId: affectedContactId,
+            oldGroupName: oldGroupName,
+            newGroupName: newGroupName,
+            type: type,
+            actionAt: actionAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$GroupHistoriesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {groupId = false, affectedContactId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (groupId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.groupId,
+                    referencedTable:
+                        $$GroupHistoriesTableReferences._groupIdTable(db),
+                    referencedColumn: $$GroupHistoriesTableReferences
+                        ._groupIdTable(db)
+                        .groupId,
+                  ) as T;
+                }
+                if (affectedContactId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.affectedContactId,
+                    referencedTable: $$GroupHistoriesTableReferences
+                        ._affectedContactIdTable(db),
+                    referencedColumn: $$GroupHistoriesTableReferences
+                        ._affectedContactIdTable(db)
+                        .userId,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$GroupHistoriesTableProcessedTableManager = ProcessedTableManager<
+    _$TwonlyDB,
+    $GroupHistoriesTable,
+    GroupHistory,
+    $$GroupHistoriesTableFilterComposer,
+    $$GroupHistoriesTableOrderingComposer,
+    $$GroupHistoriesTableAnnotationComposer,
+    $$GroupHistoriesTableCreateCompanionBuilder,
+    $$GroupHistoriesTableUpdateCompanionBuilder,
+    (GroupHistory, $$GroupHistoriesTableReferences),
+    GroupHistory,
+    PrefetchHooks Function({bool groupId, bool affectedContactId})>;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;
@@ -12141,4 +13638,6 @@ class $TwonlyDBManager {
               _db, _db.signalContactSignedPreKeys);
   $$MessageActionsTableTableManager get messageActions =>
       $$MessageActionsTableTableManager(_db, _db.messageActions);
+  $$GroupHistoriesTableTableManager get groupHistories =>
+      $$GroupHistoriesTableTableManager(_db, _db.groupHistories);
 }

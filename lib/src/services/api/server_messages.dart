@@ -11,14 +11,15 @@ import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/api/client2client/groups.c2c.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/server_messages/contact.server_messages.dart';
-import 'package:twonly/src/services/api/server_messages/media.server_messages.dart';
-import 'package:twonly/src/services/api/server_messages/messages.server_messages.dart';
-import 'package:twonly/src/services/api/server_messages/prekeys.server_messages.dart';
-import 'package:twonly/src/services/api/server_messages/pushkeys.server_messages.dart';
-import 'package:twonly/src/services/api/server_messages/reaction.server_message.dart';
-import 'package:twonly/src/services/api/server_messages/text_message.server_messages.dart';
+import 'package:twonly/src/services/api/client2client/contact.c2c.dart';
+import 'package:twonly/src/services/api/client2client/media.c2c.dart';
+import 'package:twonly/src/services/api/client2client/messages.c2c.dart';
+import 'package:twonly/src/services/api/client2client/prekeys.c2c.dart';
+import 'package:twonly/src/services/api/client2client/pushkeys.c2c.dart';
+import 'package:twonly/src/services/api/client2client/reaction.c2c.dart';
+import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -36,7 +37,7 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
   } else if (msg.v0.hasNewMessage()) {
     final body = Uint8List.fromList(msg.v0.newMessage.body);
     final fromUserId = msg.v0.newMessage.fromUserId.toInt();
-    await handleNewMessage(fromUserId, body);
+    await handleClient2ClientMessage(fromUserId, body);
   } else {
     Log.error('Unknown server message: $msg');
   }
@@ -55,7 +56,7 @@ DateTime lastPushKeyRequest = DateTime.now().subtract(const Duration(hours: 1));
 
 Mutex protectReceiptCheck = Mutex();
 
-Future<void> handleNewMessage(int fromUserId, Uint8List body) async {
+Future<void> handleClient2ClientMessage(int fromUserId, Uint8List body) async {
   final message = Message.fromBuffer(body);
   final receiptId = message.receiptId;
 
@@ -202,6 +203,33 @@ Future<PlaintextContent?> handleEncryptedMessage(
 
   if (!content.hasGroupId()) {
     Log.error('Messages should have a groupId $fromUserId.');
+    return null;
+  }
+
+  if (content.hasGroupUpdate()) {
+    await handleGroupUpdate(
+      fromUserId,
+      content.groupId,
+      content.groupUpdate,
+    );
+    return null;
+  }
+
+  if (content.hasGroupCreate()) {
+    await handleGroupCreate(
+      fromUserId,
+      content.groupId,
+      content.groupCreate,
+    );
+    return null;
+  }
+
+  if (content.hasGroupJoin()) {
+    await handleGroupJoin(
+      fromUserId,
+      content.groupId,
+      content.groupJoin,
+    );
     return null;
   }
 

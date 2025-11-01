@@ -8,14 +8,16 @@ This repository contains the complete source code of the [twonly](https://twonly
 
 - Offer a Snapchat™ like experience
 - End-to-End encryption using the [Signal Protocol](https://de.wikipedia.org/wiki/Signal-Protokoll)
+- twonly is Open Source and can be downloaded directly from GitHub
+- Developed by humans not by AI or Vibe Coding
 - No email or phone number required to register
 - Privacy friendly - Everything is stored on the device
-- Open-Source
+- Backend is exclusively hosted in European
 
-## In work
+## Planned
 
-- For Android: Using [UnifiedPush](https://unifiedpush.org/) instead of FCM 
-- For Android: Reproducible Builds + Publishing F-Droid
+- For Android: Optional support for [UnifiedPush](https://unifiedpush.org/)
+- For Android: Reproducible Builds
 - Implementing [Sealed Sender](https://signal.org/blog/sealed-sender/) to minimize metadata
 
 ## Security Issues

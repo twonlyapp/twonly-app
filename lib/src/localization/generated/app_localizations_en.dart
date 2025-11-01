@@ -1158,4 +1158,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get durationShortDays => 'Days';
+
+  @override
+  String get newGroup => 'New group';
+
+  @override
+  String get selectMembers => 'Select members';
+
+  @override
+  String get selectGroupName => 'Select group name';
+
+  @override
+  String get groupNameInput => 'Group name';
+
+  @override
+  String get groupMembers => 'Members';
+
+  @override
+  String get createGroup => 'Create group';
 }

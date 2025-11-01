@@ -206,6 +206,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     $fixnum.Int64? signedPrekeyId,
     $fixnum.Int64? registrationId,
     $core.bool? isIos,
+    $core.String? langCode,
   }) {
     final $result = create();
     if (username != null) {
@@ -232,6 +233,9 @@ class Handshake_Register extends $pb.GeneratedMessage {
     if (isIos != null) {
       $result.isIos = isIos;
     }
+    if (langCode != null) {
+      $result.langCode = langCode;
+    }
     return $result;
   }
   Handshake_Register._() : super();
@@ -247,6 +251,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     ..aInt64(6, _omitFieldNames ? '' : 'signedPrekeyId')
     ..aInt64(7, _omitFieldNames ? '' : 'registrationId')
     ..aOB(8, _omitFieldNames ? '' : 'isIos')
+    ..aOS(9, _omitFieldNames ? '' : 'langCode')
     ..hasRequiredFields = false
   ;
 
@@ -342,6 +347,15 @@ class Handshake_Register extends $pb.GeneratedMessage {
   $core.bool hasIsIos() => $_has(7);
   @$pb.TagNumber(8)
   void clearIsIos() => clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get langCode => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set langCode($core.String v) { $_setString(8, v); }
+  @$pb.TagNumber(9)
+  $core.bool hasLangCode() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearLangCode() => clearField(9);
 }
 
 class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {

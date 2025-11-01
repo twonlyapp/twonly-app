@@ -359,5 +359,11 @@
     "durationShortSecond": "Sek.",
     "durationShortMinute": "Min.",
     "durationShortHour": "Std",
-    "durationShortDays": "Tagen"
+    "durationShortDays": "Tagen",
+    "newGroup": "Neue Gruppe",
+    "selectMembers": "Mitglieder auswählen",
+    "selectGroupName": "Gruppennamen wählen",
+    "groupNameInput": "Gruppennamen",
+    "groupMembers": "Mitglieder",
+    "createGroup": "Gruppe erstellen"
 }

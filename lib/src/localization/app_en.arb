@@ -515,5 +515,11 @@
   "durationShortSecond": "Sec.",
   "durationShortMinute": "Min.",
   "durationShortHour": "Hrs.",
-  "durationShortDays": "Days"
+  "durationShortDays": "Days",
+  "newGroup": "New group",
+  "selectMembers": "Select members",
+  "selectGroupName": "Select group name",
+  "groupNameInput": "Group name",
+  "groupMembers": "Members",
+  "createGroup": "Create group"
 }

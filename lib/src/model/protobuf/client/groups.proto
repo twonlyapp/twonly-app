@@ -1,10 +1,16 @@
 syntax = "proto3";
 
 // Stored encrypted on the server in the members columns.
-message GroupState {
+message EncryptedGroupState {
     repeated int64 memberIds = 1; 
     repeated int64 adminIds = 2; 
     string groupName = 3;
     optional int64 deleteMessagesAfterMilliseconds = 4;
-    bytes _padding = 5;
+    bytes padding = 5;
+}
+
+message EncryptedGroupStateEnvelop {
+    bytes nonce = 1;
+    bytes encryptedGroupState = 2;
+    bytes mac = 3;
 }
