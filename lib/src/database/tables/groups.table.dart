@@ -82,6 +82,9 @@ class GroupHistories extends Table {
   TextColumn get groupId =>
       text().references(Groups, #groupId, onDelete: KeyAction.cascade)();
 
+  IntColumn get contactId =>
+      integer().nullable().references(Contacts, #userId)();
+
   IntColumn get affectedContactId =>
       integer().nullable().references(Contacts, #userId)();
 
@@ -94,4 +97,11 @@ class GroupHistories extends Table {
 
   @override
   Set<Column> get primaryKey => {groupHistoryId};
+}
+
+GroupActionType? groupActionTypeFromString(String name) {
+  for (final v in GroupActionType.values) {
+    if (v.name == name) return v;
+  }
+  return null;
 }

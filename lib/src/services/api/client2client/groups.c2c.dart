@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/globals.dart';
@@ -29,7 +28,7 @@ Future<void> handleGroupCreate(
       groupId: Value(groupId),
       stateVersionId: const Value(0),
       stateEncryptionKey: Value(Uint8List.fromList(newGroup.stateKey)),
-      myGroupPrivateKey: Value(myGroupKey.getPrivateKey().serialize()),
+      myGroupPrivateKey: Value(myGroupKey.serialize()),
       groupName: const Value(''),
       joinedGroup: const Value(false),
     ),
@@ -81,7 +80,53 @@ Future<void> handleGroupUpdate(
   int fromUserId,
   String groupId,
   EncryptedContent_GroupUpdate update,
-) async {}
+) async {
+  Log.info('Got group update for $groupId from $fromUserId');
+
+  final actionType = groupActionTypeFromString(update.groupActionType);
+  if (actionType == null) {
+    Log.error('Group action ${update.groupActionType} is unknown ignoring.');
+    return;
+  }
+
+  final group = (await twonlyDB.groupsDao.getGroup(groupId))!;
+
+  switch (actionType) {
+    case GroupActionType.updatedGroupName:
+      await twonlyDB.groupsDao.insertGroupAction(
+        GroupHistoriesCompanion(
+          groupId: Value(groupId),
+          type: Value(actionType),
+          oldGroupName: Value(group.groupName),
+          newGroupName: Value(update.newGroupName),
+          contactId: Value(fromUserId),
+        ),
+      );
+    case GroupActionType.removedMember:
+    case GroupActionType.addMember:
+    case GroupActionType.leftGroup:
+    case GroupActionType.promoteToAdmin:
+    case GroupActionType.demoteToMember:
+      int? affectedContactId = update.affectedContactId.toInt();
+
+      if (affectedContactId == gUser.userId) {
+        affectedContactId = null;
+      }
+
+      await twonlyDB.groupsDao.insertGroupAction(
+        GroupHistoriesCompanion(
+          groupId: Value(groupId),
+          type: Value(actionType),
+          affectedContactId: Value(affectedContactId),
+          contactId: Value(fromUserId),
+        ),
+      );
+    case GroupActionType.createdGroup:
+      break;
+  }
+
+  unawaited(fetchGroupState(group));
+}
 
 Future<bool> handleGroupJoin(
   int fromUserId,

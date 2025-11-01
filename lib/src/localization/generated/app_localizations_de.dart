@@ -1182,5 +1182,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get groupMembers => 'Mitglieder';
 
   @override
+  String get addMember => 'Mitglied hinzufügen';
+
+  @override
   String get createGroup => 'Gruppe erstellen';
+
+  @override
+  String get leaveGroup => 'Gruppe verlassen';
+
+  @override
+  String get createContactRequest => 'Kontaktanfrage erstellen';
+
+  @override
+  String get makeAdmin => 'Zum Admin machen';
+
+  @override
+  String get removeAdmin => 'Als Admin entfernen';
+
+  @override
+  String get removeFromGroup => 'Aus Gruppe entfernen';
+
+  @override
+  String get admin => 'Admin';
 }

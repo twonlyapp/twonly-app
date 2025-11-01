@@ -47,7 +47,7 @@ class _ContextMenuState extends State<ContextMenu> {
       elevation: 1,
       clipBehavior: Clip.hardEdge,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12), // corner radius
+        borderRadius: BorderRadius.circular(12),
       ),
       popUpAnimationStyle: const AnimationStyle(
         duration: Duration.zero,
@@ -56,7 +56,7 @@ class _ContextMenuState extends State<ContextMenu> {
       items: <PopupMenuEntry<int>>[
         ...widget.items.map(
           (item) => PopupMenuItem(
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.only(right: 4),
             child: ListTile(
               title: Text(item.title),
               onTap: () async {

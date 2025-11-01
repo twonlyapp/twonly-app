@@ -60,6 +60,13 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     await into(groupHistories).insert(insertAction);
   }
 
+  Stream<List<GroupHistory>> watchGroupActions(String groupId) {
+    return (select(groupHistories)
+          ..where((t) => t.groupId.equals(groupId))
+          ..orderBy([(t) => OrderingTerm.asc(t.actionAt)]))
+        .watch();
+  }
+
   Future<void> updateMember(
     String groupId,
     int contactId,
@@ -137,6 +144,19 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     ])
       ..where(groupMembers.groupId.equals(groupId)));
     return query.map((row) => row.readTable(contacts)).watch();
+  }
+
+  Stream<List<(Contact, GroupMember)>> watchGroupMembers(String groupId) {
+    final query =
+        (select(groupMembers)..where((t) => t.groupId.equals(groupId))).join([
+      leftOuterJoin(
+        contacts,
+        contacts.userId.equalsExp(groupMembers.contactId),
+      ),
+    ]);
+    return query
+        .map((row) => (row.readTable(contacts), row.readTable(groupMembers)))
+        .watch();
   }
 
   Stream<List<Group>> watchGroups() {

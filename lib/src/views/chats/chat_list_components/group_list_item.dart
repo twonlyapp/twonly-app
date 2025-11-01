@@ -17,6 +17,8 @@ import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/group_context_menu.component.dart';
+import 'package:twonly/src/views/contact/contact.view.dart';
+import 'package:twonly/src/views/groups/group.view.dart';
 
 class GroupListItem extends StatefulWidget {
   const GroupListItem({
@@ -232,7 +234,27 @@ class _UserListItem extends State<GroupListItem> {
                   ),
                 ],
               ),
-        leading: AvatarIcon(group: widget.group),
+        leading: GestureDetector(
+          onTap: () async {
+            Widget pushWidget = GroupView(widget.group);
+
+            if (widget.group.isDirectChat) {
+              final contacts = await twonlyDB.groupsDao
+                  .getGroupContact(widget.group.groupId);
+              pushWidget = ContactView(contacts.first.userId);
+            }
+            if (!context.mounted) return;
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return pushWidget;
+                },
+              ),
+            );
+          },
+          child: AvatarIcon(group: widget.group),
+        ),
         trailing: IconButton(
           onPressed: () {
             Navigator.push(

@@ -521,5 +521,12 @@
   "selectGroupName": "Select group name",
   "groupNameInput": "Group name",
   "groupMembers": "Members",
-  "createGroup": "Create group"
+  "addMember": "Add member",
+  "createGroup": "Create group",
+  "leaveGroup": "Leave group",
+  "createContactRequest": "Create contact request",
+  "makeAdmin": "Make admin",
+  "removeAdmin": "Remove as admin",
+  "removeFromGroup": "Remove from group",
+  "admin": "Admin"
 }

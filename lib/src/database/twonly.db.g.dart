@@ -6880,6 +6880,15 @@ class $GroupHistoriesTable extends GroupHistories
       requiredDuringInsert: true,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES "groups" (group_id) ON DELETE CASCADE'));
+  static const VerificationMeta _contactIdMeta =
+      const VerificationMeta('contactId');
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+      'contact_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
   static const VerificationMeta _affectedContactIdMeta =
       const VerificationMeta('affectedContactId');
   @override
@@ -6918,6 +6927,7 @@ class $GroupHistoriesTable extends GroupHistories
   List<GeneratedColumn> get $columns => [
         groupHistoryId,
         groupId,
+        contactId,
         affectedContactId,
         oldGroupName,
         newGroupName,
@@ -6947,6 +6957,10 @@ class $GroupHistoriesTable extends GroupHistories
           groupId.isAcceptableOrUnknown(data['group_id']!, _groupIdMeta));
     } else if (isInserting) {
       context.missing(_groupIdMeta);
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(_contactIdMeta,
+          contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta));
     }
     if (data.containsKey('affected_contact_id')) {
       context.handle(
@@ -6983,6 +6997,8 @@ class $GroupHistoriesTable extends GroupHistories
           DriftSqlType.string, data['${effectivePrefix}group_history_id'])!,
       groupId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
+      contactId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}contact_id']),
       affectedContactId: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}affected_contact_id']),
       oldGroupName: attachedDatabase.typeMapping
@@ -7009,6 +7025,7 @@ class $GroupHistoriesTable extends GroupHistories
 class GroupHistory extends DataClass implements Insertable<GroupHistory> {
   final String groupHistoryId;
   final String groupId;
+  final int? contactId;
   final int? affectedContactId;
   final String? oldGroupName;
   final String? newGroupName;
@@ -7017,6 +7034,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
   const GroupHistory(
       {required this.groupHistoryId,
       required this.groupId,
+      this.contactId,
       this.affectedContactId,
       this.oldGroupName,
       this.newGroupName,
@@ -7027,6 +7045,9 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
     final map = <String, Expression>{};
     map['group_history_id'] = Variable<String>(groupHistoryId);
     map['group_id'] = Variable<String>(groupId);
+    if (!nullToAbsent || contactId != null) {
+      map['contact_id'] = Variable<int>(contactId);
+    }
     if (!nullToAbsent || affectedContactId != null) {
       map['affected_contact_id'] = Variable<int>(affectedContactId);
     }
@@ -7048,6 +7069,9 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
     return GroupHistoriesCompanion(
       groupHistoryId: Value(groupHistoryId),
       groupId: Value(groupId),
+      contactId: contactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactId),
       affectedContactId: affectedContactId == null && nullToAbsent
           ? const Value.absent()
           : Value(affectedContactId),
@@ -7068,6 +7092,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
     return GroupHistory(
       groupHistoryId: serializer.fromJson<String>(json['groupHistoryId']),
       groupId: serializer.fromJson<String>(json['groupId']),
+      contactId: serializer.fromJson<int?>(json['contactId']),
       affectedContactId: serializer.fromJson<int?>(json['affectedContactId']),
       oldGroupName: serializer.fromJson<String?>(json['oldGroupName']),
       newGroupName: serializer.fromJson<String?>(json['newGroupName']),
@@ -7082,6 +7107,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
     return <String, dynamic>{
       'groupHistoryId': serializer.toJson<String>(groupHistoryId),
       'groupId': serializer.toJson<String>(groupId),
+      'contactId': serializer.toJson<int?>(contactId),
       'affectedContactId': serializer.toJson<int?>(affectedContactId),
       'oldGroupName': serializer.toJson<String?>(oldGroupName),
       'newGroupName': serializer.toJson<String?>(newGroupName),
@@ -7094,6 +7120,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
   GroupHistory copyWith(
           {String? groupHistoryId,
           String? groupId,
+          Value<int?> contactId = const Value.absent(),
           Value<int?> affectedContactId = const Value.absent(),
           Value<String?> oldGroupName = const Value.absent(),
           Value<String?> newGroupName = const Value.absent(),
@@ -7102,6 +7129,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       GroupHistory(
         groupHistoryId: groupHistoryId ?? this.groupHistoryId,
         groupId: groupId ?? this.groupId,
+        contactId: contactId.present ? contactId.value : this.contactId,
         affectedContactId: affectedContactId.present
             ? affectedContactId.value
             : this.affectedContactId,
@@ -7118,6 +7146,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
           ? data.groupHistoryId.value
           : this.groupHistoryId,
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
       affectedContactId: data.affectedContactId.present
           ? data.affectedContactId.value
           : this.affectedContactId,
@@ -7137,6 +7166,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
     return (StringBuffer('GroupHistory(')
           ..write('groupHistoryId: $groupHistoryId, ')
           ..write('groupId: $groupId, ')
+          ..write('contactId: $contactId, ')
           ..write('affectedContactId: $affectedContactId, ')
           ..write('oldGroupName: $oldGroupName, ')
           ..write('newGroupName: $newGroupName, ')
@@ -7147,14 +7177,15 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
   }
 
   @override
-  int get hashCode => Object.hash(groupHistoryId, groupId, affectedContactId,
-      oldGroupName, newGroupName, type, actionAt);
+  int get hashCode => Object.hash(groupHistoryId, groupId, contactId,
+      affectedContactId, oldGroupName, newGroupName, type, actionAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is GroupHistory &&
           other.groupHistoryId == this.groupHistoryId &&
           other.groupId == this.groupId &&
+          other.contactId == this.contactId &&
           other.affectedContactId == this.affectedContactId &&
           other.oldGroupName == this.oldGroupName &&
           other.newGroupName == this.newGroupName &&
@@ -7165,6 +7196,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
 class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
   final Value<String> groupHistoryId;
   final Value<String> groupId;
+  final Value<int?> contactId;
   final Value<int?> affectedContactId;
   final Value<String?> oldGroupName;
   final Value<String?> newGroupName;
@@ -7174,6 +7206,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
   const GroupHistoriesCompanion({
     this.groupHistoryId = const Value.absent(),
     this.groupId = const Value.absent(),
+    this.contactId = const Value.absent(),
     this.affectedContactId = const Value.absent(),
     this.oldGroupName = const Value.absent(),
     this.newGroupName = const Value.absent(),
@@ -7184,6 +7217,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
   GroupHistoriesCompanion.insert({
     required String groupHistoryId,
     required String groupId,
+    this.contactId = const Value.absent(),
     this.affectedContactId = const Value.absent(),
     this.oldGroupName = const Value.absent(),
     this.newGroupName = const Value.absent(),
@@ -7196,6 +7230,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
   static Insertable<GroupHistory> custom({
     Expression<String>? groupHistoryId,
     Expression<String>? groupId,
+    Expression<int>? contactId,
     Expression<int>? affectedContactId,
     Expression<String>? oldGroupName,
     Expression<String>? newGroupName,
@@ -7206,6 +7241,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     return RawValuesInsertable({
       if (groupHistoryId != null) 'group_history_id': groupHistoryId,
       if (groupId != null) 'group_id': groupId,
+      if (contactId != null) 'contact_id': contactId,
       if (affectedContactId != null) 'affected_contact_id': affectedContactId,
       if (oldGroupName != null) 'old_group_name': oldGroupName,
       if (newGroupName != null) 'new_group_name': newGroupName,
@@ -7218,6 +7254,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
   GroupHistoriesCompanion copyWith(
       {Value<String>? groupHistoryId,
       Value<String>? groupId,
+      Value<int?>? contactId,
       Value<int?>? affectedContactId,
       Value<String?>? oldGroupName,
       Value<String?>? newGroupName,
@@ -7227,6 +7264,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     return GroupHistoriesCompanion(
       groupHistoryId: groupHistoryId ?? this.groupHistoryId,
       groupId: groupId ?? this.groupId,
+      contactId: contactId ?? this.contactId,
       affectedContactId: affectedContactId ?? this.affectedContactId,
       oldGroupName: oldGroupName ?? this.oldGroupName,
       newGroupName: newGroupName ?? this.newGroupName,
@@ -7244,6 +7282,9 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     }
     if (groupId.present) {
       map['group_id'] = Variable<String>(groupId.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
     }
     if (affectedContactId.present) {
       map['affected_contact_id'] = Variable<int>(affectedContactId.value);
@@ -7272,6 +7313,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     return (StringBuffer('GroupHistoriesCompanion(')
           ..write('groupHistoryId: $groupHistoryId, ')
           ..write('groupId: $groupId, ')
+          ..write('contactId: $contactId, ')
           ..write('affectedContactId: $affectedContactId, ')
           ..write('oldGroupName: $oldGroupName, ')
           ..write('newGroupName: $newGroupName, ')
@@ -7568,22 +7610,6 @@ final class $$ContactsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
-
-  static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
-      _groupHistoriesRefsTable(_$TwonlyDB db) =>
-          MultiTypedResultKey.fromTable(db.groupHistories,
-              aliasName: $_aliasNameGenerator(
-                  db.contacts.userId, db.groupHistories.affectedContactId));
-
-  $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
-    final manager = $$GroupHistoriesTableTableManager($_db, $_db.groupHistories)
-        .filter((f) => f.affectedContactId.userId
-            .sqlEquals($_itemColumn<int>('user_id')!));
-
-    final cache = $_typedResult.readTableOrNull(_groupHistoriesRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
 }
 
 class $$ContactsTableFilterComposer
@@ -7764,27 +7790,6 @@ class $$ContactsTableFilterComposer
                   $removeJoinBuilderFromRootComposer:
                       $removeJoinBuilderFromRootComposer,
                 ));
-    return f(composer);
-  }
-
-  Expression<bool> groupHistoriesRefs(
-      Expression<bool> Function($$GroupHistoriesTableFilterComposer f) f) {
-    final $$GroupHistoriesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.groupHistories,
-        getReferencedColumn: (t) => t.affectedContactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupHistoriesTableFilterComposer(
-              $db: $db,
-              $table: $db.groupHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
     return f(composer);
   }
 }
@@ -8020,27 +8025,6 @@ class $$ContactsTableAnnotationComposer
                 ));
     return f(composer);
   }
-
-  Expression<T> groupHistoriesRefs<T extends Object>(
-      Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f) {
-    final $$GroupHistoriesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.userId,
-        referencedTable: $db.groupHistories,
-        getReferencedColumn: (t) => t.affectedContactId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$GroupHistoriesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.groupHistories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
 }
 
 class $$ContactsTableTableManager extends RootTableManager<
@@ -8060,8 +8044,7 @@ class $$ContactsTableTableManager extends RootTableManager<
         bool groupMembersRefs,
         bool receiptsRefs,
         bool signalContactPreKeysRefs,
-        bool signalContactSignedPreKeysRefs,
-        bool groupHistoriesRefs})> {
+        bool signalContactSignedPreKeysRefs})> {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
       : super(TableManagerState(
           db: db,
@@ -8142,8 +8125,7 @@ class $$ContactsTableTableManager extends RootTableManager<
               groupMembersRefs = false,
               receiptsRefs = false,
               signalContactPreKeysRefs = false,
-              signalContactSignedPreKeysRefs = false,
-              groupHistoriesRefs = false}) {
+              signalContactSignedPreKeysRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -8153,8 +8135,7 @@ class $$ContactsTableTableManager extends RootTableManager<
                 if (receiptsRefs) db.receipts,
                 if (signalContactPreKeysRefs) db.signalContactPreKeys,
                 if (signalContactSignedPreKeysRefs)
-                  db.signalContactSignedPreKeys,
-                if (groupHistoriesRefs) db.groupHistories
+                  db.signalContactSignedPreKeys
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -8234,19 +8215,6 @@ class $$ContactsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.contactId == item.userId),
-                        typedResults: items),
-                  if (groupHistoriesRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            GroupHistory>(
-                        currentTable: table,
-                        referencedTable: $$ContactsTableReferences
-                            ._groupHistoriesRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .groupHistoriesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems.where(
-                                (e) => e.affectedContactId == item.userId),
                         typedResults: items)
                 ];
               },
@@ -8272,8 +8240,7 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
         bool groupMembersRefs,
         bool receiptsRefs,
         bool signalContactPreKeysRefs,
-        bool signalContactSignedPreKeysRefs,
-        bool groupHistoriesRefs})>;
+        bool signalContactSignedPreKeysRefs})>;
 typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   required String groupId,
   Value<bool> isGroupAdmin,
@@ -13213,6 +13180,7 @@ typedef $$GroupHistoriesTableCreateCompanionBuilder = GroupHistoriesCompanion
     Function({
   required String groupHistoryId,
   required String groupId,
+  Value<int?> contactId,
   Value<int?> affectedContactId,
   Value<String?> oldGroupName,
   Value<String?> newGroupName,
@@ -13224,6 +13192,7 @@ typedef $$GroupHistoriesTableUpdateCompanionBuilder = GroupHistoriesCompanion
     Function({
   Value<String> groupHistoryId,
   Value<String> groupId,
+  Value<int?> contactId,
   Value<int?> affectedContactId,
   Value<String?> oldGroupName,
   Value<String?> newGroupName,
@@ -13246,6 +13215,21 @@ final class $$GroupHistoriesTableReferences
     final manager = $$GroupsTableTableManager($_db, $_db.groups)
         .filter((f) => f.groupId.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_groupIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias($_aliasNameGenerator(
+          db.groupHistories.contactId, db.contacts.userId));
+
+  $$ContactsTableProcessedTableManager? get contactId {
+    final $_column = $_itemColumn<int>('contact_id');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
+        .filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -13306,6 +13290,26 @@ class $$GroupHistoriesTableFilterComposer
             $$GroupsTableFilterComposer(
               $db: $db,
               $table: $db.groups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableFilterComposer(
+              $db: $db,
+              $table: $db.contacts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -13382,6 +13386,26 @@ class $$GroupHistoriesTableOrderingComposer
     return composer;
   }
 
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableOrderingComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   $$ContactsTableOrderingComposer get affectedContactId {
     final $$ContactsTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -13447,6 +13471,26 @@ class $$GroupHistoriesTableAnnotationComposer
     return composer;
   }
 
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   $$ContactsTableAnnotationComposer get affectedContactId {
     final $$ContactsTableAnnotationComposer composer = $composerBuilder(
         composer: this,
@@ -13479,7 +13523,8 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
     $$GroupHistoriesTableUpdateCompanionBuilder,
     (GroupHistory, $$GroupHistoriesTableReferences),
     GroupHistory,
-    PrefetchHooks Function({bool groupId, bool affectedContactId})> {
+    PrefetchHooks Function(
+        {bool groupId, bool contactId, bool affectedContactId})> {
   $$GroupHistoriesTableTableManager(_$TwonlyDB db, $GroupHistoriesTable table)
       : super(TableManagerState(
           db: db,
@@ -13493,6 +13538,7 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> groupHistoryId = const Value.absent(),
             Value<String> groupId = const Value.absent(),
+            Value<int?> contactId = const Value.absent(),
             Value<int?> affectedContactId = const Value.absent(),
             Value<String?> oldGroupName = const Value.absent(),
             Value<String?> newGroupName = const Value.absent(),
@@ -13503,6 +13549,7 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
               GroupHistoriesCompanion(
             groupHistoryId: groupHistoryId,
             groupId: groupId,
+            contactId: contactId,
             affectedContactId: affectedContactId,
             oldGroupName: oldGroupName,
             newGroupName: newGroupName,
@@ -13513,6 +13560,7 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             required String groupHistoryId,
             required String groupId,
+            Value<int?> contactId = const Value.absent(),
             Value<int?> affectedContactId = const Value.absent(),
             Value<String?> oldGroupName = const Value.absent(),
             Value<String?> newGroupName = const Value.absent(),
@@ -13523,6 +13571,7 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
               GroupHistoriesCompanion.insert(
             groupHistoryId: groupHistoryId,
             groupId: groupId,
+            contactId: contactId,
             affectedContactId: affectedContactId,
             oldGroupName: oldGroupName,
             newGroupName: newGroupName,
@@ -13537,7 +13586,7 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
                   ))
               .toList(),
           prefetchHooksCallback: (
-              {groupId = false, affectedContactId = false}) {
+              {groupId = false, contactId = false, affectedContactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -13563,6 +13612,17 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
                     referencedColumn: $$GroupHistoriesTableReferences
                         ._groupIdTable(db)
                         .groupId,
+                  ) as T;
+                }
+                if (contactId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.contactId,
+                    referencedTable:
+                        $$GroupHistoriesTableReferences._contactIdTable(db),
+                    referencedColumn: $$GroupHistoriesTableReferences
+                        ._contactIdTable(db)
+                        .userId,
                   ) as T;
                 }
                 if (affectedContactId) {
@@ -13598,7 +13658,8 @@ typedef $$GroupHistoriesTableProcessedTableManager = ProcessedTableManager<
     $$GroupHistoriesTableUpdateCompanionBuilder,
     (GroupHistory, $$GroupHistoriesTableReferences),
     GroupHistory,
-    PrefetchHooks Function({bool groupId, bool affectedContactId})>;
+    PrefetchHooks Function(
+        {bool groupId, bool contactId, bool affectedContactId})>;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;

@@ -2228,11 +2228,53 @@ abstract class AppLocalizations {
   /// **'Members'**
   String get groupMembers;
 
+  /// No description provided for @addMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Add member'**
+  String get addMember;
+
   /// No description provided for @createGroup.
   ///
   /// In en, this message translates to:
   /// **'Create group'**
   String get createGroup;
+
+  /// No description provided for @leaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroup;
+
+  /// No description provided for @createContactRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Create contact request'**
+  String get createContactRequest;
+
+  /// No description provided for @makeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get makeAdmin;
+
+  /// No description provided for @removeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove as admin'**
+  String get removeAdmin;
+
+  /// No description provided for @removeFromGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from group'**
+  String get removeFromGroup;
+
+  /// No description provided for @admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get admin;
 }
 
 class _AppLocalizationsDelegate

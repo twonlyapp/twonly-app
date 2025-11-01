@@ -14,6 +14,7 @@ import 'package:twonly/src/services/notifications/background.notifications.dart'
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_date_chip.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/chat_group_action.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
@@ -30,7 +31,12 @@ Color getMessageColor(Message message) {
 }
 
 class ChatItem {
-  const ChatItem._({this.message, this.date, this.lastOpenedPosition});
+  const ChatItem._({
+    this.message,
+    this.date,
+    this.lastOpenedPosition,
+    this.groupAction,
+  });
   factory ChatItem.date(DateTime date) {
     return ChatItem._(date: date);
   }
@@ -40,11 +46,16 @@ class ChatItem {
   factory ChatItem.lastOpenedPosition(List<Contact> contacts) {
     return ChatItem._(lastOpenedPosition: contacts);
   }
+  factory ChatItem.groupAction(GroupHistory groupAction) {
+    return ChatItem._(groupAction: groupAction);
+  }
+  final GroupHistory? groupAction;
   final Message? message;
   final DateTime? date;
   final List<Contact>? lastOpenedPosition;
   bool get isMessage => message != null;
   bool get isDate => date != null;
+  bool get isGroupAction => groupAction != null;
   bool get isLastOpenedPosition => lastOpenedPosition != null;
 }
 
@@ -65,12 +76,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   String currentInputText = '';
   late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
+  late StreamSubscription<List<GroupHistory>>? groupActionsSub;
   late StreamSubscription<Future<List<(Message, Contact)>>>?
       lastOpenedMessageByContactSub;
 
   List<ChatItem> messages = [];
   List<Message> allMessages = [];
   List<(Message, Contact)> lastOpenedMessageByContact = [];
+  List<GroupHistory> groupActions = [];
   List<MemoryItem> galleryItems = [];
   Message? quotesMessage;
   GlobalKey verifyShieldKey = GlobalKey();
@@ -97,6 +110,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   void dispose() {
     userSub.cancel();
     messageSub.cancel();
+    groupActionsSub?.cancel();
     lastOpenedMessageByContactSub?.cancel();
     tutorial?.cancel();
     textFieldFocus.dispose();
@@ -121,7 +135,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           lastOpenedStream.listen((lastActionsFuture) async {
         final update = await lastActionsFuture;
         lastOpenedMessageByContact = update;
-        await setMessages(allMessages, update);
+        await setMessages(allMessages, update, groupActions);
+      });
+
+      final actionsStream = twonlyDB.groupsDao.watchGroupActions(group.groupId);
+      groupActionsSub = actionsStream.listen((update) async {
+        groupActions = update;
+        await setMessages(allMessages, lastOpenedMessageByContact, update);
       });
     }
 
@@ -135,7 +155,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         // return;
       }
       await protectMessageUpdating.protect(() async {
-        await setMessages(update, lastOpenedMessageByContact);
+        await setMessages(update, lastOpenedMessageByContact, groupActions);
       });
     });
   }
@@ -143,6 +163,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   Future<void> setMessages(
     List<Message> newMessages,
     List<(Message, Contact)> lastOpenedMessageByContact,
+    List<GroupHistory> groupActions,
   ) async {
     await flutterLocalNotificationsPlugin.cancelAll();
 
@@ -165,8 +186,20 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       }
     }
     var index = 0;
+    var groupHistoryIndex = 0;
 
     for (final msg in newMessages) {
+      if (groupHistoryIndex < groupActions.length) {
+        for (; groupHistoryIndex < groupActions.length; groupHistoryIndex++) {
+          if (msg.createdAt.isAfter(groupActions[groupHistoryIndex].actionAt)) {
+            chatItems
+                .add(ChatItem.groupAction(groupActions[groupHistoryIndex]));
+            // groupHistoryIndex++;
+          } else {
+            break;
+          }
+        }
+      }
       index += 1;
       if (msg.type == MessageType.text &&
           msg.senderId != null &&
@@ -198,6 +231,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
             ),
           );
         }
+      }
+    }
+    if (groupHistoryIndex < groupActions.length) {
+      for (var i = groupHistoryIndex; i < groupActions.length; i++) {
+        chatItems.add(ChatItem.groupAction(groupActions[i]));
       }
     }
 
@@ -262,9 +300,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         appBar: AppBar(
           title: GestureDetector(
             onTap: () async {
-              if (widget.group.isDirectChat) {
-                final member = await twonlyDB.groupsDao
-                    .getGroupMembers(widget.group.groupId);
+              if (group.isDirectChat) {
+                final member =
+                    await twonlyDB.groupsDao.getGroupMembers(group.groupId);
                 if (!context.mounted) return;
                 await Navigator.push(
                   context,
@@ -279,7 +317,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                   context,
                   MaterialPageRoute(
                     builder: (context) {
-                      return GroupView(widget.group);
+                      return GroupView(group);
                     },
                   ),
                 );
@@ -298,7 +336,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     child: Row(
                       children: [
                         Text(
-                          substringBy(widget.group.groupName, 20),
+                          substringBy(group.groupName, 20),
                         ),
                         const SizedBox(width: 10),
                         VerifiedShield(key: verifyShieldKey, group: group),
@@ -342,6 +380,8 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                           );
                         }).toList(),
                       );
+                    } else if (messages[i].isGroupAction) {
+                      return ChatGroupAction(action: messages[i].groupAction!);
                     } else {
                       final chatMessage = messages[i].message!;
                       return Transform.translate(

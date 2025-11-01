@@ -365,5 +365,12 @@
     "selectGroupName": "Gruppennamen wählen",
     "groupNameInput": "Gruppennamen",
     "groupMembers": "Mitglieder",
-    "createGroup": "Gruppe erstellen"
+    "createGroup": "Gruppe erstellen",
+    "addMember": "Mitglied hinzufügen",
+    "leaveGroup": "Gruppe verlassen",
+    "createContactRequest": "Kontaktanfrage erstellen",
+    "makeAdmin": "Zum Admin machen",
+    "removeAdmin": "Als Admin entfernen",
+    "removeFromGroup": "Aus Gruppe entfernen",
+    "admin": "Admin"
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
@@ -8,6 +9,8 @@ import 'package:fixnum/fixnum.dart';
 import 'package:hashlib/random.dart';
 import 'package:http/http.dart' as http;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+// ignore: implementation_imports
+import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -21,6 +24,10 @@ import 'package:twonly/src/utils/misc.dart';
 
 String getGroupStateUrl() {
   return 'http${apiService.apiSecure}://${apiService.apiHost}/api/group/state';
+}
+
+String getGroupChallengeUrl() {
+  return 'http${apiService.apiSecure}://${apiService.apiHost}/api/group/challenge';
 }
 
 Future<bool> createNewGroup(String groupName, List<Contact> members) async {
@@ -90,7 +97,7 @@ Future<bool> createNewGroup(String groupName, List<Contact> members) async {
       isGroupAdmin: const Value(true),
       stateEncryptionKey: Value(stateEncryptionKey),
       stateVersionId: const Value(1),
-      myGroupPrivateKey: Value(myGroupKey.getPrivateKey().serialize()),
+      myGroupPrivateKey: Value(myGroupKey.serialize()),
       joinedGroup: const Value(true),
     ),
   );
@@ -142,7 +149,7 @@ Future<void> fetchGroupStatesForUnjoinedGroups() async {
   }
 }
 
-Future<bool> fetchGroupState(Group group) async {
+Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
   try {
     var isSuccess = true;
 
@@ -156,7 +163,7 @@ Future<bool> fetchGroupState(Group group) async {
       Log.error(
         'Could not load group state. Got status code ${response.statusCode} from server.',
       );
-      return false;
+      return null;
     }
 
     final groupStateServer = GroupState.fromBuffer(response.bodyBytes);
@@ -180,8 +187,10 @@ Future<bool> fetchGroupState(Group group) async {
         EncryptedGroupState.fromBuffer(encryptedGroupStateRaw);
 
     if (group.stateVersionId >= groupStateServer.versionId.toInt()) {
-      Log.error('Group ${group.groupId} has newest group state');
-      return false;
+      Log.info(
+        'Group ${group.groupId} has already newest group state from the server!',
+      );
+      return (groupStateServer.versionId.toInt(), encryptedGroupState);
     }
 
     final isGroupAdmin = encryptedGroupState.adminIds
@@ -204,6 +213,9 @@ Future<bool> fetchGroupState(Group group) async {
 
     // First find and insert NEW members
     for (final memberId in encryptedGroupState.memberIds) {
+      if (memberId == Int64(gUser.userId)) {
+        continue;
+      }
       if (currentGroupMembers.any((t) => t.contactId == memberId.toInt())) {
         // User is already in the database
         continue;
@@ -280,10 +292,10 @@ Future<bool> fetchGroupState(Group group) async {
         ),
       );
     }
-    return true;
+    return (groupStateServer.versionId.toInt(), encryptedGroupState);
   } catch (e) {
     Log.error(e);
-    return false;
+    return null;
   }
 }
 
@@ -302,5 +314,114 @@ Future<bool> addNewHiddenContact(int contactId) async {
     ),
   );
   await createNewSignalSession(userData);
+  return true;
+}
+
+Future<bool> updateGroupState(Group group, EncryptedGroupState state) async {
+  final chacha20 = FlutterChacha20.poly1305Aead();
+  final encryptionNonce = chacha20.newNonce();
+
+  final secretBox = await chacha20.encrypt(
+    state.writeToBuffer(),
+    secretKey: SecretKey(group.stateEncryptionKey!),
+    nonce: encryptionNonce,
+  );
+
+  final encryptedGroupState = EncryptedGroupStateEnvelop(
+    nonce: encryptionNonce,
+    encryptedGroupState: secretBox.cipherText,
+    mac: secretBox.mac.bytes,
+  );
+
+  {
+    // Upload the group state, if this fails, the group can not be created.
+
+    final keyPair = IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+
+    final publicKey = uint8ListToHex(keyPair.getPublicKey().serialize());
+
+    final responseNonce = await http
+        .get(
+          Uri.parse('${getGroupChallengeUrl()}/$publicKey'),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (responseNonce.statusCode != 200) {
+      Log.error(
+        'Could not load nonce. Got status code ${responseNonce.statusCode} from server.',
+      );
+      return false;
+    }
+
+    final updateTBS = UpdateGroupState_UpdateTBS(
+      versionId: Int64(group.stateVersionId + 1),
+      encryptedGroupState: encryptedGroupState.writeToBuffer(),
+      publicKey: keyPair.getPublicKey().serialize(),
+      nonce: responseNonce.bodyBytes,
+    );
+
+    final random = getRandomUint8List(32);
+    final signature = sign(
+      keyPair.getPrivateKey().serialize(),
+      updateTBS.writeToBuffer(),
+      random,
+    );
+
+    final newGroupState = UpdateGroupState(
+      update: updateTBS,
+      signature: signature,
+    );
+
+    final response = await http
+        .patch(
+          Uri.parse(getGroupStateUrl()),
+          body: newGroupState.writeToBuffer(),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
+      Log.error(
+        'Could not patch group state. Got status code ${response.statusCode} from server.',
+      );
+      return false;
+    }
+  }
+
+  // Update database to the newest state
+  return (await fetchGroupState(group)) != null;
+}
+
+Future<bool> updateGroupeName(Group group, String groupName) async {
+  // ensure the latest state is used
+  final currentState = await fetchGroupState(group);
+  if (currentState == null) return false;
+  final (versionId, state) = currentState;
+
+  state.groupName = groupName;
+
+  // send new state to the server
+  if (!await updateGroupState(group, state)) {
+    return false;
+  }
+
+  await sendCipherTextToGroup(
+    group.groupId,
+    EncryptedContent(
+      groupUpdate: EncryptedContent_GroupUpdate(
+        groupActionType: GroupActionType.updatedGroupName.name,
+        newGroupName: groupName,
+      ),
+    ),
+  );
+
+  await twonlyDB.groupsDao.insertGroupAction(
+    GroupHistoriesCompanion(
+      groupId: Value(group.groupId),
+      type: const Value(GroupActionType.updatedGroupName),
+      oldGroupName: Value(group.groupName),
+      newGroupName: Value(groupName),
+    ),
+  );
+
   return true;
 }
