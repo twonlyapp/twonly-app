@@ -16,6 +16,9 @@ message Message {
 
 message PlaintextContent {
     optional DecryptionErrorMessage decryptionErrorMessage = 1;
+    optional RetryErrorMessage retryControlError = 2; 
+
+    message RetryErrorMessage { }
 
     message DecryptionErrorMessage {
         enum Type {

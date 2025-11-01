@@ -74,11 +74,23 @@ Future<void> handleClient2ClientMessage(int fromUserId, Uint8List body) async {
       await twonlyDB.receiptsDao.confirmReceipt(receiptId, fromUserId);
 
     case Message_Type.PLAINTEXT_CONTENT:
-      if (message.hasPlaintextContent() &&
-          message.plaintextContent.hasDecryptionErrorMessage()) {
-        Log.info(
-          'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
-        );
+      var retry = false;
+      if (message.hasPlaintextContent()) {
+        if (message.plaintextContent.hasDecryptionErrorMessage()) {
+          Log.info(
+            'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
+          );
+          retry = true;
+        }
+        if (message.plaintextContent.hasRetryControlError()) {
+          Log.info(
+            'Got access control error for $receiptId. Resending message.',
+          );
+          retry = true;
+        }
+      }
+
+      if (retry) {
         final newReceiptId = uuid.v4();
         await twonlyDB.receiptsDao.updateReceipt(
           receiptId,
@@ -162,7 +174,10 @@ Future<PlaintextContent?> handleEncryptedMessage(
   final senderProfileCounter = await checkForProfileUpdate(fromUserId, content);
 
   if (content.hasContactRequest()) {
-    await handleContactRequest(fromUserId, content.contactRequest);
+    if (!await handleContactRequest(fromUserId, content.contactRequest)) {
+      return PlaintextContent()
+        ..retryControlError = PlaintextContent_RetryErrorMessage();
+    }
     return null;
   }
 
@@ -206,29 +221,11 @@ Future<PlaintextContent?> handleEncryptedMessage(
     return null;
   }
 
-  if (content.hasGroupUpdate()) {
-    await handleGroupUpdate(
-      fromUserId,
-      content.groupId,
-      content.groupUpdate,
-    );
-    return null;
-  }
-
   if (content.hasGroupCreate()) {
     await handleGroupCreate(
       fromUserId,
       content.groupId,
       content.groupCreate,
-    );
-    return null;
-  }
-
-  if (content.hasGroupJoin()) {
-    await handleGroupJoin(
-      fromUserId,
-      content.groupId,
-      content.groupJoin,
     );
     return null;
   }
@@ -255,9 +252,39 @@ Future<PlaintextContent?> handleEncryptedMessage(
         ),
       );
     } else {
+      if (content.hasGroupJoin()) {
+        Log.error(
+          'Got group join message, but group does not exists yet, retry later. As probably the GroupCreate was not yet received.',
+        );
+        // In case the group join was received before the GroupCreate the sender should send it later again.
+        return PlaintextContent()
+          ..retryControlError = PlaintextContent_RetryErrorMessage();
+      }
+
       Log.error('User $fromUserId tried to access group ${content.groupId}.');
       return null;
     }
+  }
+
+  if (content.hasGroupUpdate()) {
+    await handleGroupUpdate(
+      fromUserId,
+      content.groupId,
+      content.groupUpdate,
+    );
+    return null;
+  }
+
+  if (content.hasGroupJoin()) {
+    if (!await handleGroupJoin(
+      fromUserId,
+      content.groupId,
+      content.groupJoin,
+    )) {
+      return PlaintextContent()
+        ..retryControlError = PlaintextContent_RetryErrorMessage();
+    }
+    return null;
   }
 
   if (content.hasTextMessage()) {

@@ -8,7 +8,13 @@ import 'package:twonly/src/utils/misc.dart';
 
 part 'groups.dao.g.dart';
 
-@DriftAccessor(tables: [Groups, GroupMembers, GroupHistories])
+@DriftAccessor(
+  tables: [
+    Groups,
+    GroupMembers,
+    GroupHistories,
+  ],
+)
 class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -52,6 +58,24 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
       );
     }
     await into(groupHistories).insert(insertAction);
+  }
+
+  Future<void> updateMember(
+    String groupId,
+    int contactId,
+    GroupMembersCompanion updates,
+  ) async {
+    await (update(groupMembers)
+          ..where(
+              (c) => c.groupId.equals(groupId) & c.contactId.equals(contactId)))
+        .write(updates);
+  }
+
+  Future<void> removeMember(String groupId, int contactId) async {
+    await (delete(groupMembers)
+          ..where(
+              (c) => c.groupId.equals(groupId) & c.contactId.equals(contactId)))
+        .go();
   }
 
   Future<Group?> createNewDirectChat(

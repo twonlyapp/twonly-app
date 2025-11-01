@@ -122,34 +122,37 @@ class _MessageInfoViewState extends State<MessageInfoView> {
       }
 
       columns.add(
-        Row(
-          children: [
-            AvatarIcon(
-              contact: groupMember.$2,
-              fontSize: 15,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              AvatarIcon(
+                contact: groupMember.$2,
+                fontSize: 15,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      getContactDisplayName(groupMember.$2),
+                      style: const TextStyle(fontSize: 17),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
                 children: [
                   Text(
-                    getContactDisplayName(groupMember.$2),
-                    style: const TextStyle(fontSize: 17),
+                    friendlyDateTime(context, actionAt),
+                    style: const TextStyle(fontSize: 12),
                   ),
+                  Text(actionTypeText),
                 ],
               ),
-            ),
-            Column(
-              children: [
-                Text(
-                  friendlyDateTime(context, actionAt),
-                  style: const TextStyle(fontSize: 12),
-                ),
-                Text(actionTypeText),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }

@@ -65,7 +65,6 @@ class MessageContextMenu extends StatelessWidget {
                     remove: false,
                   ),
                 ),
-                null,
               );
             },
             icon: FontAwesomeIcons.faceLaugh,
@@ -124,7 +123,6 @@ class MessageContextMenu extends StatelessWidget {
                       senderMessageId: message.messageId,
                     ),
                   ),
-                  null,
                 );
               } else {
                 await twonlyDB.messagesDao
@@ -225,7 +223,6 @@ Future<void> editTextMessage(BuildContext context, Message message) async {
                       ),
                     ),
                   ),
-                  null,
                 );
               }
               if (!context.mounted) return;

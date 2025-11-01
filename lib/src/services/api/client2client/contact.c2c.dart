@@ -13,7 +13,7 @@ import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
-Future<void> handleContactRequest(
+Future<bool> handleContactRequest(
   int fromUserId,
   EncryptedContent_ContactRequest contactRequest,
 ) async {
@@ -34,24 +34,23 @@ Future<void> handleContactRequest(
               ),
             ),
           );
-          return;
+          return true;
         }
       }
       // Request the username by the server so an attacker can not
       // forge the displayed username in the contact request
-      final username = await apiService.getUsername(fromUserId);
-      if (username.isSuccess) {
-        // ignore: avoid_dynamic_calls
-        final name = username.value.userdata.username as Uint8List;
-        await twonlyDB.contactsDao.insertOnConflictUpdate(
-          ContactsCompanion(
-            username: Value(utf8.decode(name)),
-            userId: Value(fromUserId),
-            requested: const Value(true),
-            deletedByUser: const Value(false),
-          ),
-        );
+      final user = await apiService.getUserById(fromUserId);
+      if (user == null) {
+        return false;
       }
+      await twonlyDB.contactsDao.insertOnConflictUpdate(
+        ContactsCompanion(
+          username: Value(utf8.decode(user.username)),
+          userId: Value(fromUserId),
+          requested: const Value(true),
+          deletedByUser: const Value(false),
+        ),
+      );
       await setupNotificationWithUsers();
     case EncryptedContent_ContactRequest_Type.ACCEPT:
       Log.info('Got a contact accept from $fromUserId');
@@ -82,6 +81,7 @@ Future<void> handleContactRequest(
         ),
       );
   }
+  return true;
 }
 
 Future<void> handleContactUpdate(

@@ -3,7 +3,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class AvatarIcon extends StatefulWidget {
@@ -11,12 +10,14 @@ class AvatarIcon extends StatefulWidget {
     super.key,
     this.group,
     this.contact,
+    this.contactId,
     this.userData,
     this.fontSize = 20,
     this.color,
   });
   final Group? group;
   final Contact? contact;
+  final int? contactId;
   final UserData? userData;
   final double? fontSize;
   final Color? color;
@@ -54,6 +55,12 @@ class _AvatarIconState extends State<AvatarIcon> {
       _avatarSVGs.add(widget.userData!.avatarSvg!);
     } else if (widget.contact?.avatarSvgCompressed != null) {
       _avatarSVGs.add(getAvatarSvg(widget.contact!.avatarSvgCompressed!));
+    } else if (widget.contactId != null) {
+      final contact =
+          await twonlyDB.contactsDao.getContactById(widget.contactId!);
+      if (contact != null && contact.avatarSvgCompressed != null) {
+        _avatarSVGs.add(getAvatarSvg(contact.avatarSvgCompressed!));
+      }
     }
     if (mounted) setState(() {});
   }
@@ -61,6 +68,62 @@ class _AvatarIconState extends State<AvatarIcon> {
   @override
   Widget build(BuildContext context) {
     final proSize = (widget.fontSize == null) ? 40 : (widget.fontSize! * 2);
+
+    Widget avatars = SvgPicture.asset('assets/images/default_avatar.svg');
+
+    if (_avatarSVGs.length == 1) {
+      avatars = SvgPicture.string(
+        _avatarSVGs.first,
+        errorBuilder: (a, b, c) => avatars,
+      );
+    } else if (_avatarSVGs.length >= 2) {
+      final a = SvgPicture.string(
+        _avatarSVGs.first,
+        errorBuilder: (a, b, c) => avatars,
+      );
+      final b = SvgPicture.string(
+        _avatarSVGs[1],
+        errorBuilder: (a, b, c) => avatars,
+      );
+      if (_avatarSVGs.length >= 3) {
+        final c = SvgPicture.string(
+          _avatarSVGs[2],
+          errorBuilder: (a, b, c) => avatars,
+        );
+        avatars = Stack(
+          children: [
+            Transform.translate(
+              offset: const Offset(-15, 5),
+              child: Transform.scale(
+                scale: 0.8,
+                child: c,
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(15, 5),
+              child: Transform.scale(
+                scale: 0.8,
+                child: b,
+              ),
+            ),
+            a,
+          ],
+        );
+      } else {
+        avatars = Stack(
+          children: [
+            Transform.translate(
+              offset: const Offset(-10, 5),
+              child: Transform.scale(
+                scale: 0.8,
+                child: b,
+              ),
+            ),
+            Transform.translate(offset: const Offset(10, 0), child: a),
+          ],
+        );
+      }
+    }
 
     return Container(
       constraints: BoxConstraints(
@@ -76,17 +139,7 @@ class _AvatarIconState extends State<AvatarIcon> {
             height: proSize as double,
             width: proSize,
             color: widget.color,
-            child: Center(
-              child: _avatarSVGs.isEmpty
-                  ? SvgPicture.asset('assets/images/default_avatar.svg')
-                  : SvgPicture.string(
-                      _avatarSVGs.first,
-                      errorBuilder: (context, error, stackTrace) {
-                        Log.error('$error');
-                        return Container();
-                      },
-                    ),
-            ),
+            child: Center(child: avatars),
           ),
         ),
       ),

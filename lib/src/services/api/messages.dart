@@ -187,14 +187,18 @@ Future<void> insertAndSendTextMessage(
     encryptedContent.textMessage.quoteMessageId = quotesMessageId;
   }
 
-  await sendCipherTextToGroup(groupId, encryptedContent, message.messageId);
+  await sendCipherTextToGroup(
+    groupId,
+    encryptedContent,
+    messageId: message.messageId,
+  );
 }
 
 Future<void> sendCipherTextToGroup(
   String groupId,
-  pb.EncryptedContent encryptedContent,
+  pb.EncryptedContent encryptedContent, {
   String? messageId,
-) async {
+}) async {
   final groupMembers = await twonlyDB.groupsDao.getGroupMembers(groupId);
 
   await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, DateTime.now());

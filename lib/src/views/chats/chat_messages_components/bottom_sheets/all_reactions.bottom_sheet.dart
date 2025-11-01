@@ -63,7 +63,6 @@ class _AllReactionsViewState extends State<AllReactionsView> {
           remove: true,
         ),
       ),
-      null,
     );
     if (mounted) Navigator.pop(context);
   }

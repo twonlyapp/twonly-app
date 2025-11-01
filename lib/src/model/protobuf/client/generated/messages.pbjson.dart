@@ -56,11 +56,18 @@ const PlaintextContent$json = {
   '1': 'PlaintextContent',
   '2': [
     {'1': 'decryptionErrorMessage', '3': 1, '4': 1, '5': 11, '6': '.PlaintextContent.DecryptionErrorMessage', '9': 0, '10': 'decryptionErrorMessage', '17': true},
+    {'1': 'retryControlError', '3': 2, '4': 1, '5': 11, '6': '.PlaintextContent.RetryErrorMessage', '9': 1, '10': 'retryControlError', '17': true},
   ],
-  '3': [PlaintextContent_DecryptionErrorMessage$json],
+  '3': [PlaintextContent_RetryErrorMessage$json, PlaintextContent_DecryptionErrorMessage$json],
   '8': [
     {'1': '_decryptionErrorMessage'},
+    {'1': '_retryControlError'},
   ],
+};
+
+@$core.Deprecated('Use plaintextContentDescriptor instead')
+const PlaintextContent_RetryErrorMessage$json = {
+  '1': 'RetryErrorMessage',
 };
 
 @$core.Deprecated('Use plaintextContentDescriptor instead')
@@ -85,10 +92,12 @@ const PlaintextContent_DecryptionErrorMessage_Type$json = {
 final $typed_data.Uint8List plaintextContentDescriptor = $convert.base64Decode(
     'ChBQbGFpbnRleHRDb250ZW50EmUKFmRlY3J5cHRpb25FcnJvck1lc3NhZ2UYASABKAsyKC5QbG'
     'FpbnRleHRDb250ZW50LkRlY3J5cHRpb25FcnJvck1lc3NhZ2VIAFIWZGVjcnlwdGlvbkVycm9y'
-    'TWVzc2FnZYgBARqEAQoWRGVjcnlwdGlvbkVycm9yTWVzc2FnZRJBCgR0eXBlGAEgASgOMi0uUG'
-    'xhaW50ZXh0Q29udGVudC5EZWNyeXB0aW9uRXJyb3JNZXNzYWdlLlR5cGVSBHR5cGUiJwoEVHlw'
-    'ZRILCgdVTktOT1dOEAASEgoOUFJFS0VZX1VOS05PV04QAUIZChdfZGVjcnlwdGlvbkVycm9yTW'
-    'Vzc2FnZQ==');
+    'TWVzc2FnZYgBARJWChFyZXRyeUNvbnRyb2xFcnJvchgCIAEoCzIjLlBsYWludGV4dENvbnRlbn'
+    'QuUmV0cnlFcnJvck1lc3NhZ2VIAVIRcmV0cnlDb250cm9sRXJyb3KIAQEaEwoRUmV0cnlFcnJv'
+    'ck1lc3NhZ2UahAEKFkRlY3J5cHRpb25FcnJvck1lc3NhZ2USQQoEdHlwZRgBIAEoDjItLlBsYW'
+    'ludGV4dENvbnRlbnQuRGVjcnlwdGlvbkVycm9yTWVzc2FnZS5UeXBlUgR0eXBlIicKBFR5cGUS'
+    'CwoHVU5LTk9XThAAEhIKDlBSRUtFWV9VTktOT1dOEAFCGQoXX2RlY3J5cHRpb25FcnJvck1lc3'
+    'NhZ2VCFAoSX3JldHJ5Q29udHJvbEVycm9y');
 
 @$core.Deprecated('Use encryptedContentDescriptor instead')
 const EncryptedContent$json = {

@@ -36,6 +36,8 @@ class _GroupCreateSelectGroupNameViewState
         await createNewGroup(textFieldGroupName.text, widget.selectedUsers);
     if (wasSuccess) {
       // POP
+      Navigator.popUntil(context, (route) => route.isFirst);
+      return;
     }
 
     setState(() {

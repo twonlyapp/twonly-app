@@ -112,6 +112,38 @@ class Message extends $pb.GeneratedMessage {
   PlaintextContent ensurePlaintextContent() => $_ensure(3);
 }
 
+class PlaintextContent_RetryErrorMessage extends $pb.GeneratedMessage {
+  factory PlaintextContent_RetryErrorMessage() => create();
+  PlaintextContent_RetryErrorMessage._() : super();
+  factory PlaintextContent_RetryErrorMessage.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PlaintextContent_RetryErrorMessage.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PlaintextContent.RetryErrorMessage', createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  PlaintextContent_RetryErrorMessage clone() => PlaintextContent_RetryErrorMessage()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PlaintextContent_RetryErrorMessage copyWith(void Function(PlaintextContent_RetryErrorMessage) updates) => super.copyWith((message) => updates(message as PlaintextContent_RetryErrorMessage)) as PlaintextContent_RetryErrorMessage;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PlaintextContent_RetryErrorMessage create() => PlaintextContent_RetryErrorMessage._();
+  PlaintextContent_RetryErrorMessage createEmptyInstance() => create();
+  static $pb.PbList<PlaintextContent_RetryErrorMessage> createRepeated() => $pb.PbList<PlaintextContent_RetryErrorMessage>();
+  @$core.pragma('dart2js:noInline')
+  static PlaintextContent_RetryErrorMessage getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PlaintextContent_RetryErrorMessage>(create);
+  static PlaintextContent_RetryErrorMessage? _defaultInstance;
+}
+
 class PlaintextContent_DecryptionErrorMessage extends $pb.GeneratedMessage {
   factory PlaintextContent_DecryptionErrorMessage({
     PlaintextContent_DecryptionErrorMessage_Type? type,
@@ -165,10 +197,14 @@ class PlaintextContent_DecryptionErrorMessage extends $pb.GeneratedMessage {
 class PlaintextContent extends $pb.GeneratedMessage {
   factory PlaintextContent({
     PlaintextContent_DecryptionErrorMessage? decryptionErrorMessage,
+    PlaintextContent_RetryErrorMessage? retryControlError,
   }) {
     final $result = create();
     if (decryptionErrorMessage != null) {
       $result.decryptionErrorMessage = decryptionErrorMessage;
+    }
+    if (retryControlError != null) {
+      $result.retryControlError = retryControlError;
     }
     return $result;
   }
@@ -178,6 +214,7 @@ class PlaintextContent extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PlaintextContent', createEmptyInstance: create)
     ..aOM<PlaintextContent_DecryptionErrorMessage>(1, _omitFieldNames ? '' : 'decryptionErrorMessage', protoName: 'decryptionErrorMessage', subBuilder: PlaintextContent_DecryptionErrorMessage.create)
+    ..aOM<PlaintextContent_RetryErrorMessage>(2, _omitFieldNames ? '' : 'retryControlError', protoName: 'retryControlError', subBuilder: PlaintextContent_RetryErrorMessage.create)
     ..hasRequiredFields = false
   ;
 
@@ -212,6 +249,17 @@ class PlaintextContent extends $pb.GeneratedMessage {
   void clearDecryptionErrorMessage() => clearField(1);
   @$pb.TagNumber(1)
   PlaintextContent_DecryptionErrorMessage ensureDecryptionErrorMessage() => $_ensure(0);
+
+  @$pb.TagNumber(2)
+  PlaintextContent_RetryErrorMessage get retryControlError => $_getN(1);
+  @$pb.TagNumber(2)
+  set retryControlError(PlaintextContent_RetryErrorMessage v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasRetryControlError() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRetryControlError() => clearField(2);
+  @$pb.TagNumber(2)
+  PlaintextContent_RetryErrorMessage ensureRetryControlError() => $_ensure(1);
 }
 
 class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {

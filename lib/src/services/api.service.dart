@@ -485,11 +485,18 @@ class ApiService {
     return sendRequestSync(req);
   }
 
-  Future<Result> getUsername(int userId) async {
+  Future<Response_UserData?> getUserById(int userId) async {
     final get = ApplicationData_GetUserById()..userId = Int64(userId);
     final appData = ApplicationData()..getuserbyid = get;
     final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req, contactId: userId);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasUserdata()) {
+        return ok.userdata;
+      }
+    }
+    return null;
   }
 
   Future<Result> downloadDone(List<int> token) async {

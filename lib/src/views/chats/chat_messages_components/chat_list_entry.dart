@@ -13,6 +13,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/chat_text_entry.
 import 'package:twonly/src/views/chats/chat_messages_components/message_actions.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_context_menu.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 
 class ChatListEntry extends StatefulWidget {
   const ChatListEntry({
@@ -86,7 +87,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
   Widget build(BuildContext context) {
     final right = widget.message.senderId == null;
 
-    final (padding, borderRadius) = getMessageLayout(
+    final (padding, borderRadius, hideContactAvatar) = getMessageLayout(
       widget.message,
       widget.prevMessage,
       widget.nextMessage,
@@ -172,19 +173,36 @@ class _ChatListEntryState extends State<ChatListEntry> {
 
     return Align(
       alignment: right ? Alignment.centerRight : Alignment.centerLeft,
-      child: Padding(padding: padding, child: child),
+      child: Padding(
+        padding: padding,
+        child: Row(
+          mainAxisAlignment:
+              right ? MainAxisAlignment.end : MainAxisAlignment.start,
+          children: [
+            if (!right && !widget.group.isDirectChat)
+              hideContactAvatar
+                  ? const SizedBox(width: 24)
+                  : AvatarIcon(
+                      contactId: widget.message.senderId,
+                      fontSize: 12,
+                    ),
+            child,
+          ],
+        ),
+      ),
     );
   }
 }
 
-(EdgeInsetsGeometry, BorderRadius) getMessageLayout(
+(EdgeInsetsGeometry, BorderRadius, bool) getMessageLayout(
   Message message,
   Message? prevMessage,
   Message? nextMessage,
   bool hasReactions,
 ) {
-  var bottom = 20.0;
-  var top = 0.0;
+  var bottom = 10.0;
+  var top = 10.0;
+  var hideContactAvatar = false;
 
   var topLeft = 12.0;
   var topRight = 12.0;
@@ -209,6 +227,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
   if (combinesWidthNext) {
     bottom = 0;
     bottomLeft = 5.0;
+    hideContactAvatar = true;
   }
 
   if (message.senderId == null) {
@@ -219,6 +238,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
     final tmp2 = bottomLeft;
     bottomLeft = bottomRight;
     bottomRight = tmp2;
+    hideContactAvatar = true;
   }
 
   return (
@@ -228,6 +248,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
       topRight: Radius.circular(topRight),
       bottomRight: Radius.circular(bottomRight),
       bottomLeft: Radius.circular(bottomLeft),
-    )
+    ),
+    hideContactAvatar
   );
 }

@@ -6,6 +6,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -26,9 +27,11 @@ Future<void> handleGroupCreate(
   final group = await twonlyDB.groupsDao.createNewGroup(
     GroupsCompanion(
       groupId: Value(groupId),
-      stateVersionId: const Value(1),
+      stateVersionId: const Value(0),
       stateEncryptionKey: Value(Uint8List.fromList(newGroup.stateKey)),
       myGroupPrivateKey: Value(myGroupKey.getPrivateKey().serialize()),
+      groupName: const Value(''),
+      joinedGroup: const Value(false),
     ),
   );
 
@@ -63,6 +66,15 @@ Future<void> handleGroupCreate(
 
   // can be done in the background -> websocket message can be ACK
   unawaited(fetchGroupStatesForUnjoinedGroups());
+
+  await sendCipherTextToGroup(
+    groupId,
+    EncryptedContent(
+      groupJoin: EncryptedContent_GroupJoin(
+        groupPublicKey: myGroupKey.getPublicKey().serialize(),
+      ),
+    ),
+  );
 }
 
 Future<void> handleGroupUpdate(
@@ -71,8 +83,23 @@ Future<void> handleGroupUpdate(
   EncryptedContent_GroupUpdate update,
 ) async {}
 
-Future<void> handleGroupJoin(
+Future<bool> handleGroupJoin(
   int fromUserId,
   String groupId,
   EncryptedContent_GroupJoin join,
-) async {}
+) async {
+  if (await twonlyDB.contactsDao.getContactById(fromUserId) == null) {
+    if (!await addNewHiddenContact(fromUserId)) {
+      Log.error('Got group join, but could not load contact.');
+      return false;
+    }
+  }
+  await twonlyDB.groupsDao.updateMember(
+    groupId,
+    fromUserId,
+    GroupMembersCompanion(
+      groupPublicKey: Value(Uint8List.fromList(join.groupPublicKey)),
+    ),
+  );
+  return true;
+}

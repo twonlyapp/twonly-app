@@ -46,9 +46,11 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
       isBestFriend = gUser.myBestFriendGroupId == groupId;
       final stream = twonlyDB.groupsDao.watchFlameCounter(groupId);
       flameCounterSub = stream.listen((counter) {
-        setState(() {
-          flameCounter = counter;
-        });
+        if (mounted) {
+          setState(() {
+            flameCounter = counter;
+          });
+        }
       });
     }
   }

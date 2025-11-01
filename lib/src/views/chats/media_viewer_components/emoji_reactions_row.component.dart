@@ -47,7 +47,6 @@ class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
                 remove: false,
               ),
             ),
-            null,
           );
 
           setState(() {

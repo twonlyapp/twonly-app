@@ -290,7 +290,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           targetMessageId: currentMessage!.messageId,
         ),
       ),
-      null,
     );
     setState(() {
       imageSaved = true;

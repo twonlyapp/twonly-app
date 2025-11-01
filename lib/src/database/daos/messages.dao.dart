@@ -399,6 +399,38 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         .getSingleOrNull();
   }
 
+  Stream<Future<List<(Message, Contact)>>> watchLastOpenedMessagePerContact(
+    String groupId,
+  ) {
+    const sql = '''
+      SELECT m.*, c.*
+      FROM (
+        SELECT ma.contact_id, ma.message_id,
+               ROW_NUMBER() OVER (PARTITION BY ma.contact_id
+                                  ORDER BY ma.action_at DESC, ma.message_id DESC) AS rn
+        FROM message_actions ma
+        WHERE ma.type = 'openedAt'
+      ) last_open
+      JOIN messages m ON m.message_id = last_open.message_id
+      JOIN contacts c ON c.user_id = last_open.contact_id
+      WHERE last_open.rn = 1 AND m.group_id = ?;
+    ''';
+
+    return customSelect(
+      sql,
+      variables: [Variable.withString(groupId)],
+      readsFrom: {messages, messageActions, contacts},
+    ).watch().map((rows) async {
+      final res = <(Message, Contact)>[];
+      for (final row in rows) {
+        final message = await messages.mapFromRow(row);
+        final contact = await contacts.mapFromRow(row);
+        res.add((message, contact));
+      }
+      return res;
+    });
+  }
+
   // Future<void> deleteMessagesByContactId(int contactId) {
   //   return (delete(messages)
   //         ..where(

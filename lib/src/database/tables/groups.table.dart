@@ -49,7 +49,7 @@ class Groups extends Table {
   Set<Column> get primaryKey => {groupId};
 }
 
-enum MemberState { normal, admin }
+enum MemberState { normal, admin, leftGroup }
 
 @DataClassName('GroupMember')
 class GroupMembers extends Table {

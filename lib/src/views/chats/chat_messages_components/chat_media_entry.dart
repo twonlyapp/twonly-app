@@ -76,7 +76,6 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
             targetMessageId: widget.message.messageId,
           ),
         ),
-        null,
       );
       await twonlyDB.messagesDao.updateMessageId(
         widget.message.messageId,

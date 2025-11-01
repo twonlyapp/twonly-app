@@ -30,17 +30,22 @@ Color getMessageColor(Message message) {
 }
 
 class ChatItem {
-  const ChatItem._({this.message, this.date});
+  const ChatItem._({this.message, this.date, this.lastOpenedPosition});
   factory ChatItem.date(DateTime date) {
     return ChatItem._(date: date);
   }
   factory ChatItem.message(Message message) {
     return ChatItem._(message: message);
   }
+  factory ChatItem.lastOpenedPosition(List<Contact> contacts) {
+    return ChatItem._(lastOpenedPosition: contacts);
+  }
   final Message? message;
   final DateTime? date;
+  final List<Contact>? lastOpenedPosition;
   bool get isMessage => message != null;
   bool get isDate => date != null;
+  bool get isLastOpenedPosition => lastOpenedPosition != null;
 }
 
 /// Displays detailed information about a SampleItem.
@@ -60,7 +65,12 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   String currentInputText = '';
   late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
+  late StreamSubscription<Future<List<(Message, Contact)>>>?
+      lastOpenedMessageByContactSub;
+
   List<ChatItem> messages = [];
+  List<Message> allMessages = [];
+  List<(Message, Contact)> lastOpenedMessageByContact = [];
   List<MemoryItem> galleryItems = [];
   Message? quotesMessage;
   GlobalKey verifyShieldKey = GlobalKey();
@@ -87,6 +97,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   void dispose() {
     userSub.cancel();
     messageSub.cancel();
+    lastOpenedMessageByContactSub?.cancel();
     tutorial?.cancel();
     textFieldFocus.dispose();
     super.dispose();
@@ -103,64 +114,108 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       });
     });
 
+    if (!widget.group.isDirectChat) {
+      final lastOpenedStream =
+          twonlyDB.messagesDao.watchLastOpenedMessagePerContact(group.groupId);
+      lastOpenedMessageByContactSub =
+          lastOpenedStream.listen((lastActionsFuture) async {
+        final update = await lastActionsFuture;
+        lastOpenedMessageByContact = update;
+        await setMessages(allMessages, update);
+      });
+    }
+
     final msgStream = twonlyDB.messagesDao.watchByGroupId(group.groupId);
-    messageSub = msgStream.listen((newMessages) async {
+    messageSub = msgStream.listen((update) async {
+      allMessages = update;
+
       /// In case a message is not open yet the message is updated, which will trigger this watch to be called again.
       /// So as long as the Mutex is locked just return...
       if (protectMessageUpdating.isLocked) {
-        return;
+        // return;
       }
       await protectMessageUpdating.protect(() async {
-        await flutterLocalNotificationsPlugin.cancelAll();
-
-        final chatItems = <ChatItem>[];
-        final storedMediaFiles = <Message>[];
-
-        DateTime? lastDate;
-
-        final openedMessages = <int, List<String>>{};
-
-        for (final msg in newMessages) {
-          if (msg.type == MessageType.text &&
-              msg.senderId != null &&
-              msg.openedAt == null) {
-            if (openedMessages[msg.senderId!] == null) {
-              openedMessages[msg.senderId!] = [];
-            }
-            openedMessages[msg.senderId!]!.add(msg.messageId);
-          }
-
-          if (msg.type == MessageType.media && msg.mediaStored) {
-            storedMediaFiles.add(msg);
-          }
-
-          if (lastDate == null ||
-              msg.createdAt.day != lastDate.day ||
-              msg.createdAt.month != lastDate.month ||
-              msg.createdAt.year != lastDate.year) {
-            chatItems.add(ChatItem.date(msg.createdAt));
-            lastDate = msg.createdAt;
-          }
-          chatItems.add(ChatItem.message(msg));
-        }
-
-        for (final contactId in openedMessages.keys) {
-          await notifyContactAboutOpeningMessage(
-            contactId,
-            openedMessages[contactId]!,
-          );
-        }
-
-        if (!mounted) return;
-        setState(() {
-          messages = chatItems.reversed.toList();
-        });
-
-        final items = await MemoryItem.convertFromMessages(storedMediaFiles);
-        galleryItems = items.values.toList();
-        setState(() {});
+        await setMessages(update, lastOpenedMessageByContact);
       });
     });
+  }
+
+  Future<void> setMessages(
+    List<Message> newMessages,
+    List<(Message, Contact)> lastOpenedMessageByContact,
+  ) async {
+    await flutterLocalNotificationsPlugin.cancelAll();
+
+    final chatItems = <ChatItem>[];
+    final storedMediaFiles = <Message>[];
+
+    DateTime? lastDate;
+
+    final openedMessages = <int, List<String>>{};
+    final lastOpenedMessageToContact = <String, List<Contact>>{};
+
+    final myLastMessageIndex =
+        newMessages.lastIndexWhere((t) => t.senderId == null);
+
+    for (final opened in lastOpenedMessageByContact) {
+      if (!lastOpenedMessageToContact.containsKey(opened.$1.messageId)) {
+        lastOpenedMessageToContact[opened.$1.messageId] = [opened.$2];
+      } else {
+        lastOpenedMessageToContact[opened.$1.messageId]!.add(opened.$2);
+      }
+    }
+    var index = 0;
+
+    for (final msg in newMessages) {
+      index += 1;
+      if (msg.type == MessageType.text &&
+          msg.senderId != null &&
+          msg.openedAt == null) {
+        if (openedMessages[msg.senderId!] == null) {
+          openedMessages[msg.senderId!] = [];
+        }
+        openedMessages[msg.senderId!]!.add(msg.messageId);
+      }
+
+      if (msg.type == MessageType.media && msg.mediaStored) {
+        storedMediaFiles.add(msg);
+      }
+
+      if (lastDate == null ||
+          msg.createdAt.day != lastDate.day ||
+          msg.createdAt.month != lastDate.month ||
+          msg.createdAt.year != lastDate.year) {
+        chatItems.add(ChatItem.date(msg.createdAt));
+        lastDate = msg.createdAt;
+      }
+      chatItems.add(ChatItem.message(msg));
+
+      if (index <= myLastMessageIndex || index == newMessages.length) {
+        if (lastOpenedMessageToContact.containsKey(msg.messageId)) {
+          chatItems.add(
+            ChatItem.lastOpenedPosition(
+              lastOpenedMessageToContact[msg.messageId]!,
+            ),
+          );
+        }
+      }
+    }
+
+    for (final contactId in openedMessages.keys) {
+      await notifyContactAboutOpeningMessage(
+        contactId,
+        openedMessages[contactId]!,
+      );
+    }
+
+    if (!mounted) return;
+    setState(() {
+      messages = chatItems.reversed.toList();
+    });
+
+    final items = await MemoryItem.convertFromMessages(storedMediaFiles);
+    galleryItems = items.values.toList();
+    setState(() {});
   }
 
   Future<void> _sendMessage() async {
@@ -274,6 +329,18 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     if (messages[i].isDate) {
                       return ChatDateChip(
                         item: messages[i],
+                      );
+                    } else if (messages[i].isLastOpenedPosition) {
+                      return Wrap(
+                        spacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: messages[i].lastOpenedPosition!.map((w) {
+                          return AvatarIcon(
+                            key: GlobalKey(),
+                            contact: w,
+                            fontSize: 12,
+                          );
+                        }).toList(),
                       );
                     } else {
                       final chatMessage = messages[i].message!;
