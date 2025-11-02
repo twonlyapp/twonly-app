@@ -48,8 +48,8 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
 
     final affected = (affectedContact == null)
         ? 'you'
-        : "${getContactDisplayName(affectedContact!)}'s";
-    final affectedR = (affectedContact == null) ? 'your' : affected;
+        : getContactDisplayName(affectedContact!);
+    final affectedR = (affectedContact == null) ? 'your' : "$affected'";
     final maker = (contact == null) ? '' : getContactDisplayName(contact!);
 
     switch (widget.action.type) {
@@ -64,6 +64,10 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
             ? 'You have created the group.'
             : '$maker has created the group.';
       case GroupActionType.removedMember:
+        icon = FontAwesomeIcons.userMinus;
+        text = (contact == null)
+            ? 'You have removed $affected from the group.'
+            : '$maker has removed $affected from the group.';
       case GroupActionType.addMember:
         icon = FontAwesomeIcons.userPlus;
         text = (contact == null)
@@ -79,7 +83,7 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
       case GroupActionType.demoteToMember:
         icon = FontAwesomeIcons.key;
         text = (contact == null)
-            ? 'You revoked $affected admin rights.'
+            ? 'You revoked $affectedR admin rights.'
             : '$maker revoked $affectedR admin rights.';
     }
 

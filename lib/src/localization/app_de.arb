@@ -377,5 +377,8 @@
     "revokeAdminRightsOkBtn": "Als Admin entfernen",
     "makeAdminRightsTitle": "{username} zum Admin machen?",
     "makeAdminRightsBody": "{username}  wird diese Gruppe und ihre Mitglieder bearbeiten können.",
-    "makeAdminRightsOkBtn": "Zum Admin machen"
+    "makeAdminRightsOkBtn": "Zum Admin machen",
+    "updateGroup": "Gruppe aktualisieren",
+    "alreadyInGroup": "Bereits Mitglied",
+    "removeContactFromGroupTitle": "{username} aus dieser Gruppe entfernen?"
 }

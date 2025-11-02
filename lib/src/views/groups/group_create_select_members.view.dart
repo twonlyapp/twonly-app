@@ -12,7 +12,8 @@ import 'package:twonly/src/views/components/user_context_menu.component.dart';
 import 'package:twonly/src/views/groups/group_create_select_group_name.view.dart';
 
 class GroupCreateSelectMembersView extends StatefulWidget {
-  const GroupCreateSelectMembersView({super.key});
+  const GroupCreateSelectMembersView({this.group, super.key});
+  final Group? group;
   @override
   State<GroupCreateSelectMembersView> createState() => _StartNewChatView();
 }
@@ -24,6 +25,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
   late StreamSubscription<List<Contact>> contactSub;
 
   final HashSet<int> selectedUsers = HashSet();
+  final HashSet<int> alreadyInGroup = HashSet();
 
   @override
   void initState() {
@@ -40,6 +42,18 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
       });
       await filterUsers();
     });
+    initAsync();
+  }
+
+  Future<void> initAsync() async {
+    if (widget.group != null) {
+      final members =
+          await twonlyDB.groupsDao.getGroupContact(widget.group!.groupId);
+      for (final member in members) {
+        alreadyInGroup.add(member.userId);
+      }
+      if (mounted) setState(() {});
+    }
   }
 
   @override
@@ -68,6 +82,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
   }
 
   void toggleSelectedUser(int userId) {
+    if (alreadyInGroup.contains(userId)) return;
     if (!selectedUsers.contains(userId)) {
       selectedUsers.add(userId);
     } else {
@@ -76,30 +91,41 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
     setState(() {});
   }
 
+  Future<void> submitChanges() async {
+    if (widget.group != null) {
+      Navigator.pop(context, selectedUsers.toList());
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupCreateSelectGroupNameView(
+          selectedUsers: allContacts
+              .where((t) => selectedUsers.contains(t.userId))
+              .toList(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(context.lang.selectMembers),
+          title: Text(
+            widget.group == null
+                ? context.lang.selectMembers
+                : context.lang.addMember,
+          ),
         ),
         floatingActionButton: FilledButton.icon(
-          onPressed: selectedUsers.isEmpty
-              ? null
-              : () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GroupCreateSelectGroupNameView(
-                        selectedUsers: allContacts
-                            .where((t) => selectedUsers.contains(t.userId))
-                            .toList(),
-                      ),
-                    ),
-                  );
-                },
-          label: Text(context.lang.next),
+          onPressed: selectedUsers.isEmpty ? null : submitChanges,
+          label: Text(
+            widget.group == null ? context.lang.next : context.lang.updateGroup,
+          ),
           icon: const FaIcon(FontAwesomeIcons.penToSquare),
         ),
         body: SafeArea(
@@ -174,12 +200,16 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                               ),
                             ],
                           ),
+                          subtitle: (alreadyInGroup.contains(user.userId))
+                              ? Text(context.lang.alreadyInGroup)
+                              : null,
                           leading: AvatarIcon(
                             contact: user,
                             fontSize: 13,
                           ),
                           trailing: Checkbox(
-                            value: selectedUsers.contains(user.userId),
+                            value: selectedUsers.contains(user.userId) |
+                                alreadyInGroup.contains(user.userId),
                             side: WidgetStateBorderSide.resolveWith(
                               (states) {
                                 if (states.contains(WidgetState.selected)) {
@@ -221,15 +251,15 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      key: GlobalKey(),
-      avatar: AvatarIcon(
-        contact: contact,
-        fontSize: 10,
-      ),
-      label: GestureDetector(
-        onTap: () => onTap(contact.userId),
-        child: Row(
+    return GestureDetector(
+      onTap: () => onTap(contact.userId),
+      child: Chip(
+        key: GlobalKey(),
+        avatar: AvatarIcon(
+          contact: contact,
+          fontSize: 10,
+        ),
+        label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(

@@ -1225,4 +1225,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get makeAdminRightsOkBtn => 'Zum Admin machen';
+
+  @override
+  String get updateGroup => 'Gruppe aktualisieren';
+
+  @override
+  String get alreadyInGroup => 'Bereits Mitglied';
+
+  @override
+  String removeContactFromGroupTitle(Object username) {
+    return '$username aus dieser Gruppe entfernen?';
+  }
 }

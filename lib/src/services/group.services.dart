@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
@@ -111,7 +110,7 @@ Future<bool> createNewGroup(String groupName, List<Contact> members) async {
   Log.info('Created new group: ${group.groupId}');
 
   for (final member in members) {
-    await twonlyDB.groupsDao.insertGroupMember(
+    await twonlyDB.groupsDao.insertOrUpdateGroupMember(
       GroupMembersCompanion(
         groupId: Value(group.groupId),
         contactId: Value(member.userId),
@@ -151,6 +150,12 @@ Future<void> fetchGroupStatesForUnjoinedGroups() async {
 }
 
 Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
+  if (group.leftGroup) {
+    Log.error(
+      'Could not refresh group state, as user is no longer part of the group',
+    );
+    return null;
+  }
   try {
     var isSuccess = true;
 
@@ -190,6 +195,18 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
     if (group.stateVersionId >= groupStateServer.versionId.toInt()) {
       Log.info(
         'Group ${group.groupId} has already newest group state from the server!',
+      );
+      // return (groupStateServer.versionId.toInt(), encryptedGroupState);
+    }
+
+    if (!encryptedGroupState.memberIds.contains(Int64(gUser.userId))) {
+      // OH no, I am no longer a member of this group...
+      // ->
+      await twonlyDB.groupsDao.updateGroup(
+        group.groupId,
+        const GroupsCompanion(
+          leftGroup: Value(true),
+        ),
       );
       return (groupStateServer.versionId.toInt(), encryptedGroupState);
     }
@@ -236,7 +253,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
       }
       if (inContacts) {
         // User is already a contact, so just add him to the group members list
-        await twonlyDB.groupsDao.insertGroupMember(
+        await twonlyDB.groupsDao.insertOrUpdateGroupMember(
           GroupMembersCompanion(
             groupId: Value(group.groupId),
             contactId: Value(memberId.toInt()),
@@ -318,7 +335,7 @@ Future<bool> addNewHiddenContact(int contactId) async {
   return true;
 }
 
-Future<bool> updateGroupState(
+Future<bool> _updateGroupState(
   Group group,
   EncryptedGroupState state, {
   Uint8List? addAdmin,
@@ -394,9 +411,7 @@ Future<bool> updateGroupState(
       return false;
     }
   }
-
-  // Update database to the newest state
-  return (await fetchGroupState(group)) != null;
+  return true;
 }
 
 Future<bool> manageAdminState(
@@ -439,7 +454,7 @@ Future<bool> manageAdminState(
   }
 
   // send new state to the server
-  if (!await updateGroupState(
+  if (!await _updateGroupState(
     group,
     state,
     addAdmin: addAdmin,
@@ -469,7 +484,8 @@ Future<bool> manageAdminState(
     ),
   );
 
-  return true;
+  // Updates the memberState  :)
+  return (await fetchGroupState(group)) != null;
 }
 
 Future<bool> updateGroupeName(Group group, String groupName) async {
@@ -481,7 +497,7 @@ Future<bool> updateGroupeName(Group group, String groupName) async {
   state.groupName = groupName;
 
   // send new state to the server
-  if (!await updateGroupState(group, state)) {
+  if (!await _updateGroupState(group, state)) {
     return false;
   }
 
@@ -504,5 +520,138 @@ Future<bool> updateGroupeName(Group group, String groupName) async {
     ),
   );
 
-  return true;
+  // Updates the groupName  :)
+  return (await fetchGroupState(group)) != null;
+}
+
+Future<bool> addNewGroupMembers(
+  Group group,
+  List<int> newGroupMemberIds,
+) async {
+  // ensure the latest state is used
+  final currentState = await fetchGroupState(group);
+  if (currentState == null) return false;
+  final (versionId, state) = currentState;
+
+  var memberIds = state.memberIds + newGroupMemberIds.map(Int64.new).toList();
+  memberIds = memberIds.toSet().toList();
+
+  final newState = EncryptedGroupState(
+    groupName: state.groupName,
+    deleteMessagesAfterMilliseconds: state.deleteMessagesAfterMilliseconds,
+    memberIds: memberIds,
+    adminIds: state.adminIds,
+    padding: List<int>.generate(Random().nextInt(80), (_) => 0),
+  );
+
+  // send new state to the server
+  if (!await _updateGroupState(group, newState)) {
+    return false;
+  }
+
+  final keyPair = IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+
+  for (final newMember in newGroupMemberIds) {
+    await sendCipherTextToGroup(
+      group.groupId,
+      EncryptedContent(
+        groupUpdate: EncryptedContent_GroupUpdate(
+          groupActionType: GroupActionType.addMember.name,
+          affectedContactId: Int64(newMember),
+        ),
+      ),
+    );
+
+    await twonlyDB.groupsDao.insertGroupAction(
+      GroupHistoriesCompanion(
+        groupId: Value(group.groupId),
+        type: const Value(GroupActionType.addMember),
+        affectedContactId: Value(newMember),
+      ),
+    );
+
+    await sendCipherText(
+      newMember,
+      EncryptedContent(
+        groupId: group.groupId,
+        groupCreate: EncryptedContent_GroupCreate(
+          stateKey: group.stateEncryptionKey,
+          groupPublicKey: keyPair.getPublicKey().serialize(),
+        ),
+      ),
+    );
+  }
+
+  // Updates the groupMembers table :)
+  return (await fetchGroupState(group)) != null;
+}
+
+Future<bool> removeMemberFromGroup(
+  Group group,
+  GroupMember member,
+  int removeContactId,
+) async {
+  // ensure the latest state is used
+  final currentState = await fetchGroupState(group);
+  if (currentState == null) return false;
+  final (versionId, state) = currentState;
+
+  final contactId = Int64(removeContactId);
+
+  final membersIdSet = state.memberIds.toSet();
+  final adminIdSet = state.adminIds.toSet();
+  Uint8List? removeAdmin;
+  if (!membersIdSet.contains(contactId)) {
+    Log.info('User was already removed from the group!');
+    return true;
+  }
+  if (adminIdSet.contains(contactId)) {
+    if (member.groupPublicKey == null) {
+      // If the admin public key is not removed, that the user could potentially still update the group state. So only
+      // allow the user removal, if this key is known. It is better the users can not remove the other user, then
+      // the he can but the other user, could still update the group state.
+      Log.error(
+        'Could not remove user. User is admin, but groupPublicKey is unknown.',
+      );
+      return false;
+    }
+    removeAdmin = member.groupPublicKey;
+  }
+
+  membersIdSet.remove(contactId);
+  adminIdSet.remove(contactId);
+
+  final newState = EncryptedGroupState(
+    groupName: state.groupName,
+    deleteMessagesAfterMilliseconds: state.deleteMessagesAfterMilliseconds,
+    memberIds: membersIdSet.toList(),
+    adminIds: adminIdSet.toList(),
+    padding: List<int>.generate(Random().nextInt(80), (_) => 0),
+  );
+
+  // send new state to the server
+  if (!await _updateGroupState(group, newState, removeAdmin: removeAdmin)) {
+    return false;
+  }
+
+  await sendCipherTextToGroup(
+    group.groupId,
+    EncryptedContent(
+      groupUpdate: EncryptedContent_GroupUpdate(
+        groupActionType: GroupActionType.removedMember.name,
+        affectedContactId: Int64(removeContactId),
+      ),
+    ),
+  );
+
+  await twonlyDB.groupsDao.insertGroupAction(
+    GroupHistoriesCompanion(
+      groupId: Value(group.groupId),
+      type: const Value(GroupActionType.removedMember),
+      affectedContactId: Value(removeContactId),
+    ),
+  );
+
+  // Updates the groupMembers table :)
+  return (await fetchGroupState(group)) != null;
 }

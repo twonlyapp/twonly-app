@@ -50,7 +50,8 @@ class _ShareImageView extends State<ShareImageView> {
   void initState() {
     super.initState();
 
-    allGroupSub = twonlyDB.groupsDao.watchGroups().listen((allGroups) async {
+    allGroupSub =
+        twonlyDB.groupsDao.watchGroupsForShareImage().listen((allGroups) async {
       setState(() {
         contacts = allGroups;
       });

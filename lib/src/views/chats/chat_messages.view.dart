@@ -452,58 +452,59 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     ],
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 30,
-                  left: 20,
-                  right: 20,
-                  top: 10,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: newMessageController,
-                        focusNode: textFieldFocus,
-                        keyboardType: TextInputType.multiline,
-                        maxLines: 4,
-                        minLines: 1,
-                        onChanged: (value) {
-                          currentInputText = value;
-                          setState(() {});
-                        },
-                        onSubmitted: (_) {
-                          _sendMessage();
-                        },
-                        decoration: inputTextMessageDeco(context),
-                      ),
-                    ),
-                    if (currentInputText != '')
-                      IconButton(
-                        padding: const EdgeInsets.all(15),
-                        icon: const FaIcon(
-                          FontAwesomeIcons.solidPaperPlane,
+              if (!group.leftGroup)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 30,
+                    left: 20,
+                    right: 20,
+                    top: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: newMessageController,
+                          focusNode: textFieldFocus,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 4,
+                          minLines: 1,
+                          onChanged: (value) {
+                            currentInputText = value;
+                            setState(() {});
+                          },
+                          onSubmitted: (_) {
+                            _sendMessage();
+                          },
+                          decoration: inputTextMessageDeco(context),
                         ),
-                        onPressed: _sendMessage,
-                      )
-                    else
-                      IconButton(
-                        icon: const FaIcon(FontAwesomeIcons.camera),
-                        padding: const EdgeInsets.all(15),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return CameraSendToView(widget.group);
-                              },
-                            ),
-                          );
-                        },
                       ),
-                  ],
+                      if (currentInputText != '')
+                        IconButton(
+                          padding: const EdgeInsets.all(15),
+                          icon: const FaIcon(
+                            FontAwesomeIcons.solidPaperPlane,
+                          ),
+                          onPressed: _sendMessage,
+                        )
+                      else
+                        IconButton(
+                          icon: const FaIcon(FontAwesomeIcons.camera),
+                          padding: const EdgeInsets.all(15),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return CameraSendToView(widget.group);
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),

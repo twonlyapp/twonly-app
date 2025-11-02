@@ -33,17 +33,33 @@ Future<void> handleGroupCreate(
 
   final myGroupKey = generateIdentityKeyPair();
 
-  // Group state is joinedGroup -> As the current state has not yet been downloaded.
-  final group = await twonlyDB.groupsDao.createNewGroup(
-    GroupsCompanion(
-      groupId: Value(groupId),
-      stateVersionId: const Value(0),
-      stateEncryptionKey: Value(Uint8List.fromList(newGroup.stateKey)),
-      myGroupPrivateKey: Value(myGroupKey.serialize()),
-      groupName: const Value(''),
-      joinedGroup: const Value(false),
-    ),
-  );
+  var group = await twonlyDB.groupsDao.getGroup(groupId);
+  if (group == null) {
+    // Group state is joinedGroup -> As the current state has not yet been downloaded.
+    group = await twonlyDB.groupsDao.createNewGroup(
+      GroupsCompanion(
+        groupId: Value(groupId),
+        stateVersionId: const Value(0),
+        stateEncryptionKey: Value(Uint8List.fromList(newGroup.stateKey)),
+        myGroupPrivateKey: Value(myGroupKey.serialize()),
+        groupName: const Value(''),
+        joinedGroup: const Value(false),
+      ),
+    );
+  } else {
+    // User was already in the group, so update leftGroup back to false
+    await twonlyDB.groupsDao.updateGroup(
+      groupId,
+      GroupsCompanion(
+        stateVersionId: const Value(0),
+        stateEncryptionKey: Value(Uint8List.fromList(newGroup.stateKey)),
+        myGroupPrivateKey: Value(myGroupKey.serialize()),
+        groupName: const Value(''),
+        joinedGroup: const Value(false),
+        leftGroup: const Value(false),
+      ),
+    );
+  }
 
   if (group == null) {
     Log.error(
@@ -61,7 +77,7 @@ Future<void> handleGroupCreate(
     ),
   );
 
-  await twonlyDB.groupsDao.insertGroupMember(
+  await twonlyDB.groupsDao.insertOrUpdateGroupMember(
     GroupMembersCompanion(
       groupId: Value(groupId),
       contactId: Value(fromUserId),
@@ -120,6 +136,10 @@ Future<void> handleGroupUpdate(
 
       if (affectedContactId == gUser.userId) {
         affectedContactId = null;
+        if (actionType == GroupActionType.removedMember) {
+          // Oh no, I just got removed from the group...
+          // This state is handle this case in the fetchGroupState....
+        }
       }
 
       await twonlyDB.groupsDao.insertGroupAction(

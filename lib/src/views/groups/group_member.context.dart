@@ -24,6 +24,67 @@ class GroupMemberContextMenu extends StatelessWidget {
   final Group group;
   final Widget child;
 
+  Future<void> _makeContactAdmin(BuildContext context) async {
+    final ok = await showAlertDialog(
+      context,
+      context.lang.makeAdminRightsTitle(getContactDisplayName(contact)),
+      context.lang.makeAdminRightsBody(getContactDisplayName(contact)),
+      customOk: context.lang.makeAdminRightsOkBtn,
+    );
+    if (ok) {
+      if (!await manageAdminState(
+        group,
+        member,
+        contact.userId,
+        false,
+      )) {
+        if (context.mounted) {
+          showNetworkIssue(context);
+        }
+      }
+    }
+  }
+
+  Future<void> _removeContactAsAdmin(BuildContext context) async {
+    final ok = await showAlertDialog(
+      context,
+      context.lang.revokeAdminRightsTitle(getContactDisplayName(contact)),
+      '',
+      customOk: context.lang.revokeAdminRightsOkBtn,
+    );
+    if (ok) {
+      if (!await manageAdminState(
+        group,
+        member,
+        contact.userId,
+        true,
+      )) {
+        if (context.mounted) {
+          showNetworkIssue(context);
+        }
+      }
+    }
+  }
+
+  Future<void> _removeContactFromGroup(BuildContext context) async {
+    final ok = await showAlertDialog(
+      context,
+      context.lang.removeContactFromGroupTitle(getContactDisplayName(contact)),
+      '',
+    );
+    if (ok) {
+      if (!await removeMemberFromGroup(
+        group,
+        member,
+        contact.userId,
+      )) {
+        if (context.mounted) {
+          showNetworkIssue(context);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ContextMenu(
@@ -61,28 +122,7 @@ class GroupMemberContextMenu extends StatelessWidget {
             member.memberState == MemberState.normal)
           ContextMenuItem(
             title: context.lang.makeAdmin,
-            onTap: () async {
-              final ok = await showAlertDialog(
-                context,
-                context.lang
-                    .makeAdminRightsTitle(getContactDisplayName(contact)),
-                context.lang
-                    .makeAdminRightsBody(getContactDisplayName(contact)),
-                customOk: context.lang.makeAdminRightsOkBtn,
-              );
-              if (ok) {
-                if (!await manageAdminState(
-                  group,
-                  member,
-                  contact.userId,
-                  false,
-                )) {
-                  if (context.mounted) {
-                    showNetworkIssue(context);
-                  }
-                }
-              }
-            },
+            onTap: () => _makeContactAdmin(context),
             icon: FontAwesomeIcons.key,
           ),
         if (member.groupPublicKey != null &&
@@ -90,35 +130,13 @@ class GroupMemberContextMenu extends StatelessWidget {
             member.memberState == MemberState.admin)
           ContextMenuItem(
             title: context.lang.removeAdmin,
-            onTap: () async {
-              final ok = await showAlertDialog(
-                context,
-                context.lang
-                    .revokeAdminRightsTitle(getContactDisplayName(contact)),
-                '',
-                customOk: context.lang.revokeAdminRightsOkBtn,
-              );
-              if (ok) {
-                if (!await manageAdminState(
-                  group,
-                  member,
-                  contact.userId,
-                  true,
-                )) {
-                  if (context.mounted) {
-                    showNetworkIssue(context);
-                  }
-                }
-              }
-            },
+            onTap: () => _removeContactAsAdmin(context),
             icon: FontAwesomeIcons.key,
           ),
         if (group.isGroupAdmin)
           ContextMenuItem(
             title: context.lang.removeFromGroup,
-            onTap: () async {
-              // onResponseTriggered();
-            },
+            onTap: () => _removeContactFromGroup(context),
             icon: FontAwesomeIcons.rightFromBracket,
           ),
       ],

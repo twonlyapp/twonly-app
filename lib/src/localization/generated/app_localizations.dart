@@ -2305,6 +2305,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Make admin'**
   String get makeAdminRightsOkBtn;
+
+  /// No description provided for @updateGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Update group'**
+  String get updateGroup;
+
+  /// No description provided for @alreadyInGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in Group'**
+  String get alreadyInGroup;
+
+  /// No description provided for @removeContactFromGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {username} from this group?'**
+  String removeContactFromGroupTitle(Object username);
 }
 
 class _AppLocalizationsDelegate

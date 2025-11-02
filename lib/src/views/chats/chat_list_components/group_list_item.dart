@@ -255,28 +255,30 @@ class _UserListItem extends State<GroupListItem> {
           },
           child: AvatarIcon(group: widget.group),
         ),
-        trailing: IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  if (_hasNonOpenedMediaFile) {
-                    return ChatMessagesView(widget.group);
-                  } else {
-                    return CameraSendToView(widget.group);
-                  }
+        trailing: (widget.group.leftGroup)
+            ? null
+            : IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        if (_hasNonOpenedMediaFile) {
+                          return ChatMessagesView(widget.group);
+                        } else {
+                          return CameraSendToView(widget.group);
+                        }
+                      },
+                    ),
+                  );
                 },
+                icon: FaIcon(
+                  _hasNonOpenedMediaFile
+                      ? FontAwesomeIcons.solidComments
+                      : FontAwesomeIcons.camera,
+                  color: context.color.outline.withAlpha(150),
+                ),
               ),
-            );
-          },
-          icon: FaIcon(
-            _hasNonOpenedMediaFile
-                ? FontAwesomeIcons.solidComments
-                : FontAwesomeIcons.camera,
-            color: context.color.outline.withAlpha(150),
-          ),
-        ),
         onTap: onTap,
       ),
     );

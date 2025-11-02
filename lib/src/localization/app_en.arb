@@ -533,5 +533,8 @@
   "revokeAdminRightsOkBtn": "Remove as admin",
   "makeAdminRightsTitle": "Make {username} an admin?",
   "makeAdminRightsBody": "{username} will be able to edit this group and its members.",
-  "makeAdminRightsOkBtn": "Make admin"
+  "makeAdminRightsOkBtn": "Make admin",
+  "updateGroup": "Update group",
+  "alreadyInGroup": "Already in Group",
+  "removeContactFromGroupTitle": "Remove {username} from this group?"
 }

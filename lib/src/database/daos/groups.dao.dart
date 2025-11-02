@@ -46,8 +46,8 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     return _insertGroup(group);
   }
 
-  Future<void> insertGroupMember(GroupMembersCompanion members) async {
-    await into(groupMembers).insert(members);
+  Future<void> insertOrUpdateGroupMember(GroupMembersCompanion members) async {
+    await into(groupMembers).insertOnConflictUpdate(members);
   }
 
   Future<void> insertGroupAction(GroupHistoriesCompanion action) async {
@@ -159,8 +159,8 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .watch();
   }
 
-  Stream<List<Group>> watchGroups() {
-    return select(groups).watch();
+  Stream<List<Group>> watchGroupsForShareImage() {
+    return (select(groups)..where((g) => g.leftGroup.equals(false))).watch();
   }
 
   Stream<Group?> watchGroup(String groupId) {

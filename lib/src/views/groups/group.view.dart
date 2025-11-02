@@ -11,6 +11,7 @@ import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
+import 'package:twonly/src/views/groups/group_create_select_members.view.dart';
 import 'package:twonly/src/views/groups/group_member.context.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 
@@ -81,6 +82,21 @@ class _GroupViewState extends State<GroupView> {
     }
   }
 
+  Future<void> _addNewGroupMembers() async {
+    final selectedUserIds = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupCreateSelectMembersView(group: group),
+      ),
+    ) as List<int>?;
+    if (selectedUserIds == null) return;
+    if (!await addNewGroupMembers(group, selectedUserIds)) {
+      if (mounted) {
+        showNetworkIssue(context);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,7 +149,7 @@ class _GroupViewState extends State<GroupView> {
             BetterListTile(
               icon: FontAwesomeIcons.plus,
               text: context.lang.addMember,
-              onTap: () => {},
+              onTap: _addNewGroupMembers,
             ),
           BetterListTile(
             padding: const EdgeInsets.only(left: 13),
