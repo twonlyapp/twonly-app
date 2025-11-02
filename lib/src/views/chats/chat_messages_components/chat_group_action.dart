@@ -4,6 +4,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class ChatGroupAction extends StatefulWidget {
   const ChatGroupAction({
@@ -47,47 +48,88 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
     IconData? icon;
 
     final affected = (affectedContact == null)
-        ? 'you'
+        ? context.lang.groupActionYou
         : getContactDisplayName(affectedContact!);
-    final affectedR = (affectedContact == null) ? 'your' : "$affected'";
+    final affectedR =
+        (affectedContact == null) ? context.lang.groupActionYour : affected;
     final maker = (contact == null) ? '' : getContactDisplayName(contact!);
 
     switch (widget.action.type) {
       case GroupActionType.updatedGroupName:
         text = (contact == null)
-            ? 'You have changed the group name to "${widget.action.newGroupName}".'
-            : '$maker has changed the group name to "${widget.action.newGroupName}".';
+            ? context.lang.youChangedGroupName(widget.action.newGroupName!)
+            : context.lang
+                .makerChangedGroupName(maker, widget.action.newGroupName!);
         icon = FontAwesomeIcons.pencil;
       case GroupActionType.createdGroup:
         icon = FontAwesomeIcons.penToSquare;
         text = (contact == null)
-            ? 'You have created the group.'
-            : '$maker has created the group.';
+            ? context.lang.youCreatedGroup
+            : context.lang.makerCreatedGroup(maker);
       case GroupActionType.removedMember:
         icon = FontAwesomeIcons.userMinus;
         text = (contact == null)
-            ? 'You have removed $affected from the group.'
-            : '$maker has removed $affected from the group.';
+            ? context.lang.youRemovedMember(affected)
+            : context.lang.makerRemovedMember(affected, maker);
       case GroupActionType.addMember:
         icon = FontAwesomeIcons.userPlus;
         text = (contact == null)
-            ? 'You have added $affected to the group.'
-            : '$maker has added $affected to the group.';
-      case GroupActionType.leftGroup:
-        break;
+            ? context.lang.youAddedMember(affected)
+            : context.lang.makerAddedMember(affected, maker);
       case GroupActionType.promoteToAdmin:
         icon = FontAwesomeIcons.key;
         text = (contact == null)
-            ? 'You made $affected an admin.'
-            : '$maker made $affected an admin.';
+            ? context.lang.youMadeAdmin(affected)
+            : context.lang.makerMadeAdmin(affected, maker);
       case GroupActionType.demoteToMember:
         icon = FontAwesomeIcons.key;
         text = (contact == null)
-            ? 'You revoked $affectedR admin rights.'
-            : '$maker revoked $affectedR admin rights.';
+            ? context.lang.youRevokedAdminRights(affected)
+            : context.lang.makerRevokedAdminRights(affectedR, maker);
+      case GroupActionType.leftGroup:
+        icon = FontAwesomeIcons.userMinus;
+        text = (contact == null)
+            ? context.lang.youLeftGroup
+            : context.lang.makerLeftGroup(maker);
     }
 
-    if (text == '' || icon == null) return Container();
+    // switch (widget.action.type) {
+    //   case GroupActionType.updatedGroupName:
+    //     text = (contact == null)
+    //         ? 'You have changed the group name to "${widget.action.newGroupName}".'
+    //         : '$maker has changed the group name to "${widget.action.newGroupName}".';
+    //     icon = FontAwesomeIcons.pencil;
+    //   case GroupActionType.createdGroup:
+    //     icon = FontAwesomeIcons.penToSquare;
+    //     text = (contact == null)
+    //         ? 'You have created the group.'
+    //         : '$maker has created the group.';
+    //   case GroupActionType.removedMember:
+    //     icon = FontAwesomeIcons.userMinus;
+    //     text = (contact == null)
+    //         ? 'You have removed $affected from the group.'
+    //         : '$maker has removed $affected from the group.';
+    //   case GroupActionType.addMember:
+    //     icon = FontAwesomeIcons.userPlus;
+    //     text = (contact == null)
+    //         ? 'You have added $affected to the group.'
+    //         : '$maker has added $affected to the group.';
+    //   case GroupActionType.promoteToAdmin:
+    //     icon = FontAwesomeIcons.key;
+    //     text = (contact == null)
+    //         ? 'You made $affected an admin.'
+    //         : '$maker made $affected an admin.';
+    //   case GroupActionType.demoteToMember:
+    //     icon = FontAwesomeIcons.key;
+    //     text = (contact == null)
+    //         ? 'You revoked $affectedR admin rights.'
+    //         : '$maker revoked $affectedR admin rights.';
+    //   case GroupActionType.leftGroup:
+    //     icon = FontAwesomeIcons.userMinus;
+    //     text = (contact == null)
+    //         ? 'You have left the group.'
+    //         : '$maker has left the group.';
+    // }
 
     return Padding(
       padding: const EdgeInsets.all(8),

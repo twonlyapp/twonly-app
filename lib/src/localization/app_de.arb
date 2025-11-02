@@ -380,5 +380,7 @@
     "makeAdminRightsOkBtn": "Zum Admin machen",
     "updateGroup": "Gruppe aktualisieren",
     "alreadyInGroup": "Bereits Mitglied",
-    "removeContactFromGroupTitle": "{username} aus dieser Gruppe entfernen?"
+    "removeContactFromGroupTitle": "{username} aus dieser Gruppe entfernen?",
+    "groupActionYou": "dich",
+    "groupActionYour": "deine"
 }

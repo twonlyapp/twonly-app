@@ -1229,4 +1229,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String removeContactFromGroupTitle(Object username) {
     return 'Remove $username from this group?';
   }
+
+  @override
+  String youChangedGroupName(Object newGroupName) {
+    return 'Du hast den Gruppennamen zu „$newGroupName“ geändert.';
+  }
+
+  @override
+  String makerChangedGroupName(Object maker, Object newGroupName) {
+    return '$maker hat den Gruppennamen zu „$newGroupName“ geändert.';
+  }
+
+  @override
+  String get youCreatedGroup => 'Du hast die Gruppe erstellt.';
+
+  @override
+  String makerCreatedGroup(Object maker) {
+    return '$maker hat die Gruppe erstellt.';
+  }
+
+  @override
+  String youRemovedMember(Object affected) {
+    return 'Du hast $affected aus der Gruppe entfernt.';
+  }
+
+  @override
+  String makerRemovedMember(Object affected, Object maker) {
+    return '$maker hat $affected aus der Gruppe entfernt.';
+  }
+
+  @override
+  String youAddedMember(Object affected) {
+    return 'Du hast $affected zur Gruppe hinzugefügt.';
+  }
+
+  @override
+  String makerAddedMember(Object affected, Object maker) {
+    return '$maker hat $affected zur Gruppe hinzugefügt.';
+  }
+
+  @override
+  String youMadeAdmin(Object affected) {
+    return 'Du hast $affected zum Administrator gemacht.';
+  }
+
+  @override
+  String makerMadeAdmin(Object affected, Object maker) {
+    return '$maker hat $affected zum Administrator gemacht.';
+  }
+
+  @override
+  String youRevokedAdminRights(Object affectedR) {
+    return 'Du hast $affectedR die Administratorrechte entzogen.';
+  }
+
+  @override
+  String makerRevokedAdminRights(Object affectedR, Object maker) {
+    return '$maker hat $affectedR die Administratorrechte entzogen.';
+  }
+
+  @override
+  String get youLeftGroup => 'Du hast die Gruppe verlassen.';
+
+  @override
+  String makerLeftGroup(Object maker) {
+    return '$maker hat die Gruppe verlassen.';
+  }
+
+  @override
+  String get groupActionYou => 'you';
+
+  @override
+  String get groupActionYour => 'your';
 }

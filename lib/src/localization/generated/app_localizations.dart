@@ -2323,6 +2323,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove {username} from this group?'**
   String removeContactFromGroupTitle(Object username);
+
+  /// No description provided for @youChangedGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Du hast den Gruppennamen zu „{newGroupName}“ geändert.'**
+  String youChangedGroupName(Object newGroupName);
+
+  /// No description provided for @makerChangedGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} hat den Gruppennamen zu „{newGroupName}“ geändert.'**
+  String makerChangedGroupName(Object maker, Object newGroupName);
+
+  /// No description provided for @youCreatedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Du hast die Gruppe erstellt.'**
+  String get youCreatedGroup;
+
+  /// No description provided for @makerCreatedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} hat die Gruppe erstellt.'**
+  String makerCreatedGroup(Object maker);
+
+  /// No description provided for @youRemovedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Du hast {affected} aus der Gruppe entfernt.'**
+  String youRemovedMember(Object affected);
+
+  /// No description provided for @makerRemovedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} hat {affected} aus der Gruppe entfernt.'**
+  String makerRemovedMember(Object affected, Object maker);
+
+  /// No description provided for @youAddedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Du hast {affected} zur Gruppe hinzugefügt.'**
+  String youAddedMember(Object affected);
+
+  /// No description provided for @makerAddedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} hat {affected} zur Gruppe hinzugefügt.'**
+  String makerAddedMember(Object affected, Object maker);
+
+  /// No description provided for @youMadeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Du hast {affected} zum Administrator gemacht.'**
+  String youMadeAdmin(Object affected);
+
+  /// No description provided for @makerMadeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} hat {affected} zum Administrator gemacht.'**
+  String makerMadeAdmin(Object affected, Object maker);
+
+  /// No description provided for @youRevokedAdminRights.
+  ///
+  /// In en, this message translates to:
+  /// **'Du hast {affectedR} die Administratorrechte entzogen.'**
+  String youRevokedAdminRights(Object affectedR);
+
+  /// No description provided for @makerRevokedAdminRights.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} hat {affectedR} die Administratorrechte entzogen.'**
+  String makerRevokedAdminRights(Object affectedR, Object maker);
+
+  /// No description provided for @youLeftGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Du hast die Gruppe verlassen.'**
+  String get youLeftGroup;
+
+  /// No description provided for @makerLeftGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} hat die Gruppe verlassen.'**
+  String makerLeftGroup(Object maker);
+
+  /// No description provided for @groupActionYou.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get groupActionYou;
+
+  /// No description provided for @groupActionYour.
+  ///
+  /// In en, this message translates to:
+  /// **'your'**
+  String get groupActionYour;
 }
 
 class _AppLocalizationsDelegate

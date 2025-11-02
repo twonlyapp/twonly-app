@@ -536,5 +536,21 @@
   "makeAdminRightsOkBtn": "Make admin",
   "updateGroup": "Update group",
   "alreadyInGroup": "Already in Group",
-  "removeContactFromGroupTitle": "Remove {username} from this group?"
+  "removeContactFromGroupTitle": "Remove {username} from this group?",
+  "youChangedGroupName": "Du hast den Gruppennamen zu „{newGroupName}“ geändert.",
+  "makerChangedGroupName": "{maker} hat den Gruppennamen zu „{newGroupName}“ geändert.",
+  "youCreatedGroup": "Du hast die Gruppe erstellt.",
+  "makerCreatedGroup": "{maker} hat die Gruppe erstellt.",
+  "youRemovedMember": "Du hast {affected} aus der Gruppe entfernt.",
+  "makerRemovedMember": "{maker} hat {affected} aus der Gruppe entfernt.",
+  "youAddedMember": "Du hast {affected} zur Gruppe hinzugefügt.",
+  "makerAddedMember": "{maker} hat {affected} zur Gruppe hinzugefügt.",
+  "youMadeAdmin": "Du hast {affected} zum Administrator gemacht.",
+  "makerMadeAdmin": "{maker} hat {affected} zum Administrator gemacht.",
+  "youRevokedAdminRights": "Du hast {affectedR} die Administratorrechte entzogen.",
+  "makerRevokedAdminRights": "{maker} hat {affectedR} die Administratorrechte entzogen.",
+  "youLeftGroup": "Du hast die Gruppe verlassen.",
+  "makerLeftGroup": "{maker} hat die Gruppe verlassen.",
+  "groupActionYou": "you",
+  "groupActionYour": "your"
 }
