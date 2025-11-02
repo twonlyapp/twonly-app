@@ -161,13 +161,12 @@ class MediaFileService {
       return;
     }
     switch (mediaFile.type) {
+      case MediaType.gif:
       case MediaType.image:
         // all images are already compress..
         break;
       case MediaType.video:
         await createThumbnailsForVideo(storedPath, thumbnailPath);
-      case MediaType.gif:
-        Log.error('Thumbnail for .gif is not implemented yet');
     }
   }
 
@@ -183,8 +182,7 @@ class MediaFileService {
       case MediaType.video:
         await compressAndOverlayVideo(this);
       case MediaType.gif:
-        originalPath.renameSync(tempPath.path);
-        Log.error('Compression for .gif is not implemented yet.');
+        originalPath.copySync(tempPath.path);
     }
   }
 

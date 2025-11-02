@@ -298,7 +298,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     if (gUser.storeMediaFilesInGallery) {
       if (currentMedia!.mediaFile.type == MediaType.video) {
         await saveVideoToGallery(currentMedia!.storedPath.path);
-      } else if (currentMedia!.mediaFile.type == MediaType.image) {
+      } else if (currentMedia!.mediaFile.type == MediaType.image ||
+          currentMedia!.mediaFile.type == MediaType.gif) {
         final imageBytes = await currentMedia!.storedPath.readAsBytes();
         await saveImageToGallery(imageBytes);
       }
@@ -466,7 +467,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                           child: VideoPlayer(videoController!),
                         ),
                       if (currentMedia != null &&
-                          currentMedia!.mediaFile.type == MediaType.image)
+                              currentMedia!.mediaFile.type == MediaType.image ||
+                          currentMedia!.mediaFile.type == MediaType.gif)
                         Positioned.fill(
                           child: Image.file(
                             currentMedia!.tempPath,

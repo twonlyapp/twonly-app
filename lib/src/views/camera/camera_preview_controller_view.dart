@@ -285,9 +285,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     Future<Uint8List?>? imageBytes,
     File? videoFilePath, {
     bool sharedFromGallery = false,
+    MediaType? mediaType,
   }) async {
+    final type = mediaType ??
+        ((videoFilePath != null) ? MediaType.video : MediaType.image);
     final mediaFileService = await initializeMediaUpload(
-      (videoFilePath != null) ? MediaType.video : MediaType.image,
+      type,
       gUser.defaultShowTime,
     );
     if (!mounted) return true;
@@ -377,14 +380,42 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       _sharePreviewIsShown = true;
     });
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickMedia();
 
     if (pickedFile != null) {
-      final imageFile = File(pickedFile.path);
+      final imageExtensions = [
+        '.png',
+        '.jpg',
+        '.jpeg',
+        '.gif',
+        '.webp',
+        '.heic',
+        '.heif',
+        '.avif',
+      ];
+
+      Log.info('Picket from gallery: ${pickedFile.path}');
+
+      File? videoFilePath;
+      Future<Uint8List>? imageBytes;
+      MediaType? mediaType;
+
+      final isImage =
+          imageExtensions.any((ext) => pickedFile.name.contains(ext));
+      if (isImage) {
+        if (pickedFile.name.contains('.gif')) {
+          mediaType = MediaType.gif;
+        }
+        imageBytes = pickedFile.readAsBytes();
+      } else {
+        videoFilePath = File(pickedFile.path);
+      }
+
       await pushMediaEditor(
-        imageFile.readAsBytes(),
-        null,
+        imageBytes,
+        videoFilePath,
         sharedFromGallery: true,
+        mediaType: mediaType,
       );
     }
     setState(() {

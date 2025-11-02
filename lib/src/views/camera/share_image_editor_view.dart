@@ -55,6 +55,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   double widthRatio = 1;
   double heightRatio = 1;
   double pixelRatio = 1;
+  Uint8List? imageBytes;
   VideoPlayerController? videoController;
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
@@ -66,13 +67,16 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   void initState() {
     super.initState();
 
-    layers.add(FilterLayerData());
+    if (media.type != MediaType.gif) {
+      layers.add(FilterLayerData());
+    }
 
     if (widget.sendToGroup != null) {
       selectedGroupIds.add(widget.sendToGroup!.groupId);
     }
 
-    if (widget.mediaFileService.mediaFile.type == MediaType.image) {
+    if (widget.mediaFileService.mediaFile.type == MediaType.video ||
+        widget.mediaFileService.mediaFile.type == MediaType.gif) {
       if (widget.imageBytesFuture != null) {
         loadImage(widget.imageBytesFuture!);
       } else {
@@ -124,52 +128,55 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       return [];
     }
     return <Widget>[
-      ActionButton(
-        Icons.text_fields_rounded,
-        tooltipText: context.lang.addTextItem,
-        onPressed: () async {
-          layers = layers.where((x) => !x.isDeleted).toList();
-          if (layers.any((x) => x.isEditing)) return;
-          undoLayers.clear();
-          removedLayers.clear();
-          layers.add(
-            TextLayerData(
-              textLayersBefore: layers.whereType<TextLayerData>().length,
-            ),
-          );
-          setState(() {});
-        },
-      ),
+      if (media.type != MediaType.gif)
+        ActionButton(
+          Icons.text_fields_rounded,
+          tooltipText: context.lang.addTextItem,
+          onPressed: () async {
+            layers = layers.where((x) => !x.isDeleted).toList();
+            if (layers.any((x) => x.isEditing)) return;
+            undoLayers.clear();
+            removedLayers.clear();
+            layers.add(
+              TextLayerData(
+                textLayersBefore: layers.whereType<TextLayerData>().length,
+              ),
+            );
+            setState(() {});
+          },
+        ),
       const SizedBox(height: 8),
-      ActionButton(
-        Icons.draw_rounded,
-        tooltipText: context.lang.addDrawing,
-        onPressed: () async {
-          undoLayers.clear();
-          removedLayers.clear();
-          layers.add(DrawLayerData());
-          setState(() {});
-        },
-      ),
+      if (media.type != MediaType.gif)
+        ActionButton(
+          Icons.draw_rounded,
+          tooltipText: context.lang.addDrawing,
+          onPressed: () async {
+            undoLayers.clear();
+            removedLayers.clear();
+            layers.add(DrawLayerData());
+            setState(() {});
+          },
+        ),
       const SizedBox(height: 8),
-      ActionButton(
-        Icons.add_reaction_outlined,
-        tooltipText: context.lang.addEmoji,
-        onPressed: () async {
-          final layer = await showModalBottomSheet(
-            context: context,
-            backgroundColor: Colors.black,
-            builder: (BuildContext context) {
-              return const Emojis();
-            },
-          ) as Layer?;
-          if (layer == null) return;
-          undoLayers.clear();
-          removedLayers.clear();
-          layers.add(layer);
-          setState(() {});
-        },
-      ),
+      if (media.type != MediaType.gif)
+        ActionButton(
+          Icons.add_reaction_outlined,
+          tooltipText: context.lang.addEmoji,
+          onPressed: () async {
+            final layer = await showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.black,
+              builder: (BuildContext context) {
+                return const Emojis();
+              },
+            ) as Layer?;
+            if (layer == null) return;
+            undoLayers.clear();
+            removedLayers.clear();
+            layers.add(layer);
+            setState(() {});
+          },
+        ),
       const SizedBox(height: 8),
       NotificationBadge(
         count: (media.type == MediaType.video)
@@ -356,12 +363,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     if (mediaService.tempPath.existsSync()) {
       mediaService.tempPath.deleteSync();
     }
-    final imageBytes = await getEditedImageBytes();
-    if (imageBytes == null) return false;
-    if (media.type == MediaType.image) {
-      mediaService.originalPath.writeAsBytesSync(imageBytes);
+    if (media.type == MediaType.gif) {
+      mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
     } else {
-      mediaService.overlayImagePath.writeAsBytesSync(imageBytes);
+      final imageBytes = await getEditedImageBytes();
+      if (imageBytes == null) return false;
+      if (media.type == MediaType.image || media.type == MediaType.gif) {
+        mediaService.originalPath.writeAsBytesSync(imageBytes);
+      } else if (media.type == MediaType.video) {
+        mediaService.overlayImagePath.writeAsBytesSync(imageBytes);
+      } else {
+        Log.error('MediaType not supported: ${media.type}');
+      }
     }
 
     // In case the image was already stored, then rename the stored image.
@@ -374,7 +387,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future<void> loadImage(Future<Uint8List?> imageBytesFuture) async {
-    await currentImage.load(await imageBytesFuture);
+    imageBytes = await imageBytesFuture;
+    await currentImage.load(imageBytes);
     if (isDisposed) return;
 
     if (!context.mounted) return;

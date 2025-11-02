@@ -75,7 +75,8 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
     try {
       if (item.mediaFile.type == MediaType.video) {
         await saveVideoToGallery(item.storedPath.path);
-      } else if (item.mediaFile.type == MediaType.image) {
+      } else if (item.mediaFile.type == MediaType.image ||
+          item.mediaFile.type == MediaType.gif) {
         final imageBytes = await item.storedPath.readAsBytes();
         await saveImageToGallery(imageBytes);
       }

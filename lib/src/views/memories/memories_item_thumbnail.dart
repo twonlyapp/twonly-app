@@ -57,7 +57,8 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
             if (media.thumbnailPath.existsSync())
               Image.file(media.thumbnailPath)
             else if (media.storedPath.existsSync() &&
-                media.mediaFile.type == MediaType.image)
+                    media.mediaFile.type == MediaType.image ||
+                media.mediaFile.type == MediaType.gif)
               Image.file(media.storedPath)
             else
               const Text('Media file removed.'),
