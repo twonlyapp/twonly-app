@@ -14,6 +14,17 @@ Future<void> handleGroupCreate(
   String groupId,
   EncryptedContent_GroupCreate newGroup,
 ) async {
+  final user = await twonlyDB.contactsDao
+      .getContactByUserId(fromUserId)
+      .getSingleOrNull();
+  if (user == null) {
+    // Only contacts can invite other contacts, so this can (via the UI) not happen.
+    Log.error(
+      'User is not a contact. Aborting.',
+    );
+    return;
+  }
+
   // 1. Store the new group -> e.g. store the stateKey and groupPublicKey
   // 2. Call function that should fetch all jobs
   //    1. This function is also called in the main function, in case the state stored on the server could not be loaded
@@ -41,16 +52,14 @@ Future<void> handleGroupCreate(
     return;
   }
 
-  final user = await twonlyDB.contactsDao
-      .getContactByUserId(fromUserId)
-      .getSingleOrNull();
-  if (user == null) {
-    // Only contacts can invite other contacts, so this can (via the UI) not happen.
-    Log.error(
-      'User is not a contact. Aborting.',
-    );
-    return;
-  }
+  await twonlyDB.groupsDao.insertGroupAction(
+    GroupHistoriesCompanion(
+      groupId: Value(groupId),
+      contactId: Value(fromUserId),
+      affectedContactId: const Value(null),
+      type: const Value(GroupActionType.addMember),
+    ),
+  );
 
   await twonlyDB.groupsDao.insertGroupMember(
     GroupMembersCompanion(

@@ -30,6 +30,7 @@ import 'package:twonly/src/services/api/server_messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/flame.service.dart';
+import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
@@ -99,6 +100,7 @@ class ApiService {
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());
       unawaited(signalHandleNewServerConnection());
+      unawaited(fetchGroupStatesForUnjoinedGroups());
     }
   }
 

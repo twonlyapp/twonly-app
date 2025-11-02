@@ -44,6 +44,7 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
   @override
   Widget build(BuildContext context) {
     var text = '';
+    IconData? icon;
 
     final affected = (affectedContact == null)
         ? 'you'
@@ -56,22 +57,33 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
         text = (contact == null)
             ? 'You have changed the group name to "${widget.action.newGroupName}".'
             : '$maker has changed the group name to "${widget.action.newGroupName}".';
+        icon = FontAwesomeIcons.pencil;
       case GroupActionType.createdGroup:
+        icon = FontAwesomeIcons.penToSquare;
+        text = (contact == null)
+            ? 'You have created the group.'
+            : '$maker has created the group.';
       case GroupActionType.removedMember:
       case GroupActionType.addMember:
+        icon = FontAwesomeIcons.userPlus;
+        text = (contact == null)
+            ? 'You have added $affected to the group.'
+            : '$maker has added $affected to the group.';
       case GroupActionType.leftGroup:
         break;
       case GroupActionType.promoteToAdmin:
+        icon = FontAwesomeIcons.key;
         text = (contact == null)
             ? 'You made $affected an admin.'
             : '$maker made $affected an admin.';
       case GroupActionType.demoteToMember:
+        icon = FontAwesomeIcons.key;
         text = (contact == null)
             ? 'You revoked $affected admin rights.'
             : '$maker revoked $affectedR admin rights.';
     }
 
-    if (text == '') return Container();
+    if (text == '' || icon == null) return Container();
 
     return Padding(
       padding: const EdgeInsets.all(8),
@@ -80,10 +92,10 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
           textAlign: TextAlign.center,
           text: TextSpan(
             children: [
-              const WidgetSpan(
+              WidgetSpan(
                 alignment: PlaceholderAlignment.middle,
                 child: FaIcon(
-                  FontAwesomeIcons.pencil,
+                  icon,
                   size: 10,
                   color: Colors.grey,
                 ),

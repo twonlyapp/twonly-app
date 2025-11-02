@@ -381,7 +381,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                         }).toList(),
                       );
                     } else if (messages[i].isGroupAction) {
-                      return ChatGroupAction(action: messages[i].groupAction!);
+                      return ChatGroupAction(
+                        key: Key(messages[i].groupAction!.groupHistoryId),
+                        action: messages[i].groupAction!,
+                      );
                     } else {
                       final chatMessage = messages[i].message!;
                       return Transform.translate(
