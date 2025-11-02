@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
@@ -317,7 +318,12 @@ Future<bool> addNewHiddenContact(int contactId) async {
   return true;
 }
 
-Future<bool> updateGroupState(Group group, EncryptedGroupState state) async {
+Future<bool> updateGroupState(
+  Group group,
+  EncryptedGroupState state, {
+  Uint8List? addAdmin,
+  Uint8List? removeAdmin,
+}) async {
   final chacha20 = FlutterChacha20.poly1305Aead();
   final encryptionNonce = chacha20.newNonce();
 
@@ -358,6 +364,8 @@ Future<bool> updateGroupState(Group group, EncryptedGroupState state) async {
       encryptedGroupState: encryptedGroupState.writeToBuffer(),
       publicKey: keyPair.getPublicKey().serialize(),
       nonce: responseNonce.bodyBytes,
+      addAdmin: addAdmin,
+      removeAdmin: removeAdmin,
     );
 
     final random = getRandomUint8List(32);
@@ -389,6 +397,79 @@ Future<bool> updateGroupState(Group group, EncryptedGroupState state) async {
 
   // Update database to the newest state
   return (await fetchGroupState(group)) != null;
+}
+
+Future<bool> manageAdminState(
+  Group group,
+  GroupMember member,
+  int contactId,
+  bool remove,
+) async {
+  // ensure the latest state is used
+  final currentState = await fetchGroupState(group);
+  if (currentState == null) return false;
+  final (versionId, state) = currentState;
+
+  final userId = Int64(contactId);
+
+  Uint8List? addAdmin;
+  Uint8List? removeAdmin;
+
+  if (remove) {
+    if (state.adminIds.contains(userId)) {
+      state.adminIds.remove(userId);
+      removeAdmin = member.groupPublicKey;
+    } else {
+      Log.info('User was already removed as admin.');
+      return true;
+    }
+  } else {
+    if (!state.adminIds.contains(userId)) {
+      state.adminIds.add(userId);
+      addAdmin = member.groupPublicKey;
+    } else {
+      Log.info('User is already admin.');
+      return true;
+    }
+  }
+
+  if (addAdmin == null && removeAdmin == null) {
+    Log.info('User does not have a group public key.');
+    return false;
+  }
+
+  // send new state to the server
+  if (!await updateGroupState(
+    group,
+    state,
+    addAdmin: addAdmin,
+    removeAdmin: removeAdmin,
+  )) {
+    return false;
+  }
+
+  final groupActionType =
+      remove ? GroupActionType.demoteToMember : GroupActionType.promoteToAdmin;
+
+  await sendCipherTextToGroup(
+    group.groupId,
+    EncryptedContent(
+      groupUpdate: EncryptedContent_GroupUpdate(
+        groupActionType: groupActionType.name,
+        affectedContactId: Int64(contactId),
+      ),
+    ),
+  );
+
+  await twonlyDB.groupsDao.insertGroupAction(
+    GroupHistoriesCompanion(
+      groupId: Value(group.groupId),
+      type: Value(groupActionType),
+      affectedContactId: Value(contactId),
+    ),
+  );
+
+  return true;
 }
 
 Future<bool> updateGroupeName(Group group, String groupName) async {

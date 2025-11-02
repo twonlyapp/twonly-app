@@ -75,12 +75,7 @@ class _GroupViewState extends State<GroupView> {
         newGroupName != group.groupName) {
       if (!await updateGroupeName(group, newGroupName)) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Network issue. Try again later.'),
-              duration: Duration(seconds: 3),
-            ),
-          );
+          showNetworkIssue(context);
         }
       }
     }
@@ -143,6 +138,7 @@ class _GroupViewState extends State<GroupView> {
           BetterListTile(
             padding: const EdgeInsets.only(left: 13),
             leading: AvatarIcon(
+              key: GlobalKey(),
               userData: gUser,
               fontSize: 16,
             ),
@@ -159,12 +155,13 @@ class _GroupViewState extends State<GroupView> {
           ),
           ...members.map((member) {
             return GroupMemberContextMenu(
-              group: widget.group,
+              group: group,
               contact: member.$1,
               member: member.$2,
               child: BetterListTile(
                 padding: const EdgeInsets.only(left: 13),
                 leading: AvatarIcon(
+                  key: GlobalKey(),
                   contact: member.$1,
                   fontSize: 16,
                 ),
@@ -230,5 +227,14 @@ Future<String?> showGroupNameChangeDialog(
         ],
       );
     },
+  );
+}
+
+void showNetworkIssue(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Network issue. Try again later.'),
+      duration: Duration(seconds: 3),
+    ),
   );
 }

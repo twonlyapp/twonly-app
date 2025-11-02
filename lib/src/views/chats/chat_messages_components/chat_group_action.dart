@@ -28,13 +28,15 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
   }
 
   Future<void> initAsync() async {
-    if (widget.action.contactId == null) return;
-    contact =
-        await twonlyDB.contactsDao.getContactById(widget.action.contactId!);
+    if (widget.action.contactId != null) {
+      contact =
+          await twonlyDB.contactsDao.getContactById(widget.action.contactId!);
+    }
 
-    if (widget.action.affectedContactId == null) return;
-    affectedContact = await twonlyDB.contactsDao
-        .getContactById(widget.action.affectedContactId!);
+    if (widget.action.affectedContactId != null) {
+      affectedContact = await twonlyDB.contactsDao
+          .getContactById(widget.action.affectedContactId!);
+    }
 
     if (mounted) setState(() {});
   }
@@ -43,14 +45,30 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
   Widget build(BuildContext context) {
     var text = '';
 
-    if (widget.action.type == GroupActionType.updatedGroupName) {
-      if (contact == null) {
-        text =
-            'You have changed the group name to "${widget.action.newGroupName}".';
-      } else {
-        text =
-            '${getContactDisplayName(contact!)} has changed the group name to "${widget.action.newGroupName}".';
-      }
+    final affected = (affectedContact == null)
+        ? 'you'
+        : "${getContactDisplayName(affectedContact!)}'s";
+    final affectedR = (affectedContact == null) ? 'your' : affected;
+    final maker = (contact == null) ? '' : getContactDisplayName(contact!);
+
+    switch (widget.action.type) {
+      case GroupActionType.updatedGroupName:
+        text = (contact == null)
+            ? 'You have changed the group name to "${widget.action.newGroupName}".'
+            : '$maker has changed the group name to "${widget.action.newGroupName}".';
+      case GroupActionType.createdGroup:
+      case GroupActionType.removedMember:
+      case GroupActionType.addMember:
+      case GroupActionType.leftGroup:
+        break;
+      case GroupActionType.promoteToAdmin:
+        text = (contact == null)
+            ? 'You made $affected an admin.'
+            : '$maker made $affected an admin.';
+      case GroupActionType.demoteToMember:
+        text = (contact == null)
+            ? 'You revoked $affected admin rights.'
+            : '$maker revoked $affectedR admin rights.';
     }
 
     if (text == '') return Container();

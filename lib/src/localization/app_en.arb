@@ -528,5 +528,10 @@
   "makeAdmin": "Make admin",
   "removeAdmin": "Remove as admin",
   "removeFromGroup": "Remove from group",
-  "admin": "Admin"
+  "admin": "Admin",
+  "revokeAdminRightsTitle": "Revoke {username}'s admin rights?",
+  "revokeAdminRightsOkBtn": "Remove as admin",
+  "makeAdminRightsTitle": "Make {username} an admin?",
+  "makeAdminRightsBody": "{username} will be able to edit this group and its members.",
+  "makeAdminRightsOkBtn": "Make admin"
 }

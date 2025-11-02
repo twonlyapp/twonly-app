@@ -1204,4 +1204,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get admin => 'Admin';
+
+  @override
+  String revokeAdminRightsTitle(Object username) {
+    return 'Adminrechte von $username entfernen?';
+  }
+
+  @override
+  String get revokeAdminRightsOkBtn => 'Als Admin entfernen';
+
+  @override
+  String makeAdminRightsTitle(Object username) {
+    return '$username zum Admin machen?';
+  }
+
+  @override
+  String makeAdminRightsBody(Object username) {
+    return '$username  wird diese Gruppe und ihre Mitglieder bearbeiten können.';
+  }
+
+  @override
+  String get makeAdminRightsOkBtn => 'Zum Admin machen';
 }

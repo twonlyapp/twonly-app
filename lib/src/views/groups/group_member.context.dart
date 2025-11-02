@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/context_menu.component.dart';
+import 'package:twonly/src/views/groups/group.view.dart';
 
 class GroupMemberContextMenu extends StatelessWidget {
   const GroupMemberContextMenu({
@@ -52,19 +56,60 @@ class GroupMemberContextMenu extends StatelessWidget {
             },
             icon: FontAwesomeIcons.userPlus,
           ),
-        if (group.isGroupAdmin && member.memberState == MemberState.normal)
+        if (member.groupPublicKey != null &&
+            group.isGroupAdmin &&
+            member.memberState == MemberState.normal)
           ContextMenuItem(
             title: context.lang.makeAdmin,
             onTap: () async {
-              // onResponseTriggered();
+              final ok = await showAlertDialog(
+                context,
+                context.lang
+                    .makeAdminRightsTitle(getContactDisplayName(contact)),
+                context.lang
+                    .makeAdminRightsBody(getContactDisplayName(contact)),
+                customOk: context.lang.makeAdminRightsOkBtn,
+              );
+              if (ok) {
+                if (!await manageAdminState(
+                  group,
+                  member,
+                  contact.userId,
+                  false,
+                )) {
+                  if (context.mounted) {
+                    showNetworkIssue(context);
+                  }
+                }
+              }
             },
             icon: FontAwesomeIcons.key,
           ),
-        if (group.isGroupAdmin && member.memberState == MemberState.admin)
+        if (member.groupPublicKey != null &&
+            group.isGroupAdmin &&
+            member.memberState == MemberState.admin)
           ContextMenuItem(
             title: context.lang.removeAdmin,
             onTap: () async {
-              // onResponseTriggered();
+              final ok = await showAlertDialog(
+                context,
+                context.lang
+                    .revokeAdminRightsTitle(getContactDisplayName(contact)),
+                '',
+                customOk: context.lang.revokeAdminRightsOkBtn,
+              );
+              if (ok) {
+                if (!await manageAdminState(
+                  group,
+                  member,
+                  contact.userId,
+                  true,
+                )) {
+                  if (context.mounted) {
+                    showNetworkIssue(context);
+                  }
+                }
+              }
             },
             icon: FontAwesomeIcons.key,
           ),

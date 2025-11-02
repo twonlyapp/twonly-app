@@ -2275,6 +2275,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Admin'**
   String get admin;
+
+  /// No description provided for @revokeAdminRightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke {username}\'s admin rights?'**
+  String revokeAdminRightsTitle(Object username);
+
+  /// No description provided for @revokeAdminRightsOkBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove as admin'**
+  String get revokeAdminRightsOkBtn;
+
+  /// No description provided for @makeAdminRightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make {username} an admin?'**
+  String makeAdminRightsTitle(Object username);
+
+  /// No description provided for @makeAdminRightsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} will be able to edit this group and its members.'**
+  String makeAdminRightsBody(Object username);
+
+  /// No description provided for @makeAdminRightsOkBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get makeAdminRightsOkBtn;
 }
 
 class _AppLocalizationsDelegate
