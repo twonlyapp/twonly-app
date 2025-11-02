@@ -108,7 +108,7 @@ class _AllReactionsViewState extends State<AllReactionsView> {
                           },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        vertical: 5,
+                        vertical: 10,
                         horizontal: 30,
                       ),
                       color: Colors.transparent,
