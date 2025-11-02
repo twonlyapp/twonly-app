@@ -22,12 +22,13 @@ enum PushKind {
     reactionToVideo = 11;
     reactionToText = 12;
     reactionToImage = 13;
+    addedToGroup = 14;
 };
 
 message PushNotification {
     PushKind kind = 1;
     optional string messageId = 2;
-    optional string reactionContent = 3;
+    optional string additionalContent = 3;
 }
 
 

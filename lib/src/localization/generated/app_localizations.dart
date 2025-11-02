@@ -2327,85 +2327,85 @@ abstract class AppLocalizations {
   /// No description provided for @youChangedGroupName.
   ///
   /// In en, this message translates to:
-  /// **'Du hast den Gruppennamen zu „{newGroupName}“ geändert.'**
+  /// **'You have changed the group name to \"{newGroupName}\".'**
   String youChangedGroupName(Object newGroupName);
 
   /// No description provided for @makerChangedGroupName.
   ///
   /// In en, this message translates to:
-  /// **'{maker} hat den Gruppennamen zu „{newGroupName}“ geändert.'**
+  /// **'{maker} has changed the group name to \"{newGroupName}\".'**
   String makerChangedGroupName(Object maker, Object newGroupName);
 
   /// No description provided for @youCreatedGroup.
   ///
   /// In en, this message translates to:
-  /// **'Du hast die Gruppe erstellt.'**
+  /// **'You have created the group.'**
   String get youCreatedGroup;
 
   /// No description provided for @makerCreatedGroup.
   ///
   /// In en, this message translates to:
-  /// **'{maker} hat die Gruppe erstellt.'**
+  /// **'{maker} has created the group.'**
   String makerCreatedGroup(Object maker);
 
   /// No description provided for @youRemovedMember.
   ///
   /// In en, this message translates to:
-  /// **'Du hast {affected} aus der Gruppe entfernt.'**
+  /// **'You have removed {affected} from the group.'**
   String youRemovedMember(Object affected);
 
   /// No description provided for @makerRemovedMember.
   ///
   /// In en, this message translates to:
-  /// **'{maker} hat {affected} aus der Gruppe entfernt.'**
+  /// **'{maker} has removed {affected} from the group.'**
   String makerRemovedMember(Object affected, Object maker);
 
   /// No description provided for @youAddedMember.
   ///
   /// In en, this message translates to:
-  /// **'Du hast {affected} zur Gruppe hinzugefügt.'**
+  /// **'You have added {affected} to the group.'**
   String youAddedMember(Object affected);
 
   /// No description provided for @makerAddedMember.
   ///
   /// In en, this message translates to:
-  /// **'{maker} hat {affected} zur Gruppe hinzugefügt.'**
+  /// **'{maker} has added {affected} to the group.'**
   String makerAddedMember(Object affected, Object maker);
 
   /// No description provided for @youMadeAdmin.
   ///
   /// In en, this message translates to:
-  /// **'Du hast {affected} zum Administrator gemacht.'**
+  /// **'You made {affected} an admin.'**
   String youMadeAdmin(Object affected);
 
   /// No description provided for @makerMadeAdmin.
   ///
   /// In en, this message translates to:
-  /// **'{maker} hat {affected} zum Administrator gemacht.'**
+  /// **'{maker} made {affected} an admin.'**
   String makerMadeAdmin(Object affected, Object maker);
 
   /// No description provided for @youRevokedAdminRights.
   ///
   /// In en, this message translates to:
-  /// **'Du hast {affectedR} die Administratorrechte entzogen.'**
+  /// **'You revoked {affectedR} admin rights.'**
   String youRevokedAdminRights(Object affectedR);
 
   /// No description provided for @makerRevokedAdminRights.
   ///
   /// In en, this message translates to:
-  /// **'{maker} hat {affectedR} die Administratorrechte entzogen.'**
+  /// **'{maker} revoked {affectedR} admin rights.'**
   String makerRevokedAdminRights(Object affectedR, Object maker);
 
   /// No description provided for @youLeftGroup.
   ///
   /// In en, this message translates to:
-  /// **'Du hast die Gruppe verlassen.'**
+  /// **'You have left the group.'**
   String get youLeftGroup;
 
   /// No description provided for @makerLeftGroup.
   ///
   /// In en, this message translates to:
-  /// **'{maker} hat die Gruppe verlassen.'**
+  /// **'{maker} has left the group.'**
   String makerLeftGroup(Object maker);
 
   /// No description provided for @groupActionYou.
@@ -2419,6 +2419,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'your'**
   String get groupActionYour;
+
+  /// No description provided for @notificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a message.'**
+  String get notificationText;
+
+  /// No description provided for @notificationTwonly.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a twonly.'**
+  String get notificationTwonly;
+
+  /// No description provided for @notificationVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a video.'**
+  String get notificationVideo;
+
+  /// No description provided for @notificationImage.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a image.'**
+  String get notificationImage;
+
+  /// No description provided for @notificationAddedToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'has added you to \"{groupname}\"'**
+  String notificationAddedToGroup(Object groupname);
+
+  /// No description provided for @notificationContactRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'wants to connect with you.'**
+  String get notificationContactRequest;
+
+  /// No description provided for @notificationAcceptRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'is now connected with you.'**
+  String get notificationAcceptRequest;
+
+  /// No description provided for @notificationStoredMediaFile.
+  ///
+  /// In en, this message translates to:
+  /// **'has stored your image.'**
+  String get notificationStoredMediaFile;
+
+  /// No description provided for @notificationReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted to your image.'**
+  String get notificationReaction;
+
+  /// No description provided for @notificationReopenedMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'has reopened your image.'**
+  String get notificationReopenedMedia;
+
+  /// No description provided for @notificationReactionToVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your video.'**
+  String notificationReactionToVideo(Object reaction);
+
+  /// No description provided for @notificationReactionToText.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your message.'**
+  String notificationReactionToText(Object reaction);
+
+  /// No description provided for @notificationReactionToImage.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your image.'**
+  String notificationReactionToImage(Object reaction);
+
+  /// No description provided for @notificationResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'has responded.'**
+  String get notificationResponse;
+
+  /// No description provided for @notificationTitleUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get notificationTitleUnknownUser;
+
+  /// No description provided for @notificationCategoryMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get notificationCategoryMessageTitle;
+
+  /// No description provided for @notificationCategoryMessageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages from other users.'**
+  String get notificationCategoryMessageDesc;
 }
 
 class _AppLocalizationsDelegate

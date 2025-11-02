@@ -1070,10 +1070,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get twonlySafeRecoverDesc =>
-      'If you have created a backup with twonly Backup, you can restore it here.';
+      'Wenn du ein Backup mit twonly Backup erstellt hast, kannst du es hier wiederherstellen.';
 
   @override
-  String get twonlySafeRecoverBtn => 'Restore backup';
+  String get twonlySafeRecoverBtn => 'Backup wiederherstellen';
 
   @override
   String get inviteFriends => 'Freunde einladen';
@@ -1308,4 +1308,64 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupActionYour => 'deine';
+
+  @override
+  String get notificationText => 'hat eine Nachricht gesendet.';
+
+  @override
+  String get notificationTwonly => 'hat ein twonly gesendet.';
+
+  @override
+  String get notificationVideo => 'hat ein Video gesendet.';
+
+  @override
+  String get notificationImage => 'hat ein Bild gesendet.';
+
+  @override
+  String notificationAddedToGroup(Object groupname) {
+    return 'hat dich zu \"$groupname\" hinzugefügt.';
+  }
+
+  @override
+  String get notificationContactRequest => 'möchte sich mit dir vernetzen.';
+
+  @override
+  String get notificationAcceptRequest => 'ist jetzt mit dir vernetzt.';
+
+  @override
+  String get notificationStoredMediaFile => 'hat dein Bild gespeichert.';
+
+  @override
+  String get notificationReaction => 'hat auf dein Bild reagiert.';
+
+  @override
+  String get notificationReopenedMedia => 'hat dein Bild erneut geöffnet.';
+
+  @override
+  String notificationReactionToVideo(Object reaction) {
+    return 'hat mit $reaction auf dein Video reagiert.';
+  }
+
+  @override
+  String notificationReactionToText(Object reaction) {
+    return 'hat mit $reaction auf deine Nachricht reagiert.';
+  }
+
+  @override
+  String notificationReactionToImage(Object reaction) {
+    return 'hat mit $reaction auf dein Bild reagiert.';
+  }
+
+  @override
+  String get notificationResponse => 'hat dir geantwortet.';
+
+  @override
+  String get notificationTitleUnknownUser => 'Jemand';
+
+  @override
+  String get notificationCategoryMessageTitle => 'Nachrichten';
+
+  @override
+  String get notificationCategoryMessageDesc =>
+      'Nachrichten von anderen Benutzern.';
 }

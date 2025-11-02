@@ -773,5 +773,22 @@
     "twonlySafeRecoverDesc": "Wenn du ein Backup mit twonly Backup erstellt hast, kannst du es hier wiederherstellen.",
     "@twonlySafeRecoverDesc": {},
     "twonlySafeRecoverBtn": "Backup wiederherstellen",
-    "@twonlySafeRecoverBtn": {}
+    "@twonlySafeRecoverBtn": {},
+    "notificationText": "hat eine Nachricht gesendet.",
+    "notificationTwonly": "hat ein twonly gesendet.",
+    "notificationVideo": "hat ein Video gesendet.",
+    "notificationImage": "hat ein Bild gesendet.",
+    "notificationAddedToGroup": "hat dich zu \"{groupname}\" hinzugefügt.",
+    "notificationContactRequest": "möchte sich mit dir vernetzen.",
+    "notificationAcceptRequest": "ist jetzt mit dir vernetzt.",
+    "notificationStoredMediaFile": "hat dein Bild gespeichert.",
+    "notificationReaction": "hat auf dein Bild reagiert.",
+    "notificationReopenedMedia": "hat dein Bild erneut geöffnet.",
+    "notificationReactionToVideo": "hat mit {reaction} auf dein Video reagiert.",
+    "notificationReactionToText": "hat mit {reaction} auf deine Nachricht reagiert.",
+    "notificationReactionToImage": "hat mit {reaction} auf dein Bild reagiert.",
+    "notificationResponse": "hat dir geantwortet.",
+    "notificationTitleUnknownUser": "Jemand",
+    "notificationCategoryMessageTitle": "Nachrichten",
+    "notificationCategoryMessageDesc": "Nachrichten von anderen Benutzern."
 }

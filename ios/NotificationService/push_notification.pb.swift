@@ -37,6 +37,7 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
   case reactionToVideo // = 11
   case reactionToText // = 12
   case reactionToImage // = 13
+  case addedToGroup // = 14
   case UNRECOGNIZED(Int)
 
   init() {
@@ -59,6 +60,7 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 11: self = .reactionToVideo
     case 12: self = .reactionToText
     case 13: self = .reactionToImage
+    case 14: self = .addedToGroup
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -79,6 +81,7 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .reactionToVideo: return 11
     case .reactionToText: return 12
     case .reactionToImage: return 13
+    case .addedToGroup: return 14
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -99,6 +102,7 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
     .reactionToVideo,
     .reactionToText,
     .reactionToImage,
+    .addedToGroup,
   ]
 
 }
@@ -137,21 +141,21 @@ struct PushNotification: Sendable {
   /// Clears the value of `messageID`. Subsequent reads from it will return its default value.
   mutating func clearMessageID() {self._messageID = nil}
 
-  var reactionContent: String {
-    get {return _reactionContent ?? String()}
-    set {_reactionContent = newValue}
+  var additionalContent: String {
+    get {return _additionalContent ?? String()}
+    set {_additionalContent = newValue}
   }
-  /// Returns true if `reactionContent` has been explicitly set.
-  var hasReactionContent: Bool {return self._reactionContent != nil}
-  /// Clears the value of `reactionContent`. Subsequent reads from it will return its default value.
-  mutating func clearReactionContent() {self._reactionContent = nil}
+  /// Returns true if `additionalContent` has been explicitly set.
+  var hasAdditionalContent: Bool {return self._additionalContent != nil}
+  /// Clears the value of `additionalContent`. Subsequent reads from it will return its default value.
+  mutating func clearAdditionalContent() {self._additionalContent = nil}
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 
   fileprivate var _messageID: String? = nil
-  fileprivate var _reactionContent: String? = nil
+  fileprivate var _additionalContent: String? = nil
 }
 
 struct PushUsers: Sendable {
@@ -214,7 +218,7 @@ struct PushKey: Sendable {
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension PushKind: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0reaction\0\u{1}response\0\u{1}text\0\u{1}video\0\u{1}twonly\0\u{1}image\0\u{1}contactRequest\0\u{1}acceptRequest\0\u{1}storedMediaFile\0\u{1}testNotification\0\u{1}reopenedMedia\0\u{1}reactionToVideo\0\u{1}reactionToText\0\u{1}reactionToImage\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0reaction\0\u{1}response\0\u{1}text\0\u{1}video\0\u{1}twonly\0\u{1}image\0\u{1}contactRequest\0\u{1}acceptRequest\0\u{1}storedMediaFile\0\u{1}testNotification\0\u{1}reopenedMedia\0\u{1}reactionToVideo\0\u{1}reactionToText\0\u{1}reactionToImage\0\u{1}addedToGroup\0")
 }
 
 extension EncryptedPushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
@@ -264,7 +268,7 @@ extension EncryptedPushNotification: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = "PushNotification"
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}kind\0\u{1}messageId\0\u{1}reactionContent\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}kind\0\u{1}messageId\0\u{1}additionalContent\0")
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -274,7 +278,7 @@ extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularEnumField(value: &self.kind) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self._messageID) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self._reactionContent) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self._additionalContent) }()
       default: break
       }
     }
@@ -291,7 +295,7 @@ extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     try { if let v = self._messageID {
       try visitor.visitSingularStringField(value: v, fieldNumber: 2)
     } }()
-    try { if let v = self._reactionContent {
+    try { if let v = self._additionalContent {
       try visitor.visitSingularStringField(value: v, fieldNumber: 3)
     } }()
     try unknownFields.traverse(visitor: &visitor)
@@ -300,7 +304,7 @@ extension PushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   static func ==(lhs: PushNotification, rhs: PushNotification) -> Bool {
     if lhs.kind != rhs.kind {return false}
     if lhs._messageID != rhs._messageID {return false}
-    if lhs._reactionContent != rhs._reactionContent {return false}
+    if lhs._additionalContent != rhs._additionalContent {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

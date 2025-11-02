@@ -31,6 +31,7 @@ const PushKind$json = {
     {'1': 'reactionToVideo', '2': 11},
     {'1': 'reactionToText', '2': 12},
     {'1': 'reactionToImage', '2': 13},
+    {'1': 'addedToGroup', '2': 14},
   ],
 };
 
@@ -40,7 +41,7 @@ final $typed_data.Uint8List pushKindDescriptor = $convert.base64Decode(
     'VvEAMSCgoGdHdvbmx5EAQSCQoFaW1hZ2UQBRISCg5jb250YWN0UmVxdWVzdBAGEhEKDWFjY2Vw'
     'dFJlcXVlc3QQBxITCg9zdG9yZWRNZWRpYUZpbGUQCBIUChB0ZXN0Tm90aWZpY2F0aW9uEAkSEQ'
     'oNcmVvcGVuZWRNZWRpYRAKEhMKD3JlYWN0aW9uVG9WaWRlbxALEhIKDnJlYWN0aW9uVG9UZXh0'
-    'EAwSEwoPcmVhY3Rpb25Ub0ltYWdlEA0=');
+    'EAwSEwoPcmVhY3Rpb25Ub0ltYWdlEA0SEAoMYWRkZWRUb0dyb3VwEA4=');
 
 @$core.Deprecated('Use encryptedPushNotificationDescriptor instead')
 const EncryptedPushNotification$json = {
@@ -65,19 +66,20 @@ const PushNotification$json = {
   '2': [
     {'1': 'kind', '3': 1, '4': 1, '5': 14, '6': '.PushKind', '10': 'kind'},
     {'1': 'messageId', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'messageId', '17': true},
-    {'1': 'reactionContent', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'reactionContent', '17': true},
+    {'1': 'additionalContent', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'additionalContent', '17': true},
   ],
   '8': [
     {'1': '_messageId'},
-    {'1': '_reactionContent'},
+    {'1': '_additionalContent'},
   ],
 };
 
 /// Descriptor for `PushNotification`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List pushNotificationDescriptor = $convert.base64Decode(
     'ChBQdXNoTm90aWZpY2F0aW9uEh0KBGtpbmQYASABKA4yCS5QdXNoS2luZFIEa2luZBIhCgltZX'
-    'NzYWdlSWQYAiABKAlIAFIJbWVzc2FnZUlkiAEBEi0KD3JlYWN0aW9uQ29udGVudBgDIAEoCUgB'
-    'Ug9yZWFjdGlvbkNvbnRlbnSIAQFCDAoKX21lc3NhZ2VJZEISChBfcmVhY3Rpb25Db250ZW50');
+    'NzYWdlSWQYAiABKAlIAFIJbWVzc2FnZUlkiAEBEjEKEWFkZGl0aW9uYWxDb250ZW50GAMgASgJ'
+    'SAFSEWFkZGl0aW9uYWxDb250ZW50iAEBQgwKCl9tZXNzYWdlSWRCFAoSX2FkZGl0aW9uYWxDb2'
+    '50ZW50');
 
 @$core.Deprecated('Use pushUsersDescriptor instead')
 const PushUsers$json = {

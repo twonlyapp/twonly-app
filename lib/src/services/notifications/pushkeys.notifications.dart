@@ -201,7 +201,7 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
   EncryptedContent content,
 ) async {
   PushKind? kind;
-  String? reactionContent;
+  String? additionalContent;
 
   if (content.hasReaction()) {
     if (content.reaction.remove) return null;
@@ -209,7 +209,9 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
     final msg = await twonlyDB.messagesDao
         .getMessageById(content.reaction.targetMessageId)
         .getSingleOrNull();
-    if (msg == null) return null;
+    if (msg == null || msg.senderId == null || msg.senderId != toUserId) {
+      return null;
+    }
     if (msg.content != null) {
       kind = PushKind.reactionToText;
     } else if (msg.mediaId != null) {
@@ -224,7 +226,7 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
           kind = PushKind.reaction;
       }
     }
-    reactionContent = content.reaction.emoji;
+    additionalContent = content.reaction.emoji;
   }
 
   if (content.hasTextMessage()) {
@@ -270,11 +272,17 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
     }
   }
 
+  if (content.hasGroupCreate()) {
+    kind = PushKind.addedToGroup;
+    final group = await twonlyDB.groupsDao.getGroup(content.groupId);
+    additionalContent = group!.groupName;
+  }
+
   if (kind == null) return null;
 
   final pushNotification = PushNotification()..kind = kind;
-  if (reactionContent != null) {
-    pushNotification.reactionContent = reactionContent;
+  if (additionalContent != null) {
+    pushNotification.additionalContent = additionalContent;
   }
   if (messageId != null) {
     pushNotification.messageId = messageId;

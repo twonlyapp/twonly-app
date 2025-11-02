@@ -14,6 +14,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/message_actions.
 import 'package:twonly/src/views/chats/chat_messages_components/message_context_menu.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
+import 'package:twonly/src/views/contact/contact.view.dart';
 
 class ChatListEntry extends StatefulWidget {
   const ChatListEntry({
@@ -24,6 +25,7 @@ class ChatListEntry extends StatefulWidget {
     this.onResponseTriggered,
     this.prevMessage,
     this.nextMessage,
+    this.userIdToContact,
     this.hideReactions = false,
     super.key,
   });
@@ -31,6 +33,7 @@ class ChatListEntry extends StatefulWidget {
   final Message? nextMessage;
   final Message message;
   final Group group;
+  final Map<int, Contact>? userIdToContact;
   final bool hideReactions;
   final List<MemoryItem> galleryItems;
   final void Function(String)? scrollToMessage;
@@ -108,6 +111,8 @@ class _ChatListEntryState extends State<ChatListEntry> {
           ChatTextEntry(
             message: widget.message,
             nextMessage: widget.nextMessage,
+            prevMessage: widget.prevMessage,
+            userIdToContact: widget.userIdToContact,
             borderRadius: borderRadius,
             minWidth: reactionsForWidth * 43,
           )
@@ -124,6 +129,8 @@ class _ChatListEntryState extends State<ChatListEntry> {
                     ? ChatTextEntry(
                         message: widget.message,
                         nextMessage: widget.nextMessage,
+                        prevMessage: widget.prevMessage,
+                        userIdToContact: widget.userIdToContact,
                         borderRadius: borderRadius,
                         minWidth: reactionsForWidth * 43,
                       )
@@ -182,9 +189,20 @@ class _ChatListEntryState extends State<ChatListEntry> {
             if (!right && !widget.group.isDirectChat)
               hideContactAvatar
                   ? const SizedBox(width: 24)
-                  : AvatarIcon(
-                      contactId: widget.message.senderId,
-                      fontSize: 12,
+                  : GestureDetector(
+                      onTap: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ContactView(widget.message.senderId!),
+                          ),
+                        );
+                      },
+                      child: AvatarIcon(
+                        contactId: widget.message.senderId,
+                        fontSize: 12,
+                      ),
                     ),
             child,
           ],

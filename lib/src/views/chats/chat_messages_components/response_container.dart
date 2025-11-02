@@ -80,9 +80,9 @@ class _ResponseContainerState extends State<ResponseContainer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
+              key: _preview,
               padding: const EdgeInsets.only(top: 4, right: 4, left: 4),
               child: Container(
-                key: _preview,
                 width: minWidth,
                 decoration: BoxDecoration(
                   color: context.color.surface.withAlpha(150),

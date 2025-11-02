@@ -552,5 +552,22 @@
   "youLeftGroup": "You have left the group.",
   "makerLeftGroup": "{maker} has left the group.",
   "groupActionYou": "you",
-  "groupActionYour": "your"
+  "groupActionYour": "your",
+  "notificationText": "sent a message.",
+  "notificationTwonly": "sent a twonly.",
+  "notificationVideo": "sent a video.",
+  "notificationImage": "sent a image.",
+  "notificationAddedToGroup": "has added you to \"{groupname}\"",
+  "notificationContactRequest": "wants to connect with you.",
+  "notificationAcceptRequest": "is now connected with you.",
+  "notificationStoredMediaFile": "has stored your image.",
+  "notificationReaction": "has reacted to your image.",
+  "notificationReopenedMedia": "has reopened your image.",
+  "notificationReactionToVideo": "has reacted with {reaction} to your video.",
+  "notificationReactionToText": "has reacted with {reaction} to your message.",
+  "notificationReactionToImage": "has reacted with {reaction} to your image.",
+  "notificationResponse": "has responded.",
+  "notificationTitleUnknownUser": "Someone",
+  "notificationCategoryMessageTitle": "Messages",
+  "notificationCategoryMessageDesc": "Messages from other users."
 }

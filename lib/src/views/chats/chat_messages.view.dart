@@ -77,8 +77,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
   late StreamSubscription<List<GroupHistory>>? groupActionsSub;
+  late StreamSubscription<List<Contact>>? contactSub;
   late StreamSubscription<Future<List<(Message, Contact)>>>?
       lastOpenedMessageByContactSub;
+
+  Map<int, Contact> userIdToContact = {};
 
   List<ChatItem> messages = [];
   List<Message> allMessages = [];
@@ -110,6 +113,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   void dispose() {
     userSub.cancel();
     messageSub.cancel();
+    contactSub?.cancel();
     groupActionsSub?.cancel();
     lastOpenedMessageByContactSub?.cancel();
     tutorial?.cancel();
@@ -142,6 +146,13 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
       groupActionsSub = actionsStream.listen((update) async {
         groupActions = update;
         await setMessages(allMessages, lastOpenedMessageByContact, update);
+      });
+
+      final contactsStream = twonlyDB.contactsDao.watchAllContacts();
+      contactSub = contactsStream.listen((contacts) {
+        for (final contact in contacts) {
+          userIdToContact[contact.userId] = contact;
+        }
       });
     }
 
@@ -408,6 +419,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                                 : null,
                             group: group,
                             galleryItems: galleryItems,
+                            userIdToContact: userIdToContact,
                             scrollToMessage: scrollToMessage,
                             onResponseTriggered: () {
                               setState(() {

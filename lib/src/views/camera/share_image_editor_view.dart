@@ -75,7 +75,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       selectedGroupIds.add(widget.sendToGroup!.groupId);
     }
 
-    if (widget.mediaFileService.mediaFile.type == MediaType.video ||
+    if (widget.mediaFileService.mediaFile.type == MediaType.image ||
         widget.mediaFileService.mediaFile.type == MediaType.gif) {
       if (widget.imageBytesFuture != null) {
         loadImage(widget.imageBytesFuture!);

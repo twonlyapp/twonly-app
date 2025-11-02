@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -12,13 +13,17 @@ class ChatTextEntry extends StatelessWidget {
   const ChatTextEntry({
     required this.message,
     required this.nextMessage,
+    required this.prevMessage,
     required this.borderRadius,
+    required this.userIdToContact,
     required this.minWidth,
     super.key,
   });
 
   final Message message;
   final Message? nextMessage;
+  final Message? prevMessage;
+  final Map<int, Contact>? userIdToContact;
   final BorderRadius borderRadius;
   final double minWidth;
 
@@ -41,6 +46,17 @@ class ChatTextEntry extends StatelessWidget {
     }
 
     var displayTime = !combineTextMessageWithNext(message, nextMessage);
+    var displayUserName = '';
+    if (message.senderId != null &&
+        prevMessage != null &&
+        userIdToContact != null) {
+      if (!combineTextMessageWithNext(prevMessage!, message)) {
+        if (userIdToContact![message.senderId] != null) {
+          displayUserName =
+              getContactDisplayName(userIdToContact![message.senderId]!);
+        }
+      }
+    }
 
     var spacerWidth = minWidth - measureTextWidth(text) - 53;
     if (spacerWidth < 0) spacerWidth = 0;
@@ -75,57 +91,71 @@ class ChatTextEntry extends StatelessWidget {
         color: color,
         borderRadius: borderRadius,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (expanded)
-            Expanded(
-              child: BetterText(text: text, textColor: textColor),
-            )
-          else ...[
-            BetterText(text: text, textColor: textColor),
-            SizedBox(
-              width: spacerWidth,
-            ),
-          ],
-          if (displayTime || message.modifiedAt != null)
-            Align(
-              alignment: AlignmentGeometry.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 6),
-                child: Row(
-                  children: [
-                    if (message.modifiedAt != null)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: SizedBox(
-                          height: 10,
-                          child: FaIcon(
-                            FontAwesomeIcons.pencil,
-                            color: Colors.white.withAlpha(150),
-                            size: 10,
-                          ),
-                        ),
-                      ),
-                    Text(
-                      friendlyTime(
-                        context,
-                        (message.modifiedAt != null)
-                            ? message.modifiedAt!
-                            : message.createdAt,
-                      ),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.white.withAlpha(150),
-                        decoration: TextDecoration.none,
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
+          if (displayUserName != '')
+            Text(
+              displayUserName,
+              textAlign: TextAlign.left,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
             ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (expanded)
+                Expanded(
+                  child: BetterText(text: text, textColor: textColor),
+                )
+              else ...[
+                BetterText(text: text, textColor: textColor),
+                SizedBox(
+                  width: spacerWidth,
+                ),
+              ],
+              if (displayTime || message.modifiedAt != null)
+                Align(
+                  alignment: AlignmentGeometry.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Row(
+                      children: [
+                        if (message.modifiedAt != null)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 5),
+                            child: SizedBox(
+                              height: 10,
+                              child: FaIcon(
+                                FontAwesomeIcons.pencil,
+                                color: Colors.white.withAlpha(150),
+                                size: 10,
+                              ),
+                            ),
+                          ),
+                        Text(
+                          friendlyTime(
+                            context,
+                            (message.modifiedAt != null)
+                                ? message.modifiedAt!
+                                : message.createdAt,
+                          ),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.white.withAlpha(150),
+                            decoration: TextDecoration.none,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );

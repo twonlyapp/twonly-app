@@ -84,7 +84,7 @@ func getPushNotificationData(pushData: String) -> (
                                 pushUser = tryPushUser
                                 if isUUIDNewer(pushUser!.lastMessageID, pushNotification!.messageID)
                                 {
-                                    return ("blocked", "blocked", 0)
+                                    //return ("blocked", "blocked", 0)
                                 }
                                 break
                             }
@@ -109,11 +109,12 @@ func getPushNotificationData(pushData: String) -> (
             } else if pushUser != nil {
                 return (
                     pushUser!.displayName,
-                    getPushNotificationText(pushNotification: pushNotification), pushUser!.userID
+                    getPushNotificationText(pushNotification: pushNotification).0, pushUser!.userID
                 )
             } else {
+                let content = getPushNotificationText(pushNotification: pushNotification)
                 return (
-                    "", getPushNotificationTextWithoutUserId(pushKind: pushNotification.kind), 1
+                    content.1, content.0, 1
                 )
             }
 
@@ -204,28 +205,31 @@ func readFromKeychain(key: String) -> String? {
     return nil
 }
 
-func getPushNotificationText(pushNotification: PushNotification) -> String {
+func getPushNotificationText(pushNotification: PushNotification) -> (String, String) {
     let systemLanguage = Locale.current.language.languageCode?.identifier ?? "en"  // Get the current system language
 
     var pushNotificationText: [PushKind: String] = [:]
+    var title = "Someone"
 
     // Define the messages based on the system language
     if systemLanguage.contains("de") {  // German
+        title = "Jemand"
         pushNotificationText = [
-            .text: "hat dir eine Nachricht gesendet.",
-            .twonly: "hat dir ein twonly gesendet.",
-            .video: "hat dir ein Video gesendet.",
-            .image: "hat dir ein Bild gesendet.",
+            .text: "hat eine Nachricht gesendet.",
+            .twonly: "hat ein twonly gesendet.",
+            .video: "hat ein Video gesendet.",
+            .image: "hat ein Bild gesendet.",
             .contactRequest: "möchte sich mit dir vernetzen.",
             .acceptRequest: "ist jetzt mit dir vernetzt.",
             .storedMediaFile: "hat dein Bild gespeichert.",
             .reaction: "hat auf dein Bild reagiert.",
             .testNotification: "Das ist eine Testbenachrichtigung.",
             .reopenedMedia: "hat dein Bild erneut geöffnet.",
-            .reactionToVideo: "hat mit {{reaction}} auf dein Video reagiert.",
-            .reactionToText: "hat mit {{reaction}} auf deinen Text reagiert.",
-            .reactionToImage: "hat mit {{reaction}} auf dein Bild reagiert.",
+            .reactionToVideo: "hat mit {{content}} auf dein Video reagiert.",
+            .reactionToText: "hat mit {{content}} auf deinen Text reagiert.",
+            .reactionToImage: "hat mit {{content}} auf dein Bild reagiert.",
             .response: "hat dir geantwortet.",
+            .addedToGroup: "hat dich zu \"{{content}}\" hinzugefügt."
         ]
     } else {  // Default to English
         pushNotificationText = [
@@ -239,65 +243,21 @@ func getPushNotificationText(pushNotification: PushNotification) -> String {
             .reaction: "has reacted to your image.",
             .testNotification: "This is a test notification.",
             .reopenedMedia: "has reopened your image.",
-            .reactionToVideo: "has reacted with {{reaction}} to your video.",
-            .reactionToText: "has reacted with {{reaction}} to your text.",
-            .reactionToImage: "has reacted with {{reaction}} to your image.",
+            .reactionToVideo: "has reacted with {{content}} to your video.",
+            .reactionToText: "has reacted with {{content}} to your text.",
+            .reactionToImage: "has reacted with {{content}} to your image.",
             .response: "has responded.",
+            .addedToGroup: "has added you to \"{{content}}\""
         ]
     }
 
     var content = pushNotificationText[pushNotification.kind] ?? ""
 
-    if pushNotification.hasReactionContent {
-        content.replace("{{reaction}}", with: pushNotification.reactionContent)
+    if pushNotification.hasAdditionalContent {
+        content.replace("{{content}}", with: pushNotification.additionalContent)
     }
 
     // Return the corresponding message or an empty string if not found
-    return content
+    return (content, title)
 }
 
-func getPushNotificationTextWithoutUserId(pushKind: PushKind) -> String {
-    let systemLanguage = Locale.current.language.languageCode?.identifier ?? "en"  // Get the current system language
-
-    var pushNotificationText: [PushKind: String] = [:]
-
-    // Define the messages based on the system language
-    if systemLanguage.contains("de") {  // German
-        pushNotificationText = [
-            .text: "Du hast eine Nachricht erhalten.",
-            .twonly: "Du hast ein twonly erhalten.",
-            .video: "Du hast ein Video erhalten.",
-            .image: "Du hast ein Bild erhalten.",
-            .contactRequest: "Du hast eine Kontaktanfrage erhalten.",
-            .acceptRequest: "Deine Kontaktanfrage wurde angenommen.",
-            .storedMediaFile: "Dein Bild wurde gespeichert.",
-            .reaction: "Du hast eine Reaktion auf dein Bild erhalten.",
-            .testNotification: "Das ist eine Testbenachrichtigung.",
-            .reopenedMedia: "hat dein Bild erneut geöffnet.",
-            .reactionToVideo: "Du hast eine Reaktion auf dein Video erhalten.",
-            .reactionToText: "Du hast eine Reaktion auf deinen Text erhalten.",
-            .reactionToImage: "Du hast eine Reaktion auf dein Bild erhalten.",
-            .response: "Du hast eine Antwort erhalten.",
-        ]
-    } else {  // Default to English
-        pushNotificationText = [
-            .text: "You got a message.",
-            .twonly: "You got a twonly.",
-            .video: "You got a video.",
-            .image: "You got an image.",
-            .contactRequest: "You got a contact request.",
-            .acceptRequest: "Your contact request has been accepted.",
-            .storedMediaFile: "Your image has been saved.",
-            .reaction: "You got a reaction to your image.",
-            .testNotification: "This is a test notification.",
-            .reopenedMedia: "has reopened your image.",
-            .reactionToVideo: "You got a reaction to your video.",
-            .reactionToText: "You got a reaction to your text.",
-            .reactionToImage: "You got a reaction to your image.",
-            .response: "You got a response.",
-        ]
-    }
-
-    // Return the corresponding message or an empty string if not found
-    return pushNotificationText[pushKind] ?? ""
-}

@@ -114,7 +114,7 @@ class PushNotification extends $pb.GeneratedMessage {
   factory PushNotification({
     PushKind? kind,
     $core.String? messageId,
-    $core.String? reactionContent,
+    $core.String? additionalContent,
   }) {
     final $result = create();
     if (kind != null) {
@@ -123,8 +123,8 @@ class PushNotification extends $pb.GeneratedMessage {
     if (messageId != null) {
       $result.messageId = messageId;
     }
-    if (reactionContent != null) {
-      $result.reactionContent = reactionContent;
+    if (additionalContent != null) {
+      $result.additionalContent = additionalContent;
     }
     return $result;
   }
@@ -135,7 +135,7 @@ class PushNotification extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PushNotification', createEmptyInstance: create)
     ..e<PushKind>(1, _omitFieldNames ? '' : 'kind', $pb.PbFieldType.OE, defaultOrMaker: PushKind.reaction, valueOf: PushKind.valueOf, enumValues: PushKind.values)
     ..aOS(2, _omitFieldNames ? '' : 'messageId', protoName: 'messageId')
-    ..aOS(3, _omitFieldNames ? '' : 'reactionContent', protoName: 'reactionContent')
+    ..aOS(3, _omitFieldNames ? '' : 'additionalContent', protoName: 'additionalContent')
     ..hasRequiredFields = false
   ;
 
@@ -179,13 +179,13 @@ class PushNotification extends $pb.GeneratedMessage {
   void clearMessageId() => clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get reactionContent => $_getSZ(2);
+  $core.String get additionalContent => $_getSZ(2);
   @$pb.TagNumber(3)
-  set reactionContent($core.String v) { $_setString(2, v); }
+  set additionalContent($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
-  $core.bool hasReactionContent() => $_has(2);
+  $core.bool hasAdditionalContent() => $_has(2);
   @$pb.TagNumber(3)
-  void clearReactionContent() => clearField(3);
+  void clearAdditionalContent() => clearField(3);
 }
 
 class PushUsers extends $pb.GeneratedMessage {

@@ -1232,68 +1232,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String youChangedGroupName(Object newGroupName) {
-    return 'Du hast den Gruppennamen zu „$newGroupName“ geändert.';
+    return 'You have changed the group name to \"$newGroupName\".';
   }
 
   @override
   String makerChangedGroupName(Object maker, Object newGroupName) {
-    return '$maker hat den Gruppennamen zu „$newGroupName“ geändert.';
+    return '$maker has changed the group name to \"$newGroupName\".';
   }
 
   @override
-  String get youCreatedGroup => 'Du hast die Gruppe erstellt.';
+  String get youCreatedGroup => 'You have created the group.';
 
   @override
   String makerCreatedGroup(Object maker) {
-    return '$maker hat die Gruppe erstellt.';
+    return '$maker has created the group.';
   }
 
   @override
   String youRemovedMember(Object affected) {
-    return 'Du hast $affected aus der Gruppe entfernt.';
+    return 'You have removed $affected from the group.';
   }
 
   @override
   String makerRemovedMember(Object affected, Object maker) {
-    return '$maker hat $affected aus der Gruppe entfernt.';
+    return '$maker has removed $affected from the group.';
   }
 
   @override
   String youAddedMember(Object affected) {
-    return 'Du hast $affected zur Gruppe hinzugefügt.';
+    return 'You have added $affected to the group.';
   }
 
   @override
   String makerAddedMember(Object affected, Object maker) {
-    return '$maker hat $affected zur Gruppe hinzugefügt.';
+    return '$maker has added $affected to the group.';
   }
 
   @override
   String youMadeAdmin(Object affected) {
-    return 'Du hast $affected zum Administrator gemacht.';
+    return 'You made $affected an admin.';
   }
 
   @override
   String makerMadeAdmin(Object affected, Object maker) {
-    return '$maker hat $affected zum Administrator gemacht.';
+    return '$maker made $affected an admin.';
   }
 
   @override
   String youRevokedAdminRights(Object affectedR) {
-    return 'Du hast $affectedR die Administratorrechte entzogen.';
+    return 'You revoked $affectedR admin rights.';
   }
 
   @override
   String makerRevokedAdminRights(Object affectedR, Object maker) {
-    return '$maker hat $affectedR die Administratorrechte entzogen.';
+    return '$maker revoked $affectedR admin rights.';
   }
 
   @override
-  String get youLeftGroup => 'Du hast die Gruppe verlassen.';
+  String get youLeftGroup => 'You have left the group.';
 
   @override
   String makerLeftGroup(Object maker) {
-    return '$maker hat die Gruppe verlassen.';
+    return '$maker has left the group.';
   }
 
   @override
@@ -1301,4 +1301,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupActionYour => 'your';
+
+  @override
+  String get notificationText => 'sent a message.';
+
+  @override
+  String get notificationTwonly => 'sent a twonly.';
+
+  @override
+  String get notificationVideo => 'sent a video.';
+
+  @override
+  String get notificationImage => 'sent a image.';
+
+  @override
+  String notificationAddedToGroup(Object groupname) {
+    return 'has added you to \"$groupname\"';
+  }
+
+  @override
+  String get notificationContactRequest => 'wants to connect with you.';
+
+  @override
+  String get notificationAcceptRequest => 'is now connected with you.';
+
+  @override
+  String get notificationStoredMediaFile => 'has stored your image.';
+
+  @override
+  String get notificationReaction => 'has reacted to your image.';
+
+  @override
+  String get notificationReopenedMedia => 'has reopened your image.';
+
+  @override
+  String notificationReactionToVideo(Object reaction) {
+    return 'has reacted with $reaction to your video.';
+  }
+
+  @override
+  String notificationReactionToText(Object reaction) {
+    return 'has reacted with $reaction to your message.';
+  }
+
+  @override
+  String notificationReactionToImage(Object reaction) {
+    return 'has reacted with $reaction to your image.';
+  }
+
+  @override
+  String get notificationResponse => 'has responded.';
+
+  @override
+  String get notificationTitleUnknownUser => 'Someone';
+
+  @override
+  String get notificationCategoryMessageTitle => 'Messages';
+
+  @override
+  String get notificationCategoryMessageDesc => 'Messages from other users.';
 }
