@@ -261,6 +261,20 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
           ),
         );
       }
+
+      // Send the new user my public group key
+      if (group.myGroupPrivateKey != null) {
+        final keyPair =
+            IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+        await sendCipherText(
+          memberId.toInt(),
+          EncryptedContent(
+            groupJoin: EncryptedContent_GroupJoin(
+              groupPublicKey: keyPair.getPublicKey().serialize(),
+            ),
+          ),
+        );
+      }
     }
 
     // check if there is a member which is not in the server list...

@@ -165,6 +165,9 @@ Future<bool> handleGroupJoin(
   if (await twonlyDB.contactsDao.getContactById(fromUserId) == null) {
     if (!await addNewHiddenContact(fromUserId)) {
       Log.error('Got group join, but could not load contact.');
+      // This can happen in case the group join was received before the group create.
+      // In this case return false, which will cause the receipt to fail and the user
+      // will resend this message.
       return false;
     }
   }
