@@ -254,7 +254,6 @@ class _Chip extends StatelessWidget {
     return GestureDetector(
       onTap: () => onTap(contact.userId),
       child: Chip(
-        key: GlobalKey(),
         avatar: AvatarIcon(
           contactId: contact.userId,
           fontSize: 10,

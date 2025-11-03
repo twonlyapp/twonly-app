@@ -32,6 +32,7 @@ class Messages extends Table {
       boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get openedAt => dateTime().nullable()();
+  DateTimeColumn get openedByAll => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get modifiedAt => dateTime().nullable()();
   DateTimeColumn get ackByUser => dateTime().nullable()();

@@ -150,7 +150,6 @@ class _AvatarIconState extends State<AvatarIcon> {
     }
 
     return Container(
-      key: GlobalKey(),
       constraints: BoxConstraints(
         minHeight: 2 * (widget.fontSize ?? 20),
         minWidth: 2 * (widget.fontSize ?? 20),

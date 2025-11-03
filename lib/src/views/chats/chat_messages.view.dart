@@ -385,7 +385,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                         alignment: WrapAlignment.center,
                         children: messages[i].lastOpenedPosition!.map((w) {
                           return AvatarIcon(
-                            key: GlobalKey(),
                             contactId: w.userId,
                             fontSize: 12,
                           );

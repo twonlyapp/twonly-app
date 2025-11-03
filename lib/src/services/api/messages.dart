@@ -274,7 +274,10 @@ Future<void> notifyContactAboutOpeningMessage(
   for (final messageId in messageOtherIds) {
     await twonlyDB.messagesDao.updateMessageId(
       messageId,
-      MessagesCompanion(openedAt: Value(actionAt)),
+      MessagesCompanion(
+        openedAt: Value(actionAt),
+        openedByAll: Value(actionAt),
+      ),
     );
   }
   await updateLastMessageId(contactId, biggestMessageId);

@@ -2699,6 +2699,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   late final GeneratedColumn<DateTime> openedAt = GeneratedColumn<DateTime>(
       'opened_at', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _openedByAllMeta =
+      const VerificationMeta('openedByAll');
+  @override
+  late final GeneratedColumn<DateTime> openedByAll = GeneratedColumn<DateTime>(
+      'opened_by_all', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -2738,6 +2744,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         quotesMessageId,
         isDeletedFromSender,
         openedAt,
+        openedByAll,
         createdAt,
         modifiedAt,
         ackByUser,
@@ -2805,6 +2812,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       context.handle(_openedAtMeta,
           openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta));
     }
+    if (data.containsKey('opened_by_all')) {
+      context.handle(
+          _openedByAllMeta,
+          openedByAll.isAcceptableOrUnknown(
+              data['opened_by_all']!, _openedByAllMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -2858,6 +2871,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           DriftSqlType.bool, data['${effectivePrefix}is_deleted_from_sender'])!,
       openedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}opened_at']),
+      openedByAll: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}opened_by_all']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       modifiedAt: attachedDatabase.typeMapping
@@ -2890,6 +2905,7 @@ class Message extends DataClass implements Insertable<Message> {
   final String? quotesMessageId;
   final bool isDeletedFromSender;
   final DateTime? openedAt;
+  final DateTime? openedByAll;
   final DateTime createdAt;
   final DateTime? modifiedAt;
   final DateTime? ackByUser;
@@ -2906,6 +2922,7 @@ class Message extends DataClass implements Insertable<Message> {
       this.quotesMessageId,
       required this.isDeletedFromSender,
       this.openedAt,
+      this.openedByAll,
       required this.createdAt,
       this.modifiedAt,
       this.ackByUser,
@@ -2937,6 +2954,9 @@ class Message extends DataClass implements Insertable<Message> {
     map['is_deleted_from_sender'] = Variable<bool>(isDeletedFromSender);
     if (!nullToAbsent || openedAt != null) {
       map['opened_at'] = Variable<DateTime>(openedAt);
+    }
+    if (!nullToAbsent || openedByAll != null) {
+      map['opened_by_all'] = Variable<DateTime>(openedByAll);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || modifiedAt != null) {
@@ -2976,6 +2996,9 @@ class Message extends DataClass implements Insertable<Message> {
       openedAt: openedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(openedAt),
+      openedByAll: openedByAll == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openedByAll),
       createdAt: Value(createdAt),
       modifiedAt: modifiedAt == null && nullToAbsent
           ? const Value.absent()
@@ -3006,6 +3029,7 @@ class Message extends DataClass implements Insertable<Message> {
       isDeletedFromSender:
           serializer.fromJson<bool>(json['isDeletedFromSender']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
+      openedByAll: serializer.fromJson<DateTime?>(json['openedByAll']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       modifiedAt: serializer.fromJson<DateTime?>(json['modifiedAt']),
       ackByUser: serializer.fromJson<DateTime?>(json['ackByUser']),
@@ -3028,6 +3052,7 @@ class Message extends DataClass implements Insertable<Message> {
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
+      'openedByAll': serializer.toJson<DateTime?>(openedByAll),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'modifiedAt': serializer.toJson<DateTime?>(modifiedAt),
       'ackByUser': serializer.toJson<DateTime?>(ackByUser),
@@ -3047,6 +3072,7 @@ class Message extends DataClass implements Insertable<Message> {
           Value<String?> quotesMessageId = const Value.absent(),
           bool? isDeletedFromSender,
           Value<DateTime?> openedAt = const Value.absent(),
+          Value<DateTime?> openedByAll = const Value.absent(),
           DateTime? createdAt,
           Value<DateTime?> modifiedAt = const Value.absent(),
           Value<DateTime?> ackByUser = const Value.absent(),
@@ -3066,6 +3092,7 @@ class Message extends DataClass implements Insertable<Message> {
             : this.quotesMessageId,
         isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
         openedAt: openedAt.present ? openedAt.value : this.openedAt,
+        openedByAll: openedByAll.present ? openedByAll.value : this.openedByAll,
         createdAt: createdAt ?? this.createdAt,
         modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
         ackByUser: ackByUser.present ? ackByUser.value : this.ackByUser,
@@ -3091,6 +3118,8 @@ class Message extends DataClass implements Insertable<Message> {
           ? data.isDeletedFromSender.value
           : this.isDeletedFromSender,
       openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
+      openedByAll:
+          data.openedByAll.present ? data.openedByAll.value : this.openedByAll,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       modifiedAt:
           data.modifiedAt.present ? data.modifiedAt.value : this.modifiedAt,
@@ -3114,6 +3143,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('openedAt: $openedAt, ')
+          ..write('openedByAll: $openedByAll, ')
           ..write('createdAt: $createdAt, ')
           ..write('modifiedAt: $modifiedAt, ')
           ..write('ackByUser: $ackByUser, ')
@@ -3135,6 +3165,7 @@ class Message extends DataClass implements Insertable<Message> {
       quotesMessageId,
       isDeletedFromSender,
       openedAt,
+      openedByAll,
       createdAt,
       modifiedAt,
       ackByUser,
@@ -3154,6 +3185,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
           other.openedAt == this.openedAt &&
+          other.openedByAll == this.openedByAll &&
           other.createdAt == this.createdAt &&
           other.modifiedAt == this.modifiedAt &&
           other.ackByUser == this.ackByUser &&
@@ -3172,6 +3204,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
   final Value<DateTime?> openedAt;
+  final Value<DateTime?> openedByAll;
   final Value<DateTime> createdAt;
   final Value<DateTime?> modifiedAt;
   final Value<DateTime?> ackByUser;
@@ -3189,6 +3222,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.openedAt = const Value.absent(),
+    this.openedByAll = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.modifiedAt = const Value.absent(),
     this.ackByUser = const Value.absent(),
@@ -3207,6 +3241,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
     this.openedAt = const Value.absent(),
+    this.openedByAll = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.modifiedAt = const Value.absent(),
     this.ackByUser = const Value.absent(),
@@ -3227,6 +3262,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
     Expression<DateTime>? openedAt,
+    Expression<DateTime>? openedByAll,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? modifiedAt,
     Expression<DateTime>? ackByUser,
@@ -3246,6 +3282,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (isDeletedFromSender != null)
         'is_deleted_from_sender': isDeletedFromSender,
       if (openedAt != null) 'opened_at': openedAt,
+      if (openedByAll != null) 'opened_by_all': openedByAll,
       if (createdAt != null) 'created_at': createdAt,
       if (modifiedAt != null) 'modified_at': modifiedAt,
       if (ackByUser != null) 'ack_by_user': ackByUser,
@@ -3266,6 +3303,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<String?>? quotesMessageId,
       Value<bool>? isDeletedFromSender,
       Value<DateTime?>? openedAt,
+      Value<DateTime?>? openedByAll,
       Value<DateTime>? createdAt,
       Value<DateTime?>? modifiedAt,
       Value<DateTime?>? ackByUser,
@@ -3283,6 +3321,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
       openedAt: openedAt ?? this.openedAt,
+      openedByAll: openedByAll ?? this.openedByAll,
       createdAt: createdAt ?? this.createdAt,
       modifiedAt: modifiedAt ?? this.modifiedAt,
       ackByUser: ackByUser ?? this.ackByUser,
@@ -3328,6 +3367,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     if (openedAt.present) {
       map['opened_at'] = Variable<DateTime>(openedAt.value);
     }
+    if (openedByAll.present) {
+      map['opened_by_all'] = Variable<DateTime>(openedByAll.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3360,6 +3402,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
           ..write('openedAt: $openedAt, ')
+          ..write('openedByAll: $openedByAll, ')
           ..write('createdAt: $createdAt, ')
           ..write('modifiedAt: $modifiedAt, ')
           ..write('ackByUser: $ackByUser, ')
@@ -9419,6 +9462,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
   Value<DateTime?> openedAt,
+  Value<DateTime?> openedByAll,
   Value<DateTime> createdAt,
   Value<DateTime?> modifiedAt,
   Value<DateTime?> ackByUser,
@@ -9437,6 +9481,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
   Value<DateTime?> openedAt,
+  Value<DateTime?> openedByAll,
   Value<DateTime> createdAt,
   Value<DateTime?> modifiedAt,
   Value<DateTime?> ackByUser,
@@ -9595,6 +9640,9 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<DateTime> get openedAt => $composableBuilder(
       column: $table.openedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get openedByAll => $composableBuilder(
+      column: $table.openedByAll, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -9789,6 +9837,9 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<DateTime> get openedAt => $composableBuilder(
       column: $table.openedAt, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get openedByAll => $composableBuilder(
+      column: $table.openedByAll, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -9894,6 +9945,9 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get openedAt =>
       $composableBuilder(column: $table.openedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get openedByAll => $composableBuilder(
+      column: $table.openedByAll, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -10093,6 +10147,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
             Value<DateTime?> openedAt = const Value.absent(),
+            Value<DateTime?> openedByAll = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> modifiedAt = const Value.absent(),
             Value<DateTime?> ackByUser = const Value.absent(),
@@ -10111,6 +10166,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
             openedAt: openedAt,
+            openedByAll: openedByAll,
             createdAt: createdAt,
             modifiedAt: modifiedAt,
             ackByUser: ackByUser,
@@ -10129,6 +10185,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
             Value<DateTime?> openedAt = const Value.absent(),
+            Value<DateTime?> openedByAll = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> modifiedAt = const Value.absent(),
             Value<DateTime?> ackByUser = const Value.absent(),
@@ -10147,6 +10204,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
             openedAt: openedAt,
+            openedByAll: openedByAll,
             createdAt: createdAt,
             modifiedAt: modifiedAt,
             ackByUser: ackByUser,
