@@ -1303,16 +1303,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupActionYour => 'your';
 
   @override
-  String get notificationText => 'sent a message.';
+  String get notificationFillerIn => 'in';
 
   @override
-  String get notificationTwonly => 'sent a twonly.';
+  String notificationText(Object inGroup) {
+    return 'sent a message$inGroup.';
+  }
 
   @override
-  String get notificationVideo => 'sent a video.';
+  String notificationTwonly(Object inGroup) {
+    return 'sent a twonly$inGroup.';
+  }
 
   @override
-  String get notificationImage => 'sent a image.';
+  String notificationVideo(Object inGroup) {
+    return 'sent a video$inGroup.';
+  }
+
+  @override
+  String notificationImage(Object inGroup) {
+    return 'sent a image$inGroup.';
+  }
 
   @override
   String notificationAddedToGroup(Object groupname) {
@@ -1350,7 +1361,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationResponse => 'has responded.';
+  String notificationResponse(Object inGroup) {
+    return 'has responded$inGroup.';
+  }
 
   @override
   String get notificationTitleUnknownUser => 'Someone';

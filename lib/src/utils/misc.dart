@@ -67,6 +67,16 @@ Uint8List getRandomUint8List(int length) {
   return randomBytes;
 }
 
+const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+Random _rnd = Random();
+
+String getRandomString(int length) => String.fromCharCodes(
+      Iterable.generate(
+        length,
+        (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length)),
+      ),
+    );
+
 String errorCodeToText(BuildContext context, ErrorCode code) {
   // ignore: exhaustive_cases
   switch (code) {

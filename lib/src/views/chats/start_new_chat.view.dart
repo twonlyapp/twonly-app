@@ -175,7 +175,7 @@ class UserList extends StatelessWidget {
               ],
             ),
             leading: AvatarIcon(
-              contact: user,
+              contactId: user.userId,
               fontSize: 13,
             ),
             onTap: () async {

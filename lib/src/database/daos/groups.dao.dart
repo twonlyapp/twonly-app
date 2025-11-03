@@ -129,8 +129,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
       leftOuterJoin(
         groupMembers,
         groupMembers.contactId.equalsExp(contacts.userId),
+        useColumns: false,
       ),
     ])
+      ..orderBy([OrderingTerm.desc(groupMembers.lastMessage)])
       ..where(groupMembers.groupId.equals(groupId)));
     return query.map((row) => row.readTable(contacts)).get();
   }
@@ -140,8 +142,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
       leftOuterJoin(
         groupMembers,
         groupMembers.contactId.equalsExp(contacts.userId),
+        useColumns: false,
       ),
     ])
+      ..orderBy([OrderingTerm.desc(groupMembers.lastMessage)])
       ..where(groupMembers.groupId.equals(groupId)));
     return query.map((row) => row.readTable(contacts)).watch();
   }

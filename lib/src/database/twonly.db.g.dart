@@ -3987,6 +3987,12 @@ class $GroupMembersTable extends GroupMembers
   late final GeneratedColumn<Uint8List> groupPublicKey =
       GeneratedColumn<Uint8List>('group_public_key', aliasedName, true,
           type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _lastMessageMeta =
+      const VerificationMeta('lastMessage');
+  @override
+  late final GeneratedColumn<DateTime> lastMessage = GeneratedColumn<DateTime>(
+      'last_message', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -3997,7 +4003,7 @@ class $GroupMembersTable extends GroupMembers
       defaultValue: currentDateAndTime);
   @override
   List<GeneratedColumn> get $columns =>
-      [groupId, contactId, memberState, groupPublicKey, createdAt];
+      [groupId, contactId, memberState, groupPublicKey, lastMessage, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4026,6 +4032,12 @@ class $GroupMembersTable extends GroupMembers
           groupPublicKey.isAcceptableOrUnknown(
               data['group_public_key']!, _groupPublicKeyMeta));
     }
+    if (data.containsKey('last_message')) {
+      context.handle(
+          _lastMessageMeta,
+          lastMessage.isAcceptableOrUnknown(
+              data['last_message']!, _lastMessageMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -4048,6 +4060,8 @@ class $GroupMembersTable extends GroupMembers
               DriftSqlType.string, data['${effectivePrefix}member_state'])),
       groupPublicKey: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}group_public_key']),
+      lastMessage: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_message']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -4070,12 +4084,14 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
   final int contactId;
   final MemberState? memberState;
   final Uint8List? groupPublicKey;
+  final DateTime? lastMessage;
   final DateTime createdAt;
   const GroupMember(
       {required this.groupId,
       required this.contactId,
       this.memberState,
       this.groupPublicKey,
+      this.lastMessage,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4088,6 +4104,9 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
     }
     if (!nullToAbsent || groupPublicKey != null) {
       map['group_public_key'] = Variable<Uint8List>(groupPublicKey);
+    }
+    if (!nullToAbsent || lastMessage != null) {
+      map['last_message'] = Variable<DateTime>(lastMessage);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -4103,6 +4122,9 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       groupPublicKey: groupPublicKey == null && nullToAbsent
           ? const Value.absent()
           : Value(groupPublicKey),
+      lastMessage: lastMessage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastMessage),
       createdAt: Value(createdAt),
     );
   }
@@ -4116,6 +4138,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       memberState: $GroupMembersTable.$convertermemberStaten
           .fromJson(serializer.fromJson<String?>(json['memberState'])),
       groupPublicKey: serializer.fromJson<Uint8List?>(json['groupPublicKey']),
+      lastMessage: serializer.fromJson<DateTime?>(json['lastMessage']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -4128,6 +4151,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       'memberState': serializer.toJson<String?>(
           $GroupMembersTable.$convertermemberStaten.toJson(memberState)),
       'groupPublicKey': serializer.toJson<Uint8List?>(groupPublicKey),
+      'lastMessage': serializer.toJson<DateTime?>(lastMessage),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -4137,6 +4161,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
           int? contactId,
           Value<MemberState?> memberState = const Value.absent(),
           Value<Uint8List?> groupPublicKey = const Value.absent(),
+          Value<DateTime?> lastMessage = const Value.absent(),
           DateTime? createdAt}) =>
       GroupMember(
         groupId: groupId ?? this.groupId,
@@ -4144,6 +4169,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
         memberState: memberState.present ? memberState.value : this.memberState,
         groupPublicKey:
             groupPublicKey.present ? groupPublicKey.value : this.groupPublicKey,
+        lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
         createdAt: createdAt ?? this.createdAt,
       );
   GroupMember copyWithCompanion(GroupMembersCompanion data) {
@@ -4155,6 +4181,8 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
       groupPublicKey: data.groupPublicKey.present
           ? data.groupPublicKey.value
           : this.groupPublicKey,
+      lastMessage:
+          data.lastMessage.present ? data.lastMessage.value : this.lastMessage,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -4166,6 +4194,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
           ..write('contactId: $contactId, ')
           ..write('memberState: $memberState, ')
           ..write('groupPublicKey: $groupPublicKey, ')
+          ..write('lastMessage: $lastMessage, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -4173,7 +4202,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
 
   @override
   int get hashCode => Object.hash(groupId, contactId, memberState,
-      $driftBlobEquality.hash(groupPublicKey), createdAt);
+      $driftBlobEquality.hash(groupPublicKey), lastMessage, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4183,6 +4212,7 @@ class GroupMember extends DataClass implements Insertable<GroupMember> {
           other.memberState == this.memberState &&
           $driftBlobEquality.equals(
               other.groupPublicKey, this.groupPublicKey) &&
+          other.lastMessage == this.lastMessage &&
           other.createdAt == this.createdAt);
 }
 
@@ -4191,6 +4221,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
   final Value<int> contactId;
   final Value<MemberState?> memberState;
   final Value<Uint8List?> groupPublicKey;
+  final Value<DateTime?> lastMessage;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const GroupMembersCompanion({
@@ -4198,6 +4229,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     this.contactId = const Value.absent(),
     this.memberState = const Value.absent(),
     this.groupPublicKey = const Value.absent(),
+    this.lastMessage = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -4206,6 +4238,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     required int contactId,
     this.memberState = const Value.absent(),
     this.groupPublicKey = const Value.absent(),
+    this.lastMessage = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : groupId = Value(groupId),
@@ -4215,6 +4248,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     Expression<int>? contactId,
     Expression<String>? memberState,
     Expression<Uint8List>? groupPublicKey,
+    Expression<DateTime>? lastMessage,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -4223,6 +4257,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
       if (contactId != null) 'contact_id': contactId,
       if (memberState != null) 'member_state': memberState,
       if (groupPublicKey != null) 'group_public_key': groupPublicKey,
+      if (lastMessage != null) 'last_message': lastMessage,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -4233,6 +4268,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
       Value<int>? contactId,
       Value<MemberState?>? memberState,
       Value<Uint8List?>? groupPublicKey,
+      Value<DateTime?>? lastMessage,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
     return GroupMembersCompanion(
@@ -4240,6 +4276,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
       contactId: contactId ?? this.contactId,
       memberState: memberState ?? this.memberState,
       groupPublicKey: groupPublicKey ?? this.groupPublicKey,
+      lastMessage: lastMessage ?? this.lastMessage,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -4261,6 +4298,9 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
     if (groupPublicKey.present) {
       map['group_public_key'] = Variable<Uint8List>(groupPublicKey.value);
     }
+    if (lastMessage.present) {
+      map['last_message'] = Variable<DateTime>(lastMessage.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -4277,6 +4317,7 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMember> {
           ..write('contactId: $contactId, ')
           ..write('memberState: $memberState, ')
           ..write('groupPublicKey: $groupPublicKey, ')
+          ..write('lastMessage: $lastMessage, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -10870,6 +10911,7 @@ typedef $$GroupMembersTableCreateCompanionBuilder = GroupMembersCompanion
   required int contactId,
   Value<MemberState?> memberState,
   Value<Uint8List?> groupPublicKey,
+  Value<DateTime?> lastMessage,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -10879,6 +10921,7 @@ typedef $$GroupMembersTableUpdateCompanionBuilder = GroupMembersCompanion
   Value<int> contactId,
   Value<MemberState?> memberState,
   Value<Uint8List?> groupPublicKey,
+  Value<DateTime?> lastMessage,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -10934,6 +10977,9 @@ class $$GroupMembersTableFilterComposer
   ColumnFilters<Uint8List> get groupPublicKey => $composableBuilder(
       column: $table.groupPublicKey,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastMessage => $composableBuilder(
+      column: $table.lastMessage, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -10995,6 +11041,9 @@ class $$GroupMembersTableOrderingComposer
       column: $table.groupPublicKey,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get lastMessage => $composableBuilder(
+      column: $table.lastMessage, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -11054,6 +11103,9 @@ class $$GroupMembersTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get groupPublicKey => $composableBuilder(
       column: $table.groupPublicKey, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastMessage => $composableBuilder(
+      column: $table.lastMessage, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -11126,6 +11178,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
             Value<int> contactId = const Value.absent(),
             Value<MemberState?> memberState = const Value.absent(),
             Value<Uint8List?> groupPublicKey = const Value.absent(),
+            Value<DateTime?> lastMessage = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -11134,6 +11187,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
             contactId: contactId,
             memberState: memberState,
             groupPublicKey: groupPublicKey,
+            lastMessage: lastMessage,
             createdAt: createdAt,
             rowid: rowid,
           ),
@@ -11142,6 +11196,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
             required int contactId,
             Value<MemberState?> memberState = const Value.absent(),
             Value<Uint8List?> groupPublicKey = const Value.absent(),
+            Value<DateTime?> lastMessage = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -11150,6 +11205,7 @@ class $$GroupMembersTableTableManager extends RootTableManager<
             contactId: contactId,
             memberState: memberState,
             groupPublicKey: groupPublicKey,
+            lastMessage: lastMessage,
             createdAt: createdAt,
             rowid: rowid,
           ),

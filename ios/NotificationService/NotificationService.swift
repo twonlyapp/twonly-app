@@ -215,10 +215,10 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
     if systemLanguage.contains("de") {  // German
         title = "Jemand"
         pushNotificationText = [
-            .text: "hat eine Nachricht gesendet.",
-            .twonly: "hat ein twonly gesendet.",
-            .video: "hat ein Video gesendet.",
-            .image: "hat ein Bild gesendet.",
+            .text: "hat eine Nachricht{inGroup} gesendet.",
+            .twonly: "hat ein twonly{inGroup} gesendet.",
+            .video: "hat ein Video{inGroup} gesendet.",
+            .image: "hat ein Bild{inGroup} gesendet.",
             .contactRequest: "möchte sich mit dir vernetzen.",
             .acceptRequest: "ist jetzt mit dir vernetzt.",
             .storedMediaFile: "hat dein Bild gespeichert.",
@@ -228,15 +228,15 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .reactionToVideo: "hat mit {{content}} auf dein Video reagiert.",
             .reactionToText: "hat mit {{content}} auf deinen Text reagiert.",
             .reactionToImage: "hat mit {{content}} auf dein Bild reagiert.",
-            .response: "hat dir geantwortet.",
+            .response: "hat dir{inGroup} geantwortet.",
             .addedToGroup: "hat dich zu \"{{content}}\" hinzugefügt."
         ]
     } else {  // Default to English
         pushNotificationText = [
-            .text: "has sent you a message.",
-            .twonly: "has sent you a twonly.",
-            .video: "has sent you a video.",
-            .image: "has sent you an image.",
+            .text: "sent a message{inGroup}.",
+            .twonly: "sent a twonly{inGroup}.",
+            .video: "sent a video{inGroup}.",
+            .image: "sent a image{inGroup}.",
             .contactRequest: "wants to connect with you.",
             .acceptRequest: "is now connected with you.",
             .storedMediaFile: "has stored your image.",
@@ -246,7 +246,7 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .reactionToVideo: "has reacted with {{content}} to your video.",
             .reactionToText: "has reacted with {{content}} to your text.",
             .reactionToImage: "has reacted with {{content}} to your image.",
-            .response: "has responded.",
+            .response: "has responded{inGroup}.",
             .addedToGroup: "has added you to \"{{content}}\""
         ]
     }
@@ -255,6 +255,8 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
 
     if pushNotification.hasAdditionalContent {
         content.replace("{{content}}", with: pushNotification.additionalContent)
+        content.replace("{inGroup}", with: " in {inGroup}")
+        content.replace("{inGroup}", with: pushNotification.additionalContent)
     }
 
     // Return the corresponding message or an empty string if not found

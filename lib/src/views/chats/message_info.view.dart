@@ -127,7 +127,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
           child: Row(
             children: [
               AvatarIcon(
-                contact: groupMember.$2,
+                contactId: groupMember.$2.userId,
                 fontSize: 15,
               ),
               const SizedBox(width: 6),

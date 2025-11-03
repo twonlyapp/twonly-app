@@ -60,6 +60,7 @@ class GroupMembers extends Table {
   TextColumn get memberState => textEnum<MemberState>().nullable()();
   BlobColumn get groupPublicKey => blob().nullable()();
 
+  DateTimeColumn get lastMessage => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override

@@ -20,6 +20,7 @@ import 'package:twonly/src/services/api/mediafiles/media_background.service.dart
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -59,6 +60,7 @@ void main() async {
   unawaited(finishStartedPreprocessing());
 
   unawaited(MediaFileService.purgeTempFolder());
+  unawaited(createPushAvatars());
   await twonlyDB.messagesDao.purgeMessageTable();
 
   // await twonlyDB.messagesDao.resetPendingDownloadState();

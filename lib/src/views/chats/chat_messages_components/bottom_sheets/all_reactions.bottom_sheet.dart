@@ -116,8 +116,8 @@ class _AllReactionsViewState extends State<AllReactionsView> {
                       child: Row(
                         children: [
                           AvatarIcon(
-                            contact: entry.$2,
-                            userData: (entry.$2 == null) ? gUser : null,
+                            contactId: entry.$2?.userId,
+                            myAvatar: entry.$2 == null,
                             fontSize: 15,
                           ),
                           const SizedBox(width: 6),

@@ -234,6 +234,10 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
     if (content.textMessage.hasQuoteMessageId()) {
       kind = PushKind.response;
     }
+    final group = await twonlyDB.groupsDao.getGroup(content.groupId);
+    if (group != null && !group.isDirectChat) {
+      additionalContent = group.groupName;
+    }
   }
   if (content.hasMedia()) {
     switch (content.media.type) {
@@ -247,6 +251,10 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
     }
     if (content.media.requiresAuthentication) {
       kind = PushKind.twonly;
+    }
+    final group = await twonlyDB.groupsDao.getGroup(content.groupId);
+    if (group != null && !group.isDirectChat) {
+      additionalContent = group.groupName;
     }
   }
 

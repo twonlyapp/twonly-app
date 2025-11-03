@@ -115,7 +115,7 @@ class _ContactViewState extends State<ContactView> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(10),
-                child: AvatarIcon(contact: contact, fontSize: 30),
+                child: AvatarIcon(contactId: contact.userId, fontSize: 30),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

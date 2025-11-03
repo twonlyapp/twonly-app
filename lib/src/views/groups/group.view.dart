@@ -153,9 +153,8 @@ class _GroupViewState extends State<GroupView> {
             ),
           BetterListTile(
             padding: const EdgeInsets.only(left: 13),
-            leading: AvatarIcon(
-              key: GlobalKey(),
-              userData: gUser,
+            leading: const AvatarIcon(
+              myAvatar: true,
               fontSize: 16,
             ),
             text: context.lang.you,
@@ -177,8 +176,7 @@ class _GroupViewState extends State<GroupView> {
               child: BetterListTile(
                 padding: const EdgeInsets.only(left: 13),
                 leading: AvatarIcon(
-                  key: GlobalKey(),
-                  contact: member.$1,
+                  contactId: member.$1.userId,
                   fontSize: 16,
                 ),
                 text: getContactDisplayName(member.$1, maxLength: 25),

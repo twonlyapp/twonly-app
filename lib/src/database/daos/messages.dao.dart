@@ -381,6 +381,16 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         ),
       );
 
+      if (message.senderId.present) {
+        await twonlyDB.groupsDao.updateMember(
+          message.groupId.value,
+          message.senderId.value!,
+          GroupMembersCompanion(
+            lastMessage: Value(DateTime.now()),
+          ),
+        );
+      }
+
       return await (select(messages)..where((t) => t.rowId.equals(rowId)))
           .getSingle();
     } catch (e) {

@@ -55,8 +55,8 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                       color: context.color.surface.withAlpha(0),
                       child: Row(
                         children: [
-                          AvatarIcon(
-                            userData: gUser,
+                          const AvatarIcon(
+                            myAvatar: true,
                             fontSize: 30,
                           ),
                           Container(width: 20, color: Colors.transparent),

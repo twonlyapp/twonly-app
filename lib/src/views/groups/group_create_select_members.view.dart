@@ -204,7 +204,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                               ? Text(context.lang.alreadyInGroup)
                               : null,
                           leading: AvatarIcon(
-                            contact: user,
+                            contactId: user.userId,
                             fontSize: 13,
                           ),
                           trailing: Checkbox(
@@ -256,7 +256,7 @@ class _Chip extends StatelessWidget {
       child: Chip(
         key: GlobalKey(),
         avatar: AvatarIcon(
-          contact: contact,
+          contactId: contact.userId,
           fontSize: 10,
         ),
         label: Row(

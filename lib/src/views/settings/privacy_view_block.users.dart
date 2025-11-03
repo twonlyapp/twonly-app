@@ -112,7 +112,7 @@ class UserList extends StatelessWidget {
                 Text(getContactDisplayName(user)),
               ],
             ),
-            leading: AvatarIcon(contact: user, fontSize: 15),
+            leading: AvatarIcon(contactId: user.userId, fontSize: 15),
             trailing: Checkbox(
               value: user.blocked,
               onChanged: (bool? value) async {

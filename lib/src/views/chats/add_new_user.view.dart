@@ -279,7 +279,7 @@ class ContactsListView extends StatelessWidget {
         final contact = contacts[index];
         return ListTile(
           title: Text(substringBy(contact.username, 25)),
-          leading: AvatarIcon(contact: contact),
+          leading: AvatarIcon(contactId: contact.userId),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: contact.requested

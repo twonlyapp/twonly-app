@@ -2420,29 +2420,35 @@ abstract class AppLocalizations {
   /// **'your'**
   String get groupActionYour;
 
+  /// No description provided for @notificationFillerIn.
+  ///
+  /// In en, this message translates to:
+  /// **'in'**
+  String get notificationFillerIn;
+
   /// No description provided for @notificationText.
   ///
   /// In en, this message translates to:
-  /// **'sent a message.'**
-  String get notificationText;
+  /// **'sent a message{inGroup}.'**
+  String notificationText(Object inGroup);
 
   /// No description provided for @notificationTwonly.
   ///
   /// In en, this message translates to:
-  /// **'sent a twonly.'**
-  String get notificationTwonly;
+  /// **'sent a twonly{inGroup}.'**
+  String notificationTwonly(Object inGroup);
 
   /// No description provided for @notificationVideo.
   ///
   /// In en, this message translates to:
-  /// **'sent a video.'**
-  String get notificationVideo;
+  /// **'sent a video{inGroup}.'**
+  String notificationVideo(Object inGroup);
 
   /// No description provided for @notificationImage.
   ///
   /// In en, this message translates to:
-  /// **'sent a image.'**
-  String get notificationImage;
+  /// **'sent a image{inGroup}.'**
+  String notificationImage(Object inGroup);
 
   /// No description provided for @notificationAddedToGroup.
   ///
@@ -2501,8 +2507,8 @@ abstract class AppLocalizations {
   /// No description provided for @notificationResponse.
   ///
   /// In en, this message translates to:
-  /// **'has responded.'**
-  String get notificationResponse;
+  /// **'has responded{inGroup}.'**
+  String notificationResponse(Object inGroup);
 
   /// No description provided for @notificationTitleUnknownUser.
   ///

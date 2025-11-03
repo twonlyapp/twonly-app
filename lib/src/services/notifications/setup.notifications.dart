@@ -62,7 +62,7 @@ Future<void> createPushAvatars() async {
   final contacts = await twonlyDB.contactsDao.getAllNotBlockedContacts();
 
   for (final contact in contacts) {
-    if (contact.avatarSvgCompressed == null) return;
+    if (contact.avatarSvgCompressed == null) continue;
 
     final avatarSvg = getAvatarSvg(contact.avatarSvgCompressed!);
 

@@ -237,11 +237,18 @@ AppLocalizations getLocalizations() {
 String getPushNotificationText(PushNotification pushNotification) {
   final lang = getLocalizations();
 
+  var inGroup = '';
+
+  if (pushNotification.hasAdditionalContent()) {
+    inGroup =
+        ' ${lang.notificationFillerIn} ${pushNotification.additionalContent}';
+  }
+
   final pushNotificationText = {
-    PushKind.text.name: lang.notificationText,
-    PushKind.twonly.name: lang.notificationTwonly,
-    PushKind.video.name: lang.notificationVideo,
-    PushKind.image.name: lang.notificationImage,
+    PushKind.text.name: lang.notificationText(inGroup),
+    PushKind.twonly.name: lang.notificationTwonly(inGroup),
+    PushKind.video.name: lang.notificationVideo(inGroup),
+    PushKind.image.name: lang.notificationImage(inGroup),
     PushKind.contactRequest.name: lang.notificationContactRequest,
     PushKind.acceptRequest.name: lang.notificationAcceptRequest,
     PushKind.storedMediaFile.name: lang.notificationStoredMediaFile,
@@ -253,7 +260,7 @@ String getPushNotificationText(PushNotification pushNotification) {
         lang.notificationReactionToText(pushNotification.additionalContent),
     PushKind.reactionToImage.name:
         lang.notificationReactionToImage(pushNotification.additionalContent),
-    PushKind.response.name: lang.notificationResponse,
+    PushKind.response.name: lang.notificationResponse(inGroup),
     PushKind.addedToGroup.name:
         lang.notificationAddedToGroup(pushNotification.additionalContent),
   };

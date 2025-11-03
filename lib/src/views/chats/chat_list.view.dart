@@ -123,7 +123,7 @@ class _ChatListViewState extends State<ChatListView> {
                 setState(() {}); // gUser has updated
               },
               child: AvatarIcon(
-                userData: gUser,
+                myAvatar: true,
                 fontSize: 14,
                 color: context.color.onSurface.withAlpha(20),
               ),

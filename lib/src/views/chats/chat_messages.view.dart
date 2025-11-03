@@ -386,7 +386,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                         children: messages[i].lastOpenedPosition!.map((w) {
                           return AvatarIcon(
                             key: GlobalKey(),
-                            contact: w,
+                            contactId: w.userId,
                             fontSize: 12,
                           );
                         }).toList(),

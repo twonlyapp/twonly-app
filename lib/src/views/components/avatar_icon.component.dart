@@ -1,24 +1,22 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class AvatarIcon extends StatefulWidget {
   const AvatarIcon({
     super.key,
     this.group,
-    this.contact,
     this.contactId,
-    this.userData,
+    this.myAvatar = false,
     this.fontSize = 20,
     this.color,
   });
   final Group? group;
-  final Contact? contact;
   final int? contactId;
-  final UserData? userData;
+  final bool myAvatar;
   final double? fontSize;
   final Color? color;
 
@@ -27,7 +25,12 @@ class AvatarIcon extends StatefulWidget {
 }
 
 class _AvatarIconState extends State<AvatarIcon> {
-  final List<String> _avatarSVGs = [];
+  List<String> _avatarSVGs = [];
+  String? _globalUserDataCallBackId;
+
+  StreamSubscription<List<Contact>>? groupStream;
+  StreamSubscription<List<Contact>>? contactsStream;
+  StreamSubscription<Contact?>? contactStream;
 
   @override
   void initState() {
@@ -35,32 +38,53 @@ class _AvatarIconState extends State<AvatarIcon> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    groupStream?.cancel();
+    contactStream?.cancel();
+    contactsStream?.cancel();
+    if (_globalUserDataCallBackId != null) {
+      globalUserDataChangedCallBack.remove(_globalUserDataCallBackId);
+    }
+    super.dispose();
+  }
+
   Future<void> initAsync() async {
     if (widget.group != null) {
-      final contacts =
-          await twonlyDB.groupsDao.getGroupContact(widget.group!.groupId);
-      if (contacts.length == 1) {
-        if (contacts.first.avatarSvgCompressed != null) {
-          _avatarSVGs.add(getAvatarSvg(contacts.first.avatarSvgCompressed!));
-        }
-      } else {
-        for (final contact in contacts) {
-          if (contact.avatarSvgCompressed != null) {
-            _avatarSVGs.add(getAvatarSvg(contact.avatarSvgCompressed!));
+      groupStream = twonlyDB.groupsDao
+          .watchGroupContact(widget.group!.groupId)
+          .listen((contacts) {
+        _avatarSVGs = [];
+        if (contacts.length == 1) {
+          if (contacts.first.avatarSvgCompressed != null) {
+            _avatarSVGs.add(getAvatarSvg(contacts.first.avatarSvgCompressed!));
+          }
+        } else {
+          for (final contact in contacts) {
+            if (contact.avatarSvgCompressed != null) {
+              _avatarSVGs.add(getAvatarSvg(contact.avatarSvgCompressed!));
+            }
           }
         }
-      }
-      // avatarSvg = group!.avatarSvg;
-    } else if (widget.userData?.avatarSvg != null) {
-      _avatarSVGs.add(widget.userData!.avatarSvg!);
-    } else if (widget.contact?.avatarSvgCompressed != null) {
-      _avatarSVGs.add(getAvatarSvg(widget.contact!.avatarSvgCompressed!));
+        setState(() {});
+      });
+    } else if (widget.myAvatar) {
+      _globalUserDataCallBackId = 'avatar_${getRandomString(10)}';
+      globalUserDataChangedCallBack[_globalUserDataCallBackId!] = () {
+        setState(() {
+          _avatarSVGs = [gUser.avatarSvg!];
+        });
+      };
+      _avatarSVGs.add(gUser.avatarSvg!);
     } else if (widget.contactId != null) {
-      final contact =
-          await twonlyDB.contactsDao.getContactById(widget.contactId!);
-      if (contact != null && contact.avatarSvgCompressed != null) {
-        _avatarSVGs.add(getAvatarSvg(contact.avatarSvgCompressed!));
-      }
+      contactStream = twonlyDB.contactsDao
+          .watchContact(widget.contactId!)
+          .listen((contact) {
+        if (contact != null && contact.avatarSvgCompressed != null) {
+          _avatarSVGs = [getAvatarSvg(contact.avatarSvgCompressed!)];
+          setState(() {});
+        }
+      });
     }
     if (mounted) setState(() {});
   }

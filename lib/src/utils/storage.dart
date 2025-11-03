@@ -52,7 +52,7 @@ Mutex updateProtection = Mutex();
 Future<UserData?> updateUserdata(
   UserData Function(UserData userData) updateUser,
 ) async {
-  return updateProtection.protect<UserData?>(() async {
+  final userData = await updateProtection.protect<UserData?>(() async {
     final user = await getUser();
     if (user == null) return null;
     final updated = updateUser(user);
@@ -61,6 +61,14 @@ Future<UserData?> updateUserdata(
     gUser = updated;
     return updated;
   });
+  try {
+    for (final callBack in globalUserDataChangedCallBack.values) {
+      callBack();
+    }
+  } catch (e) {
+    Log.error(e);
+  }
+  return userData;
 }
 
 Future<bool> deleteLocalUserData() async {
