@@ -14,6 +14,10 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
+import 'groups.pbenum.dart';
+
+export 'groups.pbenum.dart';
+
 /// Stored encrypted on the server in the members columns.
 class EncryptedGroupState extends $pb.GeneratedMessage {
   factory EncryptedGroupState({
@@ -107,6 +111,56 @@ class EncryptedGroupState extends $pb.GeneratedMessage {
   $core.bool hasPadding() => $_has(4);
   @$pb.TagNumber(5)
   void clearPadding() => clearField(5);
+}
+
+class EncryptedAppendedGroupState extends $pb.GeneratedMessage {
+  factory EncryptedAppendedGroupState({
+    EncryptedAppendedGroupState_Type? type,
+  }) {
+    final $result = create();
+    if (type != null) {
+      $result.type = type;
+    }
+    return $result;
+  }
+  EncryptedAppendedGroupState._() : super();
+  factory EncryptedAppendedGroupState.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory EncryptedAppendedGroupState.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedAppendedGroupState', createEmptyInstance: create)
+    ..e<EncryptedAppendedGroupState_Type>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedAppendedGroupState_Type.LEFT_GROUP, valueOf: EncryptedAppendedGroupState_Type.valueOf, enumValues: EncryptedAppendedGroupState_Type.values)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  EncryptedAppendedGroupState clone() => EncryptedAppendedGroupState()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  EncryptedAppendedGroupState copyWith(void Function(EncryptedAppendedGroupState) updates) => super.copyWith((message) => updates(message as EncryptedAppendedGroupState)) as EncryptedAppendedGroupState;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedAppendedGroupState create() => EncryptedAppendedGroupState._();
+  EncryptedAppendedGroupState createEmptyInstance() => create();
+  static $pb.PbList<EncryptedAppendedGroupState> createRepeated() => $pb.PbList<EncryptedAppendedGroupState>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedAppendedGroupState getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EncryptedAppendedGroupState>(create);
+  static EncryptedAppendedGroupState? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  EncryptedAppendedGroupState_Type get type => $_getN(0);
+  @$pb.TagNumber(1)
+  set type(EncryptedAppendedGroupState_Type v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearType() => clearField(1);
 }
 
 class EncryptedGroupStateEnvelop extends $pb.GeneratedMessage {

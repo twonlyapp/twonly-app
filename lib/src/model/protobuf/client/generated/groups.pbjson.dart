@@ -36,6 +36,28 @@ final $typed_data.Uint8List encryptedGroupStateDescriptor = $convert.base64Decod
     'VzQWZ0ZXJNaWxsaXNlY29uZHOIAQESGAoHcGFkZGluZxgFIAEoDFIHcGFkZGluZ0IiCiBfZGVs'
     'ZXRlTWVzc2FnZXNBZnRlck1pbGxpc2Vjb25kcw==');
 
+@$core.Deprecated('Use encryptedAppendedGroupStateDescriptor instead')
+const EncryptedAppendedGroupState$json = {
+  '1': 'EncryptedAppendedGroupState',
+  '2': [
+    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.EncryptedAppendedGroupState.Type', '10': 'type'},
+  ],
+  '4': [EncryptedAppendedGroupState_Type$json],
+};
+
+@$core.Deprecated('Use encryptedAppendedGroupStateDescriptor instead')
+const EncryptedAppendedGroupState_Type$json = {
+  '1': 'Type',
+  '2': [
+    {'1': 'LEFT_GROUP', '2': 0},
+  ],
+};
+
+/// Descriptor for `EncryptedAppendedGroupState`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List encryptedAppendedGroupStateDescriptor = $convert.base64Decode(
+    'ChtFbmNyeXB0ZWRBcHBlbmRlZEdyb3VwU3RhdGUSNQoEdHlwZRgBIAEoDjIhLkVuY3J5cHRlZE'
+    'FwcGVuZGVkR3JvdXBTdGF0ZS5UeXBlUgR0eXBlIhYKBFR5cGUSDgoKTEVGVF9HUk9VUBAA');
+
 @$core.Deprecated('Use encryptedGroupStateEnvelopDescriptor instead')
 const EncryptedGroupStateEnvelop$json = {
   '1': 'EncryptedGroupStateEnvelop',

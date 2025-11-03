@@ -1397,4 +1397,28 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get groupContextMenuDeleteGroup =>
       'Dadurch werden alle Nachrichten in diesem Chat dauerhaft gelöscht.';
+
+  @override
+  String get groupYouAreNowLongerAMember =>
+      'Du bist nicht mehr Mitglied dieser Gruppe.';
+
+  @override
+  String get groupNetworkIssue =>
+      'Netzwerkproblem. Bitte probiere es später noch einmal.';
+
+  @override
+  String get leaveGroupSelectOtherAdminTitle => 'Einen Admin auswählen';
+
+  @override
+  String get leaveGroupSelectOtherAdminBody =>
+      'Um die Gruppe zu verlassen, musst du zuerst einen neuen Administrator auswählen.';
+
+  @override
+  String get leaveGroupSureTitle => 'Gruppe verlassen';
+
+  @override
+  String get leaveGroupSureBody => 'Willst du die Gruppe wirklich verlassen?';
+
+  @override
+  String get leaveGroupSureOkBtn => 'Gruppe verlassen';
 }

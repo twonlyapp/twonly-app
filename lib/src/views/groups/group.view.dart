@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
@@ -74,7 +76,7 @@ class _GroupViewState extends State<GroupView> {
         newGroupName != null &&
         newGroupName != '' &&
         newGroupName != group.groupName) {
-      if (!await updateGroupeName(group, newGroupName)) {
+      if (!await updateGroupName(group, newGroupName)) {
         if (mounted) {
           showNetworkIssue(context);
         }
@@ -95,6 +97,60 @@ class _GroupViewState extends State<GroupView> {
         showNetworkIssue(context);
       }
     }
+  }
+
+  Future<void> _leaveGroup() async {
+    final ok = await showAlertDialog(
+      context,
+      context.lang.leaveGroupSureTitle,
+      context.lang.leaveGroupSureBody,
+      customOk: context.lang.leaveGroupSureOkBtn,
+    );
+    if (!ok) return;
+
+    // 1. Check if I am the only admin, while there are still normal members
+    // -> ERROR first select new admin
+
+    if (members.isNotEmpty) {
+      // In case there are other members, check that there is at least one other admin before I leave the group.
+
+      if (group.isGroupAdmin) {
+        if (!members.any((m) => m.$2.memberState == MemberState.admin)) {
+          if (!mounted) return;
+          await showAlertDialog(
+            context,
+            context.lang.leaveGroupSelectOtherAdminTitle,
+            context.lang.leaveGroupSelectOtherAdminBody,
+            customCancel: '',
+          );
+          return;
+        }
+      }
+    }
+
+    late bool success;
+
+    if (group.isGroupAdmin) {
+      // Current user is a admin, to the state can be updated by the user him self.
+      final keyPair = IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+      success = await removeMemberFromGroup(
+        group,
+        keyPair.getPublicKey().serialize(),
+        gUser.userId,
+      );
+    } else {
+      success = await leaveAsNonAdminFromGroup(group);
+    }
+
+    if (!success) {
+      if (mounted) {
+        showNetworkIssue(context);
+        return;
+      }
+    }
+    // If not admin -> append to the server state
+
+    // -> Inform the other users
   }
 
   @override
@@ -126,7 +182,7 @@ class _GroupViewState extends State<GroupView> {
             ],
           ),
           const SizedBox(height: 50),
-          if (group.isGroupAdmin)
+          if (group.isGroupAdmin && !group.leftGroup)
             BetterListTile(
               icon: FontAwesomeIcons.pencil,
               text: context.lang.groupNameInput,
@@ -145,7 +201,7 @@ class _GroupViewState extends State<GroupView> {
               ),
             ),
           ),
-          if (group.isGroupAdmin)
+          if (group.isGroupAdmin && !group.leftGroup)
             BetterListTile(
               icon: FontAwesomeIcons.plus,
               text: context.lang.addMember,
@@ -197,12 +253,25 @@ class _GroupViewState extends State<GroupView> {
           const SizedBox(height: 10),
           const Divider(),
           const SizedBox(height: 10),
-          BetterListTile(
-            icon: FontAwesomeIcons.rightFromBracket,
-            color: Colors.red,
-            text: context.lang.leaveGroup,
-            onTap: () => {},
-          ),
+          if (!group.leftGroup)
+            BetterListTile(
+              icon: FontAwesomeIcons.rightFromBracket,
+              color: Colors.red,
+              text: context.lang.leaveGroup,
+              onTap: _leaveGroup,
+            )
+          else
+            ListTile(
+              title: Padding(
+                padding: const EdgeInsets.only(left: 17),
+                child: Text(
+                  context.lang.groupYouAreNowLongerAMember,
+                  style: const TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -246,9 +315,9 @@ Future<String?> showGroupNameChangeDialog(
 
 void showNetworkIssue(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Network issue. Try again later.'),
-      duration: Duration(seconds: 3),
+    SnackBar(
+      content: Text(context.lang.groupNetworkIssue),
+      duration: const Duration(seconds: 3),
     ),
   );
 }

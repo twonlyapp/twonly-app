@@ -797,5 +797,12 @@
     "notificationTitleUnknownUser": "Jemand",
     "notificationCategoryMessageTitle": "Nachrichten",
     "notificationCategoryMessageDesc": "Nachrichten von anderen Benutzern.",
-    "groupContextMenuDeleteGroup": "Dadurch werden alle Nachrichten in diesem Chat dauerhaft gelöscht."
+    "groupContextMenuDeleteGroup": "Dadurch werden alle Nachrichten in diesem Chat dauerhaft gelöscht.",
+    "groupYouAreNowLongerAMember": "Du bist nicht mehr Mitglied dieser Gruppe.",
+    "groupNetworkIssue": "Netzwerkproblem. Bitte probiere es später noch einmal.",
+    "leaveGroupSelectOtherAdminTitle": "Einen Admin auswählen",
+    "leaveGroupSelectOtherAdminBody": "Um die Gruppe zu verlassen, musst du zuerst einen neuen Administrator auswählen.",
+    "leaveGroupSureTitle": "Gruppe verlassen",
+    "leaveGroupSureBody": "Willst du die Gruppe wirklich verlassen?",
+    "leaveGroupSureOkBtn": "Gruppe verlassen"
 }

@@ -57,6 +57,7 @@ Future<void> handleGroupCreate(
         groupName: const Value(''),
         joinedGroup: const Value(false),
         leftGroup: const Value(false),
+        deletedContent: const Value(false),
       ),
     );
   }

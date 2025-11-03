@@ -373,10 +373,10 @@ class NewGroupState extends $pb.GeneratedMessage {
   factory NewGroupState.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NewGroupState', package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'groupId', protoName: 'groupId')
-    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'versionId', $pb.PbFieldType.OU6, protoName: 'versionId', defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY)
-    ..a<$core.List<$core.int>>(5, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
+    ..aOS(1, _omitFieldNames ? '' : 'groupId')
+    ..a<$fixnum.Int64>(2, _omitFieldNames ? '' : 'versionId', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
     ..hasRequiredFields = false
   ;
 
@@ -419,29 +419,202 @@ class NewGroupState extends $pb.GeneratedMessage {
   @$pb.TagNumber(2)
   void clearVersionId() => clearField(2);
 
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(3)
   $core.List<$core.int> get encryptedGroupState => $_getN(2);
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(3)
   set encryptedGroupState($core.List<$core.int> v) { $_setBytes(2, v); }
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(3)
   $core.bool hasEncryptedGroupState() => $_has(2);
-  @$pb.TagNumber(4)
-  void clearEncryptedGroupState() => clearField(4);
+  @$pb.TagNumber(3)
+  void clearEncryptedGroupState() => clearField(3);
 
-  @$pb.TagNumber(5)
+  @$pb.TagNumber(4)
   $core.List<$core.int> get publicKey => $_getN(3);
-  @$pb.TagNumber(5)
+  @$pb.TagNumber(4)
   set publicKey($core.List<$core.int> v) { $_setBytes(3, v); }
-  @$pb.TagNumber(5)
+  @$pb.TagNumber(4)
   $core.bool hasPublicKey() => $_has(3);
-  @$pb.TagNumber(5)
-  void clearPublicKey() => clearField(5);
+  @$pb.TagNumber(4)
+  void clearPublicKey() => clearField(4);
+}
+
+class AppendGroupState_AppendTBS extends $pb.GeneratedMessage {
+  factory AppendGroupState_AppendTBS({
+    $core.List<$core.int>? encryptedGroupStateAppend,
+    $core.List<$core.int>? publicKey,
+    $core.String? groupId,
+    $core.List<$core.int>? nonce,
+  }) {
+    final $result = create();
+    if (encryptedGroupStateAppend != null) {
+      $result.encryptedGroupStateAppend = encryptedGroupStateAppend;
+    }
+    if (publicKey != null) {
+      $result.publicKey = publicKey;
+    }
+    if (groupId != null) {
+      $result.groupId = groupId;
+    }
+    if (nonce != null) {
+      $result.nonce = nonce;
+    }
+    return $result;
+  }
+  AppendGroupState_AppendTBS._() : super();
+  factory AppendGroupState_AppendTBS.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory AppendGroupState_AppendTBS.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AppendGroupState.AppendTBS', package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'encryptedGroupStateAppend', $pb.PbFieldType.OY)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'publicKey', $pb.PbFieldType.OY)
+    ..aOS(3, _omitFieldNames ? '' : 'groupId')
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'nonce', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  AppendGroupState_AppendTBS clone() => AppendGroupState_AppendTBS()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  AppendGroupState_AppendTBS copyWith(void Function(AppendGroupState_AppendTBS) updates) => super.copyWith((message) => updates(message as AppendGroupState_AppendTBS)) as AppendGroupState_AppendTBS;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AppendGroupState_AppendTBS create() => AppendGroupState_AppendTBS._();
+  AppendGroupState_AppendTBS createEmptyInstance() => create();
+  static $pb.PbList<AppendGroupState_AppendTBS> createRepeated() => $pb.PbList<AppendGroupState_AppendTBS>();
+  @$core.pragma('dart2js:noInline')
+  static AppendGroupState_AppendTBS getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AppendGroupState_AppendTBS>(create);
+  static AppendGroupState_AppendTBS? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get encryptedGroupStateAppend => $_getN(0);
+  @$pb.TagNumber(1)
+  set encryptedGroupStateAppend($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasEncryptedGroupStateAppend() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearEncryptedGroupStateAppend() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.List<$core.int> get publicKey => $_getN(1);
+  @$pb.TagNumber(2)
+  set publicKey($core.List<$core.int> v) { $_setBytes(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPublicKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPublicKey() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get groupId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set groupId($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasGroupId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearGroupId() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get nonce => $_getN(3);
+  @$pb.TagNumber(4)
+  set nonce($core.List<$core.int> v) { $_setBytes(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasNonce() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNonce() => clearField(4);
+}
+
+class AppendGroupState extends $pb.GeneratedMessage {
+  factory AppendGroupState({
+    $core.List<$core.int>? signature,
+    AppendGroupState_AppendTBS? appendTBS,
+    $fixnum.Int64? versionId,
+  }) {
+    final $result = create();
+    if (signature != null) {
+      $result.signature = signature;
+    }
+    if (appendTBS != null) {
+      $result.appendTBS = appendTBS;
+    }
+    if (versionId != null) {
+      $result.versionId = versionId;
+    }
+    return $result;
+  }
+  AppendGroupState._() : super();
+  factory AppendGroupState.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory AppendGroupState.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AppendGroupState', package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'), createEmptyInstance: create)
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'signature', $pb.PbFieldType.OY)
+    ..aOM<AppendGroupState_AppendTBS>(2, _omitFieldNames ? '' : 'appendTBS', protoName: 'appendTBS', subBuilder: AppendGroupState_AppendTBS.create)
+    ..a<$fixnum.Int64>(3, _omitFieldNames ? '' : 'versionId', $pb.PbFieldType.OU6, protoName: 'versionId', defaultOrMaker: $fixnum.Int64.ZERO)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  AppendGroupState clone() => AppendGroupState()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  AppendGroupState copyWith(void Function(AppendGroupState) updates) => super.copyWith((message) => updates(message as AppendGroupState)) as AppendGroupState;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AppendGroupState create() => AppendGroupState._();
+  AppendGroupState createEmptyInstance() => create();
+  static $pb.PbList<AppendGroupState> createRepeated() => $pb.PbList<AppendGroupState>();
+  @$core.pragma('dart2js:noInline')
+  static AppendGroupState getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AppendGroupState>(create);
+  static AppendGroupState? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<$core.int> get signature => $_getN(0);
+  @$pb.TagNumber(1)
+  set signature($core.List<$core.int> v) { $_setBytes(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasSignature() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSignature() => clearField(1);
+
+  @$pb.TagNumber(2)
+  AppendGroupState_AppendTBS get appendTBS => $_getN(1);
+  @$pb.TagNumber(2)
+  set appendTBS(AppendGroupState_AppendTBS v) { setField(2, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasAppendTBS() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearAppendTBS() => clearField(2);
+  @$pb.TagNumber(2)
+  AppendGroupState_AppendTBS ensureAppendTBS() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $fixnum.Int64 get versionId => $_getI64(2);
+  @$pb.TagNumber(3)
+  set versionId($fixnum.Int64 v) { $_setInt64(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasVersionId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVersionId() => clearField(3);
 }
 
 class GroupState extends $pb.GeneratedMessage {
   factory GroupState({
     $fixnum.Int64? versionId,
     $core.List<$core.int>? encryptedGroupState,
+    $core.Iterable<AppendGroupState>? appendedGroupStates,
   }) {
     final $result = create();
     if (versionId != null) {
@@ -450,6 +623,9 @@ class GroupState extends $pb.GeneratedMessage {
     if (encryptedGroupState != null) {
       $result.encryptedGroupState = encryptedGroupState;
     }
+    if (appendedGroupStates != null) {
+      $result.appendedGroupStates.addAll(appendedGroupStates);
+    }
     return $result;
   }
   GroupState._() : super();
@@ -457,8 +633,9 @@ class GroupState extends $pb.GeneratedMessage {
   factory GroupState.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GroupState', package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'), createEmptyInstance: create)
-    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'versionId', $pb.PbFieldType.OU6, protoName: 'versionId', defaultOrMaker: $fixnum.Int64.ZERO)
-    ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY)
+    ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'versionId', $pb.PbFieldType.OU6, defaultOrMaker: $fixnum.Int64.ZERO)
+    ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'encryptedGroupState', $pb.PbFieldType.OY)
+    ..pc<AppendGroupState>(3, _omitFieldNames ? '' : 'appendedGroupStates', $pb.PbFieldType.PM, subBuilder: AppendGroupState.create)
     ..hasRequiredFields = false
   ;
 
@@ -492,14 +669,62 @@ class GroupState extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearVersionId() => clearField(1);
 
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   $core.List<$core.int> get encryptedGroupState => $_getN(1);
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   set encryptedGroupState($core.List<$core.int> v) { $_setBytes(1, v); }
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   $core.bool hasEncryptedGroupState() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearEncryptedGroupState() => clearField(2);
+
   @$pb.TagNumber(3)
-  void clearEncryptedGroupState() => clearField(3);
+  $core.List<AppendGroupState> get appendedGroupStates => $_getList(2);
+}
+
+/// this is just a database helper to store multiple appends
+class AppendGroupStateHelper extends $pb.GeneratedMessage {
+  factory AppendGroupStateHelper({
+    $core.Iterable<AppendGroupState>? appendedGroupStates,
+  }) {
+    final $result = create();
+    if (appendedGroupStates != null) {
+      $result.appendedGroupStates.addAll(appendedGroupStates);
+    }
+    return $result;
+  }
+  AppendGroupStateHelper._() : super();
+  factory AppendGroupStateHelper.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory AppendGroupStateHelper.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AppendGroupStateHelper', package: const $pb.PackageName(_omitMessageNames ? '' : 'http_requests'), createEmptyInstance: create)
+    ..pc<AppendGroupState>(1, _omitFieldNames ? '' : 'appendedGroupStates', $pb.PbFieldType.PM, subBuilder: AppendGroupState.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  AppendGroupStateHelper clone() => AppendGroupStateHelper()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  AppendGroupStateHelper copyWith(void Function(AppendGroupStateHelper) updates) => super.copyWith((message) => updates(message as AppendGroupStateHelper)) as AppendGroupStateHelper;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AppendGroupStateHelper create() => AppendGroupStateHelper._();
+  AppendGroupStateHelper createEmptyInstance() => create();
+  static $pb.PbList<AppendGroupStateHelper> createRepeated() => $pb.PbList<AppendGroupStateHelper>();
+  @$core.pragma('dart2js:noInline')
+  static AppendGroupStateHelper getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AppendGroupStateHelper>(create);
+  static AppendGroupStateHelper? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<AppendGroupState> get appendedGroupStates => $_getList(0);
 }
 
 

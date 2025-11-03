@@ -20,7 +20,7 @@ class BetterListTile extends StatelessWidget {
   final String text;
   final Widget? subtitle;
   final Color? color;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final double iconSize;
   final EdgeInsets? padding;
 

@@ -37,7 +37,7 @@ class GroupMemberContextMenu extends StatelessWidget {
     if (ok) {
       if (!await manageAdminState(
         group,
-        member,
+        member.groupPublicKey!,
         contact.userId,
         false,
       )) {
@@ -58,7 +58,7 @@ class GroupMemberContextMenu extends StatelessWidget {
     if (ok) {
       if (!await manageAdminState(
         group,
-        member,
+        member.groupPublicKey!,
         contact.userId,
         true,
       )) {
@@ -78,7 +78,7 @@ class GroupMemberContextMenu extends StatelessWidget {
     if (ok) {
       if (!await removeMemberFromGroup(
         group,
-        member,
+        member.groupPublicKey!,
         contact.userId,
       )) {
         if (context.mounted) {
@@ -159,7 +159,7 @@ class GroupMemberContextMenu extends StatelessWidget {
             onTap: () => _removeContactAsAdmin(context),
             icon: FontAwesomeIcons.key,
           ),
-        if (group.isGroupAdmin)
+        if (group.isGroupAdmin && member.groupPublicKey != null)
           ContextMenuItem(
             title: context.lang.removeFromGroup,
             onTap: () => _removeContactFromGroup(context),

@@ -9,6 +9,13 @@ message EncryptedGroupState {
     bytes padding = 5;
 }
 
+message EncryptedAppendedGroupState {
+    enum Type {
+        LEFT_GROUP = 0;
+    }
+    Type type = 1;
+}
+
 message EncryptedGroupStateEnvelop {
     bytes nonce = 1;
     bytes encryptedGroupState = 2;

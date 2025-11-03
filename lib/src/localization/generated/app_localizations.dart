@@ -2557,6 +2557,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This will permanently delete all messages in this chat.'**
   String get groupContextMenuDeleteGroup;
+
+  /// No description provided for @groupYouAreNowLongerAMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer part of this group.'**
+  String get groupYouAreNowLongerAMember;
+
+  /// No description provided for @groupNetworkIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Network issue. Try again later.'**
+  String get groupNetworkIssue;
+
+  /// No description provided for @leaveGroupSelectOtherAdminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select another admin'**
+  String get leaveGroupSelectOtherAdminTitle;
+
+  /// No description provided for @leaveGroupSelectOtherAdminBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To leave the group, you must first select a new administrator.'**
+  String get leaveGroupSelectOtherAdminBody;
+
+  /// No description provided for @leaveGroupSureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroupSureTitle;
+
+  /// No description provided for @leaveGroupSureBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you really want to leave the group?'**
+  String get leaveGroupSureBody;
+
+  /// No description provided for @leaveGroupSureOkBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroupSureOkBtn;
 }
 
 class _AppLocalizationsDelegate

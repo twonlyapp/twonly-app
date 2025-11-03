@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hashlib/random.dart';
 import 'package:http/http.dart' as http;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -170,32 +170,13 @@ Future<void> fetchMissingGroupPublicKey() async {
   }
 }
 
-Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
-  if (group.leftGroup) {
-    Log.error(
-      'Could not refresh group state, as user is no longer part of the group',
-    );
-    return null;
-  }
+Future<List<int>?> _decryptEnvelop(
+  Group group,
+  List<int> encryptedGroupState,
+) async {
   try {
-    var isSuccess = true;
-
-    final response = await http
-        .get(
-          Uri.parse('${getGroupStateUrl()}/${group.groupId}'),
-        )
-        .timeout(const Duration(seconds: 10));
-
-    if (response.statusCode != 200) {
-      Log.error(
-        'Could not load group state. Got status code ${response.statusCode} from server.',
-      );
-      return null;
-    }
-
-    final groupStateServer = GroupState.fromBuffer(response.bodyBytes);
     final envelope = EncryptedGroupStateEnvelop.fromBuffer(
-      groupStateServer.encryptedGroupState,
+      encryptedGroupState,
     );
     final chacha20 = FlutterChacha20.poly1305Aead();
 
@@ -210,19 +191,111 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
       secretKey: SecretKey(group.stateEncryptionKey!),
     );
 
+    return encryptedGroupStateRaw;
+  } catch (e) {
+    Log.error(e);
+    return null;
+  }
+}
+
+Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
+  try {
+    var isSuccess = true;
+
+    final response = await http
+        .get(
+          Uri.parse('${getGroupStateUrl()}/${group.groupId}'),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
+      if (response.statusCode == 404) {
+        // group does not exists any more.
+        await twonlyDB.groupsDao.updateGroup(
+          group.groupId,
+          const GroupsCompanion(
+            leftGroup: Value(true),
+          ),
+        );
+      }
+      Log.error(
+        'Could not load group state. Got status code ${response.statusCode} from server.',
+      );
+      return null;
+    }
+
+    final groupStateServer = GroupState.fromBuffer(response.bodyBytes);
+
+    final encryptedStateRaw =
+        await _decryptEnvelop(group, groupStateServer.encryptedGroupState);
+    if (encryptedStateRaw == null) return null;
+
     final encryptedGroupState =
-        EncryptedGroupState.fromBuffer(encryptedGroupStateRaw);
+        EncryptedGroupState.fromBuffer(encryptedStateRaw);
 
     if (group.stateVersionId >= groupStateServer.versionId.toInt()) {
       Log.info(
         'Group ${group.groupId} has already newest group state from the server!',
       );
-      // return (groupStateServer.versionId.toInt(), encryptedGroupState);
     }
 
-    if (!encryptedGroupState.memberIds.contains(Int64(gUser.userId))) {
+    final memberIds = List<Int64>.from(encryptedGroupState.memberIds);
+    final adminIds = List<Int64>.from(encryptedGroupState.adminIds);
+
+    for (final appendedState in groupStateServer.appendedGroupStates) {
+      final identityKey = IdentityKey.fromBytes(
+        Uint8List.fromList(appendedState.appendTBS.publicKey),
+        0,
+      );
+
+      final valid = Curve.verifySignature(
+        identityKey.publicKey,
+        appendedState.appendTBS.writeToBuffer(),
+        Uint8List.fromList(appendedState.signature),
+      );
+
+      if (!valid) {
+        Log.error('Invalid signature for the appendedState');
+        continue;
+      }
+
+      final encryptedStateRaw = await _decryptEnvelop(
+        group,
+        appendedState.appendTBS.encryptedGroupStateAppend,
+      );
+      if (encryptedStateRaw == null) continue;
+
+      final appended =
+          EncryptedAppendedGroupState.fromBuffer(encryptedStateRaw);
+      if (appended.type == EncryptedAppendedGroupState_Type.LEFT_GROUP) {
+        final keyPair =
+            IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+
+        final appendedPubKey = appendedState.appendTBS.publicKey;
+        final myPubKey = keyPair.getPublicKey().serialize().toList();
+
+        if (listEquals(appendedPubKey, myPubKey)) {
+          adminIds.remove(Int64(gUser.userId));
+          memberIds
+              .remove(Int64(gUser.userId)); // -> Will remove the user later...
+        } else {
+          Log.info('A non admin left the group!!!');
+
+          final member = await twonlyDB.groupsDao
+              .getGroupMemberByPublicKey(Uint8List.fromList(appendedPubKey));
+          if (member == null) {
+            Log.error('Member is already not in this group...');
+            continue;
+          }
+          adminIds.remove(Int64(member.contactId));
+          memberIds.remove(Int64(member.contactId));
+        }
+      }
+    }
+
+    if (!memberIds.contains(Int64(gUser.userId))) {
       // OH no, I am no longer a member of this group...
-      // ->
+      // Return from the group...
       await twonlyDB.groupsDao.updateGroup(
         group.groupId,
         const GroupsCompanion(
@@ -232,9 +305,41 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
       return (groupStateServer.versionId.toInt(), encryptedGroupState);
     }
 
-    final isGroupAdmin = encryptedGroupState.adminIds
-            .firstWhereOrNull((t) => t.toInt() == gUser.userId) !=
-        null;
+    final isGroupAdmin =
+        adminIds.firstWhereOrNull((t) => t.toInt() == gUser.userId) != null;
+
+    if (!listEquals(memberIds, encryptedGroupState.memberIds)) {
+      if (isGroupAdmin) {
+        try {
+          // this removes the appended_group_state from the server and merges the changes into the main group state
+          final newState = EncryptedGroupState(
+            groupName: encryptedGroupState.groupName,
+            deleteMessagesAfterMilliseconds:
+                encryptedGroupState.deleteMessagesAfterMilliseconds,
+            memberIds: memberIds,
+            adminIds: adminIds,
+            padding: List<int>.generate(Random().nextInt(80), (_) => 0),
+          );
+          // send new state to the server
+          if (!await _updateGroupState(
+            group,
+            newState,
+            versionId: groupStateServer.versionId.toInt() + 1,
+          )) {
+            // could not update the group state...
+            Log.error('Update the state to remove the appended state...');
+            return null;
+          }
+          // the state is now updated and the appended_group_state should be removed on the server, so just call this
+          // function again, to sync the local database
+          return fetchGroupState(group);
+        } catch (e) {
+          Log.error(e);
+          return null;
+        }
+      }
+      // in case this is not an admin, just work with the new memberIds and adminIds...
+    }
 
     await twonlyDB.groupsDao.updateGroup(
       group.groupId,
@@ -251,7 +356,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
         await twonlyDB.groupsDao.getGroupMembers(group.groupId);
 
     // First find and insert NEW members
-    for (final memberId in encryptedGroupState.memberIds) {
+    for (final memberId in memberIds) {
       if (memberId == Int64(gUser.userId)) {
         continue;
       }
@@ -313,7 +418,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
 
       MemberState? newMemberState;
 
-      if (encryptedGroupState.adminIds.contains(Int64(member.contactId))) {
+      if (adminIds.contains(Int64(member.contactId))) {
         if (member.memberState == MemberState.normal) {
           // user was promoted
           newMemberState = MemberState.admin;
@@ -376,6 +481,7 @@ Future<bool> _updateGroupState(
   EncryptedGroupState state, {
   Uint8List? addAdmin,
   Uint8List? removeAdmin,
+  int? versionId,
 }) async {
   final chacha20 = FlutterChacha20.poly1305Aead();
   final encryptionNonce = chacha20.newNonce();
@@ -397,26 +503,14 @@ Future<bool> _updateGroupState(
 
     final keyPair = IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
 
-    final publicKey = uint8ListToHex(keyPair.getPublicKey().serialize());
-
-    final responseNonce = await http
-        .get(
-          Uri.parse('${getGroupChallengeUrl()}/$publicKey'),
-        )
-        .timeout(const Duration(seconds: 10));
-
-    if (responseNonce.statusCode != 200) {
-      Log.error(
-        'Could not load nonce. Got status code ${responseNonce.statusCode} from server.',
-      );
-      return false;
-    }
+    final nonce = await getNonce(keyPair.getPublicKey().serialize());
+    if (nonce == null) return false;
 
     final updateTBS = UpdateGroupState_UpdateTBS(
-      versionId: Int64(group.stateVersionId + 1),
+      versionId: Int64(versionId ?? group.stateVersionId + 1),
       encryptedGroupState: encryptedGroupState.writeToBuffer(),
       publicKey: keyPair.getPublicKey().serialize(),
-      nonce: responseNonce.bodyBytes,
+      nonce: nonce,
       addAdmin: addAdmin,
       removeAdmin: removeAdmin,
     );
@@ -452,7 +546,7 @@ Future<bool> _updateGroupState(
 
 Future<bool> manageAdminState(
   Group group,
-  GroupMember member,
+  Uint8List groupPublicKey,
   int contactId,
   bool remove,
 ) async {
@@ -469,7 +563,7 @@ Future<bool> manageAdminState(
   if (remove) {
     if (state.adminIds.contains(userId)) {
       state.adminIds.remove(userId);
-      removeAdmin = member.groupPublicKey;
+      removeAdmin = groupPublicKey;
     } else {
       Log.info('User was already removed as admin.');
       return true;
@@ -477,7 +571,7 @@ Future<bool> manageAdminState(
   } else {
     if (!state.adminIds.contains(userId)) {
       state.adminIds.add(userId);
-      addAdmin = member.groupPublicKey;
+      addAdmin = groupPublicKey;
     } else {
       Log.info('User is already admin.');
       return true;
@@ -524,7 +618,7 @@ Future<bool> manageAdminState(
   return (await fetchGroupState(group)) != null;
 }
 
-Future<bool> updateGroupeName(Group group, String groupName) async {
+Future<bool> updateGroupName(Group group, String groupName) async {
   // ensure the latest state is used
   final currentState = await fetchGroupState(group);
   if (currentState == null) return false;
@@ -624,7 +718,7 @@ Future<bool> addNewGroupMembers(
 
 Future<bool> removeMemberFromGroup(
   Group group,
-  GroupMember member,
+  Uint8List groupPublicKey,
   int removeContactId,
 ) async {
   // ensure the latest state is used
@@ -642,16 +736,16 @@ Future<bool> removeMemberFromGroup(
     return true;
   }
   if (adminIdSet.contains(contactId)) {
-    if (member.groupPublicKey == null) {
-      // If the admin public key is not removed, that the user could potentially still update the group state. So only
-      // allow the user removal, if this key is known. It is better the users can not remove the other user, then
-      // the he can but the other user, could still update the group state.
-      Log.error(
-        'Could not remove user. User is admin, but groupPublicKey is unknown.',
-      );
-      return false;
-    }
-    removeAdmin = member.groupPublicKey;
+    // if (member.groupPublicKey == null) {
+    //   // If the admin public key is not removed, that the user could potentially still update the group state. So only
+    //   // allow the user removal, if this key is known. It is better the users can not remove the other user, then
+    //   // the he can but the other user, could still update the group state.
+    //   Log.error(
+    //     'Could not remove user. User is admin, but groupPublicKey is unknown.',
+    //   );
+    //   return false;
+    // }
+    removeAdmin = groupPublicKey;
   }
 
   membersIdSet.remove(contactId);
@@ -684,10 +778,126 @@ Future<bool> removeMemberFromGroup(
     GroupHistoriesCompanion(
       groupId: Value(group.groupId),
       type: const Value(GroupActionType.removedMember),
-      affectedContactId: Value(removeContactId),
+      affectedContactId: Value(
+        removeContactId == gUser.userId ? null : removeContactId,
+      ),
     ),
   );
 
   // Updates the groupMembers table :)
+  return (await fetchGroupState(group)) != null;
+}
+
+Future<Uint8List?> getNonce(Uint8List publicKey) async {
+  final publicKeyHex = uint8ListToHex(publicKey);
+
+  final responseNonce = await http
+      .get(
+        Uri.parse('${getGroupChallengeUrl()}/$publicKeyHex'),
+      )
+      .timeout(const Duration(seconds: 10));
+
+  if (responseNonce.statusCode != 200) {
+    Log.error(
+      'Could not load nonce. Got status code ${responseNonce.statusCode} from server.',
+    );
+    return null;
+  }
+  return responseNonce.bodyBytes;
+}
+
+Future<bool> leaveAsNonAdminFromGroup(Group group) async {
+  final currentState = await fetchGroupState(group);
+  if (currentState == null) {
+    Log.error('Could not load current state');
+    return false;
+  }
+
+  final (version, _) = currentState;
+  if (group.stateVersionId != version) {
+    Log.error('Version is not valid. Just retry.');
+    return false;
+  }
+
+  final chacha20 = FlutterChacha20.poly1305Aead();
+  final encryptionNonce = chacha20.newNonce();
+
+  final state = EncryptedAppendedGroupState(
+    type: EncryptedAppendedGroupState_Type.LEFT_GROUP,
+  );
+
+  final secretBox = await chacha20.encrypt(
+    state.writeToBuffer(),
+    secretKey: SecretKey(group.stateEncryptionKey!),
+    nonce: encryptionNonce,
+  );
+
+  final encryptedGroupStateAppend = EncryptedGroupStateEnvelop(
+    nonce: encryptionNonce,
+    encryptedGroupState: secretBox.cipherText,
+    mac: secretBox.mac.bytes,
+  );
+
+  {
+    // Upload the group state, if this fails, the group can not be created.
+
+    final keyPair = IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+
+    final nonce = await getNonce(keyPair.getPublicKey().serialize());
+    if (nonce == null) return false;
+
+    final appendTBS = AppendGroupState_AppendTBS(
+      publicKey: keyPair.getPublicKey().serialize(),
+      encryptedGroupStateAppend: encryptedGroupStateAppend.writeToBuffer(),
+      groupId: group.groupId,
+      nonce: nonce,
+    );
+
+    final random = getRandomUint8List(32);
+    final signature = sign(
+      keyPair.getPrivateKey().serialize(),
+      appendTBS.writeToBuffer(),
+      random,
+    );
+
+    final newGroupState = AppendGroupState(
+      versionId: Int64(group.stateVersionId + 1),
+      appendTBS: appendTBS,
+      signature: signature,
+    );
+
+    final response = await http
+        .post(
+          Uri.parse('${getGroupStateUrl()}/append'),
+          body: newGroupState.writeToBuffer(),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
+      Log.error(
+        'Could not patch group state. Got status code ${response.statusCode} from server.',
+      );
+      return false;
+    }
+  }
+  const groupActionType = GroupActionType.leftGroup;
+  await sendCipherTextToGroup(
+    group.groupId,
+    EncryptedContent(
+      groupUpdate: EncryptedContent_GroupUpdate(
+        groupActionType: groupActionType.name,
+        affectedContactId: Int64(gUser.userId),
+      ),
+    ),
+  );
+
+  await twonlyDB.groupsDao.insertGroupAction(
+    GroupHistoriesCompanion(
+      groupId: Value(group.groupId),
+      type: const Value(groupActionType),
+    ),
+  );
+
+  // Updates the table :)
   return (await fetchGroupState(group)) != null;
 }
