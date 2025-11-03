@@ -47,16 +47,16 @@ class ChatTextEntry extends StatelessWidget {
 
     var displayTime = !combineTextMessageWithNext(message, nextMessage);
     var displayUserName = '';
-    if (message.senderId != null && userIdToContact != null) {
+    if (message.senderId != null &&
+        userIdToContact != null &&
+        userIdToContact![message.senderId] != null) {
       if (prevMessage == null) {
         displayUserName =
             getContactDisplayName(userIdToContact![message.senderId]!);
       } else {
         if (!combineTextMessageWithNext(prevMessage!, message)) {
-          if (userIdToContact![message.senderId] != null) {
-            displayUserName =
-                getContactDisplayName(userIdToContact![message.senderId]!);
-          }
+          displayUserName =
+              getContactDisplayName(userIdToContact![message.senderId]!);
         }
       }
     }

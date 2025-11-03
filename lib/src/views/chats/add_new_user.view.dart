@@ -191,7 +191,7 @@ class ContactsListView extends StatelessWidget {
       Tooltip(
         message: context.lang.searchUserNameArchiveUserTooltip,
         child: IconButton(
-          icon: const FaIcon(FontAwesomeIcons.boxArchive, size: 15),
+          icon: const FaIcon(Icons.archive_outlined, size: 15),
           onPressed: () async {
             const update = ContactsCompanion(requested: Value(false));
             await twonlyDB.contactsDao.updateContact(contact.userId, update);

@@ -74,6 +74,7 @@ Future<void> insertMediaFileInMessagesTable(
         message.groupId,
         const GroupsCompanion(
           archived: Value(false),
+          deletedContent: Value(false),
         ),
       );
     } else {

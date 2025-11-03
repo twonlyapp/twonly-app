@@ -302,6 +302,12 @@ abstract class AppLocalizations {
   /// **'Search all contacts'**
   String get shareImageSearchAllContacts;
 
+  /// No description provided for @startNewChatSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, username or groupname'**
+  String get startNewChatSearchHint;
+
   /// No description provided for @shareImagedSelectAll.
   ///
   /// In en, this message translates to:
@@ -2197,6 +2203,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Days'**
   String get durationShortDays;
+
+  /// No description provided for @contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contacts;
+
+  /// No description provided for @groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groups;
 
   /// No description provided for @newGroup.
   ///

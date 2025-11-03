@@ -724,6 +724,16 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("left_group" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _deletedContentMeta =
+      const VerificationMeta('deletedContent');
+  @override
+  late final GeneratedColumn<bool> deletedContent = GeneratedColumn<bool>(
+      'deleted_content', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("deleted_content" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _stateVersionIdMeta =
       const VerificationMeta('stateVersionId');
   @override
@@ -848,6 +858,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         archived,
         joinedGroup,
         leftGroup,
+        deletedContent,
         stateVersionId,
         stateEncryptionKey,
         myGroupPrivateKey,
@@ -910,6 +921,12 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
     if (data.containsKey('left_group')) {
       context.handle(_leftGroupMeta,
           leftGroup.isAcceptableOrUnknown(data['left_group']!, _leftGroupMeta));
+    }
+    if (data.containsKey('deleted_content')) {
+      context.handle(
+          _deletedContentMeta,
+          deletedContent.isAcceptableOrUnknown(
+              data['deleted_content']!, _deletedContentMeta));
     }
     if (data.containsKey('state_version_id')) {
       context.handle(
@@ -1029,6 +1046,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           .read(DriftSqlType.bool, data['${effectivePrefix}joined_group'])!,
       leftGroup: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}left_group'])!,
+      deletedContent: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}deleted_content'])!,
       stateVersionId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}state_version_id'])!,
       stateEncryptionKey: attachedDatabase.typeMapping.read(
@@ -1083,6 +1102,7 @@ class Group extends DataClass implements Insertable<Group> {
   final bool archived;
   final bool joinedGroup;
   final bool leftGroup;
+  final bool deletedContent;
   final int stateVersionId;
   final Uint8List? stateEncryptionKey;
   final Uint8List? myGroupPrivateKey;
@@ -1107,6 +1127,7 @@ class Group extends DataClass implements Insertable<Group> {
       required this.archived,
       required this.joinedGroup,
       required this.leftGroup,
+      required this.deletedContent,
       required this.stateVersionId,
       this.stateEncryptionKey,
       this.myGroupPrivateKey,
@@ -1133,6 +1154,7 @@ class Group extends DataClass implements Insertable<Group> {
     map['archived'] = Variable<bool>(archived);
     map['joined_group'] = Variable<bool>(joinedGroup);
     map['left_group'] = Variable<bool>(leftGroup);
+    map['deleted_content'] = Variable<bool>(deletedContent);
     map['state_version_id'] = Variable<int>(stateVersionId);
     if (!nullToAbsent || stateEncryptionKey != null) {
       map['state_encryption_key'] = Variable<Uint8List>(stateEncryptionKey);
@@ -1177,6 +1199,7 @@ class Group extends DataClass implements Insertable<Group> {
       archived: Value(archived),
       joinedGroup: Value(joinedGroup),
       leftGroup: Value(leftGroup),
+      deletedContent: Value(deletedContent),
       stateVersionId: Value(stateVersionId),
       stateEncryptionKey: stateEncryptionKey == null && nullToAbsent
           ? const Value.absent()
@@ -1221,6 +1244,7 @@ class Group extends DataClass implements Insertable<Group> {
       archived: serializer.fromJson<bool>(json['archived']),
       joinedGroup: serializer.fromJson<bool>(json['joinedGroup']),
       leftGroup: serializer.fromJson<bool>(json['leftGroup']),
+      deletedContent: serializer.fromJson<bool>(json['deletedContent']),
       stateVersionId: serializer.fromJson<int>(json['stateVersionId']),
       stateEncryptionKey:
           serializer.fromJson<Uint8List?>(json['stateEncryptionKey']),
@@ -1257,6 +1281,7 @@ class Group extends DataClass implements Insertable<Group> {
       'archived': serializer.toJson<bool>(archived),
       'joinedGroup': serializer.toJson<bool>(joinedGroup),
       'leftGroup': serializer.toJson<bool>(leftGroup),
+      'deletedContent': serializer.toJson<bool>(deletedContent),
       'stateVersionId': serializer.toJson<int>(stateVersionId),
       'stateEncryptionKey': serializer.toJson<Uint8List?>(stateEncryptionKey),
       'myGroupPrivateKey': serializer.toJson<Uint8List?>(myGroupPrivateKey),
@@ -1286,6 +1311,7 @@ class Group extends DataClass implements Insertable<Group> {
           bool? archived,
           bool? joinedGroup,
           bool? leftGroup,
+          bool? deletedContent,
           int? stateVersionId,
           Value<Uint8List?> stateEncryptionKey = const Value.absent(),
           Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
@@ -1310,6 +1336,7 @@ class Group extends DataClass implements Insertable<Group> {
         archived: archived ?? this.archived,
         joinedGroup: joinedGroup ?? this.joinedGroup,
         leftGroup: leftGroup ?? this.leftGroup,
+        deletedContent: deletedContent ?? this.deletedContent,
         stateVersionId: stateVersionId ?? this.stateVersionId,
         stateEncryptionKey: stateEncryptionKey.present
             ? stateEncryptionKey.value
@@ -1355,6 +1382,9 @@ class Group extends DataClass implements Insertable<Group> {
       joinedGroup:
           data.joinedGroup.present ? data.joinedGroup.value : this.joinedGroup,
       leftGroup: data.leftGroup.present ? data.leftGroup.value : this.leftGroup,
+      deletedContent: data.deletedContent.present
+          ? data.deletedContent.value
+          : this.deletedContent,
       stateVersionId: data.stateVersionId.present
           ? data.stateVersionId.value
           : this.stateVersionId,
@@ -1413,6 +1443,7 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('archived: $archived, ')
           ..write('joinedGroup: $joinedGroup, ')
           ..write('leftGroup: $leftGroup, ')
+          ..write('deletedContent: $deletedContent, ')
           ..write('stateVersionId: $stateVersionId, ')
           ..write('stateEncryptionKey: $stateEncryptionKey, ')
           ..write('myGroupPrivateKey: $myGroupPrivateKey, ')
@@ -1443,6 +1474,7 @@ class Group extends DataClass implements Insertable<Group> {
         archived,
         joinedGroup,
         leftGroup,
+        deletedContent,
         stateVersionId,
         $driftBlobEquality.hash(stateEncryptionKey),
         $driftBlobEquality.hash(myGroupPrivateKey),
@@ -1471,6 +1503,7 @@ class Group extends DataClass implements Insertable<Group> {
           other.archived == this.archived &&
           other.joinedGroup == this.joinedGroup &&
           other.leftGroup == this.leftGroup &&
+          other.deletedContent == this.deletedContent &&
           other.stateVersionId == this.stateVersionId &&
           $driftBlobEquality.equals(
               other.stateEncryptionKey, this.stateEncryptionKey) &&
@@ -1500,6 +1533,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<bool> archived;
   final Value<bool> joinedGroup;
   final Value<bool> leftGroup;
+  final Value<bool> deletedContent;
   final Value<int> stateVersionId;
   final Value<Uint8List?> stateEncryptionKey;
   final Value<Uint8List?> myGroupPrivateKey;
@@ -1525,6 +1559,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.archived = const Value.absent(),
     this.joinedGroup = const Value.absent(),
     this.leftGroup = const Value.absent(),
+    this.deletedContent = const Value.absent(),
     this.stateVersionId = const Value.absent(),
     this.stateEncryptionKey = const Value.absent(),
     this.myGroupPrivateKey = const Value.absent(),
@@ -1551,6 +1586,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.archived = const Value.absent(),
     this.joinedGroup = const Value.absent(),
     this.leftGroup = const Value.absent(),
+    this.deletedContent = const Value.absent(),
     this.stateVersionId = const Value.absent(),
     this.stateEncryptionKey = const Value.absent(),
     this.myGroupPrivateKey = const Value.absent(),
@@ -1578,6 +1614,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<bool>? archived,
     Expression<bool>? joinedGroup,
     Expression<bool>? leftGroup,
+    Expression<bool>? deletedContent,
     Expression<int>? stateVersionId,
     Expression<Uint8List>? stateEncryptionKey,
     Expression<Uint8List>? myGroupPrivateKey,
@@ -1604,6 +1641,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       if (archived != null) 'archived': archived,
       if (joinedGroup != null) 'joined_group': joinedGroup,
       if (leftGroup != null) 'left_group': leftGroup,
+      if (deletedContent != null) 'deleted_content': deletedContent,
       if (stateVersionId != null) 'state_version_id': stateVersionId,
       if (stateEncryptionKey != null)
         'state_encryption_key': stateEncryptionKey,
@@ -1638,6 +1676,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       Value<bool>? archived,
       Value<bool>? joinedGroup,
       Value<bool>? leftGroup,
+      Value<bool>? deletedContent,
       Value<int>? stateVersionId,
       Value<Uint8List?>? stateEncryptionKey,
       Value<Uint8List?>? myGroupPrivateKey,
@@ -1663,6 +1702,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       archived: archived ?? this.archived,
       joinedGroup: joinedGroup ?? this.joinedGroup,
       leftGroup: leftGroup ?? this.leftGroup,
+      deletedContent: deletedContent ?? this.deletedContent,
       stateVersionId: stateVersionId ?? this.stateVersionId,
       stateEncryptionKey: stateEncryptionKey ?? this.stateEncryptionKey,
       myGroupPrivateKey: myGroupPrivateKey ?? this.myGroupPrivateKey,
@@ -1708,6 +1748,9 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     }
     if (leftGroup.present) {
       map['left_group'] = Variable<bool>(leftGroup.value);
+    }
+    if (deletedContent.present) {
+      map['deleted_content'] = Variable<bool>(deletedContent.value);
     }
     if (stateVersionId.present) {
       map['state_version_id'] = Variable<int>(stateVersionId.value);
@@ -1780,6 +1823,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('archived: $archived, ')
           ..write('joinedGroup: $joinedGroup, ')
           ..write('leftGroup: $leftGroup, ')
+          ..write('deletedContent: $deletedContent, ')
           ..write('stateVersionId: $stateVersionId, ')
           ..write('stateEncryptionKey: $stateEncryptionKey, ')
           ..write('myGroupPrivateKey: $myGroupPrivateKey, ')
@@ -8333,6 +8377,7 @@ typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   Value<bool> archived,
   Value<bool> joinedGroup,
   Value<bool> leftGroup,
+  Value<bool> deletedContent,
   Value<int> stateVersionId,
   Value<Uint8List?> stateEncryptionKey,
   Value<Uint8List?> myGroupPrivateKey,
@@ -8359,6 +8404,7 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<bool> archived,
   Value<bool> joinedGroup,
   Value<bool> leftGroup,
+  Value<bool> deletedContent,
   Value<int> stateVersionId,
   Value<Uint8List?> stateEncryptionKey,
   Value<Uint8List?> myGroupPrivateKey,
@@ -8458,6 +8504,10 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
 
   ColumnFilters<bool> get leftGroup => $composableBuilder(
       column: $table.leftGroup, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deletedContent => $composableBuilder(
+      column: $table.deletedContent,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get stateVersionId => $composableBuilder(
       column: $table.stateVersionId,
@@ -8614,6 +8664,10 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
   ColumnOrderings<bool> get leftGroup => $composableBuilder(
       column: $table.leftGroup, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get deletedContent => $composableBuilder(
+      column: $table.deletedContent,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get stateVersionId => $composableBuilder(
       column: $table.stateVersionId,
       builder: (column) => ColumnOrderings(column));
@@ -8707,6 +8761,9 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<bool> get leftGroup =>
       $composableBuilder(column: $table.leftGroup, builder: (column) => column);
+
+  GeneratedColumn<bool> get deletedContent => $composableBuilder(
+      column: $table.deletedContent, builder: (column) => column);
 
   GeneratedColumn<int> get stateVersionId => $composableBuilder(
       column: $table.stateVersionId, builder: (column) => column);
@@ -8853,6 +8910,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<bool> archived = const Value.absent(),
             Value<bool> joinedGroup = const Value.absent(),
             Value<bool> leftGroup = const Value.absent(),
+            Value<bool> deletedContent = const Value.absent(),
             Value<int> stateVersionId = const Value.absent(),
             Value<Uint8List?> stateEncryptionKey = const Value.absent(),
             Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
@@ -8879,6 +8937,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             archived: archived,
             joinedGroup: joinedGroup,
             leftGroup: leftGroup,
+            deletedContent: deletedContent,
             stateVersionId: stateVersionId,
             stateEncryptionKey: stateEncryptionKey,
             myGroupPrivateKey: myGroupPrivateKey,
@@ -8905,6 +8964,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<bool> archived = const Value.absent(),
             Value<bool> joinedGroup = const Value.absent(),
             Value<bool> leftGroup = const Value.absent(),
+            Value<bool> deletedContent = const Value.absent(),
             Value<int> stateVersionId = const Value.absent(),
             Value<Uint8List?> stateEncryptionKey = const Value.absent(),
             Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
@@ -8931,6 +8991,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             archived: archived,
             joinedGroup: joinedGroup,
             leftGroup: leftGroup,
+            deletedContent: deletedContent,
             stateVersionId: stateVersionId,
             stateEncryptionKey: stateEncryptionKey,
             myGroupPrivateKey: myGroupPrivateKey,

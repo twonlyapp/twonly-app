@@ -164,7 +164,11 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
   }
 
   Stream<List<Group>> watchGroupsForShareImage() {
-    return (select(groups)..where((g) => g.leftGroup.equals(false))).watch();
+    return (select(groups)
+          ..where(
+            (g) => g.leftGroup.equals(false) & g.deletedContent.equals(false),
+          ))
+        .watch();
   }
 
   Stream<Group?> watchGroup(String groupId) {
@@ -174,7 +178,15 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
   Stream<List<Group>> watchGroupsForChatList() {
     return (select(groups)
+          ..where((t) => t.deletedContent.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.lastMessageExchange)]))
+        .watch();
+  }
+
+  Stream<List<Group>> watchGroupsForStartNewChat() {
+    return (select(groups)
+          ..where((t) => t.isDirectChat.equals(false))
+          ..orderBy([(t) => OrderingTerm.asc(t.groupName)]))
         .watch();
   }
 

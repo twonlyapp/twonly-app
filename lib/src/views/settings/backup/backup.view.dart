@@ -201,7 +201,7 @@ class _BackupViewState extends State<BackupView> {
             label: 'twonly Backup',
           ),
           BottomNavigationBarItem(
-            icon: const FaIcon(FontAwesomeIcons.boxArchive, size: 17),
+            icon: const FaIcon(Icons.archive_outlined, size: 17),
             label: context.lang.backupData,
           ),
         ],

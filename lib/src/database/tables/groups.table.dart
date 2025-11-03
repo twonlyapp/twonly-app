@@ -14,6 +14,8 @@ class Groups extends Table {
 
   BoolColumn get joinedGroup => boolean().withDefault(const Constant(false))();
   BoolColumn get leftGroup => boolean().withDefault(const Constant(false))();
+  BoolColumn get deletedContent =>
+      boolean().withDefault(const Constant(false))();
 
   IntColumn get stateVersionId => integer().withDefault(const Constant(0))();
 

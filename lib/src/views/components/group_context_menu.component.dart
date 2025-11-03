@@ -29,7 +29,7 @@ class GroupContextMenu extends StatelessWidget {
                 await twonlyDB.groupsDao.updateGroup(group.groupId, update);
               }
             },
-            icon: FontAwesomeIcons.boxArchive,
+            icon: Icons.archive_outlined,
           ),
         if (group.archived)
           ContextMenuItem(
@@ -40,7 +40,7 @@ class GroupContextMenu extends StatelessWidget {
                 await twonlyDB.groupsDao.updateGroup(group.groupId, update);
               }
             },
-            icon: FontAwesomeIcons.boxOpen,
+            icon: Icons.unarchive_outlined,
           ),
         ContextMenuItem(
           title: context.lang.contextMenuOpenChat,
@@ -71,6 +71,19 @@ class GroupContextMenu extends StatelessWidget {
                 ? FontAwesomeIcons.thumbtackSlash
                 : FontAwesomeIcons.thumbtack,
           ),
+        ContextMenuItem(
+          title: context.lang.delete,
+          icon: FontAwesomeIcons.trashCan,
+          onTap: () async {
+            await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
+            await twonlyDB.groupsDao.updateGroup(
+              group.groupId,
+              const GroupsCompanion(
+                deletedContent: Value(true),
+              ),
+            );
+          },
+        ),
       ],
       child: child,
     );

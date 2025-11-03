@@ -123,6 +123,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareImageSearchAllContacts => 'Alle Kontakte durchsuchen';
 
   @override
+  String get startNewChatSearchHint => 'Name, Benutzername oder Gruppenname';
+
+  @override
   String get shareImagedSelectAll => 'Alle auswählen';
 
   @override
@@ -1165,6 +1168,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get durationShortDays => 'Tagen';
+
+  @override
+  String get contacts => 'Kontakte';
+
+  @override
+  String get groups => 'Gruppen';
 
   @override
   String get newGroup => 'Neue Gruppe';

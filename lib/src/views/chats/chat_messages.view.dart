@@ -76,9 +76,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   String currentInputText = '';
   late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
-  late StreamSubscription<List<GroupHistory>>? groupActionsSub;
-  late StreamSubscription<List<Contact>>? contactSub;
-  late StreamSubscription<Future<List<(Message, Contact)>>>?
+  StreamSubscription<List<GroupHistory>>? groupActionsSub;
+  StreamSubscription<List<Contact>>? contactSub;
+  StreamSubscription<Future<List<(Message, Contact)>>>?
       lastOpenedMessageByContactSub;
 
   Map<int, Contact> userIdToContact = {};

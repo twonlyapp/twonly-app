@@ -380,6 +380,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         GroupsCompanion(
           lastMessageExchange: Value(DateTime.now()),
           archived: const Value(false),
+          deletedContent: const Value(false),
         ),
       );
 
@@ -466,6 +467,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
 
   Future<void> deleteMessagesById(String messageId) {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
+  }
+
+  Future<void> deleteMessagesByGroupId(String groupId) {
+    return (delete(messages)..where((t) => t.groupId.equals(groupId))).go();
   }
 
   // Future<void> deleteAllMessagesByContactId(int contactId) {
