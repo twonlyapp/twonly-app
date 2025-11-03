@@ -2270,6 +2270,12 @@ abstract class AppLocalizations {
   /// **'Create contact request'**
   String get createContactRequest;
 
+  /// No description provided for @contactRequestSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact request send'**
+  String get contactRequestSend;
+
   /// No description provided for @makeAdmin.
   ///
   /// In en, this message translates to:

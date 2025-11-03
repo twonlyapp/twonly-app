@@ -1203,6 +1203,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get createContactRequest => 'Kontaktanfrage erstellen';
 
   @override
+  String get contactRequestSend => 'Kontakanfrage gesendet';
+
+  @override
   String get makeAdmin => 'Zum Admin machen';
 
   @override

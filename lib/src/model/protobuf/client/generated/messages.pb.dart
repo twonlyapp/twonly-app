@@ -342,7 +342,7 @@ class EncryptedContent_GroupJoin extends $pb.GeneratedMessage {
   factory EncryptedContent_GroupJoin.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.GroupJoin', createEmptyInstance: create)
-    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY, protoName: 'groupPublicKey')
+    ..a<$core.List<$core.int>>(1, _omitFieldNames ? '' : 'groupPublicKey', $pb.PbFieldType.OY, protoName: 'groupPublicKey')
     ..hasRequiredFields = false
   ;
 
@@ -368,14 +368,46 @@ class EncryptedContent_GroupJoin extends $pb.GeneratedMessage {
   static EncryptedContent_GroupJoin? _defaultInstance;
 
   /// key for the state stored on the server
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(1)
   $core.List<$core.int> get groupPublicKey => $_getN(0);
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(1)
   set groupPublicKey($core.List<$core.int> v) { $_setBytes(0, v); }
-  @$pb.TagNumber(4)
+  @$pb.TagNumber(1)
   $core.bool hasGroupPublicKey() => $_has(0);
-  @$pb.TagNumber(4)
-  void clearGroupPublicKey() => clearField(4);
+  @$pb.TagNumber(1)
+  void clearGroupPublicKey() => clearField(1);
+}
+
+class EncryptedContent_ResendGroupPublicKey extends $pb.GeneratedMessage {
+  factory EncryptedContent_ResendGroupPublicKey() => create();
+  EncryptedContent_ResendGroupPublicKey._() : super();
+  factory EncryptedContent_ResendGroupPublicKey.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory EncryptedContent_ResendGroupPublicKey.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.ResendGroupPublicKey', createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  EncryptedContent_ResendGroupPublicKey clone() => EncryptedContent_ResendGroupPublicKey()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  EncryptedContent_ResendGroupPublicKey copyWith(void Function(EncryptedContent_ResendGroupPublicKey) updates) => super.copyWith((message) => updates(message as EncryptedContent_ResendGroupPublicKey)) as EncryptedContent_ResendGroupPublicKey;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_ResendGroupPublicKey create() => EncryptedContent_ResendGroupPublicKey._();
+  EncryptedContent_ResendGroupPublicKey createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_ResendGroupPublicKey> createRepeated() => $pb.PbList<EncryptedContent_ResendGroupPublicKey>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_ResendGroupPublicKey getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<EncryptedContent_ResendGroupPublicKey>(create);
+  static EncryptedContent_ResendGroupPublicKey? _defaultInstance;
 }
 
 class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
@@ -1281,6 +1313,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_GroupCreate? groupCreate,
     EncryptedContent_GroupJoin? groupJoin,
     EncryptedContent_GroupUpdate? groupUpdate,
+    EncryptedContent_ResendGroupPublicKey? resendGroupPublicKey,
   }) {
     final $result = create();
     if (groupId != null) {
@@ -1328,6 +1361,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (groupUpdate != null) {
       $result.groupUpdate = groupUpdate;
     }
+    if (resendGroupPublicKey != null) {
+      $result.resendGroupPublicKey = resendGroupPublicKey;
+    }
     return $result;
   }
   EncryptedContent._() : super();
@@ -1350,6 +1386,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_GroupCreate>(14, _omitFieldNames ? '' : 'groupCreate', protoName: 'groupCreate', subBuilder: EncryptedContent_GroupCreate.create)
     ..aOM<EncryptedContent_GroupJoin>(15, _omitFieldNames ? '' : 'groupJoin', protoName: 'groupJoin', subBuilder: EncryptedContent_GroupJoin.create)
     ..aOM<EncryptedContent_GroupUpdate>(16, _omitFieldNames ? '' : 'groupUpdate', protoName: 'groupUpdate', subBuilder: EncryptedContent_GroupUpdate.create)
+    ..aOM<EncryptedContent_ResendGroupPublicKey>(17, _omitFieldNames ? '' : 'resendGroupPublicKey', protoName: 'resendGroupPublicKey', subBuilder: EncryptedContent_ResendGroupPublicKey.create)
     ..hasRequiredFields = false
   ;
 
@@ -1533,6 +1570,17 @@ class EncryptedContent extends $pb.GeneratedMessage {
   void clearGroupUpdate() => clearField(16);
   @$pb.TagNumber(16)
   EncryptedContent_GroupUpdate ensureGroupUpdate() => $_ensure(14);
+
+  @$pb.TagNumber(17)
+  EncryptedContent_ResendGroupPublicKey get resendGroupPublicKey => $_getN(15);
+  @$pb.TagNumber(17)
+  set resendGroupPublicKey(EncryptedContent_ResendGroupPublicKey v) { setField(17, v); }
+  @$pb.TagNumber(17)
+  $core.bool hasResendGroupPublicKey() => $_has(15);
+  @$pb.TagNumber(17)
+  void clearResendGroupPublicKey() => clearField(17);
+  @$pb.TagNumber(17)
+  EncryptedContent_ResendGroupPublicKey ensureResendGroupPublicKey() => $_ensure(15);
 }
 
 

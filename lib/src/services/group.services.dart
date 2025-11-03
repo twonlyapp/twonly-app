@@ -149,6 +149,25 @@ Future<void> fetchGroupStatesForUnjoinedGroups() async {
   }
 }
 
+Future<void> fetchMissingGroupPublicKey() async {
+  final members = await twonlyDB.groupsDao.getAllGroupMemberWithoutPublicKey();
+
+  for (final member in members) {
+    if (member.lastMessage == null) continue;
+    // only request if the users has send a message in the last two days.
+    if (member.lastMessage!
+        .isAfter(DateTime.now().subtract(const Duration(days: 2)))) {
+      await sendCipherText(
+        member.contactId,
+        EncryptedContent(
+          groupId: member.groupId,
+          resendGroupPublicKey: EncryptedContent_ResendGroupPublicKey(),
+        ),
+      );
+    }
+  }
+}
+
 Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
   if (group.leftGroup) {
     Log.error(

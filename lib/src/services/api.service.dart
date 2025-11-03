@@ -101,6 +101,7 @@ class ApiService {
       unawaited(setupNotificationWithUsers());
       unawaited(signalHandleNewServerConnection());
       unawaited(fetchGroupStatesForUnjoinedGroups());
+      unawaited(fetchMissingGroupPublicKey());
     }
   }
 

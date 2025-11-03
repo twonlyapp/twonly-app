@@ -528,6 +528,7 @@
   "createGroup": "Create group",
   "leaveGroup": "Leave group",
   "createContactRequest": "Create contact request",
+  "contactRequestSend": "Contact request send",
   "makeAdmin": "Make admin",
   "removeAdmin": "Remove as admin",
   "removeFromGroup": "Remove from group",

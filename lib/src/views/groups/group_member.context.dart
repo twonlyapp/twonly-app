@@ -1,9 +1,12 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
@@ -85,6 +88,31 @@ class GroupMemberContextMenu extends StatelessWidget {
     }
   }
 
+  Future<void> _makeContactRequest(BuildContext context) async {
+    await twonlyDB.contactsDao.updateContact(
+      member.contactId,
+      const ContactsCompanion(
+        requested: Value(true),
+      ),
+    );
+    await sendCipherText(
+      member.contactId,
+      EncryptedContent(
+        contactRequest: EncryptedContent_ContactRequest(
+          type: EncryptedContent_ContactRequest_Type.REQUEST,
+        ),
+      ),
+    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.lang.contactRequestSend),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ContextMenu(
@@ -112,9 +140,7 @@ class GroupMemberContextMenu extends StatelessWidget {
         if (!contact.accepted)
           ContextMenuItem(
             title: context.lang.createContactRequest,
-            onTap: () async {
-              // onResponseTriggered();
-            },
+            onTap: () => _makeContactRequest(context),
             icon: FontAwesomeIcons.userPlus,
           ),
         if (member.groupPublicKey != null &&

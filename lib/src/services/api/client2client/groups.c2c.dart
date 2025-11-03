@@ -180,3 +180,22 @@ Future<bool> handleGroupJoin(
   );
   return true;
 }
+
+Future<void> handleResendGroupPublicKey(
+  int fromUserId,
+  String groupId,
+  EncryptedContent_GroupJoin join,
+) async {
+  final group = await twonlyDB.groupsDao.getGroup(groupId);
+  if (group == null || group.myGroupPrivateKey == null) return;
+  final keyPair = IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+  await sendCipherText(
+    fromUserId,
+    EncryptedContent(
+      groupId: groupId,
+      groupJoin: EncryptedContent_GroupJoin(
+        groupPublicKey: keyPair.getPublicKey().serialize(),
+      ),
+    ),
+  );
+}

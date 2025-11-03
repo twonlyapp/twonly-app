@@ -1196,6 +1196,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createContactRequest => 'Create contact request';
 
   @override
+  String get contactRequestSend => 'Contact request send';
+
+  @override
   String get makeAdmin => 'Make admin';
 
   @override

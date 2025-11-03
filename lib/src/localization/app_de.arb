@@ -714,6 +714,7 @@
     "@leaveGroup": {},
     "createContactRequest": "Kontaktanfrage erstellen",
     "@createContactRequest": {},
+    "contactRequestSend": "Kontakanfrage gesendet",
     "makeAdmin": "Zum Admin machen",
     "@makeAdmin": {},
     "removeAdmin": "Als Admin entfernen",

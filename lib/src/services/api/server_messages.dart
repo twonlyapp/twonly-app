@@ -288,6 +288,15 @@ Future<PlaintextContent?> handleEncryptedMessage(
     return null;
   }
 
+  if (content.hasResendGroupPublicKey()) {
+    await handleResendGroupPublicKey(
+      fromUserId,
+      content.groupId,
+      content.groupJoin,
+    );
+    return null;
+  }
+
   if (content.hasTextMessage()) {
     await handleTextMessage(
       fromUserId,

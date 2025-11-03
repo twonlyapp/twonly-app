@@ -50,6 +50,7 @@ message EncryptedContent {
     optional GroupCreate groupCreate  = 14;
     optional GroupJoin groupJoin  = 15;
     optional GroupUpdate groupUpdate  = 16;
+    optional ResendGroupPublicKey resendGroupPublicKey = 17;
 
 
     message GroupCreate {
@@ -60,7 +61,11 @@ message EncryptedContent {
 
     message GroupJoin {
         // key for the state stored on the server
-        bytes groupPublicKey = 4;
+        bytes groupPublicKey = 1;
+    }
+
+    message ResendGroupPublicKey {
+
     }
 
     message GroupUpdate {
