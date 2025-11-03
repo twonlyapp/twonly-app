@@ -5,6 +5,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/context_menu.component.dart';
 
 class GroupContextMenu extends StatelessWidget {
@@ -75,13 +76,20 @@ class GroupContextMenu extends StatelessWidget {
           title: context.lang.delete,
           icon: FontAwesomeIcons.trashCan,
           onTap: () async {
-            await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
-            await twonlyDB.groupsDao.updateGroup(
-              group.groupId,
-              const GroupsCompanion(
-                deletedContent: Value(true),
-              ),
+            final ok = await showAlertDialog(
+              context,
+              context.lang.deleteTitle,
+              context.lang.groupContextMenuDeleteGroup,
             );
+            if (ok) {
+              await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
+              await twonlyDB.groupsDao.updateGroup(
+                group.groupId,
+                const GroupsCompanion(
+                  deletedContent: Value(true),
+                ),
+              );
+            }
           },
         ),
       ],

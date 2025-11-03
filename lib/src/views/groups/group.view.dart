@@ -117,7 +117,7 @@ class _GroupViewState extends State<GroupView> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 10),
-                child: VerifiedShield(key: GlobalKey(), group: group),
+                child: VerifiedShield(key: Key(group.groupId), group: group),
               ),
               Text(
                 substringBy(group.groupName, 25),

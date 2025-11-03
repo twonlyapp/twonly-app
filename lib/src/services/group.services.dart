@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
@@ -18,6 +19,7 @@ import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/groups.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart';
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -365,6 +367,7 @@ Future<bool> addNewHiddenContact(int contactId) async {
     ),
   );
   await createNewSignalSession(userData);
+  unawaited(setupNotificationWithUsers(forceContact: contactId));
   return true;
 }
 

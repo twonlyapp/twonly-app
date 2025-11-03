@@ -59,6 +59,7 @@ Future<bool> handleContactRequest(
         const ContactsCompanion(
           requested: Value(false),
           accepted: Value(true),
+          deletedByUser: Value(false),
         ),
       );
       final contact = await twonlyDB.contactsDao

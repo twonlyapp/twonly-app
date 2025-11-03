@@ -1385,4 +1385,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationCategoryMessageDesc => 'Messages from other users.';
+
+  @override
+  String get groupContextMenuDeleteGroup =>
+      'This will permanently delete all messages in this chat.';
 }

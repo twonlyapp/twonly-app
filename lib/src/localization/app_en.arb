@@ -574,5 +574,6 @@
   "notificationResponse": "has responded{inGroup}.",
   "notificationTitleUnknownUser": "Someone",
   "notificationCategoryMessageTitle": "Messages",
-  "notificationCategoryMessageDesc": "Messages from other users."
+  "notificationCategoryMessageDesc": "Messages from other users.",
+  "groupContextMenuDeleteGroup": "This will permanently delete all messages in this chat."
 }

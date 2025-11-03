@@ -2551,6 +2551,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages from other users.'**
   String get notificationCategoryMessageDesc;
+
+  /// No description provided for @groupContextMenuDeleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete all messages in this chat.'**
+  String get groupContextMenuDeleteGroup;
 }
 
 class _AppLocalizationsDelegate

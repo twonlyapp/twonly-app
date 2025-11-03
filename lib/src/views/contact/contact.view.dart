@@ -8,6 +8,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
 
@@ -110,7 +111,6 @@ class _ContactViewState extends State<ContactView> {
             return Container();
           }
           final contact = snapshot.data!;
-          // final flameCounter = getFlameCounterFromContact(contact);
           return ListView(
             children: [
               Padding(
@@ -122,18 +122,19 @@ class _ContactViewState extends State<ContactView> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(right: 10),
-                    child: VerifiedShield(key: GlobalKey(), contact: contact),
+                    child: VerifiedShield(
+                      key: GlobalKey(),
+                      contact: contact,
+                    ),
                   ),
                   Text(
                     getContactDisplayName(contact, maxLength: 20),
                     style: const TextStyle(fontSize: 20),
                   ),
-                  // if (flameCounter > 0)
-                  //   FlameCounterWidget(
-                  //     contact,
-                  //     flameCounter,
-                  //     prefix: true,
-                  //   ),
+                  FlameCounterWidget(
+                    contactId: contact.userId,
+                    prefix: true,
+                  ),
                 ],
               ),
               if (getContactDisplayName(contact) != contact.username)
@@ -166,6 +167,7 @@ class _ContactViewState extends State<ContactView> {
                       },
                     ),
                   );
+                  setState(() {});
                 },
               ),
               // BetterListTile(

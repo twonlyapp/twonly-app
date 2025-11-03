@@ -1393,4 +1393,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notificationCategoryMessageDesc =>
       'Nachrichten von anderen Benutzern.';
+
+  @override
+  String get groupContextMenuDeleteGroup =>
+      'Dadurch werden alle Nachrichten in diesem Chat dauerhaft gelöscht.';
 }

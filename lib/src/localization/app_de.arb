@@ -796,5 +796,6 @@
     "notificationResponse": "hat dir{inGroup} geantwortet.",
     "notificationTitleUnknownUser": "Jemand",
     "notificationCategoryMessageTitle": "Nachrichten",
-    "notificationCategoryMessageDesc": "Nachrichten von anderen Benutzern."
+    "notificationCategoryMessageDesc": "Nachrichten von anderen Benutzern.",
+    "groupContextMenuDeleteGroup": "Dadurch werden alle Nachrichten in diesem Chat dauerhaft gelöscht."
 }
