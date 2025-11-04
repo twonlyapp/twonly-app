@@ -793,6 +793,56 @@ class ApplicationData_GetUserByUsername extends $pb.GeneratedMessage {
   void clearUsername() => clearField(1);
 }
 
+class ApplicationData_ChangeUsername extends $pb.GeneratedMessage {
+  factory ApplicationData_ChangeUsername({
+    $core.String? username,
+  }) {
+    final $result = create();
+    if (username != null) {
+      $result.username = username;
+    }
+    return $result;
+  }
+  ApplicationData_ChangeUsername._() : super();
+  factory ApplicationData_ChangeUsername.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ApplicationData_ChangeUsername.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData.ChangeUsername', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'username')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ApplicationData_ChangeUsername clone() => ApplicationData_ChangeUsername()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ApplicationData_ChangeUsername copyWith(void Function(ApplicationData_ChangeUsername) updates) => super.copyWith((message) => updates(message as ApplicationData_ChangeUsername)) as ApplicationData_ChangeUsername;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_ChangeUsername create() => ApplicationData_ChangeUsername._();
+  ApplicationData_ChangeUsername createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_ChangeUsername> createRepeated() => $pb.PbList<ApplicationData_ChangeUsername>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_ChangeUsername getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ApplicationData_ChangeUsername>(create);
+  static ApplicationData_ChangeUsername? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get username => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set username($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUsername() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUsername() => clearField(1);
+}
+
 class ApplicationData_UpdateGoogleFcmToken extends $pb.GeneratedMessage {
   factory ApplicationData_UpdateGoogleFcmToken({
     $core.String? googleFcm,
@@ -1706,117 +1756,122 @@ class ApplicationData_DeleteAccount extends $pb.GeneratedMessage {
 }
 
 enum ApplicationData_ApplicationData {
-  textmessage, 
-  getuserbyusername, 
-  getprekeysbyuserid, 
-  getuserbyid, 
-  updategooglefcmtoken, 
-  getlocation, 
-  getcurrentplaninfos, 
-  redeemvoucher, 
-  getavailableplans, 
-  createvoucher, 
-  getvouchers, 
-  switchtopayedplan, 
-  getaddaccountsinvites, 
-  redeemadditionalcode, 
-  removeadditionaluser, 
-  updateplanoptions, 
-  downloaddone, 
-  getsignedprekeybyuserid, 
-  updatesignedprekey, 
-  deleteaccount, 
-  reportuser, 
+  textMessage, 
+  getUserByUsername, 
+  getPrekeysByUserId, 
+  getUserById, 
+  updateGoogleFcmToken, 
+  getLocation, 
+  getCurrentPlanInfos, 
+  redeemVoucher, 
+  getAvailablePlans, 
+  createVoucher, 
+  getVouchers, 
+  switchtoPayedPlan, 
+  getAddaccountsInvites, 
+  redeemAdditionalCode, 
+  removeAdditionalUser, 
+  updatePlanOptions, 
+  downloadDone, 
+  getSignedPrekeyByUserid, 
+  updateSignedPrekey, 
+  deleteAccount, 
+  reportUser, 
+  changeUsername, 
   notSet
 }
 
 class ApplicationData extends $pb.GeneratedMessage {
   factory ApplicationData({
-    ApplicationData_TextMessage? textmessage,
-    ApplicationData_GetUserByUsername? getuserbyusername,
-    ApplicationData_GetPrekeysByUserId? getprekeysbyuserid,
-    ApplicationData_GetUserById? getuserbyid,
-    ApplicationData_UpdateGoogleFcmToken? updategooglefcmtoken,
-    ApplicationData_GetLocation? getlocation,
-    ApplicationData_GetCurrentPlanInfos? getcurrentplaninfos,
-    ApplicationData_RedeemVoucher? redeemvoucher,
-    ApplicationData_GetAvailablePlans? getavailableplans,
-    ApplicationData_CreateVoucher? createvoucher,
-    ApplicationData_GetVouchers? getvouchers,
-    ApplicationData_SwitchToPayedPlan? switchtopayedplan,
-    ApplicationData_GetAddAccountsInvites? getaddaccountsinvites,
-    ApplicationData_RedeemAdditionalCode? redeemadditionalcode,
-    ApplicationData_RemoveAdditionalUser? removeadditionaluser,
-    ApplicationData_UpdatePlanOptions? updateplanoptions,
-    ApplicationData_DownloadDone? downloaddone,
-    ApplicationData_GetSignedPreKeyByUserId? getsignedprekeybyuserid,
-    ApplicationData_UpdateSignedPreKey? updatesignedprekey,
-    ApplicationData_DeleteAccount? deleteaccount,
-    ApplicationData_ReportUser? reportuser,
+    ApplicationData_TextMessage? textMessage,
+    ApplicationData_GetUserByUsername? getUserByUsername,
+    ApplicationData_GetPrekeysByUserId? getPrekeysByUserId,
+    ApplicationData_GetUserById? getUserById,
+    ApplicationData_UpdateGoogleFcmToken? updateGoogleFcmToken,
+    ApplicationData_GetLocation? getLocation,
+    ApplicationData_GetCurrentPlanInfos? getCurrentPlanInfos,
+    ApplicationData_RedeemVoucher? redeemVoucher,
+    ApplicationData_GetAvailablePlans? getAvailablePlans,
+    ApplicationData_CreateVoucher? createVoucher,
+    ApplicationData_GetVouchers? getVouchers,
+    ApplicationData_SwitchToPayedPlan? switchtoPayedPlan,
+    ApplicationData_GetAddAccountsInvites? getAddaccountsInvites,
+    ApplicationData_RedeemAdditionalCode? redeemAdditionalCode,
+    ApplicationData_RemoveAdditionalUser? removeAdditionalUser,
+    ApplicationData_UpdatePlanOptions? updatePlanOptions,
+    ApplicationData_DownloadDone? downloadDone,
+    ApplicationData_GetSignedPreKeyByUserId? getSignedPrekeyByUserid,
+    ApplicationData_UpdateSignedPreKey? updateSignedPrekey,
+    ApplicationData_DeleteAccount? deleteAccount,
+    ApplicationData_ReportUser? reportUser,
+    ApplicationData_ChangeUsername? changeUsername,
   }) {
     final $result = create();
-    if (textmessage != null) {
-      $result.textmessage = textmessage;
+    if (textMessage != null) {
+      $result.textMessage = textMessage;
     }
-    if (getuserbyusername != null) {
-      $result.getuserbyusername = getuserbyusername;
+    if (getUserByUsername != null) {
+      $result.getUserByUsername = getUserByUsername;
     }
-    if (getprekeysbyuserid != null) {
-      $result.getprekeysbyuserid = getprekeysbyuserid;
+    if (getPrekeysByUserId != null) {
+      $result.getPrekeysByUserId = getPrekeysByUserId;
     }
-    if (getuserbyid != null) {
-      $result.getuserbyid = getuserbyid;
+    if (getUserById != null) {
+      $result.getUserById = getUserById;
     }
-    if (updategooglefcmtoken != null) {
-      $result.updategooglefcmtoken = updategooglefcmtoken;
+    if (updateGoogleFcmToken != null) {
+      $result.updateGoogleFcmToken = updateGoogleFcmToken;
     }
-    if (getlocation != null) {
-      $result.getlocation = getlocation;
+    if (getLocation != null) {
+      $result.getLocation = getLocation;
     }
-    if (getcurrentplaninfos != null) {
-      $result.getcurrentplaninfos = getcurrentplaninfos;
+    if (getCurrentPlanInfos != null) {
+      $result.getCurrentPlanInfos = getCurrentPlanInfos;
     }
-    if (redeemvoucher != null) {
-      $result.redeemvoucher = redeemvoucher;
+    if (redeemVoucher != null) {
+      $result.redeemVoucher = redeemVoucher;
     }
-    if (getavailableplans != null) {
-      $result.getavailableplans = getavailableplans;
+    if (getAvailablePlans != null) {
+      $result.getAvailablePlans = getAvailablePlans;
     }
-    if (createvoucher != null) {
-      $result.createvoucher = createvoucher;
+    if (createVoucher != null) {
+      $result.createVoucher = createVoucher;
     }
-    if (getvouchers != null) {
-      $result.getvouchers = getvouchers;
+    if (getVouchers != null) {
+      $result.getVouchers = getVouchers;
     }
-    if (switchtopayedplan != null) {
-      $result.switchtopayedplan = switchtopayedplan;
+    if (switchtoPayedPlan != null) {
+      $result.switchtoPayedPlan = switchtoPayedPlan;
     }
-    if (getaddaccountsinvites != null) {
-      $result.getaddaccountsinvites = getaddaccountsinvites;
+    if (getAddaccountsInvites != null) {
+      $result.getAddaccountsInvites = getAddaccountsInvites;
     }
-    if (redeemadditionalcode != null) {
-      $result.redeemadditionalcode = redeemadditionalcode;
+    if (redeemAdditionalCode != null) {
+      $result.redeemAdditionalCode = redeemAdditionalCode;
     }
-    if (removeadditionaluser != null) {
-      $result.removeadditionaluser = removeadditionaluser;
+    if (removeAdditionalUser != null) {
+      $result.removeAdditionalUser = removeAdditionalUser;
     }
-    if (updateplanoptions != null) {
-      $result.updateplanoptions = updateplanoptions;
+    if (updatePlanOptions != null) {
+      $result.updatePlanOptions = updatePlanOptions;
     }
-    if (downloaddone != null) {
-      $result.downloaddone = downloaddone;
+    if (downloadDone != null) {
+      $result.downloadDone = downloadDone;
     }
-    if (getsignedprekeybyuserid != null) {
-      $result.getsignedprekeybyuserid = getsignedprekeybyuserid;
+    if (getSignedPrekeyByUserid != null) {
+      $result.getSignedPrekeyByUserid = getSignedPrekeyByUserid;
     }
-    if (updatesignedprekey != null) {
-      $result.updatesignedprekey = updatesignedprekey;
+    if (updateSignedPrekey != null) {
+      $result.updateSignedPrekey = updateSignedPrekey;
     }
-    if (deleteaccount != null) {
-      $result.deleteaccount = deleteaccount;
+    if (deleteAccount != null) {
+      $result.deleteAccount = deleteAccount;
     }
-    if (reportuser != null) {
-      $result.reportuser = reportuser;
+    if (reportUser != null) {
+      $result.reportUser = reportUser;
+    }
+    if (changeUsername != null) {
+      $result.changeUsername = changeUsername;
     }
     return $result;
   }
@@ -1825,52 +1880,54 @@ class ApplicationData extends $pb.GeneratedMessage {
   factory ApplicationData.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static const $core.Map<$core.int, ApplicationData_ApplicationData> _ApplicationData_ApplicationDataByTag = {
-    1 : ApplicationData_ApplicationData.textmessage,
-    2 : ApplicationData_ApplicationData.getuserbyusername,
-    3 : ApplicationData_ApplicationData.getprekeysbyuserid,
-    6 : ApplicationData_ApplicationData.getuserbyid,
-    8 : ApplicationData_ApplicationData.updategooglefcmtoken,
-    9 : ApplicationData_ApplicationData.getlocation,
-    10 : ApplicationData_ApplicationData.getcurrentplaninfos,
-    11 : ApplicationData_ApplicationData.redeemvoucher,
-    12 : ApplicationData_ApplicationData.getavailableplans,
-    13 : ApplicationData_ApplicationData.createvoucher,
-    14 : ApplicationData_ApplicationData.getvouchers,
-    15 : ApplicationData_ApplicationData.switchtopayedplan,
-    16 : ApplicationData_ApplicationData.getaddaccountsinvites,
-    17 : ApplicationData_ApplicationData.redeemadditionalcode,
-    18 : ApplicationData_ApplicationData.removeadditionaluser,
-    19 : ApplicationData_ApplicationData.updateplanoptions,
-    20 : ApplicationData_ApplicationData.downloaddone,
-    22 : ApplicationData_ApplicationData.getsignedprekeybyuserid,
-    23 : ApplicationData_ApplicationData.updatesignedprekey,
-    24 : ApplicationData_ApplicationData.deleteaccount,
-    25 : ApplicationData_ApplicationData.reportuser,
+    1 : ApplicationData_ApplicationData.textMessage,
+    2 : ApplicationData_ApplicationData.getUserByUsername,
+    3 : ApplicationData_ApplicationData.getPrekeysByUserId,
+    6 : ApplicationData_ApplicationData.getUserById,
+    8 : ApplicationData_ApplicationData.updateGoogleFcmToken,
+    9 : ApplicationData_ApplicationData.getLocation,
+    10 : ApplicationData_ApplicationData.getCurrentPlanInfos,
+    11 : ApplicationData_ApplicationData.redeemVoucher,
+    12 : ApplicationData_ApplicationData.getAvailablePlans,
+    13 : ApplicationData_ApplicationData.createVoucher,
+    14 : ApplicationData_ApplicationData.getVouchers,
+    15 : ApplicationData_ApplicationData.switchtoPayedPlan,
+    16 : ApplicationData_ApplicationData.getAddaccountsInvites,
+    17 : ApplicationData_ApplicationData.redeemAdditionalCode,
+    18 : ApplicationData_ApplicationData.removeAdditionalUser,
+    19 : ApplicationData_ApplicationData.updatePlanOptions,
+    20 : ApplicationData_ApplicationData.downloadDone,
+    22 : ApplicationData_ApplicationData.getSignedPrekeyByUserid,
+    23 : ApplicationData_ApplicationData.updateSignedPrekey,
+    24 : ApplicationData_ApplicationData.deleteAccount,
+    25 : ApplicationData_ApplicationData.reportUser,
+    26 : ApplicationData_ApplicationData.changeUsername,
     0 : ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ApplicationData', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25])
-    ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textmessage', subBuilder: ApplicationData_TextMessage.create)
-    ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getuserbyusername', subBuilder: ApplicationData_GetUserByUsername.create)
-    ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getprekeysbyuserid', subBuilder: ApplicationData_GetPrekeysByUserId.create)
-    ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getuserbyid', subBuilder: ApplicationData_GetUserById.create)
-    ..aOM<ApplicationData_UpdateGoogleFcmToken>(8, _omitFieldNames ? '' : 'updategooglefcmtoken', subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
-    ..aOM<ApplicationData_GetLocation>(9, _omitFieldNames ? '' : 'getlocation', subBuilder: ApplicationData_GetLocation.create)
-    ..aOM<ApplicationData_GetCurrentPlanInfos>(10, _omitFieldNames ? '' : 'getcurrentplaninfos', subBuilder: ApplicationData_GetCurrentPlanInfos.create)
-    ..aOM<ApplicationData_RedeemVoucher>(11, _omitFieldNames ? '' : 'redeemvoucher', subBuilder: ApplicationData_RedeemVoucher.create)
-    ..aOM<ApplicationData_GetAvailablePlans>(12, _omitFieldNames ? '' : 'getavailableplans', subBuilder: ApplicationData_GetAvailablePlans.create)
-    ..aOM<ApplicationData_CreateVoucher>(13, _omitFieldNames ? '' : 'createvoucher', subBuilder: ApplicationData_CreateVoucher.create)
-    ..aOM<ApplicationData_GetVouchers>(14, _omitFieldNames ? '' : 'getvouchers', subBuilder: ApplicationData_GetVouchers.create)
-    ..aOM<ApplicationData_SwitchToPayedPlan>(15, _omitFieldNames ? '' : 'Switchtopayedplan', protoName: 'Switchtopayedplan', subBuilder: ApplicationData_SwitchToPayedPlan.create)
-    ..aOM<ApplicationData_GetAddAccountsInvites>(16, _omitFieldNames ? '' : 'getaddaccountsinvites', subBuilder: ApplicationData_GetAddAccountsInvites.create)
-    ..aOM<ApplicationData_RedeemAdditionalCode>(17, _omitFieldNames ? '' : 'redeemadditionalcode', subBuilder: ApplicationData_RedeemAdditionalCode.create)
-    ..aOM<ApplicationData_RemoveAdditionalUser>(18, _omitFieldNames ? '' : 'removeadditionaluser', subBuilder: ApplicationData_RemoveAdditionalUser.create)
-    ..aOM<ApplicationData_UpdatePlanOptions>(19, _omitFieldNames ? '' : 'updateplanoptions', subBuilder: ApplicationData_UpdatePlanOptions.create)
-    ..aOM<ApplicationData_DownloadDone>(20, _omitFieldNames ? '' : 'downloaddone', subBuilder: ApplicationData_DownloadDone.create)
-    ..aOM<ApplicationData_GetSignedPreKeyByUserId>(22, _omitFieldNames ? '' : 'getsignedprekeybyuserid', subBuilder: ApplicationData_GetSignedPreKeyByUserId.create)
-    ..aOM<ApplicationData_UpdateSignedPreKey>(23, _omitFieldNames ? '' : 'updatesignedprekey', subBuilder: ApplicationData_UpdateSignedPreKey.create)
-    ..aOM<ApplicationData_DeleteAccount>(24, _omitFieldNames ? '' : 'deleteaccount', subBuilder: ApplicationData_DeleteAccount.create)
-    ..aOM<ApplicationData_ReportUser>(25, _omitFieldNames ? '' : 'reportuser', subBuilder: ApplicationData_ReportUser.create)
+    ..oo(0, [1, 2, 3, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26])
+    ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage', protoName: 'textMessage', subBuilder: ApplicationData_TextMessage.create)
+    ..aOM<ApplicationData_GetUserByUsername>(2, _omitFieldNames ? '' : 'getUserByUsername', protoName: 'getUserByUsername', subBuilder: ApplicationData_GetUserByUsername.create)
+    ..aOM<ApplicationData_GetPrekeysByUserId>(3, _omitFieldNames ? '' : 'getPrekeysByUserId', protoName: 'getPrekeysByUserId', subBuilder: ApplicationData_GetPrekeysByUserId.create)
+    ..aOM<ApplicationData_GetUserById>(6, _omitFieldNames ? '' : 'getUserById', protoName: 'getUserById', subBuilder: ApplicationData_GetUserById.create)
+    ..aOM<ApplicationData_UpdateGoogleFcmToken>(8, _omitFieldNames ? '' : 'updateGoogleFcmToken', protoName: 'updateGoogleFcmToken', subBuilder: ApplicationData_UpdateGoogleFcmToken.create)
+    ..aOM<ApplicationData_GetLocation>(9, _omitFieldNames ? '' : 'getLocation', protoName: 'getLocation', subBuilder: ApplicationData_GetLocation.create)
+    ..aOM<ApplicationData_GetCurrentPlanInfos>(10, _omitFieldNames ? '' : 'getCurrentPlanInfos', protoName: 'getCurrentPlanInfos', subBuilder: ApplicationData_GetCurrentPlanInfos.create)
+    ..aOM<ApplicationData_RedeemVoucher>(11, _omitFieldNames ? '' : 'redeemVoucher', protoName: 'redeemVoucher', subBuilder: ApplicationData_RedeemVoucher.create)
+    ..aOM<ApplicationData_GetAvailablePlans>(12, _omitFieldNames ? '' : 'getAvailablePlans', protoName: 'getAvailablePlans', subBuilder: ApplicationData_GetAvailablePlans.create)
+    ..aOM<ApplicationData_CreateVoucher>(13, _omitFieldNames ? '' : 'createVoucher', protoName: 'createVoucher', subBuilder: ApplicationData_CreateVoucher.create)
+    ..aOM<ApplicationData_GetVouchers>(14, _omitFieldNames ? '' : 'getVouchers', protoName: 'getVouchers', subBuilder: ApplicationData_GetVouchers.create)
+    ..aOM<ApplicationData_SwitchToPayedPlan>(15, _omitFieldNames ? '' : 'switchtoPayedPlan', protoName: 'switchtoPayedPlan', subBuilder: ApplicationData_SwitchToPayedPlan.create)
+    ..aOM<ApplicationData_GetAddAccountsInvites>(16, _omitFieldNames ? '' : 'getAddaccountsInvites', protoName: 'getAddaccountsInvites', subBuilder: ApplicationData_GetAddAccountsInvites.create)
+    ..aOM<ApplicationData_RedeemAdditionalCode>(17, _omitFieldNames ? '' : 'redeemAdditionalCode', protoName: 'redeemAdditionalCode', subBuilder: ApplicationData_RedeemAdditionalCode.create)
+    ..aOM<ApplicationData_RemoveAdditionalUser>(18, _omitFieldNames ? '' : 'removeAdditionalUser', protoName: 'removeAdditionalUser', subBuilder: ApplicationData_RemoveAdditionalUser.create)
+    ..aOM<ApplicationData_UpdatePlanOptions>(19, _omitFieldNames ? '' : 'updatePlanOptions', protoName: 'updatePlanOptions', subBuilder: ApplicationData_UpdatePlanOptions.create)
+    ..aOM<ApplicationData_DownloadDone>(20, _omitFieldNames ? '' : 'downloadDone', protoName: 'downloadDone', subBuilder: ApplicationData_DownloadDone.create)
+    ..aOM<ApplicationData_GetSignedPreKeyByUserId>(22, _omitFieldNames ? '' : 'getSignedPrekeyByUserid', protoName: 'getSignedPrekeyByUserid', subBuilder: ApplicationData_GetSignedPreKeyByUserId.create)
+    ..aOM<ApplicationData_UpdateSignedPreKey>(23, _omitFieldNames ? '' : 'updateSignedPrekey', protoName: 'updateSignedPrekey', subBuilder: ApplicationData_UpdateSignedPreKey.create)
+    ..aOM<ApplicationData_DeleteAccount>(24, _omitFieldNames ? '' : 'deleteAccount', protoName: 'deleteAccount', subBuilder: ApplicationData_DeleteAccount.create)
+    ..aOM<ApplicationData_ReportUser>(25, _omitFieldNames ? '' : 'reportUser', protoName: 'reportUser', subBuilder: ApplicationData_ReportUser.create)
+    ..aOM<ApplicationData_ChangeUsername>(26, _omitFieldNames ? '' : 'changeUsername', protoName: 'changeUsername', subBuilder: ApplicationData_ChangeUsername.create)
     ..hasRequiredFields = false
   ;
 
@@ -1899,235 +1956,246 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearApplicationData() => clearField($_whichOneof(0));
 
   @$pb.TagNumber(1)
-  ApplicationData_TextMessage get textmessage => $_getN(0);
+  ApplicationData_TextMessage get textMessage => $_getN(0);
   @$pb.TagNumber(1)
-  set textmessage(ApplicationData_TextMessage v) { setField(1, v); }
+  set textMessage(ApplicationData_TextMessage v) { setField(1, v); }
   @$pb.TagNumber(1)
-  $core.bool hasTextmessage() => $_has(0);
+  $core.bool hasTextMessage() => $_has(0);
   @$pb.TagNumber(1)
-  void clearTextmessage() => clearField(1);
+  void clearTextMessage() => clearField(1);
   @$pb.TagNumber(1)
-  ApplicationData_TextMessage ensureTextmessage() => $_ensure(0);
+  ApplicationData_TextMessage ensureTextMessage() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  ApplicationData_GetUserByUsername get getuserbyusername => $_getN(1);
+  ApplicationData_GetUserByUsername get getUserByUsername => $_getN(1);
   @$pb.TagNumber(2)
-  set getuserbyusername(ApplicationData_GetUserByUsername v) { setField(2, v); }
+  set getUserByUsername(ApplicationData_GetUserByUsername v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasGetuserbyusername() => $_has(1);
+  $core.bool hasGetUserByUsername() => $_has(1);
   @$pb.TagNumber(2)
-  void clearGetuserbyusername() => clearField(2);
+  void clearGetUserByUsername() => clearField(2);
   @$pb.TagNumber(2)
-  ApplicationData_GetUserByUsername ensureGetuserbyusername() => $_ensure(1);
+  ApplicationData_GetUserByUsername ensureGetUserByUsername() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  ApplicationData_GetPrekeysByUserId get getprekeysbyuserid => $_getN(2);
+  ApplicationData_GetPrekeysByUserId get getPrekeysByUserId => $_getN(2);
   @$pb.TagNumber(3)
-  set getprekeysbyuserid(ApplicationData_GetPrekeysByUserId v) { setField(3, v); }
+  set getPrekeysByUserId(ApplicationData_GetPrekeysByUserId v) { setField(3, v); }
   @$pb.TagNumber(3)
-  $core.bool hasGetprekeysbyuserid() => $_has(2);
+  $core.bool hasGetPrekeysByUserId() => $_has(2);
   @$pb.TagNumber(3)
-  void clearGetprekeysbyuserid() => clearField(3);
+  void clearGetPrekeysByUserId() => clearField(3);
   @$pb.TagNumber(3)
-  ApplicationData_GetPrekeysByUserId ensureGetprekeysbyuserid() => $_ensure(2);
+  ApplicationData_GetPrekeysByUserId ensureGetPrekeysByUserId() => $_ensure(2);
 
   @$pb.TagNumber(6)
-  ApplicationData_GetUserById get getuserbyid => $_getN(3);
+  ApplicationData_GetUserById get getUserById => $_getN(3);
   @$pb.TagNumber(6)
-  set getuserbyid(ApplicationData_GetUserById v) { setField(6, v); }
+  set getUserById(ApplicationData_GetUserById v) { setField(6, v); }
   @$pb.TagNumber(6)
-  $core.bool hasGetuserbyid() => $_has(3);
+  $core.bool hasGetUserById() => $_has(3);
   @$pb.TagNumber(6)
-  void clearGetuserbyid() => clearField(6);
+  void clearGetUserById() => clearField(6);
   @$pb.TagNumber(6)
-  ApplicationData_GetUserById ensureGetuserbyid() => $_ensure(3);
+  ApplicationData_GetUserById ensureGetUserById() => $_ensure(3);
 
   @$pb.TagNumber(8)
-  ApplicationData_UpdateGoogleFcmToken get updategooglefcmtoken => $_getN(4);
+  ApplicationData_UpdateGoogleFcmToken get updateGoogleFcmToken => $_getN(4);
   @$pb.TagNumber(8)
-  set updategooglefcmtoken(ApplicationData_UpdateGoogleFcmToken v) { setField(8, v); }
+  set updateGoogleFcmToken(ApplicationData_UpdateGoogleFcmToken v) { setField(8, v); }
   @$pb.TagNumber(8)
-  $core.bool hasUpdategooglefcmtoken() => $_has(4);
+  $core.bool hasUpdateGoogleFcmToken() => $_has(4);
   @$pb.TagNumber(8)
-  void clearUpdategooglefcmtoken() => clearField(8);
+  void clearUpdateGoogleFcmToken() => clearField(8);
   @$pb.TagNumber(8)
-  ApplicationData_UpdateGoogleFcmToken ensureUpdategooglefcmtoken() => $_ensure(4);
+  ApplicationData_UpdateGoogleFcmToken ensureUpdateGoogleFcmToken() => $_ensure(4);
 
   @$pb.TagNumber(9)
-  ApplicationData_GetLocation get getlocation => $_getN(5);
+  ApplicationData_GetLocation get getLocation => $_getN(5);
   @$pb.TagNumber(9)
-  set getlocation(ApplicationData_GetLocation v) { setField(9, v); }
+  set getLocation(ApplicationData_GetLocation v) { setField(9, v); }
   @$pb.TagNumber(9)
-  $core.bool hasGetlocation() => $_has(5);
+  $core.bool hasGetLocation() => $_has(5);
   @$pb.TagNumber(9)
-  void clearGetlocation() => clearField(9);
+  void clearGetLocation() => clearField(9);
   @$pb.TagNumber(9)
-  ApplicationData_GetLocation ensureGetlocation() => $_ensure(5);
+  ApplicationData_GetLocation ensureGetLocation() => $_ensure(5);
 
   @$pb.TagNumber(10)
-  ApplicationData_GetCurrentPlanInfos get getcurrentplaninfos => $_getN(6);
+  ApplicationData_GetCurrentPlanInfos get getCurrentPlanInfos => $_getN(6);
   @$pb.TagNumber(10)
-  set getcurrentplaninfos(ApplicationData_GetCurrentPlanInfos v) { setField(10, v); }
+  set getCurrentPlanInfos(ApplicationData_GetCurrentPlanInfos v) { setField(10, v); }
   @$pb.TagNumber(10)
-  $core.bool hasGetcurrentplaninfos() => $_has(6);
+  $core.bool hasGetCurrentPlanInfos() => $_has(6);
   @$pb.TagNumber(10)
-  void clearGetcurrentplaninfos() => clearField(10);
+  void clearGetCurrentPlanInfos() => clearField(10);
   @$pb.TagNumber(10)
-  ApplicationData_GetCurrentPlanInfos ensureGetcurrentplaninfos() => $_ensure(6);
+  ApplicationData_GetCurrentPlanInfos ensureGetCurrentPlanInfos() => $_ensure(6);
 
   @$pb.TagNumber(11)
-  ApplicationData_RedeemVoucher get redeemvoucher => $_getN(7);
+  ApplicationData_RedeemVoucher get redeemVoucher => $_getN(7);
   @$pb.TagNumber(11)
-  set redeemvoucher(ApplicationData_RedeemVoucher v) { setField(11, v); }
+  set redeemVoucher(ApplicationData_RedeemVoucher v) { setField(11, v); }
   @$pb.TagNumber(11)
-  $core.bool hasRedeemvoucher() => $_has(7);
+  $core.bool hasRedeemVoucher() => $_has(7);
   @$pb.TagNumber(11)
-  void clearRedeemvoucher() => clearField(11);
+  void clearRedeemVoucher() => clearField(11);
   @$pb.TagNumber(11)
-  ApplicationData_RedeemVoucher ensureRedeemvoucher() => $_ensure(7);
+  ApplicationData_RedeemVoucher ensureRedeemVoucher() => $_ensure(7);
 
   @$pb.TagNumber(12)
-  ApplicationData_GetAvailablePlans get getavailableplans => $_getN(8);
+  ApplicationData_GetAvailablePlans get getAvailablePlans => $_getN(8);
   @$pb.TagNumber(12)
-  set getavailableplans(ApplicationData_GetAvailablePlans v) { setField(12, v); }
+  set getAvailablePlans(ApplicationData_GetAvailablePlans v) { setField(12, v); }
   @$pb.TagNumber(12)
-  $core.bool hasGetavailableplans() => $_has(8);
+  $core.bool hasGetAvailablePlans() => $_has(8);
   @$pb.TagNumber(12)
-  void clearGetavailableplans() => clearField(12);
+  void clearGetAvailablePlans() => clearField(12);
   @$pb.TagNumber(12)
-  ApplicationData_GetAvailablePlans ensureGetavailableplans() => $_ensure(8);
+  ApplicationData_GetAvailablePlans ensureGetAvailablePlans() => $_ensure(8);
 
   @$pb.TagNumber(13)
-  ApplicationData_CreateVoucher get createvoucher => $_getN(9);
+  ApplicationData_CreateVoucher get createVoucher => $_getN(9);
   @$pb.TagNumber(13)
-  set createvoucher(ApplicationData_CreateVoucher v) { setField(13, v); }
+  set createVoucher(ApplicationData_CreateVoucher v) { setField(13, v); }
   @$pb.TagNumber(13)
-  $core.bool hasCreatevoucher() => $_has(9);
+  $core.bool hasCreateVoucher() => $_has(9);
   @$pb.TagNumber(13)
-  void clearCreatevoucher() => clearField(13);
+  void clearCreateVoucher() => clearField(13);
   @$pb.TagNumber(13)
-  ApplicationData_CreateVoucher ensureCreatevoucher() => $_ensure(9);
+  ApplicationData_CreateVoucher ensureCreateVoucher() => $_ensure(9);
 
   @$pb.TagNumber(14)
-  ApplicationData_GetVouchers get getvouchers => $_getN(10);
+  ApplicationData_GetVouchers get getVouchers => $_getN(10);
   @$pb.TagNumber(14)
-  set getvouchers(ApplicationData_GetVouchers v) { setField(14, v); }
+  set getVouchers(ApplicationData_GetVouchers v) { setField(14, v); }
   @$pb.TagNumber(14)
-  $core.bool hasGetvouchers() => $_has(10);
+  $core.bool hasGetVouchers() => $_has(10);
   @$pb.TagNumber(14)
-  void clearGetvouchers() => clearField(14);
+  void clearGetVouchers() => clearField(14);
   @$pb.TagNumber(14)
-  ApplicationData_GetVouchers ensureGetvouchers() => $_ensure(10);
+  ApplicationData_GetVouchers ensureGetVouchers() => $_ensure(10);
 
   @$pb.TagNumber(15)
-  ApplicationData_SwitchToPayedPlan get switchtopayedplan => $_getN(11);
+  ApplicationData_SwitchToPayedPlan get switchtoPayedPlan => $_getN(11);
   @$pb.TagNumber(15)
-  set switchtopayedplan(ApplicationData_SwitchToPayedPlan v) { setField(15, v); }
+  set switchtoPayedPlan(ApplicationData_SwitchToPayedPlan v) { setField(15, v); }
   @$pb.TagNumber(15)
-  $core.bool hasSwitchtopayedplan() => $_has(11);
+  $core.bool hasSwitchtoPayedPlan() => $_has(11);
   @$pb.TagNumber(15)
-  void clearSwitchtopayedplan() => clearField(15);
+  void clearSwitchtoPayedPlan() => clearField(15);
   @$pb.TagNumber(15)
-  ApplicationData_SwitchToPayedPlan ensureSwitchtopayedplan() => $_ensure(11);
+  ApplicationData_SwitchToPayedPlan ensureSwitchtoPayedPlan() => $_ensure(11);
 
   @$pb.TagNumber(16)
-  ApplicationData_GetAddAccountsInvites get getaddaccountsinvites => $_getN(12);
+  ApplicationData_GetAddAccountsInvites get getAddaccountsInvites => $_getN(12);
   @$pb.TagNumber(16)
-  set getaddaccountsinvites(ApplicationData_GetAddAccountsInvites v) { setField(16, v); }
+  set getAddaccountsInvites(ApplicationData_GetAddAccountsInvites v) { setField(16, v); }
   @$pb.TagNumber(16)
-  $core.bool hasGetaddaccountsinvites() => $_has(12);
+  $core.bool hasGetAddaccountsInvites() => $_has(12);
   @$pb.TagNumber(16)
-  void clearGetaddaccountsinvites() => clearField(16);
+  void clearGetAddaccountsInvites() => clearField(16);
   @$pb.TagNumber(16)
-  ApplicationData_GetAddAccountsInvites ensureGetaddaccountsinvites() => $_ensure(12);
+  ApplicationData_GetAddAccountsInvites ensureGetAddaccountsInvites() => $_ensure(12);
 
   @$pb.TagNumber(17)
-  ApplicationData_RedeemAdditionalCode get redeemadditionalcode => $_getN(13);
+  ApplicationData_RedeemAdditionalCode get redeemAdditionalCode => $_getN(13);
   @$pb.TagNumber(17)
-  set redeemadditionalcode(ApplicationData_RedeemAdditionalCode v) { setField(17, v); }
+  set redeemAdditionalCode(ApplicationData_RedeemAdditionalCode v) { setField(17, v); }
   @$pb.TagNumber(17)
-  $core.bool hasRedeemadditionalcode() => $_has(13);
+  $core.bool hasRedeemAdditionalCode() => $_has(13);
   @$pb.TagNumber(17)
-  void clearRedeemadditionalcode() => clearField(17);
+  void clearRedeemAdditionalCode() => clearField(17);
   @$pb.TagNumber(17)
-  ApplicationData_RedeemAdditionalCode ensureRedeemadditionalcode() => $_ensure(13);
+  ApplicationData_RedeemAdditionalCode ensureRedeemAdditionalCode() => $_ensure(13);
 
   @$pb.TagNumber(18)
-  ApplicationData_RemoveAdditionalUser get removeadditionaluser => $_getN(14);
+  ApplicationData_RemoveAdditionalUser get removeAdditionalUser => $_getN(14);
   @$pb.TagNumber(18)
-  set removeadditionaluser(ApplicationData_RemoveAdditionalUser v) { setField(18, v); }
+  set removeAdditionalUser(ApplicationData_RemoveAdditionalUser v) { setField(18, v); }
   @$pb.TagNumber(18)
-  $core.bool hasRemoveadditionaluser() => $_has(14);
+  $core.bool hasRemoveAdditionalUser() => $_has(14);
   @$pb.TagNumber(18)
-  void clearRemoveadditionaluser() => clearField(18);
+  void clearRemoveAdditionalUser() => clearField(18);
   @$pb.TagNumber(18)
-  ApplicationData_RemoveAdditionalUser ensureRemoveadditionaluser() => $_ensure(14);
+  ApplicationData_RemoveAdditionalUser ensureRemoveAdditionalUser() => $_ensure(14);
 
   @$pb.TagNumber(19)
-  ApplicationData_UpdatePlanOptions get updateplanoptions => $_getN(15);
+  ApplicationData_UpdatePlanOptions get updatePlanOptions => $_getN(15);
   @$pb.TagNumber(19)
-  set updateplanoptions(ApplicationData_UpdatePlanOptions v) { setField(19, v); }
+  set updatePlanOptions(ApplicationData_UpdatePlanOptions v) { setField(19, v); }
   @$pb.TagNumber(19)
-  $core.bool hasUpdateplanoptions() => $_has(15);
+  $core.bool hasUpdatePlanOptions() => $_has(15);
   @$pb.TagNumber(19)
-  void clearUpdateplanoptions() => clearField(19);
+  void clearUpdatePlanOptions() => clearField(19);
   @$pb.TagNumber(19)
-  ApplicationData_UpdatePlanOptions ensureUpdateplanoptions() => $_ensure(15);
+  ApplicationData_UpdatePlanOptions ensureUpdatePlanOptions() => $_ensure(15);
 
   @$pb.TagNumber(20)
-  ApplicationData_DownloadDone get downloaddone => $_getN(16);
+  ApplicationData_DownloadDone get downloadDone => $_getN(16);
   @$pb.TagNumber(20)
-  set downloaddone(ApplicationData_DownloadDone v) { setField(20, v); }
+  set downloadDone(ApplicationData_DownloadDone v) { setField(20, v); }
   @$pb.TagNumber(20)
-  $core.bool hasDownloaddone() => $_has(16);
+  $core.bool hasDownloadDone() => $_has(16);
   @$pb.TagNumber(20)
-  void clearDownloaddone() => clearField(20);
+  void clearDownloadDone() => clearField(20);
   @$pb.TagNumber(20)
-  ApplicationData_DownloadDone ensureDownloaddone() => $_ensure(16);
+  ApplicationData_DownloadDone ensureDownloadDone() => $_ensure(16);
 
   @$pb.TagNumber(22)
-  ApplicationData_GetSignedPreKeyByUserId get getsignedprekeybyuserid => $_getN(17);
+  ApplicationData_GetSignedPreKeyByUserId get getSignedPrekeyByUserid => $_getN(17);
   @$pb.TagNumber(22)
-  set getsignedprekeybyuserid(ApplicationData_GetSignedPreKeyByUserId v) { setField(22, v); }
+  set getSignedPrekeyByUserid(ApplicationData_GetSignedPreKeyByUserId v) { setField(22, v); }
   @$pb.TagNumber(22)
-  $core.bool hasGetsignedprekeybyuserid() => $_has(17);
+  $core.bool hasGetSignedPrekeyByUserid() => $_has(17);
   @$pb.TagNumber(22)
-  void clearGetsignedprekeybyuserid() => clearField(22);
+  void clearGetSignedPrekeyByUserid() => clearField(22);
   @$pb.TagNumber(22)
-  ApplicationData_GetSignedPreKeyByUserId ensureGetsignedprekeybyuserid() => $_ensure(17);
+  ApplicationData_GetSignedPreKeyByUserId ensureGetSignedPrekeyByUserid() => $_ensure(17);
 
   @$pb.TagNumber(23)
-  ApplicationData_UpdateSignedPreKey get updatesignedprekey => $_getN(18);
+  ApplicationData_UpdateSignedPreKey get updateSignedPrekey => $_getN(18);
   @$pb.TagNumber(23)
-  set updatesignedprekey(ApplicationData_UpdateSignedPreKey v) { setField(23, v); }
+  set updateSignedPrekey(ApplicationData_UpdateSignedPreKey v) { setField(23, v); }
   @$pb.TagNumber(23)
-  $core.bool hasUpdatesignedprekey() => $_has(18);
+  $core.bool hasUpdateSignedPrekey() => $_has(18);
   @$pb.TagNumber(23)
-  void clearUpdatesignedprekey() => clearField(23);
+  void clearUpdateSignedPrekey() => clearField(23);
   @$pb.TagNumber(23)
-  ApplicationData_UpdateSignedPreKey ensureUpdatesignedprekey() => $_ensure(18);
+  ApplicationData_UpdateSignedPreKey ensureUpdateSignedPrekey() => $_ensure(18);
 
   @$pb.TagNumber(24)
-  ApplicationData_DeleteAccount get deleteaccount => $_getN(19);
+  ApplicationData_DeleteAccount get deleteAccount => $_getN(19);
   @$pb.TagNumber(24)
-  set deleteaccount(ApplicationData_DeleteAccount v) { setField(24, v); }
+  set deleteAccount(ApplicationData_DeleteAccount v) { setField(24, v); }
   @$pb.TagNumber(24)
-  $core.bool hasDeleteaccount() => $_has(19);
+  $core.bool hasDeleteAccount() => $_has(19);
   @$pb.TagNumber(24)
-  void clearDeleteaccount() => clearField(24);
+  void clearDeleteAccount() => clearField(24);
   @$pb.TagNumber(24)
-  ApplicationData_DeleteAccount ensureDeleteaccount() => $_ensure(19);
+  ApplicationData_DeleteAccount ensureDeleteAccount() => $_ensure(19);
 
   @$pb.TagNumber(25)
-  ApplicationData_ReportUser get reportuser => $_getN(20);
+  ApplicationData_ReportUser get reportUser => $_getN(20);
   @$pb.TagNumber(25)
-  set reportuser(ApplicationData_ReportUser v) { setField(25, v); }
+  set reportUser(ApplicationData_ReportUser v) { setField(25, v); }
   @$pb.TagNumber(25)
-  $core.bool hasReportuser() => $_has(20);
+  $core.bool hasReportUser() => $_has(20);
   @$pb.TagNumber(25)
-  void clearReportuser() => clearField(25);
+  void clearReportUser() => clearField(25);
   @$pb.TagNumber(25)
-  ApplicationData_ReportUser ensureReportuser() => $_ensure(20);
+  ApplicationData_ReportUser ensureReportUser() => $_ensure(20);
+
+  @$pb.TagNumber(26)
+  ApplicationData_ChangeUsername get changeUsername => $_getN(21);
+  @$pb.TagNumber(26)
+  set changeUsername(ApplicationData_ChangeUsername v) { setField(26, v); }
+  @$pb.TagNumber(26)
+  $core.bool hasChangeUsername() => $_has(21);
+  @$pb.TagNumber(26)
+  void clearChangeUsername() => clearField(26);
+  @$pb.TagNumber(26)
+  ApplicationData_ChangeUsername ensureChangeUsername() => $_ensure(21);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

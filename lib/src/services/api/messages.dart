@@ -199,7 +199,7 @@ Future<void> sendCipherTextToGroup(
   pb.EncryptedContent encryptedContent, {
   String? messageId,
 }) async {
-  final groupMembers = await twonlyDB.groupsDao.getGroupMembers(groupId);
+  final groupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(groupId);
 
   await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, DateTime.now());
 
@@ -291,6 +291,7 @@ Future<void> notifyContactsAboutProfileChange({int? onlyToContact}) async {
       type: pb.EncryptedContent_ContactUpdate_Type.UPDATE,
       avatarSvgCompressed: gzip.encode(utf8.encode(gUser.avatarSvg!)),
       displayName: gUser.displayName,
+      username: gUser.username,
     ),
   );
 

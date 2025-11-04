@@ -630,7 +630,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get errorUsernameAlreadyTaken =>
-      'Der Benutzername, den du verwenden möchtest, ist bereits vergeben. Bitte wähle einen anderen Benutzernamen.';
+      'Der Benutzername ist bereits vergeben.';
 
   @override
   String get errorSignatureNotValid =>

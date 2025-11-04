@@ -159,7 +159,7 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
   for (final message in messages) {
     final groupMembers =
-        await twonlyDB.groupsDao.getGroupMembers(message.groupId);
+        await twonlyDB.groupsDao.getGroupNonLeftMembers(message.groupId);
 
     if (media.mediaFile.reuploadRequestedBy == null) {
       await twonlyDB.groupsDao.incFlameCounter(

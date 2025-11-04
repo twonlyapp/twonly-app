@@ -148,7 +148,8 @@ message EncryptedContent {
 
         Type type = 1;
         optional bytes avatarSvgCompressed = 2;
-        optional string displayName = 3;
+        optional string username = 3;
+        optional string displayName = 4;
     }
 
     message PushKeys {

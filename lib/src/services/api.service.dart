@@ -490,7 +490,7 @@ class ApiService {
 
   Future<Response_UserData?> getUserById(int userId) async {
     final get = ApplicationData_GetUserById()..userId = Int64(userId);
-    final appData = ApplicationData()..getuserbyid = get;
+    final appData = ApplicationData()..getUserById = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -504,21 +504,21 @@ class ApiService {
 
   Future<Result> downloadDone(List<int> token) async {
     final get = ApplicationData_DownloadDone()..downloadToken = token;
-    final appData = ApplicationData()..downloaddone = get;
+    final appData = ApplicationData()..downloadDone = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, ensureRetransmission: true);
   }
 
   Future<Result> getCurrentLocation() async {
     final get = ApplicationData_GetLocation();
-    final appData = ApplicationData()..getlocation = get;
+    final appData = ApplicationData()..getLocation = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Response_UserData?> getUserData(String username) async {
     final get = ApplicationData_GetUserByUsername()..username = username;
-    final appData = ApplicationData()..getuserbyusername = get;
+    final appData = ApplicationData()..getUserByUsername = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -532,7 +532,7 @@ class ApiService {
 
   Future<Response_PlanBallance?> getPlanBallance() async {
     final get = ApplicationData_GetCurrentPlanInfos();
-    final appData = ApplicationData()..getcurrentplaninfos = get;
+    final appData = ApplicationData()..getCurrentPlanInfos = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -546,7 +546,7 @@ class ApiService {
 
   Future<Response_Vouchers?> getVoucherList() async {
     final get = ApplicationData_GetVouchers();
-    final appData = ApplicationData()..getvouchers = get;
+    final appData = ApplicationData()..getVouchers = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -560,7 +560,7 @@ class ApiService {
 
   Future<List<Response_AddAccountsInvite>?> getAdditionalUserInvites() async {
     final get = ApplicationData_GetAddAccountsInvites();
-    final appData = ApplicationData()..getaddaccountsinvites = get;
+    final appData = ApplicationData()..getAddaccountsInvites = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -574,21 +574,21 @@ class ApiService {
 
   Future<Result> updatePlanOptions(bool autoRenewal) async {
     final get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
-    final appData = ApplicationData()..updateplanoptions = get;
+    final appData = ApplicationData()..updatePlanOptions = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> removeAdditionalUser(Int64 userId) async {
     final get = ApplicationData_RemoveAdditionalUser()..userId = userId;
-    final appData = ApplicationData()..removeadditionaluser = get;
+    final appData = ApplicationData()..removeAdditionalUser = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: userId.toInt());
   }
 
   Future<Result> buyVoucher(int valueInCents) async {
     final get = ApplicationData_CreateVoucher()..valueCents = valueInCents;
-    final appData = ApplicationData()..createvoucher = get;
+    final appData = ApplicationData()..createVoucher = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
@@ -602,14 +602,14 @@ class ApiService {
       ..planId = planId
       ..payMonthly = payMonthly
       ..autoRenewal = autoRenewal;
-    final appData = ApplicationData()..switchtopayedplan = get;
+    final appData = ApplicationData()..switchtoPayedPlan = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> redeemVoucher(String voucher) async {
     final get = ApplicationData_RedeemVoucher()..voucher = voucher;
-    final appData = ApplicationData()..redeemvoucher = get;
+    final appData = ApplicationData()..redeemVoucher = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
@@ -618,28 +618,35 @@ class ApiService {
     final get = ApplicationData_ReportUser()
       ..reportedUserId = Int64(userId)
       ..reason = reason;
-    final appData = ApplicationData()..reportuser = get;
+    final appData = ApplicationData()..reportUser = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> deleteAccount() async {
     final get = ApplicationData_DeleteAccount();
-    final appData = ApplicationData()..deleteaccount = get;
+    final appData = ApplicationData()..deleteAccount = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> redeemUserInviteCode(String inviteCode) async {
     final get = ApplicationData_RedeemAdditionalCode()..inviteCode = inviteCode;
-    final appData = ApplicationData()..redeemadditionalcode = get;
+    final appData = ApplicationData()..redeemAdditionalCode = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> updateFCMToken(String googleFcm) async {
     final get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
-    final appData = ApplicationData()..updategooglefcmtoken = get;
+    final appData = ApplicationData()..updateGoogleFcmToken = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
+  Future<Result> changeUsername(String username) async {
+    final get = ApplicationData_ChangeUsername()..username = username;
+    final appData = ApplicationData()..changeUsername = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
@@ -653,7 +660,7 @@ class ApiService {
       ..signedPrekeyId = Int64(signedPreKeyId)
       ..signedPrekey = signedPreKey
       ..signedPrekeySignature = signedPreKeySignature;
-    final appData = ApplicationData()..updatesignedprekey = get;
+    final appData = ApplicationData()..updateSignedPrekey = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
@@ -661,7 +668,7 @@ class ApiService {
   Future<Response_SignedPreKey?> getSignedKeyByUserId(int userId) async {
     final get = ApplicationData_GetSignedPreKeyByUserId()
       ..userId = Int64(userId);
-    final appData = ApplicationData()..getsignedprekeybyuserid = get;
+    final appData = ApplicationData()..getSignedPrekeyByUserid = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
@@ -675,7 +682,7 @@ class ApiService {
 
   Future<OtherPreKeys?> getPreKeysByUserId(int userId) async {
     final get = ApplicationData_GetPrekeysByUserId()..userId = Int64(userId);
-    final appData = ApplicationData()..getprekeysbyuserid = get;
+    final appData = ApplicationData()..getPrekeysByUserId = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
@@ -709,8 +716,7 @@ class ApiService {
     if (pushData != null) {
       testMessage.pushData = pushData;
     }
-
-    final appData = ApplicationData()..textmessage = testMessage;
+    final appData = ApplicationData()..textMessage = testMessage;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: target);
   }

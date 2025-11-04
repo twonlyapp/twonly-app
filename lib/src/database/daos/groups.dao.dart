@@ -37,13 +37,18 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .write(updates);
   }
 
-  Future<List<GroupMember>> getGroupMembers(String groupId) async {
+  Future<List<GroupMember>> getGroupNonLeftMembers(String groupId) async {
     return (select(groupMembers)
           ..where(
             (t) =>
                 t.groupId.equals(groupId) &
                 t.memberState.equals(MemberState.leftGroup.name).not(),
           ))
+        .get();
+  }
+
+  Future<List<GroupMember>> getAllGroupMembers(String groupId) async {
+    return (select(groupMembers)..where((t) => t.groupId.equals(groupId)))
         .get();
   }
 

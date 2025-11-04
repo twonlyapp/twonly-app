@@ -624,8 +624,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The invitation code you provided is invalid. Please check the code and try again.';
 
   @override
-  String get errorUsernameAlreadyTaken =>
-      'The username you want to use is already taken. Please choose a different username.';
+  String get errorUsernameAlreadyTaken => 'The username is already taken.';
 
   @override
   String get errorSignatureNotValid =>

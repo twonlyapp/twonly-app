@@ -375,7 +375,7 @@
     "@errorInternalError": {},
     "errorInvalidInvitationCode": "Der von dir angegebene Einladungscode ist ungültig. Bitte überprüfe den Code und versuche es erneut.",
     "@errorInvalidInvitationCode": {},
-    "errorUsernameAlreadyTaken": "Der Benutzername, den du verwenden möchtest, ist bereits vergeben. Bitte wähle einen anderen Benutzernamen.",
+    "errorUsernameAlreadyTaken": "Der Benutzername ist bereits vergeben.",
     "@errorUsernameAlreadyTaken": {},
     "errorSignatureNotValid": "Die bereitgestellte Signatur ist nicht gültig. Bitte überprüfe deine Anmeldeinformationen und versuche es erneut.",
     "@errorSignatureNotValid": {},

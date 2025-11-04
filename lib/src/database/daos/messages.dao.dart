@@ -310,7 +310,8 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     final message =
         await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
     if (message == null) return true;
-    final members = await twonlyDB.groupsDao.getGroupMembers(message.groupId);
+    final members =
+        await twonlyDB.groupsDao.getGroupNonLeftMembers(message.groupId);
 
     final actions = await (select(messageActions)
           ..where(

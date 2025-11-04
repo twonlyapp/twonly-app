@@ -88,7 +88,7 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
           await twonlyDB.messagesDao.getMessagesByMediaId(media.mediaId);
       for (final message in messages) {
         final contacts =
-            await twonlyDB.groupsDao.getGroupMembers(message.groupId);
+            await twonlyDB.groupsDao.getGroupNonLeftMembers(message.groupId);
         for (final contact in contacts) {
           await twonlyDB.messagesDao.handleMessageAckByServer(
             contact.contactId,

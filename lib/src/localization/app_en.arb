@@ -346,7 +346,7 @@
   "@errorInternalError": {},
   "errorInvalidInvitationCode": "The invitation code you provided is invalid. Please check the code and try again.",
   "@errorInvalidInvitationCode": {},
-  "errorUsernameAlreadyTaken": "The username you want to use is already taken. Please choose a different username.",
+  "errorUsernameAlreadyTaken": "The username is already taken.",
   "@errorUsernameAlreadyTaken": {},
   "errorSignatureNotValid": "The provided signature is not valid. Please check your credentials and try again.",
   "@errorSignatureNotValid": {},

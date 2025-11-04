@@ -295,8 +295,9 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
             onTap: () async {
               if (group.isDirectChat) {
                 final member =
-                    await twonlyDB.groupsDao.getGroupMembers(group.groupId);
+                    await twonlyDB.groupsDao.getAllGroupMembers(group.groupId);
                 if (!context.mounted) return;
+                if (member.isEmpty) return;
                 await Navigator.push(
                   context,
                   MaterialPageRoute(

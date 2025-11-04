@@ -36,7 +36,7 @@ Future<void> syncFlameCounters() async {
     if (flameCounter < 1 && bestFriend.groupId != group.groupId) continue;
 
     final groupMembers =
-        await twonlyDB.groupsDao.getGroupMembers(group.groupId);
+        await twonlyDB.groupsDao.getGroupNonLeftMembers(group.groupId);
     if (groupMembers.length != 1) {
       continue; // flame sync is only done for groups of two
     }

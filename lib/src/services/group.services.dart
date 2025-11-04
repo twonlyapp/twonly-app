@@ -353,7 +353,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
     );
 
     var currentGroupMembers =
-        await twonlyDB.groupsDao.getGroupMembers(group.groupId);
+        await twonlyDB.groupsDao.getGroupNonLeftMembers(group.groupId);
 
     // First find and insert NEW members
     for (final memberId in memberIds) {
@@ -407,7 +407,7 @@ Future<(int, EncryptedGroupState)?> fetchGroupState(Group group) async {
 
     // update the current members list
     currentGroupMembers =
-        await twonlyDB.groupsDao.getGroupMembers(group.groupId);
+        await twonlyDB.groupsDao.getGroupNonLeftMembers(group.groupId);
 
     for (final member in currentGroupMembers) {
       // Member is not any more in the members list

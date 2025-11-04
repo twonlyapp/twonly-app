@@ -1052,6 +1052,7 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
   factory EncryptedContent_ContactUpdate({
     EncryptedContent_ContactUpdate_Type? type,
     $core.List<$core.int>? avatarSvgCompressed,
+    $core.String? username,
     $core.String? displayName,
   }) {
     final $result = create();
@@ -1060,6 +1061,9 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
     }
     if (avatarSvgCompressed != null) {
       $result.avatarSvgCompressed = avatarSvgCompressed;
+    }
+    if (username != null) {
+      $result.username = username;
     }
     if (displayName != null) {
       $result.displayName = displayName;
@@ -1073,7 +1077,8 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'EncryptedContent.ContactUpdate', createEmptyInstance: create)
     ..e<EncryptedContent_ContactUpdate_Type>(1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE, defaultOrMaker: EncryptedContent_ContactUpdate_Type.REQUEST, valueOf: EncryptedContent_ContactUpdate_Type.valueOf, enumValues: EncryptedContent_ContactUpdate_Type.values)
     ..a<$core.List<$core.int>>(2, _omitFieldNames ? '' : 'avatarSvgCompressed', $pb.PbFieldType.OY, protoName: 'avatarSvgCompressed')
-    ..aOS(3, _omitFieldNames ? '' : 'displayName', protoName: 'displayName')
+    ..aOS(3, _omitFieldNames ? '' : 'username')
+    ..aOS(4, _omitFieldNames ? '' : 'displayName', protoName: 'displayName')
     ..hasRequiredFields = false
   ;
 
@@ -1117,13 +1122,22 @@ class EncryptedContent_ContactUpdate extends $pb.GeneratedMessage {
   void clearAvatarSvgCompressed() => clearField(2);
 
   @$pb.TagNumber(3)
-  $core.String get displayName => $_getSZ(2);
+  $core.String get username => $_getSZ(2);
   @$pb.TagNumber(3)
-  set displayName($core.String v) { $_setString(2, v); }
+  set username($core.String v) { $_setString(2, v); }
   @$pb.TagNumber(3)
-  $core.bool hasDisplayName() => $_has(2);
+  $core.bool hasUsername() => $_has(2);
   @$pb.TagNumber(3)
-  void clearDisplayName() => clearField(3);
+  void clearUsername() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get displayName => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set displayName($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasDisplayName() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearDisplayName() => clearField(4);
 }
 
 class EncryptedContent_PushKeys extends $pb.GeneratedMessage {

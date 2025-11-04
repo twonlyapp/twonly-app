@@ -1229,7 +1229,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorUsernameAlreadyTaken.
   ///
   /// In en, this message translates to:
-  /// **'The username you want to use is already taken. Please choose a different username.'**
+  /// **'The username is already taken.'**
   String get errorUsernameAlreadyTaken;
 
   /// No description provided for @errorSignatureNotValid.
