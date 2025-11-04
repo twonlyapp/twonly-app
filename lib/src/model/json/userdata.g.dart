@@ -40,9 +40,6 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       )
       ..storeMediaFilesInGallery =
           json['storeMediaFilesInGallery'] as bool? ?? false
-      ..lastUsedEditorEmojis = (json['lastUsedEditorEmojis'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList()
       ..lastPlanBallance = json['lastPlanBallance'] as String?
       ..additionalUserInvites = json['additionalUserInvites'] as String?
       ..tutorialDisplayed = (json['tutorialDisplayed'] as List<dynamic>?)
@@ -93,7 +90,6 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'preSelectedEmojies': instance.preSelectedEmojies,
       'autoDownloadOptions': instance.autoDownloadOptions,
       'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
-      'lastUsedEditorEmojis': instance.lastUsedEditorEmojis,
       'lastPlanBallance': instance.lastPlanBallance,
       'additionalUserInvites': instance.additionalUserInvites,
       'tutorialDisplayed': instance.tutorialDisplayed,

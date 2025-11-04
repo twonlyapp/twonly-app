@@ -5,7 +5,9 @@
 - Support for groups  
 - Edit & Delete messages
 - Switched to FFmpeg for improved video compression 
+- Create images using volume buttons
 - Video max. length increased to 60 seconds 
+- New and improved emoji picker
 - Removing audio after recording is possible
 - Edited image is now embedded into the video
 - New context menu and other UI enhancements  

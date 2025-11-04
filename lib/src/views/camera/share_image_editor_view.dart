@@ -167,7 +167,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
               context: context,
               backgroundColor: Colors.black,
               builder: (BuildContext context) {
-                return const Emojis();
+                return const EmojiPickerBottom();
               },
             ) as Layer?;
             if (layer == null) return;

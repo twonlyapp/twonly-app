@@ -45,7 +45,7 @@ class MessageContextMenu extends StatelessWidget {
                 context: context,
                 backgroundColor: Colors.black,
                 builder: (BuildContext context) {
-                  return const Emojis();
+                  return const EmojiPickerBottom();
                 },
               ) as EmojiLayerData?;
               if (layer == null) return;

@@ -1,107 +1,83 @@
-import 'dart:async';
-
+import 'dart:io';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/camera/image_editor/data/data.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 
-class Emojis extends StatefulWidget {
-  const Emojis({super.key});
-
-  @override
-  State<Emojis> createState() => _EmojisState();
-}
-
-class _EmojisState extends State<Emojis> {
-  List<String> lastUsed = emojis;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(initAsync());
-  }
-
-  Future<void> initAsync() async {
-    setState(() {
-      lastUsed = gUser.lastUsedEditorEmojis ?? [];
-      lastUsed.addAll(emojis);
-    });
-  }
-
-  Future<void> selectEmojis(String emoji) async {
-    await updateUserdata((user) {
-      if (user.lastUsedEditorEmojis == null) {
-        user.lastUsedEditorEmojis = [emoji];
-      } else {
-        if (user.lastUsedEditorEmojis!.contains(emoji)) {
-          user.lastUsedEditorEmojis!.remove(emoji);
-        }
-        user.lastUsedEditorEmojis!.insert(0, emoji);
-        if (user.lastUsedEditorEmojis!.length > 12) {
-          user.lastUsedEditorEmojis = user.lastUsedEditorEmojis!.sublist(0, 12);
-        }
-        user.lastUsedEditorEmojis!.toSet().toList();
-      }
-      return user;
-    });
-    if (!mounted) return;
-    Navigator.pop(
-      context,
-      EmojiLayerData(
-        text: emoji,
-      ),
-    );
-  }
+class EmojiPickerBottom extends StatelessWidget {
+  const EmojiPickerBottom({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.zero,
-        height: 400,
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.only(
+        height: 450,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
-          color: Colors.black,
+          color: context.color.surfaceContainer,
           boxShadow: [
             BoxShadow(
               blurRadius: 10.9,
-              color: Color.fromRGBO(0, 0, 0, 0.1),
+              color: context.color.surfaceContainer.withAlpha(25),
             ),
           ],
         ),
         child: Column(
           children: [
-            const SizedBox(height: 16),
             Container(
-              height: 315,
-              padding: EdgeInsets.zero,
-              child: GridView(
-                shrinkWrap: true,
-                physics: const ClampingScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 60,
-                ),
-                children: lastUsed.map((String emoji) {
-                  return GridTile(
-                    child: GestureDetector(
-                      onTap: () async {
-                        await selectEmojis(emoji);
-                      },
-                      child: Container(
-                        padding: EdgeInsets.zero,
-                        alignment: Alignment.center,
-                        child: Text(
-                          emoji,
-                          style: const TextStyle(fontSize: 35),
-                        ),
-                      ),
+              margin: const EdgeInsets.all(30),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                color: Colors.grey,
+              ),
+              height: 3,
+              width: 60,
+            ),
+            Expanded(
+              child: EmojiPicker(
+                onEmojiSelected: (category, emoji) {
+                  Navigator.pop(
+                    context,
+                    EmojiLayerData(
+                      text: emoji.emoji,
                     ),
                   );
-                }).toList(),
+                },
+                // textEditingController: _textFieldController,
+                config: Config(
+                  height: 400,
+                  locale: Localizations.localeOf(context),
+                  viewOrderConfig: const ViewOrderConfig(
+                    top: EmojiPickerItem.searchBar,
+                    // middle: EmojiPickerItem.emojiView,
+                    bottom: EmojiPickerItem.categoryBar,
+                  ),
+                  emojiTextStyle:
+                      TextStyle(fontSize: 24 * (Platform.isIOS ? 1.2 : 1)),
+                  emojiViewConfig: EmojiViewConfig(
+                    backgroundColor: context.color.surfaceContainer,
+                  ),
+                  searchViewConfig: SearchViewConfig(
+                    backgroundColor: context.color.surfaceContainer,
+                    buttonIconColor: Colors.white,
+                  ),
+                  categoryViewConfig: CategoryViewConfig(
+                    backgroundColor: context.color.surfaceContainer,
+                    dividerColor: Colors.white,
+                    indicatorColor: context.color.primary,
+                    iconColorSelected: context.color.primary,
+                    iconColor: context.color.secondary,
+                  ),
+                  bottomActionBarConfig: BottomActionBarConfig(
+                    backgroundColor: context.color.surfaceContainer,
+                    buttonColor: context.color.surfaceContainer,
+                    buttonIconColor: context.color.secondary,
+                  ),
+                ),
               ),
             ),
           ],

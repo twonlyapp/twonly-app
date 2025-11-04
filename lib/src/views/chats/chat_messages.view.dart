@@ -11,11 +11,10 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
-import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_date_chip.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_group_action.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
@@ -70,10 +69,8 @@ class ChatMessagesView extends StatefulWidget {
 }
 
 class _ChatMessagesViewState extends State<ChatMessagesView> {
-  TextEditingController newMessageController = TextEditingController();
   HashSet<int> alreadyReportedOpened = HashSet<int>();
   late Group group;
-  String currentInputText = '';
   late StreamSubscription<Group?> userSub;
   late StreamSubscription<List<Message>> messageSub;
   StreamSubscription<List<GroupHistory>>? groupActionsSub;
@@ -267,21 +264,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     setState(() {});
   }
 
-  Future<void> _sendMessage() async {
-    if (newMessageController.text == '') return;
-
-    await insertAndSendTextMessage(
-      group.groupId,
-      newMessageController.text,
-      quotesMessage?.messageId,
-    );
-
-    newMessageController.clear();
-    currentInputText = '';
-    quotesMessage = null;
-    setState(() {});
-  }
-
   Future<void> scrollToMessage(String messageId) async {
     final index = messages.indexWhere(
       (x) => x.isMessage && x.message!.messageId == messageId,
@@ -464,100 +446,15 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                   ),
                 ),
               if (!group.leftGroup)
-                Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: 30,
-                    left: 20,
-                    right: 20,
-                    top: 10,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          color: Colors.grey,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 2,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const FaIcon(FontAwesomeIcons.faceSmile),
-                              Expanded(
-                                child: TextField(
-                                  controller: newMessageController,
-                                  focusNode: textFieldFocus,
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: 4,
-                                  minLines: 1,
-                                  onChanged: (value) {
-                                    currentInputText = value;
-                                    setState(() {});
-                                  },
-                                  onSubmitted: (_) {
-                                    _sendMessage();
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: context.lang.chatListDetailInput,
-                                    // contentPadding: const EdgeInsets.symmetric(
-                                    //   horizontal: 20,
-                                    //   vertical: 10,
-                                    // ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      borderSide: BorderSide(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      borderSide: const BorderSide(
-                                        color: Colors.grey,
-                                        width: 2,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (currentInputText != '')
-                        IconButton(
-                          padding: const EdgeInsets.all(15),
-                          icon: const FaIcon(
-                            FontAwesomeIcons.solidPaperPlane,
-                          ),
-                          onPressed: _sendMessage,
-                        )
-                      else
-                        IconButton(
-                          icon: const FaIcon(FontAwesomeIcons.camera),
-                          padding: const EdgeInsets.all(15),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) {
-                                  return CameraSendToView(widget.group);
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                    ],
-                  ),
+                MessageInput(
+                  group: group,
+                  quotesMessage: quotesMessage,
+                  textFieldFocus: textFieldFocus,
+                  onMessageSend: () {
+                    setState(() {
+                      quotesMessage = null;
+                    });
+                  },
                 ),
             ],
           ),

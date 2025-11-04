@@ -64,8 +64,6 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool storeMediaFilesInGallery = false;
 
-  List<String>? lastUsedEditorEmojis;
-
   String? lastPlanBallance;
   String? additionalUserInvites;
 
