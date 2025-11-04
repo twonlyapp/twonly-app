@@ -9,6 +9,8 @@ PODS:
     - Flutter
   - device_info_plus (0.0.1):
     - Flutter
+  - emoji_picker_flutter (0.0.1):
+    - Flutter
   - ffmpeg_kit_flutter_new (1.0.0):
     - ffmpeg_kit_flutter_new/full-gpl (= 1.0.0)
     - Flutter
@@ -82,6 +84,8 @@ PODS:
   - flutter_secure_storage_darwin (10.0.0):
     - Flutter
     - FlutterMacOS
+  - flutter_volume_controller (0.0.1):
+    - Flutter
   - flutter_zxing (0.0.1):
     - Flutter
   - gal (1.0.0):
@@ -248,6 +252,7 @@ DEPENDENCIES:
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - cryptography_flutter_plus (from `.symlinks/plugins/cryptography_flutter_plus/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - emoji_picker_flutter (from `.symlinks/plugins/emoji_picker_flutter/ios`)
   - ffmpeg_kit_flutter_new (from `.symlinks/plugins/ffmpeg_kit_flutter_new/ios`)
   - Firebase
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
@@ -260,6 +265,7 @@ DEPENDENCIES:
   - flutter_keyboard_visibility_temp_fork (from `.symlinks/plugins/flutter_keyboard_visibility_temp_fork/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
+  - flutter_volume_controller (from `.symlinks/plugins/flutter_volume_controller/ios`)
   - flutter_zxing (from `.symlinks/plugins/flutter_zxing/ios`)
   - gal (from `.symlinks/plugins/gal/darwin`)
   - GoogleUtilities
@@ -311,6 +317,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/cryptography_flutter_plus/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
+  emoji_picker_flutter:
+    :path: ".symlinks/plugins/emoji_picker_flutter/ios"
   ffmpeg_kit_flutter_new:
     :path: ".symlinks/plugins/ffmpeg_kit_flutter_new/ios"
   firebase_core:
@@ -327,6 +335,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_secure_storage_darwin:
     :path: ".symlinks/plugins/flutter_secure_storage_darwin/darwin"
+  flutter_volume_controller:
+    :path: ".symlinks/plugins/flutter_volume_controller/ios"
   flutter_zxing:
     :path: ".symlinks/plugins/flutter_zxing/ios"
   gal:
@@ -364,6 +374,7 @@ SPEC CHECKSUMS:
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   cryptography_flutter_plus: 44f4e9e4079395fcbb3e7809c0ac2c6ae2d9576f
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
+  emoji_picker_flutter: ece213fc274bdddefb77d502d33080dc54e616cc
   ffmpeg_kit_flutter_new: 12426a19f10ac81186c67c6ebc4717f8f4364b7f
   Firebase: f07b15ae5a6ec0f93713e30b923d9970d144af3e
   firebase_core: 744984dbbed8b3036abf34f0b98d80f130a7e464
@@ -378,6 +389,7 @@ SPEC CHECKSUMS:
   flutter_keyboard_visibility_temp_fork: 95b2d534bacf6ac62e7fcbe5c2a9e2c2a17ce06f
   flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
   flutter_secure_storage_darwin: ce237a8775b39723566dc72571190a3769d70468
+  flutter_volume_controller: c2be490cb0487e8b88d0d9fc2b7e1c139a4ebccb
   flutter_zxing: e8bcc43bd3056c70c271b732ed94e7a16fd62f93
   gal: baecd024ebfd13c441269ca7404792a7152fde89
   GoogleAdsOnDeviceConversion: e03a386840803ea7eef3fd22a061930142c039c1

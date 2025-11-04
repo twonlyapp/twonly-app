@@ -79,6 +79,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
               cameraController: cameraController,
               selectedCameraDetails: selectedCameraDetails,
               screenshotController: screenshotController,
+              isVisible: true,
             ),
           ],
         ),

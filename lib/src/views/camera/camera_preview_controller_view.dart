@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.dart';
+import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -88,6 +90,7 @@ class CameraPreviewControllerView extends StatelessWidget {
     required this.selectCamera,
     required this.selectedCameraDetails,
     required this.screenshotController,
+    required this.isVisible,
     super.key,
     this.sendToGroup,
   });
@@ -97,6 +100,7 @@ class CameraPreviewControllerView extends StatelessWidget {
   final CameraController? cameraController;
   final SelectedCameraDetails selectedCameraDetails;
   final ScreenshotController screenshotController;
+  final bool isVisible;
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +115,7 @@ class CameraPreviewControllerView extends StatelessWidget {
               cameraController: cameraController,
               selectedCameraDetails: selectedCameraDetails,
               screenshotController: screenshotController,
+              isVisible: isVisible,
             );
           } else {
             return PermissionHandlerView(
@@ -133,6 +138,7 @@ class CameraPreviewView extends StatefulWidget {
     required this.cameraController,
     required this.selectedCameraDetails,
     required this.screenshotController,
+    required this.isVisible,
     super.key,
     this.sendToGroup,
   });
@@ -144,6 +150,7 @@ class CameraPreviewView extends StatefulWidget {
   final CameraController? cameraController;
   final SelectedCameraDetails selectedCameraDetails;
   final ScreenshotController screenshotController;
+  final bool isVisible;
 
   @override
   State<CameraPreviewView> createState() => _CameraPreviewViewState();
@@ -164,10 +171,69 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   final GlobalKey keyTriggerButton = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+  StreamSubscription<HardwareButton>? androidVolumeDownSub;
+
   @override
   void initState() {
     super.initState();
+    initVolumeControl();
     initAsync();
+  }
+
+  @override
+  void didUpdateWidget(covariant CameraPreviewView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isVisible != widget.isVisible) {
+      if (widget.isVisible) {
+        initVolumeControl();
+      } else {
+        deInitVolumeControl();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoRecordingTimer?.cancel();
+    deInitVolumeControl();
+    super.dispose();
+  }
+
+  Future<void> initVolumeControl() async {
+    if (Platform.isIOS) {
+      await FlutterVolumeController.updateShowSystemUI(false);
+      double? startedVolume;
+
+      FlutterVolumeController.addListener(
+        (volume) async {
+          if (startedVolume == null) {
+            startedVolume = volume;
+            return;
+          }
+          if (startedVolume == volume) {
+            return;
+          }
+          // reset the volume back to the original value
+          await FlutterVolumeController.setVolume(startedVolume!);
+          await takePicture();
+        },
+      );
+    }
+    if (Platform.isAndroid) {
+      androidVolumeDownSub = FlutterAndroidVolumeKeydown.stream.listen((event) {
+        takePicture();
+      });
+    }
+  }
+
+  Future<void> deInitVolumeControl() async {
+    if (Platform.isIOS) {
+      await FlutterVolumeController.updateShowSystemUI(true);
+      FlutterVolumeController.removeListener();
+    }
+    if (Platform.isAndroid) {
+      await androidVolumeDownSub?.cancel();
+    }
   }
 
   Future<void> initAsync() async {
@@ -182,12 +248,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
     if (!mounted) return;
     setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _videoRecordingTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> requestMicrophonePermission() async {
@@ -309,6 +369,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       // unawaited(mediaFileService.compressMedia());
     }
 
+    await deInitVolumeControl();
+    if (!mounted) return true;
+
     final shouldReturn = await Navigator.push(
       context,
       PageRouteBuilder(
@@ -333,11 +396,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       });
     }
     if (!mounted) return true;
+    await initVolumeControl();
     // shouldReturn is null when the user used the back button
     if (shouldReturn != null && shouldReturn) {
       if (widget.sendToGroup == null) {
         globalUpdateOfHomeViewPageIndex(0);
-      } else {
+      } else if (mounted) {
         Navigator.pop(context);
       }
       return true;

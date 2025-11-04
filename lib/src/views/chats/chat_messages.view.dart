@@ -474,20 +474,63 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: newMessageController,
-                          focusNode: textFieldFocus,
-                          keyboardType: TextInputType.multiline,
-                          maxLines: 4,
-                          minLines: 1,
-                          onChanged: (value) {
-                            currentInputText = value;
-                            setState(() {});
-                          },
-                          onSubmitted: (_) {
-                            _sendMessage();
-                          },
-                          decoration: inputTextMessageDeco(context),
+                        child: Container(
+                          color: Colors.grey,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 2,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const FaIcon(FontAwesomeIcons.faceSmile),
+                              Expanded(
+                                child: TextField(
+                                  controller: newMessageController,
+                                  focusNode: textFieldFocus,
+                                  keyboardType: TextInputType.multiline,
+                                  maxLines: 4,
+                                  minLines: 1,
+                                  onChanged: (value) {
+                                    currentInputText = value;
+                                    setState(() {});
+                                  },
+                                  onSubmitted: (_) {
+                                    _sendMessage();
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: context.lang.chatListDetailInput,
+                                    // contentPadding: const EdgeInsets.symmetric(
+                                    //   horizontal: 20,
+                                    //   vertical: 10,
+                                    // ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: BorderSide(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: const BorderSide(
+                                        color: Colors.grey,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       if (currentInputText != '')

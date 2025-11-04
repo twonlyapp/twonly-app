@@ -32,19 +32,19 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
   final ok = client.Response_Ok()..none = true;
   var response = client.Response()..ok = ok;
 
-  // try {
-  if (msg.v0.hasRequestNewPreKeys()) {
-    response = await handleRequestNewPreKey();
-  } else if (msg.v0.hasNewMessage()) {
-    final body = Uint8List.fromList(msg.v0.newMessage.body);
-    final fromUserId = msg.v0.newMessage.fromUserId.toInt();
-    await handleClient2ClientMessage(fromUserId, body);
-  } else {
-    Log.error('Unknown server message: $msg');
+  try {
+    if (msg.v0.hasRequestNewPreKeys()) {
+      response = await handleRequestNewPreKey();
+    } else if (msg.v0.hasNewMessage()) {
+      final body = Uint8List.fromList(msg.v0.newMessage.body);
+      final fromUserId = msg.v0.newMessage.fromUserId.toInt();
+      await handleClient2ClientMessage(fromUserId, body);
+    } else {
+      Log.error('Unknown server message: $msg');
+    }
+  } catch (e) {
+    Log.error(e);
   }
-  // } catch (e) {
-  // Log.error(e);
-  // }
 
   final v0 = client.V0()
     ..seq = msg.v0.seq

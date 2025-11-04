@@ -193,6 +193,8 @@ class HomeViewState extends State<HomeView> {
                   screenshotController: screenshotController,
                   selectedCameraDetails: selectedCameraDetails,
                   selectCamera: selectCamera,
+                  isVisible:
+                      ((1 - (offsetRatio * 4) % 1) == 1) && activePageIdx == 1,
                 ),
               ),
             ),
