@@ -2201,8 +2201,8 @@ abstract class AppLocalizations {
   /// No description provided for @durationShortDays.
   ///
   /// In en, this message translates to:
-  /// **'Days'**
-  String get durationShortDays;
+  /// **'{count, plural, =1{1 Day} other{{count} Days}}'**
+  String durationShortDays(num count);
 
   /// No description provided for @contacts.
   ///
@@ -2603,14 +2603,56 @@ abstract class AppLocalizations {
   /// No description provided for @changeDisplayMaxTime.
   ///
   /// In en, this message translates to:
-  /// **'{username} has set the time limit for disappearing messages to {time}.'**
+  /// **'Chats will now be deleted after {time} ({username}).'**
   String changeDisplayMaxTime(Object time, Object username);
 
   /// No description provided for @youChangedDisplayMaxTime.
   ///
   /// In en, this message translates to:
-  /// **'You have set the time limit for disappearing messages to {time}.'**
+  /// **'Chats will now be deleted after {time}.'**
   String youChangedDisplayMaxTime(Object time);
+
+  /// No description provided for @userGotReported.
+  ///
+  /// In en, this message translates to:
+  /// **'User has been reported.'**
+  String get userGotReported;
+
+  /// No description provided for @deleteChatAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat after...'**
+  String get deleteChatAfter;
+
+  /// No description provided for @deleteChatAfterAnHour.
+  ///
+  /// In en, this message translates to:
+  /// **'one hour.'**
+  String get deleteChatAfterAnHour;
+
+  /// No description provided for @deleteChatAfterADay.
+  ///
+  /// In en, this message translates to:
+  /// **'one day.'**
+  String get deleteChatAfterADay;
+
+  /// No description provided for @deleteChatAfterAWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'one week.'**
+  String get deleteChatAfterAWeek;
+
+  /// No description provided for @deleteChatAfterAMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'one month.'**
+  String get deleteChatAfterAMonth;
+
+  /// No description provided for @deleteChatAfterAYear.
+  ///
+  /// In en, this message translates to:
+  /// **'one year.'**
+  String get deleteChatAfterAYear;
 }
 
 class _AppLocalizationsDelegate

@@ -138,6 +138,15 @@ Future<void> handleGroupUpdate(
           contactId: Value(fromUserId),
         ),
       );
+      if (group.isDirectChat) {
+        await twonlyDB.groupsDao.updateGroup(
+          group.groupId,
+          GroupsCompanion(
+            deleteMessagesAfterMilliseconds:
+                Value(update.newDeleteMessagesAfterMilliseconds.toInt()),
+          ),
+        );
+      }
     case GroupActionType.removedMember:
     case GroupActionType.addMember:
     case GroupActionType.leftGroup:
@@ -165,7 +174,9 @@ Future<void> handleGroupUpdate(
       break;
   }
 
-  unawaited(fetchGroupState(group));
+  if (!group.isDirectChat) {
+    unawaited(fetchGroupState(group));
+  }
 }
 
 Future<bool> handleGroupJoin(

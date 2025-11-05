@@ -1159,7 +1159,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get durationShortHour => 'Hrs.';
 
   @override
-  String get durationShortDays => 'Days';
+  String durationShortDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Days',
+      one: '1 Day',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get contacts => 'Contacts';
@@ -1414,11 +1422,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String changeDisplayMaxTime(Object time, Object username) {
-    return '$username has set the time limit for disappearing messages to $time.';
+    return 'Chats will now be deleted after $time ($username).';
   }
 
   @override
   String youChangedDisplayMaxTime(Object time) {
-    return 'You have set the time limit for disappearing messages to $time.';
+    return 'Chats will now be deleted after $time.';
   }
+
+  @override
+  String get userGotReported => 'User has been reported.';
+
+  @override
+  String get deleteChatAfter => 'Delete chat after...';
+
+  @override
+  String get deleteChatAfterAnHour => 'one hour.';
+
+  @override
+  String get deleteChatAfterADay => 'one day.';
+
+  @override
+  String get deleteChatAfterAWeek => 'one week.';
+
+  @override
+  String get deleteChatAfterAMonth => 'one month.';
+
+  @override
+  String get deleteChatAfterAYear => 'one year.';
 }

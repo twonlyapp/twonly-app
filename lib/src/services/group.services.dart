@@ -654,6 +654,48 @@ Future<bool> updateGroupName(Group group, String groupName) async {
   return (await fetchGroupState(group)) != null;
 }
 
+Future<bool> updateChatDeletionTime(
+  Group group,
+  int deleteMessagesAfterMilliseconds,
+) async {
+  // ensure the latest state is used
+  final currentState = await fetchGroupState(group);
+  if (currentState == null) return false;
+  final (versionId, state) = currentState;
+
+  state.deleteMessagesAfterMilliseconds =
+      Int64(deleteMessagesAfterMilliseconds);
+
+  // send new state to the server
+  if (!await _updateGroupState(group, state)) {
+    return false;
+  }
+
+  await sendCipherTextToGroup(
+    group.groupId,
+    EncryptedContent(
+      groupUpdate: EncryptedContent_GroupUpdate(
+        groupActionType: GroupActionType.changeDisplayMaxTime.name,
+        newDeleteMessagesAfterMilliseconds: Int64(
+          deleteMessagesAfterMilliseconds,
+        ),
+      ),
+    ),
+  );
+
+  await twonlyDB.groupsDao.insertGroupAction(
+    GroupHistoriesCompanion(
+      groupId: Value(group.groupId),
+      type: const Value(GroupActionType.changeDisplayMaxTime),
+      newDeleteMessagesAfterMilliseconds:
+          Value(deleteMessagesAfterMilliseconds),
+    ),
+  );
+
+  // Updates the groupName  :)
+  return (await fetchGroupState(group)) != null;
+}
+
 Future<bool> addNewGroupMembers(
   Group group,
   List<int> newGroupMemberIds,

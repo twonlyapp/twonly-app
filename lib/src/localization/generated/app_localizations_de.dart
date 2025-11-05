@@ -1164,10 +1164,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get durationShortMinute => 'Min.';
 
   @override
-  String get durationShortHour => 'Std';
+  String get durationShortHour => 'Std.';
 
   @override
-  String get durationShortDays => 'Tagen';
+  String durationShortDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get contacts => 'Kontakte';
@@ -1424,11 +1432,32 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String changeDisplayMaxTime(Object time, Object username) {
-    return '$username hat das Zeitlimit für verschwindende Nachrichten auf $time.';
+    return 'Chats werden ab jetzt nach $time gelöscht ($username).';
   }
 
   @override
   String youChangedDisplayMaxTime(Object time) {
-    return 'Du hat das Zeitlimit für verschwindende Nachrichten auf $time.';
+    return 'Chats werden ab jetzt nach $time gelöscht.';
   }
+
+  @override
+  String get userGotReported => 'Benutzer wurde gemeldet.';
+
+  @override
+  String get deleteChatAfter => 'Chat löschen nach...';
+
+  @override
+  String get deleteChatAfterAnHour => 'einer Stunde.';
+
+  @override
+  String get deleteChatAfterADay => 'einem Tag.';
+
+  @override
+  String get deleteChatAfterAWeek => 'einer Woche.';
+
+  @override
+  String get deleteChatAfterAMonth => 'einem Monat.';
+
+  @override
+  String get deleteChatAfterAYear => 'einem Jahr.';
 }

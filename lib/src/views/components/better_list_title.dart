@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class BetterListTile extends StatelessWidget {
   const BetterListTile({
     required this.text,
-    required this.onTap,
+    this.onTap,
     this.icon,
     this.leading,
     super.key,

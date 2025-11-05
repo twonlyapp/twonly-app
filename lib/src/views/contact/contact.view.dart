@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -9,8 +10,10 @@ import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/flame.dart';
+import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
+import 'package:twonly/src/views/groups/group.view.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -68,30 +71,14 @@ class _ContactViewState extends State<ContactView> {
     if (!mounted) return;
     if (res.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Benutzer wurde gemeldet.'),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(context.lang.userGotReported),
+          duration: const Duration(seconds: 3),
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.',
-          ),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      showNetworkIssue(context);
     }
-    // if (block) {
-    //   const update = ContactsCompanion(blocked: Value(true));
-    //   if (context.mounted) {
-    //     await twonlyDB.contactsDao.updateContact(contact.userId, update);
-    //   }
-    //   if (mounted) {
-    //     Navigator.popUntil(context, (route) => route.isFirst);
-    //   }
-    // }
   }
 
   @override
@@ -153,6 +140,10 @@ class _ContactViewState extends State<ContactView> {
                         .updateContact(contact.userId, update);
                   }
                 },
+              ),
+              const Divider(),
+              SelectChatDeletionTimeListTitle(
+                groupId: getUUIDforDirectChat(widget.userId, gUser.userId),
               ),
               const Divider(),
               BetterListTile(

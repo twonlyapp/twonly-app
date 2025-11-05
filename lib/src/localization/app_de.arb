@@ -689,9 +689,9 @@
     "@durationShortSecond": {},
     "durationShortMinute": "Min.",
     "@durationShortMinute": {},
-    "durationShortHour": "Std",
+    "durationShortHour": "Std.",
     "@durationShortHour": {},
-    "durationShortDays": "Tagen",
+    "durationShortDays": "{count, plural, =1{1 Tag} other{{count} Tage}}",
     "@durationShortDays": {},
     "contacts": "Kontakte",
     "groups": "Gruppen",
@@ -805,6 +805,13 @@
     "leaveGroupSureTitle": "Gruppe verlassen",
     "leaveGroupSureBody": "Willst du die Gruppe wirklich verlassen?",
     "leaveGroupSureOkBtn": "Gruppe verlassen",
-    "changeDisplayMaxTime": "{username} hat das Zeitlimit für verschwindende Nachrichten auf {time}.",
-    "youChangedDisplayMaxTime": "Du hat das Zeitlimit für verschwindende Nachrichten auf {time}."
+    "changeDisplayMaxTime": "Chats werden ab jetzt nach {time} gelöscht ({username}).",
+    "youChangedDisplayMaxTime": "Chats werden ab jetzt nach {time} gelöscht.",
+    "userGotReported": "Benutzer wurde gemeldet.",
+    "deleteChatAfter": "Chat löschen nach...",
+    "deleteChatAfterAnHour": "einer Stunde.",
+    "deleteChatAfterADay": "einem Tag.",
+    "deleteChatAfterAWeek": "einer Woche.",
+    "deleteChatAfterAMonth": "einem Monat.",
+    "deleteChatAfterAYear": "einem Jahr."
 }

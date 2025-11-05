@@ -113,7 +113,7 @@ String formatDuration(BuildContext context, int seconds) {
     return '$hours ${context.lang.durationShortHour}';
   } else {
     final days = seconds ~/ 86400;
-    return '$days ${context.lang.durationShortDays}';
+    return context.lang.durationShortDays(days);
   }
 }
 

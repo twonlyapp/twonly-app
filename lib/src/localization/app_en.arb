@@ -516,7 +516,7 @@
   "durationShortSecond": "Sec.",
   "durationShortMinute": "Min.",
   "durationShortHour": "Hrs.",
-  "durationShortDays": "Days",
+  "durationShortDays": "{count, plural, =1{1 Day} other{{count} Days}}",
   "contacts": "Contacts",
   "groups": "Groups",
   "newGroup": "New group",
@@ -583,6 +583,13 @@
   "leaveGroupSureTitle": "Leave group",
   "leaveGroupSureBody": "Do you really want to leave the group?",
   "leaveGroupSureOkBtn": "Leave group",
-  "changeDisplayMaxTime": "{username} has set the time limit for disappearing messages to {time}.",
-  "youChangedDisplayMaxTime": "You have set the time limit for disappearing messages to {time}."
+  "changeDisplayMaxTime": "Chats will now be deleted after {time} ({username}).",
+  "youChangedDisplayMaxTime": "Chats will now be deleted after {time}.",
+  "userGotReported": "User has been reported.",
+  "deleteChatAfter": "Delete chat after...",
+  "deleteChatAfterAnHour": "one hour.",
+  "deleteChatAfterADay": "one day.",
+  "deleteChatAfterAWeek": "one week.",
+  "deleteChatAfterAMonth": "one month.",
+  "deleteChatAfterAYear": "one year."
 }

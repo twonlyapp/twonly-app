@@ -11,6 +11,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/groups/group_create_select_members.view.dart';
@@ -148,9 +149,6 @@ class _GroupViewState extends State<GroupView> {
         return;
       }
     }
-    // If not admin -> append to the server state
-
-    // -> Inform the other users
   }
 
   @override
@@ -188,6 +186,10 @@ class _GroupViewState extends State<GroupView> {
               text: context.lang.groupNameInput,
               onTap: _updateGroupName,
             ),
+          SelectChatDeletionTimeListTitle(
+            groupId: widget.group.groupId,
+            disabled: !group.isGroupAdmin,
+          ),
           const Divider(),
           ListTile(
             title: Padding(

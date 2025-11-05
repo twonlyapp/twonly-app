@@ -64,7 +64,6 @@ class _AllReactionsViewState extends State<AllReactionsView> {
         ),
       ),
     );
-    // if (mounted) Navigator.pop(context);
   }
 
   @override

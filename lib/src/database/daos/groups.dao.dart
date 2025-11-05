@@ -198,6 +198,12 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .watchSingleOrNull();
   }
 
+  Stream<Group?> watchDirectChat(int contactId) {
+    final groupId = getUUIDforDirectChat(contactId, gUser.userId);
+    return (select(groups)..where((t) => t.groupId.equals(groupId)))
+        .watchSingleOrNull();
+  }
+
   Stream<List<Group>> watchGroupsForChatList() {
     return (select(groups)
           ..where((t) => t.deletedContent.equals(false))

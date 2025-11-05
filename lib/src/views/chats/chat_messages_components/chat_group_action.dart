@@ -58,12 +58,12 @@ class _ChatGroupActionState extends State<ChatGroupAction> {
       case GroupActionType.changeDisplayMaxTime:
         final time = formatDuration(
           context,
-          (widget.action.newDeleteMessagesAfterMilliseconds ?? 0 / 1000) as int,
+          (widget.action.newDeleteMessagesAfterMilliseconds ?? 0) ~/ 1000,
         );
         text = (contact == null)
             ? context.lang.youChangedDisplayMaxTime(time)
-            : context.lang.changeDisplayMaxTime(maker, time);
-        icon = FontAwesomeIcons.pencil;
+            : context.lang.changeDisplayMaxTime(time, maker);
+        icon = FontAwesomeIcons.stopwatch20;
       case GroupActionType.updatedGroupName:
         text = (contact == null)
             ? context.lang.youChangedGroupName(widget.action.newGroupName!)
