@@ -1411,4 +1411,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaveGroupSureOkBtn => 'Leave group';
+
+  @override
+  String changeDisplayMaxTime(Object time, Object username) {
+    return '$username has set the time limit for disappearing messages to $time.';
+  }
+
+  @override
+  String youChangedDisplayMaxTime(Object time) {
+    return 'You have set the time limit for disappearing messages to $time.';
+  }
 }

@@ -2599,6 +2599,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave group'**
   String get leaveGroupSureOkBtn;
+
+  /// No description provided for @changeDisplayMaxTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} has set the time limit for disappearing messages to {time}.'**
+  String changeDisplayMaxTime(Object time, Object username);
+
+  /// No description provided for @youChangedDisplayMaxTime.
+  ///
+  /// In en, this message translates to:
+  /// **'You have set the time limit for disappearing messages to {time}.'**
+  String youChangedDisplayMaxTime(Object time);
 }
 
 class _AppLocalizationsDelegate

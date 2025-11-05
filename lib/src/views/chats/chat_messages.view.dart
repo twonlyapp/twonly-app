@@ -114,7 +114,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     groupActionsSub?.cancel();
     lastOpenedMessageByContactSub?.cancel();
     tutorial?.cancel();
-    textFieldFocus.dispose();
     super.dispose();
   }
 

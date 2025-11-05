@@ -6,6 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
+import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
@@ -58,6 +60,10 @@ class _ProfileViewState extends State<ProfileView> {
 
       return;
     }
+
+    // as the username has changes, remove the old from the server and then upload it again.
+    await removeTwonlySafeFromServer();
+    unawaited(performTwonlySafeBackup(force: true));
 
     await updateUserdata((user) {
       user

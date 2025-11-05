@@ -415,6 +415,7 @@ class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
     $core.String? groupActionType,
     $fixnum.Int64? affectedContactId,
     $core.String? newGroupName,
+    $fixnum.Int64? newDeleteMessagesAfterMilliseconds,
   }) {
     final $result = create();
     if (groupActionType != null) {
@@ -426,6 +427,9 @@ class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
     if (newGroupName != null) {
       $result.newGroupName = newGroupName;
     }
+    if (newDeleteMessagesAfterMilliseconds != null) {
+      $result.newDeleteMessagesAfterMilliseconds = newDeleteMessagesAfterMilliseconds;
+    }
     return $result;
   }
   EncryptedContent_GroupUpdate._() : super();
@@ -436,6 +440,7 @@ class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'groupActionType', protoName: 'groupActionType')
     ..aInt64(2, _omitFieldNames ? '' : 'affectedContactId', protoName: 'affectedContactId')
     ..aOS(3, _omitFieldNames ? '' : 'newGroupName', protoName: 'newGroupName')
+    ..aInt64(4, _omitFieldNames ? '' : 'newDeleteMessagesAfterMilliseconds', protoName: 'newDeleteMessagesAfterMilliseconds')
     ..hasRequiredFields = false
   ;
 
@@ -486,6 +491,15 @@ class EncryptedContent_GroupUpdate extends $pb.GeneratedMessage {
   $core.bool hasNewGroupName() => $_has(2);
   @$pb.TagNumber(3)
   void clearNewGroupName() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get newDeleteMessagesAfterMilliseconds => $_getI64(3);
+  @$pb.TagNumber(4)
+  set newDeleteMessagesAfterMilliseconds($fixnum.Int64 v) { $_setInt64(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasNewDeleteMessagesAfterMilliseconds() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearNewDeleteMessagesAfterMilliseconds() => clearField(4);
 }
 
 class EncryptedContent_TextMessage extends $pb.GeneratedMessage {

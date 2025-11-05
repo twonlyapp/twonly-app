@@ -128,6 +128,16 @@ Future<void> handleGroupUpdate(
           contactId: Value(fromUserId),
         ),
       );
+    case GroupActionType.changeDisplayMaxTime:
+      await twonlyDB.groupsDao.insertGroupAction(
+        GroupHistoriesCompanion(
+          groupId: Value(groupId),
+          type: Value(actionType),
+          newDeleteMessagesAfterMilliseconds:
+              Value(update.newDeleteMessagesAfterMilliseconds.toInt()),
+          contactId: Value(fromUserId),
+        ),
+      );
     case GroupActionType.removedMember:
     case GroupActionType.addMember:
     case GroupActionType.leftGroup:

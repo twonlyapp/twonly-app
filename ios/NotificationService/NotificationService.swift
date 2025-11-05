@@ -229,7 +229,7 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .reactionToText: "hat mit {{content}} auf deinen Text reagiert.",
             .reactionToImage: "hat mit {{content}} auf dein Bild reagiert.",
             .response: "hat dir{inGroup} geantwortet.",
-            .addedToGroup: "hat dich zu \"{{content}}\" hinzugefügt."
+            .addedToGroup: "hat dich zu \"{{content}}\" hinzugefügt.",
         ]
     } else {  // Default to English
         pushNotificationText = [
@@ -247,7 +247,7 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .reactionToText: "has reacted with {{content}} to your text.",
             .reactionToImage: "has reacted with {{content}} to your image.",
             .response: "has responded{inGroup}.",
-            .addedToGroup: "has added you to \"{{content}}\""
+            .addedToGroup: "has added you to \"{{content}}\"",
         ]
     }
 
@@ -257,9 +257,10 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
         content.replace("{{content}}", with: pushNotification.additionalContent)
         content.replace("{inGroup}", with: " in {inGroup}")
         content.replace("{inGroup}", with: pushNotification.additionalContent)
+    } else {
+        content.replace("{inGroup}", with: "")
     }
 
     // Return the corresponding message or an empty string if not found
     return (content, title)
 }
-

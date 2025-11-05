@@ -72,6 +72,7 @@ message EncryptedContent {
         string groupActionType = 1; // GroupActionType.name
         optional int64 affectedContactId = 2;
         optional string newGroupName = 3;
+        optional int64 newDeleteMessagesAfterMilliseconds = 4;
     }
 
     message TextMessage {

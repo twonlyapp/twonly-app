@@ -24,7 +24,7 @@ Future<void> enableTwonlySafe(String password) async {
   unawaited(performTwonlySafeBackup(force: true));
 }
 
-Future<void> disableTwonlySafe() async {
+Future<void> removeTwonlySafeFromServer() async {
   final serverUrl = await getTwonlySafeBackupUrl();
   if (serverUrl != null) {
     try {
@@ -40,10 +40,6 @@ Future<void> disableTwonlySafe() async {
       Log.error('Could not connect to the server.');
     }
   }
-  await updateUserdata((user) {
-    user.twonlySafeBackup = null;
-    return user;
-  });
 }
 
 Future<(Uint8List, Uint8List)> getMasterKey(

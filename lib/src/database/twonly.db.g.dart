@@ -7038,6 +7038,13 @@ class $GroupHistoriesTable extends GroupHistories
   late final GeneratedColumn<String> newGroupName = GeneratedColumn<String>(
       'new_group_name', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _newDeleteMessagesAfterMillisecondsMeta =
+      const VerificationMeta('newDeleteMessagesAfterMilliseconds');
+  @override
+  late final GeneratedColumn<int> newDeleteMessagesAfterMilliseconds =
+      GeneratedColumn<int>(
+          'new_delete_messages_after_milliseconds', aliasedName, true,
+          type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   late final GeneratedColumnWithTypeConverter<GroupActionType, String> type =
       GeneratedColumn<String>('type', aliasedName, false,
@@ -7059,6 +7066,7 @@ class $GroupHistoriesTable extends GroupHistories
         affectedContactId,
         oldGroupName,
         newGroupName,
+        newDeleteMessagesAfterMilliseconds,
         type,
         actionAt
       ];
@@ -7108,6 +7116,13 @@ class $GroupHistoriesTable extends GroupHistories
           newGroupName.isAcceptableOrUnknown(
               data['new_group_name']!, _newGroupNameMeta));
     }
+    if (data.containsKey('new_delete_messages_after_milliseconds')) {
+      context.handle(
+          _newDeleteMessagesAfterMillisecondsMeta,
+          newDeleteMessagesAfterMilliseconds.isAcceptableOrUnknown(
+              data['new_delete_messages_after_milliseconds']!,
+              _newDeleteMessagesAfterMillisecondsMeta));
+    }
     if (data.containsKey('action_at')) {
       context.handle(_actionAtMeta,
           actionAt.isAcceptableOrUnknown(data['action_at']!, _actionAtMeta));
@@ -7133,6 +7148,9 @@ class $GroupHistoriesTable extends GroupHistories
           .read(DriftSqlType.string, data['${effectivePrefix}old_group_name']),
       newGroupName: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}new_group_name']),
+      newDeleteMessagesAfterMilliseconds: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}new_delete_messages_after_milliseconds']),
       type: $GroupHistoriesTable.$convertertype.fromSql(attachedDatabase
           .typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
@@ -7157,6 +7175,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
   final int? affectedContactId;
   final String? oldGroupName;
   final String? newGroupName;
+  final int? newDeleteMessagesAfterMilliseconds;
   final GroupActionType type;
   final DateTime actionAt;
   const GroupHistory(
@@ -7166,6 +7185,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       this.affectedContactId,
       this.oldGroupName,
       this.newGroupName,
+      this.newDeleteMessagesAfterMilliseconds,
       required this.type,
       required this.actionAt});
   @override
@@ -7184,6 +7204,10 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
     }
     if (!nullToAbsent || newGroupName != null) {
       map['new_group_name'] = Variable<String>(newGroupName);
+    }
+    if (!nullToAbsent || newDeleteMessagesAfterMilliseconds != null) {
+      map['new_delete_messages_after_milliseconds'] =
+          Variable<int>(newDeleteMessagesAfterMilliseconds);
     }
     {
       map['type'] =
@@ -7209,6 +7233,10 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       newGroupName: newGroupName == null && nullToAbsent
           ? const Value.absent()
           : Value(newGroupName),
+      newDeleteMessagesAfterMilliseconds:
+          newDeleteMessagesAfterMilliseconds == null && nullToAbsent
+              ? const Value.absent()
+              : Value(newDeleteMessagesAfterMilliseconds),
       type: Value(type),
       actionAt: Value(actionAt),
     );
@@ -7224,6 +7252,8 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       affectedContactId: serializer.fromJson<int?>(json['affectedContactId']),
       oldGroupName: serializer.fromJson<String?>(json['oldGroupName']),
       newGroupName: serializer.fromJson<String?>(json['newGroupName']),
+      newDeleteMessagesAfterMilliseconds:
+          serializer.fromJson<int?>(json['newDeleteMessagesAfterMilliseconds']),
       type: $GroupHistoriesTable.$convertertype
           .fromJson(serializer.fromJson<String>(json['type'])),
       actionAt: serializer.fromJson<DateTime>(json['actionAt']),
@@ -7239,6 +7269,8 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       'affectedContactId': serializer.toJson<int?>(affectedContactId),
       'oldGroupName': serializer.toJson<String?>(oldGroupName),
       'newGroupName': serializer.toJson<String?>(newGroupName),
+      'newDeleteMessagesAfterMilliseconds':
+          serializer.toJson<int?>(newDeleteMessagesAfterMilliseconds),
       'type': serializer
           .toJson<String>($GroupHistoriesTable.$convertertype.toJson(type)),
       'actionAt': serializer.toJson<DateTime>(actionAt),
@@ -7252,6 +7284,7 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
           Value<int?> affectedContactId = const Value.absent(),
           Value<String?> oldGroupName = const Value.absent(),
           Value<String?> newGroupName = const Value.absent(),
+          Value<int?> newDeleteMessagesAfterMilliseconds = const Value.absent(),
           GroupActionType? type,
           DateTime? actionAt}) =>
       GroupHistory(
@@ -7265,6 +7298,10 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
             oldGroupName.present ? oldGroupName.value : this.oldGroupName,
         newGroupName:
             newGroupName.present ? newGroupName.value : this.newGroupName,
+        newDeleteMessagesAfterMilliseconds:
+            newDeleteMessagesAfterMilliseconds.present
+                ? newDeleteMessagesAfterMilliseconds.value
+                : this.newDeleteMessagesAfterMilliseconds,
         type: type ?? this.type,
         actionAt: actionAt ?? this.actionAt,
       );
@@ -7284,6 +7321,10 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
       newGroupName: data.newGroupName.present
           ? data.newGroupName.value
           : this.newGroupName,
+      newDeleteMessagesAfterMilliseconds:
+          data.newDeleteMessagesAfterMilliseconds.present
+              ? data.newDeleteMessagesAfterMilliseconds.value
+              : this.newDeleteMessagesAfterMilliseconds,
       type: data.type.present ? data.type.value : this.type,
       actionAt: data.actionAt.present ? data.actionAt.value : this.actionAt,
     );
@@ -7298,6 +7339,8 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
           ..write('affectedContactId: $affectedContactId, ')
           ..write('oldGroupName: $oldGroupName, ')
           ..write('newGroupName: $newGroupName, ')
+          ..write(
+              'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ')
           ..write('type: $type, ')
           ..write('actionAt: $actionAt')
           ..write(')'))
@@ -7305,8 +7348,16 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
   }
 
   @override
-  int get hashCode => Object.hash(groupHistoryId, groupId, contactId,
-      affectedContactId, oldGroupName, newGroupName, type, actionAt);
+  int get hashCode => Object.hash(
+      groupHistoryId,
+      groupId,
+      contactId,
+      affectedContactId,
+      oldGroupName,
+      newGroupName,
+      newDeleteMessagesAfterMilliseconds,
+      type,
+      actionAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -7317,6 +7368,8 @@ class GroupHistory extends DataClass implements Insertable<GroupHistory> {
           other.affectedContactId == this.affectedContactId &&
           other.oldGroupName == this.oldGroupName &&
           other.newGroupName == this.newGroupName &&
+          other.newDeleteMessagesAfterMilliseconds ==
+              this.newDeleteMessagesAfterMilliseconds &&
           other.type == this.type &&
           other.actionAt == this.actionAt);
 }
@@ -7328,6 +7381,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
   final Value<int?> affectedContactId;
   final Value<String?> oldGroupName;
   final Value<String?> newGroupName;
+  final Value<int?> newDeleteMessagesAfterMilliseconds;
   final Value<GroupActionType> type;
   final Value<DateTime> actionAt;
   final Value<int> rowid;
@@ -7338,6 +7392,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     this.affectedContactId = const Value.absent(),
     this.oldGroupName = const Value.absent(),
     this.newGroupName = const Value.absent(),
+    this.newDeleteMessagesAfterMilliseconds = const Value.absent(),
     this.type = const Value.absent(),
     this.actionAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -7349,6 +7404,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     this.affectedContactId = const Value.absent(),
     this.oldGroupName = const Value.absent(),
     this.newGroupName = const Value.absent(),
+    this.newDeleteMessagesAfterMilliseconds = const Value.absent(),
     required GroupActionType type,
     this.actionAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -7362,6 +7418,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     Expression<int>? affectedContactId,
     Expression<String>? oldGroupName,
     Expression<String>? newGroupName,
+    Expression<int>? newDeleteMessagesAfterMilliseconds,
     Expression<String>? type,
     Expression<DateTime>? actionAt,
     Expression<int>? rowid,
@@ -7373,6 +7430,9 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
       if (affectedContactId != null) 'affected_contact_id': affectedContactId,
       if (oldGroupName != null) 'old_group_name': oldGroupName,
       if (newGroupName != null) 'new_group_name': newGroupName,
+      if (newDeleteMessagesAfterMilliseconds != null)
+        'new_delete_messages_after_milliseconds':
+            newDeleteMessagesAfterMilliseconds,
       if (type != null) 'type': type,
       if (actionAt != null) 'action_at': actionAt,
       if (rowid != null) 'rowid': rowid,
@@ -7386,6 +7446,7 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
       Value<int?>? affectedContactId,
       Value<String?>? oldGroupName,
       Value<String?>? newGroupName,
+      Value<int?>? newDeleteMessagesAfterMilliseconds,
       Value<GroupActionType>? type,
       Value<DateTime>? actionAt,
       Value<int>? rowid}) {
@@ -7396,6 +7457,8 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
       affectedContactId: affectedContactId ?? this.affectedContactId,
       oldGroupName: oldGroupName ?? this.oldGroupName,
       newGroupName: newGroupName ?? this.newGroupName,
+      newDeleteMessagesAfterMilliseconds: newDeleteMessagesAfterMilliseconds ??
+          this.newDeleteMessagesAfterMilliseconds,
       type: type ?? this.type,
       actionAt: actionAt ?? this.actionAt,
       rowid: rowid ?? this.rowid,
@@ -7423,6 +7486,10 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
     if (newGroupName.present) {
       map['new_group_name'] = Variable<String>(newGroupName.value);
     }
+    if (newDeleteMessagesAfterMilliseconds.present) {
+      map['new_delete_messages_after_milliseconds'] =
+          Variable<int>(newDeleteMessagesAfterMilliseconds.value);
+    }
     if (type.present) {
       map['type'] = Variable<String>(
           $GroupHistoriesTable.$convertertype.toSql(type.value));
@@ -7445,6 +7512,8 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistory> {
           ..write('affectedContactId: $affectedContactId, ')
           ..write('oldGroupName: $oldGroupName, ')
           ..write('newGroupName: $newGroupName, ')
+          ..write(
+              'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ')
           ..write('type: $type, ')
           ..write('actionAt: $actionAt, ')
           ..write('rowid: $rowid')
@@ -13359,6 +13428,7 @@ typedef $$GroupHistoriesTableCreateCompanionBuilder = GroupHistoriesCompanion
   Value<int?> affectedContactId,
   Value<String?> oldGroupName,
   Value<String?> newGroupName,
+  Value<int?> newDeleteMessagesAfterMilliseconds,
   required GroupActionType type,
   Value<DateTime> actionAt,
   Value<int> rowid,
@@ -13371,6 +13441,7 @@ typedef $$GroupHistoriesTableUpdateCompanionBuilder = GroupHistoriesCompanion
   Value<int?> affectedContactId,
   Value<String?> oldGroupName,
   Value<String?> newGroupName,
+  Value<int?> newDeleteMessagesAfterMilliseconds,
   Value<GroupActionType> type,
   Value<DateTime> actionAt,
   Value<int> rowid,
@@ -13444,6 +13515,11 @@ class $$GroupHistoriesTableFilterComposer
 
   ColumnFilters<String> get newGroupName => $composableBuilder(
       column: $table.newGroupName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get newDeleteMessagesAfterMilliseconds =>
+      $composableBuilder(
+          column: $table.newDeleteMessagesAfterMilliseconds,
+          builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<GroupActionType, GroupActionType, String>
       get type => $composableBuilder(
@@ -13535,6 +13611,11 @@ class $$GroupHistoriesTableOrderingComposer
       column: $table.newGroupName,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get newDeleteMessagesAfterMilliseconds =>
+      $composableBuilder(
+          column: $table.newDeleteMessagesAfterMilliseconds,
+          builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnOrderings(column));
 
@@ -13619,6 +13700,11 @@ class $$GroupHistoriesTableAnnotationComposer
 
   GeneratedColumn<String> get newGroupName => $composableBuilder(
       column: $table.newGroupName, builder: (column) => column);
+
+  GeneratedColumn<int> get newDeleteMessagesAfterMilliseconds =>
+      $composableBuilder(
+          column: $table.newDeleteMessagesAfterMilliseconds,
+          builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<GroupActionType, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
@@ -13717,6 +13803,8 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
             Value<int?> affectedContactId = const Value.absent(),
             Value<String?> oldGroupName = const Value.absent(),
             Value<String?> newGroupName = const Value.absent(),
+            Value<int?> newDeleteMessagesAfterMilliseconds =
+                const Value.absent(),
             Value<GroupActionType> type = const Value.absent(),
             Value<DateTime> actionAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -13728,6 +13816,8 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
             affectedContactId: affectedContactId,
             oldGroupName: oldGroupName,
             newGroupName: newGroupName,
+            newDeleteMessagesAfterMilliseconds:
+                newDeleteMessagesAfterMilliseconds,
             type: type,
             actionAt: actionAt,
             rowid: rowid,
@@ -13739,6 +13829,8 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
             Value<int?> affectedContactId = const Value.absent(),
             Value<String?> oldGroupName = const Value.absent(),
             Value<String?> newGroupName = const Value.absent(),
+            Value<int?> newDeleteMessagesAfterMilliseconds =
+                const Value.absent(),
             required GroupActionType type,
             Value<DateTime> actionAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -13750,6 +13842,8 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
             affectedContactId: affectedContactId,
             oldGroupName: oldGroupName,
             newGroupName: newGroupName,
+            newDeleteMessagesAfterMilliseconds:
+                newDeleteMessagesAfterMilliseconds,
             type: type,
             actionAt: actionAt,
             rowid: rowid,

@@ -77,6 +77,7 @@ enum GroupActionType {
   promoteToAdmin,
   demoteToMember,
   updatedGroupName,
+  changeDisplayMaxTime,
 }
 
 @DataClassName('GroupHistory')
@@ -93,6 +94,8 @@ class GroupHistories extends Table {
 
   TextColumn get oldGroupName => text().nullable()();
   TextColumn get newGroupName => text().nullable()();
+
+  IntColumn get newDeleteMessagesAfterMilliseconds => integer().nullable()();
 
   TextColumn get type => textEnum<GroupActionType>()();
 

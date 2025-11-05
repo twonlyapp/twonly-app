@@ -804,5 +804,7 @@
     "leaveGroupSelectOtherAdminBody": "Um die Gruppe zu verlassen, musst du zuerst einen neuen Administrator auswählen.",
     "leaveGroupSureTitle": "Gruppe verlassen",
     "leaveGroupSureBody": "Willst du die Gruppe wirklich verlassen?",
-    "leaveGroupSureOkBtn": "Gruppe verlassen"
+    "leaveGroupSureOkBtn": "Gruppe verlassen",
+    "changeDisplayMaxTime": "{username} hat das Zeitlimit für verschwindende Nachrichten auf {time}.",
+    "youChangedDisplayMaxTime": "Du hat das Zeitlimit für verschwindende Nachrichten auf {time}."
 }

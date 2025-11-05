@@ -582,5 +582,7 @@
   "leaveGroupSelectOtherAdminBody": "To leave the group, you must first select a new administrator.",
   "leaveGroupSureTitle": "Leave group",
   "leaveGroupSureBody": "Do you really want to leave the group?",
-  "leaveGroupSureOkBtn": "Leave group"
+  "leaveGroupSureOkBtn": "Leave group",
+  "changeDisplayMaxTime": "{username} has set the time limit for disappearing messages to {time}.",
+  "youChangedDisplayMaxTime": "You have set the time limit for disappearing messages to {time}."
 }

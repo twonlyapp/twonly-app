@@ -72,10 +72,16 @@ class _AvatarIconState extends State<AvatarIcon> {
       _globalUserDataCallBackId = 'avatar_${getRandomString(10)}';
       globalUserDataChangedCallBack[_globalUserDataCallBackId!] = () {
         setState(() {
-          _avatarSVGs = [gUser.avatarSvg!];
+          if (gUser.avatarSvg != null) {
+            _avatarSVGs = [gUser.avatarSvg!];
+          } else {
+            _avatarSVGs = [];
+          }
         });
       };
-      _avatarSVGs.add(gUser.avatarSvg!);
+      if (gUser.avatarSvg != null) {
+        _avatarSVGs = [gUser.avatarSvg!];
+      }
     } else if (widget.contactId != null) {
       contactStream = twonlyDB.contactsDao
           .watchContact(widget.contactId!)

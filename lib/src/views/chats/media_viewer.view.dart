@@ -55,6 +55,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   bool imageSaved = false;
   bool imageSaving = false;
   bool displayTwonlyPresent = true;
+  final emojiKey = GlobalKey<EmojiFloatWidgetState>();
 
   StreamSubscription<MediaFile?>? downloadStateListener;
 
@@ -634,6 +635,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
                 groupId: widget.group.groupId,
                 messageId: currentMessage!.messageId,
+                emojiKey: emojiKey,
                 hide: () {
                   setState(() {
                     showShortReactions = false;
@@ -641,6 +643,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   });
                 },
               ),
+            Positioned.fill(
+              child: EmojiFloatWidget(key: emojiKey),
+            ),
           ],
         ),
       ),

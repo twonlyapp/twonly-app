@@ -29,6 +29,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     return entry != null;
   }
 
+  Future<void> deleteGroup(String groupId) async {
+    await (delete(groups)..where((t) => t.groupId.equals(groupId))).go();
+  }
+
   Future<void> updateGroup(
     String groupId,
     GroupsCompanion updates,
@@ -42,7 +46,8 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
           ..where(
             (t) =>
                 t.groupId.equals(groupId) &
-                t.memberState.equals(MemberState.leftGroup.name).not(),
+                (t.memberState.equals(MemberState.leftGroup.name).not() |
+                    t.memberState.isNull()),
           ))
         .get();
   }
@@ -131,8 +136,9 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
   Future<Group?> _insertGroup(GroupsCompanion group) async {
     try {
-      final rowId = await into(groups).insert(group);
-      return await (select(groups)..where((t) => t.rowId.equals(rowId)))
+      await into(groups).insert(group);
+      return await (select(groups)
+            ..where((t) => t.groupId.equals(group.groupId.value)))
           .getSingle();
     } catch (e) {
       Log.error('Could not insert group: $e');
