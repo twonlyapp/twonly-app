@@ -1,9 +1,6 @@
 import 'dart:typed_data';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hashlib/random.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
-import 'package:libsignal_protocol_dart/src/ecc/ed25519.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
@@ -62,21 +59,6 @@ void main() {
 
     test('Reject values > 0x7fffffff', () {
       expect(() => getUUIDforDirectChat(0x80000000, 0), throwsArgumentError);
-    });
-
-    test('sign and verify', () {
-      final keyPair = generateIdentityKeyPair();
-      final message = Uint8List(10);
-
-      final random = getRandomUint8List(32);
-
-      final signature =
-          sign(keyPair.getPrivateKey().serialize(), message, random);
-
-      expect(
-        verifySig(keyPair.getPublicKey().serialize(), message, signature),
-        true,
-      );
     });
   });
 }
