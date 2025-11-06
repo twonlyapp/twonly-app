@@ -1,12 +1,11 @@
 import 'package:cryptography_plus/cryptography_plus.dart';
-import 'package:drift/drift.dart';
 
 bool isValid(int difficulty, List<int> digest) {
   final bits = digest.map((i) => i.toRadixString(2).padLeft(8, '0')).join();
   return bits.startsWith('0' * difficulty);
 }
 
-Future<int> calculatePoW(Uint8List prefix, int difficulty) async {
+Future<int> calculatePoW(String prefix, int difficulty) async {
   var i = 0;
   while (true) {
     i++;

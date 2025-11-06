@@ -73,7 +73,7 @@ const Response$json = {
     {'1': 'ok', '3': 1, '4': 1, '5': 11, '6': '.server_to_client.Response.Ok', '9': 0, '10': 'ok'},
     {'1': 'error', '3': 2, '4': 1, '5': 14, '6': '.error.ErrorCode', '9': 0, '10': 'error'},
   ],
-  '3': [Response_Authenticated$json, Response_Plan$json, Response_Plans$json, Response_AddAccountsInvite$json, Response_AddAccountsInvites$json, Response_Transaction$json, Response_AdditionalAccount$json, Response_Voucher$json, Response_Vouchers$json, Response_PlanBallance$json, Response_Location$json, Response_PreKey$json, Response_SignedPreKey$json, Response_UserData$json, Response_UploadToken$json, Response_DownloadTokens$json, Response_Ok$json],
+  '3': [Response_Authenticated$json, Response_Plan$json, Response_Plans$json, Response_AddAccountsInvite$json, Response_AddAccountsInvites$json, Response_Transaction$json, Response_AdditionalAccount$json, Response_Voucher$json, Response_Vouchers$json, Response_PlanBallance$json, Response_Location$json, Response_PreKey$json, Response_SignedPreKey$json, Response_UserData$json, Response_UploadToken$json, Response_DownloadTokens$json, Response_ProofOfWork$json, Response_Ok$json],
   '4': [Response_TransactionTypes$json],
   '8': [
     {'1': 'Response'},
@@ -258,6 +258,15 @@ const Response_DownloadTokens$json = {
 };
 
 @$core.Deprecated('Use responseDescriptor instead')
+const Response_ProofOfWork$json = {
+  '1': 'ProofOfWork',
+  '2': [
+    {'1': 'prefix', '3': 1, '4': 1, '5': 9, '10': 'prefix'},
+    {'1': 'difficulty', '3': 2, '4': 1, '5': 3, '10': 'difficulty'},
+  ],
+};
+
+@$core.Deprecated('Use responseDescriptor instead')
 const Response_Ok$json = {
   '1': 'Ok',
   '2': [
@@ -275,6 +284,7 @@ const Response_Ok$json = {
     {'1': 'addaccountsinvites', '3': 12, '4': 1, '5': 11, '6': '.server_to_client.Response.AddAccountsInvites', '9': 0, '10': 'addaccountsinvites'},
     {'1': 'downloadtokens', '3': 13, '4': 1, '5': 11, '6': '.server_to_client.Response.DownloadTokens', '9': 0, '10': 'downloadtokens'},
     {'1': 'signedprekey', '3': 14, '4': 1, '5': 11, '6': '.server_to_client.Response.SignedPreKey', '9': 0, '10': 'signedprekey'},
+    {'1': 'proofOfWork', '3': 15, '4': 1, '5': 11, '6': '.server_to_client.Response.ProofOfWork', '9': 0, '10': 'proofOfWork'},
   ],
   '8': [
     {'1': 'Ok'},
@@ -352,24 +362,26 @@ final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
     '9zaWduZWRfcHJla2V5X2lkGlkKC1VwbG9hZFRva2VuEiEKDHVwbG9hZF90b2tlbhgBIAEoDFIL'
     'dXBsb2FkVG9rZW4SJwoPZG93bmxvYWRfdG9rZW5zGAIgAygMUg5kb3dubG9hZFRva2Vucxo5Cg'
     '5Eb3dubG9hZFRva2VucxInCg9kb3dubG9hZF90b2tlbnMYASADKAxSDmRvd25sb2FkVG9rZW5z'
-    'GvcGCgJPaxIUCgROb25lGAEgASgISABSBE5vbmUSGAoGdXNlcmlkGAIgASgDSABSBnVzZXJpZB'
-    'ImCg1hdXRoY2hhbGxlbmdlGAMgASgMSABSDWF1dGhjaGFsbGVuZ2USSgoLdXBsb2FkdG9rZW4Y'
-    'BCABKAsyJi5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlVwbG9hZFRva2VuSABSC3VwbG9hZH'
-    'Rva2VuEkEKCHVzZXJkYXRhGAUgASgLMiMuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5Vc2Vy'
-    'RGF0YUgAUgh1c2VyZGF0YRIeCglhdXRodG9rZW4YBiABKAxIAFIJYXV0aHRva2VuEkEKCGxvY2'
-    'F0aW9uGAcgASgLMiMuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5Mb2NhdGlvbkgAUghsb2Nh'
-    'dGlvbhJQCg1hdXRoZW50aWNhdGVkGAggASgLMiguc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS'
-    '5BdXRoZW50aWNhdGVkSABSDWF1dGhlbnRpY2F0ZWQSOAoFcGxhbnMYCSABKAsyIC5zZXJ2ZXJf'
-    'dG9fY2xpZW50LlJlc3BvbnNlLlBsYW5zSABSBXBsYW5zEk0KDHBsYW5iYWxsYW5jZRgKIAEoCz'
-    'InLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUGxhbkJhbGxhbmNlSABSDHBsYW5iYWxsYW5j'
-    'ZRJBCgh2b3VjaGVycxgLIAEoCzIjLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuVm91Y2hlcn'
-    'NIAFIIdm91Y2hlcnMSXwoSYWRkYWNjb3VudHNpbnZpdGVzGAwgASgLMi0uc2VydmVyX3RvX2Ns'
-    'aWVudC5SZXNwb25zZS5BZGRBY2NvdW50c0ludml0ZXNIAFISYWRkYWNjb3VudHNpbnZpdGVzEl'
-    'MKDmRvd25sb2FkdG9rZW5zGA0gASgLMikuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5Eb3du'
-    'bG9hZFRva2Vuc0gAUg5kb3dubG9hZHRva2VucxJNCgxzaWduZWRwcmVrZXkYDiABKAsyJy5zZX'
-    'J2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLlNpZ25lZFByZUtleUgAUgxzaWduZWRwcmVrZXlCBAoC'
-    'T2silgEKEFRyYW5zYWN0aW9uVHlwZXMSCgoGUmVmdW5kEAASEwoPVm91Y2hlclJlZGVlbWVkEA'
-    'ESEgoOVm91Y2hlckNyZWF0ZWQQAhIICgRDYXNoEAMSDwoLUGxhblVwZ3JhZGUQBBILCgdVbmtu'
-    'b3duEAUSFAoQVGhhbmtzRm9yVGVzdGluZxAGEg8KC0F1dG9SZW5ld2FsEAdCCgoIUmVzcG9uc2'
-    'U=');
+    'GkUKC1Byb29mT2ZXb3JrEhYKBnByZWZpeBgBIAEoCVIGcHJlZml4Eh4KCmRpZmZpY3VsdHkYAi'
+    'ABKANSCmRpZmZpY3VsdHkawwcKAk9rEhQKBE5vbmUYASABKAhIAFIETm9uZRIYCgZ1c2VyaWQY'
+    'AiABKANIAFIGdXNlcmlkEiYKDWF1dGhjaGFsbGVuZ2UYAyABKAxIAFINYXV0aGNoYWxsZW5nZR'
+    'JKCgt1cGxvYWR0b2tlbhgEIAEoCzImLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuVXBsb2Fk'
+    'VG9rZW5IAFILdXBsb2FkdG9rZW4SQQoIdXNlcmRhdGEYBSABKAsyIy5zZXJ2ZXJfdG9fY2xpZW'
+    '50LlJlc3BvbnNlLlVzZXJEYXRhSABSCHVzZXJkYXRhEh4KCWF1dGh0b2tlbhgGIAEoDEgAUglh'
+    'dXRodG9rZW4SQQoIbG9jYXRpb24YByABKAsyIy5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLk'
+    'xvY2F0aW9uSABSCGxvY2F0aW9uElAKDWF1dGhlbnRpY2F0ZWQYCCABKAsyKC5zZXJ2ZXJfdG9f'
+    'Y2xpZW50LlJlc3BvbnNlLkF1dGhlbnRpY2F0ZWRIAFINYXV0aGVudGljYXRlZBI4CgVwbGFucx'
+    'gJIAEoCzIgLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuUGxhbnNIAFIFcGxhbnMSTQoMcGxh'
+    'bmJhbGxhbmNlGAogASgLMicuc2VydmVyX3RvX2NsaWVudC5SZXNwb25zZS5QbGFuQmFsbGFuY2'
+    'VIAFIMcGxhbmJhbGxhbmNlEkEKCHZvdWNoZXJzGAsgASgLMiMuc2VydmVyX3RvX2NsaWVudC5S'
+    'ZXNwb25zZS5Wb3VjaGVyc0gAUgh2b3VjaGVycxJfChJhZGRhY2NvdW50c2ludml0ZXMYDCABKA'
+    'syLS5zZXJ2ZXJfdG9fY2xpZW50LlJlc3BvbnNlLkFkZEFjY291bnRzSW52aXRlc0gAUhJhZGRh'
+    'Y2NvdW50c2ludml0ZXMSUwoOZG93bmxvYWR0b2tlbnMYDSABKAsyKS5zZXJ2ZXJfdG9fY2xpZW'
+    '50LlJlc3BvbnNlLkRvd25sb2FkVG9rZW5zSABSDmRvd25sb2FkdG9rZW5zEk0KDHNpZ25lZHBy'
+    'ZWtleRgOIAEoCzInLnNlcnZlcl90b19jbGllbnQuUmVzcG9uc2UuU2lnbmVkUHJlS2V5SABSDH'
+    'NpZ25lZHByZWtleRJKCgtwcm9vZk9mV29yaxgPIAEoCzImLnNlcnZlcl90b19jbGllbnQuUmVz'
+    'cG9uc2UuUHJvb2ZPZldvcmtIAFILcHJvb2ZPZldvcmtCBAoCT2silgEKEFRyYW5zYWN0aW9uVH'
+    'lwZXMSCgoGUmVmdW5kEAASEwoPVm91Y2hlclJlZGVlbWVkEAESEgoOVm91Y2hlckNyZWF0ZWQQ'
+    'AhIICgRDYXNoEAMSDwoLUGxhblVwZ3JhZGUQBBILCgdVbmtub3duEAUSFAoQVGhhbmtzRm9yVG'
+    'VzdGluZxAGEg8KC0F1dG9SZW5ld2FsEAdCCgoIUmVzcG9uc2U=');
 

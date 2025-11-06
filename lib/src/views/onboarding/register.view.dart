@@ -13,14 +13,21 @@ import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/groups/group.view.dart';
 import 'package:twonly/src/views/onboarding/recover.view.dart';
 
 class RegisterView extends StatefulWidget {
-  const RegisterView({required this.callbackOnSuccess, super.key});
+  const RegisterView({
+    required this.callbackOnSuccess,
+    required this.proofOfWork,
+    super.key,
+  });
 
   final Function callbackOnSuccess;
+  final Future<int>? proofOfWork;
   @override
   State<RegisterView> createState() => _RegisterViewState();
 }
@@ -48,17 +55,40 @@ class _RegisterViewState extends State<RegisterView> {
       _showUserNameError = false;
     });
 
+    late int proof;
+
+    if (widget.proofOfWork != null) {
+      proof = await widget.proofOfWork!;
+    } else {
+      final pow = await apiService.getProofOfWork();
+      if (pow == null) {
+        if (mounted) {
+          showNetworkIssue(context);
+        }
+        return;
+        // Starting with the proof of work.
+      }
+      proof = await calculatePoW(pow.prefix, pow.difficulty.toInt());
+    }
+
+    Log.info('The result of the POW is $proof');
+
     await createIfNotExistsSignalIdentity();
 
     var userId = 0;
 
-    final res = await apiService.register(username, inviteCode);
+    final res = await apiService.register(username, inviteCode, proof);
     if (res.isSuccess) {
       Log.info('Got user_id ${res.value} from server');
       userId = res.value.userid.toInt() as int;
     } else {
       if (res.error == ErrorCode.UserIdAlreadyTaken) {
         Log.error('User ID already token. Tying again.');
+        await deleteLocalUserData();
+        return createNewUser();
+      }
+      if (res.error == ErrorCode.InvalidProofOfWork) {
+        Log.error('Proof of Work is invalid. Try again.');
         await deleteLocalUserData();
         return createNewUser();
       }

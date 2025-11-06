@@ -196,6 +196,38 @@ class V0 extends $pb.GeneratedMessage {
   Response ensureResponse() => $_ensure(3);
 }
 
+class Handshake_RequestPOW extends $pb.GeneratedMessage {
+  factory Handshake_RequestPOW() => create();
+  Handshake_RequestPOW._() : super();
+  factory Handshake_RequestPOW.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Handshake_RequestPOW.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake.RequestPOW', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Handshake_RequestPOW clone() => Handshake_RequestPOW()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Handshake_RequestPOW copyWith(void Function(Handshake_RequestPOW) updates) => super.copyWith((message) => updates(message as Handshake_RequestPOW)) as Handshake_RequestPOW;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Handshake_RequestPOW create() => Handshake_RequestPOW._();
+  Handshake_RequestPOW createEmptyInstance() => create();
+  static $pb.PbList<Handshake_RequestPOW> createRepeated() => $pb.PbList<Handshake_RequestPOW>();
+  @$core.pragma('dart2js:noInline')
+  static Handshake_RequestPOW getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Handshake_RequestPOW>(create);
+  static Handshake_RequestPOW? _defaultInstance;
+}
+
 class Handshake_Register extends $pb.GeneratedMessage {
   factory Handshake_Register({
     $core.String? username,
@@ -207,6 +239,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     $fixnum.Int64? registrationId,
     $core.bool? isIos,
     $core.String? langCode,
+    $fixnum.Int64? proofOfWork,
   }) {
     final $result = create();
     if (username != null) {
@@ -236,6 +269,9 @@ class Handshake_Register extends $pb.GeneratedMessage {
     if (langCode != null) {
       $result.langCode = langCode;
     }
+    if (proofOfWork != null) {
+      $result.proofOfWork = proofOfWork;
+    }
     return $result;
   }
   Handshake_Register._() : super();
@@ -252,6 +288,7 @@ class Handshake_Register extends $pb.GeneratedMessage {
     ..aInt64(7, _omitFieldNames ? '' : 'registrationId')
     ..aOB(8, _omitFieldNames ? '' : 'isIos')
     ..aOS(9, _omitFieldNames ? '' : 'langCode')
+    ..aInt64(10, _omitFieldNames ? '' : 'proofOfWork')
     ..hasRequiredFields = false
   ;
 
@@ -356,6 +393,15 @@ class Handshake_Register extends $pb.GeneratedMessage {
   $core.bool hasLangCode() => $_has(8);
   @$pb.TagNumber(9)
   void clearLangCode() => clearField(9);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get proofOfWork => $_getI64(9);
+  @$pb.TagNumber(10)
+  set proofOfWork($fixnum.Int64 v) { $_setInt64(9, v); }
+  @$pb.TagNumber(10)
+  $core.bool hasProofOfWork() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearProofOfWork() => clearField(10);
 }
 
 class Handshake_GetAuthChallenge extends $pb.GeneratedMessage {
@@ -548,31 +594,36 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
 
 enum Handshake_Handshake {
   register, 
-  getauthchallenge, 
-  getauthtoken, 
+  getAuthChallenge, 
+  getAuthToken, 
   authenticate, 
+  requestPOW, 
   notSet
 }
 
 class Handshake extends $pb.GeneratedMessage {
   factory Handshake({
     Handshake_Register? register,
-    Handshake_GetAuthChallenge? getauthchallenge,
-    Handshake_GetAuthToken? getauthtoken,
+    Handshake_GetAuthChallenge? getAuthChallenge,
+    Handshake_GetAuthToken? getAuthToken,
     Handshake_Authenticate? authenticate,
+    Handshake_RequestPOW? requestPOW,
   }) {
     final $result = create();
     if (register != null) {
       $result.register = register;
     }
-    if (getauthchallenge != null) {
-      $result.getauthchallenge = getauthchallenge;
+    if (getAuthChallenge != null) {
+      $result.getAuthChallenge = getAuthChallenge;
     }
-    if (getauthtoken != null) {
-      $result.getauthtoken = getauthtoken;
+    if (getAuthToken != null) {
+      $result.getAuthToken = getAuthToken;
     }
     if (authenticate != null) {
       $result.authenticate = authenticate;
+    }
+    if (requestPOW != null) {
+      $result.requestPOW = requestPOW;
     }
     return $result;
   }
@@ -582,17 +633,19 @@ class Handshake extends $pb.GeneratedMessage {
 
   static const $core.Map<$core.int, Handshake_Handshake> _Handshake_HandshakeByTag = {
     1 : Handshake_Handshake.register,
-    2 : Handshake_Handshake.getauthchallenge,
-    3 : Handshake_Handshake.getauthtoken,
+    2 : Handshake_Handshake.getAuthChallenge,
+    3 : Handshake_Handshake.getAuthToken,
     4 : Handshake_Handshake.authenticate,
+    5 : Handshake_Handshake.requestPOW,
     0 : Handshake_Handshake.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Handshake', package: const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4])
+    ..oo(0, [1, 2, 3, 4, 5])
     ..aOM<Handshake_Register>(1, _omitFieldNames ? '' : 'register', subBuilder: Handshake_Register.create)
-    ..aOM<Handshake_GetAuthChallenge>(2, _omitFieldNames ? '' : 'getauthchallenge', subBuilder: Handshake_GetAuthChallenge.create)
-    ..aOM<Handshake_GetAuthToken>(3, _omitFieldNames ? '' : 'getauthtoken', subBuilder: Handshake_GetAuthToken.create)
+    ..aOM<Handshake_GetAuthChallenge>(2, _omitFieldNames ? '' : 'getAuthChallenge', protoName: 'getAuthChallenge', subBuilder: Handshake_GetAuthChallenge.create)
+    ..aOM<Handshake_GetAuthToken>(3, _omitFieldNames ? '' : 'getAuthToken', protoName: 'getAuthToken', subBuilder: Handshake_GetAuthToken.create)
     ..aOM<Handshake_Authenticate>(4, _omitFieldNames ? '' : 'authenticate', subBuilder: Handshake_Authenticate.create)
+    ..aOM<Handshake_RequestPOW>(5, _omitFieldNames ? '' : 'requestPOW', protoName: 'requestPOW', subBuilder: Handshake_RequestPOW.create)
     ..hasRequiredFields = false
   ;
 
@@ -632,26 +685,26 @@ class Handshake extends $pb.GeneratedMessage {
   Handshake_Register ensureRegister() => $_ensure(0);
 
   @$pb.TagNumber(2)
-  Handshake_GetAuthChallenge get getauthchallenge => $_getN(1);
+  Handshake_GetAuthChallenge get getAuthChallenge => $_getN(1);
   @$pb.TagNumber(2)
-  set getauthchallenge(Handshake_GetAuthChallenge v) { setField(2, v); }
+  set getAuthChallenge(Handshake_GetAuthChallenge v) { setField(2, v); }
   @$pb.TagNumber(2)
-  $core.bool hasGetauthchallenge() => $_has(1);
+  $core.bool hasGetAuthChallenge() => $_has(1);
   @$pb.TagNumber(2)
-  void clearGetauthchallenge() => clearField(2);
+  void clearGetAuthChallenge() => clearField(2);
   @$pb.TagNumber(2)
-  Handshake_GetAuthChallenge ensureGetauthchallenge() => $_ensure(1);
+  Handshake_GetAuthChallenge ensureGetAuthChallenge() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  Handshake_GetAuthToken get getauthtoken => $_getN(2);
+  Handshake_GetAuthToken get getAuthToken => $_getN(2);
   @$pb.TagNumber(3)
-  set getauthtoken(Handshake_GetAuthToken v) { setField(3, v); }
+  set getAuthToken(Handshake_GetAuthToken v) { setField(3, v); }
   @$pb.TagNumber(3)
-  $core.bool hasGetauthtoken() => $_has(2);
+  $core.bool hasGetAuthToken() => $_has(2);
   @$pb.TagNumber(3)
-  void clearGetauthtoken() => clearField(3);
+  void clearGetAuthToken() => clearField(3);
   @$pb.TagNumber(3)
-  Handshake_GetAuthToken ensureGetauthtoken() => $_ensure(2);
+  Handshake_GetAuthToken ensureGetAuthToken() => $_ensure(2);
 
   @$pb.TagNumber(4)
   Handshake_Authenticate get authenticate => $_getN(3);
@@ -663,6 +716,17 @@ class Handshake extends $pb.GeneratedMessage {
   void clearAuthenticate() => clearField(4);
   @$pb.TagNumber(4)
   Handshake_Authenticate ensureAuthenticate() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  Handshake_RequestPOW get requestPOW => $_getN(4);
+  @$pb.TagNumber(5)
+  set requestPOW(Handshake_RequestPOW v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasRequestPOW() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearRequestPOW() => clearField(5);
+  @$pb.TagNumber(5)
+  Handshake_RequestPOW ensureRequestPOW() => $_ensure(4);
 }
 
 class ApplicationData_TextMessage extends $pb.GeneratedMessage {

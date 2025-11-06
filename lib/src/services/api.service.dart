@@ -415,7 +415,7 @@ class ApiService {
     }
 
     final handshake = Handshake()
-      ..getauthchallenge = Handshake_GetAuthChallenge();
+      ..getAuthChallenge = Handshake_GetAuthChallenge();
     final req = createClientToServerFromHandshake(handshake);
 
     final result = await sendRequestSync(req, authenticated: false);
@@ -436,7 +436,7 @@ class ApiService {
       ..response = signature
       ..userId = Int64(userData.userId);
 
-    final getauthtoken = Handshake()..getauthtoken = getAuthToken;
+    final getauthtoken = Handshake()..getAuthToken = getAuthToken;
 
     final req2 = createClientToServerFromHandshake(getauthtoken);
 
@@ -458,7 +458,11 @@ class ApiService {
     await tryAuthenticateWithToken(userData.userId);
   }
 
-  Future<Result> register(String username, String? inviteCode) async {
+  Future<Result> register(
+    String username,
+    String? inviteCode,
+    int proofOfWorkResult,
+  ) async {
     final signalIdentity = await getSignalIdentity();
     if (signalIdentity == null) {
       return Result.error(ErrorCode.InternalError);
@@ -477,6 +481,7 @@ class ApiService {
       ..signedPrekeySignature = signedPreKey.signature
       ..signedPrekeyId = Int64(signedPreKey.id)
       ..langCode = ui.PlatformDispatcher.instance.locale.languageCode
+      ..proofOfWork = Int64(proofOfWorkResult)
       ..isIos = Platform.isIOS;
 
     if (inviteCode != null && inviteCode != '') {
@@ -501,6 +506,17 @@ class ApiService {
       }
     }
     return null;
+  }
+
+  Future<Response_ProofOfWork?> getProofOfWork() async {
+    final handshake = Handshake()..requestPOW = Handshake_RequestPOW();
+    final req = createClientToServerFromHandshake(handshake);
+    final result = await sendRequestSync(req, authenticated: false);
+    if (result.isError) {
+      Log.error('could not request proof of work params', result);
+      return null;
+    }
+    return result.value.proofOfWork as Response_ProofOfWork;
   }
 
   Future<Result> downloadDone(List<int> token) async {

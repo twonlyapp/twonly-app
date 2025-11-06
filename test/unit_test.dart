@@ -15,7 +15,8 @@ void main() {
     });
 
     test('test proof-of-work simple', () async {
-      expect(await calculatePoW(Uint8List.fromList([41, 41, 41, 41]), 6), 33);
+      // ignore: prefer_single_quotes
+      expect(await calculatePoW("testing", 10), 783);
     });
 
     test('encode hex', () async {

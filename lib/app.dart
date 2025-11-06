@@ -7,6 +7,8 @@ import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/app_outdated.dart';
 import 'package:twonly/src/views/home.view.dart';
@@ -154,6 +156,8 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
 
+  Future<int>? _proofOfWork;
+
   @override
   void initState() {
     initAsync();
@@ -166,6 +170,17 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_isUserCreated) {
       if (gUser.appVersion < 62) {
         _showDatabaseMigration = true;
+      }
+    }
+
+    if (!_isUserCreated && !_showDatabaseMigration) {
+      // This means the user is in the onboarding screen, so start with the Proof of Work.
+
+      final proof = await apiService.getProofOfWork();
+      if (proof != null) {
+        Log.info('Starting with proof of work calculation.');
+        // Starting with the proof of work.
+        _proofOfWork = calculatePoW(proof.prefix, proof.difficulty.toInt());
       }
     }
 
@@ -205,6 +220,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     } else {
       child = RegisterView(
         callbackOnSuccess: initAsync,
+        proofOfWork: _proofOfWork,
       );
     }
 
