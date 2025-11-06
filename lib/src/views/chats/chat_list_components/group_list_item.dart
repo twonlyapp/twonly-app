@@ -176,22 +176,24 @@ class _UserListItem extends State<GroupListItem> {
           _previewMessages.where((x) => x.type == MessageType.media).toList();
       final mediaFile =
           await twonlyDB.mediaFilesDao.getMediaFileById(msgs.first.mediaId!);
-      if (mediaFile?.downloadState == null) return;
-      if (mediaFile!.downloadState! == DownloadState.pending) {
-        await startDownloadMedia(mediaFile, true);
-        return;
-      }
-      if (mediaFile.downloadState! == DownloadState.ready) {
-        if (!mounted) return;
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return MediaViewerView(widget.group);
-            },
-          ),
-        );
-        return;
+      if (mediaFile?.type != MediaType.audio) {
+        if (mediaFile?.downloadState == null) return;
+        if (mediaFile!.downloadState! == DownloadState.pending) {
+          await startDownloadMedia(mediaFile, true);
+          return;
+        }
+        if (mediaFile.downloadState! == DownloadState.ready) {
+          if (!mounted) return;
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return MediaViewerView(widget.group);
+              },
+            ),
+          );
+          return;
+        }
       }
     }
     if (!mounted) return;

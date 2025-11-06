@@ -7,6 +7,7 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 enum MessageSendState {
   received,
@@ -85,6 +86,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     final kindsAlreadyShown = HashSet<MessageType>();
 
     var hasLoader = false;
+    GestureTapCallback? onTap;
 
     for (final message in widget.messages) {
       if (icons.length == 2) break;
@@ -147,7 +149,27 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
           if (mediaFile != null) {
             if (mediaFile.uploadState == UploadState.uploadLimitReached) {
-              text = 'Upload Limit erreicht';
+              icon = FaIcon(
+                FontAwesomeIcons.triangleExclamation,
+                size: 12,
+                color: color,
+              );
+
+              textWidget = Text(
+                context.lang.uploadLimitReached,
+                style: const TextStyle(fontSize: 9),
+              );
+
+              onTap = () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const SubscriptionView();
+                    },
+                  ),
+                );
+              };
             }
             if (mediaFile.uploadState == UploadState.preprocessing) {
               text = 'Wird verarbeitet';
@@ -251,20 +273,23 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       );
     }
 
-    return Row(
-      mainAxisAlignment: widget.mainAxisAlignment,
-      children: [
-        icon,
-        const SizedBox(width: 3),
-        if (textWidget != null)
-          textWidget
-        else
-          Text(
-            text,
-            style: const TextStyle(fontSize: 12),
-          ),
-        const SizedBox(width: 5),
-      ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisAlignment: widget.mainAxisAlignment,
+        children: [
+          icon,
+          const SizedBox(width: 3),
+          if (textWidget != null)
+            textWidget
+          else
+            Text(
+              text,
+              style: const TextStyle(fontSize: 12),
+            ),
+          const SizedBox(width: 5),
+        ],
+      ),
     );
   }
 }

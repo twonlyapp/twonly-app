@@ -31,7 +31,9 @@ const PushKind$json = {
     {'1': 'reactionToVideo', '2': 11},
     {'1': 'reactionToText', '2': 12},
     {'1': 'reactionToImage', '2': 13},
-    {'1': 'addedToGroup', '2': 14},
+    {'1': 'reactionToAudio', '2': 14},
+    {'1': 'addedToGroup', '2': 15},
+    {'1': 'audio', '2': 16},
   ],
 };
 
@@ -41,7 +43,8 @@ final $typed_data.Uint8List pushKindDescriptor = $convert.base64Decode(
     'VvEAMSCgoGdHdvbmx5EAQSCQoFaW1hZ2UQBRISCg5jb250YWN0UmVxdWVzdBAGEhEKDWFjY2Vw'
     'dFJlcXVlc3QQBxITCg9zdG9yZWRNZWRpYUZpbGUQCBIUChB0ZXN0Tm90aWZpY2F0aW9uEAkSEQ'
     'oNcmVvcGVuZWRNZWRpYRAKEhMKD3JlYWN0aW9uVG9WaWRlbxALEhIKDnJlYWN0aW9uVG9UZXh0'
-    'EAwSEwoPcmVhY3Rpb25Ub0ltYWdlEA0SEAoMYWRkZWRUb0dyb3VwEA4=');
+    'EAwSEwoPcmVhY3Rpb25Ub0ltYWdlEA0SEwoPcmVhY3Rpb25Ub0F1ZGlvEA4SEAoMYWRkZWRUb0'
+    'dyb3VwEA8SCQoFYXVkaW8QEA==');
 
 @$core.Deprecated('Use encryptedPushNotificationDescriptor instead')
 const EncryptedPushNotification$json = {

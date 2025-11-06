@@ -219,6 +219,7 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .twonly: "hat ein twonly{inGroup} gesendet.",
             .video: "hat ein Video{inGroup} gesendet.",
             .image: "hat ein Bild{inGroup} gesendet.",
+            .audio: "hat eine Sprachnachricht{inGroup} gesendet.",
             .contactRequest: "möchte sich mit dir vernetzen.",
             .acceptRequest: "ist jetzt mit dir vernetzt.",
             .storedMediaFile: "hat dein Bild gespeichert.",
@@ -228,6 +229,7 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .reactionToVideo: "hat mit {{content}} auf dein Video reagiert.",
             .reactionToText: "hat mit {{content}} auf deinen Text reagiert.",
             .reactionToImage: "hat mit {{content}} auf dein Bild reagiert.",
+            .reactionToAudio: "hat mit {{content}} auf deine Sprachnachricht reagiert.",
             .response: "hat dir{inGroup} geantwortet.",
             .addedToGroup: "hat dich zu \"{{content}}\" hinzugefügt.",
         ]
@@ -237,6 +239,7 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .twonly: "sent a twonly{inGroup}.",
             .video: "sent a video{inGroup}.",
             .image: "sent a image{inGroup}.",
+            .audio: "sent a voice message{inGroup}.",
             .contactRequest: "wants to connect with you.",
             .acceptRequest: "is now connected with you.",
             .storedMediaFile: "has stored your image.",
@@ -246,6 +249,7 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .reactionToVideo: "has reacted with {{content}} to your video.",
             .reactionToText: "has reacted with {{content}} to your text.",
             .reactionToImage: "has reacted with {{content}} to your image.",
+            .reactionToAudio: "has reacted with {{content}} to your voice message.",
             .response: "has responded{inGroup}.",
             .addedToGroup: "has added you to \"{{content}}\"",
         ]

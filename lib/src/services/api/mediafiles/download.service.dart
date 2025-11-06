@@ -30,36 +30,50 @@ Future<void> tryDownloadAllMediaFiles({bool force = false}) async {
 enum DownloadMediaTypes {
   video,
   image,
+  audio,
 }
 
 Map<String, List<String>> defaultAutoDownloadOptions = {
-  ConnectivityResult.mobile.name: [],
+  ConnectivityResult.mobile.name: [
+    DownloadMediaTypes.audio.name,
+  ],
   ConnectivityResult.wifi.name: [
     DownloadMediaTypes.video.name,
     DownloadMediaTypes.image.name,
+    DownloadMediaTypes.audio.name,
   ],
 };
 
-Future<bool> isAllowedToDownload({required bool isVideo}) async {
+Future<bool> isAllowedToDownload(MediaType type) async {
   final connectivityResult = await Connectivity().checkConnectivity();
 
   final options = gUser.autoDownloadOptions ?? defaultAutoDownloadOptions;
 
   if (connectivityResult.contains(ConnectivityResult.mobile)) {
-    if (isVideo) {
+    if (type == MediaType.video) {
       if (options[ConnectivityResult.mobile.name]!
           .contains(DownloadMediaTypes.video.name)) {
         return true;
+      } else if (type == MediaType.audio) {
+        if (options[ConnectivityResult.mobile.name]!
+            .contains(DownloadMediaTypes.audio.name)) {
+          return true;
+        }
+      } else if (options[ConnectivityResult.mobile.name]!
+          .contains(DownloadMediaTypes.image.name)) {
+        return true;
       }
-    } else if (options[ConnectivityResult.mobile.name]!
-        .contains(DownloadMediaTypes.image.name)) {
-      return true;
     }
   }
   if (connectivityResult.contains(ConnectivityResult.wifi)) {
-    if (isVideo) {
+    if (type == MediaType.video) {
       if (options[ConnectivityResult.wifi.name]!
           .contains(DownloadMediaTypes.video.name)) {
+        return true;
+      }
+    } else if (type == MediaType.audio) {
+      if (options[ConnectivityResult.wifi.name]!
+          .contains(DownloadMediaTypes.audio.name)) {
         return true;
       }
     } else if (options[ConnectivityResult.wifi.name]!
@@ -110,8 +124,7 @@ Future<void> startDownloadMedia(MediaFile media, bool force) async {
     return;
   }
 
-  if (!force &&
-      !await isAllowedToDownload(isVideo: media.type == MediaType.video)) {
+  if (!force && !await isAllowedToDownload(media.type)) {
     Log.warn(
       'Download blocked for ${media.mediaId} because of network state.',
     );

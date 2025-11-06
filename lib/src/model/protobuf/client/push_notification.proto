@@ -22,7 +22,9 @@ enum PushKind {
     reactionToVideo = 11;
     reactionToText = 12;
     reactionToImage = 13;
-    addedToGroup = 14;
+    reactionToAudio = 14;
+    addedToGroup = 15;
+    audio = 16;
 };
 
 message PushNotification {

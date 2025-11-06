@@ -83,9 +83,10 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
   @override
   Widget build(BuildContext context) {
     if (_directChat == null ||
+        _directChat!.maxFlameCounter == 0 ||
         _flameCounter >= (_directChat!.maxFlameCounter + 1) ||
         _directChat!.lastFlameCounterChange!
-            .isBefore(DateTime.now().subtract(const Duration(days: 5)))) {
+            .isBefore(DateTime.now().subtract(const Duration(days: 4)))) {
       return Container();
     }
     return BetterListTile(

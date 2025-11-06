@@ -107,6 +107,7 @@ message EncryptedContent {
             IMAGE = 1;
             VIDEO = 2;
             GIF = 3;
+            AUDIO = 4;
         }
 
         string senderMessageId = 1;

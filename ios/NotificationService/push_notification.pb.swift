@@ -37,7 +37,9 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
   case reactionToVideo // = 11
   case reactionToText // = 12
   case reactionToImage // = 13
-  case addedToGroup // = 14
+  case reactionToAudio // = 14
+  case addedToGroup // = 15
+  case audio // = 16
   case UNRECOGNIZED(Int)
 
   init() {
@@ -60,7 +62,9 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 11: self = .reactionToVideo
     case 12: self = .reactionToText
     case 13: self = .reactionToImage
-    case 14: self = .addedToGroup
+    case 14: self = .reactionToAudio
+    case 15: self = .addedToGroup
+    case 16: self = .audio
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
@@ -81,7 +85,9 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .reactionToVideo: return 11
     case .reactionToText: return 12
     case .reactionToImage: return 13
-    case .addedToGroup: return 14
+    case .reactionToAudio: return 14
+    case .addedToGroup: return 15
+    case .audio: return 16
     case .UNRECOGNIZED(let i): return i
     }
   }
@@ -102,7 +108,9 @@ enum PushKind: SwiftProtobuf.Enum, Swift.CaseIterable {
     .reactionToVideo,
     .reactionToText,
     .reactionToImage,
+    .reactionToAudio,
     .addedToGroup,
+    .audio,
   ]
 
 }
@@ -218,7 +226,7 @@ struct PushKey: Sendable {
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 extension PushKind: SwiftProtobuf._ProtoNameProviding {
-  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0reaction\0\u{1}response\0\u{1}text\0\u{1}video\0\u{1}twonly\0\u{1}image\0\u{1}contactRequest\0\u{1}acceptRequest\0\u{1}storedMediaFile\0\u{1}testNotification\0\u{1}reopenedMedia\0\u{1}reactionToVideo\0\u{1}reactionToText\0\u{1}reactionToImage\0\u{1}addedToGroup\0")
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0reaction\0\u{1}response\0\u{1}text\0\u{1}video\0\u{1}twonly\0\u{1}image\0\u{1}contactRequest\0\u{1}acceptRequest\0\u{1}storedMediaFile\0\u{1}testNotification\0\u{1}reopenedMedia\0\u{1}reactionToVideo\0\u{1}reactionToText\0\u{1}reactionToImage\0\u{1}reactionToAudio\0\u{1}addedToGroup\0\u{1}audio\0")
 }
 
 extension EncryptedPushNotification: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {

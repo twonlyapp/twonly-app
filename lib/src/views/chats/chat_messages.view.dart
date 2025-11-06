@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mutex/mutex.dart';
@@ -11,9 +12,9 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/chat_date_chip.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_group_action.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_list_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_date_chip.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';

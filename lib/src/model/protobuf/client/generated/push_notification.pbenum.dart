@@ -28,7 +28,9 @@ class PushKind extends $pb.ProtobufEnum {
   static const PushKind reactionToVideo = PushKind._(11, _omitEnumNames ? '' : 'reactionToVideo');
   static const PushKind reactionToText = PushKind._(12, _omitEnumNames ? '' : 'reactionToText');
   static const PushKind reactionToImage = PushKind._(13, _omitEnumNames ? '' : 'reactionToImage');
-  static const PushKind addedToGroup = PushKind._(14, _omitEnumNames ? '' : 'addedToGroup');
+  static const PushKind reactionToAudio = PushKind._(14, _omitEnumNames ? '' : 'reactionToAudio');
+  static const PushKind addedToGroup = PushKind._(15, _omitEnumNames ? '' : 'addedToGroup');
+  static const PushKind audio = PushKind._(16, _omitEnumNames ? '' : 'audio');
 
   static const $core.List<PushKind> values = <PushKind> [
     reaction,
@@ -45,7 +47,9 @@ class PushKind extends $pb.ProtobufEnum {
     reactionToVideo,
     reactionToText,
     reactionToImage,
+    reactionToAudio,
     addedToGroup,
+    audio,
   ];
 
   static final $core.Map<$core.int, PushKind> _byValue = $pb.ProtobufEnum.initByValue(values);

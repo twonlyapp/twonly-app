@@ -249,6 +249,7 @@ String getPushNotificationText(PushNotification pushNotification) {
     PushKind.twonly.name: lang.notificationTwonly(inGroup),
     PushKind.video.name: lang.notificationVideo(inGroup),
     PushKind.image.name: lang.notificationImage(inGroup),
+    PushKind.video.name: lang.notificationAudio(inGroup),
     PushKind.contactRequest.name: lang.notificationContactRequest,
     PushKind.acceptRequest.name: lang.notificationAcceptRequest,
     PushKind.storedMediaFile.name: lang.notificationStoredMediaFile,
@@ -256,6 +257,8 @@ String getPushNotificationText(PushNotification pushNotification) {
     PushKind.reopenedMedia.name: lang.notificationReopenedMedia,
     PushKind.reactionToVideo.name:
         lang.notificationReactionToVideo(pushNotification.additionalContent),
+    PushKind.reactionToAudio.name:
+        lang.notificationReactionToAudio(pushNotification.additionalContent),
     PushKind.reactionToText.name:
         lang.notificationReactionToText(pushNotification.additionalContent),
     PushKind.reactionToImage.name:

@@ -115,7 +115,8 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
     }
   }
 
-  if (mediaService.mediaFile.uploadState == UploadState.uploading) {
+  if (mediaService.mediaFile.uploadState == UploadState.uploading ||
+      mediaService.mediaFile.uploadState == UploadState.uploadLimitReached) {
     await _uploadUploadRequest(mediaService);
   }
 }
@@ -180,11 +181,16 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
       final downloadToken = getRandomUint8List(32);
 
-      var type = EncryptedContent_Media_Type.IMAGE;
-      if (media.mediaFile.type == MediaType.video) {
-        type = EncryptedContent_Media_Type.VIDEO;
-      } else if (media.mediaFile.type == MediaType.gif) {
-        type = EncryptedContent_Media_Type.GIF;
+      late EncryptedContent_Media_Type type;
+      switch (media.mediaFile.type) {
+        case MediaType.audio:
+          type = EncryptedContent_Media_Type.AUDIO;
+        case MediaType.image:
+          type = EncryptedContent_Media_Type.IMAGE;
+        case MediaType.gif:
+          type = EncryptedContent_Media_Type.GIF;
+        case MediaType.video:
+          type = EncryptedContent_Media_Type.VIDEO;
       }
 
       final notEncryptedContent = EncryptedContent(

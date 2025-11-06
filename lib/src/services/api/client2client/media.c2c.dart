@@ -62,6 +62,8 @@ Future<void> handleMedia(
       mediaType = MediaType.video;
     case EncryptedContent_Media_Type.GIF:
       mediaType = MediaType.gif;
+    case EncryptedContent_Media_Type.AUDIO:
+      mediaType = MediaType.audio;
   }
 
   final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(

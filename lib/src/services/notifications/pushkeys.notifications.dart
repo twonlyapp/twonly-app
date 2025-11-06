@@ -220,6 +220,8 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
       switch (media.type) {
         case MediaType.image:
           kind = PushKind.reactionToImage;
+        case MediaType.audio:
+          kind = PushKind.reactionToAudio;
         case MediaType.video:
           kind = PushKind.reactionToVideo;
         case MediaType.gif:
@@ -241,13 +243,16 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
   }
   if (content.hasMedia()) {
     switch (content.media.type) {
+      case EncryptedContent_Media_Type.REUPLOAD:
+        return null;
       case EncryptedContent_Media_Type.IMAGE:
         kind = PushKind.image;
       case EncryptedContent_Media_Type.VIDEO:
         kind = PushKind.video;
-      // ignore: no_default_cases
-      default:
-        return null;
+      case EncryptedContent_Media_Type.GIF:
+        kind = PushKind.image;
+      case EncryptedContent_Media_Type.AUDIO:
+        kind = PushKind.audio;
     }
     if (content.media.requiresAuthentication) {
       kind = PushKind.twonly;

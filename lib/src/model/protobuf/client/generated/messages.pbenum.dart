@@ -71,12 +71,14 @@ class EncryptedContent_Media_Type extends $pb.ProtobufEnum {
   static const EncryptedContent_Media_Type IMAGE = EncryptedContent_Media_Type._(1, _omitEnumNames ? '' : 'IMAGE');
   static const EncryptedContent_Media_Type VIDEO = EncryptedContent_Media_Type._(2, _omitEnumNames ? '' : 'VIDEO');
   static const EncryptedContent_Media_Type GIF = EncryptedContent_Media_Type._(3, _omitEnumNames ? '' : 'GIF');
+  static const EncryptedContent_Media_Type AUDIO = EncryptedContent_Media_Type._(4, _omitEnumNames ? '' : 'AUDIO');
 
   static const $core.List<EncryptedContent_Media_Type> values = <EncryptedContent_Media_Type> [
     REUPLOAD,
     IMAGE,
     VIDEO,
     GIF,
+    AUDIO,
   ];
 
   static final $core.Map<$core.int, EncryptedContent_Media_Type> _byValue = $pb.ProtobufEnum.initByValue(values);

@@ -2,14 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart'
     hide MessageActions;
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/chat_media_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_reaction_row.dart';
-import 'package:twonly/src/views/chats/chat_messages_components/chat_text_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_media_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_text_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_actions.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_context_menu.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
@@ -136,13 +139,23 @@ class _ChatListEntryState extends State<ChatListEntry> {
                       )
                     : (mediaService == null)
                         ? null
-                        : ChatMediaEntry(
-                            message: widget.message,
-                            group: widget.group,
-                            mediaService: mediaService!,
-                            galleryItems: widget.galleryItems,
-                            minWidth: reactionsForWidth * 43,
-                          ),
+                        : (mediaService!.mediaFile.type == MediaType.audio)
+                            ? ChatAudioEntry(
+                                message: widget.message,
+                                nextMessage: widget.nextMessage,
+                                prevMessage: widget.prevMessage,
+                                mediaService: mediaService!,
+                                userIdToContact: widget.userIdToContact,
+                                borderRadius: borderRadius,
+                                minWidth: reactionsForWidth * 43,
+                              )
+                            : ChatMediaEntry(
+                                message: widget.message,
+                                group: widget.group,
+                                mediaService: mediaService!,
+                                galleryItems: widget.galleryItems,
+                                minWidth: reactionsForWidth * 43,
+                              ),
               ),
               if (reactionsForWidth > 0) const SizedBox(height: 20, width: 10),
             ],

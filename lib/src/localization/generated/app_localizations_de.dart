@@ -1099,6 +1099,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get doubleClickToReopen => 'Doppelklicken zum\nerneuten Öffnen.';
 
   @override
+  String get uploadLimitReached =>
+      'Das Upload-Limit wurde\nerreicht. Upgrade auf Pro\noder warte bis morgen.';
+
+  @override
   String get retransmissionRequested => 'Wird erneut versucht.';
 
   @override
@@ -1353,6 +1357,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String notificationAudio(Object inGroup) {
+    return 'hat eine Sprachnachricht$inGroup gesendet.';
+  }
+
+  @override
   String notificationAddedToGroup(Object groupname) {
     return 'hat dich zu \"$groupname\" hinzugefügt.';
   }
@@ -1385,6 +1394,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String notificationReactionToImage(Object reaction) {
     return 'hat mit $reaction auf dein Bild reagiert.';
+  }
+
+  @override
+  String notificationReactionToAudio(Object reaction) {
+    return 'hat mit $reaction auf deine Sprachnachricht reagiert.';
   }
 
   @override

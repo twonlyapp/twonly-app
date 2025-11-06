@@ -175,9 +175,16 @@ class _ResponsePreviewState extends State<ResponsePreview> {
         }
       }
       if (_message!.type == MessageType.media && _mediaService != null) {
-        subtitle = _mediaService!.mediaFile.type == MediaType.video
-            ? context.lang.video
-            : context.lang.image;
+        switch (_mediaService!.mediaFile.type) {
+          case MediaType.image:
+            subtitle = context.lang.image;
+          case MediaType.video:
+            subtitle = context.lang.video;
+          case MediaType.gif:
+            subtitle = 'Gif';
+          case MediaType.audio:
+            subtitle = 'Audio';
+        }
       }
 
       if (_message!.senderId == null) {
@@ -241,7 +248,8 @@ class _ResponsePreviewState extends State<ResponsePreview> {
               ],
             ),
           ),
-          if (_mediaService != null)
+          if (_mediaService != null &&
+              _mediaService!.mediaFile.type != MediaType.audio)
             SizedBox(
               height: widget.showBorder ? 100 : 210,
               child: Image.file(

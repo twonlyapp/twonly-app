@@ -5,6 +5,7 @@ enum MediaType {
   image,
   video,
   gif,
+  audio,
 }
 
 enum UploadState {

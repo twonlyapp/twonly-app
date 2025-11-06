@@ -89,6 +89,7 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
           ..where(
             (t) =>
                 t.uploadState.equals(UploadState.initialized.name) |
+                t.uploadState.equals(UploadState.uploadLimitReached.name) |
                 t.uploadState.equals(UploadState.preprocessing.name),
           ))
         .get();

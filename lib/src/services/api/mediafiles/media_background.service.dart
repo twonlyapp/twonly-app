@@ -58,8 +58,7 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
   final mediaId = update.task.taskId.replaceAll('upload_', '');
   final media = await twonlyDB.mediaFilesDao.getMediaFileById(mediaId);
 
-  if (update.status == TaskStatus.enqueued ||
-      update.status == TaskStatus.running) {
+  if (update.status == TaskStatus.running) {
     // Ignore these updates
     return;
   }
@@ -103,25 +102,34 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
     Log.error(
       'Got HTTP error ${update.responseStatusCode} for $mediaId',
     );
+  }
 
-    if (update.responseStatusCode == 429) {
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaId,
-        const MediaFilesCompanion(
-          uploadState: Value(UploadState.uploadLimitReached),
-        ),
-      );
-      return;
-    }
+  if (update.status == TaskStatus.notFound) {
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaId,
+      const MediaFilesCompanion(
+        uploadState: Value(UploadState.uploadLimitReached),
+      ),
+    );
+    Log.info(
+      'Background upload failed for $mediaId with status ${update.responseStatusCode}. Not trying again.',
+    );
+    return;
   }
 
   Log.info(
-    'Background upload failed for $mediaId with status ${update.status}. Trying again.',
+    'Background status $mediaId with status ${update.status} and ${update.responseStatusCode}. ',
   );
 
-  final mediaService = await MediaFileService.fromMedia(media);
+  if (update.status == TaskStatus.failed ||
+      update.status == TaskStatus.canceled) {
+    Log.error(
+      'Background upload failed for $mediaId with status ${update.status} and ${update.responseStatusCode}. ',
+    );
+    final mediaService = await MediaFileService.fromMedia(media);
 
-  await mediaService.setUploadState(UploadState.uploaded);
-  // In all other cases just try the upload again...
-  await startBackgroundMediaUpload(mediaService);
+    await mediaService.setUploadState(UploadState.uploaded);
+    // In all other cases just try the upload again...
+    await startBackgroundMediaUpload(mediaService);
+  }
 }

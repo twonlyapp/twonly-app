@@ -293,6 +293,8 @@ Color getMessageColorFromType(
     } else {
       if (mediaFile.type == MediaType.video) {
         color = const Color.fromARGB(255, 243, 33, 208);
+      } else if (mediaFile.type == MediaType.audio) {
+        color = const Color.fromARGB(255, 252, 149, 85);
       } else {
         color = Colors.redAccent;
       }

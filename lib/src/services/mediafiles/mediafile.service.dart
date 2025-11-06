@@ -78,6 +78,9 @@ class MediaFileService {
               // Message was not yet opened, so do not remove it.
               delete = false;
             }
+            if (service.mediaFile.type == MediaType.audio) {
+              delete = false; // do not delete voice messages
+            }
           }
         }
       }
@@ -162,6 +165,7 @@ class MediaFileService {
     }
     switch (mediaFile.type) {
       case MediaType.gif:
+      case MediaType.audio:
       case MediaType.image:
         // all images are already compress..
         break;
@@ -181,6 +185,7 @@ class MediaFileService {
         await compressImage(originalPath, tempPath);
       case MediaType.video:
         await compressAndOverlayVideo(this);
+      case MediaType.audio:
       case MediaType.gif:
         originalPath.copySync(tempPath.path);
     }
@@ -267,6 +272,8 @@ class MediaFileService {
           extension = 'mp4';
         case MediaType.gif:
           extension = 'gif';
+        case MediaType.audio:
+          extension = 'm4a';
       }
     }
     final mediaBaseDir =

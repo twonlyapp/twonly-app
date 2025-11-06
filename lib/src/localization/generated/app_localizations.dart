@@ -2072,6 +2072,12 @@ abstract class AppLocalizations {
   /// **'Double-click\nto open again'**
   String get doubleClickToReopen;
 
+  /// No description provided for @uploadLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload limit has\been reached. Upgrade to Pro\nor wait until tomorrow.'**
+  String get uploadLimitReached;
+
   /// No description provided for @retransmissionRequested.
   ///
   /// In en, this message translates to:
@@ -2474,6 +2480,12 @@ abstract class AppLocalizations {
   /// **'sent a image{inGroup}.'**
   String notificationImage(Object inGroup);
 
+  /// No description provided for @notificationAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a voice message{inGroup}.'**
+  String notificationAudio(Object inGroup);
+
   /// No description provided for @notificationAddedToGroup.
   ///
   /// In en, this message translates to:
@@ -2527,6 +2539,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'has reacted with {reaction} to your image.'**
   String notificationReactionToImage(Object reaction);
+
+  /// No description provided for @notificationReactionToAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your audio message.'**
+  String notificationReactionToAudio(Object reaction);
 
   /// No description provided for @notificationResponse.
   ///
