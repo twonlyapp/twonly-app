@@ -7,6 +7,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
@@ -64,25 +65,24 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
 
   @override
   Widget build(BuildContext context) {
-    final planId = context.read<CustomChangeProvider>().plan;
+    final plan = context.read<CustomChangeProvider>().plan;
     final myLocale = Localizations.localeOf(context);
     final paidMonthly = ballance?.paymentPeriodDays == MONTHLY_PAYMENT_DAYS;
-    final isPayingUser = planId == 'Family' || planId == 'Pro';
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.manageSubscription),
       ),
       body: ListView(
         children: [
-          PlanCard(planId: planId, paidMonthly: paidMonthly),
-          if (isPayingUser) const SizedBox(height: 20),
-          if (widget.nextPayment != null && isPayingUser)
+          PlanCard(plan: plan, paidMonthly: paidMonthly),
+          if (isPayingUser(plan)) const SizedBox(height: 20),
+          if (widget.nextPayment != null && isPayingUser(plan))
             ListTile(
               title: Text(
                 '${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(widget.nextPayment!)}',
               ),
             ),
-          if (autoRenewal != null && isPayingUser)
+          if (autoRenewal != null && isPayingUser(plan))
             ListTile(
               title: Text(context.lang.autoRenewal),
               subtitle: Text(

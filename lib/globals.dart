@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/api.service.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 
 late ApiService apiService;
 
@@ -26,7 +27,8 @@ void Function({required bool isConnected}) globalCallbackConnectionState = ({
 }) {};
 void Function() globalCallbackAppIsOutdated = () {};
 void Function() globalCallbackNewDeviceRegistered = () {};
-void Function(String planId) globalCallbackUpdatePlan = (String planId) {};
+void Function(SubscriptionPlan plan) globalCallbackUpdatePlan =
+    (SubscriptionPlan plan) {};
 
 Map<String, VoidCallback> globalUserDataChangedCallBack = {};
 

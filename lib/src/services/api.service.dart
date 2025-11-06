@@ -35,6 +35,7 @@ import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -384,7 +385,7 @@ class ApiService {
             user.subscriptionPlan = authenticated.plan;
             return user;
           });
-          globalCallbackUpdatePlan(authenticated.plan);
+          globalCallbackUpdatePlan(planFromString(authenticated.plan));
         }
         Log.info('websocket is authenticated');
         unawaited(onAuthenticated());

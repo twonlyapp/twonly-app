@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
@@ -104,7 +105,7 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) {
     final isConnected = context.watch<CustomChangeProvider>().isConnected;
-    final planId = context.watch<CustomChangeProvider>().plan;
+    final plan = context.watch<CustomChangeProvider>().plan;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -130,7 +131,7 @@ class _ChatListViewState extends State<ChatListView> {
             ),
             const SizedBox(width: 10),
             const Text('twonly '),
-            if (planId != 'Free')
+            if (plan != SubscriptionPlan.Free)
               GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -150,7 +151,7 @@ class _ChatListViewState extends State<ChatListView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                   child: Text(
-                    planId,
+                    plan.name,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

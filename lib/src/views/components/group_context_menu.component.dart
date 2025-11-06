@@ -82,14 +82,14 @@ class GroupContextMenu extends StatelessWidget {
               context.lang.groupContextMenuDeleteGroup,
             );
             if (ok) {
-              // await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
-              await twonlyDB.groupsDao.deleteGroup(group.groupId);
-              // await twonlyDB.groupsDao.updateGroup(
-              //   group.groupId,
-              //   const GroupsCompanion(
-              //     deletedContent: Value(true),
-              //   ),
-              // );
+              await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
+              // await twonlyDB.groupsDao.deleteGroup(group.groupId);
+              await twonlyDB.groupsDao.updateGroup(
+                group.groupId,
+                const GroupsCompanion(
+                  deletedContent: Value(true),
+                ),
+              );
             }
           },
         ),

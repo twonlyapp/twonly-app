@@ -123,16 +123,22 @@ Future<void> handleFlameSync(
   Log.info('Got a flameSync from $contactId');
 
   final group = await twonlyDB.groupsDao.getDirectChat(contactId);
-  if (group == null || group.lastFlameCounterChange != null) return;
+  if (group == null || group.lastFlameCounterChange == null) return;
 
   var updates = GroupsCompanion(
     alsoBestFriend: Value(flameSync.bestFriend),
   );
   if (isToday(group.lastFlameCounterChange!) &&
-      isToday(fromTimestamp(flameSync.lastFlameCounterChange))) {
+          isToday(fromTimestamp(flameSync.lastFlameCounterChange)) ||
+      flameSync.forceUpdate) {
     if (flameSync.flameCounter > group.flameCounter) {
-      updates = GroupsCompanion(
+      updates = updates.copyWith(
         flameCounter: Value(flameSync.flameCounter.toInt()),
+      );
+    }
+    if (flameSync.flameCounter > group.maxFlameCounter) {
+      updates = updates.copyWith(
+        maxFlameCounter: Value(flameSync.flameCounter.toInt()),
       );
     }
   }

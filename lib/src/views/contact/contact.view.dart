@@ -10,6 +10,7 @@ import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/flame.dart';
+import 'package:twonly/src/views/components/max_flame_list_title.dart';
 import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
@@ -146,6 +147,9 @@ class _ContactViewState extends State<ContactView> {
                 groupId: getUUIDforDirectChat(widget.userId, gUser.userId),
               ),
               const Divider(),
+              MaxFlameListTitle(
+                contactId: widget.userId,
+              ),
               BetterListTile(
                 icon: FontAwesomeIcons.shieldHeart,
                 text: context.lang.contactVerifyNumberTitle,

@@ -8,6 +8,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 Future<bool> isUserCreated() async {
@@ -35,16 +36,19 @@ Future<UserData?> getUser() async {
   }
 }
 
-Future<void> updateUsersPlan(BuildContext context, String planId) async {
-  context.read<CustomChangeProvider>().plan = planId;
+Future<void> updateUsersPlan(
+  BuildContext context,
+  SubscriptionPlan plan,
+) async {
+  context.read<CustomChangeProvider>().plan = plan;
 
   await updateUserdata((user) {
-    user.subscriptionPlan = planId;
+    user.subscriptionPlan = plan.name;
     return user;
   });
 
   if (!context.mounted) return;
-  await context.read<CustomChangeProvider>().updatePlan(planId);
+  await context.read<CustomChangeProvider>().updatePlan(plan);
 }
 
 Mutex updateProtection = Mutex();

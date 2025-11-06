@@ -321,8 +321,8 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         if (updateFlame) {
           flameCounter += 1;
           lastFlameCounterChange = Value(timestamp);
-          if (flameCounter > maxFlameCounter) {
-            maxFlameCounter = flameCounter;
+          if ((flameCounter + 1) >= maxFlameCounter) {
+            maxFlameCounter = flameCounter + 1;
             maxFlameCounterFrom = DateTime.now();
           }
         }

@@ -1251,6 +1251,7 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
     $fixnum.Int64? flameCounter,
     $fixnum.Int64? lastFlameCounterChange,
     $core.bool? bestFriend,
+    $core.bool? forceUpdate,
   }) {
     final $result = create();
     if (flameCounter != null) {
@@ -1262,6 +1263,9 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
     if (bestFriend != null) {
       $result.bestFriend = bestFriend;
     }
+    if (forceUpdate != null) {
+      $result.forceUpdate = forceUpdate;
+    }
     return $result;
   }
   EncryptedContent_FlameSync._() : super();
@@ -1272,6 +1276,7 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
     ..aInt64(1, _omitFieldNames ? '' : 'flameCounter', protoName: 'flameCounter')
     ..aInt64(2, _omitFieldNames ? '' : 'lastFlameCounterChange', protoName: 'lastFlameCounterChange')
     ..aOB(3, _omitFieldNames ? '' : 'bestFriend', protoName: 'bestFriend')
+    ..aOB(4, _omitFieldNames ? '' : 'forceUpdate', protoName: 'forceUpdate')
     ..hasRequiredFields = false
   ;
 
@@ -1322,6 +1327,15 @@ class EncryptedContent_FlameSync extends $pb.GeneratedMessage {
   $core.bool hasBestFriend() => $_has(2);
   @$pb.TagNumber(3)
   void clearBestFriend() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get forceUpdate => $_getBF(3);
+  @$pb.TagNumber(4)
+  set forceUpdate($core.bool v) { $_setBool(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasForceUpdate() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearForceUpdate() => clearField(4);
 }
 
 class EncryptedContent extends $pb.GeneratedMessage {

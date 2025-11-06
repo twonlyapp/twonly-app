@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
@@ -13,13 +14,13 @@ import 'package:url_launcher/url_launcher.dart';
 class SelectPaymentView extends StatefulWidget {
   const SelectPaymentView({
     super.key,
-    this.planId,
+    this.plan,
     this.payMonthly,
     this.valueInCents,
     this.refund,
   });
 
-  final String? planId;
+  final SubscriptionPlan? plan;
   final bool? payMonthly;
   final int? valueInCents;
   final int? refund;
@@ -62,9 +63,9 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
   void setCheckout(bool init) {
     if (widget.valueInCents != null && widget.valueInCents! > 0) {
       checkoutInCents = widget.valueInCents!;
-    } else if (widget.planId != null) {
+    } else if (widget.plan != null) {
       checkoutInCents =
-          getPlanPrice(widget.planId!, paidMonthly: widget.payMonthly!);
+          getPlanPrice(widget.plan!, paidMonthly: widget.payMonthly!);
     } else {
       /// Nothing to checkout for...
       Navigator.pop(context);
@@ -77,7 +78,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
 
   @override
   Widget build(BuildContext context) {
-    final totalPrice = (widget.planId != null && widget.payMonthly != null)
+    final totalPrice = (widget.plan != null && widget.payMonthly != null)
         ? '${localePrizing(context, checkoutInCents)}/${(widget.payMonthly!) ? context.lang.month : context.lang.year}'
         : localePrizing(context, checkoutInCents);
     final canPay = paymentMethods == PaymentMethods.twonlyCredit &&
@@ -239,13 +240,13 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 onPressed: canPay
                     ? () async {
                         final res = await apiService.switchToPayedPlan(
-                          widget.planId!,
+                          widget.plan!.name,
                           widget.payMonthly!,
                           tryAutoRenewal,
                         );
                         if (!context.mounted) return;
                         if (res.isSuccess) {
-                          await updateUsersPlan(context, widget.planId!);
+                          await updateUsersPlan(context, widget.plan!);
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

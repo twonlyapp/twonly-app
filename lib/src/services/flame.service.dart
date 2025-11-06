@@ -9,7 +9,7 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-Future<void> syncFlameCounters() async {
+Future<void> syncFlameCounters({String? forceForGroup}) async {
   final groups = await twonlyDB.groupsDao.getAllDirectChats();
   if (groups.isEmpty) return;
   final maxMessageCounter = groups.map((x) => x.totalMediaCounter).max;
@@ -26,8 +26,10 @@ Future<void> syncFlameCounters() async {
   for (final group in groups) {
     if (group.lastFlameCounterChange == null) continue;
     if (!isToday(group.lastFlameCounterChange!)) continue;
-    if (group.lastFlameSync != null) {
-      if (isToday(group.lastFlameSync!)) continue;
+    if (forceForGroup == null || group.groupId != forceForGroup) {
+      if (group.lastFlameSync != null) {
+        if (isToday(group.lastFlameSync!)) continue;
+      }
     }
 
     final flameCounter = getFlameCounterFromGroup(group) - 1;
@@ -49,6 +51,7 @@ Future<void> syncFlameCounters() async {
           lastFlameCounterChange:
               Int64(group.lastFlameCounterChange!.millisecondsSinceEpoch),
           bestFriend: group.groupId == bestFriend.groupId,
+          forceUpdate: group.groupId == forceForGroup,
         ),
       ),
     );

@@ -105,16 +105,6 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
               ..where((t) => t.receiptId.equals(receiptId)))
             .getSingleOrNull() !=
         null;
-    // try {
-    //   return await (select()
-    //         ..where(
-    //           (t) => t.receiptId.equals(receiptId),
-    //         ))
-    //       .getSingleOrNull();
-    // } catch (e) {
-    //   Log.error(e);
-    //   return null;
-    // }
   }
 
   Future<void> gotReceipt(String receiptId) async {

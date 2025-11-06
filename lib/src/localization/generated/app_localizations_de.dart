@@ -705,7 +705,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get proFeature2 => '1 zusätzlicher Plus Benutzer';
 
   @override
-  String get proFeature3 => 'Zusatzfunktionen (coming-soon)';
+  String get proFeature3 => 'Flammen wiederherstellen';
 
   @override
   String get proFeature4 => 'Cloud-Backup verschlüsselt (coming-soon)';

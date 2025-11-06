@@ -365,6 +365,7 @@ const EncryptedContent_FlameSync$json = {
     {'1': 'flameCounter', '3': 1, '4': 1, '5': 3, '10': 'flameCounter'},
     {'1': 'lastFlameCounterChange', '3': 2, '4': 1, '5': 3, '10': 'lastFlameCounterChange'},
     {'1': 'bestFriend', '3': 3, '4': 1, '5': 8, '10': 'bestFriend'},
+    {'1': 'forceUpdate', '3': 4, '4': 1, '5': 8, '10': 'forceUpdate'},
   ],
 };
 
@@ -434,12 +435,13 @@ final $typed_data.Uint8List encryptedContentDescriptor = $convert.base64Decode(
     'J5cHRlZENvbnRlbnQuUHVzaEtleXMuVHlwZVIEdHlwZRIZCgVrZXlJZBgCIAEoA0gAUgVrZXlJ'
     'ZIgBARIVCgNrZXkYAyABKAxIAVIDa2V5iAEBEiEKCWNyZWF0ZWRBdBgEIAEoA0gCUgljcmVhdG'
     'VkQXSIAQEiHwoEVHlwZRILCgdSRVFVRVNUEAASCgoGVVBEQVRFEAFCCAoGX2tleUlkQgYKBF9r'
-    'ZXlCDAoKX2NyZWF0ZWRBdBqHAQoJRmxhbWVTeW5jEiIKDGZsYW1lQ291bnRlchgBIAEoA1IMZm'
+    'ZXlCDAoKX2NyZWF0ZWRBdBqpAQoJRmxhbWVTeW5jEiIKDGZsYW1lQ291bnRlchgBIAEoA1IMZm'
     'xhbWVDb3VudGVyEjYKFmxhc3RGbGFtZUNvdW50ZXJDaGFuZ2UYAiABKANSFmxhc3RGbGFtZUNv'
-    'dW50ZXJDaGFuZ2USHgoKYmVzdEZyaWVuZBgDIAEoCFIKYmVzdEZyaWVuZEIKCghfZ3JvdXBJZE'
-    'IPCg1faXNEaXJlY3RDaGF0QhcKFV9zZW5kZXJQcm9maWxlQ291bnRlckIQCg5fbWVzc2FnZVVw'
-    'ZGF0ZUIICgZfbWVkaWFCDgoMX21lZGlhVXBkYXRlQhAKDl9jb250YWN0VXBkYXRlQhEKD19jb2'
-    '50YWN0UmVxdWVzdEIMCgpfZmxhbWVTeW5jQgsKCV9wdXNoS2V5c0ILCglfcmVhY3Rpb25CDgoM'
-    'X3RleHRNZXNzYWdlQg4KDF9ncm91cENyZWF0ZUIMCgpfZ3JvdXBKb2luQg4KDF9ncm91cFVwZG'
-    'F0ZUIXChVfcmVzZW5kR3JvdXBQdWJsaWNLZXk=');
+    'dW50ZXJDaGFuZ2USHgoKYmVzdEZyaWVuZBgDIAEoCFIKYmVzdEZyaWVuZBIgCgtmb3JjZVVwZG'
+    'F0ZRgEIAEoCFILZm9yY2VVcGRhdGVCCgoIX2dyb3VwSWRCDwoNX2lzRGlyZWN0Q2hhdEIXChVf'
+    'c2VuZGVyUHJvZmlsZUNvdW50ZXJCEAoOX21lc3NhZ2VVcGRhdGVCCAoGX21lZGlhQg4KDF9tZW'
+    'RpYVVwZGF0ZUIQCg5fY29udGFjdFVwZGF0ZUIRCg9fY29udGFjdFJlcXVlc3RCDAoKX2ZsYW1l'
+    'U3luY0ILCglfcHVzaEtleXNCCwoJX3JlYWN0aW9uQg4KDF90ZXh0TWVzc2FnZUIOCgxfZ3JvdX'
+    'BDcmVhdGVCDAoKX2dyb3VwSm9pbkIOCgxfZ3JvdXBVcGRhdGVCFwoVX3Jlc2VuZEdyb3VwUHVi'
+    'bGljS2V5');
 

@@ -169,6 +169,7 @@ message EncryptedContent {
         int64 flameCounter = 1;
         int64 lastFlameCounterChange = 2;
         bool bestFriend = 3;
+        bool forceUpdate = 4;
     }
 
 }
