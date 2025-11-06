@@ -40,7 +40,6 @@ class _MessageInputState extends State<MessageInput> {
     );
 
     _textFieldController.clear();
-    _emojiShowing = false;
     widget.onMessageSend();
     setState(() {});
   }
@@ -101,18 +100,21 @@ class _MessageInputState extends State<MessageInput> {
                             }
                           });
                         },
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            top: 8,
-                            bottom: 8,
-                            left: 12,
-                            right: 8,
-                          ),
-                          child: FaIcon(
-                            size: 20,
-                            _emojiShowing
-                                ? FontAwesomeIcons.keyboard
-                                : FontAwesomeIcons.faceSmile,
+                        child: ColoredBox(
+                          color: Colors.transparent,
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              top: 8,
+                              bottom: 8,
+                              left: 12,
+                              right: 8,
+                            ),
+                            child: FaIcon(
+                              size: 20,
+                              _emojiShowing
+                                  ? FontAwesomeIcons.keyboard
+                                  : FontAwesomeIcons.faceSmile,
+                            ),
                           ),
                         ),
                       ),
