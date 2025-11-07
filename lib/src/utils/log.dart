@@ -10,6 +10,7 @@ void initLogger() {
   Logger.root.onRecord.listen((record) async {
     await _writeLogToFile(record);
     if (!kReleaseMode) {
+      // ignore: avoid_print
       print(
         '${record.level.name} [twonly] ${record.loggerName} > ${record.message}',
       );
