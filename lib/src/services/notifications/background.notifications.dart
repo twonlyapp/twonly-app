@@ -23,9 +23,10 @@ Future<void> customLocalPushNotification(String title, String msg) async {
     '1',
     'System',
     channelDescription: 'System messages.',
-    importance: Importance.max,
-    priority: Priority.max,
+    importance: Importance.high,
+    priority: Priority.high,
     styleInformation: BigTextStyleInformation(msg),
+    icon: 'ic_launcher_foreground',
   );
 
   const darwinNotificationDetails = DarwinNotificationDetails();
@@ -34,8 +35,10 @@ Future<void> customLocalPushNotification(String title, String msg) async {
     iOS: darwinNotificationDetails,
   );
 
+  final id = Random.secure().nextInt(9999);
+
   await flutterLocalNotificationsPlugin.show(
-    Random.secure().nextInt(9999),
+    id,
     title,
     msg,
     notificationDetails,
@@ -95,11 +98,11 @@ Future<void> handlePushData(String pushDataB64) async {
       }
     }
   } catch (e) {
+    Log.error(e);
     await customLocalPushNotification(
       'Du hast eine neue Nachricht.',
       'Öffne twonly um mehr zu erfahren.',
     );
-    Log.error(e);
   }
 }
 
@@ -161,6 +164,7 @@ Future<void> showLocalPushNotification(
     priority: Priority.max,
     ticker: 'You got a new message.',
     largeIcon: styleInformation,
+    icon: 'ic_launcher_foreground',
   );
 
   const darwinNotificationDetails = DarwinNotificationDetails();
@@ -174,7 +178,7 @@ Future<void> showLocalPushNotification(
     title,
     body,
     notificationDetails,
-    payload: pushNotification.kind.name,
+    // payload: pushNotification.kind.name,
   );
 }
 

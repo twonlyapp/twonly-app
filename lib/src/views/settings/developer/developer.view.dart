@@ -66,7 +66,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               );
             },
           ),
-          // if (kDebugMode)
+          // if (!kReleaseMode)
           //   ListTile(
           //     title: const Text('FlameSync Test'),
           //     onTap: () async {
@@ -74,7 +74,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
           //       await syncFlameCounters();
           //     },
           //   ),
-          if (kDebugMode)
+          if (!kReleaseMode)
             ListTile(
               title: const Text('Automated Testing'),
               onTap: () async {

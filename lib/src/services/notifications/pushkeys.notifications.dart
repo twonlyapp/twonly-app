@@ -51,7 +51,7 @@ Future<void> setupNotificationWithUsers({
     final pushUser =
         pushUsers.firstWhereOrNull((x) => x.userId == contact.userId);
 
-    if (pushUser != null) {
+    if (pushUser != null && pushUser.pushKeys.isNotEmpty) {
       // make it harder to predict the change of the key
       final timeBefore =
           DateTime.now().subtract(Duration(days: 5 + random.nextInt(5)));

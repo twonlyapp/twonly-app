@@ -2671,6 +2671,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'one year.'**
   String get deleteChatAfterAYear;
+
+  /// No description provided for @yourTwonlyScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Your twonly-Score'**
+  String get yourTwonlyScore;
 }
 
 class _AppLocalizationsDelegate

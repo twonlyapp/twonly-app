@@ -263,7 +263,7 @@ bool isUUIDNewer(String uuid1, String uuid2) {
     return timestamp1 > timestamp2;
   } catch (e) {
     Log.error(e);
-    return true;
+    return false;
   }
 }
 

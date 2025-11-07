@@ -51,8 +51,8 @@ final lockRetransStore = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
-  final String apiHost = kDebugMode ? '10.99.0.140:3030' : 'api.twonly.eu';
-  final String apiSecure = kDebugMode ? '' : 's';
+  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '10.99.0.140:3030';
+  final String apiSecure = kReleaseMode ? 's' : '';
 
   bool appIsOutdated = false;
   bool isAuthenticated = false;

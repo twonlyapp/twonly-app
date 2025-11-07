@@ -3,10 +3,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
 
 class CameraZoomButtons extends StatefulWidget {
@@ -50,6 +50,7 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
 
   Future<void> initAsync() async {
     showWideAngleZoom = (await widget.controller.getMinZoomLevel()) < 1;
+    Log.info('Found ${gCameras.length} cameras for zoom.');
     if (!showWideAngleZoom && Platform.isIOS && gCameras.length == 3) {
       showWideAngleZoomIOS = true;
     }

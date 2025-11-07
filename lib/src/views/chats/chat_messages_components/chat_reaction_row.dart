@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -45,10 +47,10 @@ class ReactionRow extends StatelessWidget {
           child: Center(
             child: Text(
               reaction.emoji,
-              style: const TextStyle(fontSize: 18),
-              strutStyle: const StrutStyle(
+              style: TextStyle(fontSize: Platform.isIOS ? 18 : 15),
+              strutStyle: StrutStyle(
                 forceStrutHeight: true,
-                height: 1.6,
+                height: Platform.isIOS ? 1.6 : 1.3,
               ),
             ),
           ),
@@ -114,7 +116,7 @@ class ReactionRow extends StatelessWidget {
                         entry.$2.toString(),
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 13,
                           color:
                               isDarkMode(context) ? Colors.white : Colors.black,
                           decoration: TextDecoration.none,

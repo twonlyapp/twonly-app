@@ -109,6 +109,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
       ..where(
         contacts.requested.equals(true) &
             contacts.accepted.equals(false) &
+            contacts.deletedByUser.equals(false) &
             contacts.blocked.equals(false),
       )
       ..addColumns([count]);

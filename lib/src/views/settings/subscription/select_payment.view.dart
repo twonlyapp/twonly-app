@@ -111,6 +111,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Card(
+                      color: context.color.surfaceContainer,
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Row(
@@ -193,6 +194,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Card(
+                  color: context.color.surfaceContainer,
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
@@ -215,6 +217,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(
+                color: context.color.surfaceContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(

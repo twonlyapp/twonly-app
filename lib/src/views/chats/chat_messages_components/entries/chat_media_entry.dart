@@ -67,9 +67,10 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     if (widget.message.openedAt == null || widget.message.mediaStored) {
       return;
     }
-    if (widget.mediaService.tempPath.existsSync()) {
-      await sendCipherTextToGroup(
-        widget.message.groupId,
+    if (widget.mediaService.tempPath.existsSync() &&
+        widget.message.senderId != null) {
+      await sendCipherText(
+        widget.message.senderId!,
         EncryptedContent(
           mediaUpdate: EncryptedContent_MediaUpdate(
             type: EncryptedContent_MediaUpdate_Type.REOPENED,

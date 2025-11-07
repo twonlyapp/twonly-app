@@ -35,15 +35,15 @@ Future<void> initFileDownloader() async {
 
   try {
     var androidConfig = [];
-    if (kDebugMode) {
-      androidConfig = [(Config.bypassTLSCertificateValidation, kDebugMode)];
+    if (!kReleaseMode) {
+      androidConfig = [(Config.bypassTLSCertificateValidation, true)];
     }
     await FileDownloader().configure(androidConfig: androidConfig);
   } catch (e) {
     Log.error(e);
   }
 
-  if (kDebugMode) {
+  if (!kReleaseMode) {
     FileDownloader().configureNotification(
       running: const TaskNotification(
         'Uploading/Downloading',

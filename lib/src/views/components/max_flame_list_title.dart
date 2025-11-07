@@ -85,7 +85,7 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
     if (_directChat == null ||
         _directChat!.maxFlameCounter == 0 ||
         _flameCounter >= (_directChat!.maxFlameCounter + 1) ||
-        _directChat!.lastFlameCounterChange!
+        _directChat!.maxFlameCounterFrom!
             .isBefore(DateTime.now().subtract(const Duration(days: 4)))) {
       return Container();
     }

@@ -37,7 +37,7 @@ class _AccountViewState extends State<AccountView> {
         .where(
           (x) =>
               x.transactionType != Response_TransactionTypes.ThanksForTesting ||
-              kDebugMode,
+              !kReleaseMode,
         )
         .map((a) => a.depositCents.toInt())
         .sum;
@@ -101,7 +101,7 @@ class _AccountViewState extends State<AccountView> {
                         ),
                       )
                     : Text(context.lang.settingsAccountDeleteAccountNoBallance),
-            onLongPress: kDebugMode
+            onLongPress: !kReleaseMode
                 ? () async {
                     await deleteLocalUserData();
                     await Restart.restartApp(

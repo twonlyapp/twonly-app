@@ -82,6 +82,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _subscription.cancel();
     downloadStateListener?.cancel();
     videoController?.dispose();
+    videoController = null;
     super.dispose();
   }
 
@@ -141,7 +142,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   Future<void> loadCurrentMediaFile({bool showTwonly = false}) async {
     if (!mounted || !context.mounted) return;
-    if (allMediaFiles.isEmpty) return nextMediaOrExit();
+    if (allMediaFiles.isEmpty || allMediaFiles.first.mediaId == null) {
+      return nextMediaOrExit();
+    }
     await _noScreenshot.screenshotOff();
 
     setState(() {
@@ -175,7 +178,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
           downloadTriggered = true;
           final mediaFile = await twonlyDB.mediaFilesDao
               .getMediaFileById(allMediaFiles.first.mediaId!);
-          await startDownloadMedia(mediaFile!, true);
+          if (mediaFile == null) return;
+          await startDownloadMedia(mediaFile, true);
           unawaited(tryDownloadAllMediaFiles(force: true));
         }
         return;
@@ -269,6 +273,10 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         }
       });
       progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+        if (currentMedia!.mediaFile.displayLimitInMilliseconds == null ||
+            canBeSeenUntil == null) {
+          return;
+        }
         final difference = canBeSeenUntil!.difference(DateTime.now());
         // Calculate the progress as a value between 0.0 and 1.0
         progress = difference.inMilliseconds /
@@ -312,10 +320,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   void displayShortReactions() {
     final renderBox =
-        mediaWidgetKey.currentContext!.findRenderObject()! as RenderBox;
+        mediaWidgetKey.currentContext!.findRenderObject() as RenderBox?;
     setState(() {
       showShortReactions = true;
-      mediaViewerDistanceFromBottom = renderBox.size.height;
+      if (renderBox != null) {
+        mediaViewerDistanceFromBottom = renderBox.size.height;
+      }
     });
   }
 

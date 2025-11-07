@@ -281,7 +281,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
           ..where((t) => t.groupId.equals(groupId)))
         .getSingle();
 
-    final totalMediaCounter = group.totalMediaCounter + 1;
+    final totalMediaCounter = group.totalMediaCounter + (received ? 0 : 1);
     var flameCounter = group.flameCounter;
     var maxFlameCounter = group.maxFlameCounter;
     var maxFlameCounterFrom = group.maxFlameCounterFrom;
@@ -321,7 +321,11 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         if (updateFlame) {
           flameCounter += 1;
           lastFlameCounterChange = Value(timestamp);
-          if ((flameCounter + 1) >= maxFlameCounter) {
+          // Overwrite max flame counter either the current is bigger or the th max flame counter is older then 4 days
+          if ((flameCounter + 1) >= maxFlameCounter ||
+              maxFlameCounterFrom == null ||
+              maxFlameCounterFrom
+                  .isBefore(DateTime.now().subtract(const Duration(days: 5)))) {
             maxFlameCounter = flameCounter + 1;
             maxFlameCounterFrom = DateTime.now();
           }
@@ -349,6 +353,15 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         maxFlameCounterFrom: Value(maxFlameCounterFrom),
       ),
     );
+  }
+
+  Stream<int> watchSumTotalMediaCounter() {
+    final query = selectOnly(groups)
+      ..addColumns([groups.totalMediaCounter.sum()]);
+    return query.watch().map((rows) {
+      final expr = rows.first.read(groups.totalMediaCounter.sum());
+      return expr ?? 0;
+    });
   }
 
   Future<void> increaseLastMessageExchange(

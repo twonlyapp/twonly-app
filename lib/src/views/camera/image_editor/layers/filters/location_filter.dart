@@ -131,7 +131,7 @@ Future<List<Sticker>> getStickerIndex() async {
   final indexFile = File('${directory.path}/stickers.json');
   var res = <Sticker>[];
 
-  if (indexFile.existsSync() && !kDebugMode) {
+  if (indexFile.existsSync() && kReleaseMode) {
     final lastModified = indexFile.lastModifiedSync();
     final difference = DateTime.now().difference(lastModified);
     final content = await indexFile.readAsString();

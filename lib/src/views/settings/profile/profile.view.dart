@@ -25,9 +25,24 @@ class _ProfileViewState extends State<ProfileView> {
   final AvatarMakerController _avatarMakerController =
       PersistentAvatarMakerController(customizedPropertyCategories: []);
 
+  int twonlyScore = 0;
+  late StreamSubscription<int> twonlyScoreSub;
+
   @override
   void initState() {
+    twonlyScoreSub =
+        twonlyDB.groupsDao.watchSumTotalMediaCounter().listen((update) {
+      setState(() {
+        twonlyScore = update;
+      });
+    });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    twonlyScoreSub.cancel();
+    super.dispose();
   }
 
   Future<void> updateUserDisplayName(String displayName) async {
@@ -155,6 +170,17 @@ class _ProfileViewState extends State<ProfileView> {
                 await updateUserDisplayName(displayName);
               }
             },
+          ),
+          BetterListTile(
+            text: context.lang.yourTwonlyScore,
+            icon: FontAwesomeIcons.trophy,
+            trailing: Text(
+              twonlyScore.toString(),
+              style: TextStyle(
+                color: context.color.primary,
+                fontSize: 18,
+              ),
+            ),
           ),
         ],
       ),

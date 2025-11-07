@@ -9,7 +9,7 @@ void initLogger() {
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
     await _writeLogToFile(record);
-    if (kDebugMode) {
+    if (!kReleaseMode) {
       print(
         '${record.level.name} [twonly] ${record.loggerName} > ${record.message}',
       );

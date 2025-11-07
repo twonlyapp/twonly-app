@@ -32,7 +32,7 @@ class _AutomatedTestingViewState extends State<AutomatedTestingView> {
       ),
       body: ListView(
         children: [
-          if (kDebugMode)
+          if (!kReleaseMode)
             ListTile(
               title: const Text('Sending a lot of messages.'),
               subtitle: Text(lotsOfMessagesStatus),

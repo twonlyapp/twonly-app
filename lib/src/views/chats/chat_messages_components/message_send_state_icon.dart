@@ -242,10 +242,10 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
               child: Center(
                 child: Text(
                   widget.lastReaction!.emoji,
-                  style: const TextStyle(fontSize: 18),
+                  style: const TextStyle(fontSize: 15),
                   strutStyle: const StrutStyle(
                     forceStrutHeight: true,
-                    height: 1.6,
+                    height: 1.4,
                   ),
                 ),
               ),

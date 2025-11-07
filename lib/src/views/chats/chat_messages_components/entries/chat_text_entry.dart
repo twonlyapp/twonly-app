@@ -77,10 +77,10 @@ class ChatTextEntry extends StatelessWidget {
             children: [
               if (info.expanded)
                 Expanded(
-                  child: BetterText(text: text, textColor: info.textColor),
+                  child: BetterText(text: info.text, textColor: info.textColor),
                 )
               else ...[
-                BetterText(text: text, textColor: info.textColor),
+                BetterText(text: info.text, textColor: info.textColor),
                 SizedBox(
                   width: info.spacerWidth,
                 ),

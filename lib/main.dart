@@ -21,6 +21,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
+import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
@@ -63,13 +64,7 @@ void main() async {
   unawaited(createPushAvatars());
   await twonlyDB.messagesDao.purgeMessageTable();
 
-  // await twonlyDB.messagesDao.resetPendingDownloadState();
-  // await twonlyDB.messageRetransmissionDao.purgeOldRetransmissions();
-  // await twonlyDB.signalDao.purgeOutDatedPreKeys();
-
-  // unawaited(purgeSendMediaFiles());
-
-  // unawaited(performTwonlySafeBackup());
+  unawaited(performTwonlySafeBackup());
 
   runApp(
     MultiProvider(

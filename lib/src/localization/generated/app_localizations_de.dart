@@ -1474,4 +1474,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteChatAfterAYear => 'einem Jahr.';
+
+  @override
+  String get yourTwonlyScore => 'Dein twonly-Score';
 }

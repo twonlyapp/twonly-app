@@ -204,7 +204,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                   onPressed: (!isLoading &&
                           (passwordCtrl.text == repeatedPasswordCtrl.text &&
                                   passwordCtrl.text.length >= 8 ||
-                              kDebugMode))
+                              !kReleaseMode))
                       ? onPressedEnableTwonlySafe
                       : null,
                   icon: isLoading

@@ -102,6 +102,7 @@ class _CheckoutViewState extends State<CheckoutView> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(
+                color: context.color.surfaceContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
