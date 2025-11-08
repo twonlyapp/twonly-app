@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.0.64+64
+version: 0.0.65+65
 
 environment:
   sdk: ^3.6.0
@@ -36,7 +36,7 @@ dependencies:
   flutter_secure_storage:
     git:
       url: https://github.com/juliansteenbakker/flutter_secure_storage.git
-      ref: 71b75a36f35f2ce945998e20c6c6aa1820babfc6 # from develop
+      ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
       path: flutter_secure_storage/
   flutter_svg: ^2.0.17
   flutter_volume_controller: ^1.3.4
@@ -76,6 +76,12 @@ dependencies:
   web_socket_channel: ^3.0.1
 
 dependency_overrides: 
+
+  flutter_secure_storage_darwin:
+    git:
+      url: https://github.com/juliansteenbakker/flutter_secure_storage.git
+      ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
+      path: flutter_secure_storage_darwin/
 
   flutter_android_volume_keydown:
     git:
