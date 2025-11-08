@@ -44,7 +44,8 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
         Uint8List? avatarSvg;
         if (oldContact.avatarSvg != null) {
           avatarSvg = Uint8List.fromList(
-              gzip.encode(utf8.encode(oldContact.avatarSvg!)));
+            gzip.encode(utf8.encode(oldContact.avatarSvg!)),
+          );
         }
         await twonlyDB.contactsDao.insertContact(
           ContactsCompanion(

@@ -76,25 +76,22 @@ dependencies:
   web_socket_channel: ^3.0.1
 
 dependency_overrides: 
-
-  flutter_secure_storage_darwin:
-    git:
-      url: https://github.com/juliansteenbakker/flutter_secure_storage.git
-      ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
-      path: flutter_secure_storage_darwin/
-
-  flutter_android_volume_keydown:
-    git:
-      url: https://github.com/yenchieh/flutter_android_volume_keydown.git
-      branch: fix/lStar-not-found-error
-      
-  # hardcoding the mirror mode of the VideCapture to MIRROR_MODE_ON_FRONT_ONLY
   camera_android_camerax: 
     # path: ../flutter-packages/packages/camera/camera_android_camerax
     git:
       url: https://github.com/otsmr/flutter-packages.git
       path: packages/camera/camera_android_camerax 
       ref: aef58af205a5f3ce6588a5c59bb2e734aab943f0
+  flutter_android_volume_keydown:
+    git:
+      url: https://github.com/yenchieh/flutter_android_volume_keydown.git
+      branch: fix/lStar-not-found-error
+  flutter_secure_storage_darwin:
+    git:
+      url: https://github.com/juliansteenbakker/flutter_secure_storage.git
+      ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
+      path: flutter_secure_storage_darwin/
+  # hardcoding the mirror mode of the VideCapture to MIRROR_MODE_ON_FRONT_ONLY
 
 dev_dependencies:
   build_runner: ^2.4.15
