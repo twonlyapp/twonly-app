@@ -7,10 +7,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -64,7 +65,7 @@ const int MONTHLY_PAYMENT_DAYS = 30;
 const int YEARLY_PAYMENT_DAYS = 365;
 
 int calculateRefund(Response_PlanBallance current) {
-  var refund = getPlanPrice('Pro', paidMonthly: true);
+  var refund = getPlanPrice(SubscriptionPlan.Pro, paidMonthly: true);
 
   if (current.paymentPeriodDays == YEARLY_PAYMENT_DAYS) {
     final elapsedDays = DateTime.now()
@@ -81,7 +82,7 @@ int calculateRefund(Response_PlanBallance current) {
       // => 5€
 
       refund = (((YEARLY_PAYMENT_DAYS - elapsedDays) / YEARLY_PAYMENT_DAYS) *
-                  getPlanPrice('Pro', paidMonthly: false) /
+                  getPlanPrice(SubscriptionPlan.Pro, paidMonthly: false) /
                   100)
               .ceil() *
           100;
@@ -144,13 +145,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     String? formattedBalance;
     DateTime? nextPayment;
     final currentPlan = context.read<CustomChangeProvider>().plan;
-    final isPayingUser = currentPlan == 'Family' || currentPlan == 'Pro';
 
     if (ballance != null) {
       final lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
         ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000,
       );
-      if (isPayingUser) {
+      if (isPayingUser(currentPlan)) {
         nextPayment = lastPaymentDateTime
             .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
       }
@@ -164,7 +164,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
     }
 
     var refund = 0;
-    if (currentPlan == 'Pro' && ballance != null) {
+    if (currentPlan == SubscriptionPlan.Pro && ballance != null) {
       refund = calculateRefund(ballance!);
     }
 
@@ -202,7 +202,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 child: Text(
-                  currentPlan,
+                  currentPlan.name,
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -220,7 +220,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 style: const TextStyle(color: Colors.orange),
               ),
             ),
-          if (currentPlan != 'Family' && currentPlan != 'Pro')
+          if (!isPayingUser(currentPlan))
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(18),
@@ -231,16 +231,17 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 ),
               ),
             ),
-          if (currentPlan != 'Family' && currentPlan != 'Pro')
+          if (!isPayingUser(currentPlan) ||
+              currentPlan == SubscriptionPlan.Tester)
             PlanCard(
-              planId: 'Pro',
+              plan: SubscriptionPlan.Pro,
               onTap: () async {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) {
                       return const CheckoutView(
-                        planId: 'Pro',
+                        plan: SubscriptionPlan.Pro,
                       );
                     },
                   ),
@@ -248,9 +249,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 await initAsync();
               },
             ),
-          if (currentPlan != 'Family')
+          if (currentPlan != SubscriptionPlan.Family)
             PlanCard(
-              planId: 'Family',
+              plan: SubscriptionPlan.Family,
               refund: refund,
               onTap: () async {
                 await Navigator.push(
@@ -258,11 +259,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   MaterialPageRoute(
                     builder: (context) {
                       return CheckoutView(
-                        planId: 'Family',
+                        plan: SubscriptionPlan.Family,
                         refund: (refund > 0) ? refund : null,
-                        disableMonthlyOption: currentPlan == 'Pro' &&
-                            ballance!.paymentPeriodDays.toInt() ==
-                                YEARLY_PAYMENT_DAYS,
+                        disableMonthlyOption:
+                            currentPlan == SubscriptionPlan.Pro &&
+                                ballance!.paymentPeriodDays.toInt() ==
+                                    YEARLY_PAYMENT_DAYS,
                       );
                     },
                   ),
@@ -270,7 +272,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 await initAsync();
               },
             ),
-          if (!isPayingUser) ...[
+          if (!isPayingUser(currentPlan)) ...[
             const SizedBox(height: 10),
             Center(
               child: Padding(
@@ -284,15 +286,15 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             ),
             const SizedBox(height: 10),
             PlanCard(
-              planId: 'Plus',
+              plan: SubscriptionPlan.Plus,
               onTap: () async {
-                await redeemUserInviteCode(context, 'Plus');
+                await redeemUserInviteCode(context, SubscriptionPlan.Plus.name);
                 await initAsync();
               },
             ),
           ],
           const SizedBox(height: 10),
-          if (currentPlan != 'Family') const Divider(),
+          if (currentPlan != SubscriptionPlan.Family) const Divider(),
           BetterListTile(
             icon: FontAwesomeIcons.gears,
             text: context.lang.manageSubscription,
@@ -337,7 +339,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               );
             },
           ),
-          if (isPayingUser || currentPlan == 'Tester')
+          if (isPayingUser(currentPlan) ||
+              currentPlan == SubscriptionPlan.Tester)
             BetterListTile(
               icon: FontAwesomeIcons.userPlus,
               text: context.lang.manageAdditionalUsers,
@@ -378,36 +381,38 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 }
 
-int getPlanPrice(String planId, {required bool paidMonthly}) {
-  switch (planId) {
-    case 'Pro':
+int getPlanPrice(SubscriptionPlan plan, {required bool paidMonthly}) {
+  switch (plan) {
+    case SubscriptionPlan.Pro:
       return paidMonthly ? 100 : 1000;
-    case 'Family':
+    case SubscriptionPlan.Family:
       return paidMonthly ? 200 : 2000;
+    // ignore: no_default_cases
+    default:
+      return 0;
   }
-  return 0;
 }
 
 class PlanCard extends StatelessWidget {
   const PlanCard({
-    required this.planId,
+    required this.plan,
     super.key,
     this.refund,
     this.onTap,
     this.paidMonthly,
   });
-  final String planId;
+  final SubscriptionPlan plan;
   final void Function()? onTap;
   final int? refund;
   final bool? paidMonthly;
 
   @override
   Widget build(BuildContext context) {
-    final yearlyPrice = getPlanPrice(planId, paidMonthly: false);
-    final monthlyPrice = getPlanPrice(planId, paidMonthly: true);
+    final yearlyPrice = getPlanPrice(plan, paidMonthly: false);
+    final monthlyPrice = getPlanPrice(plan, paidMonthly: true);
     var features = <String>[];
 
-    switch (planId) {
+    switch (plan.name) {
       case 'Free':
         features = [context.lang.freeFeature1];
       case 'Plus':
@@ -439,6 +444,7 @@ class PlanCard extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
+          color: context.color.surfaceContainer,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Column(
@@ -447,7 +453,7 @@ class PlanCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Text(
-                      planId,
+                      plan.name,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 24,
@@ -519,9 +525,12 @@ class PlanCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 10),
                     child: FilledButton.icon(
                       onPressed: onTap,
-                      label: (planId == 'Free' || planId == 'Plus')
+                      label: (plan == SubscriptionPlan.Free ||
+                              plan == SubscriptionPlan.Plus)
                           ? Text(context.lang.redeemUserInviteCodeTitle)
-                          : Text(context.lang.upgradeToPaidPlanButton(planId)),
+                          : Text(
+                              context.lang.upgradeToPaidPlanButton(plan.name),
+                            ),
                     ),
                   ),
               ],

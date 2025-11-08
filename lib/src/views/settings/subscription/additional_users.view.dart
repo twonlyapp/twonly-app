@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -23,10 +23,9 @@ Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
     });
     return ballance;
   }
-  final user = await getUser();
-  if (user != null && user.lastPlanBallance != null) {
+  if (gUser.lastPlanBallance != null) {
     try {
-      final decoded = jsonDecode(user.additionalUserInvites!) as List<String>;
+      final decoded = jsonDecode(gUser.additionalUserInvites!) as List<String>;
       return decoded.map(Response_AddAccountsInvite.fromJson).toList();
     } catch (e) {
       Log.error('could not parse additional user json: $e');

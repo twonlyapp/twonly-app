@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 
 class MemoriesItemThumbnail extends StatefulWidget {
@@ -19,7 +20,17 @@ class MemoriesItemThumbnail extends StatefulWidget {
 class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
   @override
   void initState() {
+    initAsync();
     super.initState();
+  }
+
+  Future<void> initAsync() async {
+    if (!widget.galleryItem.mediaService.thumbnailPath.existsSync()) {
+      if (widget.galleryItem.mediaService.storedPath.existsSync()) {
+        await widget.galleryItem.mediaService.createThumbnail();
+        if (mounted) setState(() {});
+      }
+    }
   }
 
   @override
@@ -36,14 +47,23 @@ class _MemoriesItemThumbnailState extends State<MemoriesItemThumbnail> {
 
   @override
   Widget build(BuildContext context) {
+    final media = widget.galleryItem.mediaService;
     return GestureDetector(
       onTap: widget.onTap,
       child: Hero(
-        tag: widget.galleryItem.id.toString(),
+        tag: media.mediaFile.mediaId,
         child: Stack(
           children: [
-            Image.file(widget.galleryItem.thumbnailPath),
-            if (widget.galleryItem.videoPath != null)
+            if (media.thumbnailPath.existsSync())
+              Image.file(media.thumbnailPath)
+            else if (media.storedPath.existsSync() &&
+                    media.mediaFile.type == MediaType.image ||
+                media.mediaFile.type == MediaType.gif)
+              Image.file(media.storedPath)
+            else
+              const Text('Media file removed.'),
+            if (widget.galleryItem.mediaService.mediaFile.type ==
+                MediaType.video)
               const Positioned.fill(
                 child: Center(
                   child: FaIcon(FontAwesomeIcons.circlePlay),

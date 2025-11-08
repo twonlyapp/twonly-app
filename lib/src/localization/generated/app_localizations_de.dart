@@ -123,6 +123,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareImageSearchAllContacts => 'Alle Kontakte durchsuchen';
 
   @override
+  String get startNewChatSearchHint => 'Name, Benutzername oder Gruppenname';
+
+  @override
   String get shareImagedSelectAll => 'Alle auswählen';
 
   @override
@@ -537,6 +540,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cancel => 'Abbrechen';
 
   @override
+  String get now => 'Jetzt';
+
+  @override
+  String get you => 'Du';
+
+  @override
+  String get minutesShort => 'Min.';
+
+  @override
+  String get image => 'Bild';
+
+  @override
+  String get video => 'Video';
+
+  @override
   String get react => 'Reagieren';
 
   @override
@@ -544,6 +562,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get copy => 'Kopieren';
+
+  @override
+  String get edit => 'Bearbeiten';
 
   @override
   String get delete => 'Löschen';
@@ -609,7 +630,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get errorUsernameAlreadyTaken =>
-      'Der Benutzername, den du verwenden möchtest, ist bereits vergeben. Bitte wähle einen anderen Benutzernamen.';
+      'Der Benutzername ist bereits vergeben.';
 
   @override
   String get errorSignatureNotValid =>
@@ -684,7 +705,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get proFeature2 => '1 zusätzlicher Plus Benutzer';
 
   @override
-  String get proFeature3 => 'Zusatzfunktionen (coming-soon)';
+  String get proFeature3 => 'Flammen wiederherstellen';
 
   @override
   String get proFeature4 => 'Cloud-Backup verschlüsselt (coming-soon)';
@@ -915,7 +936,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get deleteTitle => 'Bist du dir sicher?';
 
   @override
-  String get deleteOkBtn => 'Für mich löschen';
+  String get deleteOkBtnForAll => 'Für alle löschen';
+
+  @override
+  String get deleteOkBtnForMe => 'Für mich löschen';
 
   @override
   String get deleteImageTitle => 'Bist du dir sicher?';
@@ -951,6 +975,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get backupTwonlySafeDesc =>
       'Sichere deine twonly-Identität, da dies die einzige Möglichkeit ist, dein Konto wiederherzustellen, wenn du die App deinstallierst oder dein Handy verlierst.';
+
+  @override
+  String get backupNoPasswordRecovery =>
+      'Aufgrund des Sicherheitssystems von twonly gibt es (derzeit) keine Funktion zur Wiederherstellung des Passworts. Daher musst du dir dein Passwort merken oder, besser noch, aufschreiben.';
 
   @override
   String get backupServer => 'Server';
@@ -999,11 +1027,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupTwonlySafeLongDesc =>
-      'twonly hat keine zentralen Benutzerkonten. Während der Installation wird ein Schlüsselpaar erstellt, das aus einem öffentlichen und einem privaten Schlüssel besteht. Der private Schlüssel wird nur auf deinem Gerät gespeichert, um ihn vor unbefugtem Zugriff zu schützen. Der öffentliche Schlüssel wird auf den Server hochgeladen und mit deinem gewählten Benutzernamen verknüpft, damit andere dich finden können.\n\ntwonly Safe erstellt regelmäßig ein verschlüsseltes, anonymes Backup deines privaten Schlüssels zusammen mit deinen Kontakten und Einstellungen. Dein Benutzername und das gewählte Passwort reichen aus, um diese Daten auf einem anderen Gerät wiederherzustellen.';
+      'twonly hat keine zentralen Benutzerkonten. Während der Installation wird ein Schlüsselpaar erstellt, das aus einem öffentlichen und einem privaten Schlüssel besteht. Der private Schlüssel wird nur auf deinem Gerät gespeichert, um ihn vor unbefugtem Zugriff zu schützen. Der öffentliche Schlüssel wird auf den Server hochgeladen und mit deinem gewählten Benutzernamen verknüpft, damit andere dich finden können.\n\ntwonly Backup erstellt regelmäßig ein verschlüsseltes, anonymes Backup deines privaten Schlüssels zusammen mit deinen Kontakten und Einstellungen. Dein Benutzername und das gewählte Passwort reichen aus, um diese Daten auf einem anderen Gerät wiederherzustellen.';
 
   @override
   String get backupSelectStrongPassword =>
-      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein twonly Safe-Backup wiederherstellen möchtest.';
+      'Wähle ein sicheres Passwort. Dies ist erforderlich, wenn du dein twonly Backup wiederherstellen möchtest.';
 
   @override
   String get password => 'Passwort';
@@ -1026,7 +1054,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get backupOwnServerDesc =>
-      'Speichere dein twonly Safe-Backups auf einem Server deiner Wahl.';
+      'Speichere dein twonly Backup auf einem Server deiner Wahl.';
 
   @override
   String get backupUseOwnServer => 'Server verwenden';
@@ -1038,14 +1066,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String get backupTwonlySaveNow => 'Jetzt speichern';
 
   @override
+  String get backupChangePassword => 'Password ändern';
+
+  @override
   String get twonlySafeRecoverTitle => 'Recovery';
 
   @override
   String get twonlySafeRecoverDesc =>
-      'If you have created a backup with twonly Safe, you can restore it here.';
+      'Wenn du ein Backup mit twonly Backup erstellt hast, kannst du es hier wiederherstellen.';
 
   @override
-  String get twonlySafeRecoverBtn => 'Restore backup';
+  String get twonlySafeRecoverBtn => 'Backup wiederherstellen';
 
   @override
   String get inviteFriends => 'Freunde einladen';
@@ -1066,6 +1097,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get doubleClickToReopen => 'Doppelklicken zum\nerneuten Öffnen.';
+
+  @override
+  String get uploadLimitReached =>
+      'Das Upload-Limit wurde\nerreicht. Upgrade auf Pro\noder warte bis morgen.';
 
   @override
   String get retransmissionRequested => 'Wird erneut versucht.';
@@ -1091,4 +1126,359 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get newDeviceRegistered =>
       'Du hast dich auf einem anderen Gerät angemeldet. Daher wurdest du hier abgemeldet.';
+
+  @override
+  String get tabToRemoveEmoji => 'Tippen um zu entfernen';
+
+  @override
+  String get quotedMessageWasDeleted =>
+      'Die zitierte Nachricht wurde gelöscht.';
+
+  @override
+  String get messageWasDeleted => 'Nachricht wurde gelöscht.';
+
+  @override
+  String get messageWasDeletedShort => 'Gelöscht';
+
+  @override
+  String get sent => 'Versendet';
+
+  @override
+  String get sentTo => 'Zugestellt an';
+
+  @override
+  String get received => 'Empfangen';
+
+  @override
+  String get opened => 'Geöffnet';
+
+  @override
+  String get waitingForInternet => 'Warten auf Internet';
+
+  @override
+  String get editHistory => 'Bearbeitungshistorie';
+
+  @override
+  String get archivedChats => 'Archivierte Chats';
+
+  @override
+  String get durationShortSecond => 'Sek.';
+
+  @override
+  String get durationShortMinute => 'Min.';
+
+  @override
+  String get durationShortHour => 'Std.';
+
+  @override
+  String durationShortDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Tage',
+      one: '1 Tag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get contacts => 'Kontakte';
+
+  @override
+  String get groups => 'Gruppen';
+
+  @override
+  String get newGroup => 'Neue Gruppe';
+
+  @override
+  String get selectMembers => 'Mitglieder auswählen';
+
+  @override
+  String get selectGroupName => 'Gruppennamen wählen';
+
+  @override
+  String get groupNameInput => 'Gruppennamen';
+
+  @override
+  String get groupMembers => 'Mitglieder';
+
+  @override
+  String get addMember => 'Mitglied hinzufügen';
+
+  @override
+  String get createGroup => 'Gruppe erstellen';
+
+  @override
+  String get leaveGroup => 'Gruppe verlassen';
+
+  @override
+  String get createContactRequest => 'Kontaktanfrage erstellen';
+
+  @override
+  String get contactRequestSend => 'Kontakanfrage gesendet';
+
+  @override
+  String get makeAdmin => 'Zum Admin machen';
+
+  @override
+  String get removeAdmin => 'Als Admin entfernen';
+
+  @override
+  String get removeFromGroup => 'Aus Gruppe entfernen';
+
+  @override
+  String get admin => 'Admin';
+
+  @override
+  String revokeAdminRightsTitle(Object username) {
+    return 'Adminrechte von $username entfernen?';
+  }
+
+  @override
+  String get revokeAdminRightsOkBtn => 'Als Admin entfernen';
+
+  @override
+  String makeAdminRightsTitle(Object username) {
+    return '$username zum Admin machen?';
+  }
+
+  @override
+  String makeAdminRightsBody(Object username) {
+    return '$username  wird diese Gruppe und ihre Mitglieder bearbeiten können.';
+  }
+
+  @override
+  String get makeAdminRightsOkBtn => 'Zum Admin machen';
+
+  @override
+  String get updateGroup => 'Gruppe aktualisieren';
+
+  @override
+  String get alreadyInGroup => 'Bereits Mitglied';
+
+  @override
+  String removeContactFromGroupTitle(Object username) {
+    return '$username aus dieser Gruppe entfernen?';
+  }
+
+  @override
+  String youChangedGroupName(Object newGroupName) {
+    return 'Du hast den Gruppennamen zu „$newGroupName“ geändert.';
+  }
+
+  @override
+  String makerChangedGroupName(Object maker, Object newGroupName) {
+    return '$maker hat den Gruppennamen zu „$newGroupName“ geändert.';
+  }
+
+  @override
+  String get youCreatedGroup => 'Du hast die Gruppe erstellt.';
+
+  @override
+  String makerCreatedGroup(Object maker) {
+    return '$maker hat die Gruppe erstellt.';
+  }
+
+  @override
+  String youRemovedMember(Object affected) {
+    return 'Du hast $affected aus der Gruppe entfernt.';
+  }
+
+  @override
+  String makerRemovedMember(Object affected, Object maker) {
+    return '$maker hat $affected aus der Gruppe entfernt.';
+  }
+
+  @override
+  String youAddedMember(Object affected) {
+    return 'Du hast $affected zur Gruppe hinzugefügt.';
+  }
+
+  @override
+  String makerAddedMember(Object affected, Object maker) {
+    return '$maker hat $affected zur Gruppe hinzugefügt.';
+  }
+
+  @override
+  String youMadeAdmin(Object affected) {
+    return 'Du hast $affected zum Administrator gemacht.';
+  }
+
+  @override
+  String makerMadeAdmin(Object affected, Object maker) {
+    return '$maker hat $affected zum Administrator gemacht.';
+  }
+
+  @override
+  String youRevokedAdminRights(Object affectedR) {
+    return 'Du hast $affectedR die Administratorrechte entzogen.';
+  }
+
+  @override
+  String makerRevokedAdminRights(Object affectedR, Object maker) {
+    return '$maker hat $affectedR die Administratorrechte entzogen.';
+  }
+
+  @override
+  String get youLeftGroup => 'Du hast die Gruppe verlassen.';
+
+  @override
+  String makerLeftGroup(Object maker) {
+    return '$maker hat die Gruppe verlassen.';
+  }
+
+  @override
+  String get groupActionYou => 'dich';
+
+  @override
+  String get groupActionYour => 'deine';
+
+  @override
+  String get notificationFillerIn => 'in';
+
+  @override
+  String notificationText(Object inGroup) {
+    return 'hat eine Nachricht$inGroup gesendet.';
+  }
+
+  @override
+  String notificationTwonly(Object inGroup) {
+    return 'hat ein twonly$inGroup gesendet.';
+  }
+
+  @override
+  String notificationVideo(Object inGroup) {
+    return 'hat ein Video$inGroup gesendet.';
+  }
+
+  @override
+  String notificationImage(Object inGroup) {
+    return 'hat ein Bild$inGroup gesendet.';
+  }
+
+  @override
+  String notificationAudio(Object inGroup) {
+    return 'hat eine Sprachnachricht$inGroup gesendet.';
+  }
+
+  @override
+  String notificationAddedToGroup(Object groupname) {
+    return 'hat dich zu \"$groupname\" hinzugefügt.';
+  }
+
+  @override
+  String get notificationContactRequest => 'möchte sich mit dir vernetzen.';
+
+  @override
+  String get notificationAcceptRequest => 'ist jetzt mit dir vernetzt.';
+
+  @override
+  String get notificationStoredMediaFile => 'hat dein Bild gespeichert.';
+
+  @override
+  String get notificationReaction => 'hat auf dein Bild reagiert.';
+
+  @override
+  String get notificationReopenedMedia => 'hat dein Bild erneut geöffnet.';
+
+  @override
+  String notificationReactionToVideo(Object reaction) {
+    return 'hat mit $reaction auf dein Video reagiert.';
+  }
+
+  @override
+  String notificationReactionToText(Object reaction) {
+    return 'hat mit $reaction auf deine Nachricht reagiert.';
+  }
+
+  @override
+  String notificationReactionToImage(Object reaction) {
+    return 'hat mit $reaction auf dein Bild reagiert.';
+  }
+
+  @override
+  String notificationReactionToAudio(Object reaction) {
+    return 'hat mit $reaction auf deine Sprachnachricht reagiert.';
+  }
+
+  @override
+  String notificationResponse(Object inGroup) {
+    return 'hat dir$inGroup geantwortet.';
+  }
+
+  @override
+  String get notificationTitleUnknownUser => 'Jemand';
+
+  @override
+  String get notificationCategoryMessageTitle => 'Nachrichten';
+
+  @override
+  String get notificationCategoryMessageDesc =>
+      'Nachrichten von anderen Benutzern.';
+
+  @override
+  String get groupContextMenuDeleteGroup =>
+      'Dadurch werden alle Nachrichten in diesem Chat dauerhaft gelöscht.';
+
+  @override
+  String get groupYouAreNowLongerAMember =>
+      'Du bist nicht mehr Mitglied dieser Gruppe.';
+
+  @override
+  String get groupNetworkIssue =>
+      'Netzwerkproblem. Bitte probiere es später noch einmal.';
+
+  @override
+  String get leaveGroupSelectOtherAdminTitle => 'Einen Admin auswählen';
+
+  @override
+  String get leaveGroupSelectOtherAdminBody =>
+      'Um die Gruppe zu verlassen, musst du zuerst einen neuen Administrator auswählen.';
+
+  @override
+  String get leaveGroupSureTitle => 'Gruppe verlassen';
+
+  @override
+  String get leaveGroupSureBody => 'Willst du die Gruppe wirklich verlassen?';
+
+  @override
+  String get leaveGroupSureOkBtn => 'Gruppe verlassen';
+
+  @override
+  String changeDisplayMaxTime(Object time, Object username) {
+    return 'Chats werden ab jetzt nach $time gelöscht ($username).';
+  }
+
+  @override
+  String youChangedDisplayMaxTime(Object time) {
+    return 'Chats werden ab jetzt nach $time gelöscht.';
+  }
+
+  @override
+  String get userGotReported => 'Benutzer wurde gemeldet.';
+
+  @override
+  String get deleteChatAfter => 'Chat löschen nach...';
+
+  @override
+  String get deleteChatAfterAnHour => 'einer Stunde.';
+
+  @override
+  String get deleteChatAfterADay => 'einem Tag.';
+
+  @override
+  String get deleteChatAfterAWeek => 'einer Woche.';
+
+  @override
+  String get deleteChatAfterAMonth => 'einem Monat.';
+
+  @override
+  String get deleteChatAfterAYear => 'einem Jahr.';
+
+  @override
+  String get yourTwonlyScore => 'Dein twonly-Score';
+
+  @override
+  String get registrationClosed =>
+      'Aufgrund des aktuell sehr hohen Aufkommens haben wir die Registrierung vorübergehend deaktiviert, damit der Dienst zuverlässig bleibt. Bitte versuche es in ein paar Tagen noch einmal.';
 }

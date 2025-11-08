@@ -1,24 +1,29 @@
+// ignore_for_file: unused_import
+
 import 'dart:async';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/app.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api.service.dart';
-import 'package:twonly/src/services/api/media_download.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
-
-import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,9 +33,7 @@ void main() async {
 
   final user = await getUser();
   if (user != null) {
-    if (user.isDemoUser) {
-      await deleteLocalUserData();
-    }
+    gUser = user;
   }
 
   final settingsController = SettingsChangeProvider();
@@ -42,21 +45,26 @@ void main() async {
 
   gCameras = await availableCameras();
 
+  // try {
+  //   File(join((await getApplicationSupportDirectory()).path, 'twonly.sqlite'))
+  //       .deleteSync();
+  // } catch (e) {}
+  // await updateUserdata((u) {
+  //   u.appVersion = 0;
+  //   return u;
+  // });
+
   apiService = ApiService();
-  twonlyDB = TwonlyDatabase();
-
-  await twonlyDB.messagesDao.resetPendingDownloadState();
-  await twonlyDB.messagesDao.handleMediaFilesOlderThan30Days();
-  await twonlyDB.messageRetransmissionDao.purgeOldRetransmissions();
-  await twonlyDB.signalDao.purgeOutDatedPreKeys();
-
-  // Purge media files in the background
-  unawaited(purgeReceivedMediaFiles());
-  unawaited(purgeSendMediaFiles());
-
-  unawaited(performTwonlySafeBackup());
+  twonlyDB = TwonlyDB();
 
   await initFileDownloader();
+  unawaited(finishStartedPreprocessing());
+
+  unawaited(MediaFileService.purgeTempFolder());
+  unawaited(createPushAvatars());
+  await twonlyDB.messagesDao.purgeMessageTable();
+
+  unawaited(performTwonlySafeBackup());
 
   runApp(
     MultiProvider(

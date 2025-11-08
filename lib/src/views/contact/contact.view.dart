@@ -1,17 +1,20 @@
+import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/flame.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
+import 'package:twonly/src/views/components/max_flame_list_title.dart';
+import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact_verify.view.dart';
+import 'package:twonly/src/views/groups/group.view.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -26,13 +29,19 @@ class _ContactViewState extends State<ContactView> {
   Future<void> handleUserRemoveRequest(Contact contact) async {
     final remove = await showAlertDialog(
       context,
-      context.lang.contactRemoveTitle(getContactDisplayName(contact)),
+      context.lang
+          .contactRemoveTitle(getContactDisplayName(contact, maxLength: 20)),
       context.lang.contactRemoveBody,
     );
     if (remove) {
-      // trigger deletion for the other user...
-      await rejectUser(contact.userId);
-      await deleteContact(contact.userId);
+      await twonlyDB.contactsDao.updateContact(
+        contact.userId,
+        const ContactsCompanion(
+          accepted: Value(false),
+          requested: Value(false),
+          deletedByUser: Value(true),
+        ),
+      );
       if (mounted) {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
@@ -63,30 +72,14 @@ class _ContactViewState extends State<ContactView> {
     if (!mounted) return;
     if (res.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Benutzer wurde gemeldet.'),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(context.lang.userGotReported),
+          duration: const Duration(seconds: 3),
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.',
-          ),
-          duration: Duration(seconds: 3),
-        ),
-      );
+      showNetworkIssue(context);
     }
-    // if (block) {
-    //   const update = ContactsCompanion(blocked: Value(true));
-    //   if (context.mounted) {
-    //     await twonlyDB.contactsDao.updateContact(contact.userId, update);
-    //   }
-    //   if (mounted) {
-    //     Navigator.popUntil(context, (route) => route.isFirst);
-    //   }
-    // }
   }
 
   @override
@@ -106,30 +99,30 @@ class _ContactViewState extends State<ContactView> {
             return Container();
           }
           final contact = snapshot.data!;
-          final flameCounter = getFlameCounterFromContact(contact);
           return ListView(
             children: [
               Padding(
                 padding: const EdgeInsets.all(10),
-                child: ContactAvatar(contact: contact, fontSize: 30),
+                child: AvatarIcon(contactId: contact.userId, fontSize: 30),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(right: 10),
-                    child: VerifiedShield(contact),
+                    child: VerifiedShield(
+                      key: GlobalKey(),
+                      contact: contact,
+                    ),
                   ),
                   Text(
-                    getContactDisplayName(contact),
+                    getContactDisplayName(contact, maxLength: 20),
                     style: const TextStyle(fontSize: 20),
                   ),
-                  if (flameCounter > 0)
-                    FlameCounterWidget(
-                      contact,
-                      flameCounter,
-                      prefix: true,
-                    ),
+                  FlameCounterWidget(
+                    contactId: contact.userId,
+                    prefix: true,
+                  ),
                 ],
               ),
               if (getContactDisplayName(contact) != contact.username)
@@ -150,6 +143,13 @@ class _ContactViewState extends State<ContactView> {
                 },
               ),
               const Divider(),
+              SelectChatDeletionTimeListTitle(
+                groupId: getUUIDforDirectChat(widget.userId, gUser.userId),
+              ),
+              const Divider(),
+              MaxFlameListTitle(
+                contactId: widget.userId,
+              ),
               BetterListTile(
                 icon: FontAwesomeIcons.shieldHeart,
                 text: context.lang.contactVerifyNumberTitle,
@@ -162,28 +162,29 @@ class _ContactViewState extends State<ContactView> {
                       },
                     ),
                   );
+                  setState(() {});
                 },
               ),
-              BetterListTile(
-                icon: FontAwesomeIcons.eraser,
-                iconSize: 16,
-                text: context.lang.deleteAllContactMessages,
-                onTap: () async {
-                  final block = await showAlertDialog(
-                    context,
-                    context.lang.deleteAllContactMessages,
-                    context.lang.deleteAllContactMessagesBody(
-                      getContactDisplayName(contact),
-                    ),
-                  );
-                  if (block) {
-                    if (context.mounted) {
-                      await twonlyDB.messagesDao
-                          .deleteMessagesByContactId(contact.userId);
-                    }
-                  }
-                },
-              ),
+              // BetterListTile(
+              //   icon: FontAwesomeIcons.eraser,
+              //   iconSize: 16,
+              //   text: context.lang.deleteAllContactMessages,
+              //   onTap: () async {
+              //     final block = await showAlertDialog(
+              //       context,
+              //       context.lang.deleteAllContactMessages,
+              //       context.lang.deleteAllContactMessagesBody(
+              //         getContactDisplayName(contact),
+              //       ),
+              //     );
+              //     if (block) {
+              //       if (context.mounted) {
+              //         await twonlyDB.messagesDao
+              //             .deleteMessagesByContactId(contact.userId);
+              //       }
+              //     }
+              //   },
+              // ),
               BetterListTile(
                 icon: FontAwesomeIcons.flag,
                 text: context.lang.reportUser,
@@ -194,13 +195,13 @@ class _ContactViewState extends State<ContactView> {
                 text: context.lang.contactBlock,
                 onTap: () => handleUserBlockRequest(contact),
               ),
-              BetterListTile(
-                icon: FontAwesomeIcons.userMinus,
-                iconSize: 16,
-                color: Colors.red,
-                text: context.lang.contactRemove,
-                onTap: () => handleUserRemoveRequest(contact),
-              ),
+              // BetterListTile(
+              //   icon: FontAwesomeIcons.userMinus,
+              //   iconSize: 16,
+              //   color: Colors.red,
+              //   text: context.lang.contactRemove,
+              //   onTap: () => handleUserRemoveRequest(contact),
+              // ),
             ],
           );
         },

@@ -1,30 +1,22 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path/path.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
-import 'package:twonly/src/services/thumbnail.service.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 
 class SaveToGalleryButton extends StatefulWidget {
   const SaveToGalleryButton({
-    required this.getMergedImage,
+    required this.storeImageAsOriginal,
     required this.isLoading,
     required this.displayButtonLabel,
+    required this.mediaService,
     super.key,
-    this.mediaUploadId,
-    this.videoFilePath,
   });
-  final Future<Uint8List?> Function() getMergedImage;
+  final Future<bool> Function() storeImageAsOriginal;
   final bool displayButtonLabel;
-  final File? videoFilePath;
-  final int? mediaUploadId;
+  final MediaFileService mediaService;
   final bool isLoading;
 
   @override
@@ -53,45 +45,26 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                 _imageSaving = true;
               });
 
+              if (widget.mediaService.mediaFile.type == MediaType.image ||
+                  widget.mediaService.mediaFile.type == MediaType.gif) {
+                await widget.storeImageAsOriginal();
+              }
+
               String? res;
-              var memoryPath = await getMediaBaseFilePath('memories');
 
-              if (widget.mediaUploadId != null) {
-                memoryPath = join(memoryPath, '${widget.mediaUploadId!}');
-              } else {
-                final random = Random();
-                final token = uint8ListToHex(
-                  List<int>.generate(32, (i) => random.nextInt(256)),
-                );
-                memoryPath = join(memoryPath, token);
-              }
-              final user = await getUser();
-              if (user == null) return;
-              final storeToGallery = user.storeMediaFilesInGallery;
+              final storedMediaPath = widget.mediaService.storedPath;
 
-              if (widget.videoFilePath != null) {
-                memoryPath += '.mp4';
-                await File(widget.videoFilePath!.path).copy(memoryPath);
-                unawaited(createThumbnailsForVideo(File(memoryPath)));
-                if (storeToGallery) {
-                  res = await saveVideoToGallery(widget.videoFilePath!.path);
-                }
-              } else {
-                final imageBytes = await widget.getMergedImage();
-                if (imageBytes == null || !mounted) return;
-                final webPImageBytes =
-                    await FlutterImageCompress.compressWithList(
-                  format: CompressFormat.webp,
-                  imageBytes,
-                  quality: 100,
-                );
-                memoryPath += '.png';
-                await File(memoryPath).writeAsBytes(webPImageBytes);
-                unawaited(createThumbnailsForImage(File(memoryPath)));
-                if (storeToGallery) {
-                  res = await saveImageToGallery(imageBytes);
-                }
+              final storeToGallery = gUser.storeMediaFilesInGallery;
+
+              await widget.mediaService.storeMediaFile();
+
+              if (storeToGallery) {
+                res = await saveVideoToGallery(storedMediaPath.path);
               }
+
+              await widget.mediaService.compressMedia();
+              await widget.mediaService.createThumbnail();
+
               if (res == null) {
                 setState(() {
                   _imageSaved = true;

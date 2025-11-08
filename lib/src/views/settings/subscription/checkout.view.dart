@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/settings/subscription/select_payment.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class CheckoutView extends StatefulWidget {
   const CheckoutView({
-    required this.planId,
+    required this.plan,
     super.key,
     this.refund,
     this.disableMonthlyOption,
   });
 
-  final String planId;
+  final SubscriptionPlan plan;
   final int? refund;
   final bool? disableMonthlyOption;
 
@@ -31,7 +32,7 @@ class _CheckoutViewState extends State<CheckoutView> {
   }
 
   void setCheckout({bool init = false}) {
-    checkoutInCents = getPlanPrice(widget.planId, paidMonthly: paidMonthly);
+    checkoutInCents = getPlanPrice(widget.plan, paidMonthly: paidMonthly);
     if (!init) {
       setState(() {});
     }
@@ -52,7 +53,7 @@ class _CheckoutViewState extends State<CheckoutView> {
             Expanded(
               child: ListView(
                 children: [
-                  PlanCard(planId: widget.planId),
+                  PlanCard(plan: widget.plan),
                   if (widget.disableMonthlyOption == null ||
                       !widget.disableMonthlyOption!)
                     Padding(
@@ -101,6 +102,7 @@ class _CheckoutViewState extends State<CheckoutView> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(
+                color: context.color.surfaceContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
@@ -129,7 +131,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                     MaterialPageRoute(
                       builder: (context) {
                         return SelectPaymentView(
-                          planId: widget.planId,
+                          plan: widget.plan,
                           payMonthly: paidMonthly,
                           refund: widget.refund,
                         );

@@ -60,13 +60,13 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('twonly Safe ${context.lang.twonlySafeRecoverTitle}'),
+        title: Text('twonly Backup ${context.lang.twonlySafeRecoverTitle}'),
         actions: [
           IconButton(
             onPressed: () async {
               await showAlertDialog(
                 context,
-                'twonly Safe',
+                'twonly Backup',
                 context.lang.backupTwonlySafeLongDesc,
               );
             },

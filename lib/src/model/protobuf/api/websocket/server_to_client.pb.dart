@@ -1536,6 +1536,70 @@ class Response_DownloadTokens extends $pb.GeneratedMessage {
   $core.List<$core.List<$core.int>> get downloadTokens => $_getList(0);
 }
 
+class Response_ProofOfWork extends $pb.GeneratedMessage {
+  factory Response_ProofOfWork({
+    $core.String? prefix,
+    $fixnum.Int64? difficulty,
+  }) {
+    final $result = create();
+    if (prefix != null) {
+      $result.prefix = prefix;
+    }
+    if (difficulty != null) {
+      $result.difficulty = difficulty;
+    }
+    return $result;
+  }
+  Response_ProofOfWork._() : super();
+  factory Response_ProofOfWork.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_ProofOfWork.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.ProofOfWork', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'prefix')
+    ..aInt64(2, _omitFieldNames ? '' : 'difficulty')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response_ProofOfWork clone() => Response_ProofOfWork()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_ProofOfWork copyWith(void Function(Response_ProofOfWork) updates) => super.copyWith((message) => updates(message as Response_ProofOfWork)) as Response_ProofOfWork;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_ProofOfWork create() => Response_ProofOfWork._();
+  Response_ProofOfWork createEmptyInstance() => create();
+  static $pb.PbList<Response_ProofOfWork> createRepeated() => $pb.PbList<Response_ProofOfWork>();
+  @$core.pragma('dart2js:noInline')
+  static Response_ProofOfWork getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_ProofOfWork>(create);
+  static Response_ProofOfWork? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get prefix => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set prefix($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasPrefix() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPrefix() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get difficulty => $_getI64(1);
+  @$pb.TagNumber(2)
+  set difficulty($fixnum.Int64 v) { $_setInt64(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasDifficulty() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearDifficulty() => clearField(2);
+}
+
 enum Response_Ok_Ok {
   none, 
   userid, 
@@ -1551,6 +1615,7 @@ enum Response_Ok_Ok {
   addaccountsinvites, 
   downloadtokens, 
   signedprekey, 
+  proofOfWork, 
   notSet
 }
 
@@ -1570,6 +1635,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     Response_AddAccountsInvites? addaccountsinvites,
     Response_DownloadTokens? downloadtokens,
     Response_SignedPreKey? signedprekey,
+    Response_ProofOfWork? proofOfWork,
   }) {
     final $result = create();
     if (none != null) {
@@ -1614,6 +1680,9 @@ class Response_Ok extends $pb.GeneratedMessage {
     if (signedprekey != null) {
       $result.signedprekey = signedprekey;
     }
+    if (proofOfWork != null) {
+      $result.proofOfWork = proofOfWork;
+    }
     return $result;
   }
   Response_Ok._() : super();
@@ -1635,10 +1704,11 @@ class Response_Ok extends $pb.GeneratedMessage {
     12 : Response_Ok_Ok.addaccountsinvites,
     13 : Response_Ok_Ok.downloadtokens,
     14 : Response_Ok_Ok.signedprekey,
+    15 : Response_Ok_Ok.proofOfWork,
     0 : Response_Ok_Ok.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response.Ok', package: const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'), createEmptyInstance: create)
-    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+    ..oo(0, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
     ..aOB(1, _omitFieldNames ? '' : 'None', protoName: 'None')
     ..aInt64(2, _omitFieldNames ? '' : 'userid')
     ..a<$core.List<$core.int>>(3, _omitFieldNames ? '' : 'authchallenge', $pb.PbFieldType.OY)
@@ -1653,6 +1723,7 @@ class Response_Ok extends $pb.GeneratedMessage {
     ..aOM<Response_AddAccountsInvites>(12, _omitFieldNames ? '' : 'addaccountsinvites', subBuilder: Response_AddAccountsInvites.create)
     ..aOM<Response_DownloadTokens>(13, _omitFieldNames ? '' : 'downloadtokens', subBuilder: Response_DownloadTokens.create)
     ..aOM<Response_SignedPreKey>(14, _omitFieldNames ? '' : 'signedprekey', subBuilder: Response_SignedPreKey.create)
+    ..aOM<Response_ProofOfWork>(15, _omitFieldNames ? '' : 'proofOfWork', protoName: 'proofOfWork', subBuilder: Response_ProofOfWork.create)
     ..hasRequiredFields = false
   ;
 
@@ -1825,6 +1896,17 @@ class Response_Ok extends $pb.GeneratedMessage {
   void clearSignedprekey() => clearField(14);
   @$pb.TagNumber(14)
   Response_SignedPreKey ensureSignedprekey() => $_ensure(13);
+
+  @$pb.TagNumber(15)
+  Response_ProofOfWork get proofOfWork => $_getN(14);
+  @$pb.TagNumber(15)
+  set proofOfWork(Response_ProofOfWork v) { setField(15, v); }
+  @$pb.TagNumber(15)
+  $core.bool hasProofOfWork() => $_has(14);
+  @$pb.TagNumber(15)
+  void clearProofOfWork() => clearField(15);
+  @$pb.TagNumber(15)
+  Response_ProofOfWork ensureProofOfWork() => $_ensure(14);
 }
 
 enum Response_Response {

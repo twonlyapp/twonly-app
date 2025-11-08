@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+message EncryptedPushNotification {
+    int64 keyId = 1;
+    bytes nonce = 2;
+    bytes ciphertext = 3;
+    bytes mac = 4;
+}
+
+enum PushKind {
+    reaction = 0;
+    response = 1;
+    text = 2;
+    video = 3;
+    twonly = 4;
+    image = 5;
+    contactRequest = 6;
+    acceptRequest = 7;
+    storedMediaFile = 8;
+    testNotification = 9;
+    reopenedMedia = 10;
+    reactionToVideo = 11;
+    reactionToText = 12;
+    reactionToImage = 13;
+    reactionToAudio = 14;
+    addedToGroup = 15;
+    audio = 16;
+};
+
+message PushNotification {
+    PushKind kind = 1;
+    optional string messageId = 2;
+    optional string additionalContent = 3;
+}
+
+
+message PushUsers {
+    repeated PushUser users = 1;
+}
+
+message PushUser {
+    int64 userId = 1;
+    string displayName = 2;
+    bool blocked = 3;
+    optional string lastMessageId = 4;
+    repeated PushKey pushKeys = 5;
+}
+
+message PushKey {
+    int64 id = 1;
+    bytes key = 2;
+    int64 createdAtUnixTimestamp = 3;
+}

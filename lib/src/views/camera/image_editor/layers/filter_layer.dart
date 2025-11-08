@@ -116,6 +116,7 @@ class _FilterLayerState extends State<FilterLayer> {
         }
       },
       onPageChanged: (index) {
+        widget.layerData.page = index;
         if (index == 0) {
           // If the user swipes to the first duplicated page, jump to the last page
           pageController.jumpToPage(pages.length);

@@ -2,15 +2,18 @@
 
 import 'dart:async';
 import 'dart:collection';
-import 'dart:io';
-
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hashlib/random.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -23,71 +26,76 @@ import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:twonly/src/views/camera/share_image_view.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 import 'package:video_player/video_player.dart';
 
 List<Layer> layers = [];
 List<Layer> undoLayers = [];
 List<Layer> removedLayers = [];
 
-const gMediaShowInfinite = 999999;
-
 class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView({
-    required this.mirrorVideo,
-    required this.useHighQuality,
     required this.sharedFromGallery,
+    required this.mediaFileService,
     super.key,
-    this.imageBytes,
-    this.sendTo,
-    this.videoFilePath,
+    this.imageBytesFuture,
+    this.sendToGroup,
   });
-  final Future<Uint8List?>? imageBytes;
-  final File? videoFilePath;
-  final Contact? sendTo;
-  final bool mirrorVideo;
-  final bool useHighQuality;
+  final Future<Uint8List?>? imageBytesFuture;
+  final Group? sendToGroup;
   final bool sharedFromGallery;
+  final MediaFileService mediaFileService;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
 
 class _ShareImageEditorView extends State<ShareImageEditorView> {
-  bool _isRealTwonly = false;
-  int maxShowTime = gMediaShowInfinite;
   double tabDownPosition = 0;
   bool sendingOrLoadingImage = true;
   bool loadingImage = true;
   bool isDisposed = false;
-  HashSet<int> selectedUserIds = HashSet();
+  HashSet<String> selectedGroupIds = HashSet();
   double widthRatio = 1;
   double heightRatio = 1;
   double pixelRatio = 1;
+  Uint8List? imageBytes;
   VideoPlayerController? videoController;
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
 
-  /// Media upload variables
-  int? mediaUploadId;
-  Future<bool>? videoUploadHandler;
+  MediaFileService get mediaService => widget.mediaFileService;
+  MediaFile get media => widget.mediaFileService.mediaFile;
 
   @override
   void initState() {
     super.initState();
-    unawaited(initAsync());
-    unawaited(initMediaFileUpload());
-    layers.add(FilterLayerData());
-    if (widget.sendTo != null) {
-      selectedUserIds.add(widget.sendTo!.userId);
+
+    if (media.type != MediaType.gif) {
+      layers.add(FilterLayerData());
     }
-    if (widget.imageBytes != null) {
-      unawaited(loadImage(widget.imageBytes!));
-    } else if (widget.videoFilePath != null) {
+
+    if (widget.sendToGroup != null) {
+      selectedGroupIds.add(widget.sendToGroup!.groupId);
+    }
+
+    if (widget.mediaFileService.mediaFile.type == MediaType.image ||
+        widget.mediaFileService.mediaFile.type == MediaType.gif) {
+      if (widget.imageBytesFuture != null) {
+        loadImage(widget.imageBytesFuture!);
+      } else {
+        if (widget.mediaFileService.tempPath.existsSync()) {
+          loadImage(widget.mediaFileService.tempPath.readAsBytes());
+        } else if (widget.mediaFileService.originalPath.existsSync()) {
+          loadImage(widget.mediaFileService.originalPath.readAsBytes());
+        }
+      }
+    }
+
+    if (media.type == MediaType.video) {
       setState(() {
         sendingOrLoadingImage = false;
         loadingImage = false;
       });
-      videoController = VideoPlayerController.file(widget.videoFilePath!);
+      videoController = VideoPlayerController.file(mediaService.originalPath);
       videoController?.setLooping(true);
       videoController?.initialize().then((_) async {
         await videoController!.play();
@@ -97,45 +105,27 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
   }
 
-  Future<void> initAsync() async {
-    final user = await getUser();
-    if (user == null) return;
-    if (user.defaultShowTime != null) {
-      setState(() {
-        maxShowTime = user.defaultShowTime!;
-      });
-    }
-  }
-
-  Future<void> initMediaFileUpload() async {
-    // media init was already called...
-    if (mediaUploadId != null) return;
-
-    mediaUploadId = await initMediaUpload();
-
-    if (widget.videoFilePath != null && mediaUploadId != null) {
-      // start with the video compression...
-      videoUploadHandler =
-          addVideoToUpload(mediaUploadId!, widget.videoFilePath!);
-    }
-  }
-
   @override
   void dispose() {
     isDisposed = true;
     layers.clear();
     videoController?.dispose();
+    twonlyDB.mediaFilesDao.updateAllMediaFiles(
+      const MediaFilesCompanion(
+        isDraftMedia: Value(false),
+      ),
+    );
     super.dispose();
   }
 
-  void updateStatus(int userId, bool checked) {
+  void updateSelectedGroupIds(String groupId, bool checked) {
     if (checked) {
-      if (_isRealTwonly) {
-        selectedUserIds.clear();
+      if (media.requiresAuthentication) {
+        selectedGroupIds.clear();
       }
-      selectedUserIds.add(userId);
+      selectedGroupIds.add(groupId);
     } else {
-      selectedUserIds.remove(userId);
+      selectedGroupIds.remove(groupId);
     }
     setState(() {});
   }
@@ -147,86 +137,88 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       return [];
     }
     return <Widget>[
-      ActionButton(
-        Icons.text_fields_rounded,
-        tooltipText: context.lang.addTextItem,
-        onPressed: () async {
-          layers = layers.where((x) => !x.isDeleted).toList();
-          if (layers.any((x) => x.isEditing)) return;
-          undoLayers.clear();
-          removedLayers.clear();
-          layers.add(
-            TextLayerData(
-              textLayersBefore: layers.whereType<TextLayerData>().length,
-            ),
-          );
-          setState(() {});
-        },
-      ),
+      if (media.type != MediaType.gif)
+        ActionButton(
+          Icons.text_fields_rounded,
+          tooltipText: context.lang.addTextItem,
+          onPressed: () async {
+            layers = layers.where((x) => !x.isDeleted).toList();
+            if (layers.any((x) => x.isEditing)) return;
+            undoLayers.clear();
+            removedLayers.clear();
+            layers.add(
+              TextLayerData(
+                textLayersBefore: layers.whereType<TextLayerData>().length,
+              ),
+            );
+            setState(() {});
+          },
+        ),
       const SizedBox(height: 8),
-      ActionButton(
-        Icons.draw_rounded,
-        tooltipText: context.lang.addDrawing,
-        onPressed: () async {
-          undoLayers.clear();
-          removedLayers.clear();
-          layers.add(DrawLayerData());
-          setState(() {});
-        },
-      ),
+      if (media.type != MediaType.gif)
+        ActionButton(
+          Icons.draw_rounded,
+          tooltipText: context.lang.addDrawing,
+          onPressed: () async {
+            undoLayers.clear();
+            removedLayers.clear();
+            layers.add(DrawLayerData());
+            setState(() {});
+          },
+        ),
       const SizedBox(height: 8),
-      ActionButton(
-        Icons.add_reaction_outlined,
-        tooltipText: context.lang.addEmoji,
-        onPressed: () async {
-          final layer = await showModalBottomSheet(
-            context: context,
-            backgroundColor: Colors.black,
-            builder: (BuildContext context) {
-              return const Emojis();
-            },
-          ) as Layer?;
-          if (layer == null) return;
-          undoLayers.clear();
-          removedLayers.clear();
-          layers.add(layer);
-          setState(() {});
-        },
-      ),
+      if (media.type != MediaType.gif)
+        ActionButton(
+          Icons.add_reaction_outlined,
+          tooltipText: context.lang.addEmoji,
+          onPressed: () async {
+            final layer = await showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.black,
+              builder: (BuildContext context) {
+                return const EmojiPickerBottom();
+              },
+            ) as Layer?;
+            if (layer == null) return;
+            undoLayers.clear();
+            removedLayers.clear();
+            layers.add(layer);
+            setState(() {});
+          },
+        ),
       const SizedBox(height: 8),
       NotificationBadge(
-        count: (widget.videoFilePath != null)
+        count: (media.type == MediaType.video)
             ? '0'
-            : maxShowTime == gMediaShowInfinite
+            : media.displayLimitInMilliseconds == null
                 ? '∞'
-                : maxShowTime.toString(),
+                : media.displayLimitInMilliseconds.toString(),
         child: ActionButton(
-          (widget.videoFilePath != null)
-              ? maxShowTime == gMediaShowInfinite
+          (media.type == MediaType.video)
+              ? media.displayLimitInMilliseconds == null
                   ? Icons.repeat_rounded
                   : Icons.repeat_one_rounded
               : Icons.timer_outlined,
           tooltipText: context.lang.protectAsARealTwonly,
           onPressed: () async {
-            if (widget.videoFilePath != null) {
-              setState(() {
-                if (maxShowTime == gMediaShowInfinite) {
-                  maxShowTime = 0;
-                } else {
-                  maxShowTime = gMediaShowInfinite;
-                }
-              });
+            if (media.type == MediaType.video) {
+              await mediaService.setDisplayLimit(
+                (media.displayLimitInMilliseconds == null) ? 0 : null,
+              );
+              if (!mounted) return;
+              setState(() {});
               return;
             }
-            if (maxShowTime == gMediaShowInfinite) {
+            int? maxShowTime;
+            if (media.displayLimitInMilliseconds == null) {
               maxShowTime = 1;
-            } else if (maxShowTime == 1) {
+            } else if (media.displayLimitInMilliseconds == 1) {
               maxShowTime = 5;
-            } else if (maxShowTime == 5) {
+            } else if (media.displayLimitInMilliseconds == 5) {
               maxShowTime = 20;
-            } else {
-              maxShowTime = gMediaShowInfinite;
             }
+            await mediaService.setDisplayLimit(maxShowTime);
+            if (!mounted) return;
             setState(() {});
             await updateUserdata((user) {
               user.defaultShowTime = maxShowTime;
@@ -235,19 +227,35 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           },
         ),
       ),
+      if (media.type == MediaType.video)
+        ActionButton(
+          (mediaService.removeAudio)
+              ? Icons.volume_off_rounded
+              : Icons.volume_up_rounded,
+          tooltipText: 'Enable Audio in Video',
+          color: (mediaService.removeAudio)
+              ? Colors.white.withAlpha(160)
+              : Colors.white,
+          onPressed: () async {
+            await mediaService.toggleRemoveAudio();
+            if (mediaService.removeAudio) {
+              await videoController?.setVolume(0);
+            } else {
+              await videoController?.setVolume(100);
+            }
+            if (mounted) setState(() {});
+          },
+        ),
       const SizedBox(height: 8),
       ActionButton(
         FontAwesomeIcons.shieldHeart,
         tooltipText: context.lang.protectAsARealTwonly,
-        color: _isRealTwonly
+        color: media.requiresAuthentication
             ? Theme.of(context).colorScheme.primary
             : Colors.white,
         onPressed: () async {
-          _isRealTwonly = !_isRealTwonly;
-          if (_isRealTwonly) {
-            maxShowTime = 12;
-          }
-          selectedUserIds = HashSet();
+          await mediaService.setRequiresAuth(!media.requiresAuthentication);
+          selectedGroupIds = HashSet();
           setState(() {});
         },
       ),
@@ -308,25 +316,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   }
 
   Future<void> pushShareImageView() async {
-    if (mediaUploadId == null) {
-      await initMediaFileUpload();
-      if (mediaUploadId == null) return;
-    }
-    final imageBytes = getMergedImage();
+    final mediaStoreFuture = storeImageAsOriginal();
+
     await videoController?.pause();
     if (isDisposed || !mounted) return;
     final wasSend = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ShareImageView(
-          imageBytesFuture: imageBytes,
-          isRealTwonly: _isRealTwonly,
-          maxShowTime: maxShowTime,
-          selectedUserIds: selectedUserIds,
-          updateStatus: updateStatus,
-          videoUploadHandler: videoUploadHandler,
-          mediaUploadId: mediaUploadId!,
-          mirrorVideo: widget.mirrorVideo,
+          selectedGroupIds: selectedGroupIds,
+          updateSelectedGroupIds: updateSelectedGroupIds,
+          mediaStoreFuture: mediaStoreFuture,
+          mediaFileService: mediaService,
         ),
       ),
     ) as bool?;
@@ -337,31 +338,69 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
   }
 
-  Future<Uint8List?> getMergedImage() async {
-    Uint8List? image;
-
-    if (layers.length > 1 || widget.videoFilePath != null) {
-      for (final x in layers) {
-        x.showCustomButtons = false;
-      }
-      setState(() {});
-      image = await screenshotController.capture(
-        pixelRatio: (widget.useHighQuality) ? pixelRatio : 1,
-      );
-      for (final x in layers) {
-        x.showCustomButtons = true;
-      }
-      setState(() {});
-    } else if (layers.length == 1) {
+  Future<Uint8List?> getEditedImageBytes() async {
+    if (layers.length == 1) {
       if (layers.first is BackgroundLayerData) {
-        image = (layers.first as BackgroundLayerData).image.bytes;
+        final image = (layers.first as BackgroundLayerData).image.bytes;
+        return image;
       }
     }
+
+    for (final x in layers) {
+      x.showCustomButtons = false;
+    }
+    setState(() {});
+    final image = await screenshotController.capture(
+      pixelRatio: pixelRatio,
+    );
+    if (image == null) {
+      Log.error('screenshotController did not return image bytes');
+      return null;
+    }
+
+    for (final x in layers) {
+      x.showCustomButtons = true;
+    }
+    setState(() {});
     return image;
   }
 
-  Future<void> loadImage(Future<Uint8List?> imageFile) async {
-    final imageBytes = await imageFile;
+  Future<bool> storeImageAsOriginal() async {
+    if (mediaService.overlayImagePath.existsSync()) {
+      mediaService.overlayImagePath.deleteSync();
+    }
+    if (mediaService.tempPath.existsSync()) {
+      mediaService.tempPath.deleteSync();
+    }
+    if (media.type == MediaType.gif) {
+      mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
+    } else {
+      final imageBytes = await getEditedImageBytes();
+      if (imageBytes == null) return false;
+      if (media.type == MediaType.image || media.type == MediaType.gif) {
+        mediaService.originalPath.writeAsBytesSync(imageBytes);
+      } else if (media.type == MediaType.video) {
+        mediaService.overlayImagePath.writeAsBytesSync(imageBytes);
+      } else {
+        Log.error('MediaType not supported: ${media.type}');
+      }
+    }
+
+    // In case the image was already stored, then rename the stored image.
+    if (mediaService.storedPath.existsSync()) {
+      final newPath = mediaService.storedPath.absolute.path
+          .replaceFirst(media.mediaId, uuid.v7());
+      mediaService.storedPath.renameSync(newPath);
+    }
+    return true;
+  }
+
+  Future<void> loadImage(Future<Uint8List?> imageBytesFuture) async {
+    imageBytes = await imageBytesFuture;
+
+    // store this image so it can be used as a draft in case the app is restarted
+    mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
+
     await currentImage.load(imageBytes);
     if (isDisposed) return;
 
@@ -384,56 +423,20 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     setState(() {
       sendingOrLoadingImage = true;
     });
-    final imageBytes = await getMergedImage();
+
+    await storeImageAsOriginal();
+
     if (!context.mounted) return;
-    if (imageBytes == null) {
+
+    // Insert media file into the messages database and start uploading process in the background
+    await insertMediaFileInMessagesTable(
+      mediaService,
+      [widget.sendToGroup!.groupId],
+    );
+
+    if (context.mounted) {
       // ignore: use_build_context_synchronously
       Navigator.pop(context, true);
-      return;
-    }
-    final err = await isAllowedToSend();
-    if (!context.mounted) return;
-
-    if (err != null) {
-      setState(() {
-        sendingOrLoadingImage = false;
-      });
-      if (mounted) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return SubscriptionView(
-                redirectError: err,
-              );
-            },
-          ),
-        );
-      }
-    } else {
-      final imageHandler = addOrModifyImageToUpload(mediaUploadId!, imageBytes);
-
-      // first finalize the upload
-      await finalizeUpload(
-        mediaUploadId!,
-        [widget.sendTo!.userId],
-        _isRealTwonly,
-        widget.videoFilePath != null,
-        widget.mirrorVideo,
-        maxShowTime,
-      );
-
-      /// then call the upload process in the background
-      await encryptMediaFiles(
-        mediaUploadId!,
-        imageHandler,
-        videoUploadHandler,
-      );
-
-      if (context.mounted) {
-        // ignore: use_build_context_synchronously
-        Navigator.pop(context, true);
-      }
     }
   }
 
@@ -478,14 +481,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SaveToGalleryButton(
-                      getMergedImage: getMergedImage,
-                      mediaUploadId: mediaUploadId,
-                      videoFilePath: widget.videoFilePath,
-                      displayButtonLabel: widget.sendTo == null,
+                      storeImageAsOriginal: storeImageAsOriginal,
+                      mediaService: mediaService,
+                      displayButtonLabel: widget.sendToGroup == null,
                       isLoading: loadingImage,
                     ),
-                    if (widget.sendTo != null) const SizedBox(width: 10),
-                    if (widget.sendTo != null)
+                    if (widget.sendToGroup != null) const SizedBox(width: 10),
+                    if (widget.sendToGroup != null)
                       OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           iconColor: Theme.of(context).colorScheme.primary,
@@ -495,7 +497,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         onPressed: pushShareImageView,
                         child: const FaIcon(FontAwesomeIcons.userPlus),
                       ),
-                    SizedBox(width: widget.sendTo == null ? 20 : 10),
+                    SizedBox(width: widget.sendToGroup == null ? 20 : 10),
                     FilledButton.icon(
                       icon: sendingOrLoadingImage
                           ? SizedBox(
@@ -511,7 +513,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                           : const FaIcon(FontAwesomeIcons.solidPaperPlane),
                       onPressed: () async {
                         if (sendingOrLoadingImage) return;
-                        if (widget.sendTo == null) return pushShareImageView();
+                        if (widget.sendToGroup == null) {
+                          return pushShareImageView();
+                        }
                         await sendImageToSinglePerson();
                       },
                       style: ButtonStyle(
@@ -523,9 +527,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                         ),
                       ),
                       label: Text(
-                        (widget.sendTo == null)
+                        (widget.sendToGroup == null)
                             ? context.lang.shareImagedEditorShareWith
-                            : getContactDisplayName(widget.sendTo!),
+                            : substringBy(widget.sendToGroup!.groupName, 15),
                         style: const TextStyle(fontSize: 17),
                       ),
                     ),
@@ -539,10 +543,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   children: [
                     if (videoController != null)
                       Positioned.fill(
-                        child: Transform.flip(
-                          flipX: widget.mirrorVideo,
-                          child: VideoPlayer(videoController!),
-                        ),
+                        child: VideoPlayer(videoController!),
                       ),
                     Screenshot(
                       controller: screenshotController,

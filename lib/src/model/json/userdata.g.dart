@@ -11,10 +11,10 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       username: json['username'] as String,
       displayName: json['displayName'] as String,
       subscriptionPlan: json['subscriptionPlan'] as String? ?? 'Free',
-      isDemoUser: json['isDemoUser'] as bool? ?? false,
     )
       ..avatarSvg = json['avatarSvg'] as String?
       ..avatarJson = json['avatarJson'] as String?
+      ..appVersion = (json['appVersion'] as num?)?.toInt() ?? 0
       ..avatarCounter = (json['avatarCounter'] as num?)?.toInt() ?? 0
       ..isDeveloper = json['isDeveloper'] as bool? ?? false
       ..deviceId = (json['deviceId'] as num?)?.toInt() ?? 0
@@ -40,15 +40,12 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       )
       ..storeMediaFilesInGallery =
           json['storeMediaFilesInGallery'] as bool? ?? false
-      ..lastUsedEditorEmojis = (json['lastUsedEditorEmojis'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList()
       ..lastPlanBallance = json['lastPlanBallance'] as String?
       ..additionalUserInvites = json['additionalUserInvites'] as String?
       ..tutorialDisplayed = (json['tutorialDisplayed'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList()
-      ..myBestFriendContactId = (json['myBestFriendContactId'] as num?)?.toInt()
+      ..myBestFriendGroupId = json['myBestFriendGroupId'] as String?
       ..signalLastSignedPreKeyUpdated =
           json['signalLastSignedPreKeyUpdated'] == null
               ? null
@@ -74,11 +71,11 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'userId': instance.userId,
-      'isDemoUser': instance.isDemoUser,
       'username': instance.username,
       'displayName': instance.displayName,
       'avatarSvg': instance.avatarSvg,
       'avatarJson': instance.avatarJson,
+      'appVersion': instance.appVersion,
       'avatarCounter': instance.avatarCounter,
       'isDeveloper': instance.isDeveloper,
       'deviceId': instance.deviceId,
@@ -93,11 +90,10 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'preSelectedEmojies': instance.preSelectedEmojies,
       'autoDownloadOptions': instance.autoDownloadOptions,
       'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
-      'lastUsedEditorEmojis': instance.lastUsedEditorEmojis,
       'lastPlanBallance': instance.lastPlanBallance,
       'additionalUserInvites': instance.additionalUserInvites,
       'tutorialDisplayed': instance.tutorialDisplayed,
-      'myBestFriendContactId': instance.myBestFriendContactId,
+      'myBestFriendGroupId': instance.myBestFriendGroupId,
       'signalLastSignedPreKeyUpdated':
           instance.signalLastSignedPreKeyUpdated?.toIso8601String(),
       'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,

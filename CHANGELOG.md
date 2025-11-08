@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.0.62
+
+- Support for groups with multiple administrators
+- Edit and delete messages
+- Create images using volume buttons
+- New and improved emoji picker
+- Removing audio after recording is possible
+- Edited image is now embedded into the video
+- Video max length increased to 60 seconds
+- Switched to FFmpeg for improved video compression
+- New context menu and other UI enhancements
+- Client-to-client protocol migrated to Protocol Buffers (Protobuf)
+- Database identifiers converted to UUIDs and the database schema completely redesigned
+- Improved reliability of client-to-client messaging
+- Multiple bug fixes
+
+
 ## 0.0.61
 
 - Improving image editor when changing colors

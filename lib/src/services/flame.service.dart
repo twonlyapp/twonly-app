@@ -1,60 +1,64 @@
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart' as my;
+import 'package:twonly/src/database/daos/groups.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-Future<void> syncFlameCounters() async {
-  final user = await getUser();
-  if (user == null) return;
-
-  final contacts = await twonlyDB.contactsDao.getAllNotBlockedContacts();
-  if (contacts.isEmpty) return;
-  final maxMessageCounter = contacts.map((x) => x.totalMediaCounter).max;
+Future<void> syncFlameCounters({String? forceForGroup}) async {
+  final groups = await twonlyDB.groupsDao.getAllDirectChats();
+  if (groups.isEmpty) return;
+  final maxMessageCounter = groups.map((x) => x.totalMediaCounter).max;
   final bestFriend =
-      contacts.firstWhere((x) => x.totalMediaCounter == maxMessageCounter);
+      groups.firstWhere((x) => x.totalMediaCounter == maxMessageCounter);
 
-  if (user.myBestFriendContactId != bestFriend.userId) {
+  if (gUser.myBestFriendGroupId != bestFriend.groupId) {
     await updateUserdata((user) {
-      user.myBestFriendContactId = bestFriend.userId;
+      user.myBestFriendGroupId = bestFriend.groupId;
       return user;
     });
   }
 
-  for (final contact in contacts) {
-    if (contact.lastFlameCounterChange == null || contact.deleted) continue;
-    if (!isToday(contact.lastFlameCounterChange!)) continue;
-    if (contact.lastFlameSync != null) {
-      if (isToday(contact.lastFlameSync!)) continue;
+  for (final group in groups) {
+    if (group.lastFlameCounterChange == null) continue;
+    if (!isToday(group.lastFlameCounterChange!)) continue;
+    if (forceForGroup == null || group.groupId != forceForGroup) {
+      if (group.lastFlameSync != null) {
+        if (isToday(group.lastFlameSync!)) continue;
+      }
     }
 
-    final flameCounter = getFlameCounterFromContact(contact) - 1;
+    final flameCounter = getFlameCounterFromGroup(group) - 1;
 
-    // only sync when flame counter is higher than three days
-    if (flameCounter < 1 && bestFriend.userId != contact.userId) continue;
+    // only sync when flame counter is higher than three days or when they are bestFriends
+    if (flameCounter < 1 && bestFriend.groupId != group.groupId) continue;
 
-    await encryptAndSendMessageAsync(
-      null,
-      contact.userId,
-      my.MessageJson(
-        kind: MessageKind.flameSync,
-        content: my.FlameSyncContent(
-          flameCounter: flameCounter,
-          lastFlameCounterChange: contact.lastFlameCounterChange!,
-          bestFriend: contact.userId == bestFriend.userId,
+    final groupMembers =
+        await twonlyDB.groupsDao.getGroupNonLeftMembers(group.groupId);
+    if (groupMembers.length != 1) {
+      continue; // flame sync is only done for groups of two
+    }
+
+    await sendCipherText(
+      groupMembers.first.contactId,
+      EncryptedContent(
+        flameSync: EncryptedContent_FlameSync(
+          flameCounter: Int64(flameCounter),
+          lastFlameCounterChange:
+              Int64(group.lastFlameCounterChange!.millisecondsSinceEpoch),
+          bestFriend: group.groupId == bestFriend.groupId,
+          forceUpdate: group.groupId == forceForGroup,
         ),
-        timestamp: DateTime.now(),
       ),
     );
 
-    await twonlyDB.contactsDao.updateContact(
-      contact.userId,
-      ContactsCompanion(
+    await twonlyDB.groupsDao.updateGroup(
+      group.groupId,
+      GroupsCompanion(
         lastFlameSync: Value(DateTime.now()),
       ),
     );

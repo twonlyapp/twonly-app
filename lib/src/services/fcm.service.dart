@@ -81,10 +81,18 @@ Future<void> handleRemoteMessage(RemoteMessage message) async {
   if (!Platform.isAndroid) {
     Log.error('Got message in Dart while on iOS');
   }
+  if (message.notification != null && globalIsAppInBackground) {
+    Log.error(
+      'Got notification but app is in background, so the SDK already have shown the message.',
+    );
+    return;
+  }
 
-  if (message.notification != null) {
-    final title = message.notification!.title ?? '';
-    final body = message.notification!.body ?? '';
+  if (message.notification != null || message.data['title'] != null) {
+    final title =
+        message.notification?.title ?? message.data['title'] as String? ?? '';
+    final body =
+        message.notification?.body ?? message.data['body'] as String? ?? '';
     await customLocalPushNotification(title, body);
   } else if (message.data['push_data'] != null) {
     await handlePushData(message.data['push_data'] as String);

@@ -1,12 +1,11 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
-import 'package:pie_menu/pie_menu.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
-import 'package:twonly/src/views/components/user_context_menu.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
+import 'package:twonly/src/views/components/user_context_menu.component.dart';
 
 class PrivacyViewBlockUsers extends StatefulWidget {
   const PrivacyViewBlockUsers({super.key});
@@ -32,53 +31,50 @@ class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
       appBar: AppBar(
         title: Text(context.lang.settingsPrivacyBlockUsers),
       ),
-      body: PieCanvas(
-        theme: getPieCanvasTheme(context),
-        child: Padding(
-          padding:
-              const EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                  onChanged: (value) => setState(() {
-                    filter = value;
-                  }),
-                  decoration: getInputDecoration(
-                    context,
-                    context.lang.searchUsernameInput,
-                  ),
+      body: Padding(
+        padding:
+            const EdgeInsets.only(bottom: 20, left: 10, top: 20, right: 10),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: TextField(
+                onChanged: (value) => setState(() {
+                  filter = value;
+                }),
+                decoration: getInputDecoration(
+                  context,
+                  context.lang.searchUsernameInput,
                 ),
               ),
-              const SizedBox(height: 20),
-              Text(
-                context.lang.settingsPrivacyBlockUsersDesc,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 30),
-              Expanded(
-                child: StreamBuilder(
-                  stream: allUsers,
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return Container();
-                    }
+            ),
+            const SizedBox(height: 20),
+            Text(
+              context.lang.settingsPrivacyBlockUsersDesc,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 30),
+            Expanded(
+              child: StreamBuilder(
+                stream: allUsers,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container();
+                  }
 
-                    final filteredContacts = snapshot.data!.where((contact) {
-                      return getContactDisplayName(contact)
-                          .toLowerCase()
-                          .contains(filter.toLowerCase());
-                    }).toList();
+                  final filteredContacts = snapshot.data!.where((contact) {
+                    return getContactDisplayName(contact)
+                        .toLowerCase()
+                        .contains(filter.toLowerCase());
+                  }).toList();
 
-                    return UserList(
-                      List.from(filteredContacts),
-                    );
-                  },
-                ),
+                  return UserList(
+                    List.from(filteredContacts),
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -108,7 +104,7 @@ class UserList extends StatelessWidget {
       itemCount: users.length,
       itemBuilder: (BuildContext context, int i) {
         final user = users[i];
-        return UserContextMenuBlocked(
+        return UserContextMenu(
           contact: user,
           child: ListTile(
             title: Row(
@@ -116,7 +112,7 @@ class UserList extends StatelessWidget {
                 Text(getContactDisplayName(user)),
               ],
             ),
-            leading: ContactAvatar(contact: user, fontSize: 15),
+            leading: AvatarIcon(contactId: user.userId, fontSize: 15),
             trailing: Checkbox(
               value: user.blocked,
               onChanged: (bool? value) async {

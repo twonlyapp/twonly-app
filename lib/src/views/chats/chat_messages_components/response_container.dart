@@ -1,29 +1,30 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 
 class ResponseContainer extends StatefulWidget {
   const ResponseContainer({
     required this.msg,
-    required this.contact,
+    required this.group,
     required this.child,
-    required this.scrollToMessage,
+    required this.mediaService,
+    required this.borderRadius,
+    this.scrollToMessage,
     super.key,
   });
 
-  final ChatMessage msg;
-  final Widget child;
-  final Contact contact;
-  final void Function(int) scrollToMessage;
+  final Message msg;
+  final Widget? child;
+  final Group group;
+  final MediaFileService? mediaService;
+  final BorderRadius borderRadius;
+  final void Function(String)? scrollToMessage;
 
   @override
   State<ResponseContainer> createState() => _ResponseContainerState();
@@ -57,26 +58,31 @@ class _ResponseContainerState extends State<ResponseContainer> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.msg.responseTo == null) {
-      return widget.child;
+    if (widget.msg.quotesMessageId == null) {
+      if (widget.child == null) {
+        return Container();
+      }
+      return widget.child!;
     }
     return GestureDetector(
-      onTap: () => widget.scrollToMessage(widget.msg.responseTo!.messageId),
+      onTap: widget.scrollToMessage == null
+          ? null
+          : () => widget.scrollToMessage!(widget.msg.quotesMessageId!),
       child: Container(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.8,
         ),
         decoration: BoxDecoration(
-          color: getMessageColor(widget.msg.message),
-          borderRadius: BorderRadius.circular(12),
+          color: getMessageColor(widget.msg),
+          borderRadius: widget.borderRadius,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
+              key: _preview,
               padding: const EdgeInsets.only(top: 4, right: 4, left: 4),
               child: Container(
-                key: _preview,
                 width: minWidth,
                 decoration: BoxDecoration(
                   color: context.color.surface.withAlpha(150),
@@ -88,8 +94,8 @@ class _ResponseContainerState extends State<ResponseContainer> {
                   ),
                 ),
                 child: ResponsePreview(
-                  contact: widget.contact,
-                  message: widget.msg.responseTo!,
+                  group: widget.group,
+                  messageId: widget.msg.quotesMessageId,
                   showBorder: false,
                 ),
               ),
@@ -108,14 +114,16 @@ class _ResponseContainerState extends State<ResponseContainer> {
 
 class ResponsePreview extends StatefulWidget {
   const ResponsePreview({
-    required this.message,
-    required this.contact,
+    required this.group,
     required this.showBorder,
+    this.message,
+    this.messageId,
     super.key,
   });
 
-  final Message message;
-  final Contact contact;
+  final Message? message;
+  final String? messageId;
+  final Group group;
   final bool showBorder;
 
   @override
@@ -123,81 +131,96 @@ class ResponsePreview extends StatefulWidget {
 }
 
 class _ResponsePreviewState extends State<ResponsePreview> {
-  File? thumbnailPath;
+  Message? _message;
+  MediaFileService? _mediaService;
+  String _username = '';
 
   @override
   void initState() {
+    _message = widget.message;
+    initAsync();
     super.initState();
-    unawaited(initAsync());
   }
 
   Future<void> initAsync() async {
-    final items = await MemoryItem.convertFromMessages([widget.message]);
-    if (items.length == 1 && mounted) {
-      setState(() {
-        thumbnailPath = items.values.first.thumbnailPath;
-      });
+    _message ??= await twonlyDB.messagesDao
+        .getMessageById(widget.messageId!)
+        .getSingleOrNull();
+    if (_message?.mediaId != null) {
+      _mediaService = await MediaFileService.fromMediaId(_message!.mediaId!);
     }
+    if (_message?.senderId != null) {
+      final contact = await twonlyDB.contactsDao
+          .getContactByUserId(_message!.senderId!)
+          .getSingleOrNull();
+      if (contact != null) {
+        _username = getContactDisplayName(contact);
+      }
+    }
+    if (_message == null && mounted) {
+      _username = context.lang.quotedMessageWasDeleted;
+    }
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     String? subtitle;
+    var color = const Color.fromARGB(233, 68, 137, 255);
 
-    if (widget.message.kind == MessageKind.textMessage) {
-      if (widget.message.contentJson != null) {
-        final content = MessageContent.fromJson(
-          MessageKind.textMessage,
-          jsonDecode(widget.message.contentJson!) as Map,
-        );
-        if (content is TextMessageContent) {
-          subtitle = truncateString(content.text);
+    if (_message != null) {
+      if (_message!.type == MessageType.text) {
+        if (_message!.content != null) {
+          subtitle = truncateString(_message!.content!);
         }
       }
-    }
-    if (widget.message.kind == MessageKind.media) {
-      final content = MessageContent.fromJson(
-        MessageKind.media,
-        jsonDecode(widget.message.contentJson!) as Map,
-      );
-      if (content is MediaMessageContent) {
-        subtitle = content.isVideo ? 'Video' : 'Image';
+      if (_message!.type == MessageType.media && _mediaService != null) {
+        switch (_mediaService!.mediaFile.type) {
+          case MediaType.image:
+            subtitle = context.lang.image;
+          case MediaType.video:
+            subtitle = context.lang.video;
+          case MediaType.gif:
+            subtitle = 'Gif';
+          case MediaType.audio:
+            subtitle = 'Audio';
+        }
       }
-    }
 
-    var username = 'You';
-    if (widget.message.messageOtherId != null) {
-      username = getContactDisplayName(widget.contact);
-    }
+      if (_message!.senderId == null) {
+        _username = context.lang.you;
+        // _username = _message!.senderId.toString();
+      }
 
-    final color = getMessageColor(widget.message);
+      color = getMessageColor(_message!);
 
-    if (!widget.message.mediaStored) {
-      return Container(
-        padding: widget.showBorder
-            ? const EdgeInsets.only(left: 10, right: 10)
-            : const EdgeInsets.symmetric(horizontal: 5),
-        decoration: (widget.showBorder)
-            ? BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                    color: color,
-                    width: 2,
+      if (!_message!.mediaStored) {
+        return Container(
+          padding: widget.showBorder
+              ? const EdgeInsets.only(left: 10, right: 10)
+              : const EdgeInsets.symmetric(horizontal: 5),
+          decoration: (widget.showBorder)
+              ? BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: color,
+                      width: 2,
+                    ),
                   ),
-                ),
-              )
-            : null,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              username,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            if (subtitle != null) Text(subtitle),
-          ],
-        ),
-      );
+                )
+              : null,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _username,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              if (subtitle != null) Text(subtitle),
+            ],
+          ),
+        );
+      }
     }
 
     return Container(
@@ -218,17 +241,22 @@ class _ResponsePreviewState extends State<ResponsePreview> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  username,
+                  _username,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 if (subtitle != null) Text(subtitle),
               ],
             ),
           ),
-          if (thumbnailPath != null)
+          if (_mediaService != null &&
+              _mediaService!.mediaFile.type != MediaType.audio)
             SizedBox(
               height: widget.showBorder ? 100 : 210,
-              child: Image.file(thumbnailPath!),
+              child: Image.file(
+                _mediaService!.mediaFile.type == MediaType.video
+                    ? _mediaService!.thumbnailPath
+                    : _mediaService!.storedPath,
+              ),
             ),
         ],
       ),

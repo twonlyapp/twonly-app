@@ -1,24 +1,26 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
-import 'package:twonly/src/model/json/message.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
-  TwonlyDatabase get db => Provider.of<TwonlyDatabase>(this);
+  TwonlyDB get db => Provider.of<TwonlyDB>(this);
   ColorScheme get color => Theme.of(this).colorScheme;
 }
 
@@ -65,6 +67,16 @@ Uint8List getRandomUint8List(int length) {
   return randomBytes;
 }
 
+const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
+Random _rnd = Random();
+
+String getRandomString(int length) => String.fromCharCodes(
+      Iterable.generate(
+        length,
+        (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length)),
+      ),
+    );
+
 String errorCodeToText(BuildContext context, ErrorCode code) {
   // ignore: exhaustive_cases
   switch (code) {
@@ -87,27 +99,26 @@ String errorCodeToText(BuildContext context, ErrorCode code) {
     case ErrorCode.PlanUpgradeNotYearly:
       return context.lang.errorPlanUpgradeNotYearly;
   }
-  return code.toString(); // Fallback for unrecognized keys
+  return code.toString();
 }
 
-String formatDuration(int seconds) {
+String formatDuration(BuildContext context, int seconds) {
   if (seconds < 60) {
-    return '$seconds Sec.';
+    return '$seconds ${context.lang.durationShortSecond}';
   } else if (seconds < 3600) {
     final minutes = seconds ~/ 60;
-    return '$minutes Min.';
+    return '$minutes ${context.lang.durationShortMinute}';
   } else if (seconds < 86400) {
     final hours = seconds ~/ 3600;
-    return '$hours Hrs.'; // Assuming "Stu." is for hours
+    return '$hours ${context.lang.durationShortHour}';
   } else {
     final days = seconds ~/ 86400;
-    return '$days Days';
+    return context.lang.durationShortDays(days);
   }
 }
 
 InputDecoration getInputDecoration(BuildContext context, String hintText) {
-  final primaryColor =
-      Theme.of(context).colorScheme.primary; // Get the primary color
+  final primaryColor = Theme.of(context).colorScheme.primary;
   return InputDecoration(
     hintText: hintText,
     focusedBorder: OutlineInputBorder(
@@ -245,25 +256,111 @@ String formatBytes(int bytes, {int decimalPlaces = 2}) {
   return '${formattedSize.toStringAsFixed(decimalPlaces)} ${units[unitIndex]}';
 }
 
-String getMessageText(Message message) {
+bool isUUIDNewer(String uuid1, String uuid2) {
   try {
-    if (message.contentJson == null) return '';
-    return TextMessageContent.fromJson(jsonDecode(message.contentJson!) as Map)
-        .text;
+    final timestamp1 = int.parse(uuid1.substring(0, 8), radix: 16);
+    final timestamp2 = int.parse(uuid2.substring(0, 8), radix: 16);
+    return timestamp1 > timestamp2;
   } catch (e) {
     Log.error(e);
-    return '';
+    return false;
   }
 }
 
-MediaMessageContent? getMediaContent(Message message) {
-  try {
-    if (message.contentJson == null) return null;
-    return MediaMessageContent.fromJson(
-      jsonDecode(message.contentJson!) as Map,
+String uint8ListToHex(List<int> bytes) {
+  return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+}
+
+Uint8List hexToUint8List(String hex) => Uint8List.fromList(
+      List<int>.generate(
+        hex.length ~/ 2,
+        (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16),
+      ),
     );
-  } catch (e) {
-    Log.error(e);
-    return null;
+
+Color getMessageColorFromType(
+  Message message,
+  MediaFile? mediaFile,
+  BuildContext context,
+) {
+  Color color;
+
+  if (message.type == MessageType.text) {
+    color = Colors.blueAccent;
+  } else if (mediaFile != null) {
+    if (mediaFile.requiresAuthentication) {
+      color = context.color.primary;
+    } else {
+      if (mediaFile.type == MediaType.video) {
+        color = const Color.fromARGB(255, 243, 33, 208);
+      } else if (mediaFile.type == MediaType.audio) {
+        color = const Color.fromARGB(255, 252, 149, 85);
+      } else {
+        color = Colors.redAccent;
+      }
+    }
+  } else {
+    return (isDarkMode(context)) ? Colors.white : Colors.black;
   }
+  return color;
+}
+
+String getUUIDforDirectChat(int a, int b) {
+  if (a < 0 || b < 0) {
+    throw ArgumentError('Inputs must be non-negative integers.');
+  }
+  if (a > integerMax || b > integerMax) {
+    throw ArgumentError('Inputs must be <= 0x7fffffff.');
+  }
+
+  // Mask to 64 bits in case inputs exceed 64 bits
+  final mask64 = (BigInt.one << 64) - BigInt.one;
+  final ai = BigInt.from(a) & mask64;
+  final bi = BigInt.from(b) & mask64;
+
+  // Ensure the bigger integer is in front (high 64 bits)
+  final hi = ai >= bi ? ai : bi;
+  final lo = ai >= bi ? bi : ai;
+
+  final combined = (hi << 64) | lo;
+
+  final hex = combined.toRadixString(16).padLeft(32, '0');
+
+  final parts = [
+    hex.substring(0, 8),
+    hex.substring(8, 12),
+    hex.substring(12, 16),
+    hex.substring(16, 20),
+    hex.substring(20, 32),
+  ];
+  return parts.join('-');
+}
+
+String friendlyDateTime(
+  BuildContext context,
+  DateTime dt, {
+  bool includeSeconds = false,
+  Locale? locale,
+}) {
+  // Build date part
+  final datePart =
+      DateFormat.yMd(Localizations.localeOf(context).toString()).format(dt);
+
+  final use24Hour = MediaQuery.of(context).alwaysUse24HourFormat;
+
+  var timePart = '';
+  if (use24Hour) {
+    timePart =
+        DateFormat.jm(Localizations.localeOf(context).toString()).format(dt);
+  } else {
+    timePart =
+        DateFormat.Hm(Localizations.localeOf(context).toString()).format(dt);
+  }
+
+  return '$timePart $datePart';
+}
+
+String getAvatarSvg(Uint8List avatarSvgCompressed) {
+  final raw = gzip.decode(avatarSvgCompressed);
+  return utf8.decode(raw);
 }

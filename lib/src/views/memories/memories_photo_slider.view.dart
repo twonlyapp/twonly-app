@@ -1,13 +1,12 @@
-import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
-import 'package:twonly/src/services/api/media_download.dart' as received;
-import 'package:twonly/src/services/api/media_upload.dart' as send;
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -50,7 +49,6 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
   }
 
   Future<void> deleteFile() async {
-    final messages = widget.galleryItems[currentIndex].messages;
     final confirmed = await showAlertDialog(
       context,
       context.lang.deleteImageTitle,
@@ -59,32 +57,27 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
 
     if (!confirmed) return;
 
-    widget.galleryItems[currentIndex].imagePath?.deleteSync();
-    widget.galleryItems[currentIndex].videoPath?.deleteSync();
-    for (final message in messages) {
-      await twonlyDB.messagesDao.updateMessageByMessageId(
-        message.messageId,
-        const MessagesCompanion(mediaStored: Value(false)),
-      );
-    }
+    widget.galleryItems[currentIndex].mediaService.fullMediaRemoval();
+    await twonlyDB.mediaFilesDao.deleteMediaFile(
+      widget.galleryItems[currentIndex].mediaService.mediaFile.mediaId,
+    );
 
     widget.galleryItems.removeAt(currentIndex);
     setState(() {});
-    await send.purgeSendMediaFiles();
-    await received.purgeReceivedMediaFiles();
     if (mounted) {
       Navigator.pop(context, true);
     }
   }
 
   Future<void> exportFile() async {
-    final item = widget.galleryItems[currentIndex];
+    final item = widget.galleryItems[currentIndex].mediaService;
 
     try {
-      if (item.videoPath != null) {
-        await saveVideoToGallery(item.videoPath!.path);
-      } else if (item.imagePath != null) {
-        final imageBytes = await item.imagePath!.readAsBytes();
+      if (item.mediaFile.type == MediaType.video) {
+        await saveVideoToGallery(item.storedPath.path);
+      } else if (item.mediaFile.type == MediaType.image ||
+          item.mediaFile.type == MediaType.gif) {
+        final imageBytes = await item.storedPath.readAsBytes();
         await saveImageToGallery(imageBytes);
       }
       if (!mounted) return;
@@ -127,18 +120,29 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                       FilledButton.icon(
                         icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
                         onPressed: () async {
+                          final orgMediaService =
+                              widget.galleryItems[currentIndex].mediaService;
+
+                          final newMediaService = await initializeMediaUpload(
+                            orgMediaService.mediaFile.type,
+                            gUser.defaultShowTime,
+                          );
+                          if (newMediaService == null) {
+                            Log.error('Could not create new mediaFIle');
+                            return;
+                          }
+
+                          orgMediaService.storedPath
+                              .copySync(newMediaService.tempPath.path);
+
+                          if (!context.mounted) return;
+
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => ShareImageEditorView(
-                                videoFilePath:
-                                    widget.galleryItems[currentIndex].videoPath,
-                                imageBytes: widget
-                                    .galleryItems[currentIndex].imagePath
-                                    ?.readAsBytes(),
-                                mirrorVideo: false,
+                                mediaFileService: newMediaService,
                                 sharedFromGallery: true,
-                                useHighQuality: true,
                               ),
                             ),
                           );
@@ -213,24 +217,27 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
 
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
     final item = widget.galleryItems[index];
-    return item.videoPath != null
+    return item.mediaService.mediaFile.type == MediaType.video
         ? PhotoViewGalleryPageOptions.customChild(
             child: VideoPlayerWrapper(
-              videoPath: item.videoPath!,
-              mirrorVideo: item.mirrorVideo,
+              videoPath: item.mediaService.storedPath,
             ),
             // childSize: const Size(300, 300),
             initialScale: PhotoViewComputedScale.contained,
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 4.1,
-            heroAttributes: PhotoViewHeroAttributes(tag: item.id),
+            heroAttributes: PhotoViewHeroAttributes(
+              tag: item.mediaService.mediaFile.mediaId,
+            ),
           )
         : PhotoViewGalleryPageOptions(
-            imageProvider: FileImage(item.imagePath!),
+            imageProvider: FileImage(item.mediaService.storedPath),
             initialScale: PhotoViewComputedScale.contained,
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 4.1,
-            heroAttributes: PhotoViewHeroAttributes(tag: item.id),
+            heroAttributes: PhotoViewHeroAttributes(
+              tag: item.mediaService.mediaFile.mediaId,
+            ),
           );
   }
 }

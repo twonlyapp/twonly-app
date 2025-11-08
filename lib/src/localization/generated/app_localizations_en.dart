@@ -122,6 +122,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareImageSearchAllContacts => 'Search all contacts';
 
   @override
+  String get startNewChatSearchHint => 'Name, username or groupname';
+
+  @override
   String get shareImagedSelectAll => 'Select all';
 
   @override
@@ -532,6 +535,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get now => 'Now';
+
+  @override
+  String get you => 'You';
+
+  @override
+  String get minutesShort => 'min.';
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get video => 'Video';
+
+  @override
   String get react => 'React';
 
   @override
@@ -539,6 +557,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copy => 'Copy';
+
+  @override
+  String get edit => 'Edit';
 
   @override
   String get delete => 'Delete';
@@ -603,8 +624,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The invitation code you provided is invalid. Please check the code and try again.';
 
   @override
-  String get errorUsernameAlreadyTaken =>
-      'The username you want to use is already taken. Please choose a different username.';
+  String get errorUsernameAlreadyTaken => 'The username is already taken.';
 
   @override
   String get errorSignatureNotValid =>
@@ -909,7 +929,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteTitle => 'Are you sure?';
 
   @override
-  String get deleteOkBtn => 'Delete for me';
+  String get deleteOkBtnForAll => 'Delete for all';
+
+  @override
+  String get deleteOkBtnForMe => 'Delete for me';
 
   @override
   String get deleteImageTitle => 'Are you sure?';
@@ -945,6 +968,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupTwonlySafeDesc =>
       'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.';
+
+  @override
+  String get backupNoPasswordRecovery =>
+      'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.';
 
   @override
   String get backupServer => 'Server';
@@ -993,11 +1020,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupTwonlySafeLongDesc =>
-      'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Safe regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.';
+      'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Backup regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.';
 
   @override
   String get backupSelectStrongPassword =>
-      'Choose a secure password. This is required if you want to restore your twonly Safe backup.';
+      'Choose a secure password. This is required if you want to restore your twonly Backup.';
 
   @override
   String get password => 'Password';
@@ -1020,7 +1047,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupOwnServerDesc =>
-      'Save your twonly safe backups at twonly or on any server of your choice.';
+      'Save your twonly Backup at twonly or on any server of your choice.';
 
   @override
   String get backupUseOwnServer => 'Use server';
@@ -1032,11 +1059,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupTwonlySaveNow => 'Save now';
 
   @override
+  String get backupChangePassword => 'Change password';
+
+  @override
   String get twonlySafeRecoverTitle => 'Recovery';
 
   @override
   String get twonlySafeRecoverDesc =>
-      'If you have created a backup with twonly Safe, you can restore it here.';
+      'If you have created a backup with twonly Backup, you can restore it here.';
 
   @override
   String get twonlySafeRecoverBtn => 'Restore backup';
@@ -1062,6 +1092,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get doubleClickToReopen => 'Double-click\nto open again';
 
   @override
+  String get uploadLimitReached =>
+      'The upload limit has\been reached. Upgrade to Pro\nor wait until tomorrow.';
+
+  @override
   String get retransmissionRequested => 'Retransmission requested';
 
   @override
@@ -1085,4 +1119,356 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get newDeviceRegistered =>
       'You have logged in on another device. You have therefore been logged out here.';
+
+  @override
+  String get tabToRemoveEmoji => 'Tab to remove';
+
+  @override
+  String get quotedMessageWasDeleted => 'The quoted message has been deleted.';
+
+  @override
+  String get messageWasDeleted => 'Message has been deleted.';
+
+  @override
+  String get messageWasDeletedShort => 'Deleted';
+
+  @override
+  String get sent => 'Delivered';
+
+  @override
+  String get sentTo => 'Delivered to';
+
+  @override
+  String get received => 'Received';
+
+  @override
+  String get opened => 'Opened';
+
+  @override
+  String get waitingForInternet => 'Waiting for internet';
+
+  @override
+  String get editHistory => 'Edit history';
+
+  @override
+  String get archivedChats => 'Archived chats';
+
+  @override
+  String get durationShortSecond => 'Sec.';
+
+  @override
+  String get durationShortMinute => 'Min.';
+
+  @override
+  String get durationShortHour => 'Hrs.';
+
+  @override
+  String durationShortDays(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Days',
+      one: '1 Day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get contacts => 'Contacts';
+
+  @override
+  String get groups => 'Groups';
+
+  @override
+  String get newGroup => 'New group';
+
+  @override
+  String get selectMembers => 'Select members';
+
+  @override
+  String get selectGroupName => 'Select group name';
+
+  @override
+  String get groupNameInput => 'Group name';
+
+  @override
+  String get groupMembers => 'Members';
+
+  @override
+  String get addMember => 'Add member';
+
+  @override
+  String get createGroup => 'Create group';
+
+  @override
+  String get leaveGroup => 'Leave group';
+
+  @override
+  String get createContactRequest => 'Create contact request';
+
+  @override
+  String get contactRequestSend => 'Contact request send';
+
+  @override
+  String get makeAdmin => 'Make admin';
+
+  @override
+  String get removeAdmin => 'Remove as admin';
+
+  @override
+  String get removeFromGroup => 'Remove from group';
+
+  @override
+  String get admin => 'Admin';
+
+  @override
+  String revokeAdminRightsTitle(Object username) {
+    return 'Revoke $username\'s admin rights?';
+  }
+
+  @override
+  String get revokeAdminRightsOkBtn => 'Remove as admin';
+
+  @override
+  String makeAdminRightsTitle(Object username) {
+    return 'Make $username an admin?';
+  }
+
+  @override
+  String makeAdminRightsBody(Object username) {
+    return '$username will be able to edit this group and its members.';
+  }
+
+  @override
+  String get makeAdminRightsOkBtn => 'Make admin';
+
+  @override
+  String get updateGroup => 'Update group';
+
+  @override
+  String get alreadyInGroup => 'Already in Group';
+
+  @override
+  String removeContactFromGroupTitle(Object username) {
+    return 'Remove $username from this group?';
+  }
+
+  @override
+  String youChangedGroupName(Object newGroupName) {
+    return 'You have changed the group name to \"$newGroupName\".';
+  }
+
+  @override
+  String makerChangedGroupName(Object maker, Object newGroupName) {
+    return '$maker has changed the group name to \"$newGroupName\".';
+  }
+
+  @override
+  String get youCreatedGroup => 'You have created the group.';
+
+  @override
+  String makerCreatedGroup(Object maker) {
+    return '$maker has created the group.';
+  }
+
+  @override
+  String youRemovedMember(Object affected) {
+    return 'You have removed $affected from the group.';
+  }
+
+  @override
+  String makerRemovedMember(Object affected, Object maker) {
+    return '$maker has removed $affected from the group.';
+  }
+
+  @override
+  String youAddedMember(Object affected) {
+    return 'You have added $affected to the group.';
+  }
+
+  @override
+  String makerAddedMember(Object affected, Object maker) {
+    return '$maker has added $affected to the group.';
+  }
+
+  @override
+  String youMadeAdmin(Object affected) {
+    return 'You made $affected an admin.';
+  }
+
+  @override
+  String makerMadeAdmin(Object affected, Object maker) {
+    return '$maker made $affected an admin.';
+  }
+
+  @override
+  String youRevokedAdminRights(Object affectedR) {
+    return 'You revoked $affectedR admin rights.';
+  }
+
+  @override
+  String makerRevokedAdminRights(Object affectedR, Object maker) {
+    return '$maker revoked $affectedR admin rights.';
+  }
+
+  @override
+  String get youLeftGroup => 'You have left the group.';
+
+  @override
+  String makerLeftGroup(Object maker) {
+    return '$maker has left the group.';
+  }
+
+  @override
+  String get groupActionYou => 'you';
+
+  @override
+  String get groupActionYour => 'your';
+
+  @override
+  String get notificationFillerIn => 'in';
+
+  @override
+  String notificationText(Object inGroup) {
+    return 'sent a message$inGroup.';
+  }
+
+  @override
+  String notificationTwonly(Object inGroup) {
+    return 'sent a twonly$inGroup.';
+  }
+
+  @override
+  String notificationVideo(Object inGroup) {
+    return 'sent a video$inGroup.';
+  }
+
+  @override
+  String notificationImage(Object inGroup) {
+    return 'sent a image$inGroup.';
+  }
+
+  @override
+  String notificationAudio(Object inGroup) {
+    return 'sent a voice message$inGroup.';
+  }
+
+  @override
+  String notificationAddedToGroup(Object groupname) {
+    return 'has added you to \"$groupname\"';
+  }
+
+  @override
+  String get notificationContactRequest => 'wants to connect with you.';
+
+  @override
+  String get notificationAcceptRequest => 'is now connected with you.';
+
+  @override
+  String get notificationStoredMediaFile => 'has stored your image.';
+
+  @override
+  String get notificationReaction => 'has reacted to your image.';
+
+  @override
+  String get notificationReopenedMedia => 'has reopened your image.';
+
+  @override
+  String notificationReactionToVideo(Object reaction) {
+    return 'has reacted with $reaction to your video.';
+  }
+
+  @override
+  String notificationReactionToText(Object reaction) {
+    return 'has reacted with $reaction to your message.';
+  }
+
+  @override
+  String notificationReactionToImage(Object reaction) {
+    return 'has reacted with $reaction to your image.';
+  }
+
+  @override
+  String notificationReactionToAudio(Object reaction) {
+    return 'has reacted with $reaction to your audio message.';
+  }
+
+  @override
+  String notificationResponse(Object inGroup) {
+    return 'has responded$inGroup.';
+  }
+
+  @override
+  String get notificationTitleUnknownUser => 'Someone';
+
+  @override
+  String get notificationCategoryMessageTitle => 'Messages';
+
+  @override
+  String get notificationCategoryMessageDesc => 'Messages from other users.';
+
+  @override
+  String get groupContextMenuDeleteGroup =>
+      'This will permanently delete all messages in this chat.';
+
+  @override
+  String get groupYouAreNowLongerAMember =>
+      'You are no longer part of this group.';
+
+  @override
+  String get groupNetworkIssue => 'Network issue. Try again later.';
+
+  @override
+  String get leaveGroupSelectOtherAdminTitle => 'Select another admin';
+
+  @override
+  String get leaveGroupSelectOtherAdminBody =>
+      'To leave the group, you must first select a new administrator.';
+
+  @override
+  String get leaveGroupSureTitle => 'Leave group';
+
+  @override
+  String get leaveGroupSureBody => 'Do you really want to leave the group?';
+
+  @override
+  String get leaveGroupSureOkBtn => 'Leave group';
+
+  @override
+  String changeDisplayMaxTime(Object time, Object username) {
+    return 'Chats will now be deleted after $time ($username).';
+  }
+
+  @override
+  String youChangedDisplayMaxTime(Object time) {
+    return 'Chats will now be deleted after $time.';
+  }
+
+  @override
+  String get userGotReported => 'User has been reported.';
+
+  @override
+  String get deleteChatAfter => 'Delete chat after...';
+
+  @override
+  String get deleteChatAfterAnHour => 'one hour.';
+
+  @override
+  String get deleteChatAfterADay => 'one day.';
+
+  @override
+  String get deleteChatAfterAWeek => 'one week.';
+
+  @override
+  String get deleteChatAfterAMonth => 'one month.';
+
+  @override
+  String get deleteChatAfterAYear => 'one year.';
+
+  @override
+  String get yourTwonlyScore => 'Your twonly-Score';
+
+  @override
+  String get registrationClosed =>
+      'Due to the current high volume of registrations, we have temporarily disabled registration to ensure that the service remains reliable. Please try again in a few days.';
 }

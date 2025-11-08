@@ -7,15 +7,17 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart' as my;
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 /// This function must be called after the database is setup
 Future<void> setupNotificationWithUsers({
@@ -49,7 +51,7 @@ Future<void> setupNotificationWithUsers({
     final pushUser =
         pushUsers.firstWhereOrNull((x) => x.userId == contact.userId);
 
-    if (pushUser != null) {
+    if (pushUser != null && pushUser.pushKeys.isNotEmpty) {
       // make it harder to predict the change of the key
       final timeBefore =
           DateTime.now().subtract(Duration(days: 5 + random.nextInt(5)));
@@ -104,19 +106,14 @@ Future<void> setupNotificationWithUsers({
 }
 
 Future<void> sendNewPushKey(int userId, PushKey pushKey) async {
-  await encryptAndSendMessageAsync(
-    null,
+  await sendCipherText(
     userId,
-    my.MessageJson(
-      kind: MessageKind.pushKey,
-      content: my.PushKeyContent(
-        keyId: pushKey.id.toInt(),
-        key: pushKey.key,
-      ),
-      timestamp: DateTime.fromMillisecondsSinceEpoch(
-        pushKey.createdAtUnixTimestamp.toInt(),
-      ),
-    ),
+    EncryptedContent()
+      ..pushKeys = (EncryptedContent_PushKeys()
+        ..type = EncryptedContent_PushKeys_Type.UPDATE
+        ..key = pushKey.key
+        ..keyId = pushKey.id
+        ..createdAt = pushKey.createdAtUnixTimestamp),
   );
 }
 
@@ -132,7 +129,7 @@ Future<void> updatePushUser(Contact contact) async {
         displayName: getContactDisplayName(contact),
         pushKeys: [],
         blocked: contact.blocked,
-        lastMessageId: Int64(),
+        lastMessageId: uuid.v7(),
       ),
     );
   } else {
@@ -144,7 +141,7 @@ Future<void> updatePushUser(Contact contact) async {
   await setPushKeys(SecureStorageKeys.receivingPushKeys, pushKeys);
 }
 
-Future<void> handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
+Future<void> handleNewPushKey(int fromUserId, int keyId, List<int> key) async {
   final pushKeys = await getPushKeys(SecureStorageKeys.sendingPushKeys);
 
   var pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);
@@ -160,7 +157,7 @@ Future<void> handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
         displayName: getContactDisplayName(contact),
         pushKeys: [],
         blocked: contact.blocked,
-        lastMessageId: Int64(),
+        lastMessageId: uuid.v7(),
       ),
     );
     pushUser = pushKeys.firstWhereOrNull((x) => x.userId == fromUserId);
@@ -174,8 +171,8 @@ Future<void> handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
   pushUser!.pushKeys.clear();
   pushUser.pushKeys.add(
     PushKey(
-      id: Int64(pushKey.keyId),
-      key: pushKey.key,
+      id: Int64(keyId),
+      key: key,
       createdAtUnixTimestamp: Int64(DateTime.now().millisecondsSinceEpoch),
     ),
   );
@@ -183,7 +180,7 @@ Future<void> handleNewPushKey(int fromUserId, my.PushKeyContent pushKey) async {
   await setPushKeys(SecureStorageKeys.sendingPushKeys, pushKeys);
 }
 
-Future<void> updateLastMessageId(int fromUserId, int messageId) async {
+Future<void> updateLastMessageId(int fromUserId, String messageId) async {
   final pushUsers = await getPushKeys(SecureStorageKeys.receivingPushKeys);
 
   final pushUser = pushUsers.firstWhereOrNull((x) => x.userId == fromUserId);
@@ -192,15 +189,126 @@ Future<void> updateLastMessageId(int fromUserId, int messageId) async {
     return;
   }
 
-  if (pushUser.lastMessageId < Int64(messageId)) {
-    pushUser.lastMessageId = Int64(messageId);
+  if (isUUIDNewer(messageId, pushUser.lastMessageId)) {
+    pushUser.lastMessageId = messageId;
     await setPushKeys(SecureStorageKeys.receivingPushKeys, pushUsers);
   }
 }
 
+Future<PushNotification?> getPushNotificationFromEncryptedContent(
+  int toUserId,
+  String? messageId,
+  EncryptedContent content,
+) async {
+  PushKind? kind;
+  String? additionalContent;
+
+  if (content.hasReaction()) {
+    if (content.reaction.remove) return null;
+
+    final msg = await twonlyDB.messagesDao
+        .getMessageById(content.reaction.targetMessageId)
+        .getSingleOrNull();
+    if (msg == null || msg.senderId == null || msg.senderId != toUserId) {
+      return null;
+    }
+    if (msg.content != null) {
+      kind = PushKind.reactionToText;
+    } else if (msg.mediaId != null) {
+      final media = await twonlyDB.mediaFilesDao.getMediaFileById(msg.mediaId!);
+      if (media == null) return null;
+      switch (media.type) {
+        case MediaType.image:
+          kind = PushKind.reactionToImage;
+        case MediaType.audio:
+          kind = PushKind.reactionToAudio;
+        case MediaType.video:
+          kind = PushKind.reactionToVideo;
+        case MediaType.gif:
+          kind = PushKind.reaction;
+      }
+    }
+    additionalContent = content.reaction.emoji;
+  }
+
+  if (content.hasTextMessage()) {
+    kind = PushKind.text;
+    if (content.textMessage.hasQuoteMessageId()) {
+      kind = PushKind.response;
+    }
+    final group = await twonlyDB.groupsDao.getGroup(content.groupId);
+    if (group != null && !group.isDirectChat) {
+      additionalContent = group.groupName;
+    }
+  }
+  if (content.hasMedia()) {
+    switch (content.media.type) {
+      case EncryptedContent_Media_Type.REUPLOAD:
+        return null;
+      case EncryptedContent_Media_Type.IMAGE:
+        kind = PushKind.image;
+      case EncryptedContent_Media_Type.VIDEO:
+        kind = PushKind.video;
+      case EncryptedContent_Media_Type.GIF:
+        kind = PushKind.image;
+      case EncryptedContent_Media_Type.AUDIO:
+        kind = PushKind.audio;
+    }
+    if (content.media.requiresAuthentication) {
+      kind = PushKind.twonly;
+    }
+    final group = await twonlyDB.groupsDao.getGroup(content.groupId);
+    if (group != null && !group.isDirectChat) {
+      additionalContent = group.groupName;
+    }
+  }
+
+  if (content.hasContactRequest()) {
+    switch (content.contactRequest.type) {
+      case EncryptedContent_ContactRequest_Type.REQUEST:
+        kind = PushKind.contactRequest;
+      case EncryptedContent_ContactRequest_Type.ACCEPT:
+        kind = PushKind.acceptRequest;
+      case EncryptedContent_ContactRequest_Type.REJECT:
+        return null;
+    }
+  }
+
+  if (content.hasMediaUpdate()) {
+    switch (content.mediaUpdate.type) {
+      case EncryptedContent_MediaUpdate_Type.REOPENED:
+        kind = PushKind.reopenedMedia;
+      case EncryptedContent_MediaUpdate_Type.STORED:
+        kind = PushKind.storedMediaFile;
+      case EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR:
+        return null;
+    }
+  }
+
+  if (content.hasGroupCreate()) {
+    kind = PushKind.addedToGroup;
+    final group = await twonlyDB.groupsDao.getGroup(content.groupId);
+    additionalContent = group!.groupName;
+  }
+
+  if (kind == null) return null;
+
+  final pushNotification = PushNotification()..kind = kind;
+  if (additionalContent != null) {
+    pushNotification.additionalContent = additionalContent;
+  }
+  if (messageId != null) {
+    pushNotification.messageId = messageId;
+  }
+  return pushNotification;
+}
+
 /// this will trigger a push notification
 /// push notification only containing the message kind and username
-Future<Uint8List?> getPushData(int toUserId, PushNotification content) async {
+Future<Uint8List?> encryptPushNotification(
+  int toUserId,
+  PushNotification content,
+) async {
   final pushKeys = await getPushKeys(SecureStorageKeys.sendingPushKeys);
 
   var key = 'InsecureOnlyUsedForAddingContact'.codeUnits;
@@ -218,14 +326,12 @@ Future<Uint8List?> getPushData(int toUserId, PushNotification content) async {
       // this will be enforced after every app uses this system... :/
       // return null;
       Log.error('Using insecure key as the receiver does not send a push key!');
-      await encryptAndSendMessageAsync(
-        null,
+
+      await sendCipherText(
         toUserId,
-        my.MessageJson(
-          kind: MessageKind.requestPushKey,
-          content: my.MessageContent(),
-          timestamp: DateTime.now(),
-        ),
+        EncryptedContent()
+          ..pushKeys = (EncryptedContent_PushKeys()
+            ..type = EncryptedContent_PushKeys_Type.REQUEST),
       );
     }
   } else {

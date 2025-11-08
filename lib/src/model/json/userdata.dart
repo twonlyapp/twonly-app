@@ -9,15 +9,11 @@ class UserData {
     required this.username,
     required this.displayName,
     required this.subscriptionPlan,
-    required this.isDemoUser,
   });
   factory UserData.fromJson(Map<String, dynamic> json) =>
       _$UserDataFromJson(json);
 
   final int userId;
-
-  @JsonKey(defaultValue: false)
-  bool isDemoUser = false;
 
   // -- USER PROFILE --
 
@@ -25,6 +21,9 @@ class UserData {
   String displayName;
   String? avatarSvg;
   String? avatarJson;
+
+  @JsonKey(defaultValue: 0)
+  int appVersion = 0;
 
   @JsonKey(defaultValue: 0)
   int avatarCounter = 0;
@@ -65,14 +64,12 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool storeMediaFilesInGallery = false;
 
-  List<String>? lastUsedEditorEmojis;
-
   String? lastPlanBallance;
   String? additionalUserInvites;
 
   List<String>? tutorialDisplayed;
 
-  int? myBestFriendContactId;
+  String? myBestFriendGroupId;
 
   DateTime? signalLastSignedPreKeyUpdated;
 

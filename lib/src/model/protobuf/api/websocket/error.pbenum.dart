@@ -48,6 +48,8 @@ class ErrorCode extends $pb.ProtobufEnum {
   static const ErrorCode UserIdAlreadyTaken = ErrorCode._(1029, _omitEnumNames ? '' : 'UserIdAlreadyTaken');
   static const ErrorCode AppVersionOutdated = ErrorCode._(1030, _omitEnumNames ? '' : 'AppVersionOutdated');
   static const ErrorCode NewDeviceRegistered = ErrorCode._(1031, _omitEnumNames ? '' : 'NewDeviceRegistered');
+  static const ErrorCode InvalidProofOfWork = ErrorCode._(1032, _omitEnumNames ? '' : 'InvalidProofOfWork');
+  static const ErrorCode RegistrationDisabled = ErrorCode._(1033, _omitEnumNames ? '' : 'RegistrationDisabled');
 
   static const $core.List<ErrorCode> values = <ErrorCode> [
     Unknown,
@@ -84,6 +86,8 @@ class ErrorCode extends $pb.ProtobufEnum {
     UserIdAlreadyTaken,
     AppVersionOutdated,
     NewDeviceRegistered,
+    InvalidProofOfWork,
+    RegistrationDisabled,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue = $pb.ProtobufEnum.initByValue(values);

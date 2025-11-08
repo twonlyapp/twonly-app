@@ -51,6 +51,8 @@ const ErrorCode$json = {
     {'1': 'UserIdAlreadyTaken', '2': 1029},
     {'1': 'AppVersionOutdated', '2': 1030},
     {'1': 'NewDeviceRegistered', '2': 1031},
+    {'1': 'InvalidProofOfWork', '2': 1032},
+    {'1': 'RegistrationDisabled', '2': 1033},
   ],
 };
 
@@ -70,5 +72,6 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'dlZBD+BxIVChBQbGFuTGltaXRSZWFjaGVkEP8HEhQKD05vdEVub3VnaENyZWRpdBCACBISCg1Q'
     'bGFuRG93bmdyYWRlEIEIEhkKFFBsYW5VcGdyYWRlTm90WWVhcmx5EIIIEhgKE0ludmFsaWRTaW'
     'duZWRQcmVLZXkQgwgSEwoOVXNlcklkTm90Rm91bmQQhAgSFwoSVXNlcklkQWxyZWFkeVRha2Vu'
-    'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCBIYChNOZXdEZXZpY2VSZWdpc3RlcmVkEIcI');
+    'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCBIYChNOZXdEZXZpY2VSZWdpc3RlcmVkEIcIEh'
+    'cKEkludmFsaWRQcm9vZk9mV29yaxCICBIZChRSZWdpc3RyYXRpb25EaXNhYmxlZBCJCA==');
 

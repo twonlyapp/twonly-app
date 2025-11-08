@@ -7,32 +7,38 @@ import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
+import 'package:twonly/src/localization/generated/app_localizations.dart';
+import 'package:twonly/src/localization/generated/app_localizations_de.dart';
+import 'package:twonly/src/localization/generated/app_localizations_en.dart';
+import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart'
-    show gMediaShowInfinite;
+import 'package:twonly/src/utils/misc.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 Future<void> customLocalPushNotification(String title, String msg) async {
-  const androidNotificationDetails = AndroidNotificationDetails(
+  final androidNotificationDetails = AndroidNotificationDetails(
     '1',
     'System',
     channelDescription: 'System messages.',
-    importance: Importance.max,
-    priority: Priority.max,
+    importance: Importance.high,
+    priority: Priority.high,
+    styleInformation: BigTextStyleInformation(msg),
+    icon: 'ic_launcher_foreground',
   );
 
   const darwinNotificationDetails = DarwinNotificationDetails();
-  const notificationDetails = NotificationDetails(
+  final notificationDetails = NotificationDetails(
     android: androidNotificationDetails,
     iOS: darwinNotificationDetails,
   );
 
+  final id = Random.secure().nextInt(9999);
+
   await flutterLocalNotificationsPlugin.show(
-    gMediaShowInfinite + Random.secure().nextInt(9999),
+    id,
     title,
     msg,
     notificationDetails,
@@ -75,7 +81,10 @@ Future<void> handlePushData(String pushDataB64) async {
         );
       } else if (foundPushUser != null) {
         if (pushNotification.hasMessageId()) {
-          if (pushNotification.messageId <= foundPushUser.lastMessageId) {
+          if (isUUIDNewer(
+            foundPushUser.lastMessageId,
+            pushNotification.messageId,
+          )) {
             Log.info(
               'Got a push notification for a message which was already opened.',
             );
@@ -89,11 +98,11 @@ Future<void> handlePushData(String pushDataB64) async {
       }
     }
   } catch (e) {
+    Log.error(e);
     await customLocalPushNotification(
       'Du hast eine neue Nachricht.',
       'Öffne twonly um mehr zu erfahren.',
     );
-    Log.error(e);
   }
 }
 
@@ -145,14 +154,17 @@ Future<void> showLocalPushNotification(
     styleInformation = FilePathAndroidBitmap(avatarPath);
   }
 
+  final lang = getLocalizations();
+
   final androidNotificationDetails = AndroidNotificationDetails(
     '0',
-    'Messages',
-    channelDescription: 'Messages from other users.',
+    lang.notificationCategoryMessageTitle,
+    channelDescription: lang.notificationCategoryMessageDesc,
     importance: Importance.max,
     priority: Priority.max,
     ticker: 'You got a new message.',
     largeIcon: styleInformation,
+    icon: 'ic_launcher_foreground',
   );
 
   const darwinNotificationDetails = DarwinNotificationDetails();
@@ -166,32 +178,36 @@ Future<void> showLocalPushNotification(
     title,
     body,
     notificationDetails,
-    payload: pushNotification.kind.name,
+    // payload: pushNotification.kind.name,
   );
 }
 
 Future<void> showLocalPushNotificationWithoutUserId(
   PushNotification pushNotification,
 ) async {
-  String? title;
   String? body;
 
-  body = getPushNotificationTextWithoutUserId(pushNotification.kind);
+  body = getPushNotificationText(pushNotification);
+
+  final lang = getLocalizations();
+
+  final title = lang.notificationTitleUnknownUser;
+
   if (body == '') {
     Log.error('No push notification type defined!');
   }
 
-  const androidNotificationDetails = AndroidNotificationDetails(
+  final androidNotificationDetails = AndroidNotificationDetails(
     '0',
-    'Messages',
-    channelDescription: 'Messages from other users.',
+    lang.notificationCategoryMessageTitle,
+    channelDescription: lang.notificationCategoryMessageDesc,
     importance: Importance.max,
     priority: Priority.max,
     ticker: 'You got a new message.',
   );
 
   const darwinNotificationDetails = DarwinNotificationDetails();
-  const notificationDetails = NotificationDetails(
+  final notificationDetails = NotificationDetails(
     android: androidNotificationDetails,
     iOS: darwinNotificationDetails,
   );
@@ -216,104 +232,45 @@ Future<String?> getAvatarIcon(int contactId) async {
   return null;
 }
 
-String getPushNotificationTextWithoutUserId(PushKind pushKind) {
-  Map<String, String> pushNotificationText;
-
+AppLocalizations getLocalizations() {
   final systemLanguage = Platform.localeName;
-
-  if (systemLanguage.contains('de')) {
-    pushNotificationText = {
-      PushKind.text.name: 'Du hast eine neue Nachricht erhalten.',
-      PushKind.twonly.name: 'Du hast ein neues twonly erhalten.',
-      PushKind.video.name: 'Du hast ein neues Video erhalten.',
-      PushKind.image.name: 'Du hast ein neues Bild erhalten.',
-      PushKind.contactRequest.name:
-          'Du hast eine neue Kontaktanfrage erhalten.',
-      PushKind.acceptRequest.name: 'Deine Kontaktanfrage wurde angenommen.',
-      PushKind.storedMediaFile.name: 'Dein Bild wurde gespeichert.',
-      PushKind.reaction.name: 'Du hast eine Reaktion auf dein Bild erhalten.',
-      PushKind.reopenedMedia.name: 'Dein Bild wurde erneut geöffnet.',
-      PushKind.reactionToVideo.name:
-          'Du hast eine Reaktion auf dein Video erhalten.',
-      PushKind.reactionToText.name:
-          'Du hast eine Reaktion auf deinen Text erhalten.',
-      PushKind.reactionToImage.name:
-          'Du hast eine Reaktion auf dein Bild erhalten.',
-      PushKind.response.name: 'Du hast eine Antwort erhalten.',
-    };
-  } else {
-    pushNotificationText = {
-      PushKind.text.name: 'You have received a new message.',
-      PushKind.twonly.name: 'You have received a new twonly.',
-      PushKind.video.name: 'You have received a new video.',
-      PushKind.image.name: 'You have received a new image.',
-      PushKind.contactRequest.name: 'You have received a new contact request.',
-      PushKind.acceptRequest.name: 'Your contact request has been accepted.',
-      PushKind.storedMediaFile.name: 'Your image has been saved.',
-      PushKind.reaction.name: 'You have received a reaction to your image.',
-      PushKind.reopenedMedia.name: 'Your image has been reopened.',
-      PushKind.reactionToVideo.name:
-          'You have received a reaction to your video.',
-      PushKind.reactionToText.name:
-          'You have received a reaction to your text.',
-      PushKind.reactionToImage.name:
-          'You have received a reaction to your image.',
-      PushKind.response.name: 'You have received a response.',
-    };
-  }
-  return pushNotificationText[pushKind.name] ?? '';
+  if (systemLanguage.contains('de')) return AppLocalizationsDe();
+  return AppLocalizationsEn();
 }
 
 String getPushNotificationText(PushNotification pushNotification) {
-  final systemLanguage = Platform.localeName;
+  final lang = getLocalizations();
 
-  Map<String, String> pushNotificationText;
+  var inGroup = '';
 
-  if (systemLanguage.contains('de')) {
-    pushNotificationText = {
-      PushKind.text.name: 'hat dir eine Nachricht gesendet.',
-      PushKind.twonly.name: 'hat dir ein twonly gesendet.',
-      PushKind.video.name: 'hat dir ein Video gesendet.',
-      PushKind.image.name: 'hat dir ein Bild gesendet.',
-      PushKind.contactRequest.name: 'möchte sich mit dir vernetzen.',
-      PushKind.acceptRequest.name: 'ist jetzt mit dir vernetzt.',
-      PushKind.storedMediaFile.name: 'hat dein Bild gespeichert.',
-      PushKind.reaction.name: 'hat auf dein Bild reagiert.',
-      PushKind.reopenedMedia.name: 'hat dein Bild erneut geöffnet.',
-      PushKind.reactionToVideo.name:
-          'hat mit {{reaction}} auf dein Video reagiert.',
-      PushKind.reactionToText.name:
-          'hat mit {{reaction}} auf deine Nachricht reagiert.',
-      PushKind.reactionToImage.name:
-          'hat mit {{reaction}} auf dein Bild reagiert.',
-      PushKind.response.name: 'hat dir geantwortet.',
-    };
-  } else {
-    pushNotificationText = {
-      PushKind.text.name: 'has sent you a message.',
-      PushKind.twonly.name: 'has sent you a twonly.',
-      PushKind.video.name: 'has sent you a video.',
-      PushKind.image.name: 'has sent you an image.',
-      PushKind.contactRequest.name: 'wants to connect with you.',
-      PushKind.acceptRequest.name: 'is now connected with you.',
-      PushKind.storedMediaFile.name: 'has stored your image.',
-      PushKind.reaction.name: 'has reacted to your image.',
-      PushKind.reopenedMedia.name: 'has reopened your image.',
-      PushKind.reactionToVideo.name:
-          'has reacted with {{reaction}} to your video.',
-      PushKind.reactionToText.name:
-          'has reacted with {{reaction}} to your message.',
-      PushKind.reactionToImage.name:
-          'has reacted with {{reaction}} to your image.',
-      PushKind.response.name: 'has responded.',
-    };
+  if (pushNotification.hasAdditionalContent()) {
+    inGroup =
+        ' ${lang.notificationFillerIn} ${pushNotification.additionalContent}';
   }
-  var contentText = pushNotificationText[pushNotification.kind.name] ?? '';
-  if (pushNotification.hasReactionContent()) {
-    contentText = contentText.replaceAll(
-      '{{reaction}}',
-      pushNotification.reactionContent,
-    );
-  }
-  return contentText;
+
+  final pushNotificationText = {
+    PushKind.text.name: lang.notificationText(inGroup),
+    PushKind.twonly.name: lang.notificationTwonly(inGroup),
+    PushKind.video.name: lang.notificationVideo(inGroup),
+    PushKind.image.name: lang.notificationImage(inGroup),
+    PushKind.audio.name: lang.notificationAudio(inGroup),
+    PushKind.contactRequest.name: lang.notificationContactRequest,
+    PushKind.acceptRequest.name: lang.notificationAcceptRequest,
+    PushKind.storedMediaFile.name: lang.notificationStoredMediaFile,
+    PushKind.reaction.name: lang.notificationReaction,
+    PushKind.reopenedMedia.name: lang.notificationReopenedMedia,
+    PushKind.reactionToVideo.name:
+        lang.notificationReactionToVideo(pushNotification.additionalContent),
+    PushKind.reactionToAudio.name:
+        lang.notificationReactionToAudio(pushNotification.additionalContent),
+    PushKind.reactionToText.name:
+        lang.notificationReactionToText(pushNotification.additionalContent),
+    PushKind.reactionToImage.name:
+        lang.notificationReactionToImage(pushNotification.additionalContent),
+    PushKind.response.name: lang.notificationResponse(inGroup),
+    PushKind.addedToGroup.name:
+        lang.notificationAddedToGroup(pushNotification.additionalContent),
+  };
+
+  return pushNotificationText[pushNotification.kind.name] ?? '';
 }

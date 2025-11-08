@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+message Message {
+    enum Type {
+        SENDER_DELIVERY_RECEIPT = 0;
+        PLAINTEXT_CONTENT = 1;
+        CIPHERTEXT = 2;
+        PREKEY_BUNDLE = 3;
+        TEST_NOTIFICATION = 4;
+    }
+    Type type = 1;
+    string receiptId = 2;
+    optional bytes encryptedContent = 3;
+    optional PlaintextContent plaintextContent = 4;
+}
+
+message PlaintextContent {
+    optional DecryptionErrorMessage decryptionErrorMessage = 1;
+    optional RetryErrorMessage retryControlError = 2; 
+
+    message RetryErrorMessage { }
+
+    message DecryptionErrorMessage {
+        enum Type {
+            UNKNOWN = 0;
+            PREKEY_UNKNOWN = 1;
+        }
+        Type type = 1;
+    }
+}
+
+
+message EncryptedContent {
+
+    optional string groupId = 2;
+    optional bool isDirectChat = 3;
+
+    /// This can be added, so the receiver can check weather he is up to date with the current profile
+    optional int64 senderProfileCounter = 4;
+
+    optional MessageUpdate messageUpdate  = 5;
+    optional Media media = 6;
+    optional MediaUpdate mediaUpdate = 7;
+    optional ContactUpdate contactUpdate = 8;
+    optional ContactRequest contactRequest = 9;
+    optional FlameSync flameSync = 10;
+    optional PushKeys pushKeys = 11;
+    optional Reaction reaction  = 12;
+    optional TextMessage textMessage  = 13;
+    optional GroupCreate groupCreate  = 14;
+    optional GroupJoin groupJoin  = 15;
+    optional GroupUpdate groupUpdate  = 16;
+    optional ResendGroupPublicKey resendGroupPublicKey = 17;
+
+
+    message GroupCreate {
+        // key for the state stored on the server
+        bytes stateKey = 3;
+        bytes groupPublicKey = 4;
+    }
+
+    message GroupJoin {
+        // key for the state stored on the server
+        bytes groupPublicKey = 1;
+    }
+
+    message ResendGroupPublicKey {
+
+    }
+
+    message GroupUpdate {
+        string groupActionType = 1; // GroupActionType.name
+        optional int64 affectedContactId = 2;
+        optional string newGroupName = 3;
+        optional int64 newDeleteMessagesAfterMilliseconds = 4;
+    }
+
+    message TextMessage {
+        string senderMessageId = 1;
+        string text = 2;
+        int64 timestamp = 3;
+        optional string quoteMessageId = 4;
+    }
+
+    message Reaction {
+        string targetMessageId = 1;
+        string emoji = 2;
+        bool remove = 3;
+    }
+
+    message MessageUpdate {
+        enum Type {
+            DELETE = 0;
+            EDIT_TEXT = 1;
+            OPENED = 2;
+        }
+        Type type = 1;
+        optional string senderMessageId = 2;
+        repeated string multipleTargetMessageIds = 3;
+        optional string text = 4;
+        int64 timestamp = 5;
+    }
+
+    message Media {
+        enum Type {
+            REUPLOAD = 0;
+            IMAGE = 1;
+            VIDEO = 2;
+            GIF = 3;
+            AUDIO = 4;
+        }
+
+        string senderMessageId = 1;
+        Type type = 2;
+        optional int64 displayLimitInMilliseconds = 3;
+        bool requiresAuthentication = 4;
+        int64 timestamp = 5;
+        optional string quoteMessageId = 6;
+
+        optional bytes downloadToken = 7;
+        optional bytes encryptionKey = 8;
+        optional bytes encryptionMac = 9;
+        optional bytes encryptionNonce = 10;
+    }
+
+    message MediaUpdate {
+        enum Type {
+            REOPENED = 0;
+            STORED = 1;
+            DECRYPTION_ERROR = 2;
+        }
+        Type type = 1;
+        string targetMessageId = 2;
+    }
+
+    message ContactRequest {
+        enum Type {
+            REQUEST = 0;
+            REJECT = 1;
+            ACCEPT = 2;
+        }
+        Type type = 1;
+    }
+
+    message ContactUpdate {
+        enum Type {
+            REQUEST = 0;
+            UPDATE = 1;
+        }
+
+        Type type = 1;
+        optional bytes avatarSvgCompressed = 2;
+        optional string username = 3;
+        optional string displayName = 4;
+    }
+
+    message PushKeys {
+        enum Type {
+            REQUEST = 0;
+            UPDATE = 1;
+        }
+
+        Type type = 1;
+        optional int64 keyId = 2;
+        optional bytes key = 3;
+        optional int64 createdAt = 4;
+    }
+
+    message FlameSync {
+        int64 flameCounter = 1;
+        int64 lastFlameCounterChange = 2;
+        bool bestFriend = 3;
+        bool forceUpdate = 4;
+    }
+
+}

@@ -3,17 +3,16 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:hashlib/hashlib.dart';
 import 'package:http/http.dart' as http;
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 Future<void> enableTwonlySafe(String password) async {
-  final user = await getUser();
-  if (user == null) return;
-
-  final (backupId, encryptionKey) = await getMasterKey(password, user.username);
+  final (backupId, encryptionKey) =
+      await getMasterKey(password, gUser.username);
 
   await updateUserdata((user) {
     user.twonlySafeBackup = TwonlySafeBackup(
@@ -25,7 +24,7 @@ Future<void> enableTwonlySafe(String password) async {
   unawaited(performTwonlySafeBackup(force: true));
 }
 
-Future<void> disableTwonlySafe() async {
+Future<void> removeTwonlySafeFromServer() async {
   final serverUrl = await getTwonlySafeBackupUrl();
   if (serverUrl != null) {
     try {
@@ -41,10 +40,6 @@ Future<void> disableTwonlySafe() async {
       Log.error('Could not connect to the server.');
     }
   }
-  await updateUserdata((user) {
-    user.twonlySafeBackup = null;
-    return user;
-  });
 }
 
 Future<(Uint8List, Uint8List)> getMasterKey(

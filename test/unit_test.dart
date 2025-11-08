@@ -1,7 +1,7 @@
 import 'dart:typed_data';
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:hashlib/random.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
@@ -15,21 +15,51 @@ void main() {
     });
 
     test('test proof-of-work simple', () async {
-      expect(await calculatePoW(Uint8List.fromList([41, 41, 41, 41]), 6), 33);
-    });
-
-    test('test utils', () async {
-      final list1 = Uint8List.fromList([41, 41, 41, 41, 41, 41, 41]);
-      final list2 = Uint8List.fromList([42, 42, 42]);
-      final combined = combineUint8Lists(list1, list2);
-      final lists = extractUint8Lists(combined);
-      expect(list1, lists[0]);
-      expect(list2, lists[1]);
+      // ignore: prefer_single_quotes
+      expect(await calculatePoW("testing", 10), 783);
     });
 
     test('encode hex', () async {
       final list1 = Uint8List.fromList([41, 41, 41, 41, 41, 41, 41]);
       expect(list1, hexToUint8List(uint8ListToHex(list1)));
+    });
+
+    test('Zero inputs produce all-zero UUID', () {
+      expect(
+        getUUIDforDirectChat(0, 0),
+        '00000000-0000-0000-0000-000000000000',
+      );
+      expect(getUUIDforDirectChat(0, 0).length, uuid.v1().length);
+    });
+
+    test('Max int values (0x7fffffff)', () {
+      const max32 = 0x7fffffff; // 2147483647
+      expect(
+        getUUIDforDirectChat(max32, max32),
+        '00000000-7fff-ffff-0000-00007fffffff',
+      );
+    });
+
+    test('Bigger goes front', () {
+      expect(
+        getUUIDforDirectChat(1, 0),
+        '00000000-0000-0001-0000-000000000000',
+      );
+      expect(
+        getUUIDforDirectChat(0, 1),
+        '00000000-0000-0001-0000-000000000000',
+      );
+    });
+
+    test('Arbitrary within 32-bit range', () {
+      expect(
+        getUUIDforDirectChat(0x12345678, 0x0abcdef0),
+        '00000000-1234-5678-0000-00000abcdef0',
+      );
+    });
+
+    test('Reject values > 0x7fffffff', () {
+      expect(() => getUUIDforDirectChat(0x80000000, 0), throwsArgumentError);
     });
   });
 }

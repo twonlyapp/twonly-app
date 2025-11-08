@@ -20,13 +20,11 @@ Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
 // This function runs after the clients authenticated with the server.
 // It then checks if it should update a new session key
 Future<void> signalHandleNewServerConnection() async {
-  final user = await getUser();
-  if (user == null) return;
-  if (user.signalLastSignedPreKeyUpdated != null) {
+  if (gUser.signalLastSignedPreKeyUpdated != null) {
     final fortyEightHoursAgo =
         DateTime.now().subtract(const Duration(hours: 48));
     final isYoungerThan48Hours =
-        (user.signalLastSignedPreKeyUpdated!).isAfter(fortyEightHoursAgo);
+        (gUser.signalLastSignedPreKeyUpdated!).isAfter(fortyEightHoursAgo);
     if (isYoungerThan48Hours) {
       // The key does live for 48 hours then it expires and a new key is generated.
       return;
@@ -63,7 +61,8 @@ Future<List<PreKeyRecord>> signalGetPreKeys() async {
 
   final start = user.currentPreKeyIndexStart;
   await updateUserdata((user) {
-    user.currentPreKeyIndexStart += 200;
+    user.currentPreKeyIndexStart =
+        (user.currentPreKeyIndexStart + 200) % maxValue;
     return user;
   });
   final preKeys = generatePreKeys(start, 200);

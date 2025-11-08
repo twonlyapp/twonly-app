@@ -5,8 +5,9 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class BetterText extends StatelessWidget {
-  const BetterText({required this.text, super.key});
+  const BetterText({required this.text, required this.textColor, super.key});
   final String text;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -51,16 +52,25 @@ class BetterText extends StatelessWidget {
     }
 
     if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(text: text.substring(lastMatchEnd)));
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
+        ),
+      );
     }
 
     return Text.rich(
       TextSpan(
         children: spans,
       ),
-      style: const TextStyle(
-        color: Colors.white,
+      softWrap: true,
+      textAlign: TextAlign.start,
+      overflow: TextOverflow.visible,
+      style: TextStyle(
+        color: textColor,
         fontSize: 17,
+        decoration: TextDecoration.none,
+        fontWeight: FontWeight.normal,
       ),
     );
   }

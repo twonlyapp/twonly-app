@@ -1,29 +1,23 @@
-// ignore_for_file: avoid_dynamic_calls
-
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
-import 'package:twonly/src/services/api/media_download.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart'
+    show DownloadState, MediaType;
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    as pb;
+import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/chats/media_viewer_components/reaction_buttons.component.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:video_player/video_player.dart';
@@ -31,8 +25,8 @@ import 'package:video_player/video_player.dart';
 final NoScreenshot _noScreenshot = NoScreenshot.instance;
 
 class MediaViewerView extends StatefulWidget {
-  const MediaViewerView(this.contact, {super.key, this.initialMessage});
-  final Contact contact;
+  const MediaViewerView(this.group, {super.key, this.initialMessage});
+  final Group group;
 
   final Message? initialMessage;
 
@@ -48,23 +42,22 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   double mediaViewerDistanceFromBottom = 0;
 
   // current image related
-  Uint8List? imageBytes;
-  String? videoPath;
   VideoPlayerController? videoController;
 
+  MediaFileService? currentMedia;
+  Message? currentMessage;
+
   DateTime? canBeSeenUntil;
-  int maxShowTime = gMediaShowInfinite;
   double progress = 0;
-  bool isRealTwonly = false;
-  bool mirrorVideo = false;
-  bool isDownloading = false;
   bool showSendTextMessageInput = false;
   final GlobalKey mediaWidgetKey = GlobalKey();
 
   bool imageSaved = false;
   bool imageSaving = false;
+  bool displayTwonlyPresent = true;
+  final emojiKey = GlobalKey<EmojiFloatWidgetState>();
 
-  StreamSubscription<Message?>? downloadStateListener;
+  StreamSubscription<MediaFile?>? downloadStateListener;
 
   List<Message> allMediaFiles = [];
   late StreamSubscription<List<Message>> _subscription;
@@ -89,25 +82,27 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _subscription.cancel();
     downloadStateListener?.cancel();
     videoController?.dispose();
+    videoController = null;
     super.dispose();
   }
 
   Future<void> asyncLoadNextMedia(bool firstRun) async {
     final messages =
-        twonlyDB.messagesDao.watchMediaMessageNotOpened(widget.contact.userId);
+        twonlyDB.messagesDao.watchMediaNotOpened(widget.group.groupId);
 
-    _subscription = messages.listen((messages) {
+    _subscription = messages.listen((messages) async {
       for (final msg in messages) {
-        // if (!allMediaFiles.any((m) => m.messageId == msg.messageId)) {
-        //   allMediaFiles.add(msg);
-        // }
-        // Find the index of the existing message with the same messageId
+        if (msg.mediaId == currentMedia?.mediaFile.mediaId) {
+          // The update of the current Media in case of a download is done in loadCurrentMediaFile
+          continue;
+        }
+
+        /// If the messages was already there just replace it and go to the next...
+
         final index =
             allMediaFiles.indexWhere((m) => m.messageId == msg.messageId);
 
         if (index >= 1) {
-          // to not modify the first message
-          // If the message exists, replace it
           allMediaFiles[index] = msg;
         } else if (index == -1) {
           // If the message does not exist, add it
@@ -116,101 +111,96 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
       setState(() {});
       if (firstRun) {
-        loadCurrentMediaFile();
         // ignore: parameter_assignments
         firstRun = false;
+        await loadCurrentMediaFile();
       }
     });
   }
 
   Future<void> nextMediaOrExit() async {
-    if (!mounted) return;
-    await videoController?.dispose();
-    nextMediaTimer?.cancel();
-    progressTimer?.cancel();
-    if (allMediaFiles.isNotEmpty) {
-      try {
-        if (!imageSaved && maxShowTime != gMediaShowInfinite) {
-          await deleteMediaFile(allMediaFiles.first.messageId, 'mp4');
-          await deleteMediaFile(allMediaFiles.first.messageId, 'png');
-        }
-      } catch (e) {
-        Log.error('$e');
+    /// Remove the current media file in case it is not set to unlimited
+    if (currentMedia != null) {
+      if (!imageSaved &&
+          currentMedia!.mediaFile.displayLimitInMilliseconds != null) {
+        currentMedia!.fullMediaRemoval();
       }
     }
-    if (allMediaFiles.isEmpty || allMediaFiles.length == 1) {
-      if (mounted) {
-        Navigator.pop(context);
-      }
+
+    await videoController?.dispose();
+    if (!mounted) return;
+
+    nextMediaTimer?.cancel();
+    progressTimer?.cancel();
+
+    if (allMediaFiles.isEmpty) {
+      Navigator.pop(context);
     } else {
-      allMediaFiles.removeAt(0);
       await loadCurrentMediaFile();
     }
   }
 
   Future<void> loadCurrentMediaFile({bool showTwonly = false}) async {
-    if (!mounted) return;
-    if (!context.mounted || allMediaFiles.isEmpty) return nextMediaOrExit();
+    if (!mounted || !context.mounted) return;
+    if (allMediaFiles.isEmpty || allMediaFiles.first.mediaId == null) {
+      return nextMediaOrExit();
+    }
     await _noScreenshot.screenshotOff();
 
     setState(() {
       videoController = null;
-      imageBytes = null;
+      currentMedia = null;
+      currentMessage = null;
       canBeSeenUntil = null;
-      maxShowTime = gMediaShowInfinite;
       imageSaving = false;
       imageSaved = false;
-      mirrorVideo = false;
       progress = 0;
-      videoPath = null;
-      isDownloading = false;
-      isRealTwonly = false;
       showSendTextMessageInput = false;
     });
 
-    if (Platform.isAndroid) {
-      await flutterLocalNotificationsPlugin
-          .cancel(allMediaFiles.first.contactId);
-    } else {
-      await flutterLocalNotificationsPlugin.cancelAll();
-    }
+    // if (Platform.isAndroid) {
+    //   await flutterLocalNotificationsPlugin
+    //       .cancel(allMediaFiles.first.contactId);
+    // } else {
+    await flutterLocalNotificationsPlugin.cancelAll();
+    // }
 
-    if (allMediaFiles.first.downloadState != DownloadState.downloaded) {
-      setState(() {
-        isDownloading = true;
-      });
-      await startDownloadMedia(allMediaFiles.first, true);
+    final stream =
+        twonlyDB.mediaFilesDao.watchMedia(allMediaFiles.first.mediaId!);
 
-      final stream = twonlyDB.messagesDao
-          .getMessageByMessageId(allMediaFiles.first.messageId)
-          .watchSingleOrNull();
-      await downloadStateListener?.cancel();
-      downloadStateListener = stream.listen((updated) async {
-        if (updated != null) {
-          if (updated.downloadState == DownloadState.downloaded) {
-            await downloadStateListener?.cancel();
-            await handleNextDownloadedMedia(updated, showTwonly);
-            // start downloading all the other possible missing media files.
-            await tryDownloadAllMediaFiles(force: true);
-          }
+    var downloadTriggered = false;
+
+    await downloadStateListener?.cancel();
+    downloadStateListener = stream.listen((updated) async {
+      if (updated == null) return;
+      if (updated.downloadState != DownloadState.ready) {
+        if (!downloadTriggered) {
+          downloadTriggered = true;
+          final mediaFile = await twonlyDB.mediaFilesDao
+              .getMediaFileById(allMediaFiles.first.mediaId!);
+          if (mediaFile == null) return;
+          await startDownloadMedia(mediaFile, true);
+          unawaited(tryDownloadAllMediaFiles(force: true));
         }
-      });
-    } else {
-      await handleNextDownloadedMedia(allMediaFiles.first, showTwonly);
-    }
+        return;
+      }
+
+      await downloadStateListener?.cancel();
+      await handleNextDownloadedMedia(showTwonly);
+      // start downloading all the other possible missing media files.
+    });
   }
 
   Future<void> handleNextDownloadedMedia(
-    Message current,
     bool showTwonly,
   ) async {
-    final content =
-        MediaMessageContent.fromJson(jsonDecode(current.contentJson!) as Map);
+    if (allMediaFiles.isEmpty) return;
+    currentMessage = allMediaFiles.removeAt(0);
+    final currentMediaLocal =
+        await MediaFileService.fromMediaId(currentMessage!.mediaId!);
+    if (currentMediaLocal == null || !mounted) return;
 
-    if (content.isRealTwonly) {
-      setState(() {
-        isRealTwonly = true;
-      });
+    if (currentMediaLocal.mediaFile.requiresAuthentication) {
       if (!showTwonly) return;
 
       final isAuth = await authenticateUser(
@@ -224,119 +214,103 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     }
 
     await notifyContactAboutOpeningMessage(
-      current.contactId,
-      [current.messageOtherId!],
+      currentMessage!.senderId!,
+      [currentMessage!.messageId],
     );
 
-    await twonlyDB.messagesDao.updateMessageByMessageId(
-      current.messageId,
-      MessagesCompanion(openedAt: Value(DateTime.now())),
-    );
-
-    if (content.isVideo) {
-      final videoPathTmp = await getVideoPath(current.messageId);
-      if (videoPathTmp != null) {
-        videoController = VideoPlayerController.file(File(videoPathTmp.path));
-        await videoController
-            ?.setLooping(content.maxShowTime == gMediaShowInfinite);
-        await videoController?.initialize().then((_) {
-          videoController!.play();
-          videoController?.addListener(() {
-            setState(() {
-              progress = 1 -
-                  videoController!.value.position.inSeconds /
-                      videoController!.value.duration.inSeconds;
-            });
-            if (content.maxShowTime != gMediaShowInfinite) {
-              if (videoController?.value.position ==
-                  videoController?.value.duration) {
-                nextMediaOrExit();
-              }
-            }
-          });
-          setState(() {
-            videoPath = videoPathTmp.path;
-          });
-          // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler
-        }).catchError(Log.error);
-      }
-    }
-
-    imageBytes = await getImageBytes(current.messageId);
-
-    if ((imageBytes == null && !content.isVideo) ||
-        (content.isVideo && videoController == null)) {
-      Log.error('media files are not found...');
-      // When the message should be downloaded but imageBytes are null then a error happened
-      await handleMediaError(current);
+    if (!currentMediaLocal.tempPath.existsSync()) {
+      Log.error('Temp media file not found...');
+      await handleMediaError(currentMediaLocal.mediaFile);
       return nextMediaOrExit();
     }
 
-    if (!content.isVideo) {
-      if (content.maxShowTime != gMediaShowInfinite) {
+    if (currentMediaLocal.mediaFile.type == MediaType.video) {
+      videoController = VideoPlayerController.file(currentMediaLocal.tempPath);
+      await videoController?.setLooping(
+        currentMediaLocal.mediaFile.displayLimitInMilliseconds == null,
+      );
+      await videoController?.initialize().then((_) {
+        if (videoController == null) return;
+        videoController?.play();
+        videoController?.addListener(() {
+          setState(() {
+            progress = 1 -
+                videoController!.value.position.inSeconds /
+                    videoController!.value.duration.inSeconds;
+          });
+          if (currentMediaLocal.mediaFile.displayLimitInMilliseconds != null) {
+            if (videoController?.value.position ==
+                videoController?.value.duration) {
+              nextMediaOrExit();
+            }
+          }
+        });
+        // ignore: invalid_return_type_for_catch_error, argument_type_not_assignable_to_error_handler
+      }).catchError(Log.error);
+    } else {
+      if (currentMediaLocal.mediaFile.displayLimitInMilliseconds != null) {
         canBeSeenUntil = DateTime.now().add(
-          Duration(seconds: content.maxShowTime),
+          Duration(
+            milliseconds:
+                currentMediaLocal.mediaFile.displayLimitInMilliseconds!,
+          ),
         );
         startTimer();
       }
     }
     setState(() {
-      maxShowTime = content.maxShowTime;
-      isDownloading = false;
-      mirrorVideo = content.mirrorVideo;
+      currentMedia = currentMediaLocal;
     });
   }
 
   void startTimer() {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
-    nextMediaTimer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
-      if (context.mounted) {
-        nextMediaOrExit();
-      }
-    });
-    progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-      if (canBeSeenUntil != null) {
+    if (canBeSeenUntil != null) {
+      nextMediaTimer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
+        if (context.mounted) {
+          nextMediaOrExit();
+        }
+      });
+      progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+        if (currentMedia!.mediaFile.displayLimitInMilliseconds == null ||
+            canBeSeenUntil == null) {
+          return;
+        }
         final difference = canBeSeenUntil!.difference(DateTime.now());
         // Calculate the progress as a value between 0.0 and 1.0
-        progress = difference.inMilliseconds / (maxShowTime * 1000);
+        progress = difference.inMilliseconds /
+            (currentMedia!.mediaFile.displayLimitInMilliseconds!);
         setState(() {});
-      }
-    });
+      });
+    }
   }
 
   Future<void> onPressedSaveToGallery() async {
-    if (allMediaFiles.first.messageOtherId == null) {
-      return; // should not be possible
-    }
     setState(() {
       imageSaving = true;
     });
-    await twonlyDB.messagesDao.updateMessageByMessageId(
-      allMediaFiles.first.messageId,
-      const MessagesCompanion(mediaStored: Value(true)),
-    );
-    await encryptAndSendMessageAsync(
-      null,
-      widget.contact.userId,
-      MessageJson(
-        kind: MessageKind.storedMediaFile,
-        messageSenderId: allMediaFiles.first.messageId,
-        messageReceiverId: allMediaFiles.first.messageOtherId,
-        content: MessageContent(),
-        timestamp: DateTime.now(),
+    await currentMedia!.storeMediaFile();
+    await sendCipherTextToGroup(
+      widget.group.groupId,
+      pb.EncryptedContent(
+        mediaUpdate: pb.EncryptedContent_MediaUpdate(
+          type: pb.EncryptedContent_MediaUpdate_Type.STORED,
+          targetMessageId: currentMessage!.messageId,
+        ),
       ),
-      pushNotification: PushNotification(kind: PushKind.storedMediaFile),
     );
     setState(() {
       imageSaved = true;
     });
-    final user = await getUser();
-    if (user != null && (user.storeMediaFilesInGallery)) {
-      if (videoPath != null) {
-        await saveVideoToGallery(videoPath!);
-      } else {
-        await saveImageToGallery(imageBytes!);
+
+    if (gUser.storeMediaFilesInGallery) {
+      if (currentMedia!.mediaFile.type == MediaType.video) {
+        await saveVideoToGallery(currentMedia!.storedPath.path);
+      } else if (currentMedia!.mediaFile.type == MediaType.image ||
+          currentMedia!.mediaFile.type == MediaType.gif) {
+        final imageBytes = await currentMedia!.storedPath.readAsBytes();
+        await saveImageToGallery(imageBytes);
       }
     }
     setState(() {
@@ -346,10 +320,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   void displayShortReactions() {
     final renderBox =
-        mediaWidgetKey.currentContext!.findRenderObject()! as RenderBox;
+        mediaWidgetKey.currentContext!.findRenderObject() as RenderBox?;
     setState(() {
       showShortReactions = true;
-      mediaViewerDistanceFromBottom = renderBox.size.height;
+      if (renderBox != null) {
+        mediaViewerDistanceFromBottom = renderBox.size.height;
+      }
     });
   }
 
@@ -358,7 +334,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       key: mediaWidgetKey,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (maxShowTime == gMediaShowInfinite)
+        if (currentMedia != null &&
+            currentMedia!.mediaFile.displayLimitInMilliseconds == null)
           OutlinedButton(
             style: OutlinedButton.styleFrom(
               iconColor: imageSaved
@@ -368,7 +345,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ? Theme.of(context).colorScheme.outline
                   : Theme.of(context).colorScheme.primary,
             ),
-            onPressed: onPressedSaveToGallery,
+            onPressed: (currentMedia == null) ? null : onPressedSaveToGallery,
             child: Row(
               children: [
                 if (imageSaving)
@@ -450,11 +427,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               context,
               MaterialPageRoute(
                 builder: (context) {
-                  return CameraSendToView(widget.contact);
+                  return CameraSendToView(widget.group);
                 },
               ),
             );
-            if (mounted && maxShowTime != gMediaShowInfinite) {
+            if (mounted &&
+                currentMedia!.mediaFile.displayLimitInMilliseconds != null) {
               await nextMediaOrExit();
             } else {
               await videoController?.play();
@@ -477,7 +455,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if ((imageBytes != null || videoController != null) &&
+            if ((currentMedia != null || videoController != null) &&
                 (canBeSeenUntil == null || progress >= 0))
               GestureDetector(
                 onTap: () {
@@ -497,44 +475,24 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     children: [
                       if (videoController != null)
                         Positioned.fill(
-                          child: Transform.flip(
-                            flipX: mirrorVideo,
-                            child: VideoPlayer(videoController!),
-                          ),
-                        ),
-                      if (imageBytes != null)
+                          child: VideoPlayer(videoController!),
+                        )
+                      else if (currentMedia != null &&
+                              currentMedia!.mediaFile.type == MediaType.image ||
+                          currentMedia!.mediaFile.type == MediaType.gif)
                         Positioned.fill(
-                          child: Image.memory(
-                            imageBytes!,
+                          child: Image.file(
+                            currentMedia!.tempPath,
                             fit: BoxFit.contain,
-                            frameBuilder: (
-                              context,
-                              child,
-                              frame,
-                              wasSynchronouslyLoaded,
-                            ) {
-                              if (wasSynchronouslyLoaded) return child;
-                              return AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 200),
-                                child: frame != null
-                                    ? child
-                                    : Container(
-                                        height: 60,
-                                        color: Colors.transparent,
-                                        width: 60,
-                                        child: const CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                              );
-                            },
                           ),
                         ),
                     ],
                   ),
                 ),
               ),
-            if (isRealTwonly && imageBytes == null)
+            if (currentMedia != null &&
+                currentMedia!.mediaFile.requiresAuthentication &&
+                displayTwonlyPresent)
               Positioned.fill(
                 child: GestureDetector(
                   onTap: () {
@@ -570,13 +528,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 ],
               ),
             ),
-            if (isDownloading)
+            if (currentMedia != null &&
+                currentMedia?.mediaFile.downloadState != DownloadState.ready)
               const Positioned.fill(
                 child: Center(
                   child: SizedBox(
                     height: 60,
                     width: 60,
-                    child: CircularProgressIndicator(strokeWidth: 6),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 6,
+                    ),
                   ),
                 ),
               ),
@@ -602,7 +563,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               left: showSendTextMessageInput ? 0 : null,
               right: showSendTextMessageInput ? 0 : 15,
               child: Text(
-                getContactDisplayName(widget.contact),
+                widget.group.groupName,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: showSendTextMessageInput ? 24 : 14,
@@ -658,18 +619,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                       ),
                       IconButton(
                         icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                        onPressed: () {
+                        onPressed: () async {
                           if (textMessageController.text.isNotEmpty) {
-                            sendTextMessage(
-                              widget.contact.userId,
-                              TextMessageContent(
-                                text: textMessageController.text,
-                                responseToMessageId:
-                                    allMediaFiles.first.messageOtherId,
-                              ),
-                              PushNotification(
-                                kind: PushKind.response,
-                              ),
+                            await insertAndSendTextMessage(
+                              widget.group.groupId,
+                              textMessageController.text,
+                              currentMessage!.messageId,
                             );
                             textMessageController.clear();
                           }
@@ -683,14 +638,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ),
                 ),
               ),
-            if (allMediaFiles.isNotEmpty)
+            if (currentMedia != null)
               ReactionButtons(
                 show: showShortReactions,
                 textInputFocused: showSendTextMessageInput,
                 mediaViewerDistanceFromBottom: mediaViewerDistanceFromBottom,
-                userId: widget.contact.userId,
-                responseToMessageId: allMediaFiles.first.messageOtherId!,
-                isVideo: videoController != null,
+                groupId: widget.group.groupId,
+                messageId: currentMessage!.messageId,
+                emojiKey: emojiKey,
                 hide: () {
                   setState(() {
                     showShortReactions = false;
@@ -698,200 +653,11 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   });
                 },
               ),
+            Positioned.fill(
+              child: EmojiFloatWidget(key: emojiKey),
+            ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class ReactionButtons extends StatefulWidget {
-  const ReactionButtons({
-    required this.show,
-    required this.textInputFocused,
-    required this.userId,
-    required this.mediaViewerDistanceFromBottom,
-    required this.responseToMessageId,
-    required this.isVideo,
-    required this.hide,
-    super.key,
-  });
-
-  final double mediaViewerDistanceFromBottom;
-  final bool show;
-  final bool isVideo;
-  final bool textInputFocused;
-  final int userId;
-  final int responseToMessageId;
-  final void Function() hide;
-
-  @override
-  State<ReactionButtons> createState() => _ReactionButtonsState();
-}
-
-class _ReactionButtonsState extends State<ReactionButtons> {
-  int selectedShortReaction = -1;
-
-  List<String> selectedEmojis =
-      EmojiAnimation.animatedIcons.keys.toList().sublist(0, 6);
-
-  @override
-  void initState() {
-    super.initState();
-    initAsync();
-  }
-
-  Future<void> initAsync() async {
-    final user = await getUser();
-    if (user != null && user.preSelectedEmojies != null) {
-      selectedEmojis = user.preSelectedEmojies!;
-    }
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final firstRowEmojis = selectedEmojis.take(6).toList();
-    final secondRowEmojis =
-        selectedEmojis.length > 6 ? selectedEmojis.skip(6).toList() : [];
-
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 200), // Animation duration
-      bottom: widget.show
-          ? (widget.textInputFocused
-              ? 50
-              : widget.mediaViewerDistanceFromBottom)
-          : widget.mediaViewerDistanceFromBottom - 20,
-      left: widget.show ? 0 : MediaQuery.sizeOf(context).width / 2,
-      right: widget.show ? 0 : MediaQuery.sizeOf(context).width / 2,
-      curve: Curves.linearToEaseOut,
-      child: AnimatedOpacity(
-        opacity: widget.show ? 1.0 : 0.0, // Fade in/out
-        duration: const Duration(milliseconds: 150),
-        child: Container(
-          color: widget.show ? Colors.black.withAlpha(0) : Colors.transparent,
-          padding:
-              widget.show ? const EdgeInsets.symmetric(vertical: 32) : null,
-          child: Column(
-            children: [
-              if (secondRowEmojis.isNotEmpty)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: secondRowEmojis
-                      .map(
-                        (emoji) => EmojiReactionWidget(
-                          userId: widget.userId,
-                          responseToMessageId: widget.responseToMessageId,
-                          hide: widget.hide,
-                          show: widget.show,
-                          isVideo: widget.isVideo,
-                          emoji: emoji as String,
-                        ),
-                      )
-                      .toList(),
-                ),
-              if (secondRowEmojis.isNotEmpty) const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: firstRowEmojis
-                    .map(
-                      (emoji) => EmojiReactionWidget(
-                        userId: widget.userId,
-                        responseToMessageId: widget.responseToMessageId,
-                        hide: widget.hide,
-                        show: widget.show,
-                        isVideo: widget.isVideo,
-                        emoji: emoji,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class EmojiReactionWidget extends StatefulWidget {
-  const EmojiReactionWidget({
-    required this.userId,
-    required this.responseToMessageId,
-    required this.hide,
-    required this.isVideo,
-    required this.show,
-    required this.emoji,
-    super.key,
-  });
-  final int userId;
-  final int responseToMessageId;
-  final Function hide;
-  final bool show;
-  final bool isVideo;
-  final String emoji;
-
-  @override
-  State<EmojiReactionWidget> createState() => _EmojiReactionWidgetState();
-}
-
-class _EmojiReactionWidgetState extends State<EmojiReactionWidget> {
-  int selectedShortReaction = -1;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.linearToEaseOut,
-      child: GestureDetector(
-        onTap: () {
-          sendTextMessage(
-            widget.userId,
-            TextMessageContent(
-              text: widget.emoji,
-              responseToMessageId: widget.responseToMessageId,
-            ),
-            PushNotification(
-              kind: widget.isVideo
-                  ? PushKind.reactionToVideo
-                  : PushKind.reactionToImage,
-              reactionContent: widget.emoji,
-            ),
-          );
-          setState(() {
-            selectedShortReaction = 0; // Assuming index is 0 for this example
-          });
-          Future.delayed(const Duration(milliseconds: 300), () {
-            if (mounted) {
-              setState(() {
-                widget.hide();
-                selectedShortReaction = -1;
-              });
-            }
-          });
-        },
-        child: (selectedShortReaction ==
-                0) // Assuming index is 0 for this example
-            ? EmojiAnimationFlying(
-                emoji: widget.emoji,
-                duration: const Duration(milliseconds: 300),
-                startPosition: 0,
-                size: (widget.show) ? 40 : 10,
-              )
-            : AnimatedOpacity(
-                opacity: (selectedShortReaction == -1) ? 1 : 0, // Fade in/out
-                duration: const Duration(milliseconds: 150),
-                child: SizedBox(
-                  width: widget.show ? 40 : 10,
-                  child: Center(
-                    child: EmojiAnimation(
-                      emoji: widget.emoji,
-                    ),
-                  ),
-                ),
-              ),
       ),
     );
   }

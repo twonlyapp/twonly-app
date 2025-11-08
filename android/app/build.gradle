@@ -55,6 +55,9 @@ android {
         debug {
             applicationIdSuffix ".testing"
         }
+        // profile {
+        //     applicationIdSuffix ".STOP"
+        // }
         release {
            signingConfig signingConfigs.release
        }

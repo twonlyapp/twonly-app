@@ -1,24 +1,19 @@
 import 'dart:async';
-
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/headline.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
 
 class AddNewUserView extends StatefulWidget {
   const AddNewUserView({super.key});
@@ -52,8 +47,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
   }
 
   Future<void> _addNewUser(BuildContext context) async {
-    final user = await getUser();
-    if (user == null || user.username == searchUserName.text || !mounted) {
+    if (gUser.username == searchUserName.text) {
       return;
     }
 
@@ -87,29 +81,30 @@ class _SearchUsernameView extends State<AddNewUserView> {
       return;
     }
 
-    final added = await twonlyDB.contactsDao.insertContact(
+    final added = await twonlyDB.contactsDao.insertOnConflictUpdate(
       ContactsCompanion(
         username: Value(searchUserName.text),
         userId: Value(userdata.userId.toInt()),
         requested: const Value(false),
+        blocked: const Value(false),
+        deletedByUser: const Value(false),
       ),
     );
 
     if (added > 0) {
       if (await createNewSignalSession(userdata)) {
-        // before notifying the other party, add
+        // 1. Setup notifications keys with the other user
         await setupNotificationWithUsers(
           forceContact: userdata.userId.toInt(),
         );
-        await encryptAndSendMessageAsync(
-          null,
+        // 2. Then send user request
+        await sendCipherText(
           userdata.userId.toInt(),
-          MessageJson(
-            kind: MessageKind.contactRequest,
-            timestamp: DateTime.now(),
-            content: MessageContent(),
+          EncryptedContent(
+            contactRequest: EncryptedContent_ContactRequest(
+              type: EncryptedContent_ContactRequest_Type.REQUEST,
+            ),
           ),
-          pushNotification: PushNotification(kind: PushKind.contactRequest),
         );
       }
     }
@@ -196,9 +191,9 @@ class ContactsListView extends StatelessWidget {
       Tooltip(
         message: context.lang.searchUserNameArchiveUserTooltip,
         child: IconButton(
-          icon: const FaIcon(FontAwesomeIcons.boxArchive, size: 15),
+          icon: const FaIcon(Icons.archive_outlined, size: 15),
           onPressed: () async {
-            const update = ContactsCompanion(archived: Value(true));
+            const update = ContactsCompanion(requested: Value(false));
             await twonlyDB.contactsDao.updateContact(contact.userId, update);
           },
         ),
@@ -227,25 +222,48 @@ class ContactsListView extends StatelessWidget {
         child: IconButton(
           icon: const Icon(Icons.close, color: Colors.red),
           onPressed: () async {
-            await rejectUser(contact.userId);
-            await deleteContact(contact.userId);
+            await sendCipherText(
+              contact.userId,
+              EncryptedContent(
+                contactRequest: EncryptedContent_ContactRequest(
+                  type: EncryptedContent_ContactRequest_Type.REJECT,
+                ),
+              ),
+            );
+            await twonlyDB.contactsDao.updateContact(
+              contact.userId,
+              const ContactsCompanion(
+                accepted: Value(false),
+                requested: Value(false),
+                deletedByUser: Value(true),
+              ),
+            );
           },
         ),
       ),
       IconButton(
         icon: const Icon(Icons.check, color: Colors.green),
         onPressed: () async {
-          const update = ContactsCompanion(accepted: Value(true));
-          await twonlyDB.contactsDao.updateContact(contact.userId, update);
-          await encryptAndSendMessageAsync(
-            null,
+          await twonlyDB.contactsDao.updateContact(
             contact.userId,
-            MessageJson(
-              kind: MessageKind.acceptRequest,
-              timestamp: DateTime.now(),
-              content: MessageContent(),
+            const ContactsCompanion(
+              accepted: Value(true),
+              requested: Value(false),
             ),
-            pushNotification: PushNotification(kind: PushKind.acceptRequest),
+          );
+          await twonlyDB.groupsDao.createNewDirectChat(
+            contact.userId,
+            GroupsCompanion(
+              groupName: Value(getContactDisplayName(contact)),
+            ),
+          );
+          await sendCipherText(
+            contact.userId,
+            EncryptedContent(
+              contactRequest: EncryptedContent_ContactRequest(
+                type: EncryptedContent_ContactRequest_Type.ACCEPT,
+              ),
+            ),
           );
           await notifyContactsAboutProfileChange();
         },
@@ -259,10 +277,9 @@ class ContactsListView extends StatelessWidget {
       itemCount: contacts.length,
       itemBuilder: (context, index) {
         final contact = contacts[index];
-        final displayName = getContactDisplayName(contact);
         return ListTile(
-          title: Text(displayName),
-          leading: ContactAvatar(contact: contact),
+          title: Text(substringBy(contact.username, 25)),
+          leading: AvatarIcon(contactId: contact.userId),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: contact.requested

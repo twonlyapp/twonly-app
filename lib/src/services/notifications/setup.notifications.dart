@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 final StreamController<NotificationResponse> selectNotificationStream =
     StreamController<NotificationResponse>.broadcast();
@@ -61,10 +62,11 @@ Future<void> createPushAvatars() async {
   final contacts = await twonlyDB.contactsDao.getAllNotBlockedContacts();
 
   for (final contact in contacts) {
-    if (contact.avatarSvg == null) return;
+    if (contact.avatarSvgCompressed == null) continue;
 
-    final pictureInfo =
-        await vg.loadPicture(SvgStringLoader(contact.avatarSvg!), null);
+    final avatarSvg = getAvatarSvg(contact.avatarSvgCompressed!);
+
+    final pictureInfo = await vg.loadPicture(SvgStringLoader(avatarSvg), null);
 
     final image = await pictureInfo.picture.toImage(300, 300);
 

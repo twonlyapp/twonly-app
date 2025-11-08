@@ -1,10 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/settings/developer/automated_testing.view.dart';
 import 'package:twonly/src/views/settings/developer/retransmission_data.view.dart';
 
 class DeveloperSettingsView extends StatefulWidget {
@@ -68,12 +66,26 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               );
             },
           ),
-          if (kDebugMode)
+          // if (!kReleaseMode)
+          //   ListTile(
+          //     title: const Text('FlameSync Test'),
+          //     onTap: () async {
+          //       await twonlyDB.contactsDao.modifyFlameCounterForTesting();
+          //       await syncFlameCounters();
+          //     },
+          //   ),
+          if (!kReleaseMode)
             ListTile(
-              title: const Text('FlameSync Test'),
+              title: const Text('Automated Testing'),
               onTap: () async {
-                await twonlyDB.contactsDao.modifyFlameCounterForTesting();
-                await syncFlameCounters();
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const AutomatedTestingView();
+                    },
+                  ),
+                );
               },
             ),
         ],

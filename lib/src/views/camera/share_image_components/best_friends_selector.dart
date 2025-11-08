@@ -1,37 +1,32 @@
-// ignore_for_file: strict_raw_type
-
 import 'dart:collection';
-
 import 'package:flutter/material.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/daos/contacts_dao.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/headline.dart';
-import 'package:twonly/src/views/components/initialsavatar.dart';
 
 class BestFriendsSelector extends StatelessWidget {
   const BestFriendsSelector({
-    required this.users,
-    required this.isRealTwonly,
-    required this.updateStatus,
-    required this.selectedUserIds,
+    required this.groups,
+    required this.selectedGroupIds,
+    required this.updateSelectedGroupIds,
     required this.title,
+    required this.showSelectAll,
     super.key,
   });
-  final List<Contact> users;
-  final void Function(int, bool) updateStatus;
-  final HashSet<int> selectedUserIds;
-  final bool isRealTwonly;
+  final List<Group> groups;
+  final HashSet<String> selectedGroupIds;
+  final void Function(String, bool) updateSelectedGroupIds;
   final String title;
+  final bool showSelectAll;
 
   @override
   Widget build(BuildContext context) {
-    if (users.isEmpty) {
+    if (groups.isEmpty) {
       return Container();
     }
-
     return Column(
       children: [
         Row(
@@ -39,11 +34,11 @@ class BestFriendsSelector extends StatelessWidget {
             Expanded(
               child: HeadLineComponent(title),
             ),
-            if (!isRealTwonly)
+            if (showSelectAll)
               GestureDetector(
                 onTap: () {
-                  for (final user in users) {
-                    updateStatus(user.userId, true);
+                  for (final group in groups) {
+                    updateSelectedGroupIds(group.groupId, true);
                   }
                 },
                 child: Container(
@@ -70,7 +65,7 @@ class BestFriendsSelector extends StatelessWidget {
         Column(
           spacing: 8,
           children: List.generate(
-            (users.length + 1) ~/ 2,
+            (groups.length + 1) ~/ 2,
             (rowIndex) {
               final firstUserIndex = rowIndex * 2;
               final secondUserIndex = firstUserIndex + 1;
@@ -79,21 +74,19 @@ class BestFriendsSelector extends StatelessWidget {
                 children: [
                   Expanded(
                     child: UserCheckbox(
-                      isChecked: selectedUserIds
-                          .contains(users[firstUserIndex].userId),
-                      user: users[firstUserIndex],
-                      onChanged: updateStatus,
-                      isRealTwonly: isRealTwonly,
+                      isChecked: selectedGroupIds
+                          .contains(groups[firstUserIndex].groupId),
+                      group: groups[firstUserIndex],
+                      onChanged: updateSelectedGroupIds,
                     ),
                   ),
-                  if (secondUserIndex < users.length)
+                  if (secondUserIndex < groups.length)
                     Expanded(
                       child: UserCheckbox(
-                        isChecked: selectedUserIds
-                            .contains(users[secondUserIndex].userId),
-                        user: users[secondUserIndex],
-                        onChanged: updateStatus,
-                        isRealTwonly: isRealTwonly,
+                        isChecked: selectedGroupIds
+                            .contains(groups[secondUserIndex].groupId),
+                        group: groups[secondUserIndex],
+                        onChanged: updateSelectedGroupIds,
                       ),
                     )
                   else
@@ -112,28 +105,24 @@ class BestFriendsSelector extends StatelessWidget {
 
 class UserCheckbox extends StatelessWidget {
   const UserCheckbox({
-    required this.user,
+    required this.group,
     required this.onChanged,
-    required this.isRealTwonly,
     required this.isChecked,
     super.key,
   });
-  final Contact user;
-  final void Function(int, bool) onChanged;
+  final Group group;
+  final void Function(String, bool) onChanged;
   final bool isChecked;
-  final bool isRealTwonly;
 
   @override
   Widget build(BuildContext context) {
-    final displayName = getContactDisplayName(user);
-
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 3,
       ), // Padding inside the container
       child: GestureDetector(
         onTap: () {
-          onChanged(user.userId, !isChecked);
+          onChanged(group.groupId, !isChecked);
         },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -149,8 +138,8 @@ class UserCheckbox extends StatelessWidget {
           ),
           child: Row(
             children: [
-              ContactAvatar(
-                contact: user,
+              AvatarIcon(
+                group: group,
                 fontSize: 12,
               ),
               const SizedBox(width: 8),
@@ -160,28 +149,19 @@ class UserCheckbox extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        displayName.length > 8
-                            ? '${displayName.substring(0, 8)}...'
-                            : displayName,
+                        substringBy(group.groupName, 12),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                  StreamBuilder(
-                    stream: twonlyDB.contactsDao.watchFlameCounter(user.userId),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData || snapshot.data! == 0) {
-                        return Container();
-                      }
-                      return FlameCounterWidget(user, snapshot.data!);
-                    },
-                  ),
+                  FlameCounterWidget(groupId: group.groupId),
                 ],
               ),
               Expanded(child: Container()),
               Checkbox(
                 value: isChecked,
                 side: WidgetStateBorderSide.resolveWith(
+                  // ignore: strict_raw_type
                   (Set states) {
                     if (states.contains(WidgetState.selected)) {
                       return const BorderSide(width: 0);
@@ -192,7 +172,7 @@ class UserCheckbox extends StatelessWidget {
                   },
                 ),
                 onChanged: (bool? value) {
-                  onChanged(user.userId, value ?? false);
+                  onChanged(group.groupId, value ?? false);
                 },
               ),
             ],

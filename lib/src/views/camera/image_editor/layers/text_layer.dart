@@ -24,6 +24,7 @@ class TextLayer extends StatefulWidget {
 class _TextViewState extends State<TextLayer> {
   double initialRotation = 0;
   bool deleteLayer = false;
+  double localBottom = 0;
   bool isDeleted = false;
   bool elementIsScaled = false;
   final GlobalKey _widgetKey = GlobalKey(); // Create a GlobalKey
@@ -35,9 +36,19 @@ class _TextViewState extends State<TextLayer> {
 
     textController.text = widget.layerData.text;
 
-    if (widget.layerData.offset.dy == 0) {
-      // Set the initial offset to the center of the screen
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mq = MediaQuery.of(context);
+      final globalDesiredBottom = mq.viewInsets.bottom + mq.viewPadding.bottom;
+      final parentBox = context.findRenderObject() as RenderBox?;
+      if (parentBox != null) {
+        final parentTopGlobal = parentBox.localToGlobal(Offset.zero).dy;
+        final screenHeight = mq.size.height;
+        localBottom = (screenHeight - globalDesiredBottom) -
+            parentTopGlobal -
+            (parentBox.size.height);
+      }
+
+      if (widget.layerData.offset.dy == 0) {
         setState(() {
           widget.layerData.offset = Offset(
             0,
@@ -47,17 +58,20 @@ class _TextViewState extends State<TextLayer> {
           );
           textController.text = widget.layerData.text;
         });
-      });
-    }
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.layerData.isDeleted) return Container();
 
+    final bottom = MediaQuery.of(context).viewInsets.bottom +
+        MediaQuery.of(context).viewPadding.bottom;
+
     if (widget.layerData.isEditing) {
       return Positioned(
-        bottom: MediaQuery.of(context).viewInsets.bottom - 100,
+        bottom: bottom - localBottom,
         left: 0,
         right: 0,
         child: Container(

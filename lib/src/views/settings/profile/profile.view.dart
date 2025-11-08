@@ -1,13 +1,17 @@
 import 'dart:async';
-
 import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/model/json/userdata.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
+import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/groups/group.view.dart';
 import 'package:twonly/src/views/settings/profile/modify_avatar.view.dart';
 
 class ProfileView extends StatefulWidget {
@@ -18,19 +22,27 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  UserData? user;
   final AvatarMakerController _avatarMakerController =
       PersistentAvatarMakerController(customizedPropertyCategories: []);
 
+  int twonlyScore = 0;
+  late StreamSubscription<int> twonlyScoreSub;
+
   @override
   void initState() {
+    twonlyScoreSub =
+        twonlyDB.groupsDao.watchSumTotalMediaCounter().listen((update) {
+      setState(() {
+        twonlyScore = update;
+      });
+    });
     super.initState();
-    unawaited(initAsync());
   }
 
-  Future<void> initAsync() async {
-    user = await getUser();
-    setState(() {});
+  @override
+  void dispose() {
+    twonlyScoreSub.cancel();
+    super.dispose();
   }
 
   Future<void> updateUserDisplayName(String displayName) async {
@@ -40,9 +52,42 @@ class _ProfileViewState extends State<ProfileView> {
         ..avatarCounter = user.avatarCounter + 1;
       return user;
     });
-
     await notifyContactsAboutProfileChange();
-    await initAsync();
+    setState(() {}); // gUser has updated
+  }
+
+  Future<void> _updateUsername(String username) async {
+    final result = await apiService.changeUsername(username);
+    if (result.isError) {
+      if (!mounted) return;
+
+      if (result.error == ErrorCode.UsernameAlreadyTaken) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.lang.errorUsernameAlreadyTaken),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+
+      showNetworkIssue(context);
+
+      return;
+    }
+
+    // as the username has changes, remove the old from the server and then upload it again.
+    await removeTwonlySafeFromServer();
+    unawaited(performTwonlySafeBackup(force: true));
+
+    await updateUserdata((user) {
+      user
+        ..username = username
+        ..avatarCounter = user.avatarCounter + 1;
+      return user;
+    });
+    await notifyContactsAboutProfileChange();
+    setState(() {}); // gUser has updated
   }
 
   @override
@@ -83,16 +128,59 @@ class _ProfileViewState extends State<ProfileView> {
           const SizedBox(height: 20),
           const Divider(),
           BetterListTile(
+            leading: const Padding(
+              padding: EdgeInsets.only(right: 5, left: 1),
+              child: FaIcon(
+                FontAwesomeIcons.at,
+                size: 20,
+              ),
+            ),
+            text: context.lang.registerUsernameDecoration,
+            subtitle: Text(gUser.username),
+            onTap: () async {
+              final username = await showDisplayNameChangeDialog(
+                context,
+                gUser.username,
+                context.lang.registerUsernameDecoration,
+                context.lang.registerUsernameDecoration,
+                maxLength: 12,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(12),
+                  FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z]')),
+                ],
+              );
+              if (context.mounted && username != null && username != '') {
+                await _updateUsername(username);
+              }
+            },
+          ),
+          BetterListTile(
             icon: FontAwesomeIcons.userPen,
             text: context.lang.settingsProfileEditDisplayName,
-            subtitle: (user == null) ? null : Text(user!.displayName),
+            subtitle: Text(gUser.displayName),
             onTap: () async {
-              final displayName =
-                  await showDisplayNameChangeDialog(context, user!.displayName);
+              final displayName = await showDisplayNameChangeDialog(
+                context,
+                gUser.displayName,
+                context.lang.settingsProfileEditDisplayName,
+                context.lang.settingsProfileEditDisplayNameNew,
+                maxLength: 30,
+              );
               if (context.mounted && displayName != null && displayName != '') {
                 await updateUserDisplayName(displayName);
               }
             },
+          ),
+          BetterListTile(
+            text: context.lang.yourTwonlyScore,
+            icon: FontAwesomeIcons.trophy,
+            trailing: Text(
+              twonlyScore.toString(),
+              style: TextStyle(
+                color: context.color.primary,
+                fontSize: 18,
+              ),
+            ),
           ),
         ],
       ),
@@ -103,33 +191,38 @@ class _ProfileViewState extends State<ProfileView> {
 Future<String?> showDisplayNameChangeDialog(
   BuildContext context,
   String currentName,
-) {
+  String title,
+  String hintText, {
+  List<TextInputFormatter>? inputFormatters,
+  int? maxLength,
+}) {
   final controller = TextEditingController(text: currentName);
 
   return showDialog<String>(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text(context.lang.settingsProfileEditDisplayName),
+        title: Text(title),
         content: TextField(
           controller: controller,
           autofocus: true,
+          inputFormatters: inputFormatters,
+          maxLength: maxLength,
           decoration: InputDecoration(
-            hintText: context.lang.settingsProfileEditDisplayNameNew,
+            hintText: hintText,
           ),
         ),
         actions: <Widget>[
           TextButton(
             child: Text(context.lang.cancel),
             onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
+              Navigator.of(context).pop();
             },
           ),
           TextButton(
             child: Text(context.lang.ok),
             onPressed: () {
-              Navigator.of(context)
-                  .pop(controller.text); // Return the input text
+              Navigator.of(context).pop(controller.text);
             },
           ),
         ],

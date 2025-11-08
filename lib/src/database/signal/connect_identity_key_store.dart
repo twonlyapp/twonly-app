@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 
 class ConnectIdentityKeyStore extends IdentityKeyStore {
   ConnectIdentityKeyStore(this.identityKeyPair, this.localRegistrationId);

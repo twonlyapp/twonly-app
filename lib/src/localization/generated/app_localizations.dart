@@ -302,6 +302,12 @@ abstract class AppLocalizations {
   /// **'Search all contacts'**
   String get shareImageSearchAllContacts;
 
+  /// No description provided for @startNewChatSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, username or groupname'**
+  String get startNewChatSearchHint;
+
   /// No description provided for @shareImagedSelectAll.
   ///
   /// In en, this message translates to:
@@ -1058,6 +1064,36 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
+  /// No description provided for @now.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get now;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get you;
+
+  /// No description provided for @minutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min.'**
+  String get minutesShort;
+
+  /// No description provided for @image.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get image;
+
+  /// No description provided for @video.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get video;
+
   /// No description provided for @react.
   ///
   /// In en, this message translates to:
@@ -1075,6 +1111,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy'**
   String get copy;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
 
   /// No description provided for @delete.
   ///
@@ -1187,7 +1229,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorUsernameAlreadyTaken.
   ///
   /// In en, this message translates to:
-  /// **'The username you want to use is already taken. Please choose a different username.'**
+  /// **'The username is already taken.'**
   String get errorUsernameAlreadyTaken;
 
   /// No description provided for @errorSignatureNotValid.
@@ -1730,11 +1772,17 @@ abstract class AppLocalizations {
   /// **'Are you sure?'**
   String get deleteTitle;
 
-  /// No description provided for @deleteOkBtn.
+  /// No description provided for @deleteOkBtnForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for all'**
+  String get deleteOkBtnForAll;
+
+  /// No description provided for @deleteOkBtnForMe.
   ///
   /// In en, this message translates to:
   /// **'Delete for me'**
-  String get deleteOkBtn;
+  String get deleteOkBtnForMe;
 
   /// No description provided for @deleteImageTitle.
   ///
@@ -1801,6 +1849,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back up your twonly identity, as this is the only way to restore your account if you uninstall the app or lose your phone.'**
   String get backupTwonlySafeDesc;
+
+  /// No description provided for @backupNoPasswordRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Due to twonly\'s security system, there is (currently) no password recovery function. Therefore, you must remember your password or, better yet, write it down.'**
+  String get backupNoPasswordRecovery;
 
   /// No description provided for @backupServer.
   ///
@@ -1889,13 +1943,13 @@ abstract class AppLocalizations {
   /// No description provided for @backupTwonlySafeLongDesc.
   ///
   /// In en, this message translates to:
-  /// **'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Safe regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.'**
+  /// **'twonly does not have any central user accounts. A key pair is created during installation, which consists of a public and a private key. The private key is only stored on your device to protect it from unauthorized access. The public key is uploaded to the server and linked to your chosen username so that others can find you.\n\ntwonly Backup regularly creates an encrypted, anonymous backup of your private key together with your contacts and settings. Your username and chosen password are enough to restore this data on another device.'**
   String get backupTwonlySafeLongDesc;
 
   /// No description provided for @backupSelectStrongPassword.
   ///
   /// In en, this message translates to:
-  /// **'Choose a secure password. This is required if you want to restore your twonly Safe backup.'**
+  /// **'Choose a secure password. This is required if you want to restore your twonly Backup.'**
   String get backupSelectStrongPassword;
 
   /// No description provided for @password.
@@ -1937,7 +1991,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupOwnServerDesc.
   ///
   /// In en, this message translates to:
-  /// **'Save your twonly safe backups at twonly or on any server of your choice.'**
+  /// **'Save your twonly Backup at twonly or on any server of your choice.'**
   String get backupOwnServerDesc;
 
   /// No description provided for @backupUseOwnServer.
@@ -1958,6 +2012,12 @@ abstract class AppLocalizations {
   /// **'Save now'**
   String get backupTwonlySaveNow;
 
+  /// No description provided for @backupChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get backupChangePassword;
+
   /// No description provided for @twonlySafeRecoverTitle.
   ///
   /// In en, this message translates to:
@@ -1967,7 +2027,7 @@ abstract class AppLocalizations {
   /// No description provided for @twonlySafeRecoverDesc.
   ///
   /// In en, this message translates to:
-  /// **'If you have created a backup with twonly Safe, you can restore it here.'**
+  /// **'If you have created a backup with twonly Backup, you can restore it here.'**
   String get twonlySafeRecoverDesc;
 
   /// No description provided for @twonlySafeRecoverBtn.
@@ -2012,6 +2072,12 @@ abstract class AppLocalizations {
   /// **'Double-click\nto open again'**
   String get doubleClickToReopen;
 
+  /// No description provided for @uploadLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload limit has\been reached. Upgrade to Pro\nor wait until tomorrow.'**
+  String get uploadLimitReached;
+
   /// No description provided for @retransmissionRequested.
   ///
   /// In en, this message translates to:
@@ -2053,6 +2119,570 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have logged in on another device. You have therefore been logged out here.'**
   String get newDeviceRegistered;
+
+  /// No description provided for @tabToRemoveEmoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab to remove'**
+  String get tabToRemoveEmoji;
+
+  /// No description provided for @quotedMessageWasDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'The quoted message has been deleted.'**
+  String get quotedMessageWasDeleted;
+
+  /// No description provided for @messageWasDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message has been deleted.'**
+  String get messageWasDeleted;
+
+  /// No description provided for @messageWasDeletedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get messageWasDeletedShort;
+
+  /// No description provided for @sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get sent;
+
+  /// No description provided for @sentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered to'**
+  String get sentTo;
+
+  /// No description provided for @received.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get received;
+
+  /// No description provided for @opened.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened'**
+  String get opened;
+
+  /// No description provided for @waitingForInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for internet'**
+  String get waitingForInternet;
+
+  /// No description provided for @editHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit history'**
+  String get editHistory;
+
+  /// No description provided for @archivedChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived chats'**
+  String get archivedChats;
+
+  /// No description provided for @durationShortSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Sec.'**
+  String get durationShortSecond;
+
+  /// No description provided for @durationShortMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Min.'**
+  String get durationShortMinute;
+
+  /// No description provided for @durationShortHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Hrs.'**
+  String get durationShortHour;
+
+  /// No description provided for @durationShortDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Day} other{{count} Days}}'**
+  String durationShortDays(num count);
+
+  /// No description provided for @contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contacts;
+
+  /// No description provided for @groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groups;
+
+  /// No description provided for @newGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get newGroup;
+
+  /// No description provided for @selectMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Select members'**
+  String get selectMembers;
+
+  /// No description provided for @selectGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Select group name'**
+  String get selectGroupName;
+
+  /// No description provided for @groupNameInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupNameInput;
+
+  /// No description provided for @groupMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get groupMembers;
+
+  /// No description provided for @addMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Add member'**
+  String get addMember;
+
+  /// No description provided for @createGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create group'**
+  String get createGroup;
+
+  /// No description provided for @leaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroup;
+
+  /// No description provided for @createContactRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Create contact request'**
+  String get createContactRequest;
+
+  /// No description provided for @contactRequestSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact request send'**
+  String get contactRequestSend;
+
+  /// No description provided for @makeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get makeAdmin;
+
+  /// No description provided for @removeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove as admin'**
+  String get removeAdmin;
+
+  /// No description provided for @removeFromGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from group'**
+  String get removeFromGroup;
+
+  /// No description provided for @admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get admin;
+
+  /// No description provided for @revokeAdminRightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke {username}\'s admin rights?'**
+  String revokeAdminRightsTitle(Object username);
+
+  /// No description provided for @revokeAdminRightsOkBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove as admin'**
+  String get revokeAdminRightsOkBtn;
+
+  /// No description provided for @makeAdminRightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make {username} an admin?'**
+  String makeAdminRightsTitle(Object username);
+
+  /// No description provided for @makeAdminRightsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} will be able to edit this group and its members.'**
+  String makeAdminRightsBody(Object username);
+
+  /// No description provided for @makeAdminRightsOkBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get makeAdminRightsOkBtn;
+
+  /// No description provided for @updateGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Update group'**
+  String get updateGroup;
+
+  /// No description provided for @alreadyInGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in Group'**
+  String get alreadyInGroup;
+
+  /// No description provided for @removeContactFromGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {username} from this group?'**
+  String removeContactFromGroupTitle(Object username);
+
+  /// No description provided for @youChangedGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'You have changed the group name to \"{newGroupName}\".'**
+  String youChangedGroupName(Object newGroupName);
+
+  /// No description provided for @makerChangedGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} has changed the group name to \"{newGroupName}\".'**
+  String makerChangedGroupName(Object maker, Object newGroupName);
+
+  /// No description provided for @youCreatedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You have created the group.'**
+  String get youCreatedGroup;
+
+  /// No description provided for @makerCreatedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} has created the group.'**
+  String makerCreatedGroup(Object maker);
+
+  /// No description provided for @youRemovedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You have removed {affected} from the group.'**
+  String youRemovedMember(Object affected);
+
+  /// No description provided for @makerRemovedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} has removed {affected} from the group.'**
+  String makerRemovedMember(Object affected, Object maker);
+
+  /// No description provided for @youAddedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You have added {affected} to the group.'**
+  String youAddedMember(Object affected);
+
+  /// No description provided for @makerAddedMember.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} has added {affected} to the group.'**
+  String makerAddedMember(Object affected, Object maker);
+
+  /// No description provided for @youMadeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'You made {affected} an admin.'**
+  String youMadeAdmin(Object affected);
+
+  /// No description provided for @makerMadeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} made {affected} an admin.'**
+  String makerMadeAdmin(Object affected, Object maker);
+
+  /// No description provided for @youRevokedAdminRights.
+  ///
+  /// In en, this message translates to:
+  /// **'You revoked {affectedR} admin rights.'**
+  String youRevokedAdminRights(Object affectedR);
+
+  /// No description provided for @makerRevokedAdminRights.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} revoked {affectedR} admin rights.'**
+  String makerRevokedAdminRights(Object affectedR, Object maker);
+
+  /// No description provided for @youLeftGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'You have left the group.'**
+  String get youLeftGroup;
+
+  /// No description provided for @makerLeftGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'{maker} has left the group.'**
+  String makerLeftGroup(Object maker);
+
+  /// No description provided for @groupActionYou.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get groupActionYou;
+
+  /// No description provided for @groupActionYour.
+  ///
+  /// In en, this message translates to:
+  /// **'your'**
+  String get groupActionYour;
+
+  /// No description provided for @notificationFillerIn.
+  ///
+  /// In en, this message translates to:
+  /// **'in'**
+  String get notificationFillerIn;
+
+  /// No description provided for @notificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a message{inGroup}.'**
+  String notificationText(Object inGroup);
+
+  /// No description provided for @notificationTwonly.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a twonly{inGroup}.'**
+  String notificationTwonly(Object inGroup);
+
+  /// No description provided for @notificationVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a video{inGroup}.'**
+  String notificationVideo(Object inGroup);
+
+  /// No description provided for @notificationImage.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a image{inGroup}.'**
+  String notificationImage(Object inGroup);
+
+  /// No description provided for @notificationAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'sent a voice message{inGroup}.'**
+  String notificationAudio(Object inGroup);
+
+  /// No description provided for @notificationAddedToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'has added you to \"{groupname}\"'**
+  String notificationAddedToGroup(Object groupname);
+
+  /// No description provided for @notificationContactRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'wants to connect with you.'**
+  String get notificationContactRequest;
+
+  /// No description provided for @notificationAcceptRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'is now connected with you.'**
+  String get notificationAcceptRequest;
+
+  /// No description provided for @notificationStoredMediaFile.
+  ///
+  /// In en, this message translates to:
+  /// **'has stored your image.'**
+  String get notificationStoredMediaFile;
+
+  /// No description provided for @notificationReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted to your image.'**
+  String get notificationReaction;
+
+  /// No description provided for @notificationReopenedMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'has reopened your image.'**
+  String get notificationReopenedMedia;
+
+  /// No description provided for @notificationReactionToVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your video.'**
+  String notificationReactionToVideo(Object reaction);
+
+  /// No description provided for @notificationReactionToText.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your message.'**
+  String notificationReactionToText(Object reaction);
+
+  /// No description provided for @notificationReactionToImage.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your image.'**
+  String notificationReactionToImage(Object reaction);
+
+  /// No description provided for @notificationReactionToAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'has reacted with {reaction} to your audio message.'**
+  String notificationReactionToAudio(Object reaction);
+
+  /// No description provided for @notificationResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'has responded{inGroup}.'**
+  String notificationResponse(Object inGroup);
+
+  /// No description provided for @notificationTitleUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get notificationTitleUnknownUser;
+
+  /// No description provided for @notificationCategoryMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get notificationCategoryMessageTitle;
+
+  /// No description provided for @notificationCategoryMessageDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages from other users.'**
+  String get notificationCategoryMessageDesc;
+
+  /// No description provided for @groupContextMenuDeleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete all messages in this chat.'**
+  String get groupContextMenuDeleteGroup;
+
+  /// No description provided for @groupYouAreNowLongerAMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer part of this group.'**
+  String get groupYouAreNowLongerAMember;
+
+  /// No description provided for @groupNetworkIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Network issue. Try again later.'**
+  String get groupNetworkIssue;
+
+  /// No description provided for @leaveGroupSelectOtherAdminTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select another admin'**
+  String get leaveGroupSelectOtherAdminTitle;
+
+  /// No description provided for @leaveGroupSelectOtherAdminBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To leave the group, you must first select a new administrator.'**
+  String get leaveGroupSelectOtherAdminBody;
+
+  /// No description provided for @leaveGroupSureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroupSureTitle;
+
+  /// No description provided for @leaveGroupSureBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you really want to leave the group?'**
+  String get leaveGroupSureBody;
+
+  /// No description provided for @leaveGroupSureOkBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave group'**
+  String get leaveGroupSureOkBtn;
+
+  /// No description provided for @changeDisplayMaxTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats will now be deleted after {time} ({username}).'**
+  String changeDisplayMaxTime(Object time, Object username);
+
+  /// No description provided for @youChangedDisplayMaxTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats will now be deleted after {time}.'**
+  String youChangedDisplayMaxTime(Object time);
+
+  /// No description provided for @userGotReported.
+  ///
+  /// In en, this message translates to:
+  /// **'User has been reported.'**
+  String get userGotReported;
+
+  /// No description provided for @deleteChatAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat after...'**
+  String get deleteChatAfter;
+
+  /// No description provided for @deleteChatAfterAnHour.
+  ///
+  /// In en, this message translates to:
+  /// **'one hour.'**
+  String get deleteChatAfterAnHour;
+
+  /// No description provided for @deleteChatAfterADay.
+  ///
+  /// In en, this message translates to:
+  /// **'one day.'**
+  String get deleteChatAfterADay;
+
+  /// No description provided for @deleteChatAfterAWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'one week.'**
+  String get deleteChatAfterAWeek;
+
+  /// No description provided for @deleteChatAfterAMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'one month.'**
+  String get deleteChatAfterAMonth;
+
+  /// No description provided for @deleteChatAfterAYear.
+  ///
+  /// In en, this message translates to:
+  /// **'one year.'**
+  String get deleteChatAfterAYear;
+
+  /// No description provided for @yourTwonlyScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Your twonly-Score'**
+  String get yourTwonlyScore;
+
+  /// No description provided for @registrationClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Due to the current high volume of registrations, we have temporarily disabled registration to ensure that the service remains reliable. Please try again in a few days.'**
+  String get registrationClosed;
 }
 
 class _AppLocalizationsDelegate

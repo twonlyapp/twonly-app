@@ -6,12 +6,16 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/app_outdated.dart';
 import 'package:twonly/src/views/home.view.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/onboarding/register.view.dart';
+import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
+import 'package:twonly/src/views/updates/62_database_migration.view.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -35,8 +39,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       await setUserPlan();
     };
 
-    globalCallbackUpdatePlan = (String planId) async {
-      await context.read<CustomChangeProvider>().updatePlan(planId);
+    globalCallbackUpdatePlan = (SubscriptionPlan plan) async {
+      await context.read<CustomChangeProvider>().updatePlan(plan);
     };
 
     unawaited(initAsync());
@@ -44,22 +48,11 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future<void> setUserPlan() async {
     final user = await getUser();
-    globalBestFriendUserId = -1;
     if (user != null && mounted) {
-      if (user.myBestFriendContactId != null) {
-        final contact = await twonlyDB.contactsDao
-            .getContactByUserId(user.myBestFriendContactId!)
-            .getSingleOrNull();
-        if (contact != null) {
-          if (contact.alsoBestFriend) {
-            globalBestFriendUserId = user.myBestFriendContactId ?? 0;
-          }
-        }
-      }
       if (mounted) {
-        await context
-            .read<CustomChangeProvider>()
-            .updatePlan(user.subscriptionPlan);
+        await context.read<CustomChangeProvider>().updatePlan(
+              planFromString(user.subscriptionPlan),
+            );
       }
     }
   }
@@ -68,8 +61,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     await setUserPlan();
     await apiService.connect(force: true);
     await apiService.listenToNetworkChanges();
-    // call this function so invalid media files are get purged
-    await retryMediaUpload(true);
   }
 
   @override
@@ -84,7 +75,6 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;
       globalIsAppInBackground = true;
-      unawaited(handleUploadWhenAppGoesBackground());
     }
   }
 
@@ -92,7 +82,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     globalCallbackConnectionState = ({required bool isConnected}) {};
-    globalCallbackUpdatePlan = (String planId) {};
+    globalCallbackUpdatePlan = (SubscriptionPlan planId) {};
     super.dispose();
   }
 
@@ -131,6 +121,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
             colorScheme: ColorScheme.fromSeed(
               brightness: Brightness.dark,
               seedColor: const Color(0xFF57CC99),
+              surface: const Color.fromARGB(255, 20, 18, 23),
+              surfaceContainer: const Color.fromARGB(255, 33, 30, 39),
             ),
             inputDecorationTheme: const InputDecorationTheme(
               border: OutlineInputBorder(),
@@ -159,36 +151,85 @@ class AppMainWidget extends StatefulWidget {
 }
 
 class _AppMainWidgetState extends State<AppMainWidget> {
-  Future<bool> userCreated = isUserCreated();
-  bool showOnboarding = true;
+  bool _isUserCreated = false;
+  bool _showDatabaseMigration = false;
+  bool _showOnboarding = true;
+  bool _isLoaded = false;
+
+  (Future<int>?, bool) _proofOfWork = (null, false);
+
+  @override
+  void initState() {
+    initAsync();
+    super.initState();
+  }
+
+  Future<void> initAsync() async {
+    _isUserCreated = await isUserCreated();
+
+    if (_isUserCreated) {
+      if (gUser.appVersion < 62) {
+        _showDatabaseMigration = true;
+      }
+    }
+
+    if (!_isUserCreated && !_showDatabaseMigration) {
+      // This means the user is in the onboarding screen, so start with the Proof of Work.
+
+      final (proof, disabled) = await apiService.getProofOfWork();
+      if (proof != null) {
+        Log.info('Starting with proof of work calculation.');
+        // Starting with the proof of work.
+        _proofOfWork =
+            (calculatePoW(proof.prefix, proof.difficulty.toInt()), false);
+      } else {
+        _proofOfWork = (null, disabled);
+      }
+    }
+
+    setState(() {
+      _isLoaded = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isLoaded) {
+      return Center(child: Container());
+    }
+
+    late Widget child;
+
+    if (_showDatabaseMigration) {
+      child = const DatabaseMigrationView();
+    } else if (_isUserCreated) {
+      if (gUser.twonlySafeBackup == null) {
+        child = TwonlyIdentityBackupView(
+          callBack: () {
+            setState(() {});
+          },
+        );
+      } else {
+        child = HomeView(
+          initialPage: widget.initialPage,
+        );
+      }
+    } else if (_showOnboarding) {
+      child = OnboardingView(
+        callbackOnSuccess: () => setState(() {
+          _showOnboarding = false;
+        }),
+      );
+    } else {
+      child = RegisterView(
+        callbackOnSuccess: initAsync,
+        proofOfWork: _proofOfWork,
+      );
+    }
+
     return Stack(
       children: [
-        FutureBuilder<bool>(
-          future: userCreated,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return Center(child: Container());
-            } else if (snapshot.data!) {
-              return HomeView(
-                initialPage: widget.initialPage,
-              );
-            } else if (showOnboarding) {
-              return OnboardingView(
-                callbackOnSuccess: () => setState(() {
-                  showOnboarding = false;
-                }),
-              );
-            }
-            return RegisterView(
-              callbackOnSuccess: () => setState(() {
-                userCreated = isUserCreated();
-              }),
-            );
-          },
-        ),
+        child,
         const AppOutdated(),
       ],
     );

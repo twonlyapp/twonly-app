@@ -1,13 +1,12 @@
 import 'dart:io';
-
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pbserver.dart';
+import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -52,10 +51,10 @@ class NotificationView extends StatelessWidget {
                 if (run) {
                   final user = await getUser();
                   if (user != null) {
-                    final pushData = await getPushData(
+                    final pushData = await encryptPushNotification(
                       user.userId,
                       PushNotification(
-                        messageId: Int64(),
+                        messageId: uuid.v4(),
                         kind: PushKind.testNotification,
                       ),
                     );

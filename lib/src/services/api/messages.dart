@@ -1,301 +1,308 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
-import 'package:twonly/src/model/protobuf/push_notification/push_notification.pb.dart';
-import 'package:twonly/src/services/api/server_messages.dart'
-    show messageGetsAck;
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    as pb;
+import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 final lockRetransmission = Mutex();
 
 Future<void> tryTransmitMessages() async {
   return lockRetransmission.protect(() async {
-    final retransIds =
-        await twonlyDB.messageRetransmissionDao.getRetransmitAbleMessages();
+    final receipts = await twonlyDB.receiptsDao.getReceiptsNotAckByServer();
 
-    Log.info('Retransmitting ${retransIds.length} text messages');
+    if (receipts.isEmpty) return;
 
-    if (retransIds.isEmpty) return;
+    Log.info('Reuploading ${receipts.length} messages to the server.');
 
-    for (final retransId in retransIds) {
-      await sendRetransmitMessage(retransId);
+    for (final receipt in receipts) {
+      await tryToSendCompleteMessage(receipt: receipt);
     }
   });
 }
 
-Future<void> sendRetransmitMessage(int retransId) async {
+// When the ackByServerAt is set this value is written in the receipted
+Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
+  String? receiptId,
+  Receipt? receipt,
+  bool onlyReturnEncryptedData = false,
+}) async {
   try {
-    final retrans = await twonlyDB.messageRetransmissionDao
-        .getRetransmissionById(retransId)
-        .getSingleOrNull();
-
-    if (retrans == null) {
-      Log.error('$retransId not found in database');
-      return;
-    }
-
-    if (retrans.acknowledgeByServerAt != null) {
-      Log.error('$retransId message already retransmitted');
-      return;
-    }
-
-    final json = MessageJson.fromJson(
-      jsonDecode(
-        utf8.decode(
-          gzip.decode(retrans.plaintextContent),
-        ),
-      ) as Map<String, dynamic>,
-    );
-
-    Log.info('Retransmitting $retransId: ${json.kind} to ${retrans.contactId}');
-
-    final contact = await twonlyDB.contactsDao
-        .getContactByUserId(retrans.contactId)
-        .getSingleOrNull();
-    if (contact == null || contact.deleted) {
-      Log.warn('Contact deleted $retransId or not found in database.');
-      await twonlyDB.messageRetransmissionDao
-          .deleteRetransmissionById(retransId);
-      if (retrans.messageId != null) {
-        await twonlyDB.messagesDao.updateMessageByMessageId(
-          retrans.messageId!,
-          const MessagesCompanion(errorWhileSending: Value(true)),
-        );
+    if (receiptId == null && receipt == null) return null;
+    if (receipt == null) {
+      receipt = await twonlyDB.receiptsDao.getReceiptById(receiptId!);
+      if (receipt == null) {
+        Log.error('Receipt $receiptId not found.');
+        return null;
       }
-      return;
+    }
+    receiptId = receipt.receiptId;
+
+    if (!onlyReturnEncryptedData && receipt.ackByServerAt != null) {
+      Log.error('$receiptId message already uploaded!');
+      return null;
     }
 
-    final encryptedBytes = await signalEncryptMessage(
-      retrans.contactId,
-      retrans.plaintextContent,
+    Log.info('Uploading $receiptId (Message to ${receipt.contactId})');
+
+    final message = pb.Message.fromBuffer(receipt.message)
+      ..receiptId = receiptId;
+
+    final encryptedContent =
+        pb.EncryptedContent.fromBuffer(message.encryptedContent);
+
+    final pushNotification = await getPushNotificationFromEncryptedContent(
+      receipt.contactId,
+      receipt.messageId,
+      encryptedContent,
     );
 
-    if (encryptedBytes == null) {
-      Log.error('Could not encrypt the message. Aborting and trying again.');
-      return;
+    Uint8List? pushData;
+    if (pushNotification != null && receipt.retryCount <= 3) {
+      /// In case the message has to be resend more than three times, do not show a notification again...
+      pushData =
+          await encryptPushNotification(receipt.contactId, pushNotification);
     }
 
-    final encryptedHash = (await Sha256().hash(encryptedBytes)).bytes;
+    if (message.type == pb.Message_Type.TEST_NOTIFICATION) {
+      pushData = (PushNotification()..kind = PushKind.testNotification)
+          .writeToBuffer();
+    }
 
-    await twonlyDB.messageRetransmissionDao.updateRetransmission(
-      retransId,
-      MessageRetransmissionsCompanion(
-        encryptedHash: Value(Uint8List.fromList(encryptedHash)),
-      ),
-    );
+    if (message.type == pb.Message_Type.CIPHERTEXT) {
+      final cipherText = await signalEncryptMessage(
+        receipt.contactId,
+        Uint8List.fromList(message.encryptedContent),
+      );
+      if (cipherText == null) {
+        Log.error('Could not encrypt the message. Aborting and trying again.');
+        return null;
+      }
+      message.encryptedContent = cipherText.serialize();
+      switch (cipherText.getType()) {
+        case CiphertextMessage.prekeyType:
+          message.type = pb.Message_Type.PREKEY_BUNDLE;
+        case CiphertextMessage.whisperType:
+          message.type = pb.Message_Type.CIPHERTEXT;
+        default:
+          Log.error('Invalid ciphertext type: ${cipherText.getType()}.');
+          return null;
+      }
+    }
+
+    if (onlyReturnEncryptedData) {
+      return (message.writeToBuffer(), pushData);
+    }
 
     final resp = await apiService.sendTextMessage(
-      retrans.contactId,
-      encryptedBytes,
-      retrans.pushData,
+      receipt.contactId,
+      message.writeToBuffer(),
+      pushData,
     );
 
-    var retry = true;
-
     if (resp.isError) {
-      Log.error('Could not retransmit message.');
+      Log.error('Could not transmit message $receiptId got ${resp.error}.');
       if (resp.error == ErrorCode.UserIdNotFound) {
-        retry = false;
-        if (retrans.messageId != null) {
-          await twonlyDB.messagesDao.updateMessageByMessageId(
-            retrans.messageId!,
-            const MessagesCompanion(errorWhileSending: Value(true)),
-          );
-        }
+        await twonlyDB.receiptsDao.deleteReceipt(receiptId);
         await twonlyDB.contactsDao.updateContact(
-          retrans.contactId,
-          const ContactsCompanion(deleted: Value(true)),
+          receipt.contactId,
+          const ContactsCompanion(accountDeleted: Value(true)),
         );
+        return null;
       }
     }
 
     if (resp.isSuccess) {
-      retry = false;
-      if (retrans.messageId != null) {
-        await twonlyDB.messagesDao.updateMessageByMessageId(
-          retrans.messageId!,
-          const MessagesCompanion(
-            acknowledgeByServer: Value(true),
-            errorWhileSending: Value(false),
-          ),
+      if (receipt.messageId != null) {
+        await twonlyDB.messagesDao.handleMessageAckByServer(
+          receipt.contactId,
+          receipt.messageId!,
+          DateTime.now(),
         );
       }
-    }
-
-    if (!retry) {
-      if (!messageGetsAck(json.kind)) {
-        await twonlyDB.messageRetransmissionDao
-            .deleteRetransmissionById(retransId);
+      if (!receipt.contactWillSendsReceipt) {
+        await twonlyDB.receiptsDao.deleteReceipt(receiptId);
       } else {
-        await twonlyDB.messageRetransmissionDao.updateRetransmission(
-          retransId,
-          MessageRetransmissionsCompanion(
-            acknowledgeByServerAt: Value(DateTime.now()),
-            retryCount: Value(retrans.retryCount + 1),
+        await twonlyDB.receiptsDao.updateReceipt(
+          receiptId,
+          ReceiptsCompanion(
+            ackByServerAt: Value(DateTime.now()),
+            retryCount: Value(receipt.retryCount + 1),
             lastRetry: Value(DateTime.now()),
           ),
         );
       }
     }
   } catch (e) {
-    Log.error('error resending message: $e');
-    await twonlyDB.messageRetransmissionDao.deleteRetransmissionById(retransId);
+    Log.error('Unknown Error when sending message: $e');
+    if (receiptId != null) {
+      await twonlyDB.receiptsDao.deleteReceipt(receiptId);
+    }
+    if (receipt != null) {
+      await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
+    }
   }
+  return null;
 }
 
-// encrypts and stores the message and then sends it in the background
-Future<void> encryptAndSendMessageAsync(
-  int? messageId,
-  int userId,
-  MessageJson msg, {
-  PushNotification? pushNotification,
-}) async {
-  Uint8List? pushData;
-  if (pushNotification != null) {
-    pushData = await getPushData(userId, pushNotification);
-  }
-
-  final retransId =
-      await twonlyDB.messageRetransmissionDao.insertRetransmission(
-    MessageRetransmissionsCompanion(
-      contactId: Value(userId),
-      messageId: Value(messageId),
-      plaintextContent: Value(Uint8List(0)),
-      pushData: Value(pushData),
+Future<void> insertAndSendTextMessage(
+  String groupId,
+  String textMessage,
+  String? quotesMessageId,
+) async {
+  final message = await twonlyDB.messagesDao.insertMessage(
+    MessagesCompanion(
+      groupId: Value(groupId),
+      content: Value(textMessage),
+      type: const Value(MessageType.text),
+      quotesMessageId: Value(quotesMessageId),
     ),
   );
-
-  if (retransId == null) {
-    Log.error('Could not insert the message into the retransmission database');
+  if (message == null) {
+    Log.error('Could not insert message into database');
     return;
   }
 
-  msg.retransId = retransId;
-
-  final plaintextContent =
-      Uint8List.fromList(gzip.encode(utf8.encode(jsonEncode(msg.toJson()))));
-
-  await twonlyDB.messageRetransmissionDao.updateRetransmission(
-    retransId,
-    MessageRetransmissionsCompanion(
-      plaintextContent: Value(plaintextContent),
+  final encryptedContent = pb.EncryptedContent(
+    textMessage: pb.EncryptedContent_TextMessage(
+      senderMessageId: message.messageId,
+      text: textMessage,
+      timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
     ),
   );
 
-  // this can now be done in the background...
-  unawaited(sendRetransmitMessage(retransId));
+  if (quotesMessageId != null) {
+    encryptedContent.textMessage.quoteMessageId = quotesMessageId;
+  }
+
+  await sendCipherTextToGroup(
+    groupId,
+    encryptedContent,
+    messageId: message.messageId,
+  );
 }
 
-Future<void> sendTextMessage(
-  int target,
-  TextMessageContent content,
-  PushNotification? pushNotification,
-) async {
-  final messageSendAt = DateTime.now();
-  DateTime? openedAt;
+Future<void> sendCipherTextToGroup(
+  String groupId,
+  pb.EncryptedContent encryptedContent, {
+  String? messageId,
+}) async {
+  final groupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(groupId);
 
-  if (pushNotification != null && pushNotification.hasReactionContent()) {
-    openedAt = DateTime.now();
-  }
+  await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, DateTime.now());
 
-  final messageId = await twonlyDB.messagesDao.insertMessage(
-    MessagesCompanion(
-      contactId: Value(target),
-      kind: const Value(MessageKind.textMessage),
-      sendAt: Value(messageSendAt),
-      responseToOtherMessageId: Value(content.responseToMessageId),
-      responseToMessageId: Value(content.responseToOtherMessageId),
-      downloadState: const Value(DownloadState.downloaded),
-      openedAt: Value(openedAt),
-      contentJson: Value(
-        jsonEncode(content.toJson()),
+  encryptedContent.groupId = groupId;
+
+  for (final groupMember in groupMembers) {
+    unawaited(
+      sendCipherText(
+        groupMember.contactId,
+        encryptedContent,
+        messageId: messageId,
       ),
+    );
+  }
+}
+
+Future<(Uint8List, Uint8List?)?> sendCipherText(
+  int contactId,
+  pb.EncryptedContent encryptedContent, {
+  bool onlyReturnEncryptedData = false,
+  String? messageId,
+}) async {
+  encryptedContent.senderProfileCounter = Int64(gUser.avatarCounter);
+
+  final response = pb.Message()
+    ..type = pb.Message_Type.CIPHERTEXT
+    ..encryptedContent = encryptedContent.writeToBuffer();
+
+  final receipt = await twonlyDB.receiptsDao.insertReceipt(
+    ReceiptsCompanion(
+      contactId: Value(contactId),
+      message: Value(response.writeToBuffer()),
+      messageId: Value(messageId),
+      ackByServerAt: Value(onlyReturnEncryptedData ? DateTime.now() : null),
     ),
   );
 
-  if (messageId == null) return;
-
-  if (pushNotification != null && !pushNotification.hasReactionContent()) {
-    pushNotification.messageId = Int64(messageId);
+  if (receipt != null) {
+    return tryToSendCompleteMessage(
+      receipt: receipt,
+      onlyReturnEncryptedData: onlyReturnEncryptedData,
+    );
   }
-
-  final msg = MessageJson(
-    kind: MessageKind.textMessage,
-    messageSenderId: messageId,
-    content: content,
-    timestamp: messageSendAt,
-  );
-
-  await encryptAndSendMessageAsync(
-    messageId,
-    target,
-    msg,
-    pushNotification: pushNotification,
-  );
+  return null;
 }
 
 Future<void> notifyContactAboutOpeningMessage(
-  int fromUserId,
-  List<int> messageOtherIds,
+  int contactId,
+  List<String> messageOtherIds,
 ) async {
   var biggestMessageId = messageOtherIds.first;
 
   for (final messageOtherId in messageOtherIds) {
-    if (messageOtherId > biggestMessageId) biggestMessageId = messageOtherId;
-    await encryptAndSendMessageAsync(
-      null,
-      fromUserId,
-      MessageJson(
-        kind: MessageKind.opened,
-        messageReceiverId: messageOtherId,
-        content: MessageContent(),
-        timestamp: DateTime.now(),
+    if (isUUIDNewer(messageOtherId, biggestMessageId)) {
+      biggestMessageId = messageOtherId;
+    }
+  }
+  Log.info('Opened messages: $messageOtherIds');
+
+  final actionAt = DateTime.now();
+
+  await sendCipherText(
+    contactId,
+    pb.EncryptedContent(
+      messageUpdate: pb.EncryptedContent_MessageUpdate(
+        type: pb.EncryptedContent_MessageUpdate_Type.OPENED,
+        multipleTargetMessageIds: messageOtherIds,
+        timestamp: Int64(actionAt.millisecondsSinceEpoch),
+      ),
+    ),
+  );
+  for (final messageId in messageOtherIds) {
+    await twonlyDB.messagesDao.updateMessageId(
+      messageId,
+      MessagesCompanion(
+        openedAt: Value(actionAt),
+        openedByAll: Value(actionAt),
       ),
     );
   }
-  await updateLastMessageId(fromUserId, biggestMessageId);
+  await updateLastMessageId(contactId, biggestMessageId);
 }
 
-Future<void> notifyContactsAboutProfileChange() async {
+Future<void> notifyContactsAboutProfileChange({int? onlyToContact}) async {
+  if (gUser.avatarSvg == null) return;
+
+  final encryptedContent = pb.EncryptedContent(
+    contactUpdate: pb.EncryptedContent_ContactUpdate(
+      type: pb.EncryptedContent_ContactUpdate_Type.UPDATE,
+      avatarSvgCompressed: gzip.encode(utf8.encode(gUser.avatarSvg!)),
+      displayName: gUser.displayName,
+      username: gUser.username,
+    ),
+  );
+
+  if (onlyToContact != null) {
+    await sendCipherText(onlyToContact, encryptedContent);
+    return;
+  }
+
   final contacts = await twonlyDB.contactsDao.getAllNotBlockedContacts();
 
-  final user = await getUser();
-  if (user == null) return;
-  if (user.avatarSvg == null) return;
-
   for (final contact in contacts) {
-    if (contact.myAvatarCounter < user.avatarCounter) {
-      await twonlyDB.contactsDao.updateContact(
-        contact.userId,
-        ContactsCompanion(
-          myAvatarCounter: Value(user.avatarCounter),
-        ),
-      );
-      await encryptAndSendMessageAsync(
-        null,
-        contact.userId,
-        MessageJson(
-          kind: MessageKind.profileChange,
-          content: ProfileContent(
-            avatarSvg: user.avatarSvg!,
-            displayName: user.displayName,
-          ),
-          timestamp: DateTime.now(),
-        ),
-      );
-    }
+    await sendCipherText(contact.userId, encryptedContent);
   }
 }

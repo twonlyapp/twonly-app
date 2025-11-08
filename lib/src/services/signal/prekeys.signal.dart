@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/utils/log.dart';
@@ -31,13 +31,13 @@ Future<void> requestNewPrekeysForContact(int contactId) async {
       .isAfter(DateTime.now().subtract(const Duration(seconds: 60)))) {
     return;
   }
-  Log.info('Requesting new PREKEYS for $contactId');
+  Log.info('[PREKEY] Requesting new PREKEYS for $contactId');
   lastPreKeyRequest = DateTime.now();
   await requestNewKeys.protect(() async {
     final otherKeys = await apiService.getPreKeysByUserId(contactId);
     if (otherKeys != null) {
       Log.info(
-        'got fresh ${otherKeys.preKeys.length}  pre keys from other $contactId!',
+        '[PREKEY] Got fresh ${otherKeys.preKeys.length} pre keys from other $contactId!',
       );
       final preKeys = otherKeys.preKeys
           .map(
@@ -50,7 +50,8 @@ Future<void> requestNewPrekeysForContact(int contactId) async {
           .toList();
       await twonlyDB.signalDao.insertPreKeys(preKeys);
     } else {
-      Log.error('could not load new pre keys for user $contactId');
+      // 104400
+      Log.error('[PREKEY] Could not load new pre keys for user $contactId');
     }
   });
 }

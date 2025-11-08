@@ -1,14 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hashlib/random.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    as pb;
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 
 class RetransmissionDataView extends StatefulWidget {
   const RetransmissionDataView({super.key});
@@ -19,33 +19,22 @@ class RetransmissionDataView extends StatefulWidget {
 
 class RetransMsg {
   RetransMsg({
-    required this.json,
-    required this.retrans,
+    required this.receipt,
     required this.contact,
   });
-  final MessageJson json;
-  final MessageRetransmission retrans;
+  final Receipt receipt;
   final Contact? contact;
 
   static List<RetransMsg> fromRaw(
-    List<MessageRetransmission> retrans,
+    List<Receipt> receipts,
     Map<int, Contact> contacts,
   ) {
     final res = <RetransMsg>[];
-
-    for (final retrans in retrans) {
-      final json = MessageJson.fromJson(
-        jsonDecode(
-          utf8.decode(
-            gzip.decode(retrans.plaintextContent),
-          ),
-        ) as Map<String, dynamic>,
-      );
+    for (final receipt in receipts) {
       res.add(
         RetransMsg(
-          json: json,
-          retrans: retrans,
-          contact: contacts[retrans.contactId],
+          receipt: receipt,
+          contact: contacts[receipt.contactId],
         ),
       );
     }
@@ -54,9 +43,9 @@ class RetransMsg {
 }
 
 class _RetransmissionDataViewState extends State<RetransmissionDataView> {
-  List<MessageRetransmission> retransmissions = [];
+  List<Receipt> retransmissions = [];
   Map<int, Contact> contacts = {};
-  StreamSubscription<List<MessageRetransmission>>? subscriptionRetransmission;
+  StreamSubscription<List<Receipt>>? subscriptionRetransmission;
   StreamSubscription<List<Contact>>? subscriptionContacts;
   List<RetransMsg> messages = [];
 
@@ -85,7 +74,7 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
       setState(() {});
     });
     subscriptionRetransmission =
-        twonlyDB.messageRetransmissionDao.watchAllMessages().listen((updated) {
+        twonlyDB.receiptsDao.watchAll().listen((updated) {
       retransmissions = updated;
       if (contacts.isNotEmpty) {
         messages = RetransMsg.fromRaw(retransmissions, contacts);
@@ -108,7 +97,7 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
                   .map(
                     (retrans) => ListTile(
                       title: Text(
-                        '${retrans.retrans.retransmissionId}: ${retrans.json.kind}',
+                        retrans.receipt.receiptId,
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,63 +106,49 @@ class _RetransmissionDataViewState extends State<RetransmissionDataView> {
                             'To ${retrans.contact?.username}',
                           ),
                           Text(
-                            'Server-Ack: ${retrans.retrans.acknowledgeByServerAt}',
+                            'Server-Ack: ${retrans.receipt.ackByServerAt}',
                           ),
+                          if (retrans.receipt.messageId != null)
+                            Text(
+                              'MessageId: ${retrans.receipt.messageId}',
+                            ),
+                          if (retrans.receipt.messageId != null)
+                            FutureBuilder(
+                              future: getPushNotificationFromEncryptedContent(
+                                retrans.receipt.contactId,
+                                retrans.receipt.messageId,
+                                pb.EncryptedContent.fromBuffer(
+                                  pb.Message.fromBuffer(retrans.receipt.message)
+                                      .encryptedContent,
+                                ),
+                              ),
+                              builder: (d, a) {
+                                if (!a.hasData) return Container();
+                                return Text(
+                                  'PushKind: ${a.data?.kind}',
+                                );
+                              },
+                            ),
                           Text(
-                            'Retry: ${retrans.retrans.retryCount} : ${retrans.retrans.lastRetry}',
+                            'Retry: ${retrans.receipt.retryCount} : ${retrans.receipt.lastRetry}',
                           ),
                         ],
                       ),
-                      trailing: SizedBox(
-                        width: 80,
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              height: 20,
-                              width: 40,
-                              child: Center(
-                                child: GestureDetector(
-                                  onDoubleTap: () async {
-                                    await twonlyDB.messageRetransmissionDao
-                                        .deleteRetransmissionById(
-                                      retrans.retrans.retransmissionId,
-                                    );
-                                  },
-                                  child: const FaIcon(
-                                    FontAwesomeIcons.trash,
-                                    size: 15,
-                                  ),
-                                ),
-                              ),
+                      trailing: FilledButton.icon(
+                        onPressed: () async {
+                          final newReceiptId = uuid.v4();
+                          await twonlyDB.receiptsDao.updateReceipt(
+                            retrans.receipt.receiptId,
+                            ReceiptsCompanion(
+                              receiptId: Value(newReceiptId),
+                              ackByServerAt: const Value(null),
                             ),
-                            SizedBox(
-                              width: 40,
-                              child: OutlinedButton(
-                                style: ButtonStyle(
-                                  padding: WidgetStateProperty.all<EdgeInsets>(
-                                    EdgeInsets.zero,
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  await twonlyDB.messageRetransmissionDao
-                                      .updateRetransmission(
-                                    retrans.retrans.retransmissionId,
-                                    const MessageRetransmissionsCompanion(
-                                      acknowledgeByServerAt: Value(null),
-                                    ),
-                                  );
-                                  await sendRetransmitMessage(
-                                    retrans.retrans.retransmissionId,
-                                  );
-                                },
-                                child: const FaIcon(
-                                  FontAwesomeIcons.arrowRotateLeft,
-                                  size: 15,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                          await tryToSendCompleteMessage(
+                            receiptId: newReceiptId,
+                          );
+                        },
+                        label: const FaIcon(FontAwesomeIcons.arrowRotateRight),
                       ),
                     ),
                   )

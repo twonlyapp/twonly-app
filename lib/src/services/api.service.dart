@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
@@ -17,23 +18,24 @@ import 'package:mutex/mutex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
-import 'package:twonly/src/database/twonly_database.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
-import 'package:twonly/src/services/api/media_download.dart';
-import 'package:twonly/src/services/api/media_upload.dart';
+import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/flame.service.dart';
+import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -49,8 +51,9 @@ final lockRetransStore = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
-  final String apiHost = kDebugMode ? '10.99.0.140:3030' : 'api.twonly.eu';
-  final String apiSecure = kDebugMode ? '' : 's';
+  // final String apiHost = kReleaseMode ? 'api.twonly.eu' : '10.99.0.140:3030';
+  final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
+  final String apiSecure = kReleaseMode ? 's' : 's';
 
   bool appIsOutdated = false;
   bool isAuthenticated = false;
@@ -94,13 +97,13 @@ class ApiService {
     if (!globalIsAppInBackground) {
       unawaited(retransmitRawBytes());
       unawaited(tryTransmitMessages());
-      unawaited(retryMediaUpload(false));
       unawaited(tryDownloadAllMediaFiles());
-      unawaited(notifyContactsAboutProfileChange());
       twonlyDB.markUpdated();
       unawaited(syncFlameCounters());
       unawaited(setupNotificationWithUsers());
       unawaited(signalHandleNewServerConnection());
+      unawaited(fetchGroupStatesForUnjoinedGroups());
+      unawaited(fetchMissingGroupPublicKey());
     }
   }
 
@@ -114,7 +117,7 @@ class ApiService {
     _channel = null;
     isAuthenticated = false;
     globalCallbackConnectionState(isConnected: false);
-    await twonlyDB.messagesDao.resetPendingDownloadState();
+    await twonlyDB.mediaFilesDao.resetPendingDownloadState();
   }
 
   Future<void> startReconnectionTimer() async {
@@ -158,11 +161,6 @@ class ApiService {
     }
     reconnectionTimer?.cancel();
     reconnectionTimer = null;
-    final user = await getUser();
-    if (user != null && user.isDemoUser) {
-      globalCallbackConnectionState(isConnected: true);
-      return false;
-    }
     return lockConnecting.protect<bool>(() async {
       if (_channel != null) {
         return true;
@@ -291,6 +289,10 @@ class ApiService {
     request.v0.seq = seq;
     final requestBytes = request.writeToBuffer();
 
+    Log.info(
+      'Sending ${requestBytes.length} bytes to the server via WebSocket.',
+    );
+
     if (ensureRetransmission) {
       await addToRetransmissionBuffer(seq, requestBytes);
     }
@@ -319,7 +321,9 @@ class ApiService {
       }
       if (res.error == ErrorCode.NewDeviceRegistered) {
         globalCallbackNewDeviceRegistered();
-        Log.error('Device is disabled, as a newer device restore twonly Safe.');
+        Log.error(
+          'Device is disabled, as a newer device restore twonly Backup.',
+        );
         appIsOutdated = true;
         await close(() {});
         return Result.error(ErrorCode.InternalError);
@@ -346,7 +350,7 @@ class ApiService {
           await twonlyDB.contactsDao.updateContact(
             contactId,
             ContactsCompanion(
-              deleted: const Value(true),
+              accountDeleted: const Value(true),
               username: Value('${contact.username} (${contact.userId})'),
             ),
           );
@@ -363,6 +367,12 @@ class ApiService {
     final user = await getUser();
 
     if (apiAuthToken != null && user != null) {
+      if (user.appVersion < 62) {
+        Log.error(
+          'DID NOT authenticate the user, as he still has the old version!',
+        );
+        return false;
+      }
       final authenticate = Handshake_Authenticate()
         ..userId = Int64(userId)
         ..appVersion = (await PackageInfo.fromPlatform()).version
@@ -382,7 +392,7 @@ class ApiService {
             user.subscriptionPlan = authenticated.plan;
             return user;
           });
-          globalCallbackUpdatePlan(authenticated.plan);
+          globalCallbackUpdatePlan(planFromString(authenticated.plan));
         }
         Log.info('websocket is authenticated');
         unawaited(onAuthenticated());
@@ -412,7 +422,7 @@ class ApiService {
     }
 
     final handshake = Handshake()
-      ..getauthchallenge = Handshake_GetAuthChallenge();
+      ..getAuthChallenge = Handshake_GetAuthChallenge();
     final req = createClientToServerFromHandshake(handshake);
 
     final result = await sendRequestSync(req, authenticated: false);
@@ -433,7 +443,7 @@ class ApiService {
       ..response = signature
       ..userId = Int64(userData.userId);
 
-    final getauthtoken = Handshake()..getauthtoken = getAuthToken;
+    final getauthtoken = Handshake()..getAuthToken = getAuthToken;
 
     final req2 = createClientToServerFromHandshake(getauthtoken);
 
@@ -455,7 +465,11 @@ class ApiService {
     await tryAuthenticateWithToken(userData.userId);
   }
 
-  Future<Result> register(String username, String? inviteCode) async {
+  Future<Result> register(
+    String username,
+    String? inviteCode,
+    int proofOfWorkResult,
+  ) async {
     final signalIdentity = await getSignalIdentity();
     if (signalIdentity == null) {
       return Result.error(ErrorCode.InternalError);
@@ -473,6 +487,8 @@ class ApiService {
       ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
       ..signedPrekeySignature = signedPreKey.signature
       ..signedPrekeyId = Int64(signedPreKey.id)
+      ..langCode = ui.PlatformDispatcher.instance.locale.languageCode
+      ..proofOfWork = Int64(proofOfWorkResult)
       ..isIos = Platform.isIOS;
 
     if (inviteCode != null && inviteCode != '') {
@@ -485,30 +501,52 @@ class ApiService {
     return sendRequestSync(req);
   }
 
-  Future<Result> getUsername(int userId) async {
+  Future<Response_UserData?> getUserById(int userId) async {
     final get = ApplicationData_GetUserById()..userId = Int64(userId);
-    final appData = ApplicationData()..getuserbyid = get;
+    final appData = ApplicationData()..getUserById = get;
     final req = createClientToServerFromApplicationData(appData);
-    return sendRequestSync(req, contactId: userId);
+    final res = await sendRequestSync(req);
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasUserdata()) {
+        return ok.userdata;
+      }
+    }
+    return null;
+  }
+
+  Future<(Response_ProofOfWork?, bool)> getProofOfWork() async {
+    final handshake = Handshake()..requestPOW = Handshake_RequestPOW();
+    final req = createClientToServerFromHandshake(handshake);
+    final result = await sendRequestSync(req, authenticated: false);
+    if (result.isError) {
+      Log.error('could not request proof of work params', result);
+      if (result.error == ErrorCode.RegistrationDisabled) {
+        return (null, true);
+      }
+      Log.error('could not request proof of work params', result);
+      return (null, false);
+    }
+    return (result.value.proofOfWork as Response_ProofOfWork, false);
   }
 
   Future<Result> downloadDone(List<int> token) async {
     final get = ApplicationData_DownloadDone()..downloadToken = token;
-    final appData = ApplicationData()..downloaddone = get;
+    final appData = ApplicationData()..downloadDone = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, ensureRetransmission: true);
   }
 
   Future<Result> getCurrentLocation() async {
     final get = ApplicationData_GetLocation();
-    final appData = ApplicationData()..getlocation = get;
+    final appData = ApplicationData()..getLocation = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Response_UserData?> getUserData(String username) async {
     final get = ApplicationData_GetUserByUsername()..username = username;
-    final appData = ApplicationData()..getuserbyusername = get;
+    final appData = ApplicationData()..getUserByUsername = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -522,7 +560,7 @@ class ApiService {
 
   Future<Response_PlanBallance?> getPlanBallance() async {
     final get = ApplicationData_GetCurrentPlanInfos();
-    final appData = ApplicationData()..getcurrentplaninfos = get;
+    final appData = ApplicationData()..getCurrentPlanInfos = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -536,7 +574,7 @@ class ApiService {
 
   Future<Response_Vouchers?> getVoucherList() async {
     final get = ApplicationData_GetVouchers();
-    final appData = ApplicationData()..getvouchers = get;
+    final appData = ApplicationData()..getVouchers = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -550,7 +588,7 @@ class ApiService {
 
   Future<List<Response_AddAccountsInvite>?> getAdditionalUserInvites() async {
     final get = ApplicationData_GetAddAccountsInvites();
-    final appData = ApplicationData()..getaddaccountsinvites = get;
+    final appData = ApplicationData()..getAddaccountsInvites = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req);
     if (res.isSuccess) {
@@ -564,21 +602,21 @@ class ApiService {
 
   Future<Result> updatePlanOptions(bool autoRenewal) async {
     final get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
-    final appData = ApplicationData()..updateplanoptions = get;
+    final appData = ApplicationData()..updatePlanOptions = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> removeAdditionalUser(Int64 userId) async {
     final get = ApplicationData_RemoveAdditionalUser()..userId = userId;
-    final appData = ApplicationData()..removeadditionaluser = get;
+    final appData = ApplicationData()..removeAdditionalUser = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: userId.toInt());
   }
 
   Future<Result> buyVoucher(int valueInCents) async {
     final get = ApplicationData_CreateVoucher()..valueCents = valueInCents;
-    final appData = ApplicationData()..createvoucher = get;
+    final appData = ApplicationData()..createVoucher = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
@@ -592,14 +630,14 @@ class ApiService {
       ..planId = planId
       ..payMonthly = payMonthly
       ..autoRenewal = autoRenewal;
-    final appData = ApplicationData()..switchtopayedplan = get;
+    final appData = ApplicationData()..switchtoPayedPlan = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> redeemVoucher(String voucher) async {
     final get = ApplicationData_RedeemVoucher()..voucher = voucher;
-    final appData = ApplicationData()..redeemvoucher = get;
+    final appData = ApplicationData()..redeemVoucher = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
@@ -608,28 +646,35 @@ class ApiService {
     final get = ApplicationData_ReportUser()
       ..reportedUserId = Int64(userId)
       ..reason = reason;
-    final appData = ApplicationData()..reportuser = get;
+    final appData = ApplicationData()..reportUser = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> deleteAccount() async {
     final get = ApplicationData_DeleteAccount();
-    final appData = ApplicationData()..deleteaccount = get;
+    final appData = ApplicationData()..deleteAccount = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> redeemUserInviteCode(String inviteCode) async {
     final get = ApplicationData_RedeemAdditionalCode()..inviteCode = inviteCode;
-    final appData = ApplicationData()..redeemadditionalcode = get;
+    final appData = ApplicationData()..redeemAdditionalCode = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
 
   Future<Result> updateFCMToken(String googleFcm) async {
     final get = ApplicationData_UpdateGoogleFcmToken()..googleFcm = googleFcm;
-    final appData = ApplicationData()..updategooglefcmtoken = get;
+    final appData = ApplicationData()..updateGoogleFcmToken = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
+  Future<Result> changeUsername(String username) async {
+    final get = ApplicationData_ChangeUsername()..username = username;
+    final appData = ApplicationData()..changeUsername = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
@@ -643,7 +688,7 @@ class ApiService {
       ..signedPrekeyId = Int64(signedPreKeyId)
       ..signedPrekey = signedPreKey
       ..signedPrekeySignature = signedPreKeySignature;
-    final appData = ApplicationData()..updatesignedprekey = get;
+    final appData = ApplicationData()..updateSignedPrekey = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
   }
@@ -651,7 +696,7 @@ class ApiService {
   Future<Response_SignedPreKey?> getSignedKeyByUserId(int userId) async {
     final get = ApplicationData_GetSignedPreKeyByUserId()
       ..userId = Int64(userId);
-    final appData = ApplicationData()..getsignedprekeybyuserid = get;
+    final appData = ApplicationData()..getSignedPrekeyByUserid = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
@@ -665,7 +710,7 @@ class ApiService {
 
   Future<OtherPreKeys?> getPreKeysByUserId(int userId) async {
     final get = ApplicationData_GetPrekeysByUserId()..userId = Int64(userId);
-    final appData = ApplicationData()..getprekeysbyuserid = get;
+    final appData = ApplicationData()..getPrekeysByUserId = get;
     final req = createClientToServerFromApplicationData(appData);
     final res = await sendRequestSync(req, contactId: userId);
     if (res.isSuccess) {
@@ -699,8 +744,7 @@ class ApiService {
     if (pushData != null) {
       testMessage.pushData = pushData;
     }
-
-    final appData = ApplicationData()..textmessage = testMessage;
+    final appData = ApplicationData()..textMessage = testMessage;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: target);
   }

@@ -1,13 +1,13 @@
 import 'dart:collection';
-import 'dart:convert';
-
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/src/database/tables/messages_table.dart';
-import 'package:twonly/src/database/twonly_database.dart';
-import 'package:twonly/src/model/json/message.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
+import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 enum MessageSendState {
   received,
@@ -19,42 +19,38 @@ enum MessageSendState {
 }
 
 MessageSendState messageSendStateFromMessage(Message msg) {
-  MessageSendState state;
-
-  if (!msg.acknowledgeByServer) {
-    if (msg.messageOtherId == null) {
-      state = MessageSendState.sending;
-    } else {
-      state = MessageSendState.receiving;
+  if (msg.senderId == null) {
+    /// messages was send by me, look up if every messages was received by the server...
+    if (msg.ackByServer == null) {
+      return MessageSendState.sending;
     }
-  } else {
-    if (msg.messageOtherId == null) {
-      // message send
-      if (msg.openedAt == null) {
-        state = MessageSendState.send;
-      } else {
-        state = MessageSendState.sendOpened;
-      }
+    if (msg.openedAt != null) {
+      return MessageSendState.sendOpened;
     } else {
-      // message received
-      if (msg.openedAt == null) {
-        state = MessageSendState.received;
-      } else {
-        state = MessageSendState.receivedOpened;
-      }
+      return MessageSendState.send;
     }
   }
-  return state;
+
+  // message received
+  if (msg.openedAt == null) {
+    return MessageSendState.received;
+  } else {
+    return MessageSendState.receivedOpened;
+  }
 }
 
 class MessageSendStateIcon extends StatefulWidget {
   const MessageSendStateIcon(
-    this.messages, {
+    this.messages,
+    this.mediaFiles, {
     super.key,
     this.canBeReopened = false,
+    this.lastReaction,
     this.mainAxisAlignment = MainAxisAlignment.end,
   });
   final List<Message> messages;
+  final List<MediaFile> mediaFiles;
+  final Reaction? lastReaction;
   final MainAxisAlignment mainAxisAlignment;
   final bool canBeReopened;
 
@@ -83,31 +79,28 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
   @override
   Widget build(BuildContext context) {
-    final icons = <Widget>[];
+    var icons = <Widget>[];
     var text = '';
-
-    final kindsAlreadyShown = HashSet<MessageKind>();
     Widget? textWidget;
+    textWidget = null;
+    final kindsAlreadyShown = HashSet<MessageType>();
+
+    var hasLoader = false;
+    GestureTapCallback? onTap;
 
     for (final message in widget.messages) {
       if (icons.length == 2) break;
-      if (kindsAlreadyShown.contains(message.kind)) continue;
-      kindsAlreadyShown.add(message.kind);
+      if (kindsAlreadyShown.contains(message.type)) continue;
+      kindsAlreadyShown.add(message.type);
 
       final state = messageSendStateFromMessage(message);
-      late Color color;
-      MessageContent? content;
 
-      if (message.contentJson == null) {
-        color = getMessageColorFromType(TextMessageContent(text: ''), context);
-      } else {
-        content = MessageContent.fromJson(
-          message.kind,
-          jsonDecode(message.contentJson!) as Map,
-        );
-        if (content == null) continue;
-        color = getMessageColorFromType(content, context);
-      }
+      final mediaFile = message.mediaId == null
+          ? null
+          : widget.mediaFiles
+              .firstWhereOrNull((t) => t.mediaId == message.mediaId);
+
+      final color = getMessageColorFromType(message, mediaFile, context);
 
       Widget icon = const Placeholder();
       textWidget = null;
@@ -115,9 +108,12 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       switch (state) {
         case MessageSendState.receivedOpened:
           icon = Icon(Icons.crop_square, size: 14, color: color);
-          if (content is TextMessageContent) {
-            if (isEmoji(content.text)) {
-              icon = Text(content.text, style: const TextStyle(fontSize: 12));
+          if (message.content != null) {
+            if (isEmoji(message.content!)) {
+              icon = Text(
+                message.content!,
+                style: const TextStyle(fontSize: 12),
+              );
             }
           }
           text = context.lang.messageSendState_Received;
@@ -133,13 +129,14 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.received:
           icon = Icon(Icons.square_rounded, size: 14, color: color);
           text = context.lang.messageSendState_Received;
-          if (message.kind == MessageKind.media) {
-            if (message.downloadState == DownloadState.pending) {
+          if (message.type == MessageType.media && mediaFile != null) {
+            if (mediaFile.downloadState == DownloadState.pending) {
               text = context.lang.messageSendState_TapToLoad;
             }
-            if (message.downloadState == DownloadState.downloading) {
+            if (mediaFile.downloadState == DownloadState.downloading) {
               text = context.lang.messageSendState_Loading;
               icon = getLoaderIcon(color);
+              hasLoader = true;
             }
           }
         case MessageSendState.send:
@@ -149,39 +146,113 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.sending:
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Sending;
+
+          if (mediaFile != null) {
+            if (mediaFile.uploadState == UploadState.uploadLimitReached) {
+              icon = FaIcon(
+                FontAwesomeIcons.triangleExclamation,
+                size: 12,
+                color: color,
+              );
+
+              textWidget = Text(
+                context.lang.uploadLimitReached,
+                style: const TextStyle(fontSize: 9),
+              );
+
+              onTap = () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const SubscriptionView();
+                    },
+                  ),
+                );
+              };
+            }
+            if (mediaFile.uploadState == UploadState.preprocessing) {
+              text = 'Wird verarbeitet';
+            }
+          }
+
+          hasLoader = true;
         case MessageSendState.receiving:
           icon = getLoaderIcon(color);
           text = context.lang.messageSendState_Received;
+          hasLoader = true;
       }
 
-      if (message.kind == MessageKind.storedMediaFile) {
+      if (message.mediaStored) {
         icon = FaIcon(FontAwesomeIcons.floppyDisk, size: 12, color: color);
         text = context.lang.messageStoredInGallery;
       }
 
-      if (message.kind == MessageKind.reopenedMedia) {
-        icon = FaIcon(FontAwesomeIcons.repeat, size: 12, color: color);
-        text = context.lang.messageReopened;
+      if (mediaFile != null) {
+        if (mediaFile.reopenByContact) {
+          icon = FaIcon(FontAwesomeIcons.repeat, size: 12, color: color);
+          text = context.lang.messageReopened;
+        }
+
+        if (mediaFile.downloadState == DownloadState.reuploadRequested) {
+          icon =
+              FaIcon(FontAwesomeIcons.clockRotateLeft, size: 12, color: color);
+          textWidget = Text(
+            context.lang.retransmissionRequested,
+            style: const TextStyle(fontSize: 9),
+          );
+        }
       }
 
-      if (message.errorWhileSending) {
-        icon =
-            FaIcon(FontAwesomeIcons.circleExclamation, size: 12, color: color);
-        text = 'Error';
+      if (message.isDeletedFromSender) {
+        icon = FaIcon(FontAwesomeIcons.trash, size: 10, color: color);
+        text = context.lang.messageWasDeletedShort;
       }
 
-      if (message.mediaRetransmissionState == MediaRetransmitting.requested) {
-        icon = FaIcon(FontAwesomeIcons.clockRotateLeft, size: 12, color: color);
-        textWidget = Text(
-          context.lang.retransmissionRequested,
-          style: const TextStyle(fontSize: 9),
-        );
+      if (hasLoader) {
+        icons = [icon];
+        break;
       }
 
-      if (message.kind == MessageKind.media) {
+      if (message.type == MessageType.media) {
         icons.insert(0, icon);
       } else {
         icons.add(icon);
+      }
+    }
+
+    if (widget.lastReaction != null &&
+        !widget.messages.any((t) => t.openedAt == null)) {
+      /// No messages are still open, so check if the reaction is the last message received.
+
+      if (!widget.messages
+          .any((m) => m.createdAt.isAfter(widget.lastReaction!.createdAt))) {
+        if (EmojiAnimation.animatedIcons
+            .containsKey(widget.lastReaction!.emoji)) {
+          icons = [
+            SizedBox(
+              height: 18,
+              child: EmojiAnimation(emoji: widget.lastReaction!.emoji),
+            ),
+          ];
+        } else {
+          icons = [
+            SizedBox(
+              height: 18,
+              child: Center(
+                child: Text(
+                  widget.lastReaction!.emoji,
+                  style: const TextStyle(fontSize: 15),
+                  strutStyle: const StrutStyle(
+                    forceStrutHeight: true,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ),
+          ];
+        }
+        // Log.info("DISPLAY REACTION");
       }
     }
 
@@ -193,36 +264,32 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       icon = Stack(
         alignment: Alignment.center,
         children: <Widget>[
-          // First icon (bottom icon)
-          icons[0],
-
-          Transform(
-            transform: Matrix4.identity()
-              ..scaleByDouble(0.7, 0.7, 0.7, 0.7) // Scale to half
-              ..translateByDouble(3, 5, 0, 1),
-            // Move down by 10 pixels (adjust as needed)
-            alignment: Alignment.center,
+          Transform.scale(
+            scale: 1.3,
             child: icons[1],
           ),
-          // Second icon (top icon, slightly offset)
+          icons[0],
         ],
       );
     }
 
-    return Row(
-      mainAxisAlignment: widget.mainAxisAlignment,
-      children: [
-        icon,
-        const SizedBox(width: 3),
-        if (textWidget != null)
-          textWidget
-        else
-          Text(
-            text,
-            style: const TextStyle(fontSize: 12),
-          ),
-        const SizedBox(width: 5),
-      ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisAlignment: widget.mainAxisAlignment,
+        children: [
+          icon,
+          const SizedBox(width: 3),
+          if (textWidget != null)
+            textWidget
+          else
+            Text(
+              text,
+              style: const TextStyle(fontSize: 12),
+            ),
+          const SizedBox(width: 5),
+        ],
+      ),
     );
   }
 }
