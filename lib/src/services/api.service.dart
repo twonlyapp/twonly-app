@@ -51,8 +51,9 @@ final lockRetransStore = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
-  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '10.99.0.140:3030';
-  final String apiSecure = kReleaseMode ? 's' : '';
+  // final String apiHost = kReleaseMode ? 'api.twonly.eu' : '10.99.0.140:3030';
+  final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
+  final String apiSecure = kReleaseMode ? 's' : 's';
 
   bool appIsOutdated = false;
   bool isAuthenticated = false;
@@ -508,15 +509,19 @@ class ApiService {
     return null;
   }
 
-  Future<Response_ProofOfWork?> getProofOfWork() async {
+  Future<(Response_ProofOfWork?, bool)> getProofOfWork() async {
     final handshake = Handshake()..requestPOW = Handshake_RequestPOW();
     final req = createClientToServerFromHandshake(handshake);
     final result = await sendRequestSync(req, authenticated: false);
     if (result.isError) {
       Log.error('could not request proof of work params', result);
-      return null;
+      if (result.error == ErrorCode.RegistrationDisabled) {
+        return (null, true);
+      }
+      Log.error('could not request proof of work params', result);
+      return (null, false);
     }
-    return result.value.proofOfWork as Response_ProofOfWork;
+    return (result.value.proofOfWork as Response_ProofOfWork, false);
   }
 
   Future<Result> downloadDone(List<int> token) async {

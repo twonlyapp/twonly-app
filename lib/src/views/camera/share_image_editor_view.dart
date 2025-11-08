@@ -2,11 +2,13 @@
 
 import 'dart:async';
 import 'dart:collection';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hashlib/random.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -82,6 +84,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       } else {
         if (widget.mediaFileService.tempPath.existsSync()) {
           loadImage(widget.mediaFileService.tempPath.readAsBytes());
+        } else if (widget.mediaFileService.originalPath.existsSync()) {
+          loadImage(widget.mediaFileService.originalPath.readAsBytes());
         }
       }
     }
@@ -106,6 +110,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     isDisposed = true;
     layers.clear();
     videoController?.dispose();
+    twonlyDB.mediaFilesDao.updateAllMediaFiles(
+      const MediaFilesCompanion(
+        isDraftMedia: Value(false),
+      ),
+    );
     super.dispose();
   }
 
@@ -388,6 +397,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
   Future<void> loadImage(Future<Uint8List?> imageBytesFuture) async {
     imageBytes = await imageBytesFuture;
+
+    // store this image so it can be used as a draft in case the app is restarted
+    mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
+
     await currentImage.load(imageBytes);
     if (isDisposed) return;
 

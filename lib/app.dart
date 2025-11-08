@@ -156,7 +156,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
 
-  Future<int>? _proofOfWork;
+  (Future<int>?, bool) _proofOfWork = (null, false);
 
   @override
   void initState() {
@@ -176,11 +176,14 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (!_isUserCreated && !_showDatabaseMigration) {
       // This means the user is in the onboarding screen, so start with the Proof of Work.
 
-      final proof = await apiService.getProofOfWork();
+      final (proof, disabled) = await apiService.getProofOfWork();
       if (proof != null) {
         Log.info('Starting with proof of work calculation.');
         // Starting with the proof of work.
-        _proofOfWork = calculatePoW(proof.prefix, proof.difficulty.toInt());
+        _proofOfWork =
+            (calculatePoW(proof.prefix, proof.difficulty.toInt()), false);
+      } else {
+        _proofOfWork = (null, disabled);
       }
     }
 

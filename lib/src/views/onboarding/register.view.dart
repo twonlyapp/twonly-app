@@ -27,7 +27,7 @@ class RegisterView extends StatefulWidget {
   });
 
   final Function callbackOnSuccess;
-  final Future<int>? proofOfWork;
+  final (Future<int>?, bool) proofOfWork;
   @override
   State<RegisterView> createState() => _RegisterViewState();
 }
@@ -36,9 +36,19 @@ class _RegisterViewState extends State<RegisterView> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController inviteCodeController = TextEditingController();
 
+  bool _registrationDisabled = false;
   bool _isTryingToRegister = false;
   bool _isValidUserName = false;
   bool _showUserNameError = false;
+
+  late Future<int>? proofOfWork;
+
+  @override
+  void initState() {
+    proofOfWork = widget.proofOfWork.$1;
+    _registrationDisabled = widget.proofOfWork.$2;
+    super.initState();
+  }
 
   Future<void> createNewUser() async {
     if (!_isValidUserName) {
@@ -57,11 +67,12 @@ class _RegisterViewState extends State<RegisterView> {
 
     late int proof;
 
-    if (widget.proofOfWork != null) {
-      proof = await widget.proofOfWork!;
+    if (proofOfWork != null) {
+      proof = await proofOfWork!;
     } else {
-      final pow = await apiService.getProofOfWork();
+      final (pow, registrationDisabled) = await apiService.getProofOfWork();
       if (pow == null) {
+        _registrationDisabled = registrationDisabled;
         if (mounted) {
           showNetworkIssue(context);
         }
@@ -82,6 +93,10 @@ class _RegisterViewState extends State<RegisterView> {
       Log.info('Got user_id ${res.value} from server');
       userId = res.value.userid.toInt() as int;
     } else {
+      if (res.error == ErrorCode.RegistrationDisabled) {
+        _registrationDisabled = true;
+        return;
+      }
       if (res.error == ErrorCode.UserIdAlreadyTaken) {
         Log.error('User ID already token. Tying again.');
         await deleteLocalUserData();
@@ -127,6 +142,43 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_registrationDisabled) {
+      return Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 10, right: 10),
+            child: ListView(
+              children: [
+                const SizedBox(height: 50),
+                Text(
+                  context.lang.registerTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 30),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                  child: Text(
+                    context.lang.registerSlogan,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+                const SizedBox(height: 130),
+                Text(
+                  context.lang.registrationClosed,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     InputDecoration getInputDecoration(String hintText) {
       return InputDecoration(hintText: hintText, fillColor: Colors.grey[400]);
     }

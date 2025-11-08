@@ -817,5 +817,6 @@
     "deleteChatAfterAWeek": "einer Woche.",
     "deleteChatAfterAMonth": "einem Monat.",
     "deleteChatAfterAYear": "einem Jahr.",
-    "yourTwonlyScore": "Dein twonly-Score"
+    "yourTwonlyScore": "Dein twonly-Score",
+    "registrationClosed": "Aufgrund des aktuell sehr hohen Aufkommens haben wir die Registrierung vorübergehend deaktiviert, damit der Dienst zuverlässig bleibt. Bitte versuche es in ein paar Tagen noch einmal."
 }

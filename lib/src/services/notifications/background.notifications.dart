@@ -253,7 +253,7 @@ String getPushNotificationText(PushNotification pushNotification) {
     PushKind.twonly.name: lang.notificationTwonly(inGroup),
     PushKind.video.name: lang.notificationVideo(inGroup),
     PushKind.image.name: lang.notificationImage(inGroup),
-    PushKind.video.name: lang.notificationAudio(inGroup),
+    PushKind.audio.name: lang.notificationAudio(inGroup),
     PushKind.contactRequest.name: lang.notificationContactRequest,
     PushKind.acceptRequest.name: lang.notificationAcceptRequest,
     PushKind.storedMediaFile.name: lang.notificationStoredMediaFile,

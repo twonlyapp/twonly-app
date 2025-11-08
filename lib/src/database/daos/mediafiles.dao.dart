@@ -50,9 +50,25 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         .write(updates);
   }
 
+  Future<void> updateAllMediaFiles(
+    MediaFilesCompanion updates,
+  ) async {
+    await update(mediaFiles).write(updates);
+  }
+
   Future<MediaFile?> getMediaFileById(String mediaId) async {
     return (select(mediaFiles)..where((t) => t.mediaId.equals(mediaId)))
         .getSingleOrNull();
+  }
+
+  Future<MediaFile?> getDraftMediaFile() async {
+    final medias = await (select(mediaFiles)
+          ..where((t) => t.isDraftMedia.equals(true)))
+        .get();
+    if (medias.isEmpty) {
+      return null;
+    }
+    return medias.first;
   }
 
   Stream<MediaFile?> watchMedia(String mediaId) {
@@ -87,10 +103,9 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   Future<List<MediaFile>> getAllMediaFilesPendingUpload() async {
     return (select(mediaFiles)
           ..where(
-            (t) =>
-                t.uploadState.equals(UploadState.initialized.name) |
+            (t) => (t.uploadState.equals(UploadState.initialized.name) |
                 t.uploadState.equals(UploadState.uploadLimitReached.name) |
-                t.uploadState.equals(UploadState.preprocessing.name),
+                t.uploadState.equals(UploadState.preprocessing.name)),
           ))
         .get();
   }

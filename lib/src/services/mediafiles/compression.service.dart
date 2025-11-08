@@ -65,20 +65,24 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
   if (media.tempPath.existsSync()) {
     media.tempPath.deleteSync();
   }
+  if (media.ffmpegOutputPath.existsSync()) {
+    media.ffmpegOutputPath.deleteSync();
+  }
 
   final stopwatch = Stopwatch()..start();
   var command =
-      '-i "${media.originalPath.path}" -i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0" -map "0:a?" -preset veryfast -crf 28 -c:a aac -b:a 64k "${media.tempPath.path}"';
+      '-i "${media.originalPath.path}" -i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0" -map "0:a?" -preset veryfast -crf 28 -c:a aac -b:a 64k "${media.ffmpegOutputPath.path}"';
 
   if (media.removeAudio) {
     command =
-        '-i "${media.originalPath.path}" -i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0" -preset veryfast -crf 28 -an "${media.tempPath.path}"';
+        '-i "${media.originalPath.path}" -i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0" -preset veryfast -crf 28 -an "${media.ffmpegOutputPath.path}"';
   }
 
   final session = await FFmpegKit.execute(command);
   final returnCode = await session.getReturnCode();
 
   if (ReturnCode.isSuccess(returnCode)) {
+    media.ffmpegOutputPath.copySync(media.tempPath.path);
     stopwatch.stop();
     Log.info(
       'It took ${stopwatch.elapsedMilliseconds}ms to compress the video',

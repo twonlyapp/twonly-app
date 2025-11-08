@@ -45,11 +45,16 @@ class MediaFileService {
       var delete = true;
 
       final service = await MediaFileService.fromMediaId(mediaId);
+
       if (service == null) {
         Log.error(
           'Purging media file, as it is not in the database $mediaId.',
         );
       } else {
+        if (service.mediaFile.isDraftMedia) {
+          delete = false;
+        }
+
         final messages =
             await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
 
@@ -301,6 +306,10 @@ class MediaFileService {
   File get originalPath => _buildFilePath(
         'tmp',
         namePrefix: '.original',
+      );
+  File get ffmpegOutputPath => _buildFilePath(
+        'tmp',
+        namePrefix: '.ffmpeg',
       );
   File get overlayImagePath => _buildFilePath(
         'tmp',

@@ -1477,4 +1477,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get yourTwonlyScore => 'Dein twonly-Score';
+
+  @override
+  String get registrationClosed =>
+      'Aufgrund des aktuell sehr hohen Aufkommens haben wir die Registrierung vorübergehend deaktiviert, damit der Dienst zuverlässig bleibt. Bitte versuche es in ein paar Tagen noch einmal.';
 }

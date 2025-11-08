@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.dart';
@@ -352,6 +353,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     final mediaFileService = await initializeMediaUpload(
       type,
       gUser.defaultShowTime,
+      isDraftMedia: true,
     );
     if (!mounted) return true;
 

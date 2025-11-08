@@ -2677,6 +2677,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your twonly-Score'**
   String get yourTwonlyScore;
+
+  /// No description provided for @registrationClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Due to the current high volume of registrations, we have temporarily disabled registration to ensure that the service remains reliable. Please try again in a few days.'**
+  String get registrationClosed;
 }
 
 class _AppLocalizationsDelegate

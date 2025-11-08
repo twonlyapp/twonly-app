@@ -44,10 +44,12 @@ class MediaFiles extends Table {
 
   BoolColumn get requiresAuthentication =>
       boolean().withDefault(const Constant(false))();
+
   BoolColumn get reopenByContact =>
       boolean().withDefault(const Constant(false))();
 
   BoolColumn get stored => boolean().withDefault(const Constant(false))();
+  BoolColumn get isDraftMedia => boolean().withDefault(const Constant(false))();
 
   TextColumn get reuploadRequestedBy =>
       text().map(IntListTypeConverter()).nullable()();

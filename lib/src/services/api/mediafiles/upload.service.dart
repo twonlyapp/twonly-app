@@ -24,8 +24,24 @@ Future<void> finishStartedPreprocessing() async {
       await twonlyDB.mediaFilesDao.getAllMediaFilesPendingUpload();
 
   for (final mediaFile in mediaFiles) {
+    if (mediaFile.isDraftMedia) {
+      continue;
+    }
     try {
       final service = await MediaFileService.fromMedia(mediaFile);
+      if (!service.originalPath.existsSync() &&
+          !service.uploadRequestPath.existsSync()) {
+        if (service.storedPath.existsSync()) {
+          // media files was just stored..
+          continue;
+        }
+        Log.info(
+          'Deleted media files, as originalPath and uploadRequestPath both do not exists',
+        );
+        // the file does not exists anymore.
+        await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+        continue;
+      }
       await startBackgroundMediaUpload(service);
     } catch (e) {
       Log.error(e);
@@ -35,11 +51,16 @@ Future<void> finishStartedPreprocessing() async {
 
 Future<MediaFileService?> initializeMediaUpload(
   MediaType type,
-  int? displayLimitInMilliseconds,
-) async {
+  int? displayLimitInMilliseconds, {
+  bool isDraftMedia = false,
+}) async {
   final chacha20 = FlutterChacha20.poly1305Aead();
   final encryptionKey = await (await chacha20.newSecretKey()).extract();
   final encryptionNonce = chacha20.newNonce();
+
+  await twonlyDB.mediaFilesDao.updateAllMediaFiles(
+    const MediaFilesCompanion(isDraftMedia: Value(false)),
+  );
 
   final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
     MediaFilesCompanion(
@@ -47,6 +68,7 @@ Future<MediaFileService?> initializeMediaUpload(
       displayLimitInMilliseconds: Value(displayLimitInMilliseconds),
       encryptionKey: Value(Uint8List.fromList(encryptionKey.bytes)),
       encryptionNonce: Value(Uint8List.fromList(encryptionNonce)),
+      isDraftMedia: Value(isDraftMedia),
       type: Value(type),
     ),
   );
@@ -58,6 +80,11 @@ Future<void> insertMediaFileInMessagesTable(
   MediaFileService mediaService,
   List<String> groupIds,
 ) async {
+  await twonlyDB.mediaFilesDao.updateAllMediaFiles(
+    const MediaFilesCompanion(
+      isDraftMedia: Value(false),
+    ),
+  );
   for (final groupId in groupIds) {
     final message = await twonlyDB.messagesDao.insertMessage(
       MessagesCompanion(

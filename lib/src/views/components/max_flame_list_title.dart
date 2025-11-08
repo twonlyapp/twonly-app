@@ -36,7 +36,8 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
     _flameCounterSub = stream.listen((counter) {
       if (mounted) {
         setState(() {
-          _flameCounter = counter;
+          _flameCounter = counter -
+              1; // in the watchFlameCounter a one is added, so remove this here
         });
       }
     });
@@ -73,7 +74,7 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
     await twonlyDB.groupsDao.updateGroup(
       _groupId,
       GroupsCompanion(
-        flameCounter: Value(_directChat!.maxFlameCounter - 1),
+        flameCounter: Value(_directChat!.maxFlameCounter),
         lastFlameCounterChange: Value(DateTime.now()),
       ),
     );
@@ -84,7 +85,7 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
   Widget build(BuildContext context) {
     if (_directChat == null ||
         _directChat!.maxFlameCounter == 0 ||
-        _flameCounter >= (_directChat!.maxFlameCounter + 1) ||
+        _flameCounter >= _directChat!.maxFlameCounter ||
         _directChat!.maxFlameCounterFrom!
             .isBefore(DateTime.now().subtract(const Duration(days: 4)))) {
       return Container();
@@ -97,7 +98,7 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
           emoji: '🔥',
         ),
       ),
-      text: 'Restore your ${_directChat!.maxFlameCounter} lost flames',
+      text: 'Restore your ${_directChat!.maxFlameCounter + 1} lost flames',
     );
   }
 }

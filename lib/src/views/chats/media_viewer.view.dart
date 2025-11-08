@@ -476,8 +476,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                       if (videoController != null)
                         Positioned.fill(
                           child: VideoPlayer(videoController!),
-                        ),
-                      if (currentMedia != null &&
+                        )
+                      else if (currentMedia != null &&
                               currentMedia!.mediaFile.type == MediaType.image ||
                           currentMedia!.mediaFile.type == MediaType.gif)
                         Positioned.fill(

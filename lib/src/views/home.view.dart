@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/chats/chat_list.view.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
 
@@ -144,6 +147,21 @@ class HomeViewState extends State<HomeView> {
       if (notificationAppLaunchDetails.didNotificationLaunchApp) {
         globalUpdateOfHomeViewPageIndex(0);
       }
+    }
+
+    final draftMedia = await twonlyDB.mediaFilesDao.getDraftMediaFile();
+    if (draftMedia != null) {
+      final service = await MediaFileService.fromMedia(draftMedia);
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ShareImageEditorView(
+            mediaFileService: service,
+            sharedFromGallery: true,
+          ),
+        ),
+      );
     }
   }
 
