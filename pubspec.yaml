@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.0.62+62
+version: 0.0.64+64
 
 environment:
   sdk: ^3.6.0
@@ -76,6 +76,12 @@ dependencies:
   web_socket_channel: ^3.0.1
 
 dependency_overrides: 
+
+  flutter_android_volume_keydown:
+    git:
+      url: https://github.com/yenchieh/flutter_android_volume_keydown.git
+      branch: fix/lStar-not-found-error
+      
   # hardcoding the mirror mode of the VideCapture to MIRROR_MODE_ON_FRONT_ONLY
   camera_android_camerax: 
     # path: ../flutter-packages/packages/camera/camera_android_camerax

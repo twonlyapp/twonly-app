@@ -27,13 +27,18 @@ import 'package:twonly/src/utils/storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initFCMService();
+  try {
+    await initFCMService();
+  } catch (e) {
+    Log.error('$e');
+  }
 
   initLogger();
 
   final user = await getUser();
   if (user != null) {
     gUser = user;
+    unawaited(performTwonlySafeBackup());
   }
 
   final settingsController = SettingsChangeProvider();
@@ -63,8 +68,6 @@ void main() async {
   unawaited(MediaFileService.purgeTempFolder());
   unawaited(createPushAvatars());
   await twonlyDB.messagesDao.purgeMessageTable();
-
-  unawaited(performTwonlySafeBackup());
 
   runApp(
     MultiProvider(
