@@ -59,7 +59,9 @@ android {
         //     applicationIdSuffix ".STOP"
         // }
         release {
-           signingConfig signingConfigs.release
+            shrinkResources false
+            minifyEnabled false
+            signingConfig signingConfigs.release
        }
     }
 }
