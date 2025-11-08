@@ -192,7 +192,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             ? '0'
             : media.displayLimitInMilliseconds == null
                 ? '∞'
-                : media.displayLimitInMilliseconds.toString(),
+                : (media.displayLimitInMilliseconds! ~/ 1000).toString(),
         child: ActionButton(
           (media.type == MediaType.video)
               ? media.displayLimitInMilliseconds == null
@@ -211,11 +211,13 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             }
             int? maxShowTime;
             if (media.displayLimitInMilliseconds == null) {
-              maxShowTime = 1;
-            } else if (media.displayLimitInMilliseconds == 1) {
-              maxShowTime = 5;
-            } else if (media.displayLimitInMilliseconds == 5) {
-              maxShowTime = 20;
+              maxShowTime = 1000;
+            } else if (media.displayLimitInMilliseconds == 1000) {
+              maxShowTime = 5000;
+            } else if (media.displayLimitInMilliseconds == 5000) {
+              maxShowTime = 12000;
+            } else if (media.displayLimitInMilliseconds == 12000) {
+              maxShowTime = 20000;
             }
             await mediaService.setDisplayLimit(maxShowTime);
             if (!mounted) return;

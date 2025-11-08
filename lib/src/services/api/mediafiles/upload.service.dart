@@ -54,6 +54,11 @@ Future<MediaFileService?> initializeMediaUpload(
   int? displayLimitInMilliseconds, {
   bool isDraftMedia = false,
 }) async {
+  if (displayLimitInMilliseconds != null && displayLimitInMilliseconds < 1000) {
+    // in case the time was set in seconds...
+    // ignore: parameter_assignments
+    displayLimitInMilliseconds = displayLimitInMilliseconds * 1000;
+  }
   final chacha20 = FlutterChacha20.poly1305Aead();
   final encryptionKey = await (await chacha20.newSecretKey()).extract();
   final encryptionNonce = chacha20.newNonce();

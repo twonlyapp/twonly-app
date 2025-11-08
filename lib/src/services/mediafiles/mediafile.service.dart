@@ -157,7 +157,7 @@ class MediaFileService {
       MediaFilesCompanion(
         requiresAuthentication: Value(requiresAuthentication),
         displayLimitInMilliseconds:
-            requiresAuthentication ? const Value(12) : const Value.absent(),
+            requiresAuthentication ? const Value(12000) : const Value.absent(),
       ),
     );
     await updateFromDB();

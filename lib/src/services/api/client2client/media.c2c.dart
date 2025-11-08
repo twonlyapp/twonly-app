@@ -66,15 +66,23 @@ Future<void> handleMedia(
       mediaType = MediaType.audio;
   }
 
+  int? displayLimitInMilliseconds;
+  if (media.hasDisplayLimitInMilliseconds()) {
+    if (media.displayLimitInMilliseconds.toInt() < 1000) {
+      displayLimitInMilliseconds =
+          media.displayLimitInMilliseconds.toInt() * 1000;
+    } else {
+      displayLimitInMilliseconds = media.displayLimitInMilliseconds.toInt();
+    }
+  }
+
   final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
     MediaFilesCompanion(
       downloadState: const Value(DownloadState.pending),
       type: Value(mediaType),
       requiresAuthentication: Value(media.requiresAuthentication),
       displayLimitInMilliseconds: Value(
-        media.hasDisplayLimitInMilliseconds()
-            ? media.displayLimitInMilliseconds.toInt()
-            : null,
+        displayLimitInMilliseconds,
       ),
       downloadToken: Value(Uint8List.fromList(media.downloadToken)),
       encryptionKey: Value(Uint8List.fromList(media.encryptionKey)),
