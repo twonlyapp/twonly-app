@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
@@ -54,7 +55,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
   bool imageSaved = false;
   bool imageSaving = false;
-  bool displayTwonlyPresent = true;
+  bool displayTwonlyPresent = false;
   final emojiKey = GlobalKey<EmojiFloatWidgetState>();
 
   StreamSubscription<MediaFile?>? downloadStateListener;
@@ -62,6 +63,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   List<Message> allMediaFiles = [];
   late StreamSubscription<List<Message>> _subscription;
   TextEditingController textMessageController = TextEditingController();
+
+  final HashSet<String> _alreadyOpenedMediaIds = HashSet();
 
   @override
   void initState() {
@@ -92,6 +95,13 @@ class _MediaViewerViewState extends State<MediaViewerView> {
 
     _subscription = messages.listen((messages) async {
       for (final msg in messages) {
+        if (_alreadyOpenedMediaIds.contains(msg.mediaId)) {
+          continue;
+        }
+        if (msg.mediaId == null) {
+          continue;
+        }
+
         if (msg.mediaId == currentMedia?.mediaFile.mediaId) {
           // The update of the current Media in case of a download is done in loadCurrentMediaFile
           continue;
@@ -195,13 +205,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     bool showTwonly,
   ) async {
     if (allMediaFiles.isEmpty) return;
-    currentMessage = allMediaFiles.removeAt(0);
     final currentMediaLocal =
-        await MediaFileService.fromMediaId(currentMessage!.mediaId!);
+        await MediaFileService.fromMediaId(allMediaFiles.first.mediaId!);
     if (currentMediaLocal == null || !mounted) return;
 
     if (currentMediaLocal.mediaFile.requiresAuthentication) {
-      if (!showTwonly) return;
+      if (!showTwonly) {
+        setState(() {
+          displayTwonlyPresent = true;
+        });
+        return;
+      }
 
       final isAuth = await authenticateUser(
         context.lang.mediaViewerAuthReason,
@@ -209,9 +223,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       );
       if (!isAuth) {
         await nextMediaOrExit();
+        setState(() {
+          displayTwonlyPresent = false;
+        });
         return;
       }
     }
+
+    _alreadyOpenedMediaIds.add(allMediaFiles.first.mediaId!);
+    currentMessage = allMediaFiles.removeAt(0);
+
+    setState(() {
+      displayTwonlyPresent = false;
+    });
 
     await notifyContactAboutOpeningMessage(
       currentMessage!.senderId!,
@@ -490,9 +514,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ),
                 ),
               ),
-            if (currentMedia != null &&
-                currentMedia!.mediaFile.requiresAuthentication &&
-                displayTwonlyPresent)
+            if (displayTwonlyPresent)
               Positioned.fill(
                 child: GestureDetector(
                   onTap: () {

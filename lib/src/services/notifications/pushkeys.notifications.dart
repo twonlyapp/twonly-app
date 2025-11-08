@@ -362,36 +362,49 @@ Future<Uint8List?> encryptPushNotification(
 
 Future<List<PushUser>> getPushKeys(String storageKey) async {
   const storage = FlutterSecureStorage();
-  final pushKeysProto = await storage.read(
-    key: storageKey,
-    iOptions: const IOSOptions(
-      groupId: 'CN332ZUGRP.eu.twonly.shared',
-      accessibility: KeychainAccessibility.first_unlock,
-    ),
-  );
-  if (pushKeysProto == null) return [];
-  final pushKeysRaw = base64Decode(pushKeysProto);
-  return PushUsers.fromBuffer(pushKeysRaw).users;
+  try {
+    final pushKeysProto = await storage.read(
+      key: storageKey,
+      iOptions: const IOSOptions(
+        groupId: 'CN332ZUGRP.eu.twonly.shared',
+        accessibility: KeychainAccessibility.first_unlock,
+      ),
+    );
+    if (pushKeysProto == null) return [];
+    final pushKeysRaw = base64Decode(pushKeysProto);
+    return PushUsers.fromBuffer(pushKeysRaw).users;
+  } catch (e) {
+    Log.error(e);
+  }
+  return [];
 }
 
 Future<void> setPushKeys(String storageKey, List<PushUser> pushKeys) async {
   const storage = FlutterSecureStorage();
 
-  await storage.delete(
-    key: storageKey,
-    iOptions: const IOSOptions(
-      groupId: 'CN332ZUGRP.eu.twonly.shared',
-      accessibility: KeychainAccessibility.first_unlock,
-    ),
-  );
+  try {
+    await storage.delete(
+      key: storageKey,
+      iOptions: const IOSOptions(
+        groupId: 'CN332ZUGRP.eu.twonly.shared',
+        accessibility: KeychainAccessibility.first_unlock,
+      ),
+    );
+  } catch (e) {
+    Log.error(e);
+  }
 
   final jsonString = base64Encode(PushUsers(users: pushKeys).writeToBuffer());
-  await storage.write(
-    key: storageKey,
-    value: jsonString,
-    iOptions: const IOSOptions(
-      groupId: 'CN332ZUGRP.eu.twonly.shared',
-      accessibility: KeychainAccessibility.first_unlock,
-    ),
-  );
+  try {
+    await storage.write(
+      key: storageKey,
+      value: jsonString,
+      iOptions: const IOSOptions(
+        groupId: 'CN332ZUGRP.eu.twonly.shared',
+        accessibility: KeychainAccessibility.first_unlock,
+      ),
+    );
+  } catch (e) {
+    Log.error(e);
+  }
 }
