@@ -367,6 +367,12 @@ class ApiService {
     final user = await getUser();
 
     if (apiAuthToken != null && user != null) {
+      if (user.appVersion < 62) {
+        Log.error(
+          'DID NOT authenticate the user, as he still has the old version!',
+        );
+        return false;
+      }
       final authenticate = Handshake_Authenticate()
         ..userId = Int64(userId)
         ..appVersion = (await PackageInfo.fromPlatform()).version

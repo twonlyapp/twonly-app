@@ -41,7 +41,7 @@ void main() async {
   await settingsController.loadSettings();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  // unawaited(setupPushNotification());
+  unawaited(setupPushNotification());
 
   gCameras = await availableCameras();
 
