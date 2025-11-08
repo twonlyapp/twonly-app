@@ -218,7 +218,16 @@ class _UserListItem extends State<GroupListItem> {
         subtitle: (_currentMessage == null)
             ? (widget.group.totalMediaCounter == 0)
                 ? Text(context.lang.chatsTapToSend)
-                : LastMessageTime(dateTime: widget.group.lastMessageExchange)
+                : Row(
+                    children: [
+                      LastMessageTime(
+                          dateTime: widget.group.lastMessageExchange),
+                      FlameCounterWidget(
+                        groupId: widget.group.groupId,
+                        prefix: true,
+                      ),
+                    ],
+                  )
             : Row(
                 children: [
                   MessageSendStateIcon(
