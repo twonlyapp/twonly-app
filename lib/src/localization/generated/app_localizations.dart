@@ -2683,6 +2683,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Due to the current high volume of registrations, we have temporarily disabled registration to ensure that the service remains reliable. Please try again in a few days.'**
   String get registrationClosed;
+
+  /// No description provided for @dialogAskDeleteMediaFilePopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your masterpiece?'**
+  String get dialogAskDeleteMediaFilePopTitle;
+
+  /// No description provided for @dialogAskDeleteMediaFilePopDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get dialogAskDeleteMediaFilePopDelete;
 }
 
 class _AppLocalizationsDelegate

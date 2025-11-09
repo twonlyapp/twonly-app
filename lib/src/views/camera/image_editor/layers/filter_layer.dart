@@ -75,7 +75,7 @@ class _FilterLayerState extends State<FilterLayer> {
   List<Widget> pages = [
     const FilterSkeleton(),
     const DateTimeFilter(),
-    const LocationFilter(),
+    // const LocationFilter(),
     const FilterSkeleton(),
   ];
 
