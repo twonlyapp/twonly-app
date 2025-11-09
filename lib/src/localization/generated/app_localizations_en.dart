@@ -1478,4 +1478,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dialogAskDeleteMediaFilePopDelete => 'Delete';
+
+  @override
+  String get allowErrorTracking => 'Share errors and crashes with us';
+
+  @override
+  String get allowErrorTrackingSubtitle =>
+      'If twonly crashes or errors occur, these are automatically reported to our self-hosted Glitchtip instance. Personal data such as messages or images are never uploaded.';
 }

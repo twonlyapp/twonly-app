@@ -26,7 +26,6 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           $enumDecodeNullable(_$ThemeModeEnumMap, json['themeMode']) ??
               ThemeMode.system
       ..defaultShowTime = (json['defaultShowTime'] as num?)?.toInt()
-      ..useHighQuality = json['useHighQuality'] as bool? ?? true
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
       ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
@@ -50,6 +49,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           json['signalLastSignedPreKeyUpdated'] == null
               ? null
               : DateTime.parse(json['signalLastSignedPreKeyUpdated'] as String)
+      ..allowErrorTrackingViaSentry =
+          json['allowErrorTrackingViaSentry'] as bool? ?? false
       ..currentPreKeyIndexStart =
           (json['currentPreKeyIndexStart'] as num?)?.toInt() ?? 100000
       ..currentSignedPreKeyIndexStart =
@@ -84,7 +85,6 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'todaysImageCounter': instance.todaysImageCounter,
       'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
       'defaultShowTime': instance.defaultShowTime,
-      'useHighQuality': instance.useHighQuality,
       'requestedAudioPermission': instance.requestedAudioPermission,
       'showFeedbackShortcut': instance.showFeedbackShortcut,
       'preSelectedEmojies': instance.preSelectedEmojies,
@@ -96,6 +96,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'myBestFriendGroupId': instance.myBestFriendGroupId,
       'signalLastSignedPreKeyUpdated':
           instance.signalLastSignedPreKeyUpdated?.toIso8601String(),
+      'allowErrorTrackingViaSentry': instance.allowErrorTrackingViaSentry,
       'currentPreKeyIndexStart': instance.currentPreKeyIndexStart,
       'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
       'lastChangeLogHash': instance.lastChangeLogHash,

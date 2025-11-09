@@ -598,5 +598,7 @@
   "yourTwonlyScore": "Your twonly-Score",
   "registrationClosed": "Due to the current high volume of registrations, we have temporarily disabled registration to ensure that the service remains reliable. Please try again in a few days.",
   "dialogAskDeleteMediaFilePopTitle": "Are you sure you want to delete your masterpiece?",
-  "dialogAskDeleteMediaFilePopDelete": "Delete"
+  "dialogAskDeleteMediaFilePopDelete": "Delete",
+  "allowErrorTracking": "Share errors and crashes with us",
+  "allowErrorTrackingSubtitle": "If twonly crashes or errors occur, these are automatically reported to our self-hosted Glitchtip instance. Personal data such as messages or images are never uploaded."
 }

@@ -48,9 +48,6 @@ class UserData {
 
   int? defaultShowTime;
 
-  @JsonKey(defaultValue: true)
-  bool useHighQuality = true;
-
   @JsonKey(defaultValue: false)
   bool requestedAudioPermission = false;
 
@@ -72,6 +69,9 @@ class UserData {
   String? myBestFriendGroupId;
 
   DateTime? signalLastSignedPreKeyUpdated;
+
+  @JsonKey(defaultValue: false)
+  bool allowErrorTrackingViaSentry = false;
 
   //  -- Custom DATA --
 

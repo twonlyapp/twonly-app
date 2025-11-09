@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -11,8 +12,22 @@ import 'package:twonly/src/views/settings/help/diagnostics.view.dart';
 import 'package:twonly/src/views/settings/help/faq.view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class HelpView extends StatelessWidget {
+class HelpView extends StatefulWidget {
   const HelpView({super.key});
+
+  @override
+  State<HelpView> createState() => _HelpViewState();
+}
+
+class _HelpViewState extends State<HelpView> {
+  Future<void> toggleAllowErrorTrackingViaSentry() async {
+    await updateUserdata((u) {
+      u.allowErrorTrackingViaSentry = !u.allowErrorTrackingViaSentry;
+      return u;
+    });
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +64,10 @@ class HelpView extends StatelessWidget {
           ),
           ListTile(
             title: Text(context.lang.settingsResetTutorials),
-            subtitle: Text(context.lang.settingsResetTutorialsDesc),
+            subtitle: Text(
+              context.lang.settingsResetTutorialsDesc,
+              style: const TextStyle(fontSize: 12),
+            ),
             onTap: () async {
               await updateUserdata((user) {
                 user.tutorialDisplayed = [];
@@ -60,6 +78,32 @@ class HelpView extends StatelessWidget {
                 SnackBar(
                   content: Text(context.lang.settingsResetTutorialsSuccess),
                   duration: const Duration(seconds: 3),
+                ),
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            title: Text(context.lang.allowErrorTracking),
+            subtitle: Text(
+              context.lang.allowErrorTrackingSubtitle,
+              style: const TextStyle(fontSize: 10),
+            ),
+            onTap: toggleAllowErrorTrackingViaSentry,
+            trailing: Switch(
+              value: gUser.allowErrorTrackingViaSentry,
+              onChanged: (a) => toggleAllowErrorTrackingViaSentry(),
+            ),
+          ),
+          ListTile(
+            title: Text(context.lang.settingsHelpDiagnostics),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const DiagnosticsView();
+                  },
                 ),
               );
             },
@@ -92,19 +136,6 @@ class HelpView extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) {
                     return const CreditsView();
-                  },
-                ),
-              );
-            },
-          ),
-          ListTile(
-            title: Text(context.lang.settingsHelpDiagnostics),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const DiagnosticsView();
                   },
                 ),
               );
