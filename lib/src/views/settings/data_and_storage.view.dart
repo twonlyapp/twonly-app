@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -14,24 +15,6 @@ class DataAndStorageView extends StatefulWidget {
 }
 
 class _DataAndStorageViewState extends State<DataAndStorageView> {
-  Map<String, List<String>> autoDownloadOptions = defaultAutoDownloadOptions;
-  bool storeMediaFilesInGallery = true;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  Future<void> initAsync() async {
-    final user = await getUser();
-    if (user == null) return;
-    setState(() {
-      autoDownloadOptions =
-          user.autoDownloadOptions ?? defaultAutoDownloadOptions;
-      storeMediaFilesInGallery = user.storeMediaFilesInGallery;
-    });
-  }
-
   Future<void> showAutoDownloadOptions(
     BuildContext context,
     ConnectivityResult connectionMode,
@@ -41,10 +24,11 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
       context: context,
       builder: (BuildContext context) {
         return AutoDownloadOptionsDialog(
-          autoDownloadOptions: autoDownloadOptions,
+          autoDownloadOptions:
+              gUser.autoDownloadOptions ?? defaultAutoDownloadOptions,
           connectionMode: connectionMode,
           onUpdate: () async {
-            await initAsync();
+            setState(() {});
           },
         );
       },
@@ -53,14 +37,16 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
 
   Future<void> toggleStoreInGallery() async {
     await updateUserdata((u) {
-      u.storeMediaFilesInGallery = !storeMediaFilesInGallery;
+      u.storeMediaFilesInGallery = !u.storeMediaFilesInGallery;
       return u;
     });
-    await initAsync();
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    final autoDownloadOptions =
+        gUser.autoDownloadOptions ?? defaultAutoDownloadOptions;
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsStorageData),
@@ -72,7 +58,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
             subtitle: Text(context.lang.settingsStorageDataStoreInGSubtitle),
             onTap: toggleStoreInGallery,
             trailing: Switch(
-              value: storeMediaFilesInGallery,
+              value: gUser.storeMediaFilesInGallery,
               onChanged: (a) => toggleStoreInGallery(),
             ),
           ),
@@ -155,6 +141,14 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
                 .contains(DownloadMediaTypes.video.name),
             onChanged: (bool? value) async {
               await _updateAutoDownloadSetting(DownloadMediaTypes.video, value);
+            },
+          ),
+          CheckboxListTile(
+            title: const Text('Audio'),
+            value: autoDownloadOptions[widget.connectionMode.name]!
+                .contains(DownloadMediaTypes.audio.name),
+            onChanged: (bool? value) async {
+              await _updateAutoDownloadSetting(DownloadMediaTypes.audio, value);
             },
           ),
         ],

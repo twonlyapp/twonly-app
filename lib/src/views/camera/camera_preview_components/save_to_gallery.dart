@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class SaveToGalleryButton extends StatefulWidget {
@@ -54,22 +55,24 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
 
               final storedMediaPath = widget.mediaService.storedPath;
 
-              final storeToGallery = gUser.storeMediaFilesInGallery;
-
               await widget.mediaService.storeMediaFile();
 
-              if (storeToGallery) {
-                res = await saveVideoToGallery(storedMediaPath.path);
+              if (gUser.storeMediaFilesInGallery) {
+                if (widget.mediaService.mediaFile.type == MediaType.video) {
+                  res = await saveVideoToGallery(storedMediaPath.path);
+                } else {
+                  res = await saveImageToGallery(
+                    storedMediaPath.readAsBytesSync(),
+                  );
+                }
               }
-
-              await widget.mediaService.compressMedia();
-              await widget.mediaService.createThumbnail();
 
               if (res == null) {
                 setState(() {
                   _imageSaved = true;
                 });
               } else if (mounted && context.mounted) {
+                Log.error('Could not store media file in the gallery.');
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(res),

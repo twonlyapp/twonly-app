@@ -231,15 +231,14 @@ class MediaFileService {
       ),
     );
 
-    if (originalPath.existsSync()) {
-      await originalPath.copy(tempPath.path);
+    if (originalPath.existsSync() && !tempPath.existsSync()) {
       await compressMedia();
     }
     if (tempPath.existsSync()) {
       await tempPath.copy(storedPath.path);
     } else {
       Log.error(
-        'Could not store image neither tempPath nor originalPath exists.',
+        'Could not store image neither as tempPath does not exists.',
       );
     }
     unawaited(createThumbnail());
