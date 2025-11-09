@@ -62,12 +62,43 @@ class _TextViewState extends State<TextLayer> {
     });
   }
 
+  Future<void> onEditionComplete() async {
+    Future.delayed(const Duration(milliseconds: 10), () async {
+      setState(() {
+        widget.layerData.isDeleted = textController.text == '';
+        widget.layerData.isEditing = false;
+        widget.layerData.text = textController.text;
+      });
+
+      if (!mounted) return;
+
+      await context
+          .read<ImageEditorProvider>()
+          .updateSomeTextViewIsAlreadyEditing(false);
+      if (widget.onUpdate != null) {
+        widget.onUpdate!();
+      }
+    });
+  }
+
+  double maxBottomInset = 0;
+
   @override
   Widget build(BuildContext context) {
     if (widget.layerData.isDeleted) return Container();
 
     final bottom = MediaQuery.of(context).viewInsets.bottom +
         MediaQuery.of(context).viewPadding.bottom;
+
+    if (maxBottomInset > bottom) {
+      maxBottomInset = 0;
+      if (widget.layerData.isEditing) {
+        widget.layerData.isEditing = false;
+        onEditionComplete();
+      }
+    } else {
+      maxBottomInset = bottom;
+    }
 
     if (widget.layerData.isEditing) {
       return Positioned(
@@ -83,20 +114,7 @@ class _TextViewState extends State<TextLayer> {
             autofocus: true,
             maxLines: null,
             minLines: 1,
-            onEditingComplete: () async {
-              setState(() {
-                widget.layerData.isDeleted = textController.text == '';
-                widget.layerData.isEditing = false;
-                widget.layerData.text = textController.text;
-              });
-
-              await context
-                  .read<ImageEditorProvider>()
-                  .updateSomeTextViewIsAlreadyEditing(false);
-              if (widget.onUpdate != null) {
-                widget.onUpdate!();
-              }
-            },
+            onEditingComplete: onEditionComplete,
             onTapOutside: (a) async {
               widget.layerData.text = textController.text;
               Future.delayed(const Duration(milliseconds: 100), () async {

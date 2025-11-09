@@ -58,7 +58,10 @@ class _MediaViewSizingState extends State<MediaViewSizing> {
     if (widget.bottomNavigation != null) {
       if (needToDownSizeImage) {
         imageChild = Expanded(child: imageChild);
-        bottomNavigation = widget.bottomNavigation!;
+        bottomNavigation = SizedBox(
+          height: widget.requiredHeight,
+          child: widget.bottomNavigation,
+        );
       } else {
         bottomNavigation = Expanded(child: widget.bottomNavigation!);
       }
