@@ -44,14 +44,14 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     if (receipt == null) {
       receipt = await twonlyDB.receiptsDao.getReceiptById(receiptId!);
       if (receipt == null) {
-        Log.error('Receipt $receiptId not found.');
+        Log.error('Receipt not found.');
         return null;
       }
     }
     receiptId = receipt.receiptId;
 
     if (!onlyReturnEncryptedData && receipt.ackByServerAt != null) {
-      Log.error('$receiptId message already uploaded!');
+      Log.error('message already uploaded!');
       return null;
     }
 

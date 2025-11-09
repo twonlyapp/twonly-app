@@ -322,11 +322,11 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
           flameCounter += 1;
           lastFlameCounterChange = Value(timestamp);
           // Overwrite max flame counter either the current is bigger or the th max flame counter is older then 4 days
-          if ((flameCounter + 1) >= maxFlameCounter ||
+          if (flameCounter >= maxFlameCounter ||
               maxFlameCounterFrom == null ||
               maxFlameCounterFrom
                   .isBefore(DateTime.now().subtract(const Duration(days: 5)))) {
-            maxFlameCounter = flameCounter + 1;
+            maxFlameCounter = flameCounter;
             maxFlameCounterFrom = DateTime.now();
           }
         }

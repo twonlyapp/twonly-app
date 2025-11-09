@@ -1481,4 +1481,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get registrationClosed =>
       'Aufgrund des aktuell sehr hohen Aufkommens haben wir die Registrierung vorübergehend deaktiviert, damit der Dienst zuverlässig bleibt. Bitte versuche es in ein paar Tagen noch einmal.';
+
+  @override
+  String get dialogAskDeleteMediaFilePopTitle =>
+      'Bist du sicher, dass du dein Meisterwerk löschen möchtest?';
+
+  @override
+  String get dialogAskDeleteMediaFilePopDelete => 'Löschen';
+
+  @override
+  String get allowErrorTracking => 'Fehler und Crashes mit uns teilen';
+
+  @override
+  String get allowErrorTrackingSubtitle =>
+      'Wenn twonly abstürzt oder Fehler auftreten, werden diese automatisch an unsere selbst gehostete Glitchtip-Instanz gemeldet. Persönliche Daten wie Nachrichten oder Bilder werden niemals hochgeladen.';
 }

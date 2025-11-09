@@ -221,7 +221,8 @@ class _UserListItem extends State<GroupListItem> {
                 : Row(
                     children: [
                       LastMessageTime(
-                          dateTime: widget.group.lastMessageExchange),
+                        dateTime: widget.group.lastMessageExchange,
+                      ),
                       FlameCounterWidget(
                         groupId: widget.group.groupId,
                         prefix: true,

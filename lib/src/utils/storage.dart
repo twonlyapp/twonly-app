@@ -59,6 +59,10 @@ Future<UserData?> updateUserdata(
   final userData = await updateProtection.protect<UserData?>(() async {
     final user = await getUser();
     if (user == null) return null;
+    if (user.defaultShowTime == 999999) {
+      // This was the old version for infinity -> change it to null
+      user.defaultShowTime = null;
+    }
     final updated = updateUser(user);
     await const FlutterSecureStorage()
         .write(key: SecureStorageKeys.userData, value: jsonEncode(updated));

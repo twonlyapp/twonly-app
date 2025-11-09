@@ -2683,6 +2683,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Due to the current high volume of registrations, we have temporarily disabled registration to ensure that the service remains reliable. Please try again in a few days.'**
   String get registrationClosed;
+
+  /// No description provided for @dialogAskDeleteMediaFilePopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete your masterpiece?'**
+  String get dialogAskDeleteMediaFilePopTitle;
+
+  /// No description provided for @dialogAskDeleteMediaFilePopDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get dialogAskDeleteMediaFilePopDelete;
+
+  /// No description provided for @allowErrorTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Share errors and crashes with us'**
+  String get allowErrorTracking;
+
+  /// No description provided for @allowErrorTrackingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If twonly crashes or errors occur, these are automatically reported to our self-hosted Glitchtip instance. Personal data such as messages or images are never uploaded.'**
+  String get allowErrorTrackingSubtitle;
 }
 
 class _AppLocalizationsDelegate

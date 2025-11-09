@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.67
+
+- Adds crash reports (optional). Please consider enabling this under Settings > Help > “Share errors and crashes with us.”
+- Fixes bug when saving images to the gallery
+- Multiple layout issues fixed
+- Multiple bug fixes
+
 ## 0.0.62
 
 - Support for groups with multiple administrators
@@ -15,7 +22,6 @@
 - Database identifiers converted to UUIDs and the database schema completely redesigned
 - Improved reliability of client-to-client messaging
 - Multiple bug fixes
-
 
 ## 0.0.61
 

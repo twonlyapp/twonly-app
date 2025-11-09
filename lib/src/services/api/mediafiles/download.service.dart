@@ -248,7 +248,7 @@ Future<void> requestMediaReupload(String mediaId) async {
 Future<void> handleEncryptedFile(String mediaId) async {
   final mediaService = await MediaFileService.fromMediaId(mediaId);
   if (mediaService == null) {
-    Log.error('Media file $mediaId not found in database.');
+    Log.error('Media file not found in database.');
     return;
   }
 
@@ -263,7 +263,7 @@ Future<void> handleEncryptedFile(String mediaId) async {
   try {
     encryptedBytes = await mediaService.encryptedPath.readAsBytes();
   } catch (e) {
-    Log.error('Could not read encrypted media file: $mediaId. $e');
+    Log.error('Could not read encrypted media file: $e');
     await requestMediaReupload(mediaId);
     return;
   }

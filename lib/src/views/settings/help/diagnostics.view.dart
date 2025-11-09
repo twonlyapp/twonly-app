@@ -28,7 +28,7 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
     return Scaffold(
       appBar: AppBar(title: const Text('Diagnostics')),
       body: FutureBuilder<String>(
-        future: loadLogFile(),
+        future: readLast1000Lines(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

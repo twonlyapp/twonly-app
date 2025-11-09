@@ -264,6 +264,40 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     ];
   }
 
+  Future<bool?> _showBackDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            context.lang.dialogAskDeleteMediaFilePopTitle,
+          ),
+          actions: [
+            FilledButton(
+              child: Text(context.lang.dialogAskDeleteMediaFilePopDelete),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+            ),
+            TextButton(
+              child: Text(context.lang.cancel),
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> askToCloseThenClose() async {
+    final shouldPop = await _showBackDialog() ?? false;
+    if (mounted && shouldPop) {
+      Navigator.pop(context);
+    }
+  }
+
   List<Widget> get actionsAtTheTop {
     if (layers.isNotEmpty &&
         layers.last.isEditing &&
@@ -275,7 +309,14 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         FontAwesomeIcons.xmark,
         tooltipText: context.lang.close,
         onPressed: () async {
-          Navigator.pop(context, false);
+          final nonImageFilterLayer = layers.where(
+            (x) => x is! BackgroundLayerData && x is! FilterLayerData,
+          );
+          if (nonImageFilterLayer.isEmpty) {
+            Navigator.pop(context, false);
+          } else {
+            await askToCloseThenClose();
+          }
         },
       ),
       Expanded(child: Container()),
@@ -446,153 +487,161 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Widget build(BuildContext context) {
     pixelRatio = MediaQuery.of(context).devicePixelRatio;
 
-    return Scaffold(
-      backgroundColor:
-          widget.sharedFromGallery ? null : Colors.white.withAlpha(0),
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          GestureDetector(
-            onTapDown: (details) {
-              if (details.globalPosition.dy > 60) {
-                tabDownPosition = details.globalPosition.dy - 60;
-              } else {
-                tabDownPosition = details.globalPosition.dy;
-              }
-            },
-            onTap: () {
-              if (layers.any((x) => x.isEditing)) {
-                return;
-              }
-              layers = layers.where((x) => !x.isDeleted).toList();
-              undoLayers.clear();
-              removedLayers.clear();
-              layers.add(
-                TextLayerData(
-                  offset: Offset(0, tabDownPosition),
-                  textLayersBefore: layers.whereType<TextLayerData>().length,
-                ),
-              );
-              setState(() {});
-            },
-            child: MediaViewSizing(
-              bottomNavigation: ColoredBox(
-                color: Theme.of(context).colorScheme.surface,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SaveToGalleryButton(
-                      storeImageAsOriginal: storeImageAsOriginal,
-                      mediaService: mediaService,
-                      displayButtonLabel: widget.sendToGroup == null,
-                      isLoading: loadingImage,
-                    ),
-                    if (widget.sendToGroup != null) const SizedBox(width: 10),
-                    if (widget.sendToGroup != null)
-                      OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          iconColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.primary,
-                        ),
-                        onPressed: pushShareImageView,
-                        child: const FaIcon(FontAwesomeIcons.userPlus),
+    return PopScope<bool?>(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, bool? result) async {
+        if (didPop) return;
+        await askToCloseThenClose();
+      },
+      child: Scaffold(
+        backgroundColor:
+            widget.sharedFromGallery ? null : Colors.white.withAlpha(0),
+        resizeToAvoidBottomInset: false,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            GestureDetector(
+              onTapDown: (details) {
+                if (details.globalPosition.dy > 60) {
+                  tabDownPosition = details.globalPosition.dy - 60;
+                } else {
+                  tabDownPosition = details.globalPosition.dy;
+                }
+              },
+              onTap: () {
+                if (layers.any((x) => x.isEditing)) {
+                  return;
+                }
+                layers = layers.where((x) => !x.isDeleted).toList();
+                undoLayers.clear();
+                removedLayers.clear();
+                layers.add(
+                  TextLayerData(
+                    offset: Offset(0, tabDownPosition),
+                    textLayersBefore: layers.whereType<TextLayerData>().length,
+                  ),
+                );
+                setState(() {});
+              },
+              child: MediaViewSizing(
+                requiredHeight: 90,
+                bottomNavigation: ColoredBox(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SaveToGalleryButton(
+                        storeImageAsOriginal: storeImageAsOriginal,
+                        mediaService: mediaService,
+                        displayButtonLabel: widget.sendToGroup == null,
+                        isLoading: loadingImage,
                       ),
-                    SizedBox(width: widget.sendToGroup == null ? 20 : 10),
-                    FilledButton.icon(
-                      icon: sendingOrLoadingImage
-                          ? SizedBox(
-                              height: 12,
-                              width: 12,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .inversePrimary,
-                              ),
-                            )
-                          : const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                      onPressed: () async {
-                        if (sendingOrLoadingImage) return;
-                        if (widget.sendToGroup == null) {
-                          return pushShareImageView();
-                        }
-                        await sendImageToSinglePerson();
-                      },
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsets>(
-                          const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 30,
+                      if (widget.sendToGroup != null) const SizedBox(width: 10),
+                      if (widget.sendToGroup != null)
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            iconColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.primary,
+                          ),
+                          onPressed: pushShareImageView,
+                          child: const FaIcon(FontAwesomeIcons.userPlus),
+                        ),
+                      SizedBox(width: widget.sendToGroup == null ? 20 : 10),
+                      FilledButton.icon(
+                        icon: sendingOrLoadingImage
+                            ? SizedBox(
+                                height: 12,
+                                width: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inversePrimary,
+                                ),
+                              )
+                            : const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                        onPressed: () async {
+                          if (sendingOrLoadingImage) return;
+                          if (widget.sendToGroup == null) {
+                            return pushShareImageView();
+                          }
+                          await sendImageToSinglePerson();
+                        },
+                        style: ButtonStyle(
+                          padding: WidgetStateProperty.all<EdgeInsets>(
+                            const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 30,
+                            ),
                           ),
                         ),
+                        label: Text(
+                          (widget.sendToGroup == null)
+                              ? context.lang.shareImagedEditorShareWith
+                              : substringBy(widget.sendToGroup!.groupName, 15),
+                          style: const TextStyle(fontSize: 17),
+                        ),
                       ),
-                      label: Text(
-                        (widget.sendToGroup == null)
-                            ? context.lang.shareImagedEditorShareWith
-                            : substringBy(widget.sendToGroup!.groupName, 15),
-                        style: const TextStyle(fontSize: 17),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              child: SizedBox(
-                height: currentImage.height / pixelRatio,
-                width: currentImage.width / pixelRatio,
-                child: Stack(
-                  children: [
-                    if (videoController != null)
-                      Positioned.fill(
-                        child: VideoPlayer(videoController!),
-                      ),
-                    Screenshot(
-                      controller: screenshotController,
-                      child: LayersViewer(
-                        layers: layers.where((x) => !x.isDeleted).toList(),
-                        onUpdate: () {
-                          for (final layer in layers) {
-                            layer.isEditing = false;
-                            if (layer.isDeleted) {
-                              removedLayers.add(layer);
+                child: SizedBox(
+                  height: currentImage.height / pixelRatio,
+                  width: currentImage.width / pixelRatio,
+                  child: Stack(
+                    children: [
+                      if (videoController != null)
+                        Positioned.fill(
+                          child: VideoPlayer(videoController!),
+                        ),
+                      Screenshot(
+                        controller: screenshotController,
+                        child: LayersViewer(
+                          layers: layers.where((x) => !x.isDeleted).toList(),
+                          onUpdate: () {
+                            for (final layer in layers) {
+                              layer.isEditing = false;
+                              if (layer.isDeleted) {
+                                removedLayers.add(layer);
+                              }
                             }
-                          }
-                          layers = layers.where((x) => !x.isDeleted).toList();
-                          setState(() {});
-                        },
+                            layers = layers.where((x) => !x.isDeleted).toList();
+                            setState(() {});
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            top: 10,
-            left: 5,
-            right: 0,
-            child: SafeArea(
-              child: Row(
-                children: actionsAtTheTop,
-              ),
-            ),
-          ),
-          Positioned(
-            right: 6,
-            top: 100,
-            child: Container(
-              alignment: Alignment.bottomCenter,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+            Positioned(
+              top: 10,
+              left: 5,
+              right: 0,
               child: SafeArea(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: actionsAtTheRight,
+                child: Row(
+                  children: actionsAtTheTop,
                 ),
               ),
             ),
-          ),
-        ],
+            Positioned(
+              right: 6,
+              top: 100,
+              child: Container(
+                alignment: Alignment.bottomCenter,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: actionsAtTheRight,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

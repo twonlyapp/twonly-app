@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:twonly/globals.dart';
 
 void initLogger() {
   // Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
@@ -20,6 +22,13 @@ void initLogger() {
 
 class Log {
   static void error(Object? message, [Object? error, StackTrace? stackTrace]) {
+    if (globalAllowErrorTrackingViaSentry) {
+      try {
+        throw Exception(message);
+      } catch (exception, stackTrace) {
+        Sentry.captureException(exception, stackTrace: stackTrace);
+      }
+    }
     Logger(_getCallerSourceCodeFilename()).shout(message, error, stackTrace);
   }
 
@@ -43,6 +52,15 @@ Future<String> loadLogFile() async {
   } else {
     return 'Log file does not exist.';
   }
+}
+
+Future<String> readLast1000Lines() async {
+  final dir = await getApplicationSupportDirectory();
+  final file = File('${dir.path}/app.log');
+  if (!file.existsSync()) return '';
+  final all = await file.readAsLines();
+  final start = all.length > 1000 ? all.length - 1000 : 0;
+  return all.sublist(start).join('\n');
 }
 
 Future<void> _writeLogToFile(LogRecord record) async {

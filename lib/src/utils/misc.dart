@@ -39,6 +39,7 @@ Future<String?> saveImageToGallery(Uint8List imageBytes) async {
     await Gal.putImageBytes(jpgImages);
     return null;
   } on GalException catch (e) {
+    Log.error(e);
     return e.type.message;
   }
 }
@@ -52,6 +53,7 @@ Future<String?> saveVideoToGallery(String videoPath) async {
     await Gal.putVideo(videoPath);
     return null;
   } on GalException catch (e) {
+    Log.error(e);
     return e.type.message;
   }
 }

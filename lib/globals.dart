@@ -33,3 +33,4 @@ void Function(SubscriptionPlan plan) globalCallbackUpdatePlan =
 Map<String, VoidCallback> globalUserDataChangedCallBack = {};
 
 bool globalIsAppInBackground = true;
+bool globalAllowErrorTrackingViaSentry = false;

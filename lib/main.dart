@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/app.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -69,13 +70,34 @@ void main() async {
   unawaited(createPushAvatars());
   await twonlyDB.messagesDao.purgeMessageTable();
 
+  final providers = [
+    ChangeNotifierProvider(create: (_) => settingsController),
+    ChangeNotifierProvider(create: (_) => CustomChangeProvider()),
+    ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
+  ];
+
+  if (user != null) {
+    if (user.allowErrorTrackingViaSentry) {
+      globalAllowErrorTrackingViaSentry = true;
+      return SentryFlutter.init(
+        (options) => options
+          ..dsn =
+              'https://6b24a012c85144c9b522440a1d17d01c@glitchtip.twonly.eu/4'
+          ..tracesSampleRate = 0.01
+          ..enableAutoSessionTracking = false,
+        appRunner: () => runApp(
+          MultiProvider(
+            providers: providers,
+            child: const App(),
+          ),
+        ),
+      );
+    }
+  }
+
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => settingsController),
-        ChangeNotifierProvider(create: (_) => CustomChangeProvider()),
-        ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
-      ],
+      providers: providers,
       child: const App(),
     ),
   );
