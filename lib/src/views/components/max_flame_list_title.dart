@@ -36,8 +36,8 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
     _flameCounterSub = stream.listen((counter) {
       if (mounted) {
         setState(() {
-          _flameCounter = counter -
-              1; // in the watchFlameCounter a one is added, so remove this here
+          // in the watchFlameCounter a one is added, so remove this here
+          _flameCounter = counter - 1;
         });
       }
     });
@@ -84,7 +84,7 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
   @override
   Widget build(BuildContext context) {
     if (_directChat == null ||
-        _directChat!.maxFlameCounter == 0 ||
+        _directChat!.maxFlameCounter <= 2 ||
         _flameCounter >= _directChat!.maxFlameCounter ||
         _directChat!.maxFlameCounterFrom!
             .isBefore(DateTime.now().subtract(const Duration(days: 4)))) {
