@@ -206,6 +206,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
       FlutterVolumeController.addListener(
         (volume) async {
+          if (!widget.isVisible) {
+            await deInitVolumeControl();
+            return;
+          }
           if (startedVolume == null) {
             startedVolume = volume;
             return;
@@ -221,7 +225,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
     if (Platform.isAndroid) {
       androidVolumeDownSub = FlutterAndroidVolumeKeydown.stream.listen((event) {
-        takePicture();
+        if (widget.isVisible) {
+          takePicture();
+        } else {
+          deInitVolumeControl();
+          return;
+        }
       });
     }
   }
