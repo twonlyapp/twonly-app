@@ -213,7 +213,7 @@ Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
       return user;
     });
   } else if (update.status == TaskStatus.complete) {
-    Log.error(
+    Log.info(
       'twonly Backup uploaded with status code ${update.responseStatusCode}',
     );
     await updateUserdata((user) {
