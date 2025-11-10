@@ -44,7 +44,7 @@ Future<void> finishStartedPreprocessing() async {
       }
       await startBackgroundMediaUpload(service);
     } catch (e) {
-      Log.error(e);
+      Log.warn(e);
     }
   }
 }

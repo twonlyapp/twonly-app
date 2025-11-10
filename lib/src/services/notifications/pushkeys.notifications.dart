@@ -325,7 +325,7 @@ Future<Uint8List?> encryptPushNotification(
         content.kind != PushKind.testNotification) {
       // this will be enforced after every app uses this system... :/
       // return null;
-      Log.error('Using insecure key as the receiver does not send a push key!');
+      Log.warn('Using insecure key as the receiver does not send a push key!');
 
       await sendCipherText(
         toUserId,

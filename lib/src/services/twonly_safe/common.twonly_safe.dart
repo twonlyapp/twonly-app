@@ -37,7 +37,7 @@ Future<void> removeTwonlySafeFromServer() async {
       );
       Log.info('Download deleted with: ${response.statusCode}');
     } catch (e) {
-      Log.error('Could not connect to the server.');
+      Log.error('Could not connect upload the backup.');
     }
   }
 }

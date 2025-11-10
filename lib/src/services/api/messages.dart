@@ -113,7 +113,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     );
 
     if (resp.isError) {
-      Log.error('Could not transmit message $receiptId got ${resp.error}.');
+      Log.warn('Could not transmit message got ${resp.error}.');
       if (resp.error == ErrorCode.UserIdNotFound) {
         await twonlyDB.receiptsDao.deleteReceipt(receiptId);
         await twonlyDB.contactsDao.updateContact(

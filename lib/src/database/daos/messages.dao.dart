@@ -119,11 +119,10 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             ..where(
               (m) =>
                   m.groupId.equals(group.groupId) &
-                  // m.messageId.equals(lastMessage.messageId).not() &
                   (m.mediaStored.equals(true) &
                           m.isDeletedFromSender.equals(true) |
                       m.mediaStored.equals(false)) &
-                  (m.openedByAll.isSmallerThanValue(deletionTime) |
+                  (m.openedAt.isSmallerThanValue(deletionTime) |
                       (m.isDeletedFromSender.equals(true) &
                           m.createdAt.isSmallerThanValue(deletionTime))),
             ))

@@ -35,11 +35,13 @@ class _LastMessageTimeState extends State<LastMessageTime> {
         lastMessageInSeconds =
             DateTime.now().difference(widget.dateTime!).inSeconds;
       }
-      setState(() {
-        if (lastMessageInSeconds < 0) {
-          lastMessageInSeconds = 0;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          if (lastMessageInSeconds < 0) {
+            lastMessageInSeconds = 0;
+          }
+        });
+      }
     });
   }
 

@@ -78,12 +78,7 @@ class ApiService {
       await _channel!.ready;
       Log.info('websocket connected to $apiUrl');
       return true;
-    } on WebSocketChannelException catch (e) {
-      if (!e.message
-          .toString()
-          .contains('No address associated with hostname')) {
-        Log.error('could not connect to api got: $e');
-      }
+    } catch (_) {
       return false;
     }
   }
@@ -311,17 +306,17 @@ class ApiService {
 
     final res = asResult(await _waitForResponse(seq));
     if (res.isError) {
-      Log.error('got error from server: ${res.error}');
+      Log.warn('Got error from server: ${res.error}');
       if (res.error == ErrorCode.AppVersionOutdated) {
         globalCallbackAppIsOutdated();
-        Log.error('App Version is OUTDATED.');
+        Log.warn('App Version is OUTDATED.');
         appIsOutdated = true;
         await close(() {});
         return Result.error(ErrorCode.InternalError);
       }
       if (res.error == ErrorCode.NewDeviceRegistered) {
         globalCallbackNewDeviceRegistered();
-        Log.error(
+        Log.warn(
           'Device is disabled, as a newer device restore twonly Backup.',
         );
         appIsOutdated = true;
@@ -336,13 +331,13 @@ class ApiService {
             // this will send the request one more time.
             return sendRequestSync(request, authenticated: false);
           } else {
-            Log.error('session is not authenticated');
+            Log.warn('Session is not authenticated');
             return Result.error(ErrorCode.InternalError);
           }
         }
       }
       if (res.error == ErrorCode.UserIdNotFound && contactId != null) {
-        Log.error('Contact deleted their account $contactId.');
+        Log.warn('Contact deleted their account $contactId.');
         final contact = await twonlyDB.contactsDao
             .getContactByUserId(contactId)
             .getSingleOrNull();

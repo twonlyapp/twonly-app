@@ -27,7 +27,7 @@ Future<void> compressImage(
 
     if (compressedBytes == null) {
       throw Exception(
-        'Could not compress media file: $sourceFile. Sending original file.',
+        'Could not compress media file: Sending original file.',
       );
     }
 
@@ -50,7 +50,7 @@ Future<void> compressImage(
 
     await destinationFile.writeAsBytes(compressedBytes);
   } catch (e) {
-    Log.error('$e');
+    Log.warn('$e');
     sourceFile.copySync(destinationFile.path);
   }
 

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:mutex/mutex.dart';
@@ -63,7 +62,7 @@ Future<void> handleClient2ClientMessage(int fromUserId, Uint8List body) async {
 
   await protectReceiptCheck.protect(() async {
     if (await twonlyDB.receiptsDao.isDuplicated(receiptId)) {
-      Log.error('Got duplicated message from the server. Ignoring it.');
+      Log.warn('Got duplicated message from the server.');
       return;
     }
     await twonlyDB.receiptsDao.gotReceipt(receiptId);
@@ -135,19 +134,23 @@ Future<void> handleClient2ClientMessage(int fromUserId, Uint8List body) async {
             ..receiptId = receiptId
             ..type = Message_Type.PLAINTEXT_CONTENT
             ..plaintextContent = responsePlaintextContent;
-          Log.error('Sending decryption error ($receiptId)');
+          Log.error('Sending decryption error');
         } else {
           response = Message()..type = Message_Type.SENDER_DELIVERY_RECEIPT;
         }
 
-        await twonlyDB.receiptsDao.insertReceipt(
-          ReceiptsCompanion(
-            receiptId: Value(receiptId),
-            contactId: Value(fromUserId),
-            message: Value(response.writeToBuffer()),
-            contactWillSendsReceipt: const Value(false),
-          ),
-        );
+        try {
+          await twonlyDB.receiptsDao.insertReceipt(
+            ReceiptsCompanion(
+              receiptId: Value(receiptId),
+              contactId: Value(fromUserId),
+              message: Value(response.writeToBuffer()),
+              contactWillSendsReceipt: const Value(false),
+            ),
+          );
+        } catch (e) {
+          Log.warn(e);
+        }
         await tryToSendCompleteMessage(receiptId: receiptId);
       }
     case Message_Type.TEST_NOTIFICATION:
