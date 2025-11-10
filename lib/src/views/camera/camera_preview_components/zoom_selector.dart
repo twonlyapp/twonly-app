@@ -41,6 +41,7 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   bool showWideAngleZoom = false;
   bool showWideAngleZoomIOS = false;
   bool _isDisposed = false;
+  int? _wideCameraIndex;
 
   @override
   void initState() {
@@ -51,7 +52,19 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
   Future<void> initAsync() async {
     showWideAngleZoom = (await widget.controller.getMinZoomLevel()) < 1;
     Log.info('Found ${gCameras.length} cameras for zoom.');
-    if (!showWideAngleZoom && Platform.isIOS && gCameras.length == 3) {
+
+    var index =
+        gCameras.indexWhere((t) => t.lensType == CameraLensType.ultraWide);
+    if (index == -1) {
+      index = gCameras.indexWhere(
+        (t) => t.lensType == CameraLensType.wide,
+      );
+    }
+    if (index != -1) {
+      _wideCameraIndex = index;
+    }
+
+    if (!showWideAngleZoom && Platform.isIOS && _wideCameraIndex != null) {
       showWideAngleZoomIOS = true;
     }
     if (_isDisposed) return;
@@ -76,10 +89,12 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
 
     const zoomTextStyle = TextStyle(fontSize: 13);
     final isSmallerFocused = widget.scaleFactor < 1 ||
-        (showWideAngleZoomIOS && widget.selectedCameraDetails.cameraId == 2);
+        (showWideAngleZoomIOS &&
+            widget.selectedCameraDetails.cameraId == _wideCameraIndex);
     final isMiddleFocused = widget.scaleFactor >= 1 &&
         widget.scaleFactor < 2 &&
-        !(showWideAngleZoomIOS && widget.selectedCameraDetails.cameraId == 2);
+        !(showWideAngleZoomIOS &&
+            widget.selectedCameraDetails.cameraId == _wideCameraIndex);
 
     final maxLevel = max(
       min(widget.selectedCameraDetails.maxAvailableZoom, 2),
@@ -106,7 +121,9 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                   ),
                   onPressed: () async {
                     if (showWideAngleZoomIOS) {
-                      await widget.selectCamera(2, true);
+                      if (_wideCameraIndex != null) {
+                        await widget.selectCamera(_wideCameraIndex!, true);
+                      }
                     } else {
                       final level = await widget.controller.getMinZoomLevel();
                       widget.updateScaleFactor(level);
