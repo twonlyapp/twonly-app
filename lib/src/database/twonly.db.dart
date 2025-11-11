@@ -105,25 +105,39 @@ class TwonlyDB extends _$TwonlyDB {
   }
 
   Future<void> deleteDataForTwonlySafe() async {
-    // await delete(messages).go();
-    // await delete(messageRetransmissions).go();
-    // await delete(mediaUploads).go();
-    // await update(contacts).write(
-    //   const ContactsCompanion(
-    //     avatarSvg: Value(null),
-    //     myAvatarCounter: Value(0),
-    //   ),
-    // );
-    // await delete(signalContactPreKeys).go();
-    // await delete(signalContactSignedPreKeys).go();
-    // await (delete(signalPreKeyStores)
-    //       ..where(
-    //         (t) => (t.createdAt.isSmallerThanValue(
-    //           DateTime.now().subtract(
-    //             const Duration(days: 25),
-    //           ),
-    //         )),
-    //       ))
-    //     .go();
+    await (delete(messages)
+          ..where(
+            (t) => (t.mediaStored.equals(false) &
+                t.isDeletedFromSender.equals(false)),
+          ))
+        .go();
+    await update(messages).write(
+      const MessagesCompanion(
+        downloadToken: Value(null),
+      ),
+    );
+    await (delete(mediaFiles)
+          ..where(
+            (t) => (t.stored.equals(false)),
+          ))
+        .go();
+    await delete(receipts).go();
+    await update(contacts).write(
+      const ContactsCompanion(
+        avatarSvgCompressed: Value(null),
+        senderProfileCounter: Value(0),
+      ),
+    );
+    await delete(signalContactPreKeys).go();
+    await delete(signalContactSignedPreKeys).go();
+    await (delete(signalPreKeyStores)
+          ..where(
+            (t) => (t.createdAt.isSmallerThanValue(
+              DateTime.now().subtract(
+                const Duration(days: 25),
+              ),
+            )),
+          ))
+        .go();
   }
 }
