@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.69
+
+- Support Android Monochrome Icon
+- Multiple bug fixes
+
 ## 0.0.67
 
 - Adds crash reports (optional). Please consider enabling this under Settings > Help > “Share errors and crashes with us.”
