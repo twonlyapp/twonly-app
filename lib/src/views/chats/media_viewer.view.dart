@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart'
     show DownloadState, MediaType;
 import 'package:twonly/src/database/twonly.db.dart';
@@ -56,6 +57,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   bool imageSaved = false;
   bool imageSaving = false;
   bool displayTwonlyPresent = false;
+  late String _currentMediaSender;
   final emojiKey = GlobalKey<EmojiFloatWidgetState>();
 
   StreamSubscription<MediaFile?>? downloadStateListener;
@@ -69,6 +71,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   @override
   void initState() {
     super.initState();
+    _currentMediaSender = widget.group.groupName;
 
     if (widget.initialMessage != null) {
       allMediaFiles = [widget.initialMessage!];
@@ -236,6 +239,15 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     setState(() {
       displayTwonlyPresent = false;
     });
+
+    if (!widget.group.isDirectChat) {
+      final sender =
+          await twonlyDB.contactsDao.getContactById(currentMessage!.senderId!);
+      if (sender != null) {
+        _currentMediaSender =
+            '${getContactDisplayName(sender)} (${widget.group.groupName})';
+      }
+    }
 
     await notifyContactAboutOpeningMessage(
       currentMessage!.senderId!,
@@ -585,7 +597,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
               left: showSendTextMessageInput ? 0 : null,
               right: showSendTextMessageInput ? 0 : 15,
               child: Text(
-                widget.group.groupName,
+                _currentMediaSender,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: showSendTextMessageInput ? 24 : 14,
