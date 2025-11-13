@@ -2707,6 +2707,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If twonly crashes or errors occur, these are automatically reported to our self-hosted Glitchtip instance. Personal data such as messages or images are never uploaded.'**
   String get allowErrorTrackingSubtitle;
+
+  /// No description provided for @avatarSaveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you like to save the changes?'**
+  String get avatarSaveChanges;
+
+  /// No description provided for @avatarSaveChangesStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get avatarSaveChangesStore;
+
+  /// No description provided for @avatarSaveChangesDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get avatarSaveChangesDiscard;
 }
 
 class _AppLocalizationsDelegate

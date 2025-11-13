@@ -822,5 +822,8 @@
     "dialogAskDeleteMediaFilePopTitle": "Bist du sicher, dass du dein Meisterwerk löschen möchtest?",
     "dialogAskDeleteMediaFilePopDelete": "Löschen",
     "allowErrorTracking": "Fehler und Crashes mit uns teilen",
-    "allowErrorTrackingSubtitle": "Wenn twonly abstürzt oder Fehler auftreten, werden diese automatisch an unsere selbst gehostete Glitchtip-Instanz gemeldet. Persönliche Daten wie Nachrichten oder Bilder werden niemals hochgeladen."
+    "allowErrorTrackingSubtitle": "Wenn twonly abstürzt oder Fehler auftreten, werden diese automatisch an unsere selbst gehostete Glitchtip-Instanz gemeldet. Persönliche Daten wie Nachrichten oder Bilder werden niemals hochgeladen.",
+    "avatarSaveChanges": "Möchtest du die Änderungen speichern?",
+    "avatarSaveChangesStore": "Speichern",
+    "avatarSaveChangesDiscard": "Verwerfen"
 }

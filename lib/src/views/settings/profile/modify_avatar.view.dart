@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -77,69 +78,112 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
     }
   }
 
+  Future<bool?> _showBackDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            context.lang.avatarSaveChanges,
+          ),
+          actions: [
+            FilledButton(
+              child: Text(context.lang.avatarSaveChangesStore),
+              onPressed: () async {
+                await storeAvatarAndExit();
+              },
+            ),
+            TextButton(
+              child: Text(context.lang.avatarSaveChangesDiscard),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> storeAvatarAndExit() async {
+    await _avatarMakerController.saveAvatarSVG();
+    final json = _avatarMakerController.getJsonOptionsSync();
+    final svg = _avatarMakerController.getAvatarSVGSync();
+    await updateUserAvatar(json, svg);
+    if (mounted) {
+      Navigator.pop(context, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.lang.settingsProfileCustomizeAvatar),
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.zero,
-                child: AvatarMakerAvatar(
-                  radius: 130,
-                  backgroundColor: Colors.transparent,
-                  controller: _avatarMakerController,
+    return PopScope<bool?>(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, bool? result) async {
+        if (didPop) return;
+        if (_avatarMakerController.getJsonOptionsSync() != gUser.avatarJson) {
+          // there where changes
+          final shouldPop = await _showBackDialog() ?? false;
+          if (context.mounted && shouldPop) {
+            Navigator.pop(context);
+          }
+        } else {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(context.lang.settingsProfileCustomizeAvatar),
+        ),
+        body: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.zero,
+                  child: AvatarMakerAvatar(
+                    radius: 130,
+                    backgroundColor: Colors.transparent,
+                    controller: _avatarMakerController,
+                  ),
                 ),
-              ),
-              SizedBox(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const FaIcon(FontAwesomeIcons.floppyDisk),
-                      onPressed: () async {
-                        await _avatarMakerController.saveAvatarSVG();
-                        final json =
-                            _avatarMakerController.getJsonOptionsSync();
-                        final svg = _avatarMakerController.getAvatarSVGSync();
-                        await updateUserAvatar(json, svg);
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                        }
-                      },
-                    ),
-                    IconButton(
-                      icon: const FaIcon(FontAwesomeIcons.shuffle),
-                      onPressed:
-                          _avatarMakerController.randomizedSelectedOptions,
-                    ),
-                    IconButton(
-                      icon: const Icon(FontAwesomeIcons.rotateLeft),
-                      onLongPress: () async {
-                        await PersistentAvatarMakerController
-                            .clearAvatarMaker();
-                        await _avatarMakerController.restoreState();
-                      },
-                      onPressed: _avatarMakerController.restoreState,
-                    ),
-                  ],
+                SizedBox(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const FaIcon(FontAwesomeIcons.floppyDisk),
+                        onPressed: storeAvatarAndExit,
+                      ),
+                      IconButton(
+                        icon: const FaIcon(FontAwesomeIcons.shuffle),
+                        onPressed:
+                            _avatarMakerController.randomizedSelectedOptions,
+                      ),
+                      IconButton(
+                        icon: const Icon(FontAwesomeIcons.rotateLeft),
+                        onLongPress: () async {
+                          await PersistentAvatarMakerController
+                              .clearAvatarMaker();
+                          await _avatarMakerController.restoreState();
+                        },
+                        onPressed: _avatarMakerController.restoreState,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 30),
-                child: AvatarMakerCustomizer(
-                  scaffoldWidth:
-                      min(600, MediaQuery.of(context).size.width * 0.85),
-                  theme: getAvatarMakerTheme(context),
-                  controller: _avatarMakerController,
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 30),
+                  child: AvatarMakerCustomizer(
+                    scaffoldWidth:
+                        min(600, MediaQuery.of(context).size.width * 0.85),
+                    theme: getAvatarMakerTheme(context),
+                    controller: _avatarMakerController,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
