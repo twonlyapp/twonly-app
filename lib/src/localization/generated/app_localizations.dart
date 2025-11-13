@@ -2725,6 +2725,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get avatarSaveChangesDiscard;
+
+  /// No description provided for @inProcess.
+  ///
+  /// In en, this message translates to:
+  /// **'In process'**
+  String get inProcess;
+
+  /// No description provided for @draftMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get draftMessage;
 }
 
 class _AppLocalizationsDelegate

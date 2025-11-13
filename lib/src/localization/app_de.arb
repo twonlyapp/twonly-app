@@ -825,5 +825,7 @@
     "allowErrorTrackingSubtitle": "Wenn twonly abstürzt oder Fehler auftreten, werden diese automatisch an unsere selbst gehostete Glitchtip-Instanz gemeldet. Persönliche Daten wie Nachrichten oder Bilder werden niemals hochgeladen.",
     "avatarSaveChanges": "Möchtest du die Änderungen speichern?",
     "avatarSaveChangesStore": "Speichern",
-    "avatarSaveChangesDiscard": "Verwerfen"
+    "avatarSaveChangesDiscard": "Verwerfen",
+    "inProcess": "Wird verarbeitet",
+    "draftMessage": "Entwurf"
 }

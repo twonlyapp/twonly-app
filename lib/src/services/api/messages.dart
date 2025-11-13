@@ -162,6 +162,12 @@ Future<void> insertAndSendTextMessage(
   String textMessage,
   String? quotesMessageId,
 ) async {
+  await twonlyDB.groupsDao.updateGroup(
+    groupId,
+    const GroupsCompanion(
+      draftMessage: Value(null),
+    ),
+  );
   final message = await twonlyDB.messagesDao.insertMessage(
     MessagesCompanion(
       groupId: Value(groupId),

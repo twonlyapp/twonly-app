@@ -1494,4 +1494,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get avatarSaveChangesDiscard => 'Discard';
+
+  @override
+  String get inProcess => 'In process';
+
+  @override
+  String get draftMessage => 'Draft';
 }

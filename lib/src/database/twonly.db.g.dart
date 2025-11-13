@@ -760,6 +760,12 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
   late final GeneratedColumn<String> groupName = GeneratedColumn<String>(
       'group_name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _draftMessageMeta =
+      const VerificationMeta('draftMessage');
+  @override
+  late final GeneratedColumn<String> draftMessage = GeneratedColumn<String>(
+      'draft_message', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _totalMediaCounterMeta =
       const VerificationMeta('totalMediaCounter');
   @override
@@ -863,6 +869,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         stateEncryptionKey,
         myGroupPrivateKey,
         groupName,
+        draftMessage,
         totalMediaCounter,
         alsoBestFriend,
         deleteMessagesAfterMilliseconds,
@@ -951,6 +958,12 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           groupName.isAcceptableOrUnknown(data['group_name']!, _groupNameMeta));
     } else if (isInserting) {
       context.missing(_groupNameMeta);
+    }
+    if (data.containsKey('draft_message')) {
+      context.handle(
+          _draftMessageMeta,
+          draftMessage.isAcceptableOrUnknown(
+              data['draft_message']!, _draftMessageMeta));
     }
     if (data.containsKey('total_media_counter')) {
       context.handle(
@@ -1056,6 +1069,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           DriftSqlType.blob, data['${effectivePrefix}my_group_private_key']),
       groupName: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}group_name'])!,
+      draftMessage: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}draft_message']),
       totalMediaCounter: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}total_media_counter'])!,
       alsoBestFriend: attachedDatabase.typeMapping
@@ -1107,6 +1122,7 @@ class Group extends DataClass implements Insertable<Group> {
   final Uint8List? stateEncryptionKey;
   final Uint8List? myGroupPrivateKey;
   final String groupName;
+  final String? draftMessage;
   final int totalMediaCounter;
   final bool alsoBestFriend;
   final int deleteMessagesAfterMilliseconds;
@@ -1132,6 +1148,7 @@ class Group extends DataClass implements Insertable<Group> {
       this.stateEncryptionKey,
       this.myGroupPrivateKey,
       required this.groupName,
+      this.draftMessage,
       required this.totalMediaCounter,
       required this.alsoBestFriend,
       required this.deleteMessagesAfterMilliseconds,
@@ -1163,6 +1180,9 @@ class Group extends DataClass implements Insertable<Group> {
       map['my_group_private_key'] = Variable<Uint8List>(myGroupPrivateKey);
     }
     map['group_name'] = Variable<String>(groupName);
+    if (!nullToAbsent || draftMessage != null) {
+      map['draft_message'] = Variable<String>(draftMessage);
+    }
     map['total_media_counter'] = Variable<int>(totalMediaCounter);
     map['also_best_friend'] = Variable<bool>(alsoBestFriend);
     map['delete_messages_after_milliseconds'] =
@@ -1208,6 +1228,9 @@ class Group extends DataClass implements Insertable<Group> {
           ? const Value.absent()
           : Value(myGroupPrivateKey),
       groupName: Value(groupName),
+      draftMessage: draftMessage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(draftMessage),
       totalMediaCounter: Value(totalMediaCounter),
       alsoBestFriend: Value(alsoBestFriend),
       deleteMessagesAfterMilliseconds: Value(deleteMessagesAfterMilliseconds),
@@ -1251,6 +1274,7 @@ class Group extends DataClass implements Insertable<Group> {
       myGroupPrivateKey:
           serializer.fromJson<Uint8List?>(json['myGroupPrivateKey']),
       groupName: serializer.fromJson<String>(json['groupName']),
+      draftMessage: serializer.fromJson<String?>(json['draftMessage']),
       totalMediaCounter: serializer.fromJson<int>(json['totalMediaCounter']),
       alsoBestFriend: serializer.fromJson<bool>(json['alsoBestFriend']),
       deleteMessagesAfterMilliseconds:
@@ -1286,6 +1310,7 @@ class Group extends DataClass implements Insertable<Group> {
       'stateEncryptionKey': serializer.toJson<Uint8List?>(stateEncryptionKey),
       'myGroupPrivateKey': serializer.toJson<Uint8List?>(myGroupPrivateKey),
       'groupName': serializer.toJson<String>(groupName),
+      'draftMessage': serializer.toJson<String?>(draftMessage),
       'totalMediaCounter': serializer.toJson<int>(totalMediaCounter),
       'alsoBestFriend': serializer.toJson<bool>(alsoBestFriend),
       'deleteMessagesAfterMilliseconds':
@@ -1316,6 +1341,7 @@ class Group extends DataClass implements Insertable<Group> {
           Value<Uint8List?> stateEncryptionKey = const Value.absent(),
           Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
           String? groupName,
+          Value<String?> draftMessage = const Value.absent(),
           int? totalMediaCounter,
           bool? alsoBestFriend,
           int? deleteMessagesAfterMilliseconds,
@@ -1345,6 +1371,8 @@ class Group extends DataClass implements Insertable<Group> {
             ? myGroupPrivateKey.value
             : this.myGroupPrivateKey,
         groupName: groupName ?? this.groupName,
+        draftMessage:
+            draftMessage.present ? draftMessage.value : this.draftMessage,
         totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
         alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
         deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds ??
@@ -1395,6 +1423,9 @@ class Group extends DataClass implements Insertable<Group> {
           ? data.myGroupPrivateKey.value
           : this.myGroupPrivateKey,
       groupName: data.groupName.present ? data.groupName.value : this.groupName,
+      draftMessage: data.draftMessage.present
+          ? data.draftMessage.value
+          : this.draftMessage,
       totalMediaCounter: data.totalMediaCounter.present
           ? data.totalMediaCounter.value
           : this.totalMediaCounter,
@@ -1448,6 +1479,7 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('stateEncryptionKey: $stateEncryptionKey, ')
           ..write('myGroupPrivateKey: $myGroupPrivateKey, ')
           ..write('groupName: $groupName, ')
+          ..write('draftMessage: $draftMessage, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write(
@@ -1479,6 +1511,7 @@ class Group extends DataClass implements Insertable<Group> {
         $driftBlobEquality.hash(stateEncryptionKey),
         $driftBlobEquality.hash(myGroupPrivateKey),
         groupName,
+        draftMessage,
         totalMediaCounter,
         alsoBestFriend,
         deleteMessagesAfterMilliseconds,
@@ -1510,6 +1543,7 @@ class Group extends DataClass implements Insertable<Group> {
           $driftBlobEquality.equals(
               other.myGroupPrivateKey, this.myGroupPrivateKey) &&
           other.groupName == this.groupName &&
+          other.draftMessage == this.draftMessage &&
           other.totalMediaCounter == this.totalMediaCounter &&
           other.alsoBestFriend == this.alsoBestFriend &&
           other.deleteMessagesAfterMilliseconds ==
@@ -1538,6 +1572,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<Uint8List?> stateEncryptionKey;
   final Value<Uint8List?> myGroupPrivateKey;
   final Value<String> groupName;
+  final Value<String?> draftMessage;
   final Value<int> totalMediaCounter;
   final Value<bool> alsoBestFriend;
   final Value<int> deleteMessagesAfterMilliseconds;
@@ -1564,6 +1599,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.stateEncryptionKey = const Value.absent(),
     this.myGroupPrivateKey = const Value.absent(),
     this.groupName = const Value.absent(),
+    this.draftMessage = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
     this.alsoBestFriend = const Value.absent(),
     this.deleteMessagesAfterMilliseconds = const Value.absent(),
@@ -1591,6 +1627,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.stateEncryptionKey = const Value.absent(),
     this.myGroupPrivateKey = const Value.absent(),
     required String groupName,
+    this.draftMessage = const Value.absent(),
     this.totalMediaCounter = const Value.absent(),
     this.alsoBestFriend = const Value.absent(),
     this.deleteMessagesAfterMilliseconds = const Value.absent(),
@@ -1619,6 +1656,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<Uint8List>? stateEncryptionKey,
     Expression<Uint8List>? myGroupPrivateKey,
     Expression<String>? groupName,
+    Expression<String>? draftMessage,
     Expression<int>? totalMediaCounter,
     Expression<bool>? alsoBestFriend,
     Expression<int>? deleteMessagesAfterMilliseconds,
@@ -1647,6 +1685,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
         'state_encryption_key': stateEncryptionKey,
       if (myGroupPrivateKey != null) 'my_group_private_key': myGroupPrivateKey,
       if (groupName != null) 'group_name': groupName,
+      if (draftMessage != null) 'draft_message': draftMessage,
       if (totalMediaCounter != null) 'total_media_counter': totalMediaCounter,
       if (alsoBestFriend != null) 'also_best_friend': alsoBestFriend,
       if (deleteMessagesAfterMilliseconds != null)
@@ -1681,6 +1720,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       Value<Uint8List?>? stateEncryptionKey,
       Value<Uint8List?>? myGroupPrivateKey,
       Value<String>? groupName,
+      Value<String?>? draftMessage,
       Value<int>? totalMediaCounter,
       Value<bool>? alsoBestFriend,
       Value<int>? deleteMessagesAfterMilliseconds,
@@ -1707,6 +1747,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       stateEncryptionKey: stateEncryptionKey ?? this.stateEncryptionKey,
       myGroupPrivateKey: myGroupPrivateKey ?? this.myGroupPrivateKey,
       groupName: groupName ?? this.groupName,
+      draftMessage: draftMessage ?? this.draftMessage,
       totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
       alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
       deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds ??
@@ -1765,6 +1806,9 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     }
     if (groupName.present) {
       map['group_name'] = Variable<String>(groupName.value);
+    }
+    if (draftMessage.present) {
+      map['draft_message'] = Variable<String>(draftMessage.value);
     }
     if (totalMediaCounter.present) {
       map['total_media_counter'] = Variable<int>(totalMediaCounter.value);
@@ -1828,6 +1872,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('stateEncryptionKey: $stateEncryptionKey, ')
           ..write('myGroupPrivateKey: $myGroupPrivateKey, ')
           ..write('groupName: $groupName, ')
+          ..write('draftMessage: $draftMessage, ')
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write(
@@ -8495,6 +8540,7 @@ typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   Value<Uint8List?> stateEncryptionKey,
   Value<Uint8List?> myGroupPrivateKey,
   required String groupName,
+  Value<String?> draftMessage,
   Value<int> totalMediaCounter,
   Value<bool> alsoBestFriend,
   Value<int> deleteMessagesAfterMilliseconds,
@@ -8522,6 +8568,7 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<Uint8List?> stateEncryptionKey,
   Value<Uint8List?> myGroupPrivateKey,
   Value<String> groupName,
+  Value<String?> draftMessage,
   Value<int> totalMediaCounter,
   Value<bool> alsoBestFriend,
   Value<int> deleteMessagesAfterMilliseconds,
@@ -8636,6 +8683,9 @@ class $$GroupsTableFilterComposer extends Composer<_$TwonlyDB, $GroupsTable> {
 
   ColumnFilters<String> get groupName => $composableBuilder(
       column: $table.groupName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get draftMessage => $composableBuilder(
+      column: $table.draftMessage, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get totalMediaCounter => $composableBuilder(
       column: $table.totalMediaCounter,
@@ -8796,6 +8846,10 @@ class $$GroupsTableOrderingComposer extends Composer<_$TwonlyDB, $GroupsTable> {
   ColumnOrderings<String> get groupName => $composableBuilder(
       column: $table.groupName, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get draftMessage => $composableBuilder(
+      column: $table.draftMessage,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get totalMediaCounter => $composableBuilder(
       column: $table.totalMediaCounter,
       builder: (column) => ColumnOrderings(column));
@@ -8889,6 +8943,9 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<String> get groupName =>
       $composableBuilder(column: $table.groupName, builder: (column) => column);
+
+  GeneratedColumn<String> get draftMessage => $composableBuilder(
+      column: $table.draftMessage, builder: (column) => column);
 
   GeneratedColumn<int> get totalMediaCounter => $composableBuilder(
       column: $table.totalMediaCounter, builder: (column) => column);
@@ -9028,6 +9085,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<Uint8List?> stateEncryptionKey = const Value.absent(),
             Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
             Value<String> groupName = const Value.absent(),
+            Value<String?> draftMessage = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
             Value<bool> alsoBestFriend = const Value.absent(),
             Value<int> deleteMessagesAfterMilliseconds = const Value.absent(),
@@ -9055,6 +9113,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             stateEncryptionKey: stateEncryptionKey,
             myGroupPrivateKey: myGroupPrivateKey,
             groupName: groupName,
+            draftMessage: draftMessage,
             totalMediaCounter: totalMediaCounter,
             alsoBestFriend: alsoBestFriend,
             deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds,
@@ -9082,6 +9141,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<Uint8List?> stateEncryptionKey = const Value.absent(),
             Value<Uint8List?> myGroupPrivateKey = const Value.absent(),
             required String groupName,
+            Value<String?> draftMessage = const Value.absent(),
             Value<int> totalMediaCounter = const Value.absent(),
             Value<bool> alsoBestFriend = const Value.absent(),
             Value<int> deleteMessagesAfterMilliseconds = const Value.absent(),
@@ -9109,6 +9169,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             stateEncryptionKey: stateEncryptionKey,
             myGroupPrivateKey: myGroupPrivateKey,
             groupName: groupName,
+            draftMessage: draftMessage,
             totalMediaCounter: totalMediaCounter,
             alsoBestFriend: alsoBestFriend,
             deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds,

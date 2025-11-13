@@ -1504,4 +1504,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get avatarSaveChangesDiscard => 'Verwerfen';
+
+  @override
+  String get inProcess => 'Wird verarbeitet';
+
+  @override
+  String get draftMessage => 'Entwurf';
 }

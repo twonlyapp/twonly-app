@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -45,6 +46,7 @@ class MessageSendStateIcon extends StatefulWidget {
     this.mediaFiles, {
     super.key,
     this.canBeReopened = false,
+    this.group,
     this.lastReaction,
     this.mainAxisAlignment = MainAxisAlignment.end,
   });
@@ -53,6 +55,7 @@ class MessageSendStateIcon extends StatefulWidget {
   final Reaction? lastReaction;
   final MainAxisAlignment mainAxisAlignment;
   final bool canBeReopened;
+  final Group? group;
 
   @override
   State<MessageSendStateIcon> createState() => _MessageSendStateIconState();
@@ -172,7 +175,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
               };
             }
             if (mediaFile.uploadState == UploadState.preprocessing) {
-              text = 'Wird verarbeitet';
+              text = context.lang.inProcess;
             }
           }
 
@@ -221,38 +224,48 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       }
     }
 
-    if (widget.lastReaction != null &&
-        !widget.messages.any((t) => t.openedAt == null)) {
-      /// No messages are still open, so check if the reaction is the last message received.
-
-      if (!widget.messages
-          .any((m) => m.createdAt.isAfter(widget.lastReaction!.createdAt))) {
-        if (EmojiAnimation.animatedIcons
-            .containsKey(widget.lastReaction!.emoji)) {
-          icons = [
-            SizedBox(
-              height: 18,
-              child: EmojiAnimation(emoji: widget.lastReaction!.emoji),
-            ),
-          ];
-        } else {
-          icons = [
-            SizedBox(
-              height: 18,
-              child: Center(
-                child: Text(
-                  widget.lastReaction!.emoji,
-                  style: const TextStyle(fontSize: 15),
-                  strutStyle: const StrutStyle(
-                    forceStrutHeight: true,
-                    height: 1.4,
+    if (!widget.messages.any((t) => t.openedAt == null)) {
+      if (widget.lastReaction != null) {
+        /// No messages are still open, so check if the reaction is the last message received.
+        if (!widget.messages
+            .any((m) => m.createdAt.isAfter(widget.lastReaction!.createdAt))) {
+          if (EmojiAnimation.animatedIcons
+              .containsKey(widget.lastReaction!.emoji)) {
+            icons = [
+              SizedBox(
+                height: 18,
+                child: EmojiAnimation(emoji: widget.lastReaction!.emoji),
+              ),
+            ];
+          } else {
+            icons = [
+              SizedBox(
+                height: 18,
+                child: Center(
+                  child: Text(
+                    widget.lastReaction!.emoji,
+                    style: const TextStyle(fontSize: 15),
+                    strutStyle: const StrutStyle(
+                      forceStrutHeight: true,
+                      height: 1.4,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ];
+            ];
+          }
+          // Log.info("DISPLAY REACTION");
         }
-        // Log.info("DISPLAY REACTION");
+      }
+      if (widget.group != null &&
+          widget.group!.draftMessage != null &&
+          widget.group!.draftMessage != '') {
+        icons = [
+          const FaIcon(FontAwesomeIcons.pen, size: 12, color: Colors.grey),
+        ];
+        textWidget = Text(
+          '${context.lang.draftMessage}: ${substringBy(widget.group!.draftMessage!, 10)}',
+        );
       }
     }
 

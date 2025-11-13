@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
@@ -642,6 +643,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                         child: TextField(
                           autofocus: true,
                           controller: textMessageController,
+                          onChanged: (value) async {
+                            await twonlyDB.groupsDao.updateGroup(
+                              widget.group.groupId,
+                              GroupsCompanion(
+                                draftMessage: Value(textMessageController.text),
+                              ),
+                            );
+                          },
                           onEditingComplete: () {
                             setState(() {
                               showSendTextMessageInput = false;
