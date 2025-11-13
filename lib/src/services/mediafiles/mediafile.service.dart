@@ -33,7 +33,7 @@ class MediaFileService {
   }
 
   static Future<void> purgeTempFolder() async {
-    final tempDirectory = MediaFileService._buildDirectoryPath(
+    final tempDirectory = MediaFileService.buildDirectoryPath(
       'tmp',
       await getApplicationSupportDirectory(),
     );
@@ -239,7 +239,7 @@ class MediaFileService {
     await updateFromDB();
   }
 
-  static Directory _buildDirectoryPath(
+  static Directory buildDirectoryPath(
     String directory,
     Directory applicationSupportDirectory,
   ) {
@@ -275,7 +275,7 @@ class MediaFileService {
       }
     }
     final mediaBaseDir =
-        _buildDirectoryPath(directory, applicationSupportDirectory);
+        buildDirectoryPath(directory, applicationSupportDirectory);
     return File(
       join(mediaBaseDir.path, '${mediaFile.mediaId}$namePrefix.$extension'),
     );

@@ -605,5 +605,7 @@
   "avatarSaveChangesStore": "Save",
   "avatarSaveChangesDiscard": "Discard",
   "inProcess": "In process",
-  "draftMessage": "Draft"
+  "draftMessage": "Draft",
+  "exportMemories": "Export memories (Beta)",
+  "importMemories": "Import memories (Beta)"
 }

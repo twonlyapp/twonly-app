@@ -1500,4 +1500,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get draftMessage => 'Draft';
+
+  @override
+  String get exportMemories => 'Export memories (Beta)';
+
+  @override
+  String get importMemories => 'Import memories (Beta)';
 }

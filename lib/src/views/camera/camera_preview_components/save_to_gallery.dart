@@ -46,10 +46,7 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
                 _imageSaving = true;
               });
 
-              if (widget.mediaService.mediaFile.type == MediaType.image ||
-                  widget.mediaService.mediaFile.type == MediaType.gif) {
-                await widget.storeImageAsOriginal();
-              }
+              await widget.storeImageAsOriginal();
 
               String? res;
 

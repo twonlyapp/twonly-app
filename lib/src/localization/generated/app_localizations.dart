@@ -2737,6 +2737,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Draft'**
   String get draftMessage;
+
+  /// No description provided for @exportMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Export memories (Beta)'**
+  String get exportMemories;
+
+  /// No description provided for @importMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Import memories (Beta)'**
+  String get importMemories;
 }
 
 class _AppLocalizationsDelegate

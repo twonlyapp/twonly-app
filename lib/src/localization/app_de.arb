@@ -827,5 +827,7 @@
     "avatarSaveChangesStore": "Speichern",
     "avatarSaveChangesDiscard": "Verwerfen",
     "inProcess": "Wird verarbeitet",
-    "draftMessage": "Entwurf"
+    "draftMessage": "Entwurf",
+    "exportMemories": "Memories exportieren (Beta)",
+    "importMemories": "Memories importieren (Beta)"
 }

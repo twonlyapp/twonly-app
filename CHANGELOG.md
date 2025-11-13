@@ -2,7 +2,10 @@
 
 ## 0.0.69
 
+- Option to export and import memories
+- iOS support for ultra-wide-angle camera
 - Support Android Monochrome Icon
+- Multiple layout issues fixed
 - Multiple bug fixes
 
 ## 0.0.67
