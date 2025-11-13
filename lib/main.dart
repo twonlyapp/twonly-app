@@ -4,6 +4,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
@@ -27,29 +29,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await initFCMService();
-  } catch (e) {
-    Log.error('$e');
-  }
-
-  initLogger();
-
-  final user = await getUser();
-  if (user != null) {
-    gUser = user;
-    unawaited(performTwonlySafeBackup());
-  }
-
-  final settingsController = SettingsChangeProvider();
-
-  await settingsController.loadSettings();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-  unawaited(setupPushNotification());
-
-  gCameras = await availableCameras();
+  SentryWidgetsFlutterBinding.ensureInitialized();
 
   // try {
   //   File(join((await getApplicationSupportDirectory()).path, 'twonly.sqlite'))
@@ -60,44 +40,67 @@ void main() async {
   //   return u;
   // });
 
-  apiService = ApiService();
-  twonlyDB = TwonlyDB();
-
-  await initFileDownloader();
-  unawaited(finishStartedPreprocessing());
-
-  unawaited(MediaFileService.purgeTempFolder());
-  unawaited(createPushAvatars());
-  await twonlyDB.messagesDao.purgeMessageTable();
-
-  final providers = [
-    ChangeNotifierProvider(create: (_) => settingsController),
-    ChangeNotifierProvider(create: (_) => CustomChangeProvider()),
-    ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
-  ];
-
+  final user = await getUser();
   if (user != null) {
+    gUser = user;
+
     if (user.allowErrorTrackingViaSentry) {
       globalAllowErrorTrackingViaSentry = true;
-      return SentryFlutter.init(
+      await SentryFlutter.init(
         (options) => options
           ..dsn =
               'https://6b24a012c85144c9b522440a1d17d01c@glitchtip.twonly.eu/4'
-          ..tracesSampleRate = 0.01
+          ..tracesSampleRate = 0.1
           ..enableAutoSessionTracking = false,
-        appRunner: () => runApp(
-          MultiProvider(
-            providers: providers,
-            child: const App(),
-          ),
-        ),
       );
     }
+
+    unawaited(performTwonlySafeBackup());
   }
+
+  await initFCMService();
+
+  initLogger();
+
+  final settingsController = SettingsChangeProvider();
+
+  await settingsController.loadSettings();
+  await SystemChrome.setPreferredOrientations(
+    [DeviceOrientation.portraitUp],
+  );
+
+  unawaited(setupPushNotification());
+
+  gCameras = await availableCameras();
+
+  apiService = ApiService();
+  twonlyDB = TwonlyDB();
+
+  await twonlyDB.messagesDao.purgeMessageTable();
+  unawaited(MediaFileService.purgeTempFolder());
+
+  await initFileDownloader();
+  if (Platform.isAndroid) {
+    if ((await DeviceInfoPlugin().androidInfo).version.release == '9') {
+      Future.delayed(const Duration(seconds: 20), () {
+        unawaited(finishStartedPreprocessing());
+      });
+    } else {
+      unawaited(finishStartedPreprocessing());
+    }
+  } else {
+    unawaited(finishStartedPreprocessing());
+  }
+
+  unawaited(createPushAvatars());
 
   runApp(
     MultiProvider(
-      providers: providers,
+      providers: [
+        ChangeNotifierProvider(create: (_) => settingsController),
+        ChangeNotifierProvider(create: (_) => CustomChangeProvider()),
+        ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
+      ],
       child: const App(),
     ),
   );

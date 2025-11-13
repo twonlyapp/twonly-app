@@ -21,6 +21,7 @@ import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart'
 import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_session_store.table.dart';
+import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'twonly.db.g.dart';
@@ -66,7 +67,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -83,7 +84,15 @@ class TwonlyDB extends _$TwonlyDB {
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
       },
-      // onUpgrade: stepByStep(),
+      onUpgrade: stepByStep(
+        from1To2: (m, schema) async {
+          await m.addColumn(schema.messages, schema.messages.mediaReopened);
+          await m.dropColumn(schema.mediaFiles, 'reopen_by_contact');
+        },
+        from2To3: (m, schema) async {
+          await m.addColumn(schema.groups, schema.groups.draftMessage);
+        },
+      ),
     );
   }
 
@@ -105,25 +114,39 @@ class TwonlyDB extends _$TwonlyDB {
   }
 
   Future<void> deleteDataForTwonlySafe() async {
-    // await delete(messages).go();
-    // await delete(messageRetransmissions).go();
-    // await delete(mediaUploads).go();
-    // await update(contacts).write(
-    //   const ContactsCompanion(
-    //     avatarSvg: Value(null),
-    //     myAvatarCounter: Value(0),
-    //   ),
-    // );
-    // await delete(signalContactPreKeys).go();
-    // await delete(signalContactSignedPreKeys).go();
-    // await (delete(signalPreKeyStores)
-    //       ..where(
-    //         (t) => (t.createdAt.isSmallerThanValue(
-    //           DateTime.now().subtract(
-    //             const Duration(days: 25),
-    //           ),
-    //         )),
-    //       ))
-    //     .go();
+    await (delete(messages)
+          ..where(
+            (t) => (t.mediaStored.equals(false) &
+                t.isDeletedFromSender.equals(false)),
+          ))
+        .go();
+    await update(messages).write(
+      const MessagesCompanion(
+        downloadToken: Value(null),
+      ),
+    );
+    await (delete(mediaFiles)
+          ..where(
+            (t) => (t.stored.equals(false)),
+          ))
+        .go();
+    await delete(receipts).go();
+    await update(contacts).write(
+      const ContactsCompanion(
+        avatarSvgCompressed: Value(null),
+        senderProfileCounter: Value(0),
+      ),
+    );
+    await delete(signalContactPreKeys).go();
+    await delete(signalContactSignedPreKeys).go();
+    await (delete(signalPreKeyStores)
+          ..where(
+            (t) => (t.createdAt.isSmallerThanValue(
+              DateTime.now().subtract(
+                const Duration(days: 25),
+              ),
+            )),
+          ))
+        .go();
   }
 }

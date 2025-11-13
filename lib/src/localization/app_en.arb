@@ -600,5 +600,12 @@
   "dialogAskDeleteMediaFilePopTitle": "Are you sure you want to delete your masterpiece?",
   "dialogAskDeleteMediaFilePopDelete": "Delete",
   "allowErrorTracking": "Share errors and crashes with us",
-  "allowErrorTrackingSubtitle": "If twonly crashes or errors occur, these are automatically reported to our self-hosted Glitchtip instance. Personal data such as messages or images are never uploaded."
+  "allowErrorTrackingSubtitle": "If twonly crashes or errors occur, these are automatically reported to our self-hosted Glitchtip instance. Personal data such as messages or images are never uploaded.",
+  "avatarSaveChanges": "Would you like to save the changes?",
+  "avatarSaveChangesStore": "Save",
+  "avatarSaveChangesDiscard": "Discard",
+  "inProcess": "In process",
+  "draftMessage": "Draft",
+  "exportMemories": "Export memories (Beta)",
+  "importMemories": "Import memories (Beta)"
 }

@@ -264,7 +264,6 @@ bool isUUIDNewer(String uuid1, String uuid2) {
     final timestamp2 = int.parse(uuid2.substring(0, 8), radix: 16);
     return timestamp1 > timestamp2;
   } catch (e) {
-    Log.error(e);
     return false;
   }
 }

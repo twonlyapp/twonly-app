@@ -1495,4 +1495,25 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get allowErrorTrackingSubtitle =>
       'Wenn twonly abstürzt oder Fehler auftreten, werden diese automatisch an unsere selbst gehostete Glitchtip-Instanz gemeldet. Persönliche Daten wie Nachrichten oder Bilder werden niemals hochgeladen.';
+
+  @override
+  String get avatarSaveChanges => 'Möchtest du die Änderungen speichern?';
+
+  @override
+  String get avatarSaveChangesStore => 'Speichern';
+
+  @override
+  String get avatarSaveChangesDiscard => 'Verwerfen';
+
+  @override
+  String get inProcess => 'Wird verarbeitet';
+
+  @override
+  String get draftMessage => 'Entwurf';
+
+  @override
+  String get exportMemories => 'Memories exportieren (Beta)';
+
+  @override
+  String get importMemories => 'Memories importieren (Beta)';
 }

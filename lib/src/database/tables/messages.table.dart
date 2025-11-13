@@ -23,6 +23,8 @@ class Messages extends Table {
       .references(MediaFiles, #mediaId, onDelete: KeyAction.setNull)();
 
   BoolColumn get mediaStored => boolean().withDefault(const Constant(false))();
+  BoolColumn get mediaReopened =>
+      boolean().withDefault(const Constant(false))();
 
   BlobColumn get downloadToken => blob().nullable()();
 

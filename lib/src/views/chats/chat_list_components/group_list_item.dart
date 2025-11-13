@@ -235,6 +235,7 @@ class _UserListItem extends State<GroupListItem> {
                     _previewMessages,
                     _previewMediaFiles,
                     lastReaction: _lastReaction,
+                    group: widget.group,
                   ),
                   const Text('•'),
                   const SizedBox(width: 5),

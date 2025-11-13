@@ -12,7 +12,7 @@ class EmojiPickerBottom extends StatelessWidget {
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.zero,
-        height: 450,
+        height: 480,
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
@@ -30,7 +30,7 @@ class EmojiPickerBottom extends StatelessWidget {
           child: Column(
             children: [
               Container(
-                margin: const EdgeInsets.all(30),
+                margin: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(32),
                   color: Colors.grey,
@@ -52,11 +52,6 @@ class EmojiPickerBottom extends StatelessWidget {
                   config: Config(
                     height: 400,
                     locale: Localizations.localeOf(context),
-                    viewOrderConfig: const ViewOrderConfig(
-                      top: EmojiPickerItem.searchBar,
-                      // middle: EmojiPickerItem.emojiView,
-                      bottom: EmojiPickerItem.categoryBar,
-                    ),
                     emojiTextStyle:
                         TextStyle(fontSize: 24 * (Platform.isIOS ? 1.2 : 1)),
                     emojiViewConfig: EmojiViewConfig(
@@ -68,7 +63,7 @@ class EmojiPickerBottom extends StatelessWidget {
                     ),
                     categoryViewConfig: CategoryViewConfig(
                       backgroundColor: context.color.surfaceContainer,
-                      dividerColor: Colors.white,
+                      dividerColor: context.color.surfaceContainerHigh,
                       indicatorColor: context.color.primary,
                       iconColorSelected: context.color.primary,
                       iconColor: context.color.secondary,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.dart';
@@ -224,14 +225,21 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       );
     }
     if (Platform.isAndroid) {
-      androidVolumeDownSub = FlutterAndroidVolumeKeydown.stream.listen((event) {
-        if (widget.isVisible) {
-          takePicture();
-        } else {
-          deInitVolumeControl();
-          return;
-        }
-      });
+      if ((await DeviceInfoPlugin().androidInfo).version.release == '9') {
+        // MissingPluginException: MissingPluginException(No implementation found for method cancel on channel dart-tools.dev/flutter_…
+        // Maybe this is the reason?
+        return;
+      } else {
+        androidVolumeDownSub =
+            FlutterAndroidVolumeKeydown.stream.listen((event) {
+          if (widget.isVisible) {
+            takePicture();
+          } else {
+            deInitVolumeControl();
+            return;
+          }
+        });
+      }
     }
   }
 

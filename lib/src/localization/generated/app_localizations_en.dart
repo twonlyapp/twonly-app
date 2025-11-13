@@ -1485,4 +1485,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get allowErrorTrackingSubtitle =>
       'If twonly crashes or errors occur, these are automatically reported to our self-hosted Glitchtip instance. Personal data such as messages or images are never uploaded.';
+
+  @override
+  String get avatarSaveChanges => 'Would you like to save the changes?';
+
+  @override
+  String get avatarSaveChangesStore => 'Save';
+
+  @override
+  String get avatarSaveChangesDiscard => 'Discard';
+
+  @override
+  String get inProcess => 'In process';
+
+  @override
+  String get draftMessage => 'Draft';
+
+  @override
+  String get exportMemories => 'Export memories (Beta)';
+
+  @override
+  String get importMemories => 'Import memories (Beta)';
 }

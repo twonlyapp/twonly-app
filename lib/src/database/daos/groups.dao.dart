@@ -247,16 +247,22 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .get();
   }
 
-  Future<List<GroupMember>> getAllGroupMemberWithoutPublicKey() {
-    final query =
-        ((select(groups)..where((t) => t.isDirectChat.equals(false))).join([
-      leftOuterJoin(
-        groupMembers,
-        groupMembers.groupId.equalsExp(groups.groupId),
-      ),
-    ])
-          ..where(groupMembers.groupPublicKey.isNull()));
-    return query.map((row) => row.readTable(groupMembers)).get();
+  Future<List<GroupMember>> getAllGroupMemberWithoutPublicKey() async {
+    try {
+      final query = ((select(groupMembers)
+            ..where((t) => t.groupPublicKey.isNull()))
+          .join([
+        leftOuterJoin(
+          groups,
+          groups.groupId.equalsExp(groupMembers.groupId),
+        ),
+      ])
+        ..where(groups.isDirectChat.isNull()));
+      return query.map((row) => row.readTable(groupMembers)).get();
+    } catch (e) {
+      Log.error(e);
+      return [];
+    }
   }
 
   Future<Group?> getDirectChat(int userId) async {

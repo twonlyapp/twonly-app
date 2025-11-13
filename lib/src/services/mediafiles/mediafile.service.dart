@@ -33,7 +33,7 @@ class MediaFileService {
   }
 
   static Future<void> purgeTempFolder() async {
-    final tempDirectory = MediaFileService._buildDirectoryPath(
+    final tempDirectory = MediaFileService.buildDirectoryPath(
       'tmp',
       await getApplicationSupportDirectory(),
     );
@@ -224,12 +224,6 @@ class MediaFileService {
         stored: Value(true),
       ),
     );
-    await twonlyDB.messagesDao.updateMessagesByMediaId(
-      mediaFile.mediaId,
-      const MessagesCompanion(
-        mediaStored: Value(true),
-      ),
-    );
 
     if (originalPath.existsSync() && !tempPath.existsSync()) {
       await compressMedia();
@@ -245,7 +239,7 @@ class MediaFileService {
     await updateFromDB();
   }
 
-  static Directory _buildDirectoryPath(
+  static Directory buildDirectoryPath(
     String directory,
     Directory applicationSupportDirectory,
   ) {
@@ -281,7 +275,7 @@ class MediaFileService {
       }
     }
     final mediaBaseDir =
-        _buildDirectoryPath(directory, applicationSupportDirectory);
+        buildDirectoryPath(directory, applicationSupportDirectory);
     return File(
       join(mediaBaseDir.path, '${mediaFile.mediaId}$namePrefix.$extension'),
     );

@@ -6,6 +6,8 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/settings/data_and_storage/export_media.view.dart';
+import 'package:twonly/src/views/settings/data_and_storage/import_media.view.dart';
 
 class DataAndStorageView extends StatefulWidget {
   const DataAndStorageView({super.key});
@@ -61,6 +63,36 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               value: gUser.storeMediaFilesInGallery,
               onChanged: (a) => toggleStoreInGallery(),
             ),
+          ),
+          ListTile(
+            title: Text(
+              context.lang.exportMemories,
+            ),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) {
+                    return const ExportMediaView();
+                  },
+                ),
+              );
+            },
+          ),
+          ListTile(
+            title: Text(
+              context.lang.importMemories,
+            ),
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) {
+                    return const ImportMediaView();
+                  },
+                ),
+              );
+            },
           ),
           const Divider(),
           ListTile(

@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
@@ -57,10 +59,13 @@ class _MessageInputState extends State<MessageInput> {
 
   @override
   void initState() {
+    super.initState();
     _textFieldController = TextEditingController();
+    if (widget.group.draftMessage != null) {
+      _textFieldController.text = widget.group.draftMessage!;
+    }
     widget.textFieldFocus.addListener(_handleTextFocusChange);
     _initializeControllers();
-    super.initState();
   }
 
   @override
@@ -196,8 +201,15 @@ class _MessageInputState extends State<MessageInput> {
                                 keyboardType: TextInputType.multiline,
                                 maxLines: 4,
                                 minLines: 1,
-                                onChanged: (value) {
+                                onChanged: (value) async {
                                   setState(() {});
+                                  await twonlyDB.groupsDao.updateGroup(
+                                    widget.group.groupId,
+                                    GroupsCompanion(
+                                      draftMessage:
+                                          Value(_textFieldController.text),
+                                    ),
+                                  );
                                 },
                                 onSubmitted: (_) {
                                   _sendMessage();

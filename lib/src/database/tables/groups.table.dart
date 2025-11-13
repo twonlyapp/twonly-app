@@ -23,6 +23,7 @@ class Groups extends Table {
   BlobColumn get myGroupPrivateKey => blob().nullable()();
 
   TextColumn get groupName => text()();
+  TextColumn get draftMessage => text().nullable()();
 
   IntColumn get totalMediaCounter => integer().withDefault(const Constant(0))();
 

@@ -13,33 +13,45 @@ Future<void> handleMessageUpdate(
         Log.info(
           'Opened message $targetMessageId',
         );
-        await twonlyDB.messagesDao.handleMessageOpened(
-          contactId,
-          targetMessageId,
-          fromTimestamp(messageUpdate.timestamp),
-        );
+        try {
+          await twonlyDB.messagesDao.handleMessageOpened(
+            contactId,
+            targetMessageId,
+            fromTimestamp(messageUpdate.timestamp),
+          );
+        } catch (e) {
+          Log.warn(e);
+        }
       }
     case EncryptedContent_MessageUpdate_Type.DELETE:
       if (!await isSender(contactId, messageUpdate.senderMessageId)) {
         return;
       }
       Log.info('Delete message ${messageUpdate.senderMessageId}');
-      await twonlyDB.messagesDao.handleMessageDeletion(
-        contactId,
-        messageUpdate.senderMessageId,
-        fromTimestamp(messageUpdate.timestamp),
-      );
+      try {
+        await twonlyDB.messagesDao.handleMessageDeletion(
+          contactId,
+          messageUpdate.senderMessageId,
+          fromTimestamp(messageUpdate.timestamp),
+        );
+      } catch (e) {
+        Log.warn(e);
+      }
     case EncryptedContent_MessageUpdate_Type.EDIT_TEXT:
       if (!await isSender(contactId, messageUpdate.senderMessageId)) {
         return;
       }
       Log.info('Edit message ${messageUpdate.senderMessageId}');
-      await twonlyDB.messagesDao.handleTextEdit(
-        contactId,
-        messageUpdate.senderMessageId,
-        messageUpdate.text,
-        fromTimestamp(messageUpdate.timestamp),
-      );
+      try {
+        await twonlyDB.messagesDao.handleTextEdit(
+          contactId,
+          messageUpdate.senderMessageId,
+          messageUpdate.text,
+          fromTimestamp(messageUpdate.timestamp),
+        );
+      } catch (e) {
+        Log.warn(e);
+      }
   }
 }
 
