@@ -31,7 +31,6 @@ part 'twonly_database_old.g.dart';
     SignalContactSignedPreKeys,
     MessageRetransmissions,
   ],
-  daos: [],
 )
 class TwonlyDatabaseOld extends _$TwonlyDatabaseOld {
   TwonlyDatabaseOld([QueryExecutor? e])
