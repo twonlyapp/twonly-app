@@ -1886,16 +1886,6 @@ class $MediaFilesTable extends MediaFiles
           defaultConstraints: GeneratedColumn.constraintIsAlways(
               'CHECK ("requires_authentication" IN (0, 1))'),
           defaultValue: const Constant(false));
-  static const VerificationMeta _reopenByContactMeta =
-      const VerificationMeta('reopenByContact');
-  @override
-  late final GeneratedColumn<bool> reopenByContact = GeneratedColumn<bool>(
-      'reopen_by_contact', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("reopen_by_contact" IN (0, 1))'),
-      defaultValue: const Constant(false));
   static const VerificationMeta _storedMeta = const VerificationMeta('stored');
   @override
   late final GeneratedColumn<bool> stored = GeneratedColumn<bool>(
@@ -1976,7 +1966,6 @@ class $MediaFilesTable extends MediaFiles
         uploadState,
         downloadState,
         requiresAuthentication,
-        reopenByContact,
         stored,
         isDraftMedia,
         reuploadRequestedBy,
@@ -2009,12 +1998,6 @@ class $MediaFilesTable extends MediaFiles
           _requiresAuthenticationMeta,
           requiresAuthentication.isAcceptableOrUnknown(
               data['requires_authentication']!, _requiresAuthenticationMeta));
-    }
-    if (data.containsKey('reopen_by_contact')) {
-      context.handle(
-          _reopenByContactMeta,
-          reopenByContact.isAcceptableOrUnknown(
-              data['reopen_by_contact']!, _reopenByContactMeta));
     }
     if (data.containsKey('stored')) {
       context.handle(_storedMeta,
@@ -2089,8 +2072,6 @@ class $MediaFilesTable extends MediaFiles
       requiresAuthentication: attachedDatabase.typeMapping.read(
           DriftSqlType.bool,
           data['${effectivePrefix}requires_authentication'])!,
-      reopenByContact: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}reopen_by_contact'])!,
       stored: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}stored'])!,
       isDraftMedia: attachedDatabase.typeMapping
@@ -2146,7 +2127,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final UploadState? uploadState;
   final DownloadState? downloadState;
   final bool requiresAuthentication;
-  final bool reopenByContact;
   final bool stored;
   final bool isDraftMedia;
   final List<int>? reuploadRequestedBy;
@@ -2163,7 +2143,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       this.uploadState,
       this.downloadState,
       required this.requiresAuthentication,
-      required this.reopenByContact,
       required this.stored,
       required this.isDraftMedia,
       this.reuploadRequestedBy,
@@ -2191,7 +2170,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           $MediaFilesTable.$converterdownloadStaten.toSql(downloadState));
     }
     map['requires_authentication'] = Variable<bool>(requiresAuthentication);
-    map['reopen_by_contact'] = Variable<bool>(reopenByContact);
     map['stored'] = Variable<bool>(stored);
     map['is_draft_media'] = Variable<bool>(isDraftMedia);
     if (!nullToAbsent || reuploadRequestedBy != null) {
@@ -2233,7 +2211,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ? const Value.absent()
           : Value(downloadState),
       requiresAuthentication: Value(requiresAuthentication),
-      reopenByContact: Value(reopenByContact),
       stored: Value(stored),
       isDraftMedia: Value(isDraftMedia),
       reuploadRequestedBy: reuploadRequestedBy == null && nullToAbsent
@@ -2275,7 +2252,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           .fromJson(serializer.fromJson<String?>(json['downloadState'])),
       requiresAuthentication:
           serializer.fromJson<bool>(json['requiresAuthentication']),
-      reopenByContact: serializer.fromJson<bool>(json['reopenByContact']),
       stored: serializer.fromJson<bool>(json['stored']),
       isDraftMedia: serializer.fromJson<bool>(json['isDraftMedia']),
       reuploadRequestedBy:
@@ -2302,7 +2278,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'downloadState': serializer.toJson<String?>(
           $MediaFilesTable.$converterdownloadStaten.toJson(downloadState)),
       'requiresAuthentication': serializer.toJson<bool>(requiresAuthentication),
-      'reopenByContact': serializer.toJson<bool>(reopenByContact),
       'stored': serializer.toJson<bool>(stored),
       'isDraftMedia': serializer.toJson<bool>(isDraftMedia),
       'reuploadRequestedBy': serializer.toJson<List<int>?>(reuploadRequestedBy),
@@ -2323,7 +2298,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           Value<UploadState?> uploadState = const Value.absent(),
           Value<DownloadState?> downloadState = const Value.absent(),
           bool? requiresAuthentication,
-          bool? reopenByContact,
           bool? stored,
           bool? isDraftMedia,
           Value<List<int>?> reuploadRequestedBy = const Value.absent(),
@@ -2342,7 +2316,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
             downloadState.present ? downloadState.value : this.downloadState,
         requiresAuthentication:
             requiresAuthentication ?? this.requiresAuthentication,
-        reopenByContact: reopenByContact ?? this.reopenByContact,
         stored: stored ?? this.stored,
         isDraftMedia: isDraftMedia ?? this.isDraftMedia,
         reuploadRequestedBy: reuploadRequestedBy.present
@@ -2375,9 +2348,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication: data.requiresAuthentication.present
           ? data.requiresAuthentication.value
           : this.requiresAuthentication,
-      reopenByContact: data.reopenByContact.present
-          ? data.reopenByContact.value
-          : this.reopenByContact,
       stored: data.stored.present ? data.stored.value : this.stored,
       isDraftMedia: data.isDraftMedia.present
           ? data.isDraftMedia.value
@@ -2414,7 +2384,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('uploadState: $uploadState, ')
           ..write('downloadState: $downloadState, ')
           ..write('requiresAuthentication: $requiresAuthentication, ')
-          ..write('reopenByContact: $reopenByContact, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
@@ -2436,7 +2405,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       uploadState,
       downloadState,
       requiresAuthentication,
-      reopenByContact,
       stored,
       isDraftMedia,
       reuploadRequestedBy,
@@ -2456,7 +2424,6 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.uploadState == this.uploadState &&
           other.downloadState == this.downloadState &&
           other.requiresAuthentication == this.requiresAuthentication &&
-          other.reopenByContact == this.reopenByContact &&
           other.stored == this.stored &&
           other.isDraftMedia == this.isDraftMedia &&
           other.reuploadRequestedBy == this.reuploadRequestedBy &&
@@ -2476,7 +2443,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<UploadState?> uploadState;
   final Value<DownloadState?> downloadState;
   final Value<bool> requiresAuthentication;
-  final Value<bool> reopenByContact;
   final Value<bool> stored;
   final Value<bool> isDraftMedia;
   final Value<List<int>?> reuploadRequestedBy;
@@ -2494,7 +2460,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.uploadState = const Value.absent(),
     this.downloadState = const Value.absent(),
     this.requiresAuthentication = const Value.absent(),
-    this.reopenByContact = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
@@ -2513,7 +2478,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.uploadState = const Value.absent(),
     this.downloadState = const Value.absent(),
     this.requiresAuthentication = const Value.absent(),
-    this.reopenByContact = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
@@ -2533,7 +2497,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<String>? uploadState,
     Expression<String>? downloadState,
     Expression<bool>? requiresAuthentication,
-    Expression<bool>? reopenByContact,
     Expression<bool>? stored,
     Expression<bool>? isDraftMedia,
     Expression<String>? reuploadRequestedBy,
@@ -2553,7 +2516,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (downloadState != null) 'download_state': downloadState,
       if (requiresAuthentication != null)
         'requires_authentication': requiresAuthentication,
-      if (reopenByContact != null) 'reopen_by_contact': reopenByContact,
       if (stored != null) 'stored': stored,
       if (isDraftMedia != null) 'is_draft_media': isDraftMedia,
       if (reuploadRequestedBy != null)
@@ -2576,7 +2538,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       Value<UploadState?>? uploadState,
       Value<DownloadState?>? downloadState,
       Value<bool>? requiresAuthentication,
-      Value<bool>? reopenByContact,
       Value<bool>? stored,
       Value<bool>? isDraftMedia,
       Value<List<int>?>? reuploadRequestedBy,
@@ -2595,7 +2556,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       downloadState: downloadState ?? this.downloadState,
       requiresAuthentication:
           requiresAuthentication ?? this.requiresAuthentication,
-      reopenByContact: reopenByContact ?? this.reopenByContact,
       stored: stored ?? this.stored,
       isDraftMedia: isDraftMedia ?? this.isDraftMedia,
       reuploadRequestedBy: reuploadRequestedBy ?? this.reuploadRequestedBy,
@@ -2632,9 +2592,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (requiresAuthentication.present) {
       map['requires_authentication'] =
           Variable<bool>(requiresAuthentication.value);
-    }
-    if (reopenByContact.present) {
-      map['reopen_by_contact'] = Variable<bool>(reopenByContact.value);
     }
     if (stored.present) {
       map['stored'] = Variable<bool>(stored.value);
@@ -2683,7 +2640,6 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('uploadState: $uploadState, ')
           ..write('downloadState: $downloadState, ')
           ..write('requiresAuthentication: $requiresAuthentication, ')
-          ..write('reopenByContact: $reopenByContact, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
@@ -2759,6 +2715,16 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("media_stored" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _mediaReopenedMeta =
+      const VerificationMeta('mediaReopened');
+  @override
+  late final GeneratedColumn<bool> mediaReopened = GeneratedColumn<bool>(
+      'media_reopened', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("media_reopened" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _downloadTokenMeta =
       const VerificationMeta('downloadToken');
   @override
@@ -2828,6 +2794,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         content,
         mediaId,
         mediaStored,
+        mediaReopened,
         downloadToken,
         quotesMessageId,
         isDeletedFromSender,
@@ -2877,6 +2844,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           _mediaStoredMeta,
           mediaStored.isAcceptableOrUnknown(
               data['media_stored']!, _mediaStoredMeta));
+    }
+    if (data.containsKey('media_reopened')) {
+      context.handle(
+          _mediaReopenedMeta,
+          mediaReopened.isAcceptableOrUnknown(
+              data['media_reopened']!, _mediaReopenedMeta));
     }
     if (data.containsKey('download_token')) {
       context.handle(
@@ -2951,6 +2924,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           .read(DriftSqlType.string, data['${effectivePrefix}media_id']),
       mediaStored: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}media_stored'])!,
+      mediaReopened: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}media_reopened'])!,
       downloadToken: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}download_token']),
       quotesMessageId: attachedDatabase.typeMapping.read(
@@ -2989,6 +2964,7 @@ class Message extends DataClass implements Insertable<Message> {
   final String? content;
   final String? mediaId;
   final bool mediaStored;
+  final bool mediaReopened;
   final Uint8List? downloadToken;
   final String? quotesMessageId;
   final bool isDeletedFromSender;
@@ -3006,6 +2982,7 @@ class Message extends DataClass implements Insertable<Message> {
       this.content,
       this.mediaId,
       required this.mediaStored,
+      required this.mediaReopened,
       this.downloadToken,
       this.quotesMessageId,
       required this.isDeletedFromSender,
@@ -3033,6 +3010,7 @@ class Message extends DataClass implements Insertable<Message> {
       map['media_id'] = Variable<String>(mediaId);
     }
     map['media_stored'] = Variable<bool>(mediaStored);
+    map['media_reopened'] = Variable<bool>(mediaReopened);
     if (!nullToAbsent || downloadToken != null) {
       map['download_token'] = Variable<Uint8List>(downloadToken);
     }
@@ -3074,6 +3052,7 @@ class Message extends DataClass implements Insertable<Message> {
           ? const Value.absent()
           : Value(mediaId),
       mediaStored: Value(mediaStored),
+      mediaReopened: Value(mediaReopened),
       downloadToken: downloadToken == null && nullToAbsent
           ? const Value.absent()
           : Value(downloadToken),
@@ -3112,6 +3091,7 @@ class Message extends DataClass implements Insertable<Message> {
       content: serializer.fromJson<String?>(json['content']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
       mediaStored: serializer.fromJson<bool>(json['mediaStored']),
+      mediaReopened: serializer.fromJson<bool>(json['mediaReopened']),
       downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
       quotesMessageId: serializer.fromJson<String?>(json['quotesMessageId']),
       isDeletedFromSender:
@@ -3136,6 +3116,7 @@ class Message extends DataClass implements Insertable<Message> {
       'content': serializer.toJson<String?>(content),
       'mediaId': serializer.toJson<String?>(mediaId),
       'mediaStored': serializer.toJson<bool>(mediaStored),
+      'mediaReopened': serializer.toJson<bool>(mediaReopened),
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
       'quotesMessageId': serializer.toJson<String?>(quotesMessageId),
       'isDeletedFromSender': serializer.toJson<bool>(isDeletedFromSender),
@@ -3156,6 +3137,7 @@ class Message extends DataClass implements Insertable<Message> {
           Value<String?> content = const Value.absent(),
           Value<String?> mediaId = const Value.absent(),
           bool? mediaStored,
+          bool? mediaReopened,
           Value<Uint8List?> downloadToken = const Value.absent(),
           Value<String?> quotesMessageId = const Value.absent(),
           bool? isDeletedFromSender,
@@ -3173,6 +3155,7 @@ class Message extends DataClass implements Insertable<Message> {
         content: content.present ? content.value : this.content,
         mediaId: mediaId.present ? mediaId.value : this.mediaId,
         mediaStored: mediaStored ?? this.mediaStored,
+        mediaReopened: mediaReopened ?? this.mediaReopened,
         downloadToken:
             downloadToken.present ? downloadToken.value : this.downloadToken,
         quotesMessageId: quotesMessageId.present
@@ -3196,6 +3179,9 @@ class Message extends DataClass implements Insertable<Message> {
       mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
       mediaStored:
           data.mediaStored.present ? data.mediaStored.value : this.mediaStored,
+      mediaReopened: data.mediaReopened.present
+          ? data.mediaReopened.value
+          : this.mediaReopened,
       downloadToken: data.downloadToken.present
           ? data.downloadToken.value
           : this.downloadToken,
@@ -3227,6 +3213,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
           ..write('mediaStored: $mediaStored, ')
+          ..write('mediaReopened: $mediaReopened, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
@@ -3249,6 +3236,7 @@ class Message extends DataClass implements Insertable<Message> {
       content,
       mediaId,
       mediaStored,
+      mediaReopened,
       $driftBlobEquality.hash(downloadToken),
       quotesMessageId,
       isDeletedFromSender,
@@ -3269,6 +3257,7 @@ class Message extends DataClass implements Insertable<Message> {
           other.content == this.content &&
           other.mediaId == this.mediaId &&
           other.mediaStored == this.mediaStored &&
+          other.mediaReopened == this.mediaReopened &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
           other.quotesMessageId == this.quotesMessageId &&
           other.isDeletedFromSender == this.isDeletedFromSender &&
@@ -3288,6 +3277,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<String?> content;
   final Value<String?> mediaId;
   final Value<bool> mediaStored;
+  final Value<bool> mediaReopened;
   final Value<Uint8List?> downloadToken;
   final Value<String?> quotesMessageId;
   final Value<bool> isDeletedFromSender;
@@ -3306,6 +3296,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
     this.mediaStored = const Value.absent(),
+    this.mediaReopened = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
@@ -3325,6 +3316,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
     this.mediaStored = const Value.absent(),
+    this.mediaReopened = const Value.absent(),
     this.downloadToken = const Value.absent(),
     this.quotesMessageId = const Value.absent(),
     this.isDeletedFromSender = const Value.absent(),
@@ -3346,6 +3338,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<String>? content,
     Expression<String>? mediaId,
     Expression<bool>? mediaStored,
+    Expression<bool>? mediaReopened,
     Expression<Uint8List>? downloadToken,
     Expression<String>? quotesMessageId,
     Expression<bool>? isDeletedFromSender,
@@ -3365,6 +3358,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (content != null) 'content': content,
       if (mediaId != null) 'media_id': mediaId,
       if (mediaStored != null) 'media_stored': mediaStored,
+      if (mediaReopened != null) 'media_reopened': mediaReopened,
       if (downloadToken != null) 'download_token': downloadToken,
       if (quotesMessageId != null) 'quotes_message_id': quotesMessageId,
       if (isDeletedFromSender != null)
@@ -3387,6 +3381,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<String?>? content,
       Value<String?>? mediaId,
       Value<bool>? mediaStored,
+      Value<bool>? mediaReopened,
       Value<Uint8List?>? downloadToken,
       Value<String?>? quotesMessageId,
       Value<bool>? isDeletedFromSender,
@@ -3405,6 +3400,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       content: content ?? this.content,
       mediaId: mediaId ?? this.mediaId,
       mediaStored: mediaStored ?? this.mediaStored,
+      mediaReopened: mediaReopened ?? this.mediaReopened,
       downloadToken: downloadToken ?? this.downloadToken,
       quotesMessageId: quotesMessageId ?? this.quotesMessageId,
       isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
@@ -3442,6 +3438,9 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     }
     if (mediaStored.present) {
       map['media_stored'] = Variable<bool>(mediaStored.value);
+    }
+    if (mediaReopened.present) {
+      map['media_reopened'] = Variable<bool>(mediaReopened.value);
     }
     if (downloadToken.present) {
       map['download_token'] = Variable<Uint8List>(downloadToken.value);
@@ -3486,6 +3485,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
           ..write('mediaStored: $mediaStored, ')
+          ..write('mediaReopened: $mediaReopened, ')
           ..write('downloadToken: $downloadToken, ')
           ..write('quotesMessageId: $quotesMessageId, ')
           ..write('isDeletedFromSender: $isDeletedFromSender, ')
@@ -9203,7 +9203,6 @@ typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   Value<UploadState?> uploadState,
   Value<DownloadState?> downloadState,
   Value<bool> requiresAuthentication,
-  Value<bool> reopenByContact,
   Value<bool> stored,
   Value<bool> isDraftMedia,
   Value<List<int>?> reuploadRequestedBy,
@@ -9222,7 +9221,6 @@ typedef $$MediaFilesTableUpdateCompanionBuilder = MediaFilesCompanion Function({
   Value<UploadState?> uploadState,
   Value<DownloadState?> downloadState,
   Value<bool> requiresAuthentication,
-  Value<bool> reopenByContact,
   Value<bool> stored,
   Value<bool> isDraftMedia,
   Value<List<int>?> reuploadRequestedBy,
@@ -9285,10 +9283,6 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<bool> get requiresAuthentication => $composableBuilder(
       column: $table.requiresAuthentication,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get reopenByContact => $composableBuilder(
-      column: $table.reopenByContact,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get stored => $composableBuilder(
@@ -9373,10 +9367,6 @@ class $$MediaFilesTableOrderingComposer
       column: $table.requiresAuthentication,
       builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get reopenByContact => $composableBuilder(
-      column: $table.reopenByContact,
-      builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<bool> get stored => $composableBuilder(
       column: $table.stored, builder: (column) => ColumnOrderings(column));
 
@@ -9440,9 +9430,6 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<bool> get requiresAuthentication => $composableBuilder(
       column: $table.requiresAuthentication, builder: (column) => column);
-
-  GeneratedColumn<bool> get reopenByContact => $composableBuilder(
-      column: $table.reopenByContact, builder: (column) => column);
 
   GeneratedColumn<bool> get stored =>
       $composableBuilder(column: $table.stored, builder: (column) => column);
@@ -9525,7 +9512,6 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<UploadState?> uploadState = const Value.absent(),
             Value<DownloadState?> downloadState = const Value.absent(),
             Value<bool> requiresAuthentication = const Value.absent(),
-            Value<bool> reopenByContact = const Value.absent(),
             Value<bool> stored = const Value.absent(),
             Value<bool> isDraftMedia = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
@@ -9544,7 +9530,6 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             uploadState: uploadState,
             downloadState: downloadState,
             requiresAuthentication: requiresAuthentication,
-            reopenByContact: reopenByContact,
             stored: stored,
             isDraftMedia: isDraftMedia,
             reuploadRequestedBy: reuploadRequestedBy,
@@ -9563,7 +9548,6 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<UploadState?> uploadState = const Value.absent(),
             Value<DownloadState?> downloadState = const Value.absent(),
             Value<bool> requiresAuthentication = const Value.absent(),
-            Value<bool> reopenByContact = const Value.absent(),
             Value<bool> stored = const Value.absent(),
             Value<bool> isDraftMedia = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
@@ -9582,7 +9566,6 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             uploadState: uploadState,
             downloadState: downloadState,
             requiresAuthentication: requiresAuthentication,
-            reopenByContact: reopenByContact,
             stored: stored,
             isDraftMedia: isDraftMedia,
             reuploadRequestedBy: reuploadRequestedBy,
@@ -9648,6 +9631,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   Value<String?> content,
   Value<String?> mediaId,
   Value<bool> mediaStored,
+  Value<bool> mediaReopened,
   Value<Uint8List?> downloadToken,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
@@ -9667,6 +9651,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<String?> content,
   Value<String?> mediaId,
   Value<bool> mediaStored,
+  Value<bool> mediaReopened,
   Value<Uint8List?> downloadToken,
   Value<String?> quotesMessageId,
   Value<bool> isDeletedFromSender,
@@ -9816,6 +9801,9 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<bool> get mediaStored => $composableBuilder(
       column: $table.mediaStored, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get mediaReopened => $composableBuilder(
+      column: $table.mediaReopened, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken, builder: (column) => ColumnFilters(column));
@@ -10012,6 +10000,10 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<bool> get mediaStored => $composableBuilder(
       column: $table.mediaStored, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get mediaReopened => $composableBuilder(
+      column: $table.mediaReopened,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken,
       builder: (column) => ColumnOrderings(column));
@@ -10123,6 +10115,9 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<bool> get mediaStored => $composableBuilder(
       column: $table.mediaStored, builder: (column) => column);
+
+  GeneratedColumn<bool> get mediaReopened => $composableBuilder(
+      column: $table.mediaReopened, builder: (column) => column);
 
   GeneratedColumn<Uint8List> get downloadToken => $composableBuilder(
       column: $table.downloadToken, builder: (column) => column);
@@ -10333,6 +10328,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
             Value<bool> mediaStored = const Value.absent(),
+            Value<bool> mediaReopened = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
@@ -10352,6 +10348,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             content: content,
             mediaId: mediaId,
             mediaStored: mediaStored,
+            mediaReopened: mediaReopened,
             downloadToken: downloadToken,
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,
@@ -10371,6 +10368,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
             Value<bool> mediaStored = const Value.absent(),
+            Value<bool> mediaReopened = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
             Value<String?> quotesMessageId = const Value.absent(),
             Value<bool> isDeletedFromSender = const Value.absent(),
@@ -10390,6 +10388,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             content: content,
             mediaId: mediaId,
             mediaStored: mediaStored,
+            mediaReopened: mediaReopened,
             downloadToken: downloadToken,
             quotesMessageId: quotesMessageId,
             isDeletedFromSender: isDeletedFromSender,

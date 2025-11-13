@@ -12,3 +12,4 @@ targets:
           databases:
             twonly_db: lib/src/database/twonly.db.dart
             twonly_database: lib/src/database/twonly_database_old.dart
+          schema_dir: lib/src/database/schemas

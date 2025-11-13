@@ -224,12 +224,6 @@ class MediaFileService {
         stored: Value(true),
       ),
     );
-    await twonlyDB.messagesDao.updateMessagesByMediaId(
-      mediaFile.mediaId,
-      const MessagesCompanion(
-        mediaStored: Value(true),
-      ),
-    );
 
     if (originalPath.existsSync() && !tempPath.existsSync()) {
       await compressMedia();

@@ -189,7 +189,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
       }
 
       if (mediaFile != null) {
-        if (mediaFile.reopenByContact) {
+        if (message.mediaReopened) {
           icon = FaIcon(FontAwesomeIcons.repeat, size: 12, color: color);
           text = context.lang.messageReopened;
         }

@@ -148,16 +148,22 @@ Future<void> handleMediaUpdate(
   switch (mediaUpdate.type) {
     case EncryptedContent_MediaUpdate_Type.REOPENED:
       Log.info('Got media file reopened ${mediaFile.mediaId}');
-      await twonlyDB.mediaFilesDao.updateMedia(
-        mediaFile.mediaId,
-        const MediaFilesCompanion(
-          reopenByContact: Value(true),
+      await twonlyDB.messagesDao.updateMessageId(
+        message.messageId,
+        const MessagesCompanion(
+          mediaReopened: Value(true),
         ),
       );
     case EncryptedContent_MediaUpdate_Type.STORED:
       Log.info('Got media file stored ${mediaFile.mediaId}');
       final mediaService = await MediaFileService.fromMedia(mediaFile);
       await mediaService.storeMediaFile();
+      await twonlyDB.messagesDao.updateMessageId(
+        message.messageId,
+        const MessagesCompanion(
+          mediaStored: Value(true),
+        ),
+      );
 
     case EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR:
       Log.info('Got media file decryption error ${mediaFile.mediaId}');

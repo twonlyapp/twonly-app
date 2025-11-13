@@ -21,6 +21,7 @@ import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart'
 import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_session_store.table.dart';
+import 'package:twonly/src/database/twonly.db.steps.dart';
 import 'package:twonly/src/utils/log.dart';
 
 part 'twonly.db.g.dart';
@@ -66,7 +67,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -83,7 +84,12 @@ class TwonlyDB extends _$TwonlyDB {
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
       },
-      // onUpgrade: stepByStep(),
+      onUpgrade: stepByStep(
+        from1To2: (m, schema) async {
+          await m.addColumn(schema.messages, schema.messages.mediaReopened);
+          await m.dropColumn(schema.mediaFiles, 'reopen_by_contact');
+        },
+      ),
     );
   }
 
