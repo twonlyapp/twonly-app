@@ -83,9 +83,9 @@ class _ImportMediaViewState extends State<ImportMediaView> {
     });
 
     try {
-      // Read zip bytes and decode
-      final bytes = await zipFile.readAsBytes();
-      final archive = ZipDecoder().decodeBytes(bytes);
+      final stream = InputFileStream(zipFile.path);
+
+      final archive = ZipDecoder().decodeStream(stream);
 
       // Optionally: compute total entries to show progress
       final entries = archive.where((e) => e.isFile).toList();

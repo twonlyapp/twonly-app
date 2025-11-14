@@ -328,6 +328,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       imageSaving = true;
     });
     await currentMedia!.storeMediaFile();
+    await twonlyDB.messagesDao.updateMessageId(
+      currentMessage!.messageId,
+      const MessagesCompanion(
+        mediaStored: Value(true),
+      ),
+    );
     await sendCipherTextToGroup(
       widget.group.groupId,
       pb.EncryptedContent(

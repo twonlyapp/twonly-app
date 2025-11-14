@@ -3,9 +3,31 @@ import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/utils/log.dart';
+
+class AndroidMediaStore {
+  static const androidMediaStoreChannel = MethodChannel('eu.twonly/mediaStore');
+
+  static Future<bool> safeFileToDownload(File sourceFile) async {
+    try {
+      Log.info('Storing $sourceFile');
+      final storedPath = (
+        await androidMediaStoreChannel.invokeMethod('safeFileToDownload', {
+          'sourceFile': sourceFile.path,
+        }),
+      );
+      Log.info(storedPath);
+      return true;
+    } catch (e) {
+      Log.error(e);
+      return false;
+    }
+  }
+}
 
 class ExportMediaView extends StatefulWidget {
   const ExportMediaView({super.key});
@@ -20,6 +42,7 @@ class _ExportMediaViewState extends State<ExportMediaView> {
   File? _zipFile;
   bool _isZipping = false;
   bool _zipSaved = false;
+  bool _isStoring = false;
 
   Future<Directory> _mediaFolder() async {
     final dir = MediaFileService.buildDirectoryPath(
@@ -77,7 +100,6 @@ class _ExportMediaViewState extends State<ExportMediaView> {
           _status = 'Adding $relative';
         });
 
-        // ZipFileEncoder doesn't give per-file progress; update after adding.
         await encoder.addFile(f, relative);
 
         processedBytes += await f.length();
@@ -108,17 +130,28 @@ class _ExportMediaViewState extends State<ExportMediaView> {
 
   Future<void> _saveZip() async {
     if (_zipFile == null) return;
+    setState(() {
+      _isStoring = true;
+    });
     try {
-      final outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save your memories to desired location',
-        fileName: p.basename(_zipFile!.path),
-        bytes: _zipFile!.readAsBytesSync(),
-      );
-      if (outputFile == null) return;
+      if (Platform.isAndroid) {
+        if (!await AndroidMediaStore.safeFileToDownload(_zipFile!)) {
+          return;
+        }
+      } else {
+        final outputFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save your memories to desired location',
+          fileName: p.basename(_zipFile!.path),
+          bytes: _zipFile!.readAsBytesSync(),
+        );
+        if (outputFile == null) return;
+      }
       _zipSaved = true;
+      _isStoring = false;
       _status = 'ZIP stored: ${p.basename(_zipFile!.path)}';
       setState(() {});
     } catch (e) {
+      _isStoring = false;
       setState(() => _status = 'Save failed: $e');
     }
   }
@@ -165,7 +198,9 @@ class _ExportMediaViewState extends State<ExportMediaView> {
               ElevatedButton.icon(
                 icon: const Icon(Icons.save_alt),
                 label: const Text('Save ZIP'),
-                onPressed: (_zipFile != null && !_isZipping) ? _saveZip : null,
+                onPressed: (_zipFile != null && !_isZipping && !_isStoring)
+                    ? _saveZip
+                    : null,
               ),
           ],
         ),

@@ -80,17 +80,7 @@ void main() async {
   unawaited(MediaFileService.purgeTempFolder());
 
   await initFileDownloader();
-  if (Platform.isAndroid) {
-    if ((await DeviceInfoPlugin().androidInfo).version.release == '9') {
-      Future.delayed(const Duration(seconds: 20), () {
-        unawaited(finishStartedPreprocessing());
-      });
-    } else {
-      unawaited(finishStartedPreprocessing());
-    }
-  } else {
-    unawaited(finishStartedPreprocessing());
-  }
+  unawaited(finishStartedPreprocessing());
 
   unawaited(createPushAvatars());
 

@@ -69,13 +69,19 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
     media.ffmpegOutputPath.deleteSync();
   }
 
+  var overLayCommand = '';
+  if (media.overlayImagePath.existsSync()) {
+    overLayCommand =
+        '-i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0"';
+  }
+
   final stopwatch = Stopwatch()..start();
   var command =
-      '-i "${media.originalPath.path}" -i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0" -map "0:a?" -preset veryfast -crf 28 -c:a aac -b:a 64k "${media.ffmpegOutputPath.path}"';
+      '-i "${media.originalPath.path}" $overLayCommand  -map "0:a?" -preset veryfast -crf 28 -c:a aac -b:a 64k "${media.ffmpegOutputPath.path}"';
 
   if (media.removeAudio) {
     command =
-        '-i "${media.originalPath.path}" -i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0" -preset veryfast -crf 28 -an "${media.ffmpegOutputPath.path}"';
+        '-i "${media.originalPath.path}" $overLayCommand -preset veryfast -crf 28 -an "${media.ffmpegOutputPath.path}"';
   }
 
   final session = await FFmpegKit.execute(command);
