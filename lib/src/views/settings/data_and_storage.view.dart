@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -64,36 +65,38 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               onChanged: (a) => toggleStoreInGallery(),
             ),
           ),
-          ListTile(
-            title: Text(
-              context.lang.exportMemories,
+          if (Platform.isAndroid)
+            ListTile(
+              title: Text(
+                context.lang.exportMemories,
+              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) {
+                      return const ExportMediaView();
+                    },
+                  ),
+                );
+              },
             ),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) {
-                    return const ExportMediaView();
-                  },
-                ),
-              );
-            },
-          ),
-          ListTile(
-            title: Text(
-              context.lang.importMemories,
+          if (Platform.isAndroid)
+            ListTile(
+              title: Text(
+                context.lang.importMemories,
+              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) {
+                      return const ImportMediaView();
+                    },
+                  ),
+                );
+              },
             ),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) {
-                    return const ImportMediaView();
-                  },
-                ),
-              );
-            },
-          ),
           const Divider(),
           ListTile(
             title: Text(
