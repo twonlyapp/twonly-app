@@ -45,6 +45,9 @@ Map<String, List<String>> defaultAutoDownloadOptions = {
 };
 
 Future<bool> isAllowedToDownload(MediaType type) async {
+  if (type == MediaType.audio) {
+    return true; // always download audio files
+  }
   final connectivityResult = await Connectivity().checkConnectivity();
 
   final options = gUser.autoDownloadOptions ?? defaultAutoDownloadOptions;

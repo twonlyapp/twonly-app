@@ -107,7 +107,9 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
           ListTile(
             title: Text(context.lang.settingsStorageDataAutoDownMobile),
             subtitle: Text(
-              autoDownloadOptions[ConnectivityResult.mobile.name]!.join(', '),
+              autoDownloadOptions[ConnectivityResult.mobile.name]!
+                  .where((e) => e != 'audio')
+                  .join(', '),
               style: const TextStyle(color: Colors.grey),
             ),
             onTap: () async {
@@ -117,7 +119,9 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
           ListTile(
             title: Text(context.lang.settingsStorageDataAutoDownWifi),
             subtitle: Text(
-              autoDownloadOptions[ConnectivityResult.wifi.name]!.join(', '),
+              autoDownloadOptions[ConnectivityResult.wifi.name]!
+                  .where((e) => e != 'audio')
+                  .join(', '),
               style: const TextStyle(color: Colors.grey),
             ),
             onTap: () async {
@@ -176,14 +180,6 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
                 .contains(DownloadMediaTypes.video.name),
             onChanged: (bool? value) async {
               await _updateAutoDownloadSetting(DownloadMediaTypes.video, value);
-            },
-          ),
-          CheckboxListTile(
-            title: const Text('Audio'),
-            value: autoDownloadOptions[widget.connectionMode.name]!
-                .contains(DownloadMediaTypes.audio.name),
-            onChanged: (bool? value) async {
-              await _updateAutoDownloadSetting(DownloadMediaTypes.audio, value);
             },
           ),
         ],
