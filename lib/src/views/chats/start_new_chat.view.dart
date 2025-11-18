@@ -219,7 +219,7 @@ class _StartNewChatView extends State<StartNewChatView> {
 
                     if (i < filteredContacts.length) {
                       return UserContextMenu(
-                        key: Key(filteredContacts[i].userId.toString()),
+                        key: ValueKey(filteredContacts[i].userId),
                         contact: filteredContacts[i],
                         child: ListTile(
                           title: Row(
@@ -259,7 +259,7 @@ class _StartNewChatView extends State<StartNewChatView> {
 
                     if (i < filteredGroups.length) {
                       return GroupContextMenu(
-                        key: Key(filteredGroups[i].groupId),
+                        key: ValueKey(filteredGroups[i].groupId),
                         group: filteredGroups[i],
                         child: ListTile(
                           title: Text(

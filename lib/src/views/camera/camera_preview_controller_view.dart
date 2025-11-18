@@ -598,7 +598,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return Container();
     }
     return MediaViewSizing(
-      requiredHeight: 90,
+      requiredHeight: 80,
       bottomNavigation: Container(),
       child: GestureDetector(
         onPanStart: (details) async {

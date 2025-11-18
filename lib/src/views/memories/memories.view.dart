@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -47,13 +46,8 @@ class MemoriesViewState extends State<MemoriesView> {
       months = [];
       var lastMonth = '';
       galleryItems = [];
-      final applicationSupportDirectory =
-          await getApplicationSupportDirectory();
       for (final mediaFile in mediaFiles) {
-        final mediaService = MediaFileService(
-          mediaFile,
-          applicationSupportDirectory: applicationSupportDirectory,
-        );
+        final mediaService = MediaFileService(mediaFile);
         if (!mediaService.imagePreviewAvailable) continue;
         if (mediaService.mediaFile.type == MediaType.video) {
           if (!mediaService.thumbnailPath.existsSync()) {

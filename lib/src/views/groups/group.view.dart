@@ -228,6 +228,7 @@ class _GroupViewState extends State<GroupView> {
           ),
           ...members.map((member) {
             return GroupMemberContextMenu(
+              key: ValueKey(member.$1.userId),
               group: group,
               contact: member.$1,
               member: member.$2,

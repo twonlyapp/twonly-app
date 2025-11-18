@@ -130,7 +130,7 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
                 stored: const Value(true),
               ),
             );
-            final mediaService = await MediaFileService.fromMedia(mediaFile!);
+            final mediaService = MediaFileService(mediaFile!);
             File(file.path).copySync(mediaService.storedPath.path);
             setState(() {
               _storedMediaFiles += 1;

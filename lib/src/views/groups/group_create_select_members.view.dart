@@ -188,8 +188,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                       }
                       final user = contacts[i];
                       return UserContextMenu(
-                        // when this is not set, then the avatar is not updated in the list when searching :/
-                        key: Key(user.userId.toString()),
+                        key: ValueKey(user.userId),
                         contact: user,
                         child: ListTile(
                           title: Row(

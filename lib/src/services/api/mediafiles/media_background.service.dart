@@ -126,7 +126,7 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
     Log.error(
       'Background upload failed for $mediaId with status ${update.status} and ${update.responseStatusCode}. ',
     );
-    final mediaService = await MediaFileService.fromMedia(media);
+    final mediaService = MediaFileService(media);
 
     await mediaService.setUploadState(UploadState.uploaded);
     // In all other cases just try the upload again...

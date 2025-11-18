@@ -34,3 +34,6 @@ Map<String, VoidCallback> globalUserDataChangedCallBack = {};
 
 bool globalIsAppInBackground = true;
 bool globalAllowErrorTrackingViaSentry = false;
+
+late String globalApplicationCacheDirectory;
+late String globalApplicationSupportDirectory;

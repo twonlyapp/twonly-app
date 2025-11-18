@@ -323,6 +323,7 @@ class UserList extends StatelessWidget {
       itemBuilder: (BuildContext context, int i) {
         final group = groups[i];
         return ListTile(
+          key: ValueKey(group.groupId),
           title: Row(
             children: [
               Text(substringBy(group.groupName, 12)),

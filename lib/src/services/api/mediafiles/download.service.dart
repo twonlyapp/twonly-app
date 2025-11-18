@@ -45,6 +45,9 @@ Map<String, List<String>> defaultAutoDownloadOptions = {
 };
 
 Future<bool> isAllowedToDownload(MediaType type) async {
+  if (type == MediaType.audio) {
+    return true; // always download audio files
+  }
   final connectivityResult = await Connectivity().checkConnectivity();
 
   final options = gUser.autoDownloadOptions ?? defaultAutoDownloadOptions;
@@ -117,7 +120,7 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
 Mutex protectDownload = Mutex();
 
 Future<void> startDownloadMedia(MediaFile media, bool force) async {
-  final mediaService = await MediaFileService.fromMedia(media);
+  final mediaService = MediaFileService(media);
 
   if (mediaService.encryptedPath.existsSync()) {
     await handleEncryptedFile(media.mediaId);

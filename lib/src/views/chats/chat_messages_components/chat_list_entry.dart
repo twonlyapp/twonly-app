@@ -71,9 +71,9 @@ class _ChatListEntryState extends State<ChatListEntry> {
     if (widget.message.mediaId != null) {
       final mediaFileStream =
           twonlyDB.mediaFilesDao.watchMedia(widget.message.mediaId!);
-      mediaFileSub = mediaFileStream.listen((mediaFiles) async {
+      mediaFileSub = mediaFileStream.listen((mediaFiles) {
         if (mediaFiles != null) {
-          mediaService = await MediaFileService.fromMedia(mediaFiles);
+          mediaService = MediaFileService(mediaFiles);
           if (mounted) setState(() {});
         }
       });

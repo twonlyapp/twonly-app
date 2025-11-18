@@ -101,6 +101,7 @@ class _GroupCreateSelectGroupNameViewState
                     itemBuilder: (BuildContext context, int i) {
                       final user = widget.selectedUsers[i];
                       return UserContextMenu(
+                        key: ValueKey(user.userId),
                         contact: user,
                         child: ListTile(
                           title: Row(

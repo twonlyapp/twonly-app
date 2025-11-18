@@ -278,6 +278,7 @@ class ContactsListView extends StatelessWidget {
       itemBuilder: (context, index) {
         final contact = contacts[index];
         return ListTile(
+          key: ValueKey(contact.userId),
           title: Text(substringBy(contact.username, 25)),
           leading: AvatarIcon(contactId: contact.userId),
           trailing: Row(

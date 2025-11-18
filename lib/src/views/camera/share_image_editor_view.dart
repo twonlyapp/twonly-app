@@ -524,7 +524,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 setState(() {});
               },
               child: MediaViewSizing(
-                requiredHeight: 90,
+                requiredHeight: 80,
                 bottomNavigation: ColoredBox(
                   color: Theme.of(context).colorScheme.surface,
                   child: Row(

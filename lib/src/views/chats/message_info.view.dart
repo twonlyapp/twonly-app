@@ -123,6 +123,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
 
       columns.add(
         Padding(
+          key: ValueKey(groupMember.$1.contactId),
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [

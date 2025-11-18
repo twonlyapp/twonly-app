@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -11,31 +10,21 @@ import 'package:twonly/src/services/mediafiles/thumbnail.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
 class MediaFileService {
-  MediaFileService(this.mediaFile, {required this.applicationSupportDirectory});
+  MediaFileService(this.mediaFile);
   MediaFile mediaFile;
-
-  final Directory applicationSupportDirectory;
-
-  static Future<MediaFileService> fromMedia(MediaFile media) async {
-    return MediaFileService(
-      media,
-      applicationSupportDirectory: await getApplicationSupportDirectory(),
-    );
-  }
 
   static Future<MediaFileService?> fromMediaId(String mediaId) async {
     final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(mediaId);
     if (mediaFile == null) return null;
     return MediaFileService(
       mediaFile,
-      applicationSupportDirectory: await getApplicationSupportDirectory(),
     );
   }
 
   static Future<void> purgeTempFolder() async {
     final tempDirectory = MediaFileService.buildDirectoryPath(
       'tmp',
-      await getApplicationSupportDirectory(),
+      globalApplicationSupportDirectory,
     );
 
     final files = tempDirectory.listSync();
@@ -241,11 +230,11 @@ class MediaFileService {
 
   static Directory buildDirectoryPath(
     String directory,
-    Directory applicationSupportDirectory,
+    String applicationSupportDirectory,
   ) {
     final mediaBaseDir = Directory(
       join(
-        applicationSupportDirectory.path,
+        applicationSupportDirectory,
         'mediafiles',
         directory,
       ),
@@ -275,7 +264,7 @@ class MediaFileService {
       }
     }
     final mediaBaseDir =
-        buildDirectoryPath(directory, applicationSupportDirectory);
+        buildDirectoryPath(directory, globalApplicationSupportDirectory);
     return File(
       join(mediaBaseDir.path, '${mediaFile.mediaId}$namePrefix.$extension'),
     );

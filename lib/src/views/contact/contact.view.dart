@@ -100,6 +100,7 @@ class _ContactViewState extends State<ContactView> {
           }
           final contact = snapshot.data!;
           return ListView(
+            key: ValueKey(contact.userId),
             children: [
               Padding(
                 padding: const EdgeInsets.all(10),

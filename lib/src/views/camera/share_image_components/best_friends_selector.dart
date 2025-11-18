@@ -74,6 +74,7 @@ class BestFriendsSelector extends StatelessWidget {
                 children: [
                   Expanded(
                     child: UserCheckbox(
+                      key: ValueKey(groups[firstUserIndex]),
                       isChecked: selectedGroupIds
                           .contains(groups[firstUserIndex].groupId),
                       group: groups[firstUserIndex],
@@ -83,6 +84,7 @@ class BestFriendsSelector extends StatelessWidget {
                   if (secondUserIndex < groups.length)
                     Expanded(
                       child: UserCheckbox(
+                        key: ValueKey(groups[secondUserIndex]),
                         isChecked: selectedGroupIds
                             .contains(groups[secondUserIndex].groupId),
                         group: groups[secondUserIndex],
