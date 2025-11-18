@@ -52,6 +52,7 @@ class _AvatarIconState extends State<AvatarIcon> {
     super.dispose();
   }
 
+  // ignore: strict_top_level_inference
   Widget errorBuilder(_, __, ___) {
     return const SvgPicture(
       AssetBytesLoader('assets/images/default_avatar.svg.vec'),
