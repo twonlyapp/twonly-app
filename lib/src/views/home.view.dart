@@ -151,13 +151,12 @@ class HomeViewState extends State<HomeView> {
 
     final draftMedia = await twonlyDB.mediaFilesDao.getDraftMediaFile();
     if (draftMedia != null) {
-      final service = await MediaFileService.fromMedia(draftMedia);
       if (!mounted) return;
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ShareImageEditorView(
-            mediaFileService: service,
+            mediaFileService: MediaFileService(draftMedia),
             sharedFromGallery: true,
           ),
         ),

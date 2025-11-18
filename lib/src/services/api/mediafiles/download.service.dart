@@ -117,7 +117,7 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
 Mutex protectDownload = Mutex();
 
 Future<void> startDownloadMedia(MediaFile media, bool force) async {
-  final mediaService = await MediaFileService.fromMedia(media);
+  final mediaService = MediaFileService(media);
 
   if (mediaService.encryptedPath.existsSync()) {
     await handleEncryptedFile(media.mediaId);

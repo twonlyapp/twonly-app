@@ -156,7 +156,7 @@ Future<void> handleMediaUpdate(
       );
     case EncryptedContent_MediaUpdate_Type.STORED:
       Log.info('Got media file stored ${mediaFile.mediaId}');
-      final mediaService = await MediaFileService.fromMedia(mediaFile);
+      final mediaService = MediaFileService(mediaFile);
       await mediaService.storeMediaFile();
       await twonlyDB.messagesDao.updateMessageId(
         message.messageId,

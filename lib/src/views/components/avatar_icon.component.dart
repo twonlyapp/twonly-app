@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:vector_graphics/vector_graphics.dart';
 
 class AvatarIcon extends StatefulWidget {
   const AvatarIcon({
@@ -25,8 +27,9 @@ class AvatarIcon extends StatefulWidget {
 }
 
 class _AvatarIconState extends State<AvatarIcon> {
-  List<String> _avatarSVGs = [];
+  List<Contact> _avatarContacts = [];
   String? _globalUserDataCallBackId;
+  String? _avatarSvg;
 
   StreamSubscription<List<Contact>>? groupStream;
   StreamSubscription<List<Contact>>? contactsStream;
@@ -49,20 +52,43 @@ class _AvatarIconState extends State<AvatarIcon> {
     super.dispose();
   }
 
+  Widget errorBuilder(_, __, ___) {
+    return const SvgPicture(
+      AssetBytesLoader('assets/images/default_avatar.svg.vec'),
+    );
+  }
+
+  Widget getAvatarForContact(Contact contact) {
+    final avatarFile = avatarPNGFile(contact.userId);
+    if (avatarFile.existsSync()) {
+      return Image.file(
+        avatarFile,
+        errorBuilder: errorBuilder,
+      );
+    }
+    if (contact.avatarSvgCompressed != null) {
+      return SvgPicture.string(
+        getAvatarSvg(contact.avatarSvgCompressed!),
+        errorBuilder: errorBuilder,
+      );
+    }
+    return errorBuilder(null, null, null);
+  }
+
   Future<void> initAsync() async {
     if (widget.group != null) {
       groupStream = twonlyDB.groupsDao
           .watchGroupContact(widget.group!.groupId)
           .listen((contacts) {
-        _avatarSVGs = [];
+        _avatarContacts = [];
         if (contacts.length == 1) {
           if (contacts.first.avatarSvgCompressed != null) {
-            _avatarSVGs.add(getAvatarSvg(contacts.first.avatarSvgCompressed!));
+            _avatarContacts.add(contacts.first);
           }
         } else {
           for (final contact in contacts) {
             if (contact.avatarSvgCompressed != null) {
-              _avatarSVGs.add(getAvatarSvg(contact.avatarSvgCompressed!));
+              _avatarContacts.add(contact);
             }
           }
         }
@@ -73,21 +99,21 @@ class _AvatarIconState extends State<AvatarIcon> {
       globalUserDataChangedCallBack[_globalUserDataCallBackId!] = () {
         setState(() {
           if (gUser.avatarSvg != null) {
-            _avatarSVGs = [gUser.avatarSvg!];
+            _avatarSvg = gUser.avatarSvg;
           } else {
-            _avatarSVGs = [];
+            _avatarContacts = [];
           }
         });
       };
       if (gUser.avatarSvg != null) {
-        _avatarSVGs = [gUser.avatarSvg!];
+        _avatarSvg = gUser.avatarSvg;
       }
     } else if (widget.contactId != null) {
       contactStream = twonlyDB.contactsDao
           .watchContact(widget.contactId!)
           .listen((contact) {
         if (contact != null && contact.avatarSvgCompressed != null) {
-          _avatarSVGs = [getAvatarSvg(contact.avatarSvgCompressed!)];
+          _avatarContacts = [contact];
           setState(() {});
         }
       });
@@ -99,27 +125,20 @@ class _AvatarIconState extends State<AvatarIcon> {
   Widget build(BuildContext context) {
     final proSize = (widget.fontSize == null) ? 40 : (widget.fontSize! * 2);
 
-    Widget avatars = SvgPicture.asset('assets/images/default_avatar.svg');
+    Widget avatars = Container();
 
-    if (_avatarSVGs.length == 1) {
+    if (_avatarSvg != null) {
       avatars = SvgPicture.string(
-        _avatarSVGs.first,
-        errorBuilder: (a, b, c) => avatars,
+        _avatarSvg!,
+        errorBuilder: errorBuilder,
       );
-    } else if (_avatarSVGs.length >= 2) {
-      final a = SvgPicture.string(
-        _avatarSVGs.first,
-        errorBuilder: (a, b, c) => avatars,
-      );
-      final b = SvgPicture.string(
-        _avatarSVGs[1],
-        errorBuilder: (a, b, c) => avatars,
-      );
-      if (_avatarSVGs.length >= 3) {
-        final c = SvgPicture.string(
-          _avatarSVGs[2],
-          errorBuilder: (a, b, c) => avatars,
-        );
+    } else if (_avatarContacts.length == 1) {
+      avatars = getAvatarForContact(_avatarContacts.first);
+    } else if (_avatarContacts.length >= 2) {
+      final a = getAvatarForContact(_avatarContacts.first);
+      final b = getAvatarForContact(_avatarContacts[1]);
+      if (_avatarContacts.length >= 3) {
+        final c = getAvatarForContact(_avatarContacts[2]);
         avatars = Stack(
           children: [
             Transform.translate(
@@ -153,6 +172,10 @@ class _AvatarIconState extends State<AvatarIcon> {
           ],
         );
       }
+    } else {
+      avatars = const SvgPicture(
+        AssetBytesLoader('assets/images/default_avatar.svg.vec'),
+      );
     }
 
     return Container(

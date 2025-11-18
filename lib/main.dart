@@ -1,14 +1,7 @@
-// ignore_for_file: unused_import
-
 import 'dart:async';
-import 'dart:io';
-
 import 'package:camera/camera.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -25,20 +18,12 @@ import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
+import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 void main() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
-
-  // try {
-  //   File(join((await getApplicationSupportDirectory()).path, 'twonly.sqlite'))
-  //       .deleteSync();
-  // } catch (e) {}
-  // await updateUserdata((u) {
-  //   u.appVersion = 0;
-  //   return u;
-  // });
 
   final user = await getUser();
   if (user != null) {
@@ -59,6 +44,10 @@ void main() async {
   }
 
   await initFCMService();
+
+  globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
+  globalApplicationSupportDirectory =
+      (await getApplicationSupportDirectory()).path;
 
   initLogger();
 

@@ -100,6 +100,7 @@ class _AllReactionsViewState extends State<AllReactionsView> {
               child: ListView(
                 children: reactionsUsers.map((entry) {
                   return GestureDetector(
+                    key: ValueKey(entry),
                     onTap: (entry.$2 != null)
                         ? null
                         : () {

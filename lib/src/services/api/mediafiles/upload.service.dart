@@ -28,7 +28,7 @@ Future<void> finishStartedPreprocessing() async {
       continue;
     }
     try {
-      final service = await MediaFileService.fromMedia(mediaFile);
+      final service = MediaFileService(mediaFile);
       if (!service.originalPath.existsSync() &&
           !service.uploadRequestPath.existsSync()) {
         if (service.storedPath.existsSync()) {
@@ -78,7 +78,7 @@ Future<MediaFileService?> initializeMediaUpload(
     ),
   );
   if (mediaFile == null) return null;
-  return MediaFileService.fromMedia(mediaFile);
+  return MediaFileService(mediaFile);
 }
 
 Future<void> insertMediaFileInMessagesTable(

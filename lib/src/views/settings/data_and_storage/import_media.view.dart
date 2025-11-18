@@ -118,7 +118,7 @@ class _ImportMediaViewState extends State<ImportMediaView> {
             stored: const Value(true),
           ),
         );
-        final mediaService = await MediaFileService.fromMedia(mediaFile!);
+        final mediaService = MediaFileService(mediaFile!);
         await mediaService.storedPath.writeAsBytes(file.content);
 
         processed++;

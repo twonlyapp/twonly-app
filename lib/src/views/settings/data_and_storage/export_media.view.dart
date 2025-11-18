@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -44,12 +45,12 @@ class _ExportMediaViewState extends State<ExportMediaView> {
   bool _zipSaved = false;
   bool _isStoring = false;
 
-  Future<Directory> _mediaFolder() async {
+  Directory _mediaFolder() {
     final dir = MediaFileService.buildDirectoryPath(
       'stored',
-      await getApplicationSupportDirectory(),
+      globalApplicationSupportDirectory,
     );
-    if (!dir.existsSync()) await dir.create(recursive: true);
+    if (!dir.existsSync()) dir.createSync(recursive: true);
     return dir;
   }
 
@@ -62,7 +63,7 @@ class _ExportMediaViewState extends State<ExportMediaView> {
     });
 
     try {
-      final folder = await _mediaFolder();
+      final folder = _mediaFolder();
       final allFiles =
           folder.listSync(recursive: true).whereType<File>().toList();
 
