@@ -4,6 +4,14 @@
 
 This repository contains the complete source code of the [twonly](https://twonly.eu) apps.
 
+<a href="https://testflight.apple.com/join/U9B3v2rk" >
+    <img alt="Get it on Testflight button" src="https://twonly.eu/assets/buttons/get-it-on-testflight.png"
+        width="100px" />
+</a>
+<a href="https://releases.twonly.eu/fdroid/repo/">
+    <img alt="Get it on F-Droid button" src="https://twonly.eu/assets/buttons/get-it-on-f-droid.webp" width="100px" />
+</a>
+
 ## Features
 
 - Offer a Snapchat™ like experience
@@ -54,7 +62,7 @@ run-as eu.twonly.testing ls /data/user/0/eu.twonly.testing/
 
 ## Signing Keys
 
-When you download the app **via GitHub** you can verify the signing keys using for example the [AppVerifyer](https://github.com/soupslurpr/AppVerifier) and the following SHA-256 fingerprint of the signing certificate.
+When you download the app **via GitHub or F-Droid** you can verify the signing keys using for example the [AppVerifyer](https://github.com/soupslurpr/AppVerifier) and the following SHA-256 fingerprint of the signing certificate.
 
 eu.twonly
 E3:C4:4D:56:8C:67:F9:32:AC:8C:33:90:99:8A:B9:5E:E8:FF:2D:7A:07:3C:24:E3:66:77:93:E6:EA:CD:77:0A
