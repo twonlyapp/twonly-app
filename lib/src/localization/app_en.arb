@@ -562,7 +562,7 @@
   "notificationText": "sent a message{inGroup}.",
   "notificationTwonly": "sent a twonly{inGroup}.",
   "notificationVideo": "sent a video{inGroup}.",
-  "notificationImage": "sent a image{inGroup}.",
+  "notificationImage": "sent an image{inGroup}.",
   "notificationAudio": "sent a voice message{inGroup}.",
   "notificationAddedToGroup": "has added you to \"{groupname}\"",
   "notificationContactRequest": "wants to connect with you.",
