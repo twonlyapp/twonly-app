@@ -287,7 +287,7 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
           ..where((t) => t.groupId.equals(groupId)))
         .getSingle();
 
-    final totalMediaCounter = group.totalMediaCounter + (received ? 0 : 1);
+    final totalMediaCounter = group.totalMediaCounter + 1;
     var flameCounter = group.flameCounter;
     var maxFlameCounter = group.maxFlameCounter;
     var maxFlameCounterFrom = group.maxFlameCounterFrom;
