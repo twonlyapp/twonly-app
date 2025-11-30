@@ -203,9 +203,6 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 Future<void> handleBackupStatusUpdate(TaskStatusUpdate update) async {
   if (update.status == TaskStatus.failed ||
       update.status == TaskStatus.canceled) {
-    Log.error(
-      'twonly Backup upload failed. ${update.responseStatusCode} ${update.responseBody} ${update.responseHeaders} ${update.exception}',
-    );
     await updateUserdata((user) {
       if (user.twonlySafeBackup != null) {
         user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.failed;

@@ -100,9 +100,11 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
       failed = false;
     } else {
       failed = true;
-      Log.error(
-        'Got invalid response status code: ${update.responseStatusCode}',
-      );
+      if (update.responseStatusCode != null) {
+        Log.error(
+          'Got invalid response status code: ${update.responseStatusCode}',
+        );
+      }
     }
   } else {
     Log.info('Got ${update.status} for $mediaId');
