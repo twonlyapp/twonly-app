@@ -403,7 +403,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     for (final x in layers) {
       x.showCustomButtons = true;
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     return image;
   }
 
