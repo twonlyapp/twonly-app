@@ -86,6 +86,11 @@ dependency_overrides:
       url: https://github.com/otsmr/flutter-packages.git
       path: packages/camera/camera_android_camerax 
       ref: aef58af205a5f3ce6588a5c59bb2e734aab943f0
+  emoji_picker_flutter:
+    # Fixes the issue with recent emojis (solved by https://github.com/Fintasys/emoji_picker_flutter/pull/238)
+    # Using override until this gets merged.
+    git:
+      url: https://github.com/otsmr/emoji_picker_flutter.git
   flutter_android_volume_keydown:
     git:
       url: https://github.com/yenchieh/flutter_android_volume_keydown.git
