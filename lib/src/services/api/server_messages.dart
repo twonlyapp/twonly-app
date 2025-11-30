@@ -134,7 +134,6 @@ Future<void> handleClient2ClientMessage(int fromUserId, Uint8List body) async {
             ..receiptId = receiptId
             ..type = Message_Type.PLAINTEXT_CONTENT
             ..plaintextContent = responsePlaintextContent;
-          Log.error('Sending decryption error');
         } else {
           response = Message()..type = Message_Type.SENDER_DELIVERY_RECEIPT;
         }
