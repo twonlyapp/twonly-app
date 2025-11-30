@@ -6,7 +6,6 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hashlib/random.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
@@ -431,9 +430,17 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     // In case the image was already stored, then rename the stored image.
     if (mediaService.storedPath.existsSync()) {
-      final newPath = mediaService.storedPath.absolute.path
-          .replaceFirst(media.mediaId, uuid.v7());
-      mediaService.storedPath.renameSync(newPath);
+      final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+        MediaFilesCompanion(
+          type: Value(mediaService.mediaFile.type),
+          createdAt: Value(DateTime.now()),
+          stored: const Value(true),
+        ),
+      );
+      if (mediaFile != null) {
+        mediaService.storedPath
+            .renameSync(MediaFileService(mediaFile).storedPath.path);
+      }
     }
     return true;
   }
