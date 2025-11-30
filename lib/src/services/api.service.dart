@@ -283,10 +283,6 @@ class ApiService {
     request.v0.seq = seq;
     final requestBytes = request.writeToBuffer();
 
-    Log.info(
-      'Sending ${requestBytes.length} bytes to the server via WebSocket.',
-    );
-
     if (ensureRetransmission) {
       await addToRetransmissionBuffer(seq, requestBytes);
     }

@@ -115,7 +115,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           milliseconds: group.deleteMessagesAfterMilliseconds,
         ),
       );
-      final affected = await (delete(messages)
+      await (delete(messages)
             ..where(
               (m) =>
                   m.groupId.equals(group.groupId) &
@@ -127,7 +127,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
                           m.createdAt.isSmallerThanValue(deletionTime))),
             ))
           .go();
-      Log.info('Deleted $affected messages.');
     }
   }
 

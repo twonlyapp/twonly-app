@@ -18,10 +18,24 @@ void initLogger() {
       );
     }
   });
+  cleanLogFile();
 }
 
 class Log {
-  static void error(Object? message, [Object? error, StackTrace? stackTrace]) {
+  static String filterLogMessage(String msg) {
+    if (msg.contains("SqliteException")) {
+      // Do not log data which would be inserted into the DB.
+      return msg.substring(0, msg.indexOf("parameters: "));
+    }
+    return msg;
+  }
+
+  static void error(
+    Object? messageInput, [
+    Object? error,
+    StackTrace? stackTrace,
+  ]) {
+    final message = filterLogMessage('$messageInput');
     if (globalAllowErrorTrackingViaSentry) {
       try {
         throw Exception(message);
@@ -32,11 +46,21 @@ class Log {
     Logger(_getCallerSourceCodeFilename()).shout(message, error, stackTrace);
   }
 
-  static void warn(Object? message, [Object? error, StackTrace? stackTrace]) {
+  static void warn(
+    Object? messageInput, [
+    Object? error,
+    StackTrace? stackTrace,
+  ]) {
+    final message = filterLogMessage('$messageInput');
     Logger(_getCallerSourceCodeFilename()).warning(message, error, stackTrace);
   }
 
-  static void info(Object? message, [Object? error, StackTrace? stackTrace]) {
+  static void info(
+    Object? messageInput, [
+    Object? error,
+    StackTrace? stackTrace,
+  ]) {
+    final message = filterLogMessage('$messageInput');
     Logger(_getCallerSourceCodeFilename()).fine(message, error, stackTrace);
   }
 }
@@ -75,6 +99,23 @@ Future<void> _writeLogToFile(LogRecord record) async {
     // Append the log message to the file
     await logFile.writeAsString(logMessage, mode: FileMode.append);
   });
+}
+
+Future<void> cleanLogFile() async {
+  final directory = await getApplicationSupportDirectory();
+  final logFile = File('${directory.path}/app.log');
+
+  if (logFile.existsSync()) {
+    final lines = await logFile.readAsLines();
+
+    if (lines.length <= 5000) return;
+
+    final removeCount = lines.length - 5000;
+    final remaining = lines.sublist(removeCount);
+
+    final sink = logFile.openWrite()..writeAll(remaining, '\n');
+    await sink.close();
+  }
 }
 
 Future<bool> deleteLogFile() async {
