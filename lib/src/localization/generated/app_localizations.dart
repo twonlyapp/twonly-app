@@ -2477,7 +2477,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationImage.
   ///
   /// In en, this message translates to:
-  /// **'sent a image{inGroup}.'**
+  /// **'sent an image{inGroup}.'**
   String notificationImage(Object inGroup);
 
   /// No description provided for @notificationAudio.
