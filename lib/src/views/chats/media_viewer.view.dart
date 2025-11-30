@@ -172,12 +172,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       showSendTextMessageInput = false;
     });
 
-    // if (Platform.isAndroid) {
-    //   await flutterLocalNotificationsPlugin
-    //       .cancel(allMediaFiles.first.contactId);
-    // } else {
-    await flutterLocalNotificationsPlugin.cancelAll();
-    // }
+    unawaited(flutterLocalNotificationsPlugin.cancelAll());
 
     final stream =
         twonlyDB.mediaFilesDao.watchMedia(allMediaFiles.first.mediaId!);
@@ -261,6 +256,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       return nextMediaOrExit();
     }
 
+    var timerRequired = false;
+
     if (currentMediaLocal.mediaFile.type == MediaType.video) {
       videoController = VideoPlayerController.file(currentMediaLocal.tempPath);
       await videoController?.setLooping(
@@ -292,12 +289,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 currentMediaLocal.mediaFile.displayLimitInMilliseconds!,
           ),
         );
+        timerRequired = true;
+      }
+    }
+    if (mounted) {
+      setState(() {
+        currentMedia = currentMediaLocal;
+      });
+      if (timerRequired) {
         startTimer();
       }
     }
-    setState(() {
-      currentMedia = currentMediaLocal;
-    });
   }
 
   void startTimer() {
@@ -310,14 +312,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         }
       });
       progressTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-        if (currentMedia!.mediaFile.displayLimitInMilliseconds == null ||
+        final mediaFile = currentMedia?.mediaFile;
+        if (mediaFile == null) return;
+        if (mediaFile.displayLimitInMilliseconds == null ||
             canBeSeenUntil == null) {
           return;
         }
         final difference = canBeSeenUntil!.difference(DateTime.now());
         // Calculate the progress as a value between 0.0 and 1.0
-        progress = difference.inMilliseconds /
-            (currentMedia!.mediaFile.displayLimitInMilliseconds!);
+        progress =
+            difference.inMilliseconds / (mediaFile.displayLimitInMilliseconds!);
         setState(() {});
       });
     }

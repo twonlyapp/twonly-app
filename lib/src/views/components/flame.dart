@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 
 class FlameCounterWidget extends StatefulWidget {
@@ -38,18 +39,20 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
 
   Future<void> initAsync() async {
     var groupId = widget.groupId;
+    late Group? group;
     if (widget.groupId == null && widget.contactId != null) {
-      final group = await twonlyDB.groupsDao.getDirectChat(widget.contactId!);
+      group = await twonlyDB.groupsDao.getDirectChat(widget.contactId!);
       groupId = group?.groupId;
     } else if (groupId != null) {
       // do not display the flame counter for groups
-      final group = await twonlyDB.groupsDao.getGroup(groupId);
+      group = await twonlyDB.groupsDao.getGroup(groupId);
       if (!(group?.isDirectChat ?? false)) {
         return;
       }
     }
-    if (groupId != null) {
-      isBestFriend = gUser.myBestFriendGroupId == groupId;
+    if (groupId != null && group != null) {
+      isBestFriend =
+          gUser.myBestFriendGroupId == groupId && group.alsoBestFriend;
       final stream = twonlyDB.groupsDao.watchFlameCounter(groupId);
       flameCounterSub = stream.listen((counter) {
         if (mounted) {

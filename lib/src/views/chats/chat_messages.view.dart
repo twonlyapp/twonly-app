@@ -260,6 +260,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     });
 
     final items = await MemoryItem.convertFromMessages(storedMediaFiles);
+    if (!mounted) return;
     galleryItems = items.values.toList();
     setState(() {});
   }

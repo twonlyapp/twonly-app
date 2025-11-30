@@ -238,7 +238,7 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
             .text: "sent a message{inGroup}.",
             .twonly: "sent a twonly{inGroup}.",
             .video: "sent a video{inGroup}.",
-            .image: "sent a image{inGroup}.",
+            .image: "sent an image{inGroup}.",
             .audio: "sent a voice message{inGroup}.",
             .contactRequest: "wants to connect with you.",
             .acceptRequest: "is now connected with you.",

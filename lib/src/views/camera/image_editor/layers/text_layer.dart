@@ -90,11 +90,15 @@ class _TextViewState extends State<TextLayer> {
     final bottom = MediaQuery.of(context).viewInsets.bottom +
         MediaQuery.of(context).viewPadding.bottom;
 
+    // On Android it is possible to close the keyboard without `onEditingComplete` is triggered.
     if (maxBottomInset > bottom) {
-      maxBottomInset = 0;
-      if (widget.layerData.isEditing) {
-        widget.layerData.isEditing = false;
-        onEditionComplete();
+      // prevent that the text element will be disappearing in case the keyboard just switches for example to the emoji page
+      if (bottom < 20) {
+        maxBottomInset = 0;
+        if (widget.layerData.isEditing) {
+          widget.layerData.isEditing = false;
+          onEditionComplete();
+        }
       }
     } else {
       maxBottomInset = bottom;

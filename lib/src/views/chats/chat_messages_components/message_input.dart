@@ -76,11 +76,7 @@ class _MessageInputState extends State<MessageInput> {
   }
 
   void _initializeControllers() {
-    recorderController = RecorderController()
-      ..androidEncoder = AndroidEncoder.aac
-      ..androidOutputFormat = AndroidOutputFormat.mpeg4
-      ..iosEncoder = IosEncoder.kAudioFormatMPEG4AAC
-      ..sampleRate = 44100;
+    recorderController = RecorderController();
   }
 
   void _handleTextFocusChange() {

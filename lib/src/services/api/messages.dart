@@ -44,7 +44,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     if (receipt == null) {
       receipt = await twonlyDB.receiptsDao.getReceiptById(receiptId!);
       if (receipt == null) {
-        Log.error('Receipt not found.');
+        Log.warn('Receipt not found.');
         return null;
       }
     }

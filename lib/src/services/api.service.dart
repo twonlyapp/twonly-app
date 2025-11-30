@@ -185,7 +185,7 @@ class ApiService {
   }
 
   Future<void> _onError(dynamic e) async {
-    Log.error('websocket error: $e');
+    Log.warn('websocket error: $e');
     await onClosed();
   }
 
@@ -206,7 +206,7 @@ class ApiService {
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
     final startTime = DateTime.now();
 
-    const timeout = Duration(seconds: 20);
+    const timeout = Duration(seconds: 60);
 
     while (true) {
       if (messagesV0[seq] != null) {
@@ -215,7 +215,7 @@ class ApiService {
         return tmp;
       }
       if (DateTime.now().difference(startTime) > timeout) {
-        Log.error('Timeout for message $seq');
+        Log.warn('Timeout for message $seq');
         return null;
       }
       await Future.delayed(const Duration(milliseconds: 10));
@@ -282,10 +282,6 @@ class ApiService {
 
     request.v0.seq = seq;
     final requestBytes = request.writeToBuffer();
-
-    Log.info(
-      'Sending ${requestBytes.length} bytes to the server via WebSocket.',
-    );
 
     if (ensureRetransmission) {
       await addToRetransmissionBuffer(seq, requestBytes);
@@ -421,7 +417,7 @@ class ApiService {
 
     final result = await sendRequestSync(req, authenticated: false);
     if (result.isError) {
-      Log.error('could not request auth challenge', result);
+      Log.warn('could not request auth challenge', result);
       return;
     }
 

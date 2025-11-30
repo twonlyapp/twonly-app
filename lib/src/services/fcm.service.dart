@@ -22,6 +22,13 @@ Future<void> initFCMAfterAuthenticated() async {
   final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
 
   try {
+    if (Platform.isIOS) {
+      final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      if (apnsToken == null) {
+        Log.error('Error getting apnsToken');
+        return;
+      }
+    }
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken == null) {
       Log.error('Error getting fcmToken');

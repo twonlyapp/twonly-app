@@ -35,11 +35,7 @@ class MediaFileService {
 
       final service = await MediaFileService.fromMediaId(mediaId);
 
-      if (service == null) {
-        Log.error(
-          'Purging media file, as it is not in the database $mediaId.',
-        );
-      } else {
+      if (service != null) {
         if (service.mediaFile.isDraftMedia) {
           delete = false;
         }

@@ -1345,7 +1345,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String notificationImage(Object inGroup) {
-    return 'sent a image$inGroup.';
+    return 'sent an image$inGroup.';
   }
 
   @override
