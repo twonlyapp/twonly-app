@@ -23,9 +23,9 @@ void initLogger() {
 
 class Log {
   static String filterLogMessage(String msg) {
-    if (msg.contains("SqliteException")) {
+    if (msg.contains('SqliteException')) {
       // Do not log data which would be inserted into the DB.
-      return msg.substring(0, msg.indexOf("parameters: "));
+      return msg.substring(0, msg.indexOf('parameters: '));
     }
     return msg;
   }

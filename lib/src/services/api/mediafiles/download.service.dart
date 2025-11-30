@@ -112,7 +112,6 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
   }
 
   if (failed) {
-    Log.error('Background media upload failed: ${update.status}');
     await requestMediaReupload(mediaId);
   } else {
     await handleEncryptedFile(mediaId);

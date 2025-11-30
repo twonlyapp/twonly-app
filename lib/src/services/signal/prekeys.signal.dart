@@ -50,8 +50,7 @@ Future<void> requestNewPrekeysForContact(int contactId) async {
           .toList();
       await twonlyDB.signalDao.insertPreKeys(preKeys);
     } else {
-      // 104400
-      Log.error('[PREKEY] Could not load new pre keys for user $contactId');
+      Log.warn('[PREKEY] Could not load new pre keys for user $contactId');
     }
   });
 }
@@ -85,7 +84,7 @@ Future<void> requestNewSignedPreKeyForContact(int contactId) async {
         ),
       );
     } else {
-      Log.error('could not load new signed pre key for user $contactId');
+      Log.warn('could not load new signed pre key for user $contactId');
     }
   });
 }

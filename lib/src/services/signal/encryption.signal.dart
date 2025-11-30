@@ -112,7 +112,7 @@ Future<(EncryptedContent?, PlaintextContent_DecryptionErrorMessage_Type?)>
 
     return (EncryptedContent.fromBuffer(plaintext), null);
   } on InvalidKeyIdException catch (e) {
-    Log.error(e);
+    Log.warn(e);
     return (null, PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN);
   } catch (e) {
     Log.error(e);
