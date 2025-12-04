@@ -382,6 +382,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (currentMedia != null &&
+            !currentMedia!.mediaFile.requiresAuthentication &&
             currentMedia!.mediaFile.displayLimitInMilliseconds == null)
           OutlinedButton(
             style: OutlinedButton.styleFrom(
