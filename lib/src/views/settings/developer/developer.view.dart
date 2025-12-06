@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/settings/developer/automated_testing.view.dart';
 import 'package:twonly/src/views/settings/developer/retransmission_data.view.dart';
@@ -13,20 +14,9 @@ class DeveloperSettingsView extends StatefulWidget {
 }
 
 class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
-  bool isDeveloper = true;
-
   @override
   void initState() {
     super.initState();
-    unawaited(initAsync());
-  }
-
-  Future<void> initAsync() async {
-    final user = await getUser();
-    if (user == null) return;
-    setState(() {
-      isDeveloper = user.isDeveloper;
-    });
   }
 
   Future<void> toggleDeveloperSettings() async {
@@ -34,7 +24,15 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
       u.isDeveloper = !u.isDeveloper;
       return u;
     });
-    await initAsync();
+    setState(() {});
+  }
+
+  Future<void> toggleVideoCompression() async {
+    await updateUserdata((u) {
+      u.disableVideoCompression = !u.disableVideoCompression;
+      return u;
+    });
+    setState(() {});
   }
 
   @override
@@ -49,7 +47,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
             title: const Text('Show Developer Settings'),
             onTap: toggleDeveloperSettings,
             trailing: Switch(
-              value: isDeveloper,
+              value: gUser.isDeveloper,
               onChanged: (a) => toggleDeveloperSettings(),
             ),
           ),
@@ -66,14 +64,17 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               );
             },
           ),
-          // if (!kReleaseMode)
-          //   ListTile(
-          //     title: const Text('FlameSync Test'),
-          //     onTap: () async {
-          //       await twonlyDB.contactsDao.modifyFlameCounterForTesting();
-          //       await syncFlameCounters();
-          //     },
-          //   ),
+          ListTile(
+            title: const Text('Disable ffmpeg'),
+            subtitle: const Text(
+              'If your smartphone crashes, you can disable ffmpeg. This will prevent your videos from being compressed and NO FILTER will be applied to the video! This is a workaround, until the root-cause in ffmpeg is found.',
+            ),
+            onTap: toggleVideoCompression,
+            trailing: Switch(
+              value: gUser.disableVideoCompression,
+              onChanged: (a) => toggleVideoCompression(),
+            ),
+          ),
           if (!kReleaseMode)
             ListTile(
               title: const Text('Automated Testing'),
