@@ -20,7 +20,8 @@ class HomeViewCameraPreview extends StatelessWidget {
     }
     return Positioned.fill(
       child: MediaViewSizing(
-        requiredHeight: 80,
+        requiredHeight: 0,
+        additionalPadding: 59,
         bottomNavigation: Container(),
         child: Screenshot(
           controller: screenshotController,
@@ -60,8 +61,8 @@ class SendToCameraPreview extends StatelessWidget {
     }
     return Positioned.fill(
       child: MediaViewSizing(
-        requiredHeight: 80,
-        bottomNavigation: Container(),
+        requiredHeight: 0,
+        additionalPadding: 59,
         child: Screenshot(
           controller: screenshotController,
           child: AspectRatio(

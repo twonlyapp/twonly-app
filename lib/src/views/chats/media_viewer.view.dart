@@ -518,7 +518,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                 },
                 child: MediaViewSizing(
                   bottomNavigation: bottomNavigation(),
-                  requiredHeight: 80,
+                  requiredHeight: 55,
                   child: Stack(
                     children: [
                       if (videoController != null)
