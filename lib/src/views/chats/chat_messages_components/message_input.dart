@@ -15,6 +15,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 
 class MessageInput extends StatefulWidget {
   const MessageInput({
@@ -41,6 +42,10 @@ class _MessageInputState extends State<MessageInput> {
   late final RecorderController recorderController;
   final bool isApple = Platform.isIOS;
   bool _emojiShowing = false;
+  bool _audioRecordingLock = false;
+  int _currentDuration = 0;
+  double _cancelSlideOffset = 0;
+  Offset _recordingOffset = Offset.zero;
   RecordingState _recordingState = RecordingState.none;
 
   Future<void> _sendMessage() async {
@@ -72,11 +77,17 @@ class _MessageInputState extends State<MessageInput> {
   void dispose() {
     widget.textFieldFocus.removeListener(_handleTextFocusChange);
     widget.textFieldFocus.dispose();
+    recorderController.dispose();
     super.dispose();
   }
 
   void _initializeControllers() {
     recorderController = RecorderController();
+    recorderController.onCurrentDuration.listen((duration) {
+      setState(() {
+        _currentDuration = duration.inMilliseconds;
+      });
+    });
   }
 
   void _handleTextFocusChange() {
@@ -87,9 +98,37 @@ class _MessageInputState extends State<MessageInput> {
     }
   }
 
+  Future<void> _startAudioRecording() async {
+    if (!await Permission.microphone.isGranted) {
+      final statuses = await [
+        Permission.microphone,
+      ].request();
+      if (statuses[Permission.microphone]!.isPermanentlyDenied) {
+        await openAppSettings();
+        return;
+      }
+      if (!await Permission.microphone.isGranted) {
+        return;
+      }
+    }
+    setState(() {
+      _recordingState = RecordingState.recording;
+    });
+    await HapticFeedback.heavyImpact();
+    final audioTmpPath =
+        '${(await getApplicationCacheDirectory()).path}/recording.m4a';
+    unawaited(
+      recorderController.record(
+        path: audioTmpPath,
+      ),
+    );
+  }
+
   Future<void> _stopAudioRecording() async {
     await HapticFeedback.heavyImpact();
     setState(() {
+      _audioRecordingLock = false;
+      _cancelSlideOffset = 0;
       _recordingState = RecordingState.none;
     });
 
@@ -112,6 +151,19 @@ class _MessageInputState extends State<MessageInput> {
       mediaFileService,
       [widget.group.groupId],
     );
+  }
+
+  Future<void> _cancelAudioRecording() async {
+    setState(() {
+      _audioRecordingLock = false;
+      _cancelSlideOffset = 0;
+      _recordingState = RecordingState.none;
+    });
+    final path = await recorderController.stop();
+    if (path == null) return;
+    if (File(path).existsSync()) {
+      File(path).deleteSync();
+    }
   }
 
   @override
@@ -169,27 +221,53 @@ class _MessageInputState extends State<MessageInput> {
                         ),
                       Expanded(
                         child: (_recordingState == RecordingState.recording)
-                            ? AudioWaveforms(
-                                enableGesture: true,
-                                size: Size(
-                                  MediaQuery.of(context).size.width / 2,
-                                  50,
-                                ),
-                                recorderController: recorderController,
-                                waveStyle: WaveStyle(
-                                  waveColor: isDarkMode(context)
-                                      ? Colors.white
-                                      : Colors.black,
-                                  extendWaveform: true,
-                                  showMiddleLine: false,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: context.color.surfaceContainer,
-                                ),
-                                padding: const EdgeInsets.only(left: 18),
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                            ? Row(
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.only(
+                                      top: 14,
+                                      bottom: 14,
+                                      left: 12,
+                                      right: 8,
+                                    ),
+                                    child: FaIcon(
+                                      FontAwesomeIcons.microphone,
+                                      size: 20,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    formatMsToMinSec(
+                                      _currentDuration,
+                                    ),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  if (!_audioRecordingLock) ...[
+                                    SizedBox(
+                                      width: (100 - _cancelSlideOffset) % 101,
+                                    ),
+                                    Text(
+                                        context.lang.voiceMessageSlideToCancel),
+                                  ] else ...[
+                                    Expanded(
+                                      child: Container(),
+                                    ),
+                                    GestureDetector(
+                                      onTap: _cancelAudioRecording,
+                                      child: Text(
+                                        context.lang.voiceMessageCancel,
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 20)
+                                  ],
+                                ],
                               )
                             : TextField(
                                 controller: _textFieldController,
@@ -220,47 +298,84 @@ class _MessageInputState extends State<MessageInput> {
                       ),
                       if (_textFieldController.text == '')
                         GestureDetector(
-                          onLongPressStart: (a) async {
-                            if (!await Permission.microphone.isGranted) {
-                              final statuses = await [
-                                Permission.microphone,
-                              ].request();
-                              if (statuses[Permission.microphone]!
-                                  .isPermanentlyDenied) {
-                                await openAppSettings();
-                                return;
-                              }
-                              if (!await Permission.microphone.isGranted) {
-                                return;
-                              }
+                          onLongPressMoveUpdate: (details) {
+                            if (_audioRecordingLock) return;
+                            if (_recordingOffset.dy -
+                                    details.localPosition.dy >=
+                                100) {
+                              HapticFeedback.heavyImpact();
+                              setState(() {
+                                _audioRecordingLock = true;
+                              });
                             }
-                            setState(() {
-                              _recordingState = RecordingState.recording;
-                            });
-                            await HapticFeedback.heavyImpact();
-                            final audioTmpPath =
-                                '${(await getApplicationCacheDirectory()).path}/recording.m4a';
-                            unawaited(
-                              recorderController.record(
-                                path: audioTmpPath,
-                              ),
-                            );
-                          },
-                          onLongPressCancel: () async {
-                            final path = await recorderController.stop();
-                            if (path == null) return;
-                            if (File(path).existsSync()) {
-                              File(path).deleteSync();
-                            }
-                            setState(() {
+                            if (_recordingOffset.dx -
+                                        details.localPosition.dx >=
+                                    90 &&
+                                _recordingState == RecordingState.recording) {
                               _recordingState = RecordingState.none;
+                              HapticFeedback.heavyImpact();
+                              _cancelAudioRecording();
+                            }
+
+                            setState(() {
+                              final a = _recordingOffset.dx -
+                                  details.localPosition.dx;
+                              if (a > 0 && a <= 90) {
+                                _cancelSlideOffset = _recordingOffset.dx -
+                                    details.localPosition.dx;
+                              }
                             });
                           },
-                          onLongPressEnd: (a) => _stopAudioRecording(),
+                          onLongPressStart: (a) {
+                            _recordingOffset = a.localPosition;
+                            _startAudioRecording();
+                          },
+                          onLongPressCancel: _cancelAudioRecording,
+                          onLongPressEnd: (a) {
+                            if (_recordingState != RecordingState.recording) {
+                              return;
+                            }
+                            if (!_audioRecordingLock) {
+                              _stopAudioRecording();
+                            }
+                          },
                           child: Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              if (_recordingState == RecordingState.recording)
+                              if (_recordingState == RecordingState.recording &&
+                                  !_audioRecordingLock)
+                                Positioned.fill(
+                                  top: -120,
+                                  left: -5,
+                                  child: Align(
+                                    alignment: AlignmentGeometry.topCenter,
+                                    child: Container(
+                                      padding: const EdgeInsets.only(top: 13),
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(90),
+                                        color: Colors.black,
+                                      ),
+                                      child: const Center(
+                                        child: Column(
+                                          children: [
+                                            FaIcon(
+                                              FontAwesomeIcons.lock,
+                                              size: 16,
+                                            ),
+                                            SizedBox(height: 5),
+                                            FaIcon(
+                                              FontAwesomeIcons.angleUp,
+                                              size: 16,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              if (_recordingState == RecordingState.recording &&
+                                  !_audioRecordingLock)
                                 Positioned.fill(
                                   top: -20,
                                   left: -25,
@@ -275,30 +390,31 @@ class _MessageInputState extends State<MessageInput> {
                                     height: 60,
                                   ),
                                 ),
-                              ColoredBox(
-                                color: Colors.transparent,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 8,
-                                    bottom: 8,
-                                    left: 8,
-                                    right: 12,
-                                  ),
-                                  child: FaIcon(
-                                    size: 20,
-                                    color: (_recordingState ==
-                                            RecordingState.recording)
-                                        ? Colors.white
-                                        : null,
-                                    (_recordingState == RecordingState.none)
-                                        ? FontAwesomeIcons.microphone
-                                        : (_recordingState ==
-                                                RecordingState.recording)
-                                            ? FontAwesomeIcons.stop
-                                            : FontAwesomeIcons.play,
+                              if (!_audioRecordingLock)
+                                ColoredBox(
+                                  color: Colors.transparent,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 8,
+                                      bottom: 8,
+                                      left: 8,
+                                      right: 12,
+                                    ),
+                                    child: FaIcon(
+                                      size: 20,
+                                      color: (_recordingState ==
+                                              RecordingState.recording)
+                                          ? Colors.white
+                                          : null,
+                                      (_recordingState == RecordingState.none)
+                                          ? FontAwesomeIcons.microphone
+                                          : (_recordingState ==
+                                                  RecordingState.recording)
+                                              ? FontAwesomeIcons.stop
+                                              : FontAwesomeIcons.play,
+                                    ),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -306,14 +422,15 @@ class _MessageInputState extends State<MessageInput> {
                   ),
                 ),
               ),
-              if (_textFieldController.text != '')
+              if (_textFieldController.text != '' || _audioRecordingLock)
                 IconButton(
                   padding: const EdgeInsets.all(15),
                   icon: FaIcon(
                     color: context.color.primary,
                     FontAwesomeIcons.solidPaperPlane,
                   ),
-                  onPressed: _sendMessage,
+                  onPressed:
+                      _audioRecordingLock ? _stopAudioRecording : _sendMessage,
                 )
               else
                 IconButton(

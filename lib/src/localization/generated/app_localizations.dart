@@ -2749,6 +2749,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import memories (Beta)'**
   String get importMemories;
+
+  /// No description provided for @voiceMessageSlideToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to cancel'**
+  String get voiceMessageSlideToCancel;
+
+  /// No description provided for @voiceMessageCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get voiceMessageCancel;
 }
 
 class _AppLocalizationsDelegate

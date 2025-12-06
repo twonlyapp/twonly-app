@@ -607,5 +607,7 @@
   "inProcess": "In process",
   "draftMessage": "Draft",
   "exportMemories": "Export memories (Beta)",
-  "importMemories": "Import memories (Beta)"
+  "importMemories": "Import memories (Beta)",
+  "voiceMessageSlideToCancel": "Slide to cancel",
+  "voiceMessageCancel": "Cancel"
 }

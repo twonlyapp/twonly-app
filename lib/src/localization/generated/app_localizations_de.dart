@@ -1516,4 +1516,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get importMemories => 'Memories importieren (Beta)';
+
+  @override
+  String get voiceMessageSlideToCancel => 'Zum Abbrechen ziehen';
+
+  @override
+  String get voiceMessageCancel => 'Abbrechen';
 }

@@ -48,7 +48,7 @@ class _MediaViewSizingState extends State<MediaViewSizing> {
     Widget imageChild = Align(
       alignment: Alignment.topCenter,
       child: SizedBox(
-        height: availableHeight,
+        // height: availableHeight,
         child: AspectRatio(
           aspectRatio: 9 / 16,
           child: ClipRRect(

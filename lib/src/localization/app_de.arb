@@ -829,5 +829,7 @@
     "inProcess": "Wird verarbeitet",
     "draftMessage": "Entwurf",
     "exportMemories": "Memories exportieren (Beta)",
-    "importMemories": "Memories importieren (Beta)"
+    "importMemories": "Memories importieren (Beta)",
+    "voiceMessageSlideToCancel": "Zum Abbrechen ziehen",
+    "voiceMessageCancel": "Abbrechen"
 }
