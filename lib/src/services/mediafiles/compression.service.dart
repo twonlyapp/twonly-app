@@ -69,6 +69,11 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
     media.ffmpegOutputPath.deleteSync();
   }
 
+  if (gUser.disableVideoCompression) {
+    media.originalPath.copySync(media.tempPath.path);
+    return;
+  }
+
   var overLayCommand = '';
   if (media.overlayImagePath.existsSync()) {
     overLayCommand =

@@ -31,6 +31,9 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool isDeveloper = false;
 
+  @JsonKey(defaultValue: false)
+  bool disableVideoCompression = false;
+
   @JsonKey(defaultValue: 0)
   int deviceId = 0;
 
