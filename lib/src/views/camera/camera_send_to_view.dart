@@ -1,11 +1,9 @@
 import 'dart:async';
-
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
-import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 
 class CameraSendToView extends StatefulWidget {
   const CameraSendToView(this.sendToGroup, {super.key});
@@ -15,71 +13,36 @@ class CameraSendToView extends StatefulWidget {
 }
 
 class CameraSendToViewState extends State<CameraSendToView> {
-  CameraController? cameraController;
-  ScreenshotController screenshotController = ScreenshotController();
-  SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
+  final MainCameraController _mainCameraController = MainCameraController();
 
   @override
   void initState() {
     super.initState();
-    unawaited(selectCamera(0, true));
+    _mainCameraController.setState = () {
+      if (mounted) setState(() {});
+    };
+    unawaited(_mainCameraController.selectCamera(0, true));
   }
 
   @override
   void dispose() {
-    cameraController?.dispose();
-    cameraController = null;
-    selectedCameraDetails = SelectedCameraDetails();
+    _mainCameraController.closeCamera();
     super.dispose();
-  }
-
-  Future<CameraController?> selectCamera(
-    int sCameraId,
-    bool init,
-  ) async {
-    final opts = await initializeCameraController(
-      selectedCameraDetails,
-      sCameraId,
-      init,
-    );
-    if (opts != null) {
-      selectedCameraDetails = opts.$1;
-      cameraController = opts.$2;
-    }
-    setState(() {});
-    return cameraController;
-  }
-
-  /// same function also in home.view.dart
-  Future<void> toggleSelectedCamera() async {
-    if (cameraController == null) return;
-    // do not allow switching camera when recording
-    if (cameraController!.value.isRecordingVideo) {
-      return;
-    }
-    await cameraController!.dispose();
-    cameraController = null;
-    await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: toggleSelectedCamera,
+        onDoubleTap: _mainCameraController.toggleSelectedCamera,
         child: Stack(
           children: [
-            SendToCameraPreview(
-              cameraController: cameraController,
-              screenshotController: screenshotController,
-              customPaint: null,
+            MainCameraPreview(
+              mainCameraController: _mainCameraController,
             ),
             CameraPreviewControllerView(
-              selectCamera: selectCamera,
+              mainController: _mainCameraController,
               sendToGroup: widget.sendToGroup,
-              cameraController: cameraController,
-              selectedCameraDetails: selectedCameraDetails,
-              screenshotController: screenshotController,
               isVisible: true,
             ),
           ],

@@ -1,23 +1,21 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 
-class HomeViewCameraPreview extends StatelessWidget {
-  const HomeViewCameraPreview({
-    required this.controller,
-    required this.screenshotController,
-    required this.customPaint,
+class MainCameraPreview extends StatelessWidget {
+  const MainCameraPreview({
+    required this.mainCameraController,
     super.key,
   });
 
-  final CameraController? controller;
-  final CustomPaint? customPaint;
-  final ScreenshotController screenshotController;
+  final MainCameraController mainCameraController;
 
   @override
   Widget build(BuildContext context) {
-    if (controller == null || !controller!.value.isInitialized) {
+    if (mainCameraController.cameraController == null ||
+        !mainCameraController.cameraController!.value.isInitialized) {
       return Container();
     }
     return Positioned.fill(
@@ -26,58 +24,21 @@ class HomeViewCameraPreview extends StatelessWidget {
         additionalPadding: 59,
         bottomNavigation: Container(),
         child: Screenshot(
-          controller: screenshotController,
+          controller: mainCameraController.screenshotController,
           child: AspectRatio(
             aspectRatio: 9 / 16,
             child: ClipRect(
               child: FittedBox(
                 fit: BoxFit.cover,
                 child: SizedBox(
-                  width: controller!.value.previewSize!.height,
-                  height: controller!.value.previewSize!.width,
-                  child: CameraPreview(controller!, child: customPaint),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class SendToCameraPreview extends StatelessWidget {
-  const SendToCameraPreview({
-    required this.cameraController,
-    required this.screenshotController,
-    required this.customPaint,
-    super.key,
-  });
-
-  final CameraController? cameraController;
-  final ScreenshotController screenshotController;
-  final CustomPaint? customPaint;
-
-  @override
-  Widget build(BuildContext context) {
-    if (cameraController == null || !cameraController!.value.isInitialized) {
-      return Container();
-    }
-    return Positioned.fill(
-      child: MediaViewSizing(
-        requiredHeight: 0,
-        additionalPadding: 59,
-        child: Screenshot(
-          controller: screenshotController,
-          child: AspectRatio(
-            aspectRatio: 9 / 16,
-            child: ClipRect(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: cameraController!.value.previewSize!.height,
-                  height: cameraController!.value.previewSize!.width,
-                  child: CameraPreview(cameraController!, child: customPaint),
+                  width: mainCameraController
+                      .cameraController!.value.previewSize!.height,
+                  height: mainCameraController
+                      .cameraController!.value.previewSize!.width,
+                  child: CameraPreview(
+                    mainCameraController.cameraController!,
+                    child: mainCameraController.customPaint,
+                  ),
                 ),
               ),
             ),

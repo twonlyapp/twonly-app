@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +10,6 @@ import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -22,6 +22,7 @@ import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/home.view.dart';
@@ -89,20 +90,14 @@ class SelectedCameraDetails {
 
 class CameraPreviewControllerView extends StatelessWidget {
   const CameraPreviewControllerView({
-    required this.cameraController,
-    required this.selectCamera,
-    required this.selectedCameraDetails,
-    required this.screenshotController,
+    required this.mainController,
     required this.isVisible,
     super.key,
     this.sendToGroup,
   });
+
+  final MainCameraController mainController;
   final Group? sendToGroup;
-  final Future<CameraController?> Function(int sCameraId, bool init)
-      selectCamera;
-  final CameraController? cameraController;
-  final SelectedCameraDetails selectedCameraDetails;
-  final ScreenshotController screenshotController;
   final bool isVisible;
 
   @override
@@ -114,16 +109,13 @@ class CameraPreviewControllerView extends StatelessWidget {
           if (snap.data!) {
             return CameraPreviewView(
               sendToGroup: sendToGroup,
-              selectCamera: selectCamera,
-              cameraController: cameraController,
-              selectedCameraDetails: selectedCameraDetails,
-              screenshotController: screenshotController,
+              mainCameraController: mainController,
               isVisible: isVisible,
             );
           } else {
             return PermissionHandlerView(
               onSuccess: () {
-                selectCamera(0, true);
+                mainController.selectCamera(0, true);
               },
             );
           }
@@ -137,22 +129,14 @@ class CameraPreviewControllerView extends StatelessWidget {
 
 class CameraPreviewView extends StatefulWidget {
   const CameraPreviewView({
-    required this.selectCamera,
-    required this.cameraController,
-    required this.selectedCameraDetails,
-    required this.screenshotController,
+    required this.mainCameraController,
     required this.isVisible,
     super.key,
     this.sendToGroup,
   });
+
+  final MainCameraController mainCameraController;
   final Group? sendToGroup;
-  final Future<CameraController?> Function(
-    int sCameraId,
-    bool init,
-  ) selectCamera;
-  final CameraController? cameraController;
-  final SelectedCameraDetails selectedCameraDetails;
-  final ScreenshotController screenshotController;
   final bool isVisible;
 
   @override
@@ -173,6 +157,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   DateTime _currentTime = DateTime.now();
   final GlobalKey keyTriggerButton = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  MainCameraController get mc => widget.mainCameraController;
 
   StreamSubscription<HardwareButton>? androidVolumeDownSub;
 
@@ -282,18 +268,18 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> updateScaleFactor(double newScale) async {
-    if (widget.selectedCameraDetails.scaleFactor == newScale ||
-        widget.cameraController == null) {
+    if (mc.selectedCameraDetails.scaleFactor == newScale ||
+        mc.cameraController == null) {
       return;
     }
-    await widget.cameraController?.setZoomLevel(
+    await mc.cameraController?.setZoomLevel(
       newScale.clamp(
-        widget.selectedCameraDetails.minAvailableZoom,
-        widget.selectedCameraDetails.maxAvailableZoom,
+        mc.selectedCameraDetails.minAvailableZoom,
+        mc.selectedCameraDetails.maxAvailableZoom,
       ),
     );
     setState(() {
-      widget.selectedCameraDetails.scaleFactor = newScale;
+      mc.selectedCameraDetails.scaleFactor = newScale;
     });
   }
 
@@ -325,31 +311,31 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     setState(() {
       _sharePreviewIsShown = true;
     });
-    if (widget.selectedCameraDetails.isFlashOn) {
+    if (mc.selectedCameraDetails.isFlashOn) {
       if (isFront) {
         setState(() {
           _showSelfieFlash = true;
         });
       } else {
-        await widget.cameraController?.setFlashMode(FlashMode.torch);
+        await mc.cameraController?.setFlashMode(FlashMode.torch);
       }
       await Future.delayed(const Duration(milliseconds: 1000));
     }
 
-    await widget.cameraController?.pausePreview();
+    await mc.cameraController?.pausePreview();
     if (!mounted) {
       return;
     }
 
     if (Platform.isIOS) {
       // android has a problem with this. Flash is turned off in the pausePreview function.
-      await widget.cameraController?.setFlashMode(FlashMode.off);
+      await mc.cameraController?.setFlashMode(FlashMode.off);
     }
     if (!mounted) {
       return;
     }
 
-    imageBytes = widget.screenshotController
+    imageBytes = mc.screenshotController
         .capture(pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
     if (await pushMediaEditor(imageBytes, null)) {
@@ -426,33 +412,33 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       }
       return true;
     }
-    await widget.selectCamera(
-      widget.selectedCameraDetails.cameraId,
+    await mc.selectCamera(
+      mc.selectedCameraDetails.cameraId,
       false,
     );
     return false;
   }
 
   bool get isFront =>
-      widget.cameraController?.description.lensDirection ==
+      mc.cameraController?.description.lensDirection ==
       CameraLensDirection.front;
 
   Future<void> onPanUpdate(dynamic details) async {
     if (isFront || details == null) {
       return;
     }
-    if (widget.cameraController == null ||
-        !widget.cameraController!.value.isInitialized) {
+    if (mc.cameraController == null ||
+        !mc.cameraController!.value.isInitialized) {
       return;
     }
 
-    widget.selectedCameraDetails.scaleFactor = (_baseScaleFactor +
+    mc.selectedCameraDetails.scaleFactor = (_baseScaleFactor +
             // ignore: avoid_dynamic_calls
             (_basePanY - (details.localPosition.dy as double)) / 30)
-        .clamp(1, widget.selectedCameraDetails.maxAvailableZoom);
+        .clamp(1, mc.selectedCameraDetails.maxAvailableZoom);
 
-    await widget.cameraController!
-        .setZoomLevel(widget.selectedCameraDetails.scaleFactor);
+    await mc.cameraController!
+        .setZoomLevel(mc.selectedCameraDetails.scaleFactor);
     if (mounted) {
       setState(() {});
     }
@@ -509,8 +495,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> startVideoRecording() async {
-    if (widget.cameraController != null &&
-        widget.cameraController!.value.isRecordingVideo) {
+    if (mc.cameraController != null &&
+        mc.cameraController!.value.isRecordingVideo) {
       return;
     }
     setState(() {
@@ -518,7 +504,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     });
 
     try {
-      await widget.cameraController?.startVideoRecording();
+      await mc.cameraController?.startVideoRecording();
       _videoRecordingTimer =
           Timer.periodic(const Duration(milliseconds: 15), (timer) {
         setState(() {
@@ -556,8 +542,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       _isVideoRecording = false;
     });
 
-    if (widget.cameraController == null ||
-        !widget.cameraController!.value.isRecordingVideo) {
+    if (mc.cameraController == null ||
+        !mc.cameraController!.value.isRecordingVideo) {
       return;
     }
 
@@ -566,9 +552,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     });
 
     try {
-      final videoPath = await widget.cameraController?.stopVideoRecording();
+      final videoPath = await mc.cameraController?.stopVideoRecording();
       if (videoPath == null) return;
-      await widget.cameraController?.pausePreview();
+      await mc.cameraController?.pausePreview();
       if (await pushMediaEditor(null, File(videoPath.path))) {
         return;
       }
@@ -595,8 +581,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.selectedCameraDetails.cameraId >= gCameras.length ||
-        widget.cameraController == null) {
+    if (mc.selectedCameraDetails.cameraId >= gCameras.length ||
+        mc.cameraController == null) {
       return Container();
     }
     return MediaViewSizing(
@@ -610,14 +596,14 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           }
           setState(() {
             _basePanY = details.localPosition.dy;
-            _baseScaleFactor = widget.selectedCameraDetails.scaleFactor;
+            _baseScaleFactor = mc.selectedCameraDetails.scaleFactor;
           });
         },
         onLongPressMoveUpdate: onPanUpdate,
         onLongPressStart: (details) {
           setState(() {
             _basePanY = details.localPosition.dy;
-            _baseScaleFactor = widget.selectedCameraDetails.scaleFactor;
+            _baseScaleFactor = mc.selectedCameraDetails.scaleFactor;
           });
           // Get the position of the pointer
           final renderBox =
@@ -670,29 +656,29 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           Icons.repeat_rounded,
                           tooltipText: context.lang.switchFrontAndBackCamera,
                           onPressed: () async {
-                            await widget.selectCamera(
-                              (widget.selectedCameraDetails.cameraId + 1) % 2,
+                            await mc.selectCamera(
+                              (mc.selectedCameraDetails.cameraId + 1) % 2,
                               false,
                             );
                           },
                         ),
                         ActionButton(
-                          widget.selectedCameraDetails.isFlashOn
+                          mc.selectedCameraDetails.isFlashOn
                               ? Icons.flash_on_rounded
                               : Icons.flash_off_rounded,
                           tooltipText: context.lang.toggleFlashLight,
-                          color: widget.selectedCameraDetails.isFlashOn
+                          color: mc.selectedCameraDetails.isFlashOn
                               ? Colors.white
                               : Colors.white.withAlpha(160),
                           onPressed: () async {
-                            if (widget.selectedCameraDetails.isFlashOn) {
-                              await widget.cameraController
+                            if (mc.selectedCameraDetails.isFlashOn) {
+                              await mc.cameraController
                                   ?.setFlashMode(FlashMode.off);
-                              widget.selectedCameraDetails.isFlashOn = false;
+                              mc.selectedCameraDetails.isFlashOn = false;
                             } else {
-                              await widget.cameraController
+                              await mc.cameraController
                                   ?.setFlashMode(FlashMode.always);
-                              widget.selectedCameraDetails.isFlashOn = true;
+                              mc.selectedCameraDetails.isFlashOn = true;
                             }
                             setState(() {});
                           },
@@ -719,20 +705,19 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   alignment: Alignment.bottomCenter,
                   child: Column(
                     children: [
-                      if (widget.cameraController!.value.isInitialized &&
-                          widget.selectedCameraDetails.isZoomAble &&
+                      if (mc.cameraController!.value.isInitialized &&
+                          mc.selectedCameraDetails.isZoomAble &&
                           !isFront &&
                           !_isVideoRecording)
                         SizedBox(
                           width: 120,
                           child: CameraZoomButtons(
                             key: widget.key,
-                            scaleFactor:
-                                widget.selectedCameraDetails.scaleFactor,
+                            scaleFactor: mc.selectedCameraDetails.scaleFactor,
                             updateScaleFactor: updateScaleFactor,
-                            selectCamera: widget.selectCamera,
-                            selectedCameraDetails: widget.selectedCameraDetails,
-                            controller: widget.cameraController!,
+                            selectCamera: mc.selectCamera,
+                            selectedCameraDetails: mc.selectedCameraDetails,
+                            controller: mc.cameraController!,
                           ),
                         ),
                       const SizedBox(height: 30),
