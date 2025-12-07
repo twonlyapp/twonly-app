@@ -52,6 +52,8 @@ Future<(SelectedCameraDetails, CameraController)?> initializeCameraController(
     gCameras[cameraId],
     ResolutionPreset.high,
     enableAudio: await Permission.microphone.isGranted,
+    imageFormatGroup:
+        Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
   );
 
   await cameraController.initialize().then((_) async {

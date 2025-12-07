@@ -72,6 +72,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
             SendToCameraPreview(
               cameraController: cameraController,
               screenshotController: screenshotController,
+              customPaint: null,
             ),
             CameraPreviewControllerView(
               selectCamera: selectCamera,

@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -10,6 +13,7 @@ import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/camera/painters/barcode_detector_painter.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/chats/chat_list.view.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
@@ -108,7 +112,9 @@ class HomeViewState extends State<HomeView> {
   void dispose() {
     unawaited(selectNotificationStream.close());
     disableCameraTimer?.cancel();
+    cameraController?.stopImageStream();
     cameraController?.dispose();
+    cameraController = null;
     super.dispose();
   }
 
@@ -123,6 +129,10 @@ class HomeViewState extends State<HomeView> {
       cameraController = opts.$2;
       initCameraStarted = false;
     }
+    if (cameraController?.description.lensDirection ==
+        CameraLensDirection.back) {
+      await cameraController?.startImageStream(_processCameraImage);
+    }
     setState(() {});
     return cameraController;
   }
@@ -134,9 +144,125 @@ class HomeViewState extends State<HomeView> {
     if (cameraController!.value.isRecordingVideo) {
       return;
     }
+    await cameraController!.stopImageStream();
     await cameraController!.dispose();
     cameraController = null;
     await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
+  }
+
+  final BarcodeScanner _barcodeScanner = BarcodeScanner();
+  bool _canProcess = true;
+  bool _isBusy = false;
+  CustomPaint? _customPaint;
+  String? _text;
+
+  final _orientations = {
+    DeviceOrientation.portraitUp: 0,
+    DeviceOrientation.landscapeLeft: 90,
+    DeviceOrientation.portraitDown: 180,
+    DeviceOrientation.landscapeRight: 270,
+  };
+
+  void _processCameraImage(CameraImage image) {
+    final inputImage = _inputImageFromCameraImage(image);
+    if (inputImage == null) return;
+    _processImage(inputImage);
+  }
+
+  InputImage? _inputImageFromCameraImage(CameraImage image) {
+    if (cameraController == null) return null;
+
+    // get image rotation
+    // it is used in android to convert the InputImage from Dart to Java: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/android/src/main/java/com/google_mlkit_commons/InputImageConverter.java
+    // `rotation` is not used in iOS to convert the InputImage from Dart to Obj-C: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/ios/Classes/MLKVisionImage%2BFlutterPlugin.m
+    // in both platforms `rotation` and `camera.lensDirection` can be used to compensate `x` and `y` coordinates on a canvas: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
+    final camera = cameraController!.description;
+    final sensorOrientation = camera.sensorOrientation;
+    // print(
+    //     'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${_controller?.value.deviceOrientation} ${_controller?.value.lockedCaptureOrientation} ${_controller?.value.isCaptureOrientationLocked}');
+    InputImageRotation? rotation;
+    if (Platform.isIOS) {
+      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+    } else if (Platform.isAndroid) {
+      var rotationCompensation =
+          _orientations[cameraController!.value.deviceOrientation];
+      if (rotationCompensation == null) return null;
+      if (camera.lensDirection == CameraLensDirection.front) {
+        // front-facing
+        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
+      } else {
+        // back-facing
+        rotationCompensation =
+            (sensorOrientation - rotationCompensation + 360) % 360;
+      }
+      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+      // print('rotationCompensation: $rotationCompensation');
+    }
+    if (rotation == null) return null;
+    // print('final rotation: $rotation');
+
+    // get image format
+    var format = InputImageFormatValue.fromRawValue(image.format.raw as int);
+    // validate format depending on platform
+    // only supported formats:
+    // * nv21 for Android
+    // * bgra8888 for iOS
+    if (Platform.isAndroid && format == InputImageFormat.yuv420) {
+      // https://developer.android.com/reference/kotlin/androidx/camera/core/ImageAnalysis#OUTPUT_IMAGE_FORMAT_NV21()
+      format = InputImageFormat.nv21;
+    }
+    if (format == null ||
+        (Platform.isAndroid && format != InputImageFormat.nv21) ||
+        (Platform.isIOS && format != InputImageFormat.bgra8888)) {
+      return null;
+    }
+
+    // since format is constraint to nv21 or bgra8888, both only have one plane
+    if (image.planes.length != 1) return null;
+    final plane = image.planes.first;
+
+    // compose InputImage using bytes
+    return InputImage.fromBytes(
+      bytes: plane.bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation, // used only in Android
+        format: format, // used only in iOS
+        bytesPerRow: plane.bytesPerRow, // used only in iOS
+      ),
+    );
+  }
+
+  Future<void> _processImage(InputImage inputImage) async {
+    if (!_canProcess) return;
+    if (_isBusy) return;
+    _isBusy = true;
+    setState(() {
+      _text = '';
+    });
+    final barcodes = await _barcodeScanner.processImage(inputImage);
+    if (inputImage.metadata?.size != null &&
+        inputImage.metadata?.rotation != null &&
+        cameraController != null) {
+      final painter = BarcodeDetectorPainter(
+          barcodes,
+          inputImage.metadata!.size,
+          inputImage.metadata!.rotation,
+          cameraController!.description.lensDirection);
+      _customPaint = CustomPaint(painter: painter);
+    } else {
+      String text = 'Barcodes found: ${barcodes.length}\n\n';
+      for (final barcode in barcodes) {
+        text += 'Barcode: ${barcode.rawValue}\n\n';
+      }
+      _text = text;
+      // TODO: set _customPaint to draw boundingRect on top of image
+      _customPaint = null;
+    }
+    _isBusy = false;
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> initAsync() async {
@@ -174,6 +300,7 @@ class HomeViewState extends State<HomeView> {
             HomeViewCameraPreview(
               controller: cameraController,
               screenshotController: screenshotController,
+              customPaint: _customPaint,
             ),
             Shade(
               opacity: offsetRatio,

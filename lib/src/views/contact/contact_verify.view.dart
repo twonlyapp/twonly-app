@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
-import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -52,36 +51,36 @@ class _ContactVerifyViewState extends State<ContactVerifyView> {
     _fingerprint = await generateSessionFingerPrint(widget.contact.userId);
 
     if (_fingerprint != null) {
-      final result = zx.encodeBarcode(
-        contents: base64Encode(
-          _fingerprint!.scannableFingerprint.fingerprints,
-        ),
-        params: EncodeParams(
-          width: 150,
-          height: 150,
-        ),
-      );
-      if (result.isValid && result.data != null) {
-        final img = imglib.Image.fromBytes(
-          width: 150,
-          height: 150,
-          bytes: result.data!.buffer,
-          numChannels: 1,
-        );
-        _qrCodeImageBytes = imglib.encodePng(img);
-      }
+      // final result = zx.encodeBarcode(
+      //   contents: base64Encode(
+      //     _fingerprint!.scannableFingerprint.fingerprints,
+      //   ),
+      //   params: EncodeParams(
+      //     width: 150,
+      //     height: 150,
+      //   ),
+      // );
+      // if (result.isValid && result.data != null) {
+      //   final img = imglib.Image.fromBytes(
+      //     width: 150,
+      //     height: 150,
+      //     bytes: result.data!.buffer,
+      //     numChannels: 1,
+      //   );
+      //   _qrCodeImageBytes = imglib.encodePng(img);
+      // }
     }
 
-    final contact = twonlyDB.contactsDao
-        .getContactByUserId(widget.contact.userId)
-        .watchSingleOrNull();
-    _contactSub = contact.listen((contact) {
-      if (contact == null) return;
-      setState(() {
-        _contact = contact;
-      });
-    });
-    setState(() {});
+    // final contact = twonlyDB.contactsDao
+    //     .getContactByUserId(widget.contact.userId)
+    //     .watchSingleOrNull();
+    // _contactSub = contact.listen((contact) {
+    //   if (contact == null) return;
+    //   setState(() {
+    //     _contact = contact;
+    //   });
+    // });
+    // setState(() {});
   }
 
   Future<void> openQrScanner() async {

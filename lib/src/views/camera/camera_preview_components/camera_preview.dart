@@ -7,10 +7,12 @@ class HomeViewCameraPreview extends StatelessWidget {
   const HomeViewCameraPreview({
     required this.controller,
     required this.screenshotController,
+    required this.customPaint,
     super.key,
   });
 
   final CameraController? controller;
+  final CustomPaint? customPaint;
   final ScreenshotController screenshotController;
 
   @override
@@ -33,7 +35,7 @@ class HomeViewCameraPreview extends StatelessWidget {
                 child: SizedBox(
                   width: controller!.value.previewSize!.height,
                   height: controller!.value.previewSize!.width,
-                  child: CameraPreview(controller!),
+                  child: CameraPreview(controller!, child: customPaint),
                 ),
               ),
             ),
@@ -48,11 +50,13 @@ class SendToCameraPreview extends StatelessWidget {
   const SendToCameraPreview({
     required this.cameraController,
     required this.screenshotController,
+    required this.customPaint,
     super.key,
   });
 
   final CameraController? cameraController;
   final ScreenshotController screenshotController;
+  final CustomPaint? customPaint;
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +77,7 @@ class SendToCameraPreview extends StatelessWidget {
                 child: SizedBox(
                   width: cameraController!.value.previewSize!.height,
                   height: cameraController!.value.previewSize!.width,
-                  child: CameraPreview(cameraController!),
+                  child: CameraPreview(cameraController!, child: customPaint),
                 ),
               ),
             ),
