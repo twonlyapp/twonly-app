@@ -23,7 +23,6 @@ import 'package:twonly/src/views/settings/help/changelog.view.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
-import 'package:twonly/src/views/tutorial/tutorials.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -38,7 +37,6 @@ class _ChatListViewState extends State<ChatListView> {
   List<Group> _groupsArchived = [];
 
   GlobalKey searchForOtherUsers = GlobalKey();
-  Timer? tutorial;
   bool showFeedbackShortcut = false;
 
   @override
@@ -56,16 +54,6 @@ class _ChatListViewState extends State<ChatListView> {
         _groupsPinned = groups.where((x) => x.pinned && !x.archived).toList();
         _groupsArchived = groups.where((x) => x.archived).toList();
       });
-    });
-
-    tutorial = Timer(const Duration(seconds: 1), () async {
-      tutorial = null;
-      if (!mounted) return;
-      await showChatListTutorialSearchOtherUsers(context, searchForOtherUsers);
-      if (!mounted) return;
-      // if (_groupsNotPinned.isNotEmpty) {
-      //   await showChatListTutorialContextMenu(context, firstUserListItemKey);
-      // }
     });
 
     final changeLog = await rootBundle.loadString('CHANGELOG.md');
@@ -97,7 +85,6 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   void dispose() {
-    tutorial?.cancel();
     _contactsSub.cancel();
     super.dispose();
   }

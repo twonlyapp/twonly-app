@@ -85,5 +85,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!--Disable Firebase Telemetry-->
+	<key>firebase_performance_collection_deactivated</key>
+	<true/>
+	<!--...-->
 </dict>
 </plist>

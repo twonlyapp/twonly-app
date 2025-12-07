@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <application
         android:label="twonly"
         android:name="${applicationName}"
@@ -33,6 +33,12 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- // https://github.com/juliansteenbakker/mobile_scanner/issues/553 -->
+        <meta-data android:name="firebase_performance_collection_deactivated" android:value="true" />
+        <service
+            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+            tools:node="remove">
+        </service>
 
         <!-- <service 
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"

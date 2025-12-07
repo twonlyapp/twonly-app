@@ -62,26 +62,26 @@ class _HelpViewState extends State<HelpView> {
               );
             },
           ),
-          ListTile(
-            title: Text(context.lang.settingsResetTutorials),
-            subtitle: Text(
-              context.lang.settingsResetTutorialsDesc,
-              style: const TextStyle(fontSize: 12),
-            ),
-            onTap: () async {
-              await updateUserdata((user) {
-                user.tutorialDisplayed = [];
-                return user;
-              });
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(context.lang.settingsResetTutorialsSuccess),
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            },
-          ),
+          // ListTile(
+          //   title: Text(context.lang.settingsResetTutorials),
+          //   subtitle: Text(
+          //     context.lang.settingsResetTutorialsDesc,
+          //     style: const TextStyle(fontSize: 12),
+          //   ),
+          //   onTap: () async {
+          //     await updateUserdata((user) {
+          //       user.tutorialDisplayed = [];
+          //       return user;
+          //     });
+          //     if (!context.mounted) return;
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       SnackBar(
+          //         content: Text(context.lang.settingsResetTutorialsSuccess),
+          //         duration: const Duration(seconds: 3),
+          //       ),
+          //     );
+          //   },
+          // ),
           const Divider(),
           ListTile(
             title: Text(context.lang.allowErrorTracking),

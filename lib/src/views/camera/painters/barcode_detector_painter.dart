@@ -23,24 +23,26 @@ class BarcodeDetectorPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
+    final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
       ..color = Colors.lightGreenAccent;
 
-    final Paint background = Paint()..color = Color(0x99000000);
+    final background = Paint()..color = const Color(0x99000000);
 
-    for (final Barcode barcode in barcodes) {
-      final ParagraphBuilder builder = ParagraphBuilder(
+    for (final barcode in barcodes) {
+      final builder = ParagraphBuilder(
         ParagraphStyle(
-            textAlign: TextAlign.left,
-            fontSize: 16,
-            textDirection: TextDirection.ltr),
-      );
-      builder.pushStyle(
-          ui.TextStyle(color: Colors.lightGreenAccent, background: background));
-      builder.addText('${barcode.displayValue}');
-      builder.pop();
+          textAlign: TextAlign.left,
+          fontSize: 16,
+          textDirection: TextDirection.ltr,
+        ),
+      )
+        ..pushStyle(
+          ui.TextStyle(color: Colors.lightGreenAccent, background: background),
+        )
+        ..addText('${barcode.displayValue}')
+        ..pop();
 
       final left = translateX(
         barcode.boundingBox.left,
@@ -77,16 +79,16 @@ class BarcodeDetectorPainter extends CustomPainter {
       //   paint,
       // );
 
-      final List<Offset> cornerPoints = <Offset>[];
+      final cornerPoints = <Offset>[];
       for (final point in barcode.cornerPoints) {
-        final double x = translateX(
+        final x = translateX(
           point.x.toDouble(),
           size,
           imageSize,
           rotation,
           cameraLensDirection,
         );
-        final double y = translateY(
+        final y = translateY(
           point.y.toDouble(),
           size,
           imageSize,
@@ -99,20 +101,23 @@ class BarcodeDetectorPainter extends CustomPainter {
 
       // Add the first point to close the polygon
       cornerPoints.add(cornerPoints.first);
-      canvas.drawPoints(PointMode.polygon, cornerPoints, paint);
-
-      canvas.drawParagraph(
-        builder.build()
-          ..layout(ParagraphConstraints(
-            width: (right - left).abs(),
-          )),
-        Offset(
+      canvas
+        ..drawPoints(PointMode.polygon, cornerPoints, paint)
+        ..drawParagraph(
+          builder.build()
+            ..layout(
+              ParagraphConstraints(
+                width: (right - left).abs(),
+              ),
+            ),
+          Offset(
             Platform.isAndroid &&
                     cameraLensDirection == CameraLensDirection.front
                 ? right
                 : left,
-            top),
-      );
+            top,
+          ),
+        );
     }
   }
 

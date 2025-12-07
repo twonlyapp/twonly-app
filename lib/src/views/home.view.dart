@@ -156,7 +156,7 @@ class HomeViewState extends State<HomeView> {
   CustomPaint? _customPaint;
   String? _text;
 
-  final _orientations = {
+  final Map<DeviceOrientation, int> _orientations = {
     DeviceOrientation.portraitUp: 0,
     DeviceOrientation.landscapeLeft: 90,
     DeviceOrientation.portraitDown: 180,

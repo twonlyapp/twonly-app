@@ -22,7 +22,6 @@ import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
-import 'package:twonly/src/views/tutorial/tutorials.dart';
 
 Color getMessageColor(Message message) {
   return (message.senderId == null)
@@ -89,7 +88,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   Message? quotesMessage;
   GlobalKey verifyShieldKey = GlobalKey();
   late FocusNode textFieldFocus;
-  Timer? tutorial;
   final ItemScrollController itemScrollController = ItemScrollController();
   int? focusedScrollItem;
 
@@ -99,12 +97,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     group = widget.group;
     textFieldFocus = FocusNode();
     initStreams();
-
-    tutorial = Timer(const Duration(seconds: 1), () async {
-      tutorial = null;
-      if (!mounted) return;
-      await showVerifyShieldTutorial(context, verifyShieldKey);
-    });
   }
 
   @override
@@ -114,7 +106,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     contactSub?.cancel();
     groupActionsSub?.cancel();
     lastOpenedMessageByContactSub?.cancel();
-    tutorial?.cancel();
     super.dispose();
   }
 
