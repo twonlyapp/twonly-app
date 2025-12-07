@@ -16,6 +16,8 @@ analyzer:
     - "lib/src/model/protobuf/api/websocket/**"
     - "lib/generated/**"
     - "dependencies/**"
+    - "pubspec.yaml"
+    - "*.arb"
     - "test/drift/**"
     - "**.g.dart"
 

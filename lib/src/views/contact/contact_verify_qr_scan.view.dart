@@ -19,7 +19,7 @@ class ContactVerifyQrScanView extends StatefulWidget {
 class _ContactVerifyQrScanViewState extends State<ContactVerifyQrScanView> {
   @override
   Widget build(BuildContext context) {
-    return Text('Not yet implemented.');
+    return const Text('Not yet implemented.');
     // return Scaffold(
     //   body: ReaderWidget(
     //     onScan: (result) async {
