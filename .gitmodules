@@ -1,3 +1,0 @@
-[submodule "dependencies/flutter_zxing"]
-	path = dependencies/flutter_zxing
-	url = https://github.com/khoren93/flutter_zxing.git
