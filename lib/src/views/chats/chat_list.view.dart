@@ -19,6 +19,7 @@ import 'package:twonly/src/views/chats/chat_list_components/group_list_item.dart
 import 'package:twonly/src/views/chats/start_new_chat.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
+import 'package:twonly/src/views/public_profile.view.dart';
 import 'package:twonly/src/views/settings/help/changelog.view.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
@@ -290,18 +291,45 @@ class _ChatListViewState extends State<ChatListView> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return const StartNewChatView();
-                },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton.small(
+              backgroundColor: context.color.primary,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const PublicProfileView();
+                    },
+                  ),
+                );
+              },
+              child: const FaIcon(
+                FontAwesomeIcons.qrcode,
+                color: Colors.black,
               ),
-            );
-          },
-          child: const FaIcon(FontAwesomeIcons.penToSquare),
+            ),
+            const SizedBox(height: 12),
+            FloatingActionButton(
+              backgroundColor: context.color.primary,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartNewChatView();
+                    },
+                  ),
+                );
+              },
+              child: const FaIcon(
+                FontAwesomeIcons.penToSquare,
+                color: Colors.black,
+              ),
+            ),
+          ],
         ),
       ),
     );

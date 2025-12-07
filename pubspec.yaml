@@ -97,7 +97,7 @@ dependencies:
   lottie: ^3.3.1
   mutex: ^3.1.0
   introduction_screen: ^4.0.0
-  qr: ^3.0.2
+  qr_flutter: ^4.1.0
 
 dependency_overrides:
   dots_indicator:
@@ -128,6 +128,8 @@ dependency_overrides:
     path: ./dependencies/pointycastle
   x25519:
     path: ./dependencies/x25519
+  qr_flutter:
+    path: ./dependencies/qr_flutter
   camera_android_camerax: 
     # path: ../flutter-packages/packages/camera/camera_android_camerax
     git:

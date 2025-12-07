@@ -1,13 +1,14 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: messages.proto
-//
-// @dart = 2.12
+// Generated from messages.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -19,8 +20,25 @@ const Message$json = {
   '2': [
     {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.Message.Type', '10': 'type'},
     {'1': 'receiptId', '3': 2, '4': 1, '5': 9, '10': 'receiptId'},
-    {'1': 'encryptedContent', '3': 3, '4': 1, '5': 12, '9': 0, '10': 'encryptedContent', '17': true},
-    {'1': 'plaintextContent', '3': 4, '4': 1, '5': 11, '6': '.PlaintextContent', '9': 1, '10': 'plaintextContent', '17': true},
+    {
+      '1': 'encryptedContent',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'encryptedContent',
+      '17': true
+    },
+    {
+      '1': 'plaintextContent',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.PlaintextContent',
+      '9': 1,
+      '10': 'plaintextContent',
+      '17': true
+    },
   ],
   '4': [Message_Type$json],
   '8': [
@@ -55,10 +73,31 @@ final $typed_data.Uint8List messageDescriptor = $convert.base64Decode(
 const PlaintextContent$json = {
   '1': 'PlaintextContent',
   '2': [
-    {'1': 'decryptionErrorMessage', '3': 1, '4': 1, '5': 11, '6': '.PlaintextContent.DecryptionErrorMessage', '9': 0, '10': 'decryptionErrorMessage', '17': true},
-    {'1': 'retryControlError', '3': 2, '4': 1, '5': 11, '6': '.PlaintextContent.RetryErrorMessage', '9': 1, '10': 'retryControlError', '17': true},
+    {
+      '1': 'decryptionErrorMessage',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.PlaintextContent.DecryptionErrorMessage',
+      '9': 0,
+      '10': 'decryptionErrorMessage',
+      '17': true
+    },
+    {
+      '1': 'retryControlError',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.PlaintextContent.RetryErrorMessage',
+      '9': 1,
+      '10': 'retryControlError',
+      '17': true
+    },
   ],
-  '3': [PlaintextContent_RetryErrorMessage$json, PlaintextContent_DecryptionErrorMessage$json],
+  '3': [
+    PlaintextContent_RetryErrorMessage$json,
+    PlaintextContent_DecryptionErrorMessage$json
+  ],
   '8': [
     {'1': '_decryptionErrorMessage'},
     {'1': '_retryControlError'},
@@ -74,7 +113,14 @@ const PlaintextContent_RetryErrorMessage$json = {
 const PlaintextContent_DecryptionErrorMessage$json = {
   '1': 'DecryptionErrorMessage',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.PlaintextContent.DecryptionErrorMessage.Type', '10': 'type'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.PlaintextContent.DecryptionErrorMessage.Type',
+      '10': 'type'
+    },
   ],
   '4': [PlaintextContent_DecryptionErrorMessage_Type$json],
 };
@@ -103,24 +149,179 @@ final $typed_data.Uint8List plaintextContentDescriptor = $convert.base64Decode(
 const EncryptedContent$json = {
   '1': 'EncryptedContent',
   '2': [
-    {'1': 'groupId', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'groupId', '17': true},
-    {'1': 'isDirectChat', '3': 3, '4': 1, '5': 8, '9': 1, '10': 'isDirectChat', '17': true},
-    {'1': 'senderProfileCounter', '3': 4, '4': 1, '5': 3, '9': 2, '10': 'senderProfileCounter', '17': true},
-    {'1': 'messageUpdate', '3': 5, '4': 1, '5': 11, '6': '.EncryptedContent.MessageUpdate', '9': 3, '10': 'messageUpdate', '17': true},
-    {'1': 'media', '3': 6, '4': 1, '5': 11, '6': '.EncryptedContent.Media', '9': 4, '10': 'media', '17': true},
-    {'1': 'mediaUpdate', '3': 7, '4': 1, '5': 11, '6': '.EncryptedContent.MediaUpdate', '9': 5, '10': 'mediaUpdate', '17': true},
-    {'1': 'contactUpdate', '3': 8, '4': 1, '5': 11, '6': '.EncryptedContent.ContactUpdate', '9': 6, '10': 'contactUpdate', '17': true},
-    {'1': 'contactRequest', '3': 9, '4': 1, '5': 11, '6': '.EncryptedContent.ContactRequest', '9': 7, '10': 'contactRequest', '17': true},
-    {'1': 'flameSync', '3': 10, '4': 1, '5': 11, '6': '.EncryptedContent.FlameSync', '9': 8, '10': 'flameSync', '17': true},
-    {'1': 'pushKeys', '3': 11, '4': 1, '5': 11, '6': '.EncryptedContent.PushKeys', '9': 9, '10': 'pushKeys', '17': true},
-    {'1': 'reaction', '3': 12, '4': 1, '5': 11, '6': '.EncryptedContent.Reaction', '9': 10, '10': 'reaction', '17': true},
-    {'1': 'textMessage', '3': 13, '4': 1, '5': 11, '6': '.EncryptedContent.TextMessage', '9': 11, '10': 'textMessage', '17': true},
-    {'1': 'groupCreate', '3': 14, '4': 1, '5': 11, '6': '.EncryptedContent.GroupCreate', '9': 12, '10': 'groupCreate', '17': true},
-    {'1': 'groupJoin', '3': 15, '4': 1, '5': 11, '6': '.EncryptedContent.GroupJoin', '9': 13, '10': 'groupJoin', '17': true},
-    {'1': 'groupUpdate', '3': 16, '4': 1, '5': 11, '6': '.EncryptedContent.GroupUpdate', '9': 14, '10': 'groupUpdate', '17': true},
-    {'1': 'resendGroupPublicKey', '3': 17, '4': 1, '5': 11, '6': '.EncryptedContent.ResendGroupPublicKey', '9': 15, '10': 'resendGroupPublicKey', '17': true},
+    {
+      '1': 'groupId',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'groupId',
+      '17': true
+    },
+    {
+      '1': 'isDirectChat',
+      '3': 3,
+      '4': 1,
+      '5': 8,
+      '9': 1,
+      '10': 'isDirectChat',
+      '17': true
+    },
+    {
+      '1': 'senderProfileCounter',
+      '3': 4,
+      '4': 1,
+      '5': 3,
+      '9': 2,
+      '10': 'senderProfileCounter',
+      '17': true
+    },
+    {
+      '1': 'messageUpdate',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.MessageUpdate',
+      '9': 3,
+      '10': 'messageUpdate',
+      '17': true
+    },
+    {
+      '1': 'media',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.Media',
+      '9': 4,
+      '10': 'media',
+      '17': true
+    },
+    {
+      '1': 'mediaUpdate',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.MediaUpdate',
+      '9': 5,
+      '10': 'mediaUpdate',
+      '17': true
+    },
+    {
+      '1': 'contactUpdate',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.ContactUpdate',
+      '9': 6,
+      '10': 'contactUpdate',
+      '17': true
+    },
+    {
+      '1': 'contactRequest',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.ContactRequest',
+      '9': 7,
+      '10': 'contactRequest',
+      '17': true
+    },
+    {
+      '1': 'flameSync',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.FlameSync',
+      '9': 8,
+      '10': 'flameSync',
+      '17': true
+    },
+    {
+      '1': 'pushKeys',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.PushKeys',
+      '9': 9,
+      '10': 'pushKeys',
+      '17': true
+    },
+    {
+      '1': 'reaction',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.Reaction',
+      '9': 10,
+      '10': 'reaction',
+      '17': true
+    },
+    {
+      '1': 'textMessage',
+      '3': 13,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.TextMessage',
+      '9': 11,
+      '10': 'textMessage',
+      '17': true
+    },
+    {
+      '1': 'groupCreate',
+      '3': 14,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.GroupCreate',
+      '9': 12,
+      '10': 'groupCreate',
+      '17': true
+    },
+    {
+      '1': 'groupJoin',
+      '3': 15,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.GroupJoin',
+      '9': 13,
+      '10': 'groupJoin',
+      '17': true
+    },
+    {
+      '1': 'groupUpdate',
+      '3': 16,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.GroupUpdate',
+      '9': 14,
+      '10': 'groupUpdate',
+      '17': true
+    },
+    {
+      '1': 'resendGroupPublicKey',
+      '3': 17,
+      '4': 1,
+      '5': 11,
+      '6': '.EncryptedContent.ResendGroupPublicKey',
+      '9': 15,
+      '10': 'resendGroupPublicKey',
+      '17': true
+    },
   ],
-  '3': [EncryptedContent_GroupCreate$json, EncryptedContent_GroupJoin$json, EncryptedContent_ResendGroupPublicKey$json, EncryptedContent_GroupUpdate$json, EncryptedContent_TextMessage$json, EncryptedContent_Reaction$json, EncryptedContent_MessageUpdate$json, EncryptedContent_Media$json, EncryptedContent_MediaUpdate$json, EncryptedContent_ContactRequest$json, EncryptedContent_ContactUpdate$json, EncryptedContent_PushKeys$json, EncryptedContent_FlameSync$json],
+  '3': [
+    EncryptedContent_GroupCreate$json,
+    EncryptedContent_GroupJoin$json,
+    EncryptedContent_ResendGroupPublicKey$json,
+    EncryptedContent_GroupUpdate$json,
+    EncryptedContent_TextMessage$json,
+    EncryptedContent_Reaction$json,
+    EncryptedContent_MessageUpdate$json,
+    EncryptedContent_Media$json,
+    EncryptedContent_MediaUpdate$json,
+    EncryptedContent_ContactRequest$json,
+    EncryptedContent_ContactUpdate$json,
+    EncryptedContent_PushKeys$json,
+    EncryptedContent_FlameSync$json
+  ],
   '8': [
     {'1': '_groupId'},
     {'1': '_isDirectChat'},
@@ -168,9 +369,33 @@ const EncryptedContent_GroupUpdate$json = {
   '1': 'GroupUpdate',
   '2': [
     {'1': 'groupActionType', '3': 1, '4': 1, '5': 9, '10': 'groupActionType'},
-    {'1': 'affectedContactId', '3': 2, '4': 1, '5': 3, '9': 0, '10': 'affectedContactId', '17': true},
-    {'1': 'newGroupName', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'newGroupName', '17': true},
-    {'1': 'newDeleteMessagesAfterMilliseconds', '3': 4, '4': 1, '5': 3, '9': 2, '10': 'newDeleteMessagesAfterMilliseconds', '17': true},
+    {
+      '1': 'affectedContactId',
+      '3': 2,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'affectedContactId',
+      '17': true
+    },
+    {
+      '1': 'newGroupName',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'newGroupName',
+      '17': true
+    },
+    {
+      '1': 'newDeleteMessagesAfterMilliseconds',
+      '3': 4,
+      '4': 1,
+      '5': 3,
+      '9': 2,
+      '10': 'newDeleteMessagesAfterMilliseconds',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_affectedContactId'},
@@ -186,7 +411,15 @@ const EncryptedContent_TextMessage$json = {
     {'1': 'senderMessageId', '3': 1, '4': 1, '5': 9, '10': 'senderMessageId'},
     {'1': 'text', '3': 2, '4': 1, '5': 9, '10': 'text'},
     {'1': 'timestamp', '3': 3, '4': 1, '5': 3, '10': 'timestamp'},
-    {'1': 'quoteMessageId', '3': 4, '4': 1, '5': 9, '9': 0, '10': 'quoteMessageId', '17': true},
+    {
+      '1': 'quoteMessageId',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'quoteMessageId',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_quoteMessageId'},
@@ -207,9 +440,30 @@ const EncryptedContent_Reaction$json = {
 const EncryptedContent_MessageUpdate$json = {
   '1': 'MessageUpdate',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.EncryptedContent.MessageUpdate.Type', '10': 'type'},
-    {'1': 'senderMessageId', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'senderMessageId', '17': true},
-    {'1': 'multipleTargetMessageIds', '3': 3, '4': 3, '5': 9, '10': 'multipleTargetMessageIds'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.EncryptedContent.MessageUpdate.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'senderMessageId',
+      '3': 2,
+      '4': 1,
+      '5': 9,
+      '9': 0,
+      '10': 'senderMessageId',
+      '17': true
+    },
+    {
+      '1': 'multipleTargetMessageIds',
+      '3': 3,
+      '4': 3,
+      '5': 9,
+      '10': 'multipleTargetMessageIds'
+    },
     {'1': 'text', '3': 4, '4': 1, '5': 9, '9': 1, '10': 'text', '17': true},
     {'1': 'timestamp', '3': 5, '4': 1, '5': 3, '10': 'timestamp'},
   ],
@@ -235,15 +489,76 @@ const EncryptedContent_Media$json = {
   '1': 'Media',
   '2': [
     {'1': 'senderMessageId', '3': 1, '4': 1, '5': 9, '10': 'senderMessageId'},
-    {'1': 'type', '3': 2, '4': 1, '5': 14, '6': '.EncryptedContent.Media.Type', '10': 'type'},
-    {'1': 'displayLimitInMilliseconds', '3': 3, '4': 1, '5': 3, '9': 0, '10': 'displayLimitInMilliseconds', '17': true},
-    {'1': 'requiresAuthentication', '3': 4, '4': 1, '5': 8, '10': 'requiresAuthentication'},
+    {
+      '1': 'type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.EncryptedContent.Media.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'displayLimitInMilliseconds',
+      '3': 3,
+      '4': 1,
+      '5': 3,
+      '9': 0,
+      '10': 'displayLimitInMilliseconds',
+      '17': true
+    },
+    {
+      '1': 'requiresAuthentication',
+      '3': 4,
+      '4': 1,
+      '5': 8,
+      '10': 'requiresAuthentication'
+    },
     {'1': 'timestamp', '3': 5, '4': 1, '5': 3, '10': 'timestamp'},
-    {'1': 'quoteMessageId', '3': 6, '4': 1, '5': 9, '9': 1, '10': 'quoteMessageId', '17': true},
-    {'1': 'downloadToken', '3': 7, '4': 1, '5': 12, '9': 2, '10': 'downloadToken', '17': true},
-    {'1': 'encryptionKey', '3': 8, '4': 1, '5': 12, '9': 3, '10': 'encryptionKey', '17': true},
-    {'1': 'encryptionMac', '3': 9, '4': 1, '5': 12, '9': 4, '10': 'encryptionMac', '17': true},
-    {'1': 'encryptionNonce', '3': 10, '4': 1, '5': 12, '9': 5, '10': 'encryptionNonce', '17': true},
+    {
+      '1': 'quoteMessageId',
+      '3': 6,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'quoteMessageId',
+      '17': true
+    },
+    {
+      '1': 'downloadToken',
+      '3': 7,
+      '4': 1,
+      '5': 12,
+      '9': 2,
+      '10': 'downloadToken',
+      '17': true
+    },
+    {
+      '1': 'encryptionKey',
+      '3': 8,
+      '4': 1,
+      '5': 12,
+      '9': 3,
+      '10': 'encryptionKey',
+      '17': true
+    },
+    {
+      '1': 'encryptionMac',
+      '3': 9,
+      '4': 1,
+      '5': 12,
+      '9': 4,
+      '10': 'encryptionMac',
+      '17': true
+    },
+    {
+      '1': 'encryptionNonce',
+      '3': 10,
+      '4': 1,
+      '5': 12,
+      '9': 5,
+      '10': 'encryptionNonce',
+      '17': true
+    },
   ],
   '4': [EncryptedContent_Media_Type$json],
   '8': [
@@ -272,7 +587,14 @@ const EncryptedContent_Media_Type$json = {
 const EncryptedContent_MediaUpdate$json = {
   '1': 'MediaUpdate',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.EncryptedContent.MediaUpdate.Type', '10': 'type'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.EncryptedContent.MediaUpdate.Type',
+      '10': 'type'
+    },
     {'1': 'targetMessageId', '3': 2, '4': 1, '5': 9, '10': 'targetMessageId'},
   ],
   '4': [EncryptedContent_MediaUpdate_Type$json],
@@ -292,7 +614,14 @@ const EncryptedContent_MediaUpdate_Type$json = {
 const EncryptedContent_ContactRequest$json = {
   '1': 'ContactRequest',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.EncryptedContent.ContactRequest.Type', '10': 'type'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.EncryptedContent.ContactRequest.Type',
+      '10': 'type'
+    },
   ],
   '4': [EncryptedContent_ContactRequest_Type$json],
 };
@@ -311,10 +640,41 @@ const EncryptedContent_ContactRequest_Type$json = {
 const EncryptedContent_ContactUpdate$json = {
   '1': 'ContactUpdate',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.EncryptedContent.ContactUpdate.Type', '10': 'type'},
-    {'1': 'avatarSvgCompressed', '3': 2, '4': 1, '5': 12, '9': 0, '10': 'avatarSvgCompressed', '17': true},
-    {'1': 'username', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'username', '17': true},
-    {'1': 'displayName', '3': 4, '4': 1, '5': 9, '9': 2, '10': 'displayName', '17': true},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.EncryptedContent.ContactUpdate.Type',
+      '10': 'type'
+    },
+    {
+      '1': 'avatarSvgCompressed',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'avatarSvgCompressed',
+      '17': true
+    },
+    {
+      '1': 'username',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'username',
+      '17': true
+    },
+    {
+      '1': 'displayName',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'displayName',
+      '17': true
+    },
   ],
   '4': [EncryptedContent_ContactUpdate_Type$json],
   '8': [
@@ -337,10 +697,25 @@ const EncryptedContent_ContactUpdate_Type$json = {
 const EncryptedContent_PushKeys$json = {
   '1': 'PushKeys',
   '2': [
-    {'1': 'type', '3': 1, '4': 1, '5': 14, '6': '.EncryptedContent.PushKeys.Type', '10': 'type'},
+    {
+      '1': 'type',
+      '3': 1,
+      '4': 1,
+      '5': 14,
+      '6': '.EncryptedContent.PushKeys.Type',
+      '10': 'type'
+    },
     {'1': 'keyId', '3': 2, '4': 1, '5': 3, '9': 0, '10': 'keyId', '17': true},
     {'1': 'key', '3': 3, '4': 1, '5': 12, '9': 1, '10': 'key', '17': true},
-    {'1': 'createdAt', '3': 4, '4': 1, '5': 3, '9': 2, '10': 'createdAt', '17': true},
+    {
+      '1': 'createdAt',
+      '3': 4,
+      '4': 1,
+      '5': 3,
+      '9': 2,
+      '10': 'createdAt',
+      '17': true
+    },
   ],
   '4': [EncryptedContent_PushKeys_Type$json],
   '8': [
@@ -364,7 +739,13 @@ const EncryptedContent_FlameSync$json = {
   '1': 'FlameSync',
   '2': [
     {'1': 'flameCounter', '3': 1, '4': 1, '5': 3, '10': 'flameCounter'},
-    {'1': 'lastFlameCounterChange', '3': 2, '4': 1, '5': 3, '10': 'lastFlameCounterChange'},
+    {
+      '1': 'lastFlameCounterChange',
+      '3': 2,
+      '4': 1,
+      '5': 3,
+      '10': 'lastFlameCounterChange'
+    },
     {'1': 'bestFriend', '3': 3, '4': 1, '5': 8, '10': 'bestFriend'},
     {'1': 'forceUpdate', '3': 4, '4': 1, '5': 8, '10': 'forceUpdate'},
   ],
@@ -445,4 +826,3 @@ final $typed_data.Uint8List encryptedContentDescriptor = $convert.base64Decode(
     'dEIMCgpfZmxhbWVTeW5jQgsKCV9wdXNoS2V5c0ILCglfcmVhY3Rpb25CDgoMX3RleHRNZXNzYW'
     'dlQg4KDF9ncm91cENyZWF0ZUIMCgpfZ3JvdXBKb2luQg4KDF9ncm91cFVwZGF0ZUIXChVfcmVz'
     'ZW5kR3JvdXBQdWJsaWNLZXk=');
-

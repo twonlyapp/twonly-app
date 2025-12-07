@@ -1,0 +1,47 @@
+import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
+import 'package:twonly/src/services/signal/identity.signal.dart';
+import 'package:twonly/src/services/signal/utils.signal.dart';
+import 'package:twonly/src/utils/log.dart';
+
+Future<Uint8List> getProfileQrCodeData() async {
+  final signalIdentity = (await getSignalIdentity())!;
+
+  final signalStore = await getSignalStoreFromIdentity(signalIdentity);
+
+  final signedPreKey = (await signalStore.loadSignedPreKeys())[0];
+
+  final publicProfile = PublicProfile(
+    userId: Int64(gUser.userId),
+    username: gUser.username,
+    publicIdentityKey:
+        (await signalStore.getIdentityKeyPair()).getPublicKey().serialize(),
+    registrationId: Int64(signalIdentity.registrationId),
+    signedPrekey: signedPreKey.getKeyPair().publicKey.serialize(),
+    signedPrekeySignature: signedPreKey.signature,
+    signedPrekeyId: Int64(signedPreKey.id),
+  );
+
+  final data = publicProfile.writeToBuffer();
+
+  final qrEnvelope = QREnvelope(
+    type: QREnvelope_Type.PublicProfile,
+    data: data,
+  );
+
+  return qrEnvelope.writeToBuffer();
+}
+
+PublicProfile? parseQrCodeData(Uint8List rawBytes) {
+  try {
+    final envelop = QREnvelope.fromBuffer(rawBytes);
+    if (envelop.type == QREnvelope_Type.PublicProfile) {
+      return PublicProfile.fromBuffer(envelop.data);
+    }
+  } catch (e) {
+    Log.warn(e);
+  }
+  return null;
+}

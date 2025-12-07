@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:twonly/src/utils/qr.dart';
 
 import 'coordinates_translator.dart';
 
@@ -31,6 +32,13 @@ class BarcodeDetectorPainter extends CustomPainter {
     final background = Paint()..color = const Color(0x99000000);
 
     for (final barcode in barcodes) {
+      final bytes = barcode.rawBytes;
+      if (bytes == null) continue;
+
+      final profile = parseQrCodeData(bytes);
+
+      if (profile == null) continue;
+
       final builder = ParagraphBuilder(
         ParagraphStyle(
           textAlign: TextAlign.left,
@@ -41,7 +49,7 @@ class BarcodeDetectorPainter extends CustomPainter {
         ..pushStyle(
           ui.TextStyle(color: Colors.lightGreenAccent, background: background),
         )
-        ..addText('${barcode.displayValue}')
+        ..addText(profile.username)
         ..pop();
 
       final left = translateX(

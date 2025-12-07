@@ -1423,12 +1423,19 @@ packages:
     source: hosted
     version: "1.5.0"
   qr:
-    dependency: "direct main"
+    dependency: "direct overridden"
     description:
       path: "dependencies/qr"
       relative: true
     source: path
     version: "3.1.0-wip"
+  qr_flutter:
+    dependency: "direct main"
+    description:
+      path: "dependencies/qr_flutter"
+      relative: true
+    source: path
+    version: "4.1.0"
   recase:
     dependency: transitive
     description:

@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from groups.proto.
+// Generated from qr.proto.
 
 // @dart = 3.3
 
@@ -14,21 +14,20 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-class EncryptedAppendedGroupState_Type extends $pb.ProtobufEnum {
-  static const EncryptedAppendedGroupState_Type LEFT_GROUP =
-      EncryptedAppendedGroupState_Type._(0, _omitEnumNames ? '' : 'LEFT_GROUP');
+class QREnvelope_Type extends $pb.ProtobufEnum {
+  static const QREnvelope_Type PublicProfile =
+      QREnvelope_Type._(0, _omitEnumNames ? '' : 'PublicProfile');
 
-  static const $core.List<EncryptedAppendedGroupState_Type> values =
-      <EncryptedAppendedGroupState_Type>[
-    LEFT_GROUP,
+  static const $core.List<QREnvelope_Type> values = <QREnvelope_Type>[
+    PublicProfile,
   ];
 
-  static final $core.List<EncryptedAppendedGroupState_Type?> _byValue =
+  static final $core.List<QREnvelope_Type?> _byValue =
       $pb.ProtobufEnum.$_initByValueList(values, 0);
-  static EncryptedAppendedGroupState_Type? valueOf($core.int value) =>
+  static QREnvelope_Type? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 
-  const EncryptedAppendedGroupState_Type._(super.value, super.name);
+  const QREnvelope_Type._(super.value, super.name);
 }
 
 const $core.bool _omitEnumNames =
