@@ -251,7 +251,8 @@ class _MessageInputState extends State<MessageInput> {
                                       width: (100 - _cancelSlideOffset) % 101,
                                     ),
                                     Text(
-                                        context.lang.voiceMessageSlideToCancel),
+                                      context.lang.voiceMessageSlideToCancel,
+                                    ),
                                   ] else ...[
                                     Expanded(
                                       child: Container(),
@@ -265,7 +266,7 @@ class _MessageInputState extends State<MessageInput> {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 20)
+                                    const SizedBox(width: 20),
                                   ],
                                 ],
                               )

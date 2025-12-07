@@ -22,6 +22,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_send_to_view.dart';
 import 'package:twonly/src/views/chats/media_viewer_components/reaction_buttons.component.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
+import 'package:twonly/src/views/components/loader.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:video_player/video_player.dart';
 
@@ -58,6 +59,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
   bool imageSaved = false;
   bool imageSaving = false;
   bool displayTwonlyPresent = false;
+  bool _showDownloadingLoader = false;
   late String _currentMediaSender;
   final emojiKey = GlobalKey<EmojiFloatWidgetState>();
 
@@ -183,6 +185,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     downloadStateListener = stream.listen((updated) async {
       if (updated == null) return;
       if (updated.downloadState != DownloadState.ready) {
+        setState(() {
+          _showDownloadingLoader = true;
+        });
         if (!downloadTriggered) {
           downloadTriggered = true;
           final mediaFile = await twonlyDB.mediaFilesDao
@@ -204,6 +209,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     bool showTwonly,
   ) async {
     if (allMediaFiles.isEmpty) return;
+    setState(() {
+      _showDownloadingLoader = false;
+    });
     final currentMediaLocal =
         await MediaFileService.fromMediaId(allMediaFiles.first.mediaId!);
     if (currentMediaLocal == null || !mounted) return;
@@ -503,6 +511,17 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            if (_showDownloadingLoader)
+              Center(
+                child: SizedBox(
+                  height: 60,
+                  width: 60,
+                  child: ThreeRotatingDots(
+                    size: 40,
+                    color: context.color.primary,
+                  ),
+                ),
+              ),
             if ((currentMedia != null || videoController != null) &&
                 (canBeSeenUntil == null || progress >= 0))
               GestureDetector(
