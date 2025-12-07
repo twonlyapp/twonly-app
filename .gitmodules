@@ -1,0 +1,4 @@
+
+[submodule "dependencies"]
+	path = dependencies
+	url = git@github.com:twonlyapp/twonly-app-dependencies.git

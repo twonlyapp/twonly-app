@@ -18,12 +18,11 @@ packages:
     source: hosted
     version: "1.3.64"
   adaptive_number:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: adaptive_number
-      sha256: "3a567544e9b5c9c803006f51140ad544aedc79604fd4f3f2c1380003f97c1d77"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/adaptive_number"
+      relative: true
+    source: path
     version: "1.0.0"
   analyzer:
     dependency: transitive
@@ -275,7 +274,7 @@ packages:
     source: hosted
     version: "2.0.1"
   convert:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: convert
       sha256: b30acd5944035672bc15c6b7a8b47d773e41e2f17de064350988c5d02adb1c68
@@ -291,7 +290,7 @@ packages:
     source: hosted
     version: "0.3.5"
   crypto:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: crypto
       sha256: c8ea0233063ba03258fbcf2ca4d6dadfefe14f02fab57702265467a19f27fadf
@@ -355,12 +354,11 @@ packages:
     source: hosted
     version: "7.0.3"
   dots_indicator:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: dots_indicator
-      sha256: c070af5058a084ba7b354df4b4c26c719595d70a3531eea6edd8af8716684ba3
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/dots_indicator"
+      relative: true
+    source: path
     version: "4.0.1"
   drift:
     dependency: "direct main"
@@ -387,12 +385,11 @@ packages:
     source: hosted
     version: "0.2.7"
   ed25519_edwards:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: ed25519_edwards
-      sha256: "6ce0112d131327ec6d42beede1e5dfd526069b18ad45dcf654f15074ad9276cd"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/ed25519_edwards"
+      relative: true
+    source: path
     version: "0.3.1"
   emoji_picker_flutter:
     dependency: "direct main"
@@ -853,18 +850,16 @@ packages:
   hashlib:
     dependency: "direct main"
     description:
-      name: hashlib
-      sha256: "408af9bfb16289d433822635f0b6890e4440b74fe7acd40014983abeef6d33f0"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/hashlib"
+      relative: true
+    source: path
     version: "2.2.0"
   hashlib_codecs:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: hashlib_codecs
-      sha256: "0e1a17c47792fd131a9bf49b811c394b22516287746ee14cd0b0c22a34136699"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/hashlib_codecs"
+      relative: true
+    source: path
     version: "3.0.1"
   html:
     dependency: transitive
@@ -981,10 +976,9 @@ packages:
   introduction_screen:
     dependency: "direct main"
     description:
-      name: introduction_screen
-      sha256: "47ad51281f86c3ed47e0c1a0008899ad253ca71e8b626fd862e55993825a271b"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/introduction_screen"
+      relative: true
+    source: path
     version: "4.0.0"
   io:
     dependency: transitive
@@ -1053,10 +1047,9 @@ packages:
   libsignal_protocol_dart:
     dependency: "direct main"
     description:
-      name: libsignal_protocol_dart
-      sha256: "2b18de43016474ab85d21553a88f59d6f4fea8c2eddf35be7e24ab5f8969a81d"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/libsignal_protocol_dart"
+      relative: true
+    source: path
     version: "0.7.4"
   lints:
     dependency: transitive
@@ -1117,10 +1110,9 @@ packages:
   lottie:
     dependency: "direct main"
     description:
-      name: lottie
-      sha256: "8ae0be46dbd9e19641791dc12ee480d34e1fd3f84c749adc05f3ad9342b71b95"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/lottie"
+      relative: true
+    source: path
     version: "3.3.2"
   matcher:
     dependency: transitive
@@ -1139,7 +1131,7 @@ packages:
     source: hosted
     version: "0.11.1"
   meta:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: meta
       sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
@@ -1157,10 +1149,9 @@ packages:
   mutex:
     dependency: "direct main"
     description:
-      name: mutex
-      sha256: "8827da25de792088eb33e572115a5eb0d61d61a3c01acbc8bcbe76ed78f1a1f2"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/mutex"
+      relative: true
+    source: path
     version: "3.1.0"
   nested:
     dependency: transitive
@@ -1203,12 +1194,11 @@ packages:
     source: hosted
     version: "2.1.0"
   optional:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: optional
-      sha256: f80327d7a3335a0be68418072668043c7ab291df575c21aa42e0c5633641da39
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/optional"
+      relative: true
+    source: path
     version: "6.1.0+1"
   package_config:
     dependency: transitive
@@ -1357,10 +1347,9 @@ packages:
   photo_view:
     dependency: "direct main"
     description:
-      name: photo_view
-      sha256: "1fc3d970a91295fbd1364296575f854c9863f225505c28c46e0a03e48960c75e"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/photo_view"
+      relative: true
+    source: path
     version: "0.15.0"
   platform:
     dependency: transitive
@@ -1379,12 +1368,11 @@ packages:
     source: hosted
     version: "2.1.8"
   pointycastle:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: pointycastle
-      sha256: "92aa3841d083cc4b0f4709b5c74fd6409a3e6ba833ffc7dc6a8fee096366acf5"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/pointycastle"
+      relative: true
+    source: path
     version: "4.0.0"
   pool:
     dependency: transitive
@@ -1434,6 +1422,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  qr:
+    dependency: "direct main"
+    description:
+      path: "dependencies/qr"
+      relative: true
+    source: path
+    version: "3.1.0-wip"
   recase:
     dependency: transitive
     description:
@@ -1735,14 +1730,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.10.1"
-  tutorial_coach_mark:
-    dependency: "direct main"
-    description:
-      name: tutorial_coach_mark
-      sha256: "5a325d53bcf16ce7a969e2ab8d4dc9610f39ee3eab2b3cc57d5c98936129b891"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.3"
   typed_data:
     dependency: transitive
     description:
@@ -1960,12 +1947,11 @@ packages:
     source: hosted
     version: "2.1.0"
   x25519:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: x25519
-      sha256: cec3c125f0d934dccba6c4cab48f3fbf866dc78895dcc5a1584d35b0a845005b
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/x25519"
+      relative: true
+    source: path
     version: "0.1.1"
   xdg_directories:
     dependency: transitive
