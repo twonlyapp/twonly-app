@@ -6,7 +6,7 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 
 class CameraZoomButtons extends StatefulWidget {
   const CameraZoomButtons({

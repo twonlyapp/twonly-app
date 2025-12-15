@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:intl/intl.dart';
-import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -309,9 +308,6 @@ Color getMessageColorFromType(
 String getUUIDforDirectChat(int a, int b) {
   if (a < 0 || b < 0) {
     throw ArgumentError('Inputs must be non-negative integers.');
-  }
-  if (a > integerMax || b > integerMax) {
-    throw ArgumentError('Inputs must be <= 0x7fffffff.');
   }
 
   // Mask to 64 bits in case inputs exceed 64 bits

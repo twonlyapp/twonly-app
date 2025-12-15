@@ -1181,8 +1181,8 @@ abstract class AppLocalizations {
   /// No description provided for @userFound.
   ///
   /// In en, this message translates to:
-  /// **'User found'**
-  String get userFound;
+  /// **'{username} found'**
+  String userFound(Object username);
 
   /// No description provided for @userFoundBody.
   ///
@@ -2749,6 +2749,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import memories (Beta)'**
   String get importMemories;
+
+  /// No description provided for @voiceMessageSlideToCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide to cancel'**
+  String get voiceMessageSlideToCancel;
+
+  /// No description provided for @voiceMessageCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get voiceMessageCancel;
+
+  /// No description provided for @shareYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your profile'**
+  String get shareYourProfile;
+
+  /// No description provided for @scanOtherProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan other profile'**
+  String get scanOtherProfile;
+
+  /// No description provided for @skipForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get skipForNow;
+
+  /// No description provided for @linkFromUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Is the link from {username}?'**
+  String linkFromUsername(Object username);
+
+  /// No description provided for @linkFromUsernameLong.
+  ///
+  /// In en, this message translates to:
+  /// **'If you received the link from your friend, you can mark the user as verified, as the public key in the link matches the public key already stored for that user?'**
+  String get linkFromUsernameLong;
+
+  /// No description provided for @gotLinkFromFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, I got the link from my friend!'**
+  String get gotLinkFromFriend;
+
+  /// No description provided for @couldNotVerifyUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify {username}'**
+  String couldNotVerifyUsername(Object username);
+
+  /// No description provided for @linkPubkeyDoesNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!'**
+  String get linkPubkeyDoesNotMatch;
 }
 
 class _AppLocalizationsDelegate

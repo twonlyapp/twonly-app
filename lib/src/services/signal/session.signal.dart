@@ -56,7 +56,7 @@ Future<bool> createNewSignalSession(Response_UserData userData) async {
   );
 
   final preKeyBundle = PreKeyBundle(
-    userData.userId.toInt(),
+    userData.registrationId.toInt(),
     defaultDeviceId,
     tempPreKeyId,
     tempPrePublicKey,
@@ -99,6 +99,25 @@ Future<Fingerprint?> generateSessionFingerPrint(int target) async {
       );
 
       return localFingerprint;
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+Future<Uint8List?> getPublicKeyFromContact(int contactId) async {
+  final signalStore = await getSignalStore();
+  if (signalStore == null) return null;
+  try {
+    final targetIdentity = await signalStore.getIdentity(
+      SignalProtocolAddress(
+        contactId.toString(),
+        defaultDeviceId,
+      ),
+    );
+    if (targetIdentity != null) {
+      return targetIdentity.publicKey.serialize();
     }
     return null;
   } catch (e) {

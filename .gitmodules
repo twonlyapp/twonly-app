@@ -1,3 +1,4 @@
-[submodule "dependencies/flutter_zxing"]
-	path = dependencies/flutter_zxing
-	url = https://github.com/khoren93/flutter_zxing.git
+
+[submodule "dependencies"]
+	path = dependencies
+	url = https://github.com/twonlyapp/twonly-app-dependencies.git

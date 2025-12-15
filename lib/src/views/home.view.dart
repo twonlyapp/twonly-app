@@ -1,18 +1,29 @@
 import 'dart:async';
-import 'package:camera/camera.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:app_links/app_links.dart';
+import 'package:collection/collection.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
-import 'package:twonly/src/views/camera/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_list.view.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
+import 'package:twonly/src/views/public_profile.view.dart';
 
 void Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
 
@@ -47,7 +58,10 @@ class Shade extends StatelessWidget {
 class HomeViewState extends State<HomeView> {
   int activePageIdx = 0;
 
+  final MainCameraController _mainCameraController = MainCameraController();
+
   final PageController homeViewPageController = PageController(initialPage: 1);
+  late StreamSubscription<Uri> _deepLinkSub;
 
   double buttonDiameter = 100;
   double offsetRatio = 0;
@@ -55,11 +69,6 @@ class HomeViewState extends State<HomeView> {
   double lastChange = 0;
 
   Timer? disableCameraTimer;
-  bool initCameraStarted = true;
-
-  CameraController? cameraController;
-  ScreenshotController screenshotController = ScreenshotController();
-  SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
 
   bool onPageView(ScrollNotification notification) {
     disableCameraTimer?.cancel();
@@ -71,15 +80,19 @@ class HomeViewState extends State<HomeView> {
         offsetRatio = offsetFromOne.abs();
       });
     }
-    if (cameraController == null && !initCameraStarted && offsetRatio < 1) {
-      initCameraStarted = true;
-      unawaited(selectCamera(selectedCameraDetails.cameraId, false));
+    if (_mainCameraController.cameraController == null &&
+        !_mainCameraController.initCameraStarted &&
+        offsetRatio < 1) {
+      unawaited(
+        _mainCameraController.selectCamera(
+          _mainCameraController.selectedCameraDetails.cameraId,
+          false,
+        ),
+      );
     }
     if (offsetRatio == 1) {
       disableCameraTimer = Timer(const Duration(milliseconds: 500), () async {
-        await cameraController?.dispose();
-        cameraController = null;
-        selectedCameraDetails = SelectedCameraDetails();
+        await _mainCameraController.closeCamera();
         disableCameraTimer = null;
       });
     }
@@ -89,6 +102,9 @@ class HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    _mainCameraController.setState = () {
+      if (mounted) setState(() {});
+    };
     activePageIdx = widget.initialPage;
     globalUpdateOfHomeViewPageIndex = (index) {
       homeViewPageController.jumpToPage(index);
@@ -100,43 +116,114 @@ class HomeViewState extends State<HomeView> {
         .listen((NotificationResponse? response) async {
       globalUpdateOfHomeViewPageIndex(0);
     });
-    unawaited(selectCamera(0, true));
+    unawaited(_mainCameraController.selectCamera(0, true));
     unawaited(initAsync());
+
+    // Subscribe to all events (initial link and further)
+    _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
+      if (!uri.scheme.startsWith('http')) return;
+      if (uri.host != 'me.twonly.eu') return;
+      if (uri.hasEmptyPath) return;
+
+      final publicKey = uri.hasFragment ? uri.fragment : null;
+      final userPaths = uri.path.split('/');
+      if (userPaths.length != 2) return;
+      final username = userPaths[1];
+
+      if (!mounted) return;
+
+      if (username == gUser.username) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return const PublicProfileView();
+            },
+          ),
+        );
+        return;
+      }
+
+      Log.info(
+        'Opened via deep link!: username = $username public_key = ${uri.fragment}',
+      );
+      final contacts =
+          await twonlyDB.contactsDao.getContactsByUsername(username);
+      if (contacts.isEmpty) {
+        if (!mounted) return;
+        Uint8List? publicKeyBytes;
+        if (publicKey != null) {
+          publicKeyBytes = base64Url.decode(publicKey);
+        }
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return AddNewUserView(
+                username: username,
+                publicKey: publicKeyBytes,
+              );
+            },
+          ),
+        );
+      } else if (publicKey != null) {
+        try {
+          final contact = contacts.first;
+          final storedPublicKey = await getPublicKeyFromContact(contact.userId);
+          final receivedPublicKey = base64Url.decode(publicKey);
+          if (storedPublicKey == null ||
+              receivedPublicKey.isEmpty ||
+              !mounted) {
+            return;
+          }
+          if (storedPublicKey.equals(receivedPublicKey)) {
+            if (!contact.verified) {
+              final markAsVerified = await showAlertDialog(
+                context,
+                context.lang.linkFromUsername(contact.username),
+                context.lang.linkFromUsernameLong,
+                customOk: context.lang.gotLinkFromFriend,
+              );
+              if (markAsVerified) {
+                await twonlyDB.contactsDao.updateContact(
+                  contact.userId,
+                  const ContactsCompanion(
+                    verified: Value(true),
+                  ),
+                );
+              }
+            } else {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ContactView(contact.userId);
+                  },
+                ),
+              );
+            }
+          } else {
+            await showAlertDialog(
+              context,
+              context.lang.couldNotVerifyUsername(contact.username),
+              context.lang.linkPubkeyDoesNotMatch,
+              customCancel: '',
+            );
+          }
+        } catch (e) {
+          Log.warn(e);
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     unawaited(selectNotificationStream.close());
     disableCameraTimer?.cancel();
-    cameraController?.dispose();
+    _mainCameraController.closeCamera();
+    _deepLinkSub.cancel();
     super.dispose();
-  }
-
-  Future<CameraController?> selectCamera(int sCameraId, bool init) async {
-    final opts = await initializeCameraController(
-      selectedCameraDetails,
-      sCameraId,
-      init,
-    );
-    if (opts != null) {
-      selectedCameraDetails = opts.$1;
-      cameraController = opts.$2;
-      initCameraStarted = false;
-    }
-    setState(() {});
-    return cameraController;
-  }
-
-  /// same function also in camera_send_to_view
-  Future<void> toggleSelectedCamera() async {
-    if (cameraController == null) return;
-    // do not allow switching camera when recording
-    if (cameraController!.value.isRecordingVideo) {
-      return;
-    }
-    await cameraController!.dispose();
-    cameraController = null;
-    await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
   }
 
   Future<void> initAsync() async {
@@ -168,13 +255,12 @@ class HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: offsetRatio == 0 ? toggleSelectedCamera : null,
+        onDoubleTap: offsetRatio == 0
+            ? _mainCameraController.toggleSelectedCamera
+            : null,
         child: Stack(
           children: <Widget>[
-            HomeViewCameraPreview(
-              controller: cameraController,
-              screenshotController: screenshotController,
-            ),
+            MainCameraPreview(mainCameraController: _mainCameraController),
             Shade(
               opacity: offsetRatio,
             ),
@@ -206,10 +292,7 @@ class HomeViewState extends State<HomeView> {
               child: Opacity(
                 opacity: 1 - (offsetRatio * 4) % 1,
                 child: CameraPreviewControllerView(
-                  cameraController: cameraController,
-                  screenshotController: screenshotController,
-                  selectedCameraDetails: selectedCameraDetails,
-                  selectCamera: selectCamera,
+                  mainController: _mainCameraController,
                   isVisible:
                       ((1 - (offsetRatio * 4) % 1) == 1) && activePageIdx == 1,
                 ),

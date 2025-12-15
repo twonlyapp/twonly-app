@@ -1,13 +1,14 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: api/http/http_requests.proto
-//
-// @dart = 2.12
+// Generated from api/http/http_requests.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
@@ -19,7 +20,15 @@ const TextMessage$json = {
   '2': [
     {'1': 'user_id', '3': 1, '4': 1, '5': 3, '10': 'userId'},
     {'1': 'body', '3': 2, '4': 1, '5': 12, '10': 'body'},
-    {'1': 'push_data', '3': 3, '4': 1, '5': 12, '9': 0, '10': 'pushData', '17': true},
+    {
+      '1': 'push_data',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'pushData',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_push_data'},
@@ -37,7 +46,14 @@ const UploadRequest$json = {
   '2': [
     {'1': 'encrypted_data', '3': 1, '4': 1, '5': 12, '10': 'encryptedData'},
     {'1': 'download_tokens', '3': 2, '4': 3, '5': 12, '10': 'downloadTokens'},
-    {'1': 'messages_on_success', '3': 3, '4': 3, '5': 11, '6': '.http_requests.TextMessage', '10': 'messagesOnSuccess'},
+    {
+      '1': 'messages_on_success',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.http_requests.TextMessage',
+      '10': 'messagesOnSuccess'
+    },
   ],
 };
 
@@ -52,7 +68,14 @@ final $typed_data.Uint8List uploadRequestDescriptor = $convert.base64Decode(
 const UpdateGroupState$json = {
   '1': 'UpdateGroupState',
   '2': [
-    {'1': 'update', '3': 1, '4': 1, '5': 11, '6': '.http_requests.UpdateGroupState.UpdateTBS', '10': 'update'},
+    {
+      '1': 'update',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.http_requests.UpdateGroupState.UpdateTBS',
+      '10': 'update'
+    },
     {'1': 'signature', '3': 2, '4': 1, '5': 12, '10': 'signature'},
   ],
   '3': [UpdateGroupState_UpdateTBS$json],
@@ -63,10 +86,32 @@ const UpdateGroupState_UpdateTBS$json = {
   '1': 'UpdateTBS',
   '2': [
     {'1': 'version_id', '3': 1, '4': 1, '5': 4, '10': 'versionId'},
-    {'1': 'encrypted_group_state', '3': 3, '4': 1, '5': 12, '10': 'encryptedGroupState'},
+    {
+      '1': 'encrypted_group_state',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedGroupState'
+    },
     {'1': 'public_key', '3': 4, '4': 1, '5': 12, '10': 'publicKey'},
-    {'1': 'remove_admin', '3': 5, '4': 1, '5': 12, '9': 0, '10': 'removeAdmin', '17': true},
-    {'1': 'add_admin', '3': 6, '4': 1, '5': 12, '9': 1, '10': 'addAdmin', '17': true},
+    {
+      '1': 'remove_admin',
+      '3': 5,
+      '4': 1,
+      '5': 12,
+      '9': 0,
+      '10': 'removeAdmin',
+      '17': true
+    },
+    {
+      '1': 'add_admin',
+      '3': 6,
+      '4': 1,
+      '5': 12,
+      '9': 1,
+      '10': 'addAdmin',
+      '17': true
+    },
     {'1': 'nonce', '3': 7, '4': 1, '5': 12, '10': 'nonce'},
   ],
   '8': [
@@ -91,7 +136,13 @@ const NewGroupState$json = {
   '2': [
     {'1': 'group_id', '3': 1, '4': 1, '5': 9, '10': 'groupId'},
     {'1': 'version_id', '3': 2, '4': 1, '5': 4, '10': 'versionId'},
-    {'1': 'encrypted_group_state', '3': 3, '4': 1, '5': 12, '10': 'encryptedGroupState'},
+    {
+      '1': 'encrypted_group_state',
+      '3': 3,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedGroupState'
+    },
     {'1': 'public_key', '3': 4, '4': 1, '5': 12, '10': 'publicKey'},
   ],
 };
@@ -107,7 +158,14 @@ const AppendGroupState$json = {
   '1': 'AppendGroupState',
   '2': [
     {'1': 'signature', '3': 1, '4': 1, '5': 12, '10': 'signature'},
-    {'1': 'appendTBS', '3': 2, '4': 1, '5': 11, '6': '.http_requests.AppendGroupState.AppendTBS', '10': 'appendTBS'},
+    {
+      '1': 'appendTBS',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.http_requests.AppendGroupState.AppendTBS',
+      '10': 'appendTBS'
+    },
     {'1': 'versionId', '3': 3, '4': 1, '5': 4, '10': 'versionId'},
   ],
   '3': [AppendGroupState_AppendTBS$json],
@@ -117,7 +175,13 @@ const AppendGroupState$json = {
 const AppendGroupState_AppendTBS$json = {
   '1': 'AppendTBS',
   '2': [
-    {'1': 'encrypted_group_state_append', '3': 1, '4': 1, '5': 12, '10': 'encryptedGroupStateAppend'},
+    {
+      '1': 'encrypted_group_state_append',
+      '3': 1,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedGroupStateAppend'
+    },
     {'1': 'public_key', '3': 2, '4': 1, '5': 12, '10': 'publicKey'},
     {'1': 'group_id', '3': 3, '4': 1, '5': 9, '10': 'groupId'},
     {'1': 'nonce', '3': 4, '4': 1, '5': 12, '10': 'nonce'},
@@ -138,8 +202,21 @@ const GroupState$json = {
   '1': 'GroupState',
   '2': [
     {'1': 'version_id', '3': 1, '4': 1, '5': 4, '10': 'versionId'},
-    {'1': 'encrypted_group_state', '3': 2, '4': 1, '5': 12, '10': 'encryptedGroupState'},
-    {'1': 'appended_group_states', '3': 3, '4': 3, '5': 11, '6': '.http_requests.AppendGroupState', '10': 'appendedGroupStates'},
+    {
+      '1': 'encrypted_group_state',
+      '3': 2,
+      '4': 1,
+      '5': 12,
+      '10': 'encryptedGroupState'
+    },
+    {
+      '1': 'appended_group_states',
+      '3': 3,
+      '4': 3,
+      '5': 11,
+      '6': '.http_requests.AppendGroupState',
+      '10': 'appendedGroupStates'
+    },
   ],
 };
 
@@ -154,7 +231,14 @@ final $typed_data.Uint8List groupStateDescriptor = $convert.base64Decode(
 const AppendGroupStateHelper$json = {
   '1': 'AppendGroupStateHelper',
   '2': [
-    {'1': 'appended_group_states', '3': 1, '4': 3, '5': 11, '6': '.http_requests.AppendGroupState', '10': 'appendedGroupStates'},
+    {
+      '1': 'appended_group_states',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.http_requests.AppendGroupState',
+      '10': 'appendedGroupStates'
+    },
   ],
 };
 
@@ -162,4 +246,3 @@ const AppendGroupStateHelper$json = {
 final $typed_data.Uint8List appendGroupStateHelperDescriptor = $convert.base64Decode(
     'ChZBcHBlbmRHcm91cFN0YXRlSGVscGVyElMKFWFwcGVuZGVkX2dyb3VwX3N0YXRlcxgBIAMoCz'
     'IfLmh0dHBfcmVxdWVzdHMuQXBwZW5kR3JvdXBTdGF0ZVITYXBwZW5kZWRHcm91cFN0YXRlcw==');
-

@@ -403,7 +403,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     for (final x in layers) {
       x.showCustomButtons = true;
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
     return image;
   }
 
@@ -531,7 +533,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 setState(() {});
               },
               child: MediaViewSizing(
-                requiredHeight: 80,
+                requiredHeight: 59,
                 bottomNavigation: ColoredBox(
                   color: Theme.of(context).colorScheme.surface,
                   child: Row(

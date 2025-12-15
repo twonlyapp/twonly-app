@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <application
         android:label="twonly"
         android:name="${applicationName}"
@@ -26,6 +26,13 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" android:host="me.twonly.eu" />
+                <data android:scheme="https" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
@@ -33,6 +40,12 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- // https://github.com/juliansteenbakker/mobile_scanner/issues/553 -->
+        <meta-data android:name="firebase_performance_collection_deactivated" android:value="true" />
+        <service
+            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+            tools:node="remove">
+        </service>
 
         <!-- <service 
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"

@@ -54,8 +54,9 @@ Future<CiphertextMessage?> signalEncryptMessage(
 
         final tempIdentityKey = await signalStore.getIdentity(address);
         if (tempIdentityKey != null) {
+          final registrationId = await session.getRemoteRegistrationId();
           final preKeyBundle = PreKeyBundle(
-            target,
+            registrationId,
             defaultDeviceId,
             preKey?.preKeyId,
             tempPrePublicKey,

@@ -155,6 +155,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showDatabaseMigration = false;
   bool _showOnboarding = true;
   bool _isLoaded = false;
+  bool _skipBackup = false;
 
   (Future<int>?, bool) _proofOfWork = (null, false);
 
@@ -203,9 +204,10 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_showDatabaseMigration) {
       child = const DatabaseMigrationView();
     } else if (_isUserCreated) {
-      if (gUser.twonlySafeBackup == null) {
+      if (gUser.twonlySafeBackup == null && !_skipBackup) {
         child = TwonlyIdentityBackupView(
           callBack: () {
+            _skipBackup = true;
             setState(() {});
           },
         );

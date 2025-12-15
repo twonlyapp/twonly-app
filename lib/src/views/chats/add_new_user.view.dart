@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +17,14 @@ import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/headline.dart';
 
 class AddNewUserView extends StatefulWidget {
-  const AddNewUserView({super.key});
+  const AddNewUserView({
+    this.username,
+    this.publicKey,
+    super.key,
+  });
+
+  final String? username;
+  final Uint8List? publicKey;
 
   @override
   State<AddNewUserView> createState() => _SearchUsernameView();
@@ -38,6 +46,13 @@ class _SearchUsernameView extends State<AddNewUserView> {
             contacts = update;
           }),
         );
+
+    if (widget.username != null) {
+      searchUserName.text = widget.username!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _addNewUser(context);
+      });
+    }
   }
 
   @override
@@ -73,7 +88,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
 
     final addUser = await showAlertDialog(
       context,
-      context.lang.userFound,
+      context.lang.userFound(searchUserName.text),
       context.lang.userFoundBody,
     );
 
@@ -88,6 +103,10 @@ class _SearchUsernameView extends State<AddNewUserView> {
         requested: const Value(false),
         blocked: const Value(false),
         deletedByUser: const Value(false),
+        verified: Value(
+          !(widget.publicKey == null) &&
+              userdata.publicIdentityKey.equals(widget.publicKey!),
+        ),
       ),
     );
 

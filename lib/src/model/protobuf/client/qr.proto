@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+message QREnvelope {
+    enum Type {
+        PublicProfile = 0;
+    }
+    Type type = 2;
+    bytes data = 3;
+}
+
+message PublicProfile {
+    int64 user_id = 1;
+    string username = 2;
+    bytes public_identity_key = 3;
+    bytes signed_prekey = 4;
+    int64 registration_id = 5;
+    bytes signed_prekey_signature = 6;
+    int64 signed_prekey_id = 7;
+}

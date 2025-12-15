@@ -13,8 +13,8 @@ import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/max_flame_list_title.dart';
 import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
-import 'package:twonly/src/views/contact/contact_verify.view.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
+import 'package:twonly/src/views/public_profile.view.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -159,7 +159,7 @@ class _ContactViewState extends State<ContactView> {
                     context,
                     MaterialPageRoute(
                       builder: (context) {
-                        return ContactVerifyView(contact);
+                        return const PublicProfileView();
                       },
                     ),
                   );

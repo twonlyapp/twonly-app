@@ -31,6 +31,7 @@ class MediaFileService {
     for (final file in files) {
       final mediaId = basename(file.path).split('.').first;
 
+      // in case the mediaID is unknown the file will be deleted
       var delete = true;
 
       final service = await MediaFileService.fromMediaId(mediaId);
@@ -46,31 +47,32 @@ class MediaFileService {
         // in case messages in empty the file will be deleted, as delete is true by default
 
         for (final message in messages) {
-          if (message.senderId == null) {
-            // Media was send by me
-            if (message.openedAt == null) {
-              // Message was not yet opened from all persons, so wait...
+          if (service.mediaFile.type == MediaType.audio) {
+            delete = false; // do not delete voice messages
+          }
+
+          if (message.openedAt == null) {
+            // Message was not yet opened from all persons, so wait...
+            delete = false;
+          } else if (service.mediaFile.requiresAuthentication ||
+              service.mediaFile.displayLimitInMilliseconds != null) {
+            // Message was opened by all persons, and they can not reopen the image.
+            // delete = true; // do not overwrite a previous delete = false
+            // this is just to make it easier to understand :)
+          } else if (message.openedAt!
+              .isAfter(DateTime.now().subtract(const Duration(days: 2)))) {
+            // In case the image was opened, but send with unlimited time or no authentication.
+            if (message.senderId == null) {
               delete = false;
-            } else if (service.mediaFile.requiresAuthentication ||
-                service.mediaFile.displayLimitInMilliseconds != null) {
-              // Message was opened by all persons, and they can not reopen the image.
-              // delete = true; // do not overwrite a previous delete = false
-              // this is just to make it easier to understand :)
-            } else if (message.openedAt!
-                .isAfter(DateTime.now().subtract(const Duration(days: 2)))) {
-              // Message was opened by all persons, as it can be reopened and then stored by a other person keep it for
-              // two day just to be sure.
-              delete = false;
+            } else {
+              // Check weather the image was send in a group. Then the images is preserved for two days in case another person stores the image.
+              // This also allows to reopen this image for two days.
+              final group = await twonlyDB.groupsDao.getGroup(message.groupId);
+              if (group != null && !group.isDirectChat) {
+                delete = false;
+              }
             }
-          } else {
-            // this media was received from another person
-            if (message.openedAt == null) {
-              // Message was not yet opened, so do not remove it.
-              delete = false;
-            }
-            if (service.mediaFile.type == MediaType.audio) {
-              delete = false; // do not delete voice messages
-            }
+            // In case the app was send in a direct chat, then it can be deleted.
           }
         }
       }

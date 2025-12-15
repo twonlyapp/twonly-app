@@ -17,6 +17,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..appVersion = (json['appVersion'] as num?)?.toInt() ?? 0
       ..avatarCounter = (json['avatarCounter'] as num?)?.toInt() ?? 0
       ..isDeveloper = json['isDeveloper'] as bool? ?? false
+      ..disableVideoCompression =
+          json['disableVideoCompression'] as bool? ?? false
       ..deviceId = (json['deviceId'] as num?)?.toInt() ?? 0
       ..lastImageSend = json['lastImageSend'] == null
           ? null
@@ -79,6 +81,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'appVersion': instance.appVersion,
       'avatarCounter': instance.avatarCounter,
       'isDeveloper': instance.isDeveloper,
+      'disableVideoCompression': instance.disableVideoCompression,
       'deviceId': instance.deviceId,
       'subscriptionPlan': instance.subscriptionPlan,
       'lastImageSend': instance.lastImageSend?.toIso8601String(),

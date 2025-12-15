@@ -19,11 +19,11 @@ import 'package:twonly/src/views/chats/chat_list_components/group_list_item.dart
 import 'package:twonly/src/views/chats/start_new_chat.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
+import 'package:twonly/src/views/public_profile.view.dart';
 import 'package:twonly/src/views/settings/help/changelog.view.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
-import 'package:twonly/src/views/tutorial/tutorials.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -38,7 +38,6 @@ class _ChatListViewState extends State<ChatListView> {
   List<Group> _groupsArchived = [];
 
   GlobalKey searchForOtherUsers = GlobalKey();
-  Timer? tutorial;
   bool showFeedbackShortcut = false;
 
   @override
@@ -56,16 +55,6 @@ class _ChatListViewState extends State<ChatListView> {
         _groupsPinned = groups.where((x) => x.pinned && !x.archived).toList();
         _groupsArchived = groups.where((x) => x.archived).toList();
       });
-    });
-
-    tutorial = Timer(const Duration(seconds: 1), () async {
-      tutorial = null;
-      if (!mounted) return;
-      await showChatListTutorialSearchOtherUsers(context, searchForOtherUsers);
-      if (!mounted) return;
-      // if (_groupsNotPinned.isNotEmpty) {
-      //   await showChatListTutorialContextMenu(context, firstUserListItemKey);
-      // }
     });
 
     final changeLog = await rootBundle.loadString('CHANGELOG.md');
@@ -97,7 +86,6 @@ class _ChatListViewState extends State<ChatListView> {
 
   @override
   void dispose() {
-    tutorial?.cancel();
     _contactsSub.cancel();
     super.dispose();
   }
@@ -303,18 +291,45 @@ class _ChatListViewState extends State<ChatListView> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 30),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return const StartNewChatView();
-                },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton.small(
+              backgroundColor: context.color.primary,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const PublicProfileView();
+                    },
+                  ),
+                );
+              },
+              child: FaIcon(
+                FontAwesomeIcons.qrcode,
+                color: isDarkMode(context) ? Colors.black : Colors.white,
               ),
-            );
-          },
-          child: const FaIcon(FontAwesomeIcons.penToSquare),
+            ),
+            const SizedBox(height: 12),
+            FloatingActionButton(
+              backgroundColor: context.color.primary,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const StartNewChatView();
+                    },
+                  ),
+                );
+              },
+              child: FaIcon(
+                FontAwesomeIcons.penToSquare,
+                color: isDarkMode(context) ? Colors.black : Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );

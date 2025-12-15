@@ -6,9 +6,11 @@ class MediaViewSizing extends StatefulWidget {
     super.key,
     this.requiredHeight,
     this.bottomNavigation,
+    this.additionalPadding,
   });
 
   final double? requiredHeight;
+  final double? additionalPadding;
   final Widget? bottomNavigation;
   final Widget child;
 
@@ -20,19 +22,22 @@ class _MediaViewSizingState extends State<MediaViewSizing> {
   @override
   Widget build(BuildContext context) {
     var needToDownSizeImage = false;
+    var availableHeight = MediaQuery.of(context).size.height;
 
+    // Get the screen size and safe area padding
+    final screenSize = MediaQuery.of(context).size;
+    final safeAreaPadding = MediaQuery.of(context).padding;
+
+    // Calculate the available width and height
+    final availableWidth = screenSize.width;
+    availableHeight = screenSize.height -
+        safeAreaPadding.top -
+        safeAreaPadding.bottom -
+        (widget.additionalPadding ?? 0);
+
+    final aspectRatioWidth = availableWidth;
+    final aspectRatioHeight = (aspectRatioWidth * 16) / 9;
     if (widget.requiredHeight != null) {
-      // Get the screen size and safe area padding
-      final screenSize = MediaQuery.of(context).size;
-      final safeAreaPadding = MediaQuery.of(context).padding;
-
-      // Calculate the available width and height
-      final availableWidth = screenSize.width;
-      final availableHeight =
-          screenSize.height - safeAreaPadding.top - safeAreaPadding.bottom;
-
-      final aspectRatioWidth = availableWidth;
-      final aspectRatioHeight = (aspectRatioWidth * 16) / 9;
       if (aspectRatioHeight < availableHeight) {
         if ((screenSize.height - widget.requiredHeight!) < aspectRatioHeight) {
           needToDownSizeImage = true;
@@ -43,6 +48,7 @@ class _MediaViewSizingState extends State<MediaViewSizing> {
     Widget imageChild = Align(
       alignment: Alignment.topCenter,
       child: SizedBox(
+        // height: availableHeight,
         child: AspectRatio(
           aspectRatio: 9 / 16,
           child: ClipRRect(
@@ -68,8 +74,13 @@ class _MediaViewSizingState extends State<MediaViewSizing> {
     }
 
     return SafeArea(
-      child: Column(
-        children: [imageChild, bottomNavigation],
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: availableHeight,
+        ),
+        child: Column(
+          children: [imageChild, bottomNavigation],
+        ),
       ),
     );
   }

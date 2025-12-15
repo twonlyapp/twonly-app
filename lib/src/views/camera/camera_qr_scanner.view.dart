@@ -1,18 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 
-class CameraSendToView extends StatefulWidget {
-  const CameraSendToView(this.sendToGroup, {super.key});
-  final Group sendToGroup;
+class QrCodeScanner extends StatefulWidget {
+  const QrCodeScanner({super.key});
   @override
-  State<CameraSendToView> createState() => CameraSendToViewState();
+  State<QrCodeScanner> createState() => QrCodeScannerState();
 }
 
-class CameraSendToViewState extends State<CameraSendToView> {
+class QrCodeScannerState extends State<QrCodeScanner> {
   final MainCameraController _mainCameraController = MainCameraController();
 
   @override
@@ -42,7 +40,7 @@ class CameraSendToViewState extends State<CameraSendToView> {
             ),
             CameraPreviewControllerView(
               mainController: _mainCameraController,
-              sendToGroup: widget.sendToGroup,
+              hideControllers: true,
               isVisible: true,
             ),
           ],

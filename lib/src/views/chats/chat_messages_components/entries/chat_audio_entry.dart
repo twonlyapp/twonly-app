@@ -84,12 +84,7 @@ class ChatAudioEntry extends StatelessWidget {
                           path: mediaService.tempPath.path,
                           message: message,
                         )
-                      : (mediaService.originalPath.existsSync())
-                          ? InChatAudioPlayer(
-                              path: mediaService.originalPath.path,
-                              message: message,
-                            )
-                          : Container()
+                      : Container()
                 else
                   MessageSendStateIcon([message], [mediaService.mediaFile]),
               ],
@@ -138,27 +133,28 @@ class _InChatAudioPlayerState extends State<InChatAudioPlayer> {
       }
     });
 
-    _playerController.onCurrentDurationChanged.listen((duration) {
+    _playerController.onPlayerStateChanged.listen((a) async {
+      if (a == PlayerState.initialized) {
+        _displayDuration =
+            await _playerController.getDuration(DurationType.max);
+        _maxDuration = _displayDuration;
+        setState(() {});
+      }
+    });
+
+    _playerController.onCurrentDurationChanged.listen((duration) async {
       if (mounted) {
         setState(() {
           _displayDuration = _maxDuration - duration;
         });
       }
     });
-    initAsync();
   }
 
   @override
   void dispose() {
     _playerController.dispose();
     super.dispose();
-  }
-
-  Future<void> initAsync() async {
-    _displayDuration = await _playerController.getDuration(DurationType.max);
-    _maxDuration = _displayDuration;
-    if (!mounted) return;
-    setState(() {});
   }
 
   bool _isPlaying = false;
