@@ -593,7 +593,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toggleHighQuality => 'Toggle better resolution';
 
   @override
-  String get userFound => 'User found';
+  String userFound(Object username) {
+    return '$username found';
+  }
 
   @override
   String get userFoundBody => 'Do you want to create a follow request?';
@@ -1521,4 +1523,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get skipForNow => 'Skip for now';
+
+  @override
+  String linkFromUsername(Object username) {
+    return 'Is the link from $username?';
+  }
+
+  @override
+  String get linkFromUsernameLong =>
+      'If you received the link from your friend, you can mark the user as verified, as the public key in the link matches the public key already stored for that user?';
+
+  @override
+  String get gotLinkFromFriend => 'Yes, I got the link from my friend!';
+
+  @override
+  String couldNotVerifyUsername(Object username) {
+    return 'Could not verify $username';
+  }
+
+  @override
+  String get linkPubkeyDoesNotMatch =>
+      'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!';
 }

@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:app_links/app_links.dart';
 import 'package:collection/collection.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
@@ -15,7 +18,10 @@ import 'package:twonly/src/views/camera/camera_preview_components/camera_preview
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_list.view.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
 import 'package:twonly/src/views/public_profile.view.dart';
 
@@ -144,18 +150,65 @@ class HomeViewState extends State<HomeView> {
       final contacts =
           await twonlyDB.contactsDao.getContactsByUsername(username);
       if (contacts.isEmpty) {
-        // load user from server...
+        if (!mounted) return;
+        Uint8List? publicKeyBytes;
+        if (publicKey != null) {
+          publicKeyBytes = base64Url.decode(publicKey);
+        }
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              return AddNewUserView(
+                username: username,
+                publicKey: publicKeyBytes,
+              );
+            },
+          ),
+        );
       } else if (publicKey != null) {
         try {
           final contact = contacts.first;
           final storedPublicKey = await getPublicKeyFromContact(contact.userId);
           final receivedPublicKey = base64Url.decode(publicKey);
-          if (storedPublicKey == null || receivedPublicKey.isEmpty) return;
-
+          if (storedPublicKey == null ||
+              receivedPublicKey.isEmpty ||
+              !mounted) {
+            return;
+          }
           if (storedPublicKey.equals(receivedPublicKey)) {
-            Log.info('Could verify the user');
+            if (!contact.verified) {
+              final markAsVerified = await showAlertDialog(
+                context,
+                context.lang.linkFromUsername(contact.username),
+                context.lang.linkFromUsernameLong,
+                customOk: context.lang.gotLinkFromFriend,
+              );
+              if (markAsVerified) {
+                await twonlyDB.contactsDao.updateContact(
+                  contact.userId,
+                  const ContactsCompanion(
+                    verified: Value(true),
+                  ),
+                );
+              }
+            } else {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return ContactView(contact.userId);
+                  },
+                ),
+              );
+            }
           } else {
-            Log.error('Show error message');
+            await showAlertDialog(
+              context,
+              context.lang.couldNotVerifyUsername(contact.username),
+              context.lang.linkPubkeyDoesNotMatch,
+              customCancel: '',
+            );
           }
         } catch (e) {
           Log.warn(e);

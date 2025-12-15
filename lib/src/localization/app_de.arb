@@ -53,7 +53,7 @@
     "searchUserNameBlockUserTooltip": "Benutzer ohne Benachrichtigung blockieren.",
     "searchUserNameRejectUserTooltip": "Die Anfrage ablehnen und den Anfragenden informieren.",
     "searchUserNameArchiveUserTooltip": "Benutzer archivieren. Du wirst informiert sobald er deine Anfrage akzeptiert.",
-    "userFound": "Benutzer gefunden",
+    "userFound": "{username} gefunden",
     "userFoundBody": "Möchtest du eine Folgeanfrage stellen?",
     "chatListViewSearchUserNameBtn": "Füge deinen ersten twonly-Kontakt hinzu!",
     "chatListViewSendFirstTwonly": "Sende dein erstes twonly!",
@@ -446,5 +446,10 @@
     "voiceMessageCancel": "Abbrechen",
     "shareYourProfile": "Teile dein Profil",
     "scanOtherProfile": "Scanne ein anderes Profil",
-    "skipForNow": "Vorerst überspringen"
+    "skipForNow": "Vorerst überspringen",
+    "linkFromUsername": "Ist der Link von {username}?",
+    "linkFromUsernameLong": "Wenn du den Link von der Person direkt erhalten hast, kannst du den Kontakt als verifiziert markieren, da der öffentliche Schlüssel im Link mit dem bereits für diesen Benutzer gespeicherten öffentlichen Schlüssel übereinstimmt.",
+    "gotLinkFromFriend": "Ja, der Link kommt direkt von der Person.",
+    "couldNotVerifyUsername": "{username} konnte nicht verifiziert werden",
+    "linkPubkeyDoesNotMatch": "Der öffentliche Schlüssel im Link stimmt nicht mit dem für diesen Kontakt gespeicherten öffentlichen Schlüssel überein. Triff die Person persönlich und scanne den QR-Code direkt!"
 }
