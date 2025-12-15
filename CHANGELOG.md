@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.73
+
+- Integrated QR code scanner in the main camera
+- New profile share page
+- New workflow for checking the security number
+- Improved user interface for creating voice messages
+
 ## 0.0.69
 
 - Option to export and import memories

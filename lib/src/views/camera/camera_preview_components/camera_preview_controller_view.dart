@@ -822,6 +822,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       (c) {
                         return GestureDetector(
                           onTap: () async {
+                            if (c.isLoading) return;
+                            c.isLoading = true;
+                            widget.mainCameraController.setState();
                             await addNewContactFromPublicProfile(c.profile);
                             widget.mainCameraController.scannedNewProfiles
                                 .remove(c.profile.userId.toInt());
@@ -838,16 +841,25 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               children: [
                                 Text(c.profile.username),
                                 Expanded(child: Container()),
-                                ColoredBox(
-                                  color: Colors.transparent,
-                                  child: FaIcon(
-                                    FontAwesomeIcons.userPlus,
-                                    color: isDarkMode(context)
-                                        ? Colors.white
-                                        : Colors.black,
-                                    size: 17,
+                                if (c.isLoading)
+                                  const SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                else
+                                  ColoredBox(
+                                    color: Colors.transparent,
+                                    child: FaIcon(
+                                      FontAwesomeIcons.userPlus,
+                                      color: isDarkMode(context)
+                                          ? Colors.white
+                                          : Colors.black,
+                                      size: 17,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ),

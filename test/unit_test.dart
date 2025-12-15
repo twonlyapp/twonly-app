@@ -57,9 +57,16 @@ void main() {
         '00000000-1234-5678-0000-00000abcdef0',
       );
     });
-
-    test('Reject values > 0x7fffffff', () {
-      expect(() => getUUIDforDirectChat(0x80000000, 0), throwsArgumentError);
+    test('Arbitrary within 32-bit range', () {
+      expect(
+        // ignore: avoid_js_rounded_ints
+        getUUIDforDirectChat(0x7dc8a4f20a75de46, 0x7ffffffffffffff8),
+        '7fffffff-ffff-fff8-7dc8-a4f20a75de46',
+      );
     });
+
+    // test('Reject values > 0x7fffffff', () {
+    //   expect(() => getUUIDforDirectChat(0x80000000, 0), throwsArgumentError);
+    // });
   });
 }

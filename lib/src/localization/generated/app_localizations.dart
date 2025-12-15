@@ -2773,6 +2773,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan other profile'**
   String get scanOtherProfile;
+
+  /// No description provided for @skipForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get skipForNow;
 }
 
 class _AppLocalizationsDelegate

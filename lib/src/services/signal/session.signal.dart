@@ -56,7 +56,7 @@ Future<bool> createNewSignalSession(Response_UserData userData) async {
   );
 
   final preKeyBundle = PreKeyBundle(
-    userData.userId.toInt(),
+    userData.registrationId.toInt(),
     defaultDeviceId,
     tempPreKeyId,
     tempPrePublicKey,

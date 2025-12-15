@@ -1518,4 +1518,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanOtherProfile => 'Scan other profile';
+
+  @override
+  String get skipForNow => 'Skip for now';
 }

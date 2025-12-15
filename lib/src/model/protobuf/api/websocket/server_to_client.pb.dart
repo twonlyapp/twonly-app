@@ -1408,6 +1408,7 @@ class Response_UserData extends $pb.GeneratedMessage {
     $core.List<$core.int>? signedPrekeySignature,
     $fixnum.Int64? signedPrekeyId,
     $core.List<$core.int>? username,
+    $fixnum.Int64? registrationId,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
@@ -1418,6 +1419,7 @@ class Response_UserData extends $pb.GeneratedMessage {
       result.signedPrekeySignature = signedPrekeySignature;
     if (signedPrekeyId != null) result.signedPrekeyId = signedPrekeyId;
     if (username != null) result.username = username;
+    if (registrationId != null) result.registrationId = registrationId;
     return result;
   }
 
@@ -1448,6 +1450,7 @@ class Response_UserData extends $pb.GeneratedMessage {
     ..aInt64(6, _omitFieldNames ? '' : 'signedPrekeyId')
     ..a<$core.List<$core.int>>(
         7, _omitFieldNames ? '' : 'username', $pb.PbFieldType.OY)
+    ..aInt64(8, _omitFieldNames ? '' : 'registrationId')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1528,6 +1531,15 @@ class Response_UserData extends $pb.GeneratedMessage {
   $core.bool hasUsername() => $_has(6);
   @$pb.TagNumber(7)
   void clearUsername() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get registrationId => $_getI64(7);
+  @$pb.TagNumber(8)
+  set registrationId($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasRegistrationId() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearRegistrationId() => $_clearField(8);
 }
 
 class Response_UploadToken extends $pb.GeneratedMessage {

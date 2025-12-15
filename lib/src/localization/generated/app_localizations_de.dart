@@ -1528,4 +1528,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get scanOtherProfile => 'Scanne ein anderes Profil';
+
+  @override
+  String get skipForNow => 'Vorerst überspringen';
 }

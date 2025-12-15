@@ -475,5 +475,6 @@
   "voiceMessageSlideToCancel": "Slide to cancel",
   "voiceMessageCancel": "Cancel",
   "shareYourProfile": "Share your profile",
-  "scanOtherProfile": "Scan other profile"
+  "scanOtherProfile": "Scan other profile",
+  "skipForNow": "Skip for now"
 }

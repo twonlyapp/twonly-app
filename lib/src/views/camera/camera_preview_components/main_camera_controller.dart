@@ -27,8 +27,10 @@ class ScannedVerifiedContact {
 class ScannedNewProfile {
   ScannedNewProfile({
     required this.profile,
+    this.isLoading = false,
   });
   PublicProfile profile;
+  bool isLoading;
 }
 
 class MainCameraController {
@@ -198,7 +200,7 @@ class MainCameraController {
         final contact =
             await twonlyDB.contactsDao.getContactById(profile.userId.toInt());
 
-        if (contact != null) {
+        if (contact != null && contact.accepted) {
           if (contactsVerified[contact.userId] == null) {
             final storedPublicKey =
                 await getPublicKeyFromContact(contact.userId);

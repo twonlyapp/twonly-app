@@ -221,6 +221,21 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  if (widget.callBack != null) {
+                    widget.callBack!();
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
+                child: Text(
+                  context.lang.skipForNow,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 8, color: Colors.grey),
+                ),
+              ),
             ],
           ),
         ),

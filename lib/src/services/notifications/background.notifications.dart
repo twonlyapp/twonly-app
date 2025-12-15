@@ -174,7 +174,9 @@ Future<void> showLocalPushNotification(
   );
 
   await flutterLocalNotificationsPlugin.show(
-    pushUser.userId.toInt(),
+    pushUser.userId.toInt() %
+        // ignore: avoid_js_rounded_ints
+        2373257871630019505, // Invalid argument (id): must fit within the size of a 32-bit integer
     title,
     body,
     notificationDetails,
