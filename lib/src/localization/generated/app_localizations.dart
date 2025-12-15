@@ -2761,6 +2761,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get voiceMessageCancel;
+
+  /// No description provided for @shareYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your profile'**
+  String get shareYourProfile;
+
+  /// No description provided for @scanOtherProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan other profile'**
+  String get scanOtherProfile;
 }
 
 class _AppLocalizationsDelegate

@@ -306,9 +306,9 @@ class _ChatListViewState extends State<ChatListView> {
                   ),
                 );
               },
-              child: const FaIcon(
+              child: FaIcon(
                 FontAwesomeIcons.qrcode,
-                color: Colors.black,
+                color: isDarkMode(context) ? Colors.black : Colors.white,
               ),
             ),
             const SizedBox(height: 12),
@@ -324,9 +324,9 @@ class _ChatListViewState extends State<ChatListView> {
                   ),
                 );
               },
-              child: const FaIcon(
+              child: FaIcon(
                 FontAwesomeIcons.penToSquare,
-                color: Colors.black,
+                color: isDarkMode(context) ? Colors.black : Colors.white,
               ),
             ),
           ],

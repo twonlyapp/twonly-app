@@ -9,13 +9,16 @@ import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.da
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/qr.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
@@ -24,8 +27,10 @@ import 'package:twonly/src/views/camera/camera_preview_components/video_recordin
 import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/home.view.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 int maxVideoRecordingTime = 60;
 
@@ -92,6 +97,7 @@ class CameraPreviewControllerView extends StatelessWidget {
   const CameraPreviewControllerView({
     required this.mainController,
     required this.isVisible,
+    this.hideControllers = false,
     super.key,
     this.sendToGroup,
   });
@@ -99,6 +105,7 @@ class CameraPreviewControllerView extends StatelessWidget {
   final MainCameraController mainController;
   final Group? sendToGroup;
   final bool isVisible;
+  final bool hideControllers;
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +118,7 @@ class CameraPreviewControllerView extends StatelessWidget {
               sendToGroup: sendToGroup,
               mainCameraController: mainController,
               isVisible: isVisible,
+              hideControllers: hideControllers,
             );
           } else {
             return PermissionHandlerView(
@@ -131,6 +139,7 @@ class CameraPreviewView extends StatefulWidget {
   const CameraPreviewView({
     required this.mainCameraController,
     required this.isVisible,
+    required this.hideControllers,
     super.key,
     this.sendToGroup,
   });
@@ -138,6 +147,7 @@ class CameraPreviewView extends StatefulWidget {
   final MainCameraController mainCameraController;
   final Group? sendToGroup;
   final bool isVisible;
+  final bool hideControllers;
 
   @override
   State<CameraPreviewView> createState() => _CameraPreviewViewState();
@@ -641,7 +651,9 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                 widget.sendToGroup != null &&
                 !_isVideoRecording)
               SendToWidget(sendTo: widget.sendToGroup!.groupName),
-            if (!_sharePreviewIsShown && !_isVideoRecording)
+            if (!_sharePreviewIsShown &&
+                !_isVideoRecording &&
+                !widget.hideControllers)
               Positioned(
                 right: 5,
                 top: 0,
@@ -696,7 +708,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   ),
                 ),
               ),
-            if (!_sharePreviewIsShown)
+            if (!_sharePreviewIsShown && !widget.hideControllers)
               Positioned(
                 bottom: 30,
                 left: 0,
@@ -775,7 +787,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               videoRecordingStarted: _videoRecordingStarted,
               maxVideoRecordingTime: maxVideoRecordingTime,
             ),
-            if (!_sharePreviewIsShown && widget.sendToGroup != null)
+            if (!_sharePreviewIsShown && widget.sendToGroup != null ||
+                widget.hideControllers)
               Positioned(
                 left: 5,
                 top: 10,
@@ -796,6 +809,144 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   ),
                 ),
               ),
+            Positioned(
+              right: 8,
+              top: 170,
+              child: SizedBox(
+                height: 200,
+                width: 150,
+                child: ListView(
+                  children: [
+                    ...widget.mainCameraController.scannedNewProfiles.values
+                        .map(
+                      (c) {
+                        return GestureDetector(
+                          onTap: () async {
+                            await addNewContactFromPublicProfile(c.profile);
+                            widget.mainCameraController.scannedNewProfiles
+                                .remove(c.profile.userId.toInt());
+                            widget.mainCameraController.setState();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: context.color.surfaceContainer,
+                            ),
+                            child: Row(
+                              children: [
+                                Text(c.profile.username),
+                                Expanded(child: Container()),
+                                ColoredBox(
+                                  color: Colors.transparent,
+                                  child: FaIcon(
+                                    FontAwesomeIcons.userPlus,
+                                    color: isDarkMode(context)
+                                        ? Colors.white
+                                        : Colors.black,
+                                    size: 17,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    ...widget.mainCameraController.contactsVerified.values.map(
+                      (c) {
+                        return Container(
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: context.color.surfaceContainer,
+                          ),
+                          child: Row(
+                            children: [
+                              AvatarIcon(
+                                contactId: c.contact.userId,
+                                fontSize: 14,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                getContactDisplayName(
+                                  c.contact,
+                                  maxLength: 13,
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(),
+                              ),
+                              ColoredBox(
+                                color: Colors.transparent,
+                                child: SizedBox(
+                                  width: 30,
+                                  child: Lottie.asset(
+                                    c.verificationOk
+                                        ? 'assets/animations/success.json'
+                                        : 'assets/animations/failed.json',
+                                    repeat: false,
+                                    onLoaded: (p0) {
+                                      Future.delayed(const Duration(seconds: 4),
+                                          () {
+                                        widget.mainCameraController.setState();
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    if (widget.mainCameraController.scannedUrl != null)
+                      GestureDetector(
+                        onTap: () {
+                          launchUrlString(
+                            widget.mainCameraController.scannedUrl!,
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: context.color.surfaceContainer,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                substringBy(
+                                  widget.mainCameraController.scannedUrl!,
+                                  25,
+                                ),
+                                style: const TextStyle(fontSize: 8),
+                              ),
+                              Expanded(
+                                child: Container(),
+                              ),
+                              Expanded(child: Container()),
+                              ColoredBox(
+                                color: Colors.transparent,
+                                child: FaIcon(
+                                  FontAwesomeIcons.shareFromSquare,
+                                  color: isDarkMode(context)
+                                      ? Colors.white
+                                      : Colors.black,
+                                  size: 17,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

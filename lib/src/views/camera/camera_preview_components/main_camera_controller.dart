@@ -1,11 +1,35 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:collection/collection.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:screenshot/screenshot.dart';
+import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
+import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/qr.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/painters/barcode_detector_painter.dart';
+
+class ScannedVerifiedContact {
+  ScannedVerifiedContact({
+    required this.contact,
+    required this.verificationOk,
+  });
+  Contact contact;
+  bool verificationOk;
+}
+
+class ScannedNewProfile {
+  ScannedNewProfile({
+    required this.profile,
+  });
+  PublicProfile profile;
+}
 
 class MainCameraController {
   late void Function() setState;
@@ -13,9 +37,19 @@ class MainCameraController {
   ScreenshotController screenshotController = ScreenshotController();
   SelectedCameraDetails selectedCameraDetails = SelectedCameraDetails();
   bool initCameraStarted = true;
+  Map<int, ScannedVerifiedContact> contactsVerified = {};
+  Map<int, ScannedNewProfile> scannedNewProfiles = {};
+  String? scannedUrl;
 
   Future<void> closeCamera() async {
-    await cameraController?.stopImageStream();
+    contactsVerified = {};
+    scannedNewProfiles = {};
+    scannedUrl = null;
+    try {
+      await cameraController?.stopImageStream();
+    } catch (e) {
+      Log.warn(e);
+    }
     await cameraController?.dispose();
     cameraController = null;
     initCameraStarted = false;
@@ -47,7 +81,11 @@ class MainCameraController {
     if (cameraController!.value.isRecordingVideo) {
       return;
     }
-    await cameraController!.stopImageStream();
+    try {
+      await cameraController!.stopImageStream();
+    } catch (e) {
+      Log.warn(e);
+    }
     await cameraController!.dispose();
     cameraController = null;
     await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
@@ -72,16 +110,11 @@ class MainCameraController {
 
   InputImage? _inputImageFromCameraImage(CameraImage image) {
     if (cameraController == null) return null;
-
-    // get image rotation
-    // it is used in android to convert the InputImage from Dart to Java: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/android/src/main/java/com/google_mlkit_commons/InputImageConverter.java
-    // `rotation` is not used in iOS to convert the InputImage from Dart to Obj-C: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/ios/Classes/MLKVisionImage%2BFlutterPlugin.m
-    // in both platforms `rotation` and `camera.lensDirection` can be used to compensate `x` and `y` coordinates on a canvas: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
     final camera = cameraController!.description;
     final sensorOrientation = camera.sensorOrientation;
-    // print(
-    //     'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${_controller?.value.deviceOrientation} ${_controller?.value.lockedCaptureOrientation} ${_controller?.value.isCaptureOrientationLocked}');
+
     InputImageRotation? rotation;
+
     if (Platform.isIOS) {
       rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
     } else if (Platform.isAndroid) {
@@ -148,6 +181,50 @@ class MainCameraController {
         cameraController!.description.lensDirection,
       );
       customPaint = CustomPaint(painter: painter);
+
+      for (final barcode in barcodes) {
+        if (barcode.displayValue != null) {
+          if (barcode.displayValue!.startsWith('http://') ||
+              barcode.displayValue!.startsWith('https://')) {
+            scannedUrl = barcode.displayValue;
+          }
+        }
+        if (barcode.rawBytes == null) continue;
+
+        final profile = parseQrCodeData(barcode.rawBytes!);
+
+        if (profile == null) continue;
+
+        final contact =
+            await twonlyDB.contactsDao.getContactById(profile.userId.toInt());
+
+        if (contact != null) {
+          if (contactsVerified[contact.userId] == null) {
+            final storedPublicKey =
+                await getPublicKeyFromContact(contact.userId);
+            if (storedPublicKey != null) {
+              final verificationOk =
+                  profile.publicIdentityKey.equals(storedPublicKey.toList());
+              contactsVerified[contact.userId] = ScannedVerifiedContact(
+                contact: contact,
+                verificationOk: verificationOk,
+              );
+              if (verificationOk) {
+                await twonlyDB.contactsDao.updateContact(
+                  contact.userId,
+                  const ContactsCompanion(verified: Value(true)),
+                );
+              }
+            }
+          }
+        } else {
+          if (scannedNewProfiles[profile.userId.toInt()] == null) {
+            scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(
+              profile: profile,
+            );
+          }
+        }
+      }
     }
     _isBusy = false;
     setState();

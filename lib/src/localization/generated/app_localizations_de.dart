@@ -1522,4 +1522,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceMessageCancel => 'Abbrechen';
+
+  @override
+  String get shareYourProfile => 'Teile dein Profil';
+
+  @override
+  String get scanOtherProfile => 'Scanne ein anderes Profil';
 }
