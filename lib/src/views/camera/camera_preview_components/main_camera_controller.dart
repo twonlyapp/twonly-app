@@ -220,10 +220,12 @@ class MainCameraController {
             }
           }
         } else {
-          if (scannedNewProfiles[profile.userId.toInt()] == null) {
-            scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(
-              profile: profile,
-            );
+          if (profile.username != gUser.username) {
+            if (scannedNewProfiles[profile.userId.toInt()] == null) {
+              scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(
+                profile: profile,
+              );
+            }
           }
         }
       }

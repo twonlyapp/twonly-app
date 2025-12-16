@@ -76,17 +76,29 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
 
   var overLayCommand = '';
   if (media.overlayImagePath.existsSync()) {
-    overLayCommand =
-        '-i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0"';
+    if (Platform.isAndroid) {
+      overLayCommand =
+          '-i "${media.overlayImagePath.path}" -filter_complex "[1:v]format=yuva420p[ovr_in];[0:v]format=yuv420p[base_in];[ovr_in][base_in]scale2ref=w=rw:h=rh[ovr_out][base_out];[base_out][ovr_out]overlay=0:0"';
+    } else {
+      overLayCommand =
+          '-i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0"';
+    }
   }
 
   final stopwatch = Stopwatch()..start();
+
+  var additionalParams = '';
+
+  if (Platform.isAndroid) {
+    additionalParams += ' -c:v libx264';
+  }
+
   var command =
-      '-i "${media.originalPath.path}" $overLayCommand  -map "0:a?" -preset veryfast -crf 28 -c:a aac -b:a 64k "${media.ffmpegOutputPath.path}"';
+      '-i "${media.originalPath.path}" $overLayCommand  -map "0:a?" $additionalParams -preset veryfast -crf 28 -c:a aac -b:a 64k "${media.ffmpegOutputPath.path}"';
 
   if (media.removeAudio) {
     command =
-        '-i "${media.originalPath.path}" $overLayCommand -preset veryfast -crf 28 -an "${media.ffmpegOutputPath.path}"';
+        '-i "${media.originalPath.path}" $overLayCommand $additionalParams -preset veryfast -crf 28 -an "${media.ffmpegOutputPath.path}"';
   }
 
   final session = await FFmpegKit.execute(command);

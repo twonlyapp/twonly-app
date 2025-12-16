@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.74
+
+- Improving uploading speed
+- Fixing issue with ffmpeg for android
+
 ## 0.0.73
 
 - Integrated QR code scanner in the main camera
