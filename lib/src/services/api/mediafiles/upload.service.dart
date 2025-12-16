@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:background_downloader/background_downloader.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
@@ -14,6 +16,7 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -322,10 +325,62 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
       },
     );
 
-    Log.info('Enqueue upload task: ${task.taskId}');
+    final connectivityResult = await Connectivity().checkConnectivity();
 
-    await FileDownloader().enqueue(task);
-
-    await media.setUploadState(UploadState.backgroundUploadTaskStarted);
+    if (!connectivityResult.contains(ConnectivityResult.mobile) &&
+        !connectivityResult.contains(ConnectivityResult.wifi)) {
+      // no internet, directly put it into the background...
+      await FileDownloader().enqueue(task);
+      await media.setUploadState(UploadState.backgroundUploadTaskStarted);
+      Log.info('Enqueue upload task: ${task.taskId}');
+    } else {
+      unawaited(uploadFileFastOrEnqueue(task, media));
+    }
   });
+}
+
+Future<void> uploadFileFastOrEnqueue(
+  UploadTask task,
+  MediaFileService media,
+) async {
+  final requestMultipart = http.MultipartRequest(
+    'POST',
+    Uri.parse(task.url),
+  );
+
+  requestMultipart.headers.addAll(task.headers);
+
+  requestMultipart.files.add(
+    await http.MultipartFile.fromPath(
+      'file',
+      await task.filePath(),
+      filename: 'upload',
+    ),
+  );
+
+  try {
+    Log.info('Uploading fast: ${task.taskId}');
+    final response =
+        await requestMultipart.send().timeout(const Duration(seconds: 4));
+    var status = TaskStatus.failed;
+    if (response.statusCode == 200) {
+      status = TaskStatus.complete;
+    } else if (response.statusCode == 404) {
+      status = TaskStatus.notFound;
+    }
+    await handleUploadStatusUpdate(
+      TaskStatusUpdate(
+        task,
+        status,
+        null,
+        null,
+        null,
+        response.statusCode,
+      ),
+    );
+  } catch (e) {
+    Log.info('Upload failed enqueuing task...');
+    await FileDownloader().enqueue(task);
+    await media.setUploadState(UploadState.backgroundUploadTaskStarted);
+  }
 }
