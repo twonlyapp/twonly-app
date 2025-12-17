@@ -87,6 +87,8 @@ dependencies:
   screenshot: ^3.0.0
   sentry_flutter: ^9.8.0
   app_links: ^7.0.0
+  in_app_purchase: ^3.2.3
+
 
   # Overwritten by self-controlled repository
   emoji_picker_flutter: ^4.3.0
@@ -162,6 +164,7 @@ dev_dependencies:
     sdk: flutter
   json_serializable: ^6.8.0
   very_good_analysis: ^10.0.0
+  in_app_purchase_platform_interface: ^1.4.0
 
 flutter_launcher_icons:
   android: true
