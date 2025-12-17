@@ -217,11 +217,13 @@ class MainCameraController {
                   const ContactsCompanion(verified: Value(true)),
                 );
               }
+              await HapticFeedback.heavyImpact();
             }
           }
         } else {
           if (profile.username != gUser.username) {
             if (scannedNewProfiles[profile.userId.toInt()] == null) {
+              await HapticFeedback.heavyImpact();
               scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(
                 profile: profile,
               );

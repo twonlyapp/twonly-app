@@ -90,6 +90,9 @@ Future<String> readLast1000Lines() async {
 Future<void> _writeLogToFile(LogRecord record) async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
+  if (!logFile.existsSync()) {
+    logFile.createSync(recursive: true);
+  }
 
   // Prepare the log message
   final logMessage =
