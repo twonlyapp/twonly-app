@@ -316,40 +316,35 @@ class _PlanCardState extends State<PlanCard> {
                   },
                   label: const Text('Manage subscription'),
                 ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.onPurchase != null && monthlyProduct != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: OutlinedButton.icon(
-                        onPressed: () => onButtonPressed(monthlyProduct),
-                        label: (widget.plan == SubscriptionPlan.Free ||
-                                widget.plan == SubscriptionPlan.Plus)
-                            ? Text(context.lang.redeemUserInviteCodeTitle)
-                            : Text(
-                                context.lang.upgradeToPaidPlanButton(
-                                  widget.plan.name,
-                                  ' (${context.lang.monthly})',
-                                ),
-                              ),
-                      ),
-                    ),
-                  if (widget.onPurchase != null && yearlyProduct != null)
-                    FilledButton.icon(
-                      onPressed: () => onButtonPressed(yearlyProduct),
-                      label: (widget.plan == SubscriptionPlan.Free ||
-                              widget.plan == SubscriptionPlan.Plus)
-                          ? Text(context.lang.redeemUserInviteCodeTitle)
-                          : Text(
-                              context.lang.upgradeToPaidPlanButton(
-                                widget.plan.name,
-                                ' (${context.lang.yearly})',
-                              ),
+              if (widget.onPurchase != null && monthlyProduct != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: OutlinedButton.icon(
+                    onPressed: () => onButtonPressed(monthlyProduct),
+                    label: (widget.plan == SubscriptionPlan.Free ||
+                            widget.plan == SubscriptionPlan.Plus)
+                        ? Text(context.lang.redeemUserInviteCodeTitle)
+                        : Text(
+                            context.lang.upgradeToPaidPlanButton(
+                              widget.plan.name,
+                              ' (${context.lang.monthly})',
                             ),
-                    ),
-                ],
-              ),
+                          ),
+                  ),
+                ),
+              if (widget.onPurchase != null && yearlyProduct != null)
+                FilledButton.icon(
+                  onPressed: () => onButtonPressed(yearlyProduct),
+                  label: (widget.plan == SubscriptionPlan.Free ||
+                          widget.plan == SubscriptionPlan.Plus)
+                      ? Text(context.lang.redeemUserInviteCodeTitle)
+                      : Text(
+                          context.lang.upgradeToPaidPlanButton(
+                            widget.plan.name,
+                            ' (${context.lang.yearly})',
+                          ),
+                        ),
+                ),
             ],
           ),
         ),
