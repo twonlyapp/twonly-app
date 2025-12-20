@@ -90,8 +90,7 @@ class GroupHistories extends Table {
   IntColumn get contactId =>
       integer().nullable().references(Contacts, #userId)();
 
-  IntColumn get affectedContactId =>
-      integer().nullable().references(Contacts, #userId)();
+  IntColumn get affectedContactId => integer().nullable()();
 
   TextColumn get oldGroupName => text().nullable()();
   TextColumn get newGroupName => text().nullable()();

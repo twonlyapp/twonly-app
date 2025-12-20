@@ -352,9 +352,8 @@ class ApiService {
         if (contact != null) {
           await twonlyDB.contactsDao.updateContact(
             contactId,
-            ContactsCompanion(
-              accountDeleted: const Value(true),
-              username: Value('${contact.username} (${contact.userId})'),
+            const ContactsCompanion(
+              accountDeleted: Value(true),
             ),
           );
         }
@@ -496,7 +495,8 @@ class ApiService {
   }
 
   Future<void> checkForDeletedUsernames() async {
-    final users = await twonlyDB.contactsDao.getContactsByUsername('[deleted]');
+    final users = await twonlyDB.contactsDao
+        .getContactsByUsername('[deleted]', username2: '[Unknown]');
     for (final user in users) {
       final userData = await getUserById(user.userId);
       if (userData != null) {

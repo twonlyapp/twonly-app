@@ -5,6 +5,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
+import 'package:twonly/src/views/public_profile.view.dart';
 import 'package:twonly/src/views/settings/account.view.dart';
 import 'package:twonly/src/views/settings/appearance.view.dart';
 import 'package:twonly/src/views/settings/backup/backup.view.dart';
@@ -82,13 +83,22 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     ),
                   ),
                 ),
-                // Align(
-                //   alignment: Alignment.centerRight,
-                //   child: IconButton(
-                //     onPressed: () {},
-                //     icon: FaIcon(FontAwesomeIcons.qrcode),
-                //   ),
-                // )
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return const PublicProfileView();
+                          },
+                        ),
+                      );
+                    },
+                    icon: const FaIcon(FontAwesomeIcons.qrcode),
+                  ),
+                )
               ],
             ),
           ),

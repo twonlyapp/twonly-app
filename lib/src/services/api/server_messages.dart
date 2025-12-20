@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:mutex/mutex.dart';
@@ -118,13 +119,17 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
                 .getContactByUserId(fromUserId)
                 .getSingleOrNull() ==
             null) {
+          final user = await apiService.getUserById(fromUserId);
+
           /// In case the user does not exists, just create a dummy user which was deleted by the user, so the message
           /// can be inserted into the receipts database
           await twonlyDB.contactsDao.insertContact(
             ContactsCompanion(
               userId: Value(fromUserId),
               deletedByUser: const Value(true),
-              username: const Value('[deleted]'),
+              username: Value(
+                user == null ? '[Unknown]' : utf8.decode(user.username),
+              ),
             ),
           );
         }
