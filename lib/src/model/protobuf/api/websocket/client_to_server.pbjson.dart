@@ -461,6 +461,24 @@ const ApplicationData$json = {
       '9': 0,
       '10': 'changeUsername'
     },
+    {
+      '1': 'ipaPurchase',
+      '3': 27,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.IPAPurchase',
+      '9': 0,
+      '10': 'ipaPurchase'
+    },
+    {
+      '1': 'ipaForceCheck',
+      '3': 28,
+      '4': 1,
+      '5': 11,
+      '6': '.client_to_server.ApplicationData.IPAForceCheck',
+      '9': 0,
+      '10': 'ipaForceCheck'
+    },
   ],
   '3': [
     ApplicationData_TextMessage$json,
@@ -484,6 +502,8 @@ const ApplicationData$json = {
     ApplicationData_UpdateSignedPreKey$json,
     ApplicationData_DownloadDone$json,
     ApplicationData_ReportUser$json,
+    ApplicationData_IPAPurchase$json,
+    ApplicationData_IPAForceCheck$json,
     ApplicationData_DeleteAccount$json
   ],
   '8': [
@@ -669,6 +689,27 @@ const ApplicationData_ReportUser$json = {
 };
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_IPAPurchase$json = {
+  '1': 'IPAPurchase',
+  '2': [
+    {'1': 'product_id', '3': 1, '4': 1, '5': 9, '10': 'productId'},
+    {'1': 'source', '3': 2, '4': 1, '5': 9, '10': 'source'},
+    {
+      '1': 'verification_data',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '10': 'verificationData'
+    },
+  ],
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
+const ApplicationData_IPAForceCheck$json = {
+  '1': 'IPAForceCheck',
+};
+
+@$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData_DeleteAccount$json = {
   '1': 'DeleteAccount',
 };
@@ -713,29 +754,34 @@ final $typed_data.Uint8List applicationDataDescriptor = $convert.base64Decode(
     'NhdGlvbkRhdGEuRGVsZXRlQWNjb3VudEgAUg1kZWxldGVBY2NvdW50Ek4KCnJlcG9ydFVzZXIY'
     'GSABKAsyLC5jbGllbnRfdG9fc2VydmVyLkFwcGxpY2F0aW9uRGF0YS5SZXBvcnRVc2VySABSCn'
     'JlcG9ydFVzZXISWgoOY2hhbmdlVXNlcm5hbWUYGiABKAsyMC5jbGllbnRfdG9fc2VydmVyLkFw'
-    'cGxpY2F0aW9uRGF0YS5DaGFuZ2VVc2VybmFtZUgAUg5jaGFuZ2VVc2VybmFtZRpqCgtUZXh0TW'
-    'Vzc2FnZRIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQSEgoEYm9keRgDIAEoDFIEYm9keRIgCglw'
-    'dXNoX2RhdGEYBCABKAxIAFIIcHVzaERhdGGIAQFCDAoKX3B1c2hfZGF0YRovChFHZXRVc2VyQn'
-    'lVc2VybmFtZRIaCgh1c2VybmFtZRgBIAEoCVIIdXNlcm5hbWUaLAoOQ2hhbmdlVXNlcm5hbWUS'
-    'GgoIdXNlcm5hbWUYASABKAlSCHVzZXJuYW1lGjUKFFVwZGF0ZUdvb2dsZUZjbVRva2VuEh0KCm'
-    'dvb2dsZV9mY20YASABKAlSCWdvb2dsZUZjbRomCgtHZXRVc2VyQnlJZBIXCgd1c2VyX2lkGAEg'
-    'ASgDUgZ1c2VySWQaKQoNUmVkZWVtVm91Y2hlchIYCgd2b3VjaGVyGAEgASgJUgd2b3VjaGVyGn'
-    'AKEVN3aXRjaFRvUGF5ZWRQbGFuEhcKB3BsYW5faWQYASABKAlSBnBsYW5JZBIfCgtwYXlfbW9u'
-    'dGhseRgCIAEoCFIKcGF5TW9udGhseRIhCgxhdXRvX3JlbmV3YWwYAyABKAhSC2F1dG9SZW5ld2'
-    'FsGjYKEVVwZGF0ZVBsYW5PcHRpb25zEiEKDGF1dG9fcmVuZXdhbBgBIAEoCFILYXV0b1JlbmV3'
-    'YWwaMAoNQ3JlYXRlVm91Y2hlchIfCgt2YWx1ZV9jZW50cxgBIAEoDVIKdmFsdWVDZW50cxoNCg'
-    'tHZXRMb2NhdGlvbhoNCgtHZXRWb3VjaGVycxoTChFHZXRBdmFpbGFibGVQbGFucxoXChVHZXRB'
-    'ZGRBY2NvdW50c0ludml0ZXMaFQoTR2V0Q3VycmVudFBsYW5JbmZvcxo3ChRSZWRlZW1BZGRpdG'
-    'lvbmFsQ29kZRIfCgtpbnZpdGVfY29kZRgCIAEoCVIKaW52aXRlQ29kZRovChRSZW1vdmVBZGRp'
-    'dGlvbmFsVXNlchIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQaLQoSR2V0UHJla2V5c0J5VXNlck'
-    'lkEhcKB3VzZXJfaWQYASABKANSBnVzZXJJZBoyChdHZXRTaWduZWRQcmVLZXlCeVVzZXJJZBIX'
-    'Cgd1c2VyX2lkGAEgASgDUgZ1c2VySWQamwEKElVwZGF0ZVNpZ25lZFByZUtleRIoChBzaWduZW'
-    'RfcHJla2V5X2lkGAEgASgDUg5zaWduZWRQcmVrZXlJZBIjCg1zaWduZWRfcHJla2V5GAIgASgM'
-    'UgxzaWduZWRQcmVrZXkSNgoXc2lnbmVkX3ByZWtleV9zaWduYXR1cmUYAyABKAxSFXNpZ25lZF'
-    'ByZWtleVNpZ25hdHVyZRo1CgxEb3dubG9hZERvbmUSJQoOZG93bmxvYWRfdG9rZW4YASABKAxS'
-    'DWRvd25sb2FkVG9rZW4aTgoKUmVwb3J0VXNlchIoChByZXBvcnRlZF91c2VyX2lkGAEgASgDUg'
-    '5yZXBvcnRlZFVzZXJJZBIWCgZyZWFzb24YAiABKAlSBnJlYXNvbhoPCg1EZWxldGVBY2NvdW50'
-    'QhEKD0FwcGxpY2F0aW9uRGF0YQ==');
+    'cGxpY2F0aW9uRGF0YS5DaGFuZ2VVc2VybmFtZUgAUg5jaGFuZ2VVc2VybmFtZRJRCgtpcGFQdX'
+    'JjaGFzZRgbIAEoCzItLmNsaWVudF90b19zZXJ2ZXIuQXBwbGljYXRpb25EYXRhLklQQVB1cmNo'
+    'YXNlSABSC2lwYVB1cmNoYXNlElcKDWlwYUZvcmNlQ2hlY2sYHCABKAsyLy5jbGllbnRfdG9fc2'
+    'VydmVyLkFwcGxpY2F0aW9uRGF0YS5JUEFGb3JjZUNoZWNrSABSDWlwYUZvcmNlQ2hlY2saagoL'
+    'VGV4dE1lc3NhZ2USFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkEhIKBGJvZHkYAyABKAxSBGJvZH'
+    'kSIAoJcHVzaF9kYXRhGAQgASgMSABSCHB1c2hEYXRhiAEBQgwKCl9wdXNoX2RhdGEaLwoRR2V0'
+    'VXNlckJ5VXNlcm5hbWUSGgoIdXNlcm5hbWUYASABKAlSCHVzZXJuYW1lGiwKDkNoYW5nZVVzZX'
+    'JuYW1lEhoKCHVzZXJuYW1lGAEgASgJUgh1c2VybmFtZRo1ChRVcGRhdGVHb29nbGVGY21Ub2tl'
+    'bhIdCgpnb29nbGVfZmNtGAEgASgJUglnb29nbGVGY20aJgoLR2V0VXNlckJ5SWQSFwoHdXNlcl'
+    '9pZBgBIAEoA1IGdXNlcklkGikKDVJlZGVlbVZvdWNoZXISGAoHdm91Y2hlchgBIAEoCVIHdm91'
+    'Y2hlchpwChFTd2l0Y2hUb1BheWVkUGxhbhIXCgdwbGFuX2lkGAEgASgJUgZwbGFuSWQSHwoLcG'
+    'F5X21vbnRobHkYAiABKAhSCnBheU1vbnRobHkSIQoMYXV0b19yZW5ld2FsGAMgASgIUgthdXRv'
+    'UmVuZXdhbBo2ChFVcGRhdGVQbGFuT3B0aW9ucxIhCgxhdXRvX3JlbmV3YWwYASABKAhSC2F1dG'
+    '9SZW5ld2FsGjAKDUNyZWF0ZVZvdWNoZXISHwoLdmFsdWVfY2VudHMYASABKA1SCnZhbHVlQ2Vu'
+    'dHMaDQoLR2V0TG9jYXRpb24aDQoLR2V0Vm91Y2hlcnMaEwoRR2V0QXZhaWxhYmxlUGxhbnMaFw'
+    'oVR2V0QWRkQWNjb3VudHNJbnZpdGVzGhUKE0dldEN1cnJlbnRQbGFuSW5mb3MaNwoUUmVkZWVt'
+    'QWRkaXRpb25hbENvZGUSHwoLaW52aXRlX2NvZGUYAiABKAlSCmludml0ZUNvZGUaLwoUUmVtb3'
+    'ZlQWRkaXRpb25hbFVzZXISFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkGi0KEkdldFByZWtleXNC'
+    'eVVzZXJJZBIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQaMgoXR2V0U2lnbmVkUHJlS2V5QnlVc2'
+    'VySWQSFwoHdXNlcl9pZBgBIAEoA1IGdXNlcklkGpsBChJVcGRhdGVTaWduZWRQcmVLZXkSKAoQ'
+    'c2lnbmVkX3ByZWtleV9pZBgBIAEoA1IOc2lnbmVkUHJla2V5SWQSIwoNc2lnbmVkX3ByZWtleR'
+    'gCIAEoDFIMc2lnbmVkUHJla2V5EjYKF3NpZ25lZF9wcmVrZXlfc2lnbmF0dXJlGAMgASgMUhVz'
+    'aWduZWRQcmVrZXlTaWduYXR1cmUaNQoMRG93bmxvYWREb25lEiUKDmRvd25sb2FkX3Rva2VuGA'
+    'EgASgMUg1kb3dubG9hZFRva2VuGk4KClJlcG9ydFVzZXISKAoQcmVwb3J0ZWRfdXNlcl9pZBgB'
+    'IAEoA1IOcmVwb3J0ZWRVc2VySWQSFgoGcmVhc29uGAIgASgJUgZyZWFzb24acQoLSVBBUHVyY2'
+    'hhc2USHQoKcHJvZHVjdF9pZBgBIAEoCVIJcHJvZHVjdElkEhYKBnNvdXJjZRgCIAEoCVIGc291'
+    'cmNlEisKEXZlcmlmaWNhdGlvbl9kYXRhGAMgASgJUhB2ZXJpZmljYXRpb25EYXRhGg8KDUlQQU'
+    'ZvcmNlQ2hlY2saDwoNRGVsZXRlQWNjb3VudEIRCg9BcHBsaWNhdGlvbkRhdGE=');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

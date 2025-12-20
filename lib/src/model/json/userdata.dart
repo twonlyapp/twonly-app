@@ -41,6 +41,8 @@ class UserData {
 
   @JsonKey(defaultValue: 'Free')
   String subscriptionPlan;
+
+  String? subscriptionPlanIdStore;
   DateTime? lastImageSend;
   int? todaysImageCounter;
 
@@ -88,6 +90,9 @@ class UserData {
 
   @JsonKey(defaultValue: false)
   bool hideChangeLog = false;
+
+  @JsonKey(defaultValue: true)
+  bool updateFCMToken = true;
 
   // --- BACKUP ---
 

@@ -7,8 +7,8 @@ import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
-import 'package:twonly/src/views/settings/subscription/voucher.view.dart';
+import 'package:twonly/src/views/settings/subscription_custom/subscription.view.dart';
+import 'package:twonly/src/views/settings/subscription_custom/voucher.view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SelectPaymentView extends StatefulWidget {
@@ -17,13 +17,11 @@ class SelectPaymentView extends StatefulWidget {
     this.plan,
     this.payMonthly,
     this.valueInCents,
-    this.refund,
   });
 
   final SubscriptionPlan? plan;
   final bool? payMonthly;
   final int? valueInCents;
-  final int? refund;
 
   @override
   State<SelectPaymentView> createState() => _SelectPaymentViewState();
@@ -190,30 +188,6 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                 ),
               ),
             ),
-            if (widget.refund != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Card(
-                  color: context.color.surfaceContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text(
-                          context.lang.refund,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          '+${localePrizing(context, widget.refund!)}',
-                          textAlign: TextAlign.end,
-                          style: TextStyle(color: context.color.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(

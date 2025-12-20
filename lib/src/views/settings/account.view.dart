@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +10,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/account/refund_credits.view.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class AccountView extends StatefulWidget {
   const AccountView({super.key});
@@ -31,7 +29,7 @@ class _AccountViewState extends State<AccountView> {
   }
 
   Future<void> initAsync() async {
-    final ballance = await loadPlanBalance(useCache: false);
+    final ballance = await apiService.loadPlanBalance(useCache: false);
     if (ballance == null || !mounted) return;
     var ballanceInCents = ballance.transactions
         .where(

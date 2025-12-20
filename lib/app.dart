@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -39,8 +40,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       await setUserPlan();
     };
 
-    globalCallbackUpdatePlan = (SubscriptionPlan plan) async {
-      await context.read<CustomChangeProvider>().updatePlan(plan);
+    globalCallbackUpdatePlan = (SubscriptionPlan plan) {
+      context.read<PurchasesProvider>().updatePlan(plan);
     };
 
     unawaited(initAsync());
@@ -50,7 +51,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     final user = await getUser();
     if (user != null && mounted) {
       if (mounted) {
-        await context.read<CustomChangeProvider>().updatePlan(
+        context.read<PurchasesProvider>().updatePlan(
               planFromString(user.subscriptionPlan),
             );
       }

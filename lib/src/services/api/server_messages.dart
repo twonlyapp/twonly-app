@@ -10,6 +10,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart
 import 'package:twonly/src/model/protobuf/api/websocket/client_to_server.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart'
     as server;
+import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/client2client/contact.c2c.dart';
 import 'package:twonly/src/services/api/client2client/groups.c2c.dart';
@@ -35,9 +36,11 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
     if (msg.v0.hasRequestNewPreKeys()) {
       response = await handleRequestNewPreKey();
     } else if (msg.v0.hasNewMessage()) {
-      final body = Uint8List.fromList(msg.v0.newMessage.body);
-      final fromUserId = msg.v0.newMessage.fromUserId.toInt();
-      await handleClient2ClientMessage(fromUserId, body);
+      await handleClient2ClientMessage(msg.v0.newMessage);
+    } else if (msg.v0.hasNewMessages()) {
+      for (final newMessage in msg.v0.newMessages.newMessages) {
+        await handleClient2ClientMessage(newMessage);
+      }
     } else {
       Log.error('Unknown server message: $msg');
     }
@@ -56,7 +59,10 @@ DateTime lastPushKeyRequest = DateTime.now().subtract(const Duration(hours: 1));
 
 Mutex protectReceiptCheck = Mutex();
 
-Future<void> handleClient2ClientMessage(int fromUserId, Uint8List body) async {
+Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
+  final body = Uint8List.fromList(newMessage.body);
+  final fromUserId = newMessage.fromUserId.toInt();
+
   final message = Message.fromBuffer(body);
   final receiptId = message.receiptId;
 

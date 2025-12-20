@@ -1,5 +1,6 @@
 // ignore_for_file: unreachable_from_main
 
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:firebase_core/firebase_core.dart';
@@ -9,39 +10,50 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/storage.dart';
 
 import '../../firebase_options.dart';
 
 // see more here: https://firebase.google.com/docs/cloud-messaging/flutter/receive?hl=de
 
-Future<void> initFCMAfterAuthenticated() async {
-  if (globalIsAppInBackground) return;
-
+Future<void> checkForTokenUpdates() async {
   const storage = FlutterSecureStorage();
 
   final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
 
   try {
     if (Platform.isIOS) {
-      final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      var apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      for (var i = 0; i < 20; i++) {
+        if (apnsToken != null) break;
+        await Future<void>.delayed(const Duration(seconds: 1));
+        apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      }
       if (apnsToken == null) {
-        Log.error('Error getting apnsToken');
+        Log.error('Could not get APNS token even after 20s...');
         return;
       }
     }
+
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken == null) {
-      Log.error('Error getting fcmToken');
+      Log.error('Could not get fcm token');
       return;
     }
-
+    Log.info('Loaded fcm token');
     if (storedToken == null || fcmToken != storedToken) {
-      await apiService.updateFCMToken(fcmToken);
+      await updateUserdata((u) {
+        u.updateFCMToken = true;
+        return u;
+      });
       await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
     }
 
     FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
-      await apiService.updateFCMToken(fcmToken);
+      await updateUserdata((u) {
+        u.updateFCMToken = true;
+        return u;
+      });
       await storage.write(key: SecureStorageKeys.googleFcm, value: fcmToken);
     }).onError((err) {
       Log.error('could not listen on token refresh');
@@ -51,10 +63,29 @@ Future<void> initFCMAfterAuthenticated() async {
   }
 }
 
+Future<void> initFCMAfterAuthenticated() async {
+  if (gUser.updateFCMToken) {
+    const storage = FlutterSecureStorage();
+    final storedToken = await storage.read(key: SecureStorageKeys.googleFcm);
+    if (storedToken != null) {
+      final res = await apiService.updateFCMToken(storedToken);
+      if (res.isSuccess) {
+        Log.info('Uploaded new fmt token!');
+        await updateUserdata((u) {
+          u.updateFCMToken = false;
+          return u;
+        });
+      }
+    }
+  }
+}
+
 Future<void> initFCMService() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  unawaited(checkForTokenUpdates());
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -65,12 +96,12 @@ Future<void> initFCMService() async {
   await FirebaseMessaging.instance.requestPermission();
 
   // For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
-  if (Platform.isIOS) {
-    final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-    if (apnsToken == null) {
-      return;
-    }
-  }
+  // if (Platform.isIOS) {
+  //   final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+  //   if (apnsToken == null) {
+  //     return;
+  //   }
+  // }
 
   FirebaseMessaging.onMessage.listen(handleRemoteMessage);
 }

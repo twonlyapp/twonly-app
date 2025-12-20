@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -40,7 +40,7 @@ Future<void> updateUsersPlan(
   BuildContext context,
   SubscriptionPlan plan,
 ) async {
-  context.read<CustomChangeProvider>().plan = plan;
+  context.read<PurchasesProvider>().plan = plan;
 
   await updateUserdata((user) {
     user.subscriptionPlan = plan.name;
@@ -48,7 +48,7 @@ Future<void> updateUsersPlan(
   });
 
   if (!context.mounted) return;
-  await context.read<CustomChangeProvider>().updatePlan(plan);
+  context.read<PurchasesProvider>().updatePlan(plan);
 }
 
 Mutex updateProtection = Mutex();

@@ -98,12 +98,13 @@ class ApiService {
       unawaited(signalHandleNewServerConnection());
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
+      unawaited(checkForDeletedUsernames());
     }
   }
 
   Future<void> onConnected() async {
     await authenticate();
-    _reconnectionDelay = 5;
+    _reconnectionDelay = 1;
     globalCallbackConnectionState(isConnected: true);
   }
 
@@ -112,6 +113,7 @@ class ApiService {
     isAuthenticated = false;
     globalCallbackConnectionState(isConnected: false);
     await twonlyDB.mediaFilesDao.resetPendingDownloadState();
+    await startReconnectionTimer();
   }
 
   Future<void> startReconnectionTimer() async {
@@ -121,7 +123,7 @@ class ApiService {
       reconnectionTimer = null;
       await connect(force: true);
     });
-    _reconnectionDelay += 5;
+    _reconnectionDelay += 2;
   }
 
   Future<void> close(Function callback) async {
@@ -300,6 +302,17 @@ class ApiService {
     _channel!.sink.add(requestBytes);
 
     final res = asResult(await _waitForResponse(seq));
+    if (res.isSuccess) {
+      final ok = res.value as server.Response_Ok;
+      if (ok.hasAuthenticated()) {
+        final authenticated = ok.authenticated;
+        await updateUserdata((user) {
+          user.subscriptionPlan = authenticated.plan;
+          return user;
+        });
+        globalCallbackUpdatePlan(planFromString(authenticated.plan));
+      }
+    }
     if (res.isError) {
       Log.warn('Got error from server: ${res.error}');
       if (res.error == ErrorCode.AppVersionOutdated) {
@@ -375,15 +388,6 @@ class ApiService {
       final result = await sendRequestSync(req, authenticated: false);
 
       if (result.isSuccess) {
-        final ok = result.value as server.Response_Ok;
-        if (ok.hasAuthenticated()) {
-          final authenticated = ok.authenticated;
-          await updateUserdata((user) {
-            user.subscriptionPlan = authenticated.plan;
-            return user;
-          });
-          globalCallbackUpdatePlan(planFromString(authenticated.plan));
-        }
         Log.info('websocket is authenticated');
         unawaited(onAuthenticated());
         return true;
@@ -489,6 +493,19 @@ class ApiService {
     final req = createClientToServerFromHandshake(handshake);
 
     return sendRequestSync(req);
+  }
+
+  Future<void> checkForDeletedUsernames() async {
+    final users = await twonlyDB.contactsDao.getContactsByUsername('[deleted]');
+    for (final user in users) {
+      final userData = await getUserById(user.userId);
+      if (userData != null) {
+        await twonlyDB.contactsDao.updateContact(
+          user.userId,
+          ContactsCompanion(username: Value(utf8.decode(userData.username))),
+        );
+      }
+    }
   }
 
   Future<Response_UserData?> getUserById(int userId) async {
@@ -662,10 +679,35 @@ class ApiService {
     return sendRequestSync(req);
   }
 
+  Future<Result> ipaPurchase(
+    String productId,
+    String source,
+    String verificationData,
+  ) async {
+    final appData = ApplicationData(
+      ipaPurchase: ApplicationData_IPAPurchase(
+        productId: productId,
+        source: source,
+        verificationData: verificationData,
+      ),
+    );
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
   Future<Result> changeUsername(String username) async {
     final get = ApplicationData_ChangeUsername()..username = username;
     final appData = ApplicationData()..changeUsername = get;
     final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req);
+  }
+
+  Future<Result> forceIpaCheck() async {
+    final req = createClientToServerFromApplicationData(
+      ApplicationData(
+        ipaForceCheck: ApplicationData_IPAForceCheck(),
+      ),
+    );
     return sendRequestSync(req);
   }
 
@@ -720,6 +762,28 @@ class ApiService {
       }
     }
     return null;
+  }
+
+  Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
+    final ballance = await getPlanBallance();
+    if (ballance != null) {
+      await updateUserdata((u) {
+        u.lastPlanBallance = ballance.writeToJson();
+        return u;
+      });
+      return ballance;
+    }
+    final user = await getUser();
+    if (user != null && user.lastPlanBallance != null && useCache) {
+      try {
+        return Response_PlanBallance.fromJson(
+          user.lastPlanBallance!,
+        );
+      } catch (e) {
+        Log.error('from json: $e');
+      }
+    }
+    return ballance;
   }
 
   Future<Result> sendTextMessage(

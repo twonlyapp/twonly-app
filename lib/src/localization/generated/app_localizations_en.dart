@@ -679,8 +679,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upgradeToPaidPlan => 'Upgrade to a paid plan.';
 
   @override
-  String upgradeToPaidPlanButton(Object planId) {
-    return 'Upgrade subscription to $planId';
+  String upgradeToPaidPlanButton(Object planId, Object sufix) {
+    return 'Upgrade to $planId$sufix';
   }
 
   @override
@@ -692,16 +692,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get year => 'year';
 
   @override
+  String get yearly => 'Yearly';
+
+  @override
   String get month => 'month';
+
+  @override
+  String get monthly => 'Monthly';
 
   @override
   String get proFeature1 => '✓ Unlimited media file uploads';
 
   @override
-  String get proFeature2 => '1 additional Plus user';
+  String get proFeature2 => '✓ 1 additional Plus user';
 
   @override
-  String get proFeature3 => 'Cloud-Backup encrypted (coming-soon)';
+  String get proFeature3 => '✓ Cloud-Backup encrypted (coming-soon)';
 
   @override
   String get proFeature4 => 'Additional features (coming-soon)';
@@ -710,7 +716,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyFeature1 => '✓ All from Pro';
 
   @override
-  String get familyFeature2 => '4 additional Plus users';
+  String get familyFeature2 => '✓ 4 additional Plus users';
 
   @override
   String get redeemUserInviteCode => 'Or redeem a twonly-Code.';
@@ -723,13 +729,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your plan has been successfully adjusted.';
 
   @override
-  String get freeFeature1 => '10 Media file uploads per day';
+  String get freeFeature1 => '✓ 10 Media file uploads per day';
 
   @override
   String get plusFeature1 => '✓ Unlimited media file uploads';
 
   @override
-  String get plusFeature2 => 'Additional features (coming-soon)';
+  String get plusFeature2 => '✓ Additional features (coming-soon)';
 
   @override
   String get transactionHistory => 'Your transaction history';

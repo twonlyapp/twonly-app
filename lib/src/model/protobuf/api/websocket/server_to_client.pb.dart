@@ -92,7 +92,14 @@ class ServerToClient extends $pb.GeneratedMessage {
   V0 ensureV0() => $_ensure(0);
 }
 
-enum V0_Kind { response, newMessage, requestNewPreKeys, error, notSet }
+enum V0_Kind {
+  response,
+  newMessage,
+  requestNewPreKeys,
+  error,
+  newMessages,
+  notSet
+}
 
 class V0 extends $pb.GeneratedMessage {
   factory V0({
@@ -101,6 +108,7 @@ class V0 extends $pb.GeneratedMessage {
     NewMessage? newMessage,
     $core.bool? requestNewPreKeys,
     $0.ErrorCode? error,
+    NewMessages? newMessages,
   }) {
     final result = create();
     if (seq != null) result.seq = seq;
@@ -108,6 +116,7 @@ class V0 extends $pb.GeneratedMessage {
     if (newMessage != null) result.newMessage = newMessage;
     if (requestNewPreKeys != null) result.requestNewPreKeys = requestNewPreKeys;
     if (error != null) result.error = error;
+    if (newMessages != null) result.newMessages = newMessages;
     return result;
   }
 
@@ -125,6 +134,7 @@ class V0 extends $pb.GeneratedMessage {
     3: V0_Kind.newMessage,
     4: V0_Kind.requestNewPreKeys,
     6: V0_Kind.error,
+    7: V0_Kind.newMessages,
     0: V0_Kind.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -132,7 +142,7 @@ class V0 extends $pb.GeneratedMessage {
       package:
           const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
       createEmptyInstance: create)
-    ..oo(0, [2, 3, 4, 6])
+    ..oo(0, [2, 3, 4, 6, 7])
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'seq', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
     ..aOM<Response>(2, _omitFieldNames ? '' : 'response',
@@ -145,6 +155,8 @@ class V0 extends $pb.GeneratedMessage {
         defaultOrMaker: $0.ErrorCode.Unknown,
         valueOf: $0.ErrorCode.valueOf,
         enumValues: $0.ErrorCode.values)
+    ..aOM<NewMessages>(7, _omitFieldNames ? '' : 'newMessages',
+        protoName: 'newMessages', subBuilder: NewMessages.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -217,6 +229,17 @@ class V0 extends $pb.GeneratedMessage {
   $core.bool hasError() => $_has(4);
   @$pb.TagNumber(6)
   void clearError() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  NewMessages get newMessages => $_getN(5);
+  @$pb.TagNumber(7)
+  set newMessages(NewMessages value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasNewMessages() => $_has(5);
+  @$pb.TagNumber(7)
+  void clearNewMessages() => $_clearField(7);
+  @$pb.TagNumber(7)
+  NewMessages ensureNewMessages() => $_ensure(5);
 }
 
 class NewMessage extends $pb.GeneratedMessage {
@@ -285,6 +308,58 @@ class NewMessage extends $pb.GeneratedMessage {
   $core.bool hasFromUserId() => $_has(1);
   @$pb.TagNumber(2)
   void clearFromUserId() => $_clearField(2);
+}
+
+class NewMessages extends $pb.GeneratedMessage {
+  factory NewMessages({
+    $core.Iterable<NewMessage>? newMessages,
+  }) {
+    final result = create();
+    if (newMessages != null) result.newMessages.addAll(newMessages);
+    return result;
+  }
+
+  NewMessages._();
+
+  factory NewMessages.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory NewMessages.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'NewMessages',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'server_to_client'),
+      createEmptyInstance: create)
+    ..pc<NewMessage>(
+        1, _omitFieldNames ? '' : 'newMessages', $pb.PbFieldType.PM,
+        protoName: 'newMessages', subBuilder: NewMessage.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NewMessages clone() => NewMessages()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  NewMessages copyWith(void Function(NewMessages) updates) =>
+      super.copyWith((message) => updates(message as NewMessages))
+          as NewMessages;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static NewMessages create() => NewMessages._();
+  @$core.override
+  NewMessages createEmptyInstance() => create();
+  static $pb.PbList<NewMessages> createRepeated() => $pb.PbList<NewMessages>();
+  @$core.pragma('dart2js:noInline')
+  static NewMessages getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<NewMessages>(create);
+  static NewMessages? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<NewMessage> get newMessages => $_getList(0);
 }
 
 class Response_Authenticated extends $pb.GeneratedMessage {
