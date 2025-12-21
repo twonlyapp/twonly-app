@@ -98,7 +98,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                     },
                     icon: const FaIcon(FontAwesomeIcons.qrcode),
                   ),
-                )
+                ),
               ],
             ),
           ),

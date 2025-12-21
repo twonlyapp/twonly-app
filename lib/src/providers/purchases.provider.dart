@@ -178,7 +178,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
         for (var i = 0; i < 100; i++) {
           if (apiService.isAuthenticated) {
             Log.info(
-                'current user does not have a sub: ${purchaseDetails.productID}');
+              'current user does not have a sub: ${purchaseDetails.productID}',
+            );
             await _verifyPurchase(purchaseDetails);
             break;
           }
