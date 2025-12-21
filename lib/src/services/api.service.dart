@@ -117,13 +117,17 @@ class ApiService {
   }
 
   Future<void> startReconnectionTimer() async {
+    if (reconnectionTimer?.isActive ?? false) {
+      return;
+    }
     reconnectionTimer?.cancel();
-    reconnectionTimer ??=
-        Timer(Duration(seconds: _reconnectionDelay), () async {
+    Log.info('Starting reconnection timer with $_reconnectionDelay s delay');
+    reconnectionTimer = Timer(Duration(seconds: _reconnectionDelay), () async {
+      Log.info('Reconnection timer triggered');
       reconnectionTimer = null;
-      await connect(force: true);
+      await connect();
     });
-    _reconnectionDelay += 2;
+    _reconnectionDelay = 3;
   }
 
   Future<void> close(Function callback) async {
@@ -145,18 +149,13 @@ class ApiService {
         .onConnectivityChanged
         .listen((List<ConnectivityResult> result) async {
       if (!result.contains(ConnectivityResult.none)) {
-        await connect(force: true);
+        await connect();
       }
       // Received changes in available connectivity types!
     });
   }
 
-  Future<bool> connect({bool force = false}) async {
-    if (reconnectionTimer != null && !force) {
-      return false;
-    }
-    reconnectionTimer?.cancel();
-    reconnectionTimer = null;
+  Future<bool> connect() async {
     return lockConnecting.protect<bool>(() async {
       if (_channel != null) {
         return true;
@@ -292,6 +291,7 @@ class ApiService {
     if (_channel == null) {
       Log.warn('sending request while api is not connected');
       if (!await connect()) {
+        Log.warn('could not connected again');
         return Result.error(ErrorCode.InternalError);
       }
       if (_channel == null) {

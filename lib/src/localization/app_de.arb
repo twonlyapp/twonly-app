@@ -411,7 +411,7 @@
     "notificationReactionToImage": "hat mit {reaction} auf dein Bild reagiert.",
     "notificationReactionToAudio": "hat mit {reaction} auf deine Sprachnachricht reagiert.",
     "notificationResponse": "hat dir{inGroup} geantwortet.",
-    "notificationTitleUnknownUser": "Jemand",
+    "notificationTitleUnknownUser": "[Unbekannt]",
     "notificationCategoryMessageTitle": "Nachrichten",
     "notificationCategoryMessageDesc": "Nachrichten von anderen Benutzern.",
     "groupContextMenuDeleteGroup": "Dadurch werden alle Nachrichten in diesem Chat dauerhaft gelöscht.",

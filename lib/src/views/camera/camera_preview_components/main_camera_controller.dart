@@ -52,8 +52,9 @@ class MainCameraController {
     } catch (e) {
       Log.warn(e);
     }
-    await cameraController?.dispose();
+    final cameraControllerTemp = cameraController;
     cameraController = null;
+    await cameraControllerTemp?.dispose();
     initCameraStarted = false;
     selectedCameraDetails = SelectedCameraDetails();
   }

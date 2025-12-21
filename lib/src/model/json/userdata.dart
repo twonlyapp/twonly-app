@@ -88,8 +88,8 @@ class UserData {
 
   List<int>? lastChangeLogHash;
 
-  @JsonKey(defaultValue: false)
-  bool hideChangeLog = false;
+  @JsonKey(defaultValue: true)
+  bool hideChangeLog = true;
 
   @JsonKey(defaultValue: true)
   bool updateFCMToken = true;

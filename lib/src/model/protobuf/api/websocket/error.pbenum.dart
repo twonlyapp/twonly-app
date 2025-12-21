@@ -87,6 +87,8 @@ class ErrorCode extends $pb.ProtobufEnum {
       ErrorCode._(1032, _omitEnumNames ? '' : 'InvalidProofOfWork');
   static const ErrorCode RegistrationDisabled =
       ErrorCode._(1033, _omitEnumNames ? '' : 'RegistrationDisabled');
+  static const ErrorCode IPAPaymentExpired =
+      ErrorCode._(1034, _omitEnumNames ? '' : 'IPAPaymentExpired');
 
   static const $core.List<ErrorCode> values = <ErrorCode>[
     Unknown,
@@ -125,6 +127,7 @@ class ErrorCode extends $pb.ProtobufEnum {
     NewDeviceRegistered,
     InvalidProofOfWork,
     RegistrationDisabled,
+    IPAPaymentExpired,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue =

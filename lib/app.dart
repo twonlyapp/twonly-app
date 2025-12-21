@@ -60,7 +60,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
 
   Future<void> initAsync() async {
     await setUserPlan();
-    await apiService.connect(force: true);
+    await apiService.connect();
     await apiService.listenToNetworkChanges();
   }
 
@@ -71,7 +71,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       if (wasPaused) {
         globalIsAppInBackground = false;
         twonlyDB.markUpdated();
-        unawaited(apiService.connect(force: true));
+        unawaited(apiService.connect());
       }
     } else if (state == AppLifecycleState.paused) {
       wasPaused = true;

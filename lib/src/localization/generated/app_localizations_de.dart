@@ -1415,7 +1415,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get notificationTitleUnknownUser => 'Jemand';
+  String get notificationTitleUnknownUser => '[Unbekannt]';
 
   @override
   String get notificationCategoryMessageTitle => 'Nachrichten';

@@ -2567,7 +2567,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationTitleUnknownUser.
   ///
   /// In en, this message translates to:
-  /// **'Someone'**
+  /// **'[Unknown]'**
   String get notificationTitleUnknownUser;
 
   /// No description provided for @notificationCategoryMessageTitle.

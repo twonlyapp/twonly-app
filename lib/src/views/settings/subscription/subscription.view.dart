@@ -50,6 +50,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       }
     }
     setState(() {});
+    await apiService.forceIpaCheck();
   }
 
   @override
@@ -93,7 +94,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             PlanCard(
               plan: currentPlan,
             ),
-          if (!isPayingUser(currentPlan)) ...[
+          if (!isPayingUser(currentPlan) ||
+              currentPlan == SubscriptionPlan.Tester) ...[
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(18),
@@ -404,7 +406,7 @@ Future<void> redeemUserInviteCode(BuildContext context, String newPlan) async {
                 );
                 // reconnect to load new plan.
                 await apiService.close(() {});
-                await apiService.connect(force: true);
+                await apiService.connect();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

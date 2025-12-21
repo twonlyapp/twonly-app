@@ -204,7 +204,7 @@ class _ChatListViewState extends State<ChatListView> {
             child: RefreshIndicator(
               onRefresh: () async {
                 await apiService.close(() {});
-                await apiService.connect(force: true);
+                await apiService.connect();
                 await Future.delayed(const Duration(seconds: 1));
               },
               child: (_groupsNotPinned.isEmpty &&

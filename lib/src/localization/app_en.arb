@@ -441,7 +441,7 @@
   "notificationReactionToImage": "has reacted with {reaction} to your image.",
   "notificationReactionToAudio": "has reacted with {reaction} to your audio message.",
   "notificationResponse": "has responded{inGroup}.",
-  "notificationTitleUnknownUser": "Someone",
+  "notificationTitleUnknownUser": "[Unknown]",
   "notificationCategoryMessageTitle": "Messages",
   "notificationCategoryMessageDesc": "Messages from other users.",
   "groupContextMenuDeleteGroup": "This will permanently delete all messages in this chat.",

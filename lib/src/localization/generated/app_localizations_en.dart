@@ -1407,7 +1407,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationTitleUnknownUser => 'Someone';
+  String get notificationTitleUnknownUser => '[Unknown]';
 
   @override
   String get notificationCategoryMessageTitle => 'Messages';

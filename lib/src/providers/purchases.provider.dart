@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/subscription.keys.dart';
+import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/purchases/purchasable_product.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Gives the option to override in tests.
 class IAPConnection {
@@ -23,6 +26,8 @@ class IAPConnection {
 
 enum StoreState { loading, available, notAvailable }
 
+Timer? globalForceIpaCheck;
+
 class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   PurchasesProvider() {
     final purchaseUpdated = iapConnection.purchaseStream;
@@ -32,14 +37,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       onError: _updateStreamOnError,
     );
 
-    forceIpaCheck = Timer(const Duration(seconds: 10), () {
-      Log.warn('Force Ipa check was not stopped. Requesting forced check...');
-      apiService.forceIpaCheck();
-    });
     loadPurchases();
   }
-
-  late Timer forceIpaCheck;
 
   SubscriptionPlan plan = SubscriptionPlan.Free;
   StoreState storeState = StoreState.loading;
@@ -47,6 +46,8 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
 
   late StreamSubscription<List<PurchaseDetails>> _subscription;
   final InAppPurchase iapConnection = IAPConnection.instance;
+
+  bool _userTriggeredBuyButton = false;
 
   void updatePlan(SubscriptionPlan newPlan) {
     plan = newPlan;
@@ -77,11 +78,19 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     storeState = StoreState.available;
     notifyListeners();
 
+    final user = await getUser();
+    if (user != null && isPayingUser(planFromString(user.subscriptionPlan))) {
+      Log.info('Started IPA timer for verification.');
+      globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
+        Log.warn('Force Ipa check was not stopped. Requesting forced check...');
+        await apiService.forceIpaCheck();
+      });
+    }
+
     await iapConnection.restorePurchases();
   }
 
   Future<void> buy(PurchasableProduct product) async {
-    Log.info('User wants to buy ${product.id}');
     final purchaseParam = PurchaseParam(productDetails: product.productDetails);
     switch (product.id) {
       // case storeKeyConsumable:
@@ -89,6 +98,9 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       case SubscriptionKeys.proMonthly:
       case SubscriptionKeys.proYearly:
       case SubscriptionKeys.familyYearly:
+        _userTriggeredBuyButton = true;
+        Log.info('User wants to buy ${product.id}');
+
         await iapConnection.buyNonConsumable(purchaseParam: purchaseParam);
       default:
         throw ArgumentError.value(
@@ -108,44 +120,70 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   }
 
   Future<bool> _verifyPurchase(PurchaseDetails purchaseDetails) async {
-    Log.info(purchaseDetails.productID);
-    Log.info(purchaseDetails.verificationData.serverVerificationData);
-    Log.info(purchaseDetails.verificationData.source);
+    if (kDebugMode) {
+      Log.info(purchaseDetails.productID);
+      Log.info(purchaseDetails.verificationData.serverVerificationData);
+      // if (Platform.isIOS) {
+      // final data = purchaseDetails.verificationData.serverVerificationData;
+      // printWrapped(data);
+      // final datas = data.split('.')[1];
+      // printWrapped(datas);
+      // }
+      Log.info(purchaseDetails.verificationData.source);
+    }
     final res = await apiService.ipaPurchase(
       purchaseDetails.productID,
       purchaseDetails.verificationData.source,
       purchaseDetails.verificationData.serverVerificationData,
     );
+    // plan is updated in the apiProvider, as the server updates its states and responses with
+    // an ok authenticated which is processed in the apiProvider...
+    if (res.isSuccess) {
+      if (Platform.isAndroid) {
+        await updateUserdata((u) {
+          u.subscriptionPlanIdStore = purchaseDetails.productID;
+          return u;
+        });
+      }
+    }
+    if (res.isError) {
+      if (res.error == ErrorCode.IPAPaymentExpired &&
+          _userTriggeredBuyButton &&
+          Platform.isIOS) {
+        await launchUrl(
+          Uri.parse('https://apps.apple.com/account/subscriptions'),
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    }
     return res.isSuccess;
   }
 
   Future<void> _handlePurchase(PurchaseDetails purchaseDetails) async {
-    var validPurchase = false;
+    Log.info(
+      '_handlePurchase: ${purchaseDetails.productID}, ${purchaseDetails.status}',
+    );
     if (purchaseDetails.status == PurchaseStatus.purchased) {
-      Log.info('purchased: ${purchaseDetails.productID}');
-      validPurchase = await _verifyPurchase(purchaseDetails);
-      if (validPurchase) {
-        var plan = SubscriptionPlan.Pro;
-        if (purchaseDetails.productID.contains('family')) {
-          plan = SubscriptionPlan.Family;
-        }
-        await updateUserdata((u) {
-          u
-            ..subscriptionPlan = plan.name
-            ..subscriptionPlanIdStore = purchaseDetails.productID;
-          return u;
-        });
-        updatePlan(plan);
-      }
+      await _verifyPurchase(purchaseDetails);
     }
-    if (purchaseDetails.status == PurchaseStatus.restored) {
-      // there is a
-      forceIpaCheck.cancel();
+    if (purchaseDetails.status == PurchaseStatus.restored &&
+        purchaseDetails.error == null) {
+      globalForceIpaCheck?.cancel();
 
-      if (gUser.subscriptionPlan != SubscriptionPlan.Family.name ||
-          gUser.subscriptionPlan != SubscriptionPlan.Pro.name) {
-        // app was installed on some one other...
-        // subscription is handled on the server, so on a new device the subscription comes from the server again...
+      final user = await getUser();
+
+      if (user != null &&
+          (user.subscriptionPlan != SubscriptionPlan.Family.name &&
+              user.subscriptionPlan != SubscriptionPlan.Pro.name)) {
+        for (var i = 0; i < 100; i++) {
+          if (apiService.isAuthenticated) {
+            Log.info(
+                'current user does not have a sub: ${purchaseDetails.productID}');
+            await _verifyPurchase(purchaseDetails);
+            break;
+          }
+          await Future.delayed(const Duration(seconds: 1));
+        }
       }
     }
 

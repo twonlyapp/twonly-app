@@ -209,11 +209,11 @@ func getPushNotificationText(pushNotification: PushNotification) -> (String, Str
     let systemLanguage = Locale.current.language.languageCode?.identifier ?? "en"  // Get the current system language
 
     var pushNotificationText: [PushKind: String] = [:]
-    var title = "Someone"
+    var title = "[Unknown]"
 
     // Define the messages based on the system language
     if systemLanguage.contains("de") {  // German
-        title = "Jemand"
+        title = "[Unbekannt]"
         pushNotificationText = [
             .text: "hat eine Nachricht{inGroup} gesendet.",
             .twonly: "hat ein twonly{inGroup} gesendet.",

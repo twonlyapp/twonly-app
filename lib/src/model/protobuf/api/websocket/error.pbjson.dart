@@ -54,6 +54,7 @@ const ErrorCode$json = {
     {'1': 'NewDeviceRegistered', '2': 1031},
     {'1': 'InvalidProofOfWork', '2': 1032},
     {'1': 'RegistrationDisabled', '2': 1033},
+    {'1': 'IPAPaymentExpired', '2': 1034},
   ],
 };
 
@@ -74,4 +75,5 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'bGFuRG93bmdyYWRlEIEIEhkKFFBsYW5VcGdyYWRlTm90WWVhcmx5EIIIEhgKE0ludmFsaWRTaW'
     'duZWRQcmVLZXkQgwgSEwoOVXNlcklkTm90Rm91bmQQhAgSFwoSVXNlcklkQWxyZWFkeVRha2Vu'
     'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCBIYChNOZXdEZXZpY2VSZWdpc3RlcmVkEIcIEh'
-    'cKEkludmFsaWRQcm9vZk9mV29yaxCICBIZChRSZWdpc3RyYXRpb25EaXNhYmxlZBCJCA==');
+    'cKEkludmFsaWRQcm9vZk9mV29yaxCICBIZChRSZWdpc3RyYXRpb25EaXNhYmxlZBCJCBIWChFJ'
+    'UEFQYXltZW50RXhwaXJlZBCKCA==');
