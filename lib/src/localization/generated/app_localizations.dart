@@ -1313,8 +1313,8 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeToPaidPlanButton.
   ///
   /// In en, this message translates to:
-  /// **'Upgrade subscription to {planId}'**
-  String upgradeToPaidPlanButton(Object planId);
+  /// **'Upgrade to {planId}{sufix}'**
+  String upgradeToPaidPlanButton(Object planId, Object sufix);
 
   /// No description provided for @partOfPaidPlanOf.
   ///
@@ -1328,11 +1328,23 @@ abstract class AppLocalizations {
   /// **'year'**
   String get year;
 
+  /// No description provided for @yearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get yearly;
+
   /// No description provided for @month.
   ///
   /// In en, this message translates to:
   /// **'month'**
   String get month;
+
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
 
   /// No description provided for @proFeature1.
   ///
@@ -1343,32 +1355,44 @@ abstract class AppLocalizations {
   /// No description provided for @proFeature2.
   ///
   /// In en, this message translates to:
-  /// **'1 additional Plus user'**
+  /// **'✓ 1 additional Plus user'**
   String get proFeature2;
 
   /// No description provided for @proFeature3.
   ///
   /// In en, this message translates to:
-  /// **'Cloud-Backup encrypted (coming-soon)'**
+  /// **'✓ Restore flames'**
   String get proFeature3;
 
   /// No description provided for @proFeature4.
   ///
   /// In en, this message translates to:
-  /// **'Additional features (coming-soon)'**
+  /// **'✓ Support twonly'**
   String get proFeature4;
 
   /// No description provided for @familyFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ All from Pro'**
+  /// **'✓ Unlimited media file uploads'**
   String get familyFeature1;
 
   /// No description provided for @familyFeature2.
   ///
   /// In en, this message translates to:
-  /// **'4 additional Plus users'**
+  /// **'✓ 4 additional Plus user'**
   String get familyFeature2;
+
+  /// No description provided for @familyFeature3.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Restore flames'**
+  String get familyFeature3;
+
+  /// No description provided for @familyFeature4.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Support twonly'**
+  String get familyFeature4;
 
   /// No description provided for @redeemUserInviteCode.
   ///
@@ -1391,7 +1415,7 @@ abstract class AppLocalizations {
   /// No description provided for @freeFeature1.
   ///
   /// In en, this message translates to:
-  /// **'10 Media file uploads per day'**
+  /// **'✓ 10 Media file uploads per day'**
   String get freeFeature1;
 
   /// No description provided for @plusFeature1.
@@ -1403,7 +1427,7 @@ abstract class AppLocalizations {
   /// No description provided for @plusFeature2.
   ///
   /// In en, this message translates to:
-  /// **'Additional features (coming-soon)'**
+  /// **'✓ Additional features (coming-soon)'**
   String get plusFeature2;
 
   /// No description provided for @transactionHistory.
@@ -2555,7 +2579,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationTitleUnknownUser.
   ///
   /// In en, this message translates to:
-  /// **'Someone'**
+  /// **'[Unknown]'**
   String get notificationTitleUnknownUser;
 
   /// No description provided for @notificationCategoryMessageTitle.

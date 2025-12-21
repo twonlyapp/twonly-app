@@ -1,15 +1,14 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
+import 'package:twonly/src/views/settings/subscription_custom/subscription.view.dart';
 
 class ManageSubscriptionView extends StatefulWidget {
   const ManageSubscriptionView({
@@ -65,7 +64,7 @@ class _ManageSubscriptionViewState extends State<ManageSubscriptionView> {
 
   @override
   Widget build(BuildContext context) {
-    final plan = context.read<CustomChangeProvider>().plan;
+    final plan = context.watch<PurchasesProvider>().plan;
     final myLocale = Localizations.localeOf(context);
     final paidMonthly = ballance?.paymentPeriodDays == MONTHLY_PAYMENT_DAYS;
     return Scaffold(

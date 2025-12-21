@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/subscription/select_payment.view.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
+import 'package:twonly/src/views/settings/subscription_custom/select_payment.view.dart';
+import 'package:twonly/src/views/settings/subscription_custom/subscription.view.dart';
 
 class CheckoutView extends StatefulWidget {
   const CheckoutView({
     required this.plan,
     super.key,
-    this.refund,
     this.disableMonthlyOption,
   });
 
   final SubscriptionPlan plan;
-  final int? refund;
   final bool? disableMonthlyOption;
 
   @override
@@ -76,29 +74,6 @@ class _CheckoutViewState extends State<CheckoutView> {
                 ],
               ),
             ),
-            if (widget.refund != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text(
-                          context.lang.refund,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          '+${localePrizing(context, widget.refund!)}',
-                          textAlign: TextAlign.end,
-                          style: TextStyle(color: context.color.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(
@@ -133,7 +108,6 @@ class _CheckoutViewState extends State<CheckoutView> {
                         return SelectPaymentView(
                           plan: widget.plan,
                           payMonthly: paidMonthly,
-                          refund: widget.refund,
                         );
                       },
                     ),

@@ -53,19 +53,19 @@ class OnboardingView extends StatelessWidget {
                 ),
               ),
             ),
-            PageViewModel(
-              title: context.lang.onboardingSendTwonliesTitle,
-              body: context.lang.onboardingSendTwonliesBody,
-              image: Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 100),
-                  child: Lottie.asset(
-                    'assets/animations/twonlies.json',
-                    repeat: false,
-                  ),
-                ),
-              ),
-            ),
+            // PageViewModel(
+            //   title: context.lang.onboardingSendTwonliesTitle,
+            //   body: context.lang.onboardingSendTwonliesBody,
+            //   image: Center(
+            //     child: Padding(
+            //       padding: const EdgeInsets.only(top: 100),
+            //       child: Lottie.asset(
+            //         'assets/animations/twonlies.json',
+            //         repeat: false,
+            //       ),
+            //     ),
+            //   ),
+            // ),
             PageViewModel(
               title: context.lang.onboardingNotProductTitle,
               bodyWidget: Column(

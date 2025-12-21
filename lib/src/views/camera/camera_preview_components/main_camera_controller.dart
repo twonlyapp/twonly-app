@@ -52,8 +52,9 @@ class MainCameraController {
     } catch (e) {
       Log.warn(e);
     }
-    await cameraController?.dispose();
+    final cameraControllerTemp = cameraController;
     cameraController = null;
+    await cameraControllerTemp?.dispose();
     initCameraStarted = false;
     selectedCameraDetails = SelectedCameraDetails();
   }
@@ -217,11 +218,13 @@ class MainCameraController {
                   const ContactsCompanion(verified: Value(true)),
                 );
               }
+              await HapticFeedback.heavyImpact();
             }
           }
         } else {
           if (profile.username != gUser.username) {
             if (scannedNewProfiles[profile.userId.toInt()] == null) {
+              await HapticFeedback.heavyImpact();
               scannedNewProfiles[profile.userId.toInt()] = ScannedNewProfile(
                 profile: profile,
               );

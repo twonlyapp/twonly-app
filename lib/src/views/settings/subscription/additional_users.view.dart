@@ -11,7 +11,7 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
+import 'package:twonly/src/views/settings/subscription_custom/subscription.view.dart';
 
 Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
   final ballance = await apiService.getAdditionalUserInvites();
@@ -65,12 +65,9 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
   @override
   Widget build(BuildContext context) {
     var plusInvites = <Response_AddAccountsInvite>[];
-    var freeInvites = <Response_AddAccountsInvite>[];
     if (additionalInvites != null) {
       plusInvites =
           additionalInvites!.where((x) => x.planId == 'Plus').toList();
-      freeInvites =
-          additionalInvites!.where((x) => x.planId == 'Free').toList();
     }
     return Scaffold(
       appBar: AppBar(
@@ -95,11 +92,10 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
               ),
             ),
           if (plusInvites.isNotEmpty)
-            ListTile(
-              title: Text(
-                context.lang.additionalUsersPlusTokens,
-                style: const TextStyle(fontSize: 13),
-              ),
+            Text(
+              context.lang.additionalUsersPlusTokens,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
             ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -109,23 +105,6 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
               childAspectRatio: 16 / 5,
               shrinkWrap: true,
               children: plusInvites.map(AdditionalUserInvite.new).toList(),
-            ),
-          ),
-          if (freeInvites.isNotEmpty)
-            ListTile(
-              title: Text(
-                context.lang.additionalUsersFreeTokens,
-                style: const TextStyle(fontSize: 13),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: GridView.count(
-              crossAxisCount: 2,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 16 / 5,
-              shrinkWrap: true,
-              children: freeInvites.map(AdditionalUserInvite.new).toList(),
             ),
           ),
         ],
@@ -200,7 +179,7 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
                 final remove = await showAlertDialog(
                   context,
                   'Remove this additional user',
-                  'The additional user will automatically be downgraded to the preview plan after removal and you will receive a new invitation code to give to another person.',
+                  'The additional user will automatically be downgraded to the free plan after removal and you will receive a new invitation code to give to another person.',
                 );
                 if (remove) {
                   final res = await apiService

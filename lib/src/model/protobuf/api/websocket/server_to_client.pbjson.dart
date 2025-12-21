@@ -62,6 +62,15 @@ const V0$json = {
       '10': 'newMessage'
     },
     {
+      '1': 'newMessages',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.server_to_client.NewMessages',
+      '9': 0,
+      '10': 'newMessages'
+    },
+    {
       '1': 'RequestNewPreKeys',
       '3': 4,
       '4': 1,
@@ -88,9 +97,10 @@ const V0$json = {
 final $typed_data.Uint8List v0Descriptor = $convert.base64Decode(
     'CgJWMBIQCgNzZXEYASABKARSA3NlcRI4CghyZXNwb25zZRgCIAEoCzIaLnNlcnZlcl90b19jbG'
     'llbnQuUmVzcG9uc2VIAFIIcmVzcG9uc2USPgoKbmV3TWVzc2FnZRgDIAEoCzIcLnNlcnZlcl90'
-    'b19jbGllbnQuTmV3TWVzc2FnZUgAUgpuZXdNZXNzYWdlEi4KEVJlcXVlc3ROZXdQcmVLZXlzGA'
-    'QgASgISABSEVJlcXVlc3ROZXdQcmVLZXlzEigKBWVycm9yGAYgASgOMhAuZXJyb3IuRXJyb3JD'
-    'b2RlSABSBWVycm9yQgYKBEtpbmQ=');
+    'b19jbGllbnQuTmV3TWVzc2FnZUgAUgpuZXdNZXNzYWdlEkEKC25ld01lc3NhZ2VzGAcgASgLMh'
+    '0uc2VydmVyX3RvX2NsaWVudC5OZXdNZXNzYWdlc0gAUgtuZXdNZXNzYWdlcxIuChFSZXF1ZXN0'
+    'TmV3UHJlS2V5cxgEIAEoCEgAUhFSZXF1ZXN0TmV3UHJlS2V5cxIoCgVlcnJvchgGIAEoDjIQLm'
+    'Vycm9yLkVycm9yQ29kZUgAUgVlcnJvckIGCgRLaW5k');
 
 @$core.Deprecated('Use newMessageDescriptor instead')
 const NewMessage$json = {
@@ -105,6 +115,26 @@ const NewMessage$json = {
 final $typed_data.Uint8List newMessageDescriptor = $convert.base64Decode(
     'CgpOZXdNZXNzYWdlEiAKDGZyb21fdXNlcl9pZBgCIAEoA1IKZnJvbVVzZXJJZBISCgRib2R5GA'
     'EgASgMUgRib2R5');
+
+@$core.Deprecated('Use newMessagesDescriptor instead')
+const NewMessages$json = {
+  '1': 'NewMessages',
+  '2': [
+    {
+      '1': 'newMessages',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.server_to_client.NewMessage',
+      '10': 'newMessages'
+    },
+  ],
+};
+
+/// Descriptor for `NewMessages`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List newMessagesDescriptor = $convert.base64Decode(
+    'CgtOZXdNZXNzYWdlcxI+CgtuZXdNZXNzYWdlcxgBIAMoCzIcLnNlcnZlcl90b19jbGllbnQuTm'
+    'V3TWVzc2FnZVILbmV3TWVzc2FnZXM=');
 
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {

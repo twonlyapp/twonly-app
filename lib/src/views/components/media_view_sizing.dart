@@ -37,6 +37,9 @@ class _MediaViewSizingState extends State<MediaViewSizing> {
 
     final aspectRatioWidth = availableWidth;
     final aspectRatioHeight = (aspectRatioWidth * 16) / 9;
+    if (aspectRatioHeight > availableHeight) {
+      needToDownSizeImage = true;
+    }
     if (widget.requiredHeight != null) {
       if (aspectRatioHeight < availableHeight) {
         if ((screenSize.height - widget.requiredHeight!) < aspectRatioHeight) {

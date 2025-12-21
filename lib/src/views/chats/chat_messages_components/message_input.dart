@@ -113,6 +113,7 @@ class _MessageInputState extends State<MessageInput> {
     }
     setState(() {
       _recordingState = RecordingState.recording;
+      _currentDuration = 0;
     });
     await HapticFeedback.heavyImpact();
     final audioTmpPath =
@@ -220,82 +221,96 @@ class _MessageInputState extends State<MessageInput> {
                           ),
                         ),
                       Expanded(
-                        child: (_recordingState == RecordingState.recording)
-                            ? Row(
-                                children: [
-                                  const Padding(
-                                    padding: EdgeInsets.only(
-                                      top: 14,
-                                      bottom: 14,
-                                      left: 12,
-                                      right: 8,
-                                    ),
-                                    child: FaIcon(
-                                      FontAwesomeIcons.microphone,
-                                      size: 20,
-                                      color: Colors.red,
-                                    ),
+                        child: Stack(
+                          children: [
+                            TextField(
+                              controller: _textFieldController,
+                              focusNode: widget.textFieldFocus,
+                              keyboardType: TextInputType.multiline,
+                              showCursor:
+                                  _recordingState != RecordingState.recording,
+                              maxLines: 4,
+                              minLines: 1,
+                              onChanged: (value) async {
+                                setState(() {});
+                                await twonlyDB.groupsDao.updateGroup(
+                                  widget.group.groupId,
+                                  GroupsCompanion(
+                                    draftMessage:
+                                        Value(_textFieldController.text),
                                   ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    formatMsToMinSec(
-                                      _currentDuration,
-                                    ),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  if (!_audioRecordingLock) ...[
-                                    SizedBox(
-                                      width: (100 - _cancelSlideOffset) % 101,
-                                    ),
-                                    Text(
-                                      context.lang.voiceMessageSlideToCancel,
-                                    ),
-                                  ] else ...[
-                                    Expanded(
-                                      child: Container(),
-                                    ),
-                                    GestureDetector(
-                                      onTap: _cancelAudioRecording,
-                                      child: Text(
-                                        context.lang.voiceMessageCancel,
-                                        style: const TextStyle(
-                                          color: Colors.red,
-                                        ),
+                                );
+                              },
+                              onSubmitted: (_) {
+                                _sendMessage();
+                              },
+                              style: const TextStyle(fontSize: 17),
+                              decoration: InputDecoration(
+                                hintText: context.lang.chatListDetailInput,
+                                contentPadding: EdgeInsets.zero,
+                                border: InputBorder.none,
+                              ),
+                            ),
+                            if (_recordingState == RecordingState.recording)
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: context.color.surfaceContainer,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(
+                                        top: 14,
+                                        bottom: 14,
+                                        left: 12,
+                                        right: 8,
+                                      ),
+                                      child: FaIcon(
+                                        FontAwesomeIcons.microphone,
+                                        size: 20,
+                                        color: Colors.red,
                                       ),
                                     ),
-                                    const SizedBox(width: 20),
-                                  ],
-                                ],
-                              )
-                            : TextField(
-                                controller: _textFieldController,
-                                focusNode: widget.textFieldFocus,
-                                keyboardType: TextInputType.multiline,
-                                maxLines: 4,
-                                minLines: 1,
-                                onChanged: (value) async {
-                                  setState(() {});
-                                  await twonlyDB.groupsDao.updateGroup(
-                                    widget.group.groupId,
-                                    GroupsCompanion(
-                                      draftMessage:
-                                          Value(_textFieldController.text),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      formatMsToMinSec(
+                                        _currentDuration,
+                                      ),
+                                      style: TextStyle(
+                                        color: isDarkMode(context)
+                                            ? Colors.white
+                                            : Colors.black,
+                                        fontSize: 12,
+                                      ),
                                     ),
-                                  );
-                                },
-                                onSubmitted: (_) {
-                                  _sendMessage();
-                                },
-                                style: const TextStyle(fontSize: 17),
-                                decoration: InputDecoration(
-                                  hintText: context.lang.chatListDetailInput,
-                                  contentPadding: EdgeInsets.zero,
-                                  border: InputBorder.none,
+                                    if (!_audioRecordingLock) ...[
+                                      SizedBox(
+                                        width: (100 - _cancelSlideOffset) % 101,
+                                      ),
+                                      Text(
+                                        context.lang.voiceMessageSlideToCancel,
+                                      ),
+                                    ] else ...[
+                                      Expanded(
+                                        child: Container(),
+                                      ),
+                                      GestureDetector(
+                                        onTap: _cancelAudioRecording,
+                                        child: Text(
+                                          context.lang.voiceMessageCancel,
+                                          style: const TextStyle(
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 20),
+                                    ],
+                                  ],
                                 ),
                               ),
+                          ],
+                        ),
                       ),
                       if (_textFieldController.text == '')
                         GestureDetector(
@@ -355,7 +370,9 @@ class _MessageInputState extends State<MessageInput> {
                                       height: 60,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(90),
-                                        color: Colors.black,
+                                        color: isDarkMode(context)
+                                            ? Colors.black
+                                            : Colors.white,
                                       ),
                                       child: const Center(
                                         child: Column(

@@ -10,6 +10,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/image_editor.provider.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api.service.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
@@ -24,6 +25,8 @@ import 'package:twonly/src/utils/storage.dart';
 
 void main() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
+
+  await initFCMService();
 
   final user = await getUser();
   if (user != null) {
@@ -43,8 +46,6 @@ void main() async {
     unawaited(performTwonlySafeBackup());
   }
 
-  await initFCMService();
-
   globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
   globalApplicationSupportDirectory =
       (await getApplicationSupportDirectory()).path;
@@ -54,9 +55,7 @@ void main() async {
   final settingsController = SettingsChangeProvider();
 
   await settingsController.loadSettings();
-  await SystemChrome.setPreferredOrientations(
-    [DeviceOrientation.portraitUp],
-  );
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   unawaited(setupPushNotification());
 
@@ -79,6 +78,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => settingsController),
         ChangeNotifierProvider(create: (_) => CustomChangeProvider()),
         ChangeNotifierProvider(create: (_) => ImageEditorProvider()),
+        ChangeNotifierProvider(create: (_) => PurchasesProvider()),
       ],
       child: const App(),
     ),

@@ -2085,6 +2085,136 @@ class ApplicationData_ReportUser extends $pb.GeneratedMessage {
   void clearReason() => $_clearField(2);
 }
 
+class ApplicationData_IPAPurchase extends $pb.GeneratedMessage {
+  factory ApplicationData_IPAPurchase({
+    $core.String? productId,
+    $core.String? source,
+    $core.String? verificationData,
+  }) {
+    final result = create();
+    if (productId != null) result.productId = productId;
+    if (source != null) result.source = source;
+    if (verificationData != null) result.verificationData = verificationData;
+    return result;
+  }
+
+  ApplicationData_IPAPurchase._();
+
+  factory ApplicationData_IPAPurchase.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_IPAPurchase.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.IPAPurchase',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'productId')
+    ..aOS(2, _omitFieldNames ? '' : 'source')
+    ..aOS(3, _omitFieldNames ? '' : 'verificationData')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_IPAPurchase clone() =>
+      ApplicationData_IPAPurchase()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_IPAPurchase copyWith(
+          void Function(ApplicationData_IPAPurchase) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_IPAPurchase))
+          as ApplicationData_IPAPurchase;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_IPAPurchase create() =>
+      ApplicationData_IPAPurchase._();
+  @$core.override
+  ApplicationData_IPAPurchase createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_IPAPurchase> createRepeated() =>
+      $pb.PbList<ApplicationData_IPAPurchase>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_IPAPurchase getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_IPAPurchase>(create);
+  static ApplicationData_IPAPurchase? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get productId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set productId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasProductId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearProductId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get source => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set source($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasSource() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSource() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get verificationData => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set verificationData($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasVerificationData() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVerificationData() => $_clearField(3);
+}
+
+class ApplicationData_IPAForceCheck extends $pb.GeneratedMessage {
+  factory ApplicationData_IPAForceCheck() => create();
+
+  ApplicationData_IPAForceCheck._();
+
+  factory ApplicationData_IPAForceCheck.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_IPAForceCheck.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.IPAForceCheck',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_IPAForceCheck clone() =>
+      ApplicationData_IPAForceCheck()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_IPAForceCheck copyWith(
+          void Function(ApplicationData_IPAForceCheck) updates) =>
+      super.copyWith(
+              (message) => updates(message as ApplicationData_IPAForceCheck))
+          as ApplicationData_IPAForceCheck;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_IPAForceCheck create() =>
+      ApplicationData_IPAForceCheck._();
+  @$core.override
+  ApplicationData_IPAForceCheck createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_IPAForceCheck> createRepeated() =>
+      $pb.PbList<ApplicationData_IPAForceCheck>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_IPAForceCheck getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_IPAForceCheck>(create);
+  static ApplicationData_IPAForceCheck? _defaultInstance;
+}
+
 class ApplicationData_DeleteAccount extends $pb.GeneratedMessage {
   factory ApplicationData_DeleteAccount() => create();
 
@@ -2153,6 +2283,8 @@ enum ApplicationData_ApplicationData {
   deleteAccount,
   reportUser,
   changeUsername,
+  ipaPurchase,
+  ipaForceCheck,
   notSet
 }
 
@@ -2180,6 +2312,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_DeleteAccount? deleteAccount,
     ApplicationData_ReportUser? reportUser,
     ApplicationData_ChangeUsername? changeUsername,
+    ApplicationData_IPAPurchase? ipaPurchase,
+    ApplicationData_IPAForceCheck? ipaForceCheck,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -2212,6 +2346,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (deleteAccount != null) result.deleteAccount = deleteAccount;
     if (reportUser != null) result.reportUser = reportUser;
     if (changeUsername != null) result.changeUsername = changeUsername;
+    if (ipaPurchase != null) result.ipaPurchase = ipaPurchase;
+    if (ipaForceCheck != null) result.ipaForceCheck = ipaForceCheck;
     return result;
   }
 
@@ -2248,6 +2384,8 @@ class ApplicationData extends $pb.GeneratedMessage {
     24: ApplicationData_ApplicationData.deleteAccount,
     25: ApplicationData_ApplicationData.reportUser,
     26: ApplicationData_ApplicationData.changeUsername,
+    27: ApplicationData_ApplicationData.ipaPurchase,
+    28: ApplicationData_ApplicationData.ipaForceCheck,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -2277,7 +2415,9 @@ class ApplicationData extends $pb.GeneratedMessage {
       23,
       24,
       25,
-      26
+      26,
+      27,
+      28
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -2361,6 +2501,13 @@ class ApplicationData extends $pb.GeneratedMessage {
         26, _omitFieldNames ? '' : 'changeUsername',
         protoName: 'changeUsername',
         subBuilder: ApplicationData_ChangeUsername.create)
+    ..aOM<ApplicationData_IPAPurchase>(27, _omitFieldNames ? '' : 'ipaPurchase',
+        protoName: 'ipaPurchase',
+        subBuilder: ApplicationData_IPAPurchase.create)
+    ..aOM<ApplicationData_IPAForceCheck>(
+        28, _omitFieldNames ? '' : 'ipaForceCheck',
+        protoName: 'ipaForceCheck',
+        subBuilder: ApplicationData_IPAForceCheck.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2652,6 +2799,29 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearChangeUsername() => $_clearField(26);
   @$pb.TagNumber(26)
   ApplicationData_ChangeUsername ensureChangeUsername() => $_ensure(21);
+
+  @$pb.TagNumber(27)
+  ApplicationData_IPAPurchase get ipaPurchase => $_getN(22);
+  @$pb.TagNumber(27)
+  set ipaPurchase(ApplicationData_IPAPurchase value) => $_setField(27, value);
+  @$pb.TagNumber(27)
+  $core.bool hasIpaPurchase() => $_has(22);
+  @$pb.TagNumber(27)
+  void clearIpaPurchase() => $_clearField(27);
+  @$pb.TagNumber(27)
+  ApplicationData_IPAPurchase ensureIpaPurchase() => $_ensure(22);
+
+  @$pb.TagNumber(28)
+  ApplicationData_IPAForceCheck get ipaForceCheck => $_getN(23);
+  @$pb.TagNumber(28)
+  set ipaForceCheck(ApplicationData_IPAForceCheck value) =>
+      $_setField(28, value);
+  @$pb.TagNumber(28)
+  $core.bool hasIpaForceCheck() => $_has(23);
+  @$pb.TagNumber(28)
+  void clearIpaForceCheck() => $_clearField(28);
+  @$pb.TagNumber(28)
+  ApplicationData_IPAForceCheck ensureIpaForceCheck() => $_ensure(23);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

@@ -5,6 +5,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
@@ -71,6 +72,9 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
       );
       return;
     }
+    Log.info(
+      'Restoring flames from ${_directChat!.flameCounter} to ${_directChat!.maxFlameCounter}',
+    );
     await twonlyDB.groupsDao.updateGroup(
       _groupId,
       GroupsCompanion(

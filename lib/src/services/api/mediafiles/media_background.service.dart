@@ -128,7 +128,7 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
     );
     final mediaService = MediaFileService(media);
 
-    await mediaService.setUploadState(UploadState.uploaded);
+    await mediaService.setUploadState(UploadState.uploading);
     // In all other cases just try the upload again...
     await startBackgroundMediaUpload(mediaService);
   }

@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.0.74+74
+version: 0.0.78+78
 
 environment:
   sdk: ^3.6.0
@@ -47,8 +47,8 @@ dependencies:
 
 
   # Trustworthy publishers
-  firebase_core: ^4.2.0 # firebase.google.com
-  firebase_messaging: ^16.0.3  # firebase.google.com
+  firebase_core: ^4.3.0 # firebase.google.com
+  firebase_messaging: ^16.1.0  # firebase.google.com
   json_annotation: ^4.9.0 # google.dev
   protobuf: ^4.0.0 # google.dev
   scrollable_positioned_list: ^0.3.8 # google.dev
@@ -87,6 +87,8 @@ dependencies:
   screenshot: ^3.0.0
   sentry_flutter: ^9.8.0
   app_links: ^7.0.0
+  in_app_purchase: ^3.2.3
+
 
   # Overwritten by self-controlled repository
   emoji_picker_flutter: ^4.3.0
@@ -162,6 +164,7 @@ dev_dependencies:
     sdk: flutter
   json_serializable: ^6.8.0
   very_good_analysis: ^10.0.0
+  in_app_purchase_platform_interface: ^1.4.0
 
 flutter_launcher_icons:
   android: true

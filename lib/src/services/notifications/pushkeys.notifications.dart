@@ -303,6 +303,15 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
   return pushNotification;
 }
 
+Future<void> requestNewPushKeysForUser(int toUserId) async {
+  await sendCipherText(
+    toUserId,
+    EncryptedContent()
+      ..pushKeys = (EncryptedContent_PushKeys()
+        ..type = EncryptedContent_PushKeys_Type.REQUEST),
+  );
+}
+
 /// this will trigger a push notification
 /// push notification only containing the message kind and username
 Future<Uint8List?> encryptPushNotification(
@@ -326,15 +335,16 @@ Future<Uint8List?> encryptPushNotification(
       // this will be enforced after every app uses this system... :/
       // return null;
       Log.warn('Using insecure key as the receiver does not send a push key!');
-
-      await sendCipherText(
-        toUserId,
-        EncryptedContent()
-          ..pushKeys = (EncryptedContent_PushKeys()
-            ..type = EncryptedContent_PushKeys_Type.REQUEST),
-      );
+      await requestNewPushKeysForUser(toUserId);
     }
   } else {
+    final createdAt = DateTime.fromMillisecondsSinceEpoch(
+      pushUser.pushKeys.last.createdAtUnixTimestamp.toInt(),
+    );
+    final timeBefore = DateTime.now().subtract(const Duration(days: 8));
+    if (createdAt.isBefore(timeBefore)) {
+      await requestNewPushKeysForUser(toUserId);
+    }
     try {
       key = pushUser.pushKeys.last.key;
       keyId = pushUser.pushKeys.last.id.toInt();

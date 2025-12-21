@@ -820,15 +820,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     ...widget.mainCameraController.scannedNewProfiles.values
                         .map(
                       (c) {
+                        if (c.isLoading) return Container();
                         return GestureDetector(
                           onTap: () async {
-                            if (c.isLoading) return;
                             c.isLoading = true;
                             widget.mainCameraController.setState();
                             await addNewContactFromPublicProfile(c.profile);
-                            widget.mainCameraController.scannedNewProfiles
-                                .remove(c.profile.userId.toInt());
-                            widget.mainCameraController.setState();
                           },
                           child: Container(
                             padding: const EdgeInsets.all(12),

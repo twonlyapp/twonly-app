@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -93,7 +94,7 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) {
     final isConnected = context.watch<CustomChangeProvider>().isConnected;
-    final plan = context.watch<CustomChangeProvider>().plan;
+    final plan = context.watch<PurchasesProvider>().plan;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -203,7 +204,7 @@ class _ChatListViewState extends State<ChatListView> {
             child: RefreshIndicator(
               onRefresh: () async {
                 await apiService.close(() {});
-                await apiService.connect(force: true);
+                await apiService.connect();
                 await Future.delayed(const Duration(seconds: 1));
               },
               child: (_groupsNotPinned.isEmpty &&

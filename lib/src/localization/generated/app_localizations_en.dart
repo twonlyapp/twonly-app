@@ -679,8 +679,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upgradeToPaidPlan => 'Upgrade to a paid plan.';
 
   @override
-  String upgradeToPaidPlanButton(Object planId) {
-    return 'Upgrade subscription to $planId';
+  String upgradeToPaidPlanButton(Object planId, Object sufix) {
+    return 'Upgrade to $planId$sufix';
   }
 
   @override
@@ -692,25 +692,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get year => 'year';
 
   @override
+  String get yearly => 'Yearly';
+
+  @override
   String get month => 'month';
+
+  @override
+  String get monthly => 'Monthly';
 
   @override
   String get proFeature1 => '✓ Unlimited media file uploads';
 
   @override
-  String get proFeature2 => '1 additional Plus user';
+  String get proFeature2 => '✓ 1 additional Plus user';
 
   @override
-  String get proFeature3 => 'Cloud-Backup encrypted (coming-soon)';
+  String get proFeature3 => '✓ Restore flames';
 
   @override
-  String get proFeature4 => 'Additional features (coming-soon)';
+  String get proFeature4 => '✓ Support twonly';
 
   @override
-  String get familyFeature1 => '✓ All from Pro';
+  String get familyFeature1 => '✓ Unlimited media file uploads';
 
   @override
-  String get familyFeature2 => '4 additional Plus users';
+  String get familyFeature2 => '✓ 4 additional Plus user';
+
+  @override
+  String get familyFeature3 => '✓ Restore flames';
+
+  @override
+  String get familyFeature4 => '✓ Support twonly';
 
   @override
   String get redeemUserInviteCode => 'Or redeem a twonly-Code.';
@@ -723,13 +735,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your plan has been successfully adjusted.';
 
   @override
-  String get freeFeature1 => '10 Media file uploads per day';
+  String get freeFeature1 => '✓ 10 Media file uploads per day';
 
   @override
   String get plusFeature1 => '✓ Unlimited media file uploads';
 
   @override
-  String get plusFeature2 => 'Additional features (coming-soon)';
+  String get plusFeature2 => '✓ Additional features (coming-soon)';
 
   @override
   String get transactionHistory => 'Your transaction history';
@@ -1401,7 +1413,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationTitleUnknownUser => 'Someone';
+  String get notificationTitleUnknownUser => '[Unknown]';
 
   @override
   String get notificationCategoryMessageTitle => 'Messages';

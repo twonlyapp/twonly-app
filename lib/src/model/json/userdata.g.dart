@@ -20,6 +20,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..disableVideoCompression =
           json['disableVideoCompression'] as bool? ?? false
       ..deviceId = (json['deviceId'] as num?)?.toInt() ?? 0
+      ..subscriptionPlanIdStore = json['subscriptionPlanIdStore'] as String?
       ..lastImageSend = json['lastImageSend'] == null
           ? null
           : DateTime.parse(json['lastImageSend'] as String)
@@ -61,6 +62,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           ?.map((e) => (e as num).toInt())
           .toList()
       ..hideChangeLog = json['hideChangeLog'] as bool? ?? false
+      ..updateFCMToken = json['updateFCMToken'] as bool? ?? true
       ..nextTimeToShowBackupNotice = json['nextTimeToShowBackupNotice'] == null
           ? null
           : DateTime.parse(json['nextTimeToShowBackupNotice'] as String)
@@ -84,6 +86,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'disableVideoCompression': instance.disableVideoCompression,
       'deviceId': instance.deviceId,
       'subscriptionPlan': instance.subscriptionPlan,
+      'subscriptionPlanIdStore': instance.subscriptionPlanIdStore,
       'lastImageSend': instance.lastImageSend?.toIso8601String(),
       'todaysImageCounter': instance.todaysImageCounter,
       'themeMode': _$ThemeModeEnumMap[instance.themeMode]!,
@@ -104,6 +107,7 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'currentSignedPreKeyIndexStart': instance.currentSignedPreKeyIndexStart,
       'lastChangeLogHash': instance.lastChangeLogHash,
       'hideChangeLog': instance.hideChangeLog,
+      'updateFCMToken': instance.updateFCMToken,
       'nextTimeToShowBackupNotice':
           instance.nextTimeToShowBackupNotice?.toIso8601String(),
       'backupServer': instance.backupServer,

@@ -386,14 +386,18 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
 
 int getFlameCounterFromGroup(Group? group) {
   if (group == null) return 0;
-  if (group.lastMessageSend == null || group.lastMessageReceived == null) {
+  if (group.lastMessageSend == null ||
+      group.lastMessageReceived == null ||
+      group.lastFlameCounterChange == null) {
     return 0;
   }
   final now = DateTime.now();
   final startOfToday = DateTime(now.year, now.month, now.day);
   final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
+  final oneDayAgo = startOfToday.subtract(const Duration(days: 1));
   if (group.lastMessageSend!.isAfter(twoDaysAgo) &&
-      group.lastMessageReceived!.isAfter(twoDaysAgo)) {
+          group.lastMessageReceived!.isAfter(twoDaysAgo) ||
+      group.lastFlameCounterChange!.isAfter(oneDayAgo)) {
     return group.flameCounter + 1;
   } else {
     return 0;

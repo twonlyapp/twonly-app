@@ -685,8 +685,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get upgradeToPaidPlan => 'Upgrade auf einen kostenpflichtigen Plan.';
 
   @override
-  String upgradeToPaidPlanButton(Object planId) {
-    return 'Auf $planId upgraden';
+  String upgradeToPaidPlanButton(Object planId, Object sufix) {
+    return 'Auf $planId upgraden$sufix';
   }
 
   @override
@@ -695,28 +695,40 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get year => 'year';
+  String get year => 'Jahr';
 
   @override
-  String get month => 'month';
+  String get yearly => 'Jährlich';
+
+  @override
+  String get month => 'Monat';
+
+  @override
+  String get monthly => 'Monatlich';
 
   @override
   String get proFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get proFeature2 => '1 zusätzlicher Plus Benutzer';
+  String get proFeature2 => '✓ 1 zusätzlicher Plus Benutzer';
 
   @override
-  String get proFeature3 => 'Flammen wiederherstellen';
+  String get proFeature3 => '✓ Flammen wiederherstellen';
 
   @override
-  String get proFeature4 => 'Cloud-Backup verschlüsselt (coming-soon)';
+  String get proFeature4 => '✓ twonly unterstützen';
 
   @override
-  String get familyFeature1 => '✓ Alles von Pro';
+  String get familyFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get familyFeature2 => '4 zusätzliche Plus Benutzer';
+  String get familyFeature2 => '✓ 4 zusätzliche Plus Benutzer';
+
+  @override
+  String get familyFeature3 => '✓ Flammen wiederherstellen';
+
+  @override
+  String get familyFeature4 => '✓ twonly unterstützen';
 
   @override
   String get redeemUserInviteCode => 'Oder löse einen twonly-Code ein.';
@@ -729,13 +741,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dein Plan wurde erfolgreich angepasst.';
 
   @override
-  String get freeFeature1 => '10 Medien-Datei-Uploads pro Tag';
+  String get freeFeature1 => '✓ 10 Medien-Datei-Uploads pro Tag';
 
   @override
   String get plusFeature1 => '✓ Unbegrenzte Medien-Datei-Uploads';
 
   @override
-  String get plusFeature2 => 'Zusatzfunktionen (coming-soon)';
+  String get plusFeature2 => '✓ Zusatzfunktionen (coming-soon)';
 
   @override
   String get transactionHistory => 'Transaktionshistorie';
@@ -1409,7 +1421,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get notificationTitleUnknownUser => 'Jemand';
+  String get notificationTitleUnknownUser => '[Unbekannt]';
 
   @override
   String get notificationCategoryMessageTitle => 'Nachrichten';

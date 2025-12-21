@@ -117,6 +117,10 @@ Future<void> handleGroupUpdate(
 
   final group = (await twonlyDB.groupsDao.getGroup(groupId))!;
 
+  if (!group.isDirectChat) {
+    unawaited(fetchGroupState(group));
+  }
+
   switch (actionType) {
     case GroupActionType.updatedGroupName:
       await twonlyDB.groupsDao.insertGroupAction(
@@ -172,10 +176,6 @@ Future<void> handleGroupUpdate(
       );
     case GroupActionType.createdGroup:
       break;
-  }
-
-  if (!group.isDirectChat) {
-    unawaited(fetchGroupState(group));
   }
 }
 

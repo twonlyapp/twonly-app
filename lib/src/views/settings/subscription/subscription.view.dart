@@ -1,111 +1,24 @@
 // ignore_for_file: inference_failure_on_instance_creation
 import 'dart:async';
+import 'dart:io';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
-import 'package:twonly/src/providers/connection.provider.dart';
+import 'package:twonly/src/model/purchases/purchasable_product.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/settings/subscription/additional_users.view.dart';
-import 'package:twonly/src/views/settings/subscription/checkout.view.dart';
-import 'package:twonly/src/views/settings/subscription/manage_subscription.view.dart';
-import 'package:twonly/src/views/settings/subscription/transaction.view.dart';
-import 'package:twonly/src/views/settings/subscription/voucher.view.dart';
-
-String localePrizing(BuildContext context, int cents) {
-  final myLocale = Localizations.localeOf(context);
-  final euros = cents / 100;
-
-  if (euros == euros.toInt()) {
-    return '${euros.toInt()}€';
-  }
-
-  return NumberFormat.currency(
-    locale: myLocale.toString(),
-    symbol: '€',
-    decimalDigits: 2,
-  ).format(cents / 100);
-}
-
-Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {
-  final ballance = await apiService.getPlanBallance();
-  if (ballance != null) {
-    await updateUserdata((u) {
-      u.lastPlanBallance = ballance.writeToJson();
-      return u;
-    });
-    return ballance;
-  }
-  final user = await getUser();
-  if (user != null && user.lastPlanBallance != null && useCache) {
-    try {
-      return Response_PlanBallance.fromJson(
-        user.lastPlanBallance!,
-      );
-    } catch (e) {
-      Log.error('from json: $e');
-    }
-  }
-  return ballance;
-}
-
-// ignore: constant_identifier_names
-const int MONTHLY_PAYMENT_DAYS = 30;
-// ignore: constant_identifier_names
-const int YEARLY_PAYMENT_DAYS = 365;
-
-int calculateRefund(Response_PlanBallance current) {
-  var refund = getPlanPrice(SubscriptionPlan.Pro, paidMonthly: true);
-
-  if (current.paymentPeriodDays == YEARLY_PAYMENT_DAYS) {
-    final elapsedDays = DateTime.now()
-        .difference(
-          DateTime.fromMillisecondsSinceEpoch(
-            current.lastPaymentDoneUnixTimestamp.toInt() * 1000,
-          ),
-        )
-        .inDays;
-    if (elapsedDays < current.paymentPeriodDays.toInt()) {
-      // User has yearly plan with 10€
-      // used it half a year and wants now to upgrade => gets 5€ discount...
-      // math.ceil(((365-(365/2))/365)*10)
-      // => 5€
-
-      refund = (((YEARLY_PAYMENT_DAYS - elapsedDays) / YEARLY_PAYMENT_DAYS) *
-                  getPlanPrice(SubscriptionPlan.Pro, paidMonthly: false) /
-                  100)
-              .ceil() *
-          100;
-    }
-  } else {
-    final elapsedDays = DateTime.now()
-        .difference(
-          DateTime.fromMillisecondsSinceEpoch(
-            current.lastPaymentDoneUnixTimestamp.toInt() * 1000,
-          ),
-        )
-        .inDays;
-    if (elapsedDays > 14) {
-      refund = 0;
-    }
-  }
-  return refund;
-}
+import 'package:url_launcher/url_launcher.dart';
 
 class SubscriptionView extends StatefulWidget {
-  const SubscriptionView({super.key, this.redirectError});
-
-  final ErrorCode? redirectError;
+  const SubscriptionView({super.key});
 
   @override
   State<SubscriptionView> createState() => _SubscriptionViewState();
@@ -124,7 +37,7 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future<void> initAsync() async {
-    ballance = await loadPlanBalance();
+    ballance = await apiService.loadPlanBalance();
     if (ballance != null && ballance!.hasAdditionalAccountOwnerId()) {
       final ownerId = ballance!.additionalAccountOwnerId.toInt();
       final contact = await twonlyDB.contactsDao
@@ -137,61 +50,18 @@ class _SubscriptionViewState extends State<SubscriptionView> {
       }
     }
     setState(() {});
+    await apiService.forceIpaCheck();
   }
 
   @override
   Widget build(BuildContext context) {
-    final myLocale = Localizations.localeOf(context);
-    String? formattedBalance;
-    DateTime? nextPayment;
-    final currentPlan = context.read<CustomChangeProvider>().plan;
-
-    if (ballance != null) {
-      final lastPaymentDateTime = DateTime.fromMillisecondsSinceEpoch(
-        ballance!.lastPaymentDoneUnixTimestamp.toInt() * 1000,
-      );
-      if (isPayingUser(currentPlan)) {
-        nextPayment = lastPaymentDateTime
-            .add(Duration(days: ballance!.paymentPeriodDays.toInt()));
-      }
-      final ballanceInCents =
-          ballance!.transactions.map((a) => a.depositCents.toInt()).sum;
-      formattedBalance = NumberFormat.currency(
-        locale: myLocale.toString(),
-        symbol: '€',
-        decimalDigits: 2,
-      ).format(ballanceInCents / 100);
-    }
-
-    var refund = 0;
-    if (currentPlan == SubscriptionPlan.Pro && ballance != null) {
-      refund = calculateRefund(ballance!);
-    }
-
+    final currentPlan = context.watch<PurchasesProvider>().plan;
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.settingsSubscription),
       ),
       body: ListView(
         children: [
-          if (widget.redirectError != null)
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orangeAccent,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Text(
-                  (widget.redirectError == ErrorCode.PlanLimitReached)
-                      ? context.lang.planLimitReached
-                      : context.lang.planNotAllowed,
-                  style: const TextStyle(color: Colors.black),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
           Padding(
             padding: const EdgeInsets.all(32),
             child: Center(
@@ -220,7 +90,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 style: const TextStyle(color: Colors.orange),
               ),
             ),
-          if (!isPayingUser(currentPlan))
+          if (isPayingUser(currentPlan))
+            PlanCard(
+              plan: currentPlan,
+            ),
+          if (!isPayingUser(currentPlan) ||
+              currentPlan == SubscriptionPlan.Tester) ...[
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(18),
@@ -231,48 +106,16 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 ),
               ),
             ),
-          if (!isPayingUser(currentPlan) ||
-              currentPlan == SubscriptionPlan.Tester)
             PlanCard(
               plan: SubscriptionPlan.Pro,
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const CheckoutView(
-                        plan: SubscriptionPlan.Pro,
-                      );
-                    },
-                  ),
-                );
-                await initAsync();
-              },
+              onPurchase: initAsync,
             ),
-          if (currentPlan != SubscriptionPlan.Family)
             PlanCard(
               plan: SubscriptionPlan.Family,
-              refund: refund,
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return CheckoutView(
-                        plan: SubscriptionPlan.Family,
-                        refund: (refund > 0) ? refund : null,
-                        disableMonthlyOption:
-                            currentPlan == SubscriptionPlan.Pro &&
-                                ballance!.paymentPeriodDays.toInt() ==
-                                    YEARLY_PAYMENT_DAYS,
-                      );
-                    },
-                  ),
-                );
-                await initAsync();
-              },
+              onPurchase: initAsync,
             ),
-          if (!isPayingUser(currentPlan)) ...[
+          ],
+          if (currentPlan == SubscriptionPlan.Free) ...[
             const SizedBox(height: 10),
             Center(
               child: Padding(
@@ -287,58 +130,11 @@ class _SubscriptionViewState extends State<SubscriptionView> {
             const SizedBox(height: 10),
             PlanCard(
               plan: SubscriptionPlan.Plus,
-              onTap: () async {
-                await redeemUserInviteCode(context, SubscriptionPlan.Plus.name);
-                await initAsync();
-              },
+              onPurchase: initAsync,
             ),
           ],
           const SizedBox(height: 10),
           if (currentPlan != SubscriptionPlan.Family) const Divider(),
-          BetterListTile(
-            icon: FontAwesomeIcons.gears,
-            text: context.lang.manageSubscription,
-            subtitle: (nextPayment != null)
-                ? Text(
-                    '${context.lang.nextPayment}: ${DateFormat.yMMMMd(myLocale.toString()).format(nextPayment)}',
-                  )
-                : null,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return ManageSubscriptionView(
-                      ballance: ballance,
-                      nextPayment: nextPayment,
-                    );
-                  },
-                ),
-              );
-              await initAsync();
-            },
-          ),
-          BetterListTile(
-            icon: FontAwesomeIcons.moneyBillTransfer,
-            text: context.lang.transactionHistory,
-            subtitle: (formattedBalance != null)
-                ? Text('${context.lang.currentBalance}: $formattedBalance')
-                : null,
-            onTap: () async {
-              if (formattedBalance == null) return;
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return TransactionView(
-                      transactions: ballance?.transactions,
-                      formattedBalance: formattedBalance!,
-                    );
-                  },
-                ),
-              );
-            },
-          ),
           if (isPayingUser(currentPlan) ||
               currentPlan == SubscriptionPlan.Tester)
             BetterListTile(
@@ -359,64 +155,72 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                 await initAsync();
               },
             ),
-          BetterListTile(
-            icon: FontAwesomeIcons.ticket,
-            text: context.lang.createOrRedeemVoucher,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const VoucherView();
-                  },
-                ),
-              );
-              await initAsync();
-            },
-          ),
-          const SizedBox(height: 30),
         ],
       ),
     );
   }
 }
 
-int getPlanPrice(SubscriptionPlan plan, {required bool paidMonthly}) {
-  switch (plan) {
-    case SubscriptionPlan.Pro:
-      return paidMonthly ? 100 : 1000;
-    case SubscriptionPlan.Family:
-      return paidMonthly ? 200 : 2000;
-    // ignore: no_default_cases
-    default:
-      return 0;
-  }
-}
-
-class PlanCard extends StatelessWidget {
+class PlanCard extends StatefulWidget {
   const PlanCard({
     required this.plan,
     super.key,
-    this.refund,
-    this.onTap,
+    this.onPurchase,
     this.paidMonthly,
   });
   final SubscriptionPlan plan;
-  final void Function()? onTap;
-  final int? refund;
+  final void Function()? onPurchase;
   final bool? paidMonthly;
 
   @override
+  State<PlanCard> createState() => _PlanCardState();
+}
+
+String getFormattedPrice(PurchasableProduct product) {
+  if (product.price.contains('€')) {
+    return product.price.replaceAll(',00', '').replaceAll('.00', '');
+  }
+  return product.price;
+}
+
+class _PlanCardState extends State<PlanCard> {
+  Future<void> onButtonPressed(PurchasableProduct? product) async {
+    if (widget.onPurchase == null) return;
+    if (widget.plan == SubscriptionPlan.Free ||
+        widget.plan == SubscriptionPlan.Plus) {
+      await redeemUserInviteCode(context, SubscriptionPlan.Plus.name);
+      widget.onPurchase!();
+      return;
+    }
+    if (product == null) return;
+    await context.read<PurchasesProvider>().buy(product);
+    widget.onPurchase!();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final yearlyPrice = getPlanPrice(plan, paidMonthly: false);
-    final monthlyPrice = getPlanPrice(plan, paidMonthly: true);
+    final products = context.watch<PurchasesProvider>().products;
+    final currentPlan = context.watch<PurchasesProvider>().plan;
+    PurchasableProduct? yearlyProduct;
+    PurchasableProduct? monthlyProduct;
+
+    for (final product in products) {
+      if (product.id.toLowerCase().startsWith(widget.plan.name.toLowerCase())) {
+        if (product.id.toLowerCase().contains('monthly')) {
+          monthlyProduct = product;
+        } else if (product.id.toLowerCase().contains('yearly')) {
+          yearlyProduct = product;
+        }
+      }
+    }
+
     var features = <String>[];
 
-    switch (plan.name) {
+    switch (widget.plan.name) {
       case 'Free':
         features = [context.lang.freeFeature1];
       case 'Plus':
-        features = [context.lang.plusFeature1, context.lang.plusFeature2];
+        features = [context.lang.plusFeature1]; //, context.lang.plusFeature2];
       case 'Tester':
       case 'Pro':
         features = [
@@ -424,117 +228,135 @@ class PlanCard extends StatelessWidget {
           context.lang.proFeature2,
           context.lang.proFeature3,
           context.lang.proFeature4,
+          // context.lang.proFeature4,
         ];
       case 'Family':
         features = [
-          context.lang.proFeature1,
+          context.lang.familyFeature1,
           context.lang.familyFeature2,
-          context.lang.proFeature3,
-          context.lang.proFeature4,
+          context.lang.familyFeature3,
+          context.lang.familyFeature4,
         ];
       default:
     }
 
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          color: context.color.surfaceContainer,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        color: context.color.surfaceContainer,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    widget.plan.name,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (yearlyProduct != null && currentPlan != widget.plan)
+                    const SizedBox(height: 10),
+                  if (yearlyProduct != null &&
+                      widget.paidMonthly == null &&
+                      currentPlan != widget.plan)
+                    Column(
+                      children: [
+                        Text(
+                          '${getFormattedPrice(yearlyProduct)}/${context.lang.year}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (monthlyProduct != null)
+                          Text(
+                            '${getFormattedPrice(monthlyProduct)}/${context.lang.month}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                      ],
+                    ),
+                  if (widget.paidMonthly != null)
                     Text(
-                      plan.name,
+                      (widget.paidMonthly!)
+                          ? '${getFormattedPrice(monthlyProduct!)}/${context.lang.month}'
+                          : '${getFormattedPrice(yearlyProduct!)}/${context.lang.year}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (yearlyPrice != 0) const SizedBox(height: 10),
-                    if (yearlyPrice != 0 && paidMonthly == null)
-                      Column(
-                        children: [
-                          if (paidMonthly == null || paidMonthly!)
-                            Text(
-                              '${localePrizing(context, yearlyPrice)}/${context.lang.year}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          if (paidMonthly == null || !paidMonthly!)
-                            Text(
-                              '${localePrizing(context, monthlyPrice)}/${context.lang.month}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                        ],
-                      ),
-                    if (paidMonthly != null)
-                      Text(
-                        (paidMonthly!)
-                            ? '${localePrizing(context, monthlyPrice)}/${context.lang.month}'
-                            : '${localePrizing(context, yearlyPrice)}/${context.lang.year}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                ],
+              ),
+              const SizedBox(height: 10),
+              ...features.map(
+                (feature) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Text(
+                    feature,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (currentPlan == widget.plan)
+                FilledButton.icon(
+                  onPressed: () async {
+                    var url = 'https://apps.apple.com/account/subscriptions';
+                    if (Platform.isAndroid) {
+                      url =
+                          'https://play.google.com/store/account/subscriptions?sku=${gUser.subscriptionPlanIdStore}&package=eu.twonly';
+                    }
+                    await launchUrl(
+                      Uri.parse(url),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  label: const Text('Manage subscription'),
+                ),
+              if (widget.onPurchase != null && monthlyProduct != null)
+                OutlinedButton.icon(
+                  onPressed: () => onButtonPressed(monthlyProduct),
+                  label: (widget.plan == SubscriptionPlan.Free ||
+                          widget.plan == SubscriptionPlan.Plus)
+                      ? Text(context.lang.redeemUserInviteCodeTitle)
+                      : Text(
+                          context.lang.upgradeToPaidPlanButton(
+                            widget.plan.name,
+                            ' (${context.lang.monthly})',
+                          ),
                         ),
-                      ),
-                  ],
                 ),
-                const SizedBox(height: 10),
-                ...features.map(
-                  (feature) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text(
-                      feature,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+              if (widget.onPurchase != null &&
+                  (yearlyProduct != null ||
+                      currentPlan == SubscriptionPlan.Free))
+                FilledButton.icon(
+                  onPressed: () => onButtonPressed(yearlyProduct),
+                  label: (widget.plan == SubscriptionPlan.Free ||
+                          widget.plan == SubscriptionPlan.Plus)
+                      ? Text(context.lang.redeemUserInviteCodeTitle)
+                      : Text(
+                          context.lang.upgradeToPaidPlanButton(
+                            widget.plan.name,
+                            ' (${context.lang.yearly})',
+                          ),
+                        ),
                 ),
-                if (refund != null && refund! > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 7),
-                    child: Text(
-                      context.lang
-                          .subscriptionRefund(localePrizing(context, refund!)),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: context.color.primary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                if (onTap != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: FilledButton.icon(
-                      onPressed: onTap,
-                      label: (plan == SubscriptionPlan.Free ||
-                              plan == SubscriptionPlan.Plus)
-                          ? Text(context.lang.redeemUserInviteCodeTitle)
-                          : Text(
-                              context.lang.upgradeToPaidPlanButton(plan.name),
-                            ),
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -593,7 +415,7 @@ Future<void> redeemUserInviteCode(BuildContext context, String newPlan) async {
                 );
                 // reconnect to load new plan.
                 await apiService.close(() {});
-                await apiService.connect(force: true);
+                await apiService.connect();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
