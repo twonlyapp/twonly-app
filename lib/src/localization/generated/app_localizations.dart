@@ -1361,26 +1361,38 @@ abstract class AppLocalizations {
   /// No description provided for @proFeature3.
   ///
   /// In en, this message translates to:
-  /// **'✓ Cloud-Backup encrypted (coming-soon)'**
+  /// **'✓ Restore flames'**
   String get proFeature3;
 
   /// No description provided for @proFeature4.
   ///
   /// In en, this message translates to:
-  /// **'Additional features (coming-soon)'**
+  /// **'✓ Support twonly'**
   String get proFeature4;
 
   /// No description provided for @familyFeature1.
   ///
   /// In en, this message translates to:
-  /// **'✓ All from Pro'**
+  /// **'✓ Unlimited media file uploads'**
   String get familyFeature1;
 
   /// No description provided for @familyFeature2.
   ///
   /// In en, this message translates to:
-  /// **'✓ 4 additional Plus users'**
+  /// **'✓ 4 additional Plus user'**
   String get familyFeature2;
+
+  /// No description provided for @familyFeature3.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Restore flames'**
+  String get familyFeature3;
+
+  /// No description provided for @familyFeature4.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Support twonly'**
+  String get familyFeature4;
 
   /// No description provided for @redeemUserInviteCode.
   ///

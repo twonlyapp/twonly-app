@@ -227,14 +227,15 @@ class _PlanCardState extends State<PlanCard> {
           context.lang.proFeature1,
           context.lang.proFeature2,
           context.lang.proFeature3,
+          context.lang.proFeature4,
           // context.lang.proFeature4,
         ];
       case 'Family':
         features = [
-          context.lang.proFeature1,
+          context.lang.familyFeature1,
           context.lang.familyFeature2,
-          context.lang.proFeature3,
-          // context.lang.proFeature4,
+          context.lang.familyFeature3,
+          context.lang.familyFeature4,
         ];
       default:
     }

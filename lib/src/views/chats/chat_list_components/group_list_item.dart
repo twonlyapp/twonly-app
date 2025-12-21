@@ -159,7 +159,7 @@ class _UserListItem extends State<GroupListItem> {
   }
 
   Future<void> onTap() async {
-    if (_currentMessage == null) {
+    if (_currentMessage == null && widget.group.totalMediaCounter == 0) {
       await Navigator.push(
         context,
         MaterialPageRoute(

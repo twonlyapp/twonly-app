@@ -707,16 +707,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proFeature2 => '✓ 1 additional Plus user';
 
   @override
-  String get proFeature3 => '✓ Cloud-Backup encrypted (coming-soon)';
+  String get proFeature3 => '✓ Restore flames';
 
   @override
-  String get proFeature4 => 'Additional features (coming-soon)';
+  String get proFeature4 => '✓ Support twonly';
 
   @override
-  String get familyFeature1 => '✓ All from Pro';
+  String get familyFeature1 => '✓ Unlimited media file uploads';
 
   @override
-  String get familyFeature2 => '✓ 4 additional Plus users';
+  String get familyFeature2 => '✓ 4 additional Plus user';
+
+  @override
+  String get familyFeature3 => '✓ Restore flames';
+
+  @override
+  String get familyFeature4 => '✓ Support twonly';
 
   @override
   String get redeemUserInviteCode => 'Or redeem a twonly-Code.';
