@@ -79,6 +79,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your username must be at least 3 characters long.';
 
   @override
+  String get registerProofOfWorkFailed =>
+      'There was an issue with the captcha test. Please try again.';
+
+  @override
   String get registerSubmitButton => 'Register now!';
 
   @override

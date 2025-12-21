@@ -20,6 +20,7 @@
     "registerUsernameSlogan": "Bitte wähle einen Benutzernamen, damit dich andere finden können!",
     "registerUsernameDecoration": "Benutzername",
     "registerUsernameLimits": "Der Benutzername muss mindestens 3 Zeichen lang sein.",
+    "registerProofOfWorkFailed": "Beim Captcha-Test gab es ein Problem. Bitte versuche es erneut.",
     "registerSubmitButton": "Jetzt registrieren!",
     "registerTwonlyCodeText": "Hast du einen twonly-Code erhalten? Dann löse ihn entweder direkt hier oder später ein!",
     "registerTwonlyCodeLabel": "twonly-Code",

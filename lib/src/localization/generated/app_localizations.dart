@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'Your username must be at least 3 characters long.'**
   String get registerUsernameLimits;
 
+  /// No description provided for @registerProofOfWorkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'There was an issue with the captcha test. Please try again.'**
+  String get registerProofOfWorkFailed;
+
   /// No description provided for @registerSubmitButton.
   ///
   /// In en, this message translates to:
