@@ -187,6 +187,10 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
       }
     }
 
+    if (purchaseDetails.status == PurchaseStatus.error) {
+      await iapConnection.restorePurchases();
+    }
+
     if (purchaseDetails.pendingCompletePurchase) {
       await iapConnection.completePurchase(purchaseDetails);
     }

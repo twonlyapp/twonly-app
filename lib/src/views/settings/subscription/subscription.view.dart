@@ -114,6 +114,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               plan: SubscriptionPlan.Family,
               onPurchase: initAsync,
             ),
+          ],
+          if (currentPlan == SubscriptionPlan.Free) ...[
             const SizedBox(height: 10),
             Center(
               child: Padding(
@@ -172,6 +174,13 @@ class PlanCard extends StatefulWidget {
 
   @override
   State<PlanCard> createState() => _PlanCardState();
+}
+
+String getFormattedPrice(PurchasableProduct product) {
+  if (product.price.contains('€')) {
+    return product.price.replaceAll(',00', '').replaceAll('.00', '');
+  }
+  return product.price;
 }
 
 class _PlanCardState extends State<PlanCard> {
@@ -261,7 +270,7 @@ class _PlanCardState extends State<PlanCard> {
                     Column(
                       children: [
                         Text(
-                          '${yearlyProduct.price}/${context.lang.year}',
+                          '${getFormattedPrice(yearlyProduct)}/${context.lang.year}',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 20,
@@ -270,7 +279,7 @@ class _PlanCardState extends State<PlanCard> {
                         ),
                         if (monthlyProduct != null)
                           Text(
-                            '${monthlyProduct.price}/${context.lang.month}',
+                            '${getFormattedPrice(monthlyProduct)}/${context.lang.month}',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 16,
@@ -282,8 +291,8 @@ class _PlanCardState extends State<PlanCard> {
                   if (widget.paidMonthly != null)
                     Text(
                       (widget.paidMonthly!)
-                          ? '${monthlyProduct?.price}/${context.lang.month}'
-                          : '${yearlyProduct?.price}/${context.lang.year}',
+                          ? '${getFormattedPrice(monthlyProduct!)}/${context.lang.month}'
+                          : '${getFormattedPrice(yearlyProduct!)}/${context.lang.year}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 20,
@@ -319,22 +328,21 @@ class _PlanCardState extends State<PlanCard> {
                   label: const Text('Manage subscription'),
                 ),
               if (widget.onPurchase != null && monthlyProduct != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: OutlinedButton.icon(
-                    onPressed: () => onButtonPressed(monthlyProduct),
-                    label: (widget.plan == SubscriptionPlan.Free ||
-                            widget.plan == SubscriptionPlan.Plus)
-                        ? Text(context.lang.redeemUserInviteCodeTitle)
-                        : Text(
-                            context.lang.upgradeToPaidPlanButton(
-                              widget.plan.name,
-                              ' (${context.lang.monthly})',
-                            ),
+                OutlinedButton.icon(
+                  onPressed: () => onButtonPressed(monthlyProduct),
+                  label: (widget.plan == SubscriptionPlan.Free ||
+                          widget.plan == SubscriptionPlan.Plus)
+                      ? Text(context.lang.redeemUserInviteCodeTitle)
+                      : Text(
+                          context.lang.upgradeToPaidPlanButton(
+                            widget.plan.name,
+                            ' (${context.lang.monthly})',
                           ),
-                  ),
+                        ),
                 ),
-              if (widget.onPurchase != null && yearlyProduct != null)
+              if (widget.onPurchase != null &&
+                  (yearlyProduct != null ||
+                      currentPlan == SubscriptionPlan.Free))
                 FilledButton.icon(
                   onPressed: () => onButtonPressed(yearlyProduct),
                   label: (widget.plan == SubscriptionPlan.Free ||
