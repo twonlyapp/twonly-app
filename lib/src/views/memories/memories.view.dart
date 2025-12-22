@@ -145,6 +145,6 @@ class MemoriesViewState extends State<MemoriesView> {
         // reverseTransitionDuration: Duration.zero,
       ),
     ) as bool?;
-    setState(() {});
+    if (mounted) setState(() {});
   }
 }
