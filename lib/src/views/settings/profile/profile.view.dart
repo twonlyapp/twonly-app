@@ -146,7 +146,7 @@ class _ProfileViewState extends State<ProfileView> {
                 maxLength: 12,
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(12),
-                  FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z]')),
+                  FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z._]')),
                 ],
               );
               if (context.mounted && username != null && username != '') {

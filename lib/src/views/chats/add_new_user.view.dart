@@ -169,7 +169,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
                   },
                   inputFormatters: [
                     LengthLimitingTextInputFormatter(12),
-                    FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z]')),
+                    FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z._]')),
                   ],
                   controller: searchUserName,
                   decoration:

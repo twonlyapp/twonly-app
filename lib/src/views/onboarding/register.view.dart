@@ -40,6 +40,7 @@ class _RegisterViewState extends State<RegisterView> {
   bool _isTryingToRegister = false;
   bool _isValidUserName = false;
   bool _showUserNameError = false;
+  bool _showProofOfWorkError = false;
 
   late Future<int>? proofOfWork;
 
@@ -63,6 +64,7 @@ class _RegisterViewState extends State<RegisterView> {
     setState(() {
       _isTryingToRegister = true;
       _showUserNameError = false;
+      _showProofOfWorkError = false;
     });
 
     late int proof;
@@ -93,6 +95,7 @@ class _RegisterViewState extends State<RegisterView> {
       Log.info('Got user_id ${res.value} from server');
       userId = res.value.userid.toInt() as int;
     } else {
+      proofOfWork = null;
       if (res.error == ErrorCode.RegistrationDisabled) {
         _registrationDisabled = true;
         return;
@@ -103,9 +106,12 @@ class _RegisterViewState extends State<RegisterView> {
         return createNewUser();
       }
       if (res.error == ErrorCode.InvalidProofOfWork) {
-        Log.error('Proof of Work is invalid. Try again.');
         await deleteLocalUserData();
-        return createNewUser();
+        setState(() {
+          _showProofOfWorkError = true;
+          _isTryingToRegister = false;
+        });
+        return;
       }
       if (mounted) {
         setState(() {
@@ -232,7 +238,7 @@ class _RegisterViewState extends State<RegisterView> {
                 },
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(12),
-                  FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z]')),
+                  FilteringTextInputFormatter.allow(RegExp('[a-z0-9A-Z._]')),
                 ],
                 style: const TextStyle(fontSize: 17),
                 decoration: getInputDecoration(
@@ -248,7 +254,17 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 10),
+              Text(
+                context.lang.registerProofOfWorkFailed,
+                style: TextStyle(
+                  color:
+                      _showProofOfWorkError ? Colors.red : Colors.transparent,
+                  fontSize: 12,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
               Column(
                 children: [
                   FilledButton.icon(
