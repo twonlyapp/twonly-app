@@ -18,6 +18,7 @@ import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_dat
 import 'package:twonly/src/views/chats/chat_messages_components/message_input.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
+import 'package:twonly/src/views/components/blink.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
@@ -372,36 +373,25 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                       );
                     } else {
                       final chatMessage = messages[i].message!;
-                      return Transform.translate(
-                        offset: Offset(
-                          (focusedScrollItem == i)
-                              ? (chatMessage.senderId == null)
-                                  ? -8
-                                  : 8
-                              : 0,
-                          0,
-                        ),
-                        child: Transform.scale(
-                          scale: (focusedScrollItem == i) ? 1.05 : 1,
-                          child: ChatListEntry(
-                            key: Key(chatMessage.messageId),
-                            message: messages[i].message!,
-                            nextMessage:
-                                (i > 0) ? messages[i - 1].message : null,
-                            prevMessage: ((i + 1) < messages.length)
-                                ? messages[i + 1].message
-                                : null,
-                            group: group,
-                            galleryItems: galleryItems,
-                            userIdToContact: userIdToContact,
-                            scrollToMessage: scrollToMessage,
-                            onResponseTriggered: () {
-                              setState(() {
-                                quotesMessage = chatMessage;
-                              });
-                              textFieldFocus.requestFocus();
-                            },
-                          ),
+                      return BlinkWidget(
+                        enabled: focusedScrollItem == i,
+                        child: ChatListEntry(
+                          key: Key(chatMessage.messageId),
+                          message: messages[i].message!,
+                          nextMessage: (i > 0) ? messages[i - 1].message : null,
+                          prevMessage: ((i + 1) < messages.length)
+                              ? messages[i + 1].message
+                              : null,
+                          group: group,
+                          galleryItems: galleryItems,
+                          userIdToContact: userIdToContact,
+                          scrollToMessage: scrollToMessage,
+                          onResponseTriggered: () {
+                            setState(() {
+                              quotesMessage = chatMessage;
+                            });
+                            textFieldFocus.requestFocus();
+                          },
                         ),
                       );
                     }
