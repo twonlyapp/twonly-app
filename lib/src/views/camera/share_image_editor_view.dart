@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -134,6 +135,82 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     setState(() {});
   }
 
+  Future<void> _setMaxShowTime(int? maxShowTime) async {
+    await mediaService.setDisplayLimit(maxShowTime);
+    if (!mounted) return;
+    setState(() {});
+    await updateUserdata((user) {
+      user.defaultShowTime = maxShowTime;
+      return user;
+    });
+  }
+
+  Future<void> _setImageDisplayTime() async {
+    if (media.type == MediaType.video) {
+      await mediaService.setDisplayLimit(
+        (media.displayLimitInMilliseconds == null) ? 0 : null,
+      );
+      if (!mounted) return;
+      setState(() {});
+      return;
+    }
+
+    final options = [
+      1000,
+      2000,
+      3000,
+      4000,
+      5000,
+      6000,
+      7000,
+      8000,
+      9000,
+      10000,
+      15000,
+      20000,
+      null,
+    ];
+
+    var initialItem = options.length - 1;
+    if (media.displayLimitInMilliseconds != null) {
+      initialItem = options.indexOf(media.displayLimitInMilliseconds);
+      if (initialItem == -1) {
+        initialItem = options.length - 1;
+      }
+    }
+
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => Container(
+        height: 350,
+        padding: const EdgeInsets.only(top: 6),
+        margin:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: SafeArea(
+          top: false,
+          child: CupertinoPicker(
+            magnification: 1.22,
+            squeeze: 1.2,
+            useMagnifier: true,
+            itemExtent: 32,
+            scrollController: FixedExtentScrollController(
+              initialItem: initialItem,
+            ),
+            onSelectedItemChanged: (int selectedItem) {
+              _setMaxShowTime(options[selectedItem]);
+            },
+            children: options.map((e) {
+              return Center(
+                child: Text(e == null ? '∞' : '${e ~/ 1000}s'),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
   List<Widget> get actionsAtTheRight {
     if (layers.isNotEmpty &&
         layers.last.isEditing &&
@@ -205,33 +282,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                   : Icons.repeat_one_rounded
               : Icons.timer_outlined,
           tooltipText: context.lang.protectAsARealTwonly,
-          onPressed: () async {
-            if (media.type == MediaType.video) {
-              await mediaService.setDisplayLimit(
-                (media.displayLimitInMilliseconds == null) ? 0 : null,
-              );
-              if (!mounted) return;
-              setState(() {});
-              return;
-            }
-            int? maxShowTime;
-            if (media.displayLimitInMilliseconds == null) {
-              maxShowTime = 1000;
-            } else if (media.displayLimitInMilliseconds == 1000) {
-              maxShowTime = 5000;
-            } else if (media.displayLimitInMilliseconds == 5000) {
-              maxShowTime = 12000;
-            } else if (media.displayLimitInMilliseconds == 12000) {
-              maxShowTime = 20000;
-            }
-            await mediaService.setDisplayLimit(maxShowTime);
-            if (!mounted) return;
-            setState(() {});
-            await updateUserdata((user) {
-              user.defaultShowTime = maxShowTime;
-              return user;
-            });
-          },
+          onPressed: _setImageDisplayTime,
         ),
       ),
       if (media.type == MediaType.video)
