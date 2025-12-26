@@ -1563,4 +1563,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startWithCameraOpen => 'Start with camera open';
+
+  @override
+  String get showImagePreviewWhenSending =>
+      'Display image preview when selecting recipients';
 }

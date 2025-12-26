@@ -487,5 +487,6 @@
   "gotLinkFromFriend": "Yes, I got the link from my friend!",
   "couldNotVerifyUsername": "Could not verify {username}",
   "linkPubkeyDoesNotMatch": "The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!",
-  "startWithCameraOpen": "Start with camera open"
+  "startWithCameraOpen": "Start with camera open",
+  "showImagePreviewWhenSending": "Display image preview when selecting recipients"
 }

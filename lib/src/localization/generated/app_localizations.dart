@@ -2845,6 +2845,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start with camera open'**
   String get startWithCameraOpen;
+
+  /// No description provided for @showImagePreviewWhenSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Display image preview when selecting recipients'**
+  String get showImagePreviewWhenSending;
 }
 
 class _AppLocalizationsDelegate

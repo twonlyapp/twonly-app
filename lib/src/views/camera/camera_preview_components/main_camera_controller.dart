@@ -5,13 +5,13 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/qr.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/painters/barcode_detector_painter.dart';
 

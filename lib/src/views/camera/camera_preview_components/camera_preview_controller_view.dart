@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +18,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
@@ -316,7 +316,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   Future<void> takePicture() async {
     if (_sharePreviewIsShown || _isVideoRecording) return;
-    late Future<Uint8List?> imageBytes;
 
     setState(() {
       _sharePreviewIsShown = true;
@@ -345,10 +344,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
-    imageBytes = mc.screenshotController
+    final image = await mc.screenshotController
         .capture(pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
-    if (await pushMediaEditor(imageBytes, null)) {
+    if (await pushMediaEditor(image, null)) {
       return;
     }
     setState(() {
@@ -357,7 +356,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<bool> pushMediaEditor(
-    Future<Uint8List?>? imageBytes,
+    ScreenshotImage? imageBytes,
     File? videoFilePath, {
     bool sharedFromGallery = false,
     MediaType? mediaType,
@@ -478,7 +477,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       Log.info('Picket from gallery: ${pickedFile.path}');
 
       File? videoFilePath;
-      Future<Uint8List>? imageBytes;
+      ScreenshotImage? image;
       MediaType? mediaType;
 
       final isImage =
@@ -487,13 +486,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         if (pickedFile.name.contains('.gif')) {
           mediaType = MediaType.gif;
         }
-        imageBytes = pickedFile.readAsBytes();
+        image = ScreenshotImage(imageBytesFuture: pickedFile.readAsBytes());
       } else {
         videoFilePath = File(pickedFile.path);
       }
 
       await pushMediaEditor(
-        imageBytes,
+        image,
         videoFilePath,
         sharedFromGallery: true,
         mediaType: mediaType,

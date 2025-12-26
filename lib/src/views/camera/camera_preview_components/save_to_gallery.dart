@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -15,7 +16,7 @@ class SaveToGalleryButton extends StatefulWidget {
     required this.mediaService,
     super.key,
   });
-  final Future<bool> Function() storeImageAsOriginal;
+  final Future<Uint8List?> Function() storeImageAsOriginal;
   final bool displayButtonLabel;
   final MediaFileService mediaService;
   final bool isLoading;

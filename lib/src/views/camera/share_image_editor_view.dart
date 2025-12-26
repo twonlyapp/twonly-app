@@ -6,7 +6,6 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
@@ -15,6 +14,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/save_to_gallery.dart';
@@ -33,14 +33,15 @@ List<Layer> undoLayers = [];
 List<Layer> removedLayers = [];
 
 class ShareImageEditorView extends StatefulWidget {
-  const ShareImageEditorView(
-      {required this.sharedFromGallery,
-      required this.mediaFileService,
-      super.key,
-      this.imageBytesFuture,
-      this.sendToGroup,
-      this.mainCameraController});
-  final Future<Uint8List?>? imageBytesFuture;
+  const ShareImageEditorView({
+    required this.sharedFromGallery,
+    required this.mediaFileService,
+    super.key,
+    this.imageBytesFuture,
+    this.sendToGroup,
+    this.mainCameraController,
+  });
+  final ScreenshotImage? imageBytesFuture;
   final Group? sendToGroup;
   final bool sharedFromGallery;
   final MediaFileService mediaFileService;
@@ -84,9 +85,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         loadImage(widget.imageBytesFuture!);
       } else {
         if (widget.mediaFileService.tempPath.existsSync()) {
-          loadImage(widget.mediaFileService.tempPath.readAsBytes());
+          loadImage(ScreenshotImage(file: widget.mediaFileService.tempPath));
         } else if (widget.mediaFileService.originalPath.existsSync()) {
-          loadImage(widget.mediaFileService.originalPath.readAsBytes());
+          loadImage(
+            ScreenshotImage(file: widget.mediaFileService.originalPath),
+          );
         }
       }
     }
@@ -383,11 +386,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     }
   }
 
-  Future<Uint8List?> getEditedImageBytes() async {
+  Future<ScreenshotImage?> getEditedImageBytes() async {
     if (layers.length == 1) {
       if (layers.first is BackgroundLayerData) {
         final image = (layers.first as BackgroundLayerData).image.bytes;
-        return image;
+        return ScreenshotImage(imageBytes: image);
       }
     }
 
@@ -412,22 +415,31 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     return image;
   }
 
-  Future<bool> storeImageAsOriginal() async {
+  Future<Uint8List?> storeImageAsOriginal() async {
     if (mediaService.overlayImagePath.existsSync()) {
       mediaService.overlayImagePath.deleteSync();
     }
     if (mediaService.tempPath.existsSync()) {
       mediaService.tempPath.deleteSync();
     }
+    if (mediaService.originalPath.existsSync()) {
+      mediaService.originalPath.deleteSync();
+    }
+    var bytes = imageBytes;
     if (media.type == MediaType.gif) {
       mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
     } else {
-      final imageBytes = await getEditedImageBytes();
-      if (imageBytes == null) return false;
+      final image = await getEditedImageBytes();
+      if (image == null) return null;
+      bytes = await image.getBytes();
+      if (bytes == null) {
+        Log.error('imageBytes are empty');
+        return null;
+      }
       if (media.type == MediaType.image || media.type == MediaType.gif) {
-        mediaService.originalPath.writeAsBytesSync(imageBytes);
+        mediaService.originalPath.writeAsBytesSync(bytes!);
       } else if (media.type == MediaType.video) {
-        mediaService.overlayImagePath.writeAsBytesSync(imageBytes);
+        mediaService.overlayImagePath.writeAsBytesSync(bytes!);
       } else {
         Log.error('MediaType not supported: ${media.type}');
       }
@@ -447,12 +459,11 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             .renameSync(MediaFileService(mediaFile).storedPath.path);
       }
     }
-    return true;
+    return bytes;
   }
 
-  Future<void> loadImage(Future<Uint8List?> imageBytesFuture) async {
-    imageBytes = await imageBytesFuture;
-
+  Future<void> loadImage(ScreenshotImage imageBytesFuture) async {
+    imageBytes = await imageBytesFuture.getBytes();
     // store this image so it can be used as a draft in case the app is restarted
     mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
 
@@ -486,18 +497,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       sendingOrLoadingImage = true;
     });
 
-    await storeImageAsOriginal();
-
     if (!context.mounted) return;
 
     // Insert media file into the messages database and start uploading process in the background
-    await insertMediaFileInMessagesTable(
-      mediaService,
-      [widget.sendToGroup!.groupId],
+    unawaited(
+      insertMediaFileInMessagesTable(
+        mediaService,
+        [widget.sendToGroup!.groupId],
+        storeImageAsOriginal(),
+      ),
     );
 
     if (context.mounted) {
-      // ignore: use_build_context_synchronously
       Navigator.pop(context, true);
     }
   }

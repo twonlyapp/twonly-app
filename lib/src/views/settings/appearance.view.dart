@@ -92,6 +92,16 @@ class _AppearanceViewState extends State<AppearanceView> {
     });
   }
 
+  Future<void> toggleShowImagePreviewWhenSending() async {
+    await updateUserdata((u) {
+      u.showShowImagePreviewWhenSending = !u.showShowImagePreviewWhenSending;
+      return u;
+    });
+    setState(() {
+      // gUser
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedTheme = context.watch<SettingsChangeProvider>().themeMode;
@@ -125,6 +135,14 @@ class _AppearanceViewState extends State<AppearanceView> {
             trailing: Switch(
               value: gUser.startWithCameraOpen,
               onChanged: (a) => toggleStartWithCameraOpen(),
+            ),
+          ),
+          ListTile(
+            title: Text(context.lang.showImagePreviewWhenSending),
+            onTap: toggleShowImagePreviewWhenSending,
+            trailing: Switch(
+              value: gUser.showShowImagePreviewWhenSending,
+              onChanged: (a) => toggleShowImagePreviewWhenSending(),
             ),
           ),
         ],

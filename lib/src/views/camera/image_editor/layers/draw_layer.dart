@@ -3,8 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hand_signature/signature.dart';
 // ignore: implementation_imports
 import 'package:hand_signature/src/utils.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 

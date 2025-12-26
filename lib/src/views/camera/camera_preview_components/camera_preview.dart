@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:screenshot/screenshot.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 
