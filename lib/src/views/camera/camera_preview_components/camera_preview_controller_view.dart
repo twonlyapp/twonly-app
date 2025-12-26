@@ -28,6 +28,7 @@ import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
+import 'package:twonly/src/views/components/loader.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/home.view.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -639,10 +640,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
             if (_galleryLoadedImageIsShown)
               Center(
                 child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1,
+                  height: 60,
+                  width: 60,
+                  child: ThreeRotatingDots(
+                    size: 40,
                     color: context.color.primary,
                   ),
                 ),
