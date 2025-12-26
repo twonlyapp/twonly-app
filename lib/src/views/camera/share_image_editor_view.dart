@@ -16,6 +16,7 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/save_to_gallery.dart';
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/image_editor/data/image_item.dart';
@@ -32,17 +33,18 @@ List<Layer> undoLayers = [];
 List<Layer> removedLayers = [];
 
 class ShareImageEditorView extends StatefulWidget {
-  const ShareImageEditorView({
-    required this.sharedFromGallery,
-    required this.mediaFileService,
-    super.key,
-    this.imageBytesFuture,
-    this.sendToGroup,
-  });
+  const ShareImageEditorView(
+      {required this.sharedFromGallery,
+      required this.mediaFileService,
+      super.key,
+      this.imageBytesFuture,
+      this.sendToGroup,
+      this.mainCameraController});
   final Future<Uint8List?>? imageBytesFuture;
   final Group? sendToGroup;
   final bool sharedFromGallery;
   final MediaFileService mediaFileService;
+  final MainCameraController? mainCameraController;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -69,7 +71,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     super.initState();
 
     if (media.type != MediaType.gif) {
-      layers.add(FilterLayerData());
+      layers.add(FilterLayerData(key: GlobalKey()));
     }
 
     if (widget.sendToGroup != null) {
@@ -147,6 +149,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             removedLayers.clear();
             layers.add(
               TextLayerData(
+                key: GlobalKey(),
                 textLayersBefore: layers.whereType<TextLayerData>().length,
               ),
             );
@@ -161,7 +164,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           onPressed: () async {
             undoLayers.clear();
             removedLayers.clear();
-            layers.add(DrawLayerData());
+            layers.add(DrawLayerData(key: GlobalKey()));
             setState(() {});
           },
         ),
@@ -458,9 +461,16 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     if (!context.mounted) return;
 
+    Future.delayed(const Duration(milliseconds: 500), () async {
+      if (context.mounted) {
+        await widget.mainCameraController?.closeCamera();
+      }
+    });
+
     layers.insert(
       0,
       BackgroundLayerData(
+        key: GlobalKey(),
         image: currentImage,
       ),
     );
@@ -526,6 +536,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
                 removedLayers.clear();
                 layers.add(
                   TextLayerData(
+                    key: GlobalKey(),
                     offset: Offset(0, tabDownPosition),
                     textLayersBefore: layers.whereType<TextLayerData>().length,
                   ),

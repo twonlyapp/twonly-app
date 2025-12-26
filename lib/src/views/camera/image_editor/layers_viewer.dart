@@ -23,12 +23,14 @@ class LayersViewer extends StatelessWidget {
       children: [
         ...layers.whereType<BackgroundLayerData>().map((layerItem) {
           return BackgroundLayer(
+            key: layerItem.key,
             layerData: layerItem,
             onUpdate: onUpdate,
           );
         }),
         ...layers.whereType<FilterLayerData>().map((layerItem) {
           return FilterLayer(
+            key: layerItem.key,
             layerData: layerItem,
           );
         }),
@@ -40,12 +42,13 @@ class LayersViewer extends StatelessWidget {
             .map((layerItem) {
           if (layerItem is EmojiLayerData) {
             return EmojiLayer(
-              key: GlobalKey(),
+              key: layerItem.key,
               layerData: layerItem,
               onUpdate: onUpdate,
             );
           } else if (layerItem is DrawLayerData) {
             return DrawLayer(
+              key: layerItem.key,
               layerData: layerItem,
               onUpdate: onUpdate,
             );
@@ -54,7 +57,7 @@ class LayersViewer extends StatelessWidget {
         }),
         ...layers.whereType<TextLayerData>().map((layerItem) {
           return TextLayer(
-            // key: GlobalKey(),
+            key: layerItem.key,
             layerData: layerItem,
             onUpdate: onUpdate,
           );

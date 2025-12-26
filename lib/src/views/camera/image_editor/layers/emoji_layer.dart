@@ -119,6 +119,11 @@ class _EmojiLayerState extends State<EmojiLayer> {
                 setState(() {
                   twoPointerWhereDown = details.pointerCount >= 2;
                   widget.layerData.size = initialScale * details.scale;
+                  if (widget.layerData.size > 96) {
+                    // https://github.com/twonlyapp/twonly-app/issues/349
+                    widget.layerData.size = 96;
+                  }
+                  // print(widget.layerData.size);
                   widget.layerData.rotation =
                       initialRotation + details.rotation;
 

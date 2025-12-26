@@ -7,6 +7,7 @@ import 'package:twonly/src/views/camera/image_editor/data/image_item.dart';
 /// Layer class with some common properties
 class Layer {
   Layer({
+    required this.key,
     this.offset = Offset.zero,
     this.opacity = 1,
     this.isEditing = false,
@@ -16,6 +17,7 @@ class Layer {
     this.rotation = 0,
     this.scale = 1,
   });
+  Key key;
   Offset offset;
   double rotation;
   double scale;
@@ -29,18 +31,24 @@ class Layer {
 /// Attributes used by [BackgroundLayer]
 class BackgroundLayerData extends Layer {
   BackgroundLayerData({
+    required super.key,
     required this.image,
   });
   ImageItem image;
 }
 
 class FilterLayerData extends Layer {
+  FilterLayerData({
+    required super.key,
+    this.page = 1,
+  });
   int page = 1;
 }
 
 /// Attributes used by [EmojiLayer]
 class EmojiLayerData extends Layer {
   EmojiLayerData({
+    required super.key,
     this.text = '',
     this.size = 64,
     super.offset,
@@ -56,6 +64,7 @@ class EmojiLayerData extends Layer {
 /// Attributes used by [TextLayer]
 class TextLayerData extends Layer {
   TextLayerData({
+    required super.key,
     required this.textLayersBefore,
     this.text = '',
     super.offset,
@@ -72,6 +81,7 @@ class TextLayerData extends Layer {
 class DrawLayerData extends Layer {
   // String text;
   DrawLayerData({
+    required super.key,
     super.offset,
     super.opacity,
     super.rotation,

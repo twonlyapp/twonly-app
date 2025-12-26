@@ -397,6 +397,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           sharedFromGallery: sharedFromGallery,
           sendToGroup: widget.sendToGroup,
           mediaFileService: mediaFileService,
+          mainCameraController: mc,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;

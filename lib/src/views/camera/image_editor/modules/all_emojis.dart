@@ -44,6 +44,7 @@ class EmojiPickerBottom extends StatelessWidget {
                     Navigator.pop(
                       context,
                       EmojiLayerData(
+                        key: GlobalKey(),
                         text: emoji.emoji,
                       ),
                     );
