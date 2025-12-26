@@ -94,6 +94,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       listenable: context.watch<SettingsChangeProvider>(),
       builder: (BuildContext context, Widget? child) {
         return MaterialApp(
+          scaffoldMessengerKey: globalRootScaffoldMessengerKey,
           restorationScopeId: 'app',
           localizationsDelegates: const [
             AppLocalizations.delegate,

@@ -2851,6 +2851,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Display image preview when selecting recipients'**
   String get showImagePreviewWhenSending;
+
+  /// No description provided for @verifiedPublicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'The public key of {username} has been verified and is valid.'**
+  String verifiedPublicKey(Object username);
 }
 
 class _AppLocalizationsDelegate

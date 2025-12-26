@@ -1567,4 +1567,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get showImagePreviewWhenSending =>
       'Display image preview when selecting recipients';
+
+  @override
+  String verifiedPublicKey(Object username) {
+    return 'The public key of $username has been verified and is valid.';
+  }
 }

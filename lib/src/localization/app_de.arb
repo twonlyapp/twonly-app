@@ -458,5 +458,6 @@
     "couldNotVerifyUsername": "{username} konnte nicht verifiziert werden",
     "linkPubkeyDoesNotMatch": "Der öffentliche Schlüssel im Link stimmt nicht mit dem für diesen Kontakt gespeicherten öffentlichen Schlüssel überein. Triff die Person persönlich und scanne den QR-Code direkt!",
     "startWithCameraOpen": "Mit geöffneter Kamera starten",
-    "showImagePreviewWhenSending": "Bildvorschau bei der Auswahl von Empfängern anzeigen"
+    "showImagePreviewWhenSending": "Bildvorschau bei der Auswahl von Empfängern anzeigen",
+    "verifiedPublicKey": "Der öffentliche Schlüssel von {username} wurde überprüft und ist gültig."
 }
