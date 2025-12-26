@@ -230,10 +230,10 @@ class HomeViewState extends State<HomeView> {
     final notificationAppLaunchDetails =
         await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
 
-    if (notificationAppLaunchDetails != null) {
-      if (notificationAppLaunchDetails.didNotificationLaunchApp) {
-        globalUpdateOfHomeViewPageIndex(0);
-      }
+    if (widget.initialPage == 0 ||
+        (notificationAppLaunchDetails != null &&
+            notificationAppLaunchDetails.didNotificationLaunchApp)) {
+      globalUpdateOfHomeViewPageIndex(0);
     }
 
     final draftMedia = await twonlyDB.mediaFilesDao.getDraftMediaFile();

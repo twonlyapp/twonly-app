@@ -2839,6 +2839,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!'**
   String get linkPubkeyDoesNotMatch;
+
+  /// No description provided for @startWithCameraOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with camera open'**
+  String get startWithCameraOpen;
 }
 
 class _AppLocalizationsDelegate
