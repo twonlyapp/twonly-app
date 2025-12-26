@@ -337,10 +337,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
-    if (Platform.isIOS) {
-      // android has a problem with this. Flash is turned off in the pausePreview function.
+    if (mc.cameraController?.value.flashMode != FlashMode.off) {
       await mc.cameraController?.setFlashMode(FlashMode.off);
     }
+
     if (!mounted) {
       return;
     }
