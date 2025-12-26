@@ -437,9 +437,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         return null;
       }
       if (media.type == MediaType.image || media.type == MediaType.gif) {
-        mediaService.originalPath.writeAsBytesSync(bytes!);
+        mediaService.originalPath.writeAsBytesSync(bytes);
       } else if (media.type == MediaType.video) {
-        mediaService.overlayImagePath.writeAsBytesSync(bytes!);
+        mediaService.overlayImagePath.writeAsBytesSync(bytes);
       } else {
         Log.error('MediaType not supported: ${media.type}');
       }
