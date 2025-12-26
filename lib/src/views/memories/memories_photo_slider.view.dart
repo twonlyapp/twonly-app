@@ -133,7 +133,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                           }
 
                           orgMediaService.storedPath
-                              .copySync(newMediaService.tempPath.path);
+                              .copySync(newMediaService.originalPath.path);
 
                           if (!context.mounted) return;
 

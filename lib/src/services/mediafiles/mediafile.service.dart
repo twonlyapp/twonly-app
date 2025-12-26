@@ -219,7 +219,7 @@ class MediaFileService {
       await tempPath.copy(storedPath.path);
     } else {
       Log.error(
-        'Could not store image neither as tempPath does not exists.',
+        'Could not store image neither as ${tempPath.path} does not exists.',
       );
     }
     unawaited(createThumbnail());

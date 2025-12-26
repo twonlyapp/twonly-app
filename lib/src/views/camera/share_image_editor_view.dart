@@ -474,7 +474,9 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       mediaService.tempPath.deleteSync();
     }
     if (mediaService.originalPath.existsSync()) {
-      mediaService.originalPath.deleteSync();
+      if (media.type != MediaType.video) {
+        mediaService.originalPath.deleteSync();
+      }
     }
     var bytes = imageBytes;
     if (media.type == MediaType.gif) {
