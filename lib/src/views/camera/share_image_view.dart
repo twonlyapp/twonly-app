@@ -2,11 +2,13 @@
 
 import 'dart:async';
 import 'dart:collection';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/daos/groups.dao.dart';
+import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -26,7 +28,7 @@ class ShareImageView extends StatefulWidget {
   });
   final HashSet<String> selectedGroupIds;
   final void Function(String, bool) updateSelectedGroupIds;
-  final Future<bool>? mediaStoreFuture;
+  final Future<Uint8List?>? mediaStoreFuture;
   final MediaFileService mediaFileService;
 
   @override
@@ -41,6 +43,7 @@ class _ShareImageView extends State<ShareImageView> {
 
   bool sendingImage = false;
   bool mediaStoreFutureReady = false;
+  Uint8List? _imageBytes;
   bool hideArchivedUsers = true;
   final TextEditingController searchUserName = TextEditingController();
   late StreamSubscription<List<Group>> allGroupSub;
@@ -63,10 +66,9 @@ class _ShareImageView extends State<ShareImageView> {
 
   Future<void> initAsync() async {
     if (widget.mediaStoreFuture != null) {
-      await widget.mediaStoreFuture;
+      _imageBytes = await widget.mediaStoreFuture;
     }
     mediaStoreFutureReady = true;
-    // unawaited(startBackgroundMediaUpload(widget.mediaFileService));
     if (!mounted) return;
     setState(() {});
   }
@@ -235,12 +237,31 @@ class _ShareImageView extends State<ShareImageView> {
         ),
       ),
       floatingActionButton: SizedBox(
-        height: 120,
+        height: 168,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
+          padding: const EdgeInsets.only(bottom: 20, right: 20),
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              if (widget.mediaFileService.mediaFile.type == MediaType.image &&
+                  _imageBytes != null &&
+                  gUser.showShowImagePreviewWhenSending)
+                SizedBox(
+                  height: 100,
+                  child: Container(
+                    clipBehavior: Clip.hardEdge,
+                    decoration: BoxDecoration(
+                      border:
+                          Border.all(color: context.color.primary, width: 2),
+                      color: context.color.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.memory(_imageBytes!),
+                    ),
+                  ),
+                ),
               FilledButton.icon(
                 icon: !mediaStoreFutureReady || sendingImage
                     ? SizedBox(
@@ -265,6 +286,7 @@ class _ShareImageView extends State<ShareImageView> {
                   await insertMediaFileInMessagesTable(
                     widget.mediaFileService,
                     widget.selectedGroupIds.toList(),
+                    null,
                   );
 
                   if (context.mounted) {
@@ -282,13 +304,13 @@ class _ShareImageView extends State<ShareImageView> {
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
                   ),
                   backgroundColor: WidgetStateProperty.all<Color>(
-                    mediaStoreFutureReady || widget.selectedGroupIds.isEmpty
-                        ? Theme.of(context).colorScheme.secondary
-                        : Theme.of(context).colorScheme.primary,
+                    !mediaStoreFutureReady || widget.selectedGroupIds.isEmpty
+                        ? context.color.onSurface
+                        : context.color.primary,
                   ),
                 ),
                 label: Text(
-                  context.lang.shareImagedEditorSendImage,
+                  '${context.lang.shareImagedEditorSendImage} (${widget.selectedGroupIds.length})',
                   style: const TextStyle(fontSize: 17),
                 ),
               ),

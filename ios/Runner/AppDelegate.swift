@@ -3,6 +3,7 @@ import Flutter
 import Foundation
 import UIKit
 import UserNotifications
+import flutter_sharing_intent
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -13,6 +14,17 @@ import UserNotifications
     UNUserNotificationCenter.current().delegate = self
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+
+    override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+
+         let sharingIntent = SwiftFlutterSharingIntentPlugin.instance
+         if sharingIntent.hasSameSchemePrefix(url: url) {
+             return sharingIntent.application(app, open: url, options: options)
+         }
+
+         // Proceed url handling for other Flutter libraries like app_links
+         return super.application(app, open: url, options:options)
+       }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)

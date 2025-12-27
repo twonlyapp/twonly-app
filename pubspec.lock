@@ -742,29 +742,27 @@ packages:
   flutter_secure_storage:
     dependency: "direct main"
     description:
-      path: flutter_secure_storage
-      ref: a06ead81809c900e7fc421a30db0adf3b5919139
-      resolved-ref: a06ead81809c900e7fc421a30db0adf3b5919139
-      url: "https://github.com/juliansteenbakker/flutter_secure_storage.git"
-    source: git
-    version: "10.0.0-beta.4"
+      name: flutter_secure_storage
+      sha256: da922f2aab2d733db7e011a6bcc4a825b844892d4edd6df83ff156b09a9b2e40
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.0.0"
   flutter_secure_storage_darwin:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
-      path: flutter_secure_storage_darwin
-      ref: a06ead81809c900e7fc421a30db0adf3b5919139
-      resolved-ref: a06ead81809c900e7fc421a30db0adf3b5919139
-      url: "https://github.com/juliansteenbakker/flutter_secure_storage.git"
-    source: git
-    version: "0.1.0"
+      name: flutter_secure_storage_darwin
+      sha256: "8878c25136a79def1668c75985e8e193d9d7d095453ec28730da0315dc69aee3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   flutter_secure_storage_linux:
     dependency: transitive
     description:
       name: flutter_secure_storage_linux
-      sha256: "9b4b73127e857cd3117d43a70fa3dddadb6e0b253be62e6a6ab85caa0742182c"
+      sha256: "2b5c76dce569ab752d55a1cee6a2242bcc11fdba927078fb88c503f150767cda"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.1"
+    version: "3.0.0"
   flutter_secure_storage_platform_interface:
     dependency: transitive
     description:
@@ -777,18 +775,25 @@ packages:
     dependency: transitive
     description:
       name: flutter_secure_storage_web
-      sha256: "4c3f233e739545c6cb09286eeec1cc4744138372b985113acc904f7263bef517"
+      sha256: "6a1137df62b84b54261dca582c1c09ea72f4f9a4b2fcee21b025964132d5d0c3"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0"
+    version: "2.1.0"
   flutter_secure_storage_windows:
     dependency: transitive
     description:
       name: flutter_secure_storage_windows
-      sha256: ff32af20f70a8d0e59b2938fc92de35b54a74671041c814275afd80e27df9f21
+      sha256: "3b7c8e068875dfd46719ff57c90d8c459c87f2302ed6b00ff006b3c9fcad1613"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.0"
+    version: "4.1.0"
+  flutter_sharing_intent:
+    dependency: "direct main"
+    description:
+      path: "dependencies/flutter_sharing_intent"
+      relative: true
+    source: path
+    version: "2.0.4"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -882,10 +887,9 @@ packages:
   hand_signature:
     dependency: "direct main"
     description:
-      name: hand_signature
-      sha256: "05b40d3b2d1885a5dda126f26db386660aa46e497b63c96feb91d3198a667eea"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/hand_signature"
+      relative: true
+    source: path
     version: "3.1.0+2"
   hashlib:
     dependency: "direct main"
@@ -1244,11 +1248,10 @@ packages:
   no_screenshot:
     dependency: "direct main"
     description:
-      name: no_screenshot
-      sha256: ec3d86d7ee89a09c3a3939c1003012536ba4b3fcb4f8cbd23d87ada595c99258
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.1"
+      path: "dependencies/no_screenshot"
+      relative: true
+    source: path
+    version: "0.3.2-beta.3"
   objective_c:
     dependency: transitive
     description:
@@ -1532,14 +1535,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
-  screenshot:
-    dependency: "direct main"
-    description:
-      name: screenshot
-      sha256: "63817697a7835e6ce82add4228e15d233b74d42975c143ad8cfe07009fab866b"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
   scrollable_positioned_list:
     dependency: "direct main"
     description:

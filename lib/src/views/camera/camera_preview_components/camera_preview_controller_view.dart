@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +18,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
@@ -28,6 +28,7 @@ import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.
 import 'package:twonly/src/views/camera/image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
+import 'package:twonly/src/views/components/loader.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/home.view.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -316,7 +317,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
   Future<void> takePicture() async {
     if (_sharePreviewIsShown || _isVideoRecording) return;
-    late Future<Uint8List?> imageBytes;
 
     setState(() {
       _sharePreviewIsShown = true;
@@ -337,18 +337,18 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
 
-    if (Platform.isIOS) {
-      // android has a problem with this. Flash is turned off in the pausePreview function.
+    if (mc.cameraController?.value.flashMode != FlashMode.off) {
       await mc.cameraController?.setFlashMode(FlashMode.off);
     }
+
     if (!mounted) {
       return;
     }
 
-    imageBytes = mc.screenshotController
+    final image = await mc.screenshotController
         .capture(pixelRatio: MediaQuery.of(context).devicePixelRatio);
 
-    if (await pushMediaEditor(imageBytes, null)) {
+    if (await pushMediaEditor(image, null)) {
       return;
     }
     setState(() {
@@ -357,7 +357,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<bool> pushMediaEditor(
-    Future<Uint8List?>? imageBytes,
+    ScreenshotImage? imageBytes,
     File? videoFilePath, {
     bool sharedFromGallery = false,
     MediaType? mediaType,
@@ -397,6 +397,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           sharedFromGallery: sharedFromGallery,
           sendToGroup: widget.sendToGroup,
           mediaFileService: mediaFileService,
+          mainCameraController: mc,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;
@@ -477,7 +478,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       Log.info('Picket from gallery: ${pickedFile.path}');
 
       File? videoFilePath;
-      Future<Uint8List>? imageBytes;
+      ScreenshotImage? image;
       MediaType? mediaType;
 
       final isImage =
@@ -486,13 +487,13 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         if (pickedFile.name.contains('.gif')) {
           mediaType = MediaType.gif;
         }
-        imageBytes = pickedFile.readAsBytes();
+        image = ScreenshotImage(imageBytesFuture: pickedFile.readAsBytes());
       } else {
         videoFilePath = File(pickedFile.path);
       }
 
       await pushMediaEditor(
-        imageBytes,
+        image,
         videoFilePath,
         sharedFromGallery: true,
         mediaType: mediaType,
@@ -639,10 +640,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
             if (_galleryLoadedImageIsShown)
               Center(
                 child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1,
+                  height: 60,
+                  width: 60,
+                  child: ThreeRotatingDots(
+                    size: 40,
                     color: context.color.primary,
                   ),
                 ),

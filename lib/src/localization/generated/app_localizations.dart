@@ -2839,6 +2839,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!'**
   String get linkPubkeyDoesNotMatch;
+
+  /// No description provided for @startWithCameraOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with camera open'**
+  String get startWithCameraOpen;
+
+  /// No description provided for @showImagePreviewWhenSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Display image preview when selecting recipients'**
+  String get showImagePreviewWhenSending;
+
+  /// No description provided for @verifiedPublicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'The public key of {username} has been verified and is valid.'**
+  String verifiedPublicKey(Object username);
+
+  /// No description provided for @memoriesAYearAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'One year ago'**
+  String get memoriesAYearAgo;
+
+  /// No description provided for @memoriesXYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} years ago'**
+  String memoriesXYearsAgo(Object years);
 }
 
 class _AppLocalizationsDelegate

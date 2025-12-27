@@ -7111,10 +7111,7 @@ class $GroupHistoriesTable extends GroupHistories
   @override
   late final GeneratedColumn<int> affectedContactId = GeneratedColumn<int>(
       'affected_contact_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _oldGroupNameMeta =
       const VerificationMeta('oldGroupName');
   @override
@@ -7896,6 +7893,22 @@ final class $$ContactsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
+      _groupHistoriesRefsTable(_$TwonlyDB db) =>
+          MultiTypedResultKey.fromTable(db.groupHistories,
+              aliasName: $_aliasNameGenerator(
+                  db.contacts.userId, db.groupHistories.contactId));
+
+  $$GroupHistoriesTableProcessedTableManager get groupHistoriesRefs {
+    final manager = $$GroupHistoriesTableTableManager($_db, $_db.groupHistories)
+        .filter(
+            (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+
+    final cache = $_typedResult.readTableOrNull(_groupHistoriesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$ContactsTableFilterComposer
@@ -8076,6 +8089,27 @@ class $$ContactsTableFilterComposer
                   $removeJoinBuilderFromRootComposer:
                       $removeJoinBuilderFromRootComposer,
                 ));
+    return f(composer);
+  }
+
+  Expression<bool> groupHistoriesRefs(
+      Expression<bool> Function($$GroupHistoriesTableFilterComposer f) f) {
+    final $$GroupHistoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.groupHistories,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupHistoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.groupHistories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 }
@@ -8311,6 +8345,27 @@ class $$ContactsTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> groupHistoriesRefs<T extends Object>(
+      Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f) {
+    final $$GroupHistoriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.groupHistories,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$GroupHistoriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.groupHistories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$ContactsTableTableManager extends RootTableManager<
@@ -8330,7 +8385,8 @@ class $$ContactsTableTableManager extends RootTableManager<
         bool groupMembersRefs,
         bool receiptsRefs,
         bool signalContactPreKeysRefs,
-        bool signalContactSignedPreKeysRefs})> {
+        bool signalContactSignedPreKeysRefs,
+        bool groupHistoriesRefs})> {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
       : super(TableManagerState(
           db: db,
@@ -8411,7 +8467,8 @@ class $$ContactsTableTableManager extends RootTableManager<
               groupMembersRefs = false,
               receiptsRefs = false,
               signalContactPreKeysRefs = false,
-              signalContactSignedPreKeysRefs = false}) {
+              signalContactSignedPreKeysRefs = false,
+              groupHistoriesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
@@ -8421,7 +8478,8 @@ class $$ContactsTableTableManager extends RootTableManager<
                 if (receiptsRefs) db.receipts,
                 if (signalContactPreKeysRefs) db.signalContactPreKeys,
                 if (signalContactSignedPreKeysRefs)
-                  db.signalContactSignedPreKeys
+                  db.signalContactSignedPreKeys,
+                if (groupHistoriesRefs) db.groupHistories
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -8501,6 +8559,19 @@ class $$ContactsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.contactId == item.userId),
+                        typedResults: items),
+                  if (groupHistoriesRefs)
+                    await $_getPrefetchedData<Contact, $ContactsTable,
+                            GroupHistory>(
+                        currentTable: table,
+                        referencedTable: $$ContactsTableReferences
+                            ._groupHistoriesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ContactsTableReferences(db, table, p0)
+                                .groupHistoriesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.contactId == item.userId),
                         typedResults: items)
                 ];
               },
@@ -8526,7 +8597,8 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
         bool groupMembersRefs,
         bool receiptsRefs,
         bool signalContactPreKeysRefs,
-        bool signalContactSignedPreKeysRefs})>;
+        bool signalContactSignedPreKeysRefs,
+        bool groupHistoriesRefs})>;
 typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   required String groupId,
   Value<bool> isGroupAdmin,
@@ -13600,21 +13672,6 @@ final class $$GroupHistoriesTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
-
-  static $ContactsTable _affectedContactIdTable(_$TwonlyDB db) =>
-      db.contacts.createAlias($_aliasNameGenerator(
-          db.groupHistories.affectedContactId, db.contacts.userId));
-
-  $$ContactsTableProcessedTableManager? get affectedContactId {
-    final $_column = $_itemColumn<int>('affected_contact_id');
-    if ($_column == null) return null;
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.userId.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_affectedContactIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
 }
 
 class $$GroupHistoriesTableFilterComposer
@@ -13628,6 +13685,10 @@ class $$GroupHistoriesTableFilterComposer
   });
   ColumnFilters<String> get groupHistoryId => $composableBuilder(
       column: $table.groupHistoryId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get affectedContactId => $composableBuilder(
+      column: $table.affectedContactId,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get oldGroupName => $composableBuilder(
@@ -13688,26 +13749,6 @@ class $$GroupHistoriesTableFilterComposer
             ));
     return composer;
   }
-
-  $$ContactsTableFilterComposer get affectedContactId {
-    final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.affectedContactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 }
 
 class $$GroupHistoriesTableOrderingComposer
@@ -13721,6 +13762,10 @@ class $$GroupHistoriesTableOrderingComposer
   });
   ColumnOrderings<String> get groupHistoryId => $composableBuilder(
       column: $table.groupHistoryId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get affectedContactId => $composableBuilder(
+      column: $table.affectedContactId,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get oldGroupName => $composableBuilder(
@@ -13781,26 +13826,6 @@ class $$GroupHistoriesTableOrderingComposer
             ));
     return composer;
   }
-
-  $$ContactsTableOrderingComposer get affectedContactId {
-    final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.affectedContactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 }
 
 class $$GroupHistoriesTableAnnotationComposer
@@ -13814,6 +13839,9 @@ class $$GroupHistoriesTableAnnotationComposer
   });
   GeneratedColumn<String> get groupHistoryId => $composableBuilder(
       column: $table.groupHistoryId, builder: (column) => column);
+
+  GeneratedColumn<int> get affectedContactId => $composableBuilder(
+      column: $table.affectedContactId, builder: (column) => column);
 
   GeneratedColumn<String> get oldGroupName => $composableBuilder(
       column: $table.oldGroupName, builder: (column) => column);
@@ -13871,26 +13899,6 @@ class $$GroupHistoriesTableAnnotationComposer
             ));
     return composer;
   }
-
-  $$ContactsTableAnnotationComposer get affectedContactId {
-    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.affectedContactId,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.userId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
 }
 
 class $$GroupHistoriesTableTableManager extends RootTableManager<
@@ -13904,8 +13912,7 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
     $$GroupHistoriesTableUpdateCompanionBuilder,
     (GroupHistory, $$GroupHistoriesTableReferences),
     GroupHistory,
-    PrefetchHooks Function(
-        {bool groupId, bool contactId, bool affectedContactId})> {
+    PrefetchHooks Function({bool groupId, bool contactId})> {
   $$GroupHistoriesTableTableManager(_$TwonlyDB db, $GroupHistoriesTable table)
       : super(TableManagerState(
           db: db,
@@ -13974,8 +13981,7 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
                     $$GroupHistoriesTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: (
-              {groupId = false, contactId = false, affectedContactId = false}) {
+          prefetchHooksCallback: ({groupId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -14014,17 +14020,6 @@ class $$GroupHistoriesTableTableManager extends RootTableManager<
                         .userId,
                   ) as T;
                 }
-                if (affectedContactId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.affectedContactId,
-                    referencedTable: $$GroupHistoriesTableReferences
-                        ._affectedContactIdTable(db),
-                    referencedColumn: $$GroupHistoriesTableReferences
-                        ._affectedContactIdTable(db)
-                        .userId,
-                  ) as T;
-                }
 
                 return state;
               },
@@ -14047,8 +14042,7 @@ typedef $$GroupHistoriesTableProcessedTableManager = ProcessedTableManager<
     $$GroupHistoriesTableUpdateCompanionBuilder,
     (GroupHistory, $$GroupHistoriesTableReferences),
     GroupHistory,
-    PrefetchHooks Function(
-        {bool groupId, bool contactId, bool affectedContactId})>;
+    PrefetchHooks Function({bool groupId, bool contactId})>;
 
 class $TwonlyDBManager {
   final _$TwonlyDB _db;

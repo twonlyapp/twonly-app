@@ -1,6 +1,5 @@
-import 'dart:ui';
-
 import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/api.service.dart';
@@ -37,3 +36,6 @@ bool globalAllowErrorTrackingViaSentry = false;
 
 late String globalApplicationCacheDirectory;
 late String globalApplicationSupportDirectory;
+
+final GlobalKey<ScaffoldMessengerState> globalRootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();

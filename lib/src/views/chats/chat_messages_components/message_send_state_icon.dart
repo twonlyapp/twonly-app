@@ -174,7 +174,8 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
                 );
               };
             }
-            if (mediaFile.uploadState == UploadState.preprocessing) {
+            if (mediaFile.uploadState == UploadState.preprocessing ||
+                mediaFile.uploadState == UploadState.initialized) {
               text = context.lang.inProcess;
             }
           }

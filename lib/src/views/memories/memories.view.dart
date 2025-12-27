@@ -18,11 +18,12 @@ class MemoriesView extends StatefulWidget {
 }
 
 class MemoriesViewState extends State<MemoriesView> {
-  bool verticalGallery = false;
   List<MemoryItem> galleryItems = [];
   Map<String, List<int>> orderedByMonth = {};
   List<String> months = [];
   StreamSubscription<List<MediaFile>>? messageSub;
+
+  final Map<int, List<MemoryItem>> _galleryItemsLastYears = {};
 
   @override
   void initState() {
@@ -46,6 +47,9 @@ class MemoriesViewState extends State<MemoriesView> {
       months = [];
       var lastMonth = '';
       galleryItems = [];
+
+      final now = DateTime.now();
+
       for (final mediaFile in mediaFiles) {
         final mediaService = MediaFileService(mediaFile);
         if (!mediaService.imagePreviewAvailable) continue;
@@ -54,12 +58,21 @@ class MemoriesViewState extends State<MemoriesView> {
             await mediaService.createThumbnail();
           }
         }
-        galleryItems.add(
-          MemoryItem(
-            mediaService: mediaService,
-            messages: [],
-          ),
+        final item = MemoryItem(
+          mediaService: mediaService,
+          messages: [],
         );
+        galleryItems.add(item);
+        if (mediaFile.createdAt.month == now.month &&
+            mediaFile.createdAt.day == now.day) {
+          final diff = now.year - mediaFile.createdAt.year;
+          if (diff > 0) {
+            if (!_galleryItemsLastYears.containsKey(diff)) {
+              _galleryItemsLastYears[diff] = [];
+            }
+            _galleryItemsLastYears[diff]!.add(item);
+          }
+        }
       }
       galleryItems.sort(
         (a, b) => b.mediaService.mediaFile.createdAt.compareTo(
@@ -94,8 +107,83 @@ class MemoriesViewState extends State<MemoriesView> {
                 ),
               )
             : ListView.builder(
-                itemCount: months.length * 2,
+                itemCount: (months.length * 2) +
+                    (_galleryItemsLastYears.isEmpty ? 0 : 1),
                 itemBuilder: (context, mIndex) {
+                  if (_galleryItemsLastYears.isNotEmpty && mIndex == 0) {
+                    return SizedBox(
+                      height: 140,
+                      width: MediaQuery.sizeOf(context).width,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: _galleryItemsLastYears.entries.map(
+                          (item) {
+                            var text = context.lang.memoriesAYearAgo;
+                            if (item.key > 1) {
+                              text = context.lang.memoriesXYearsAgo(item.key);
+                            }
+                            return GestureDetector(
+                              onTap: () async {
+                                await open(context, item.value, 0);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      spreadRadius: -12,
+                                      blurRadius: 12,
+                                    ),
+                                  ],
+                                ),
+                                clipBehavior: Clip.hardEdge,
+                                height: 150,
+                                width: 120,
+                                child: Stack(
+                                  children: [
+                                    Positioned.fill(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.file(
+                                          item.value.first.mediaService
+                                              .storedPath,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      bottom: 10,
+                                      left: 0,
+                                      right: 0,
+                                      child: Text(
+                                        text,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                          shadows: [
+                                            Shadow(
+                                              color:
+                                                  Color.fromARGB(122, 0, 0, 0),
+                                              blurRadius: 5,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ).toList(),
+                      ),
+                    );
+                  }
+                  if (_galleryItemsLastYears.isNotEmpty) {
+                    mIndex -= 1;
+                  }
                   if (mIndex.isEven) {
                     return Padding(
                       padding: const EdgeInsets.all(8),
@@ -117,7 +205,7 @@ class MemoriesViewState extends State<MemoriesView> {
                       return MemoriesItemThumbnail(
                         galleryItem: galleryItems[gaIndex],
                         onTap: () async {
-                          await open(context, gaIndex);
+                          await open(context, galleryItems, gaIndex);
                         },
                       );
                     },
@@ -128,7 +216,11 @@ class MemoriesViewState extends State<MemoriesView> {
     );
   }
 
-  Future<void> open(BuildContext context, int index) async {
+  Future<void> open(
+    BuildContext context,
+    List<MemoryItem> galleryItems,
+    int index,
+  ) async {
     await Navigator.push(
       context,
       PageRouteBuilder(
@@ -136,15 +228,9 @@ class MemoriesViewState extends State<MemoriesView> {
         pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
           galleryItems: galleryItems,
           initialIndex: index,
-          scrollDirection: verticalGallery ? Axis.vertical : Axis.horizontal,
         ),
-        // transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        //   return child;
-        // },
-        // transitionDuration: Duration.zero,
-        // reverseTransitionDuration: Duration.zero,
       ),
     ) as bool?;
-    setState(() {});
+    if (mounted) setState(() {});
   }
 }

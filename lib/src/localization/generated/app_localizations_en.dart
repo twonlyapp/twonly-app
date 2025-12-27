@@ -1560,4 +1560,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get linkPubkeyDoesNotMatch =>
       'The public key in the link does not match the public key stored for this contact. Try to meet your friend in person and scan the QR code directly!';
+
+  @override
+  String get startWithCameraOpen => 'Start with camera open';
+
+  @override
+  String get showImagePreviewWhenSending =>
+      'Display image preview when selecting recipients';
+
+  @override
+  String verifiedPublicKey(Object username) {
+    return 'The public key of $username has been verified and is valid.';
+  }
+
+  @override
+  String get memoriesAYearAgo => 'One year ago';
+
+  @override
+  String memoriesXYearsAgo(Object years) {
+    return '$years years ago';
+  }
 }

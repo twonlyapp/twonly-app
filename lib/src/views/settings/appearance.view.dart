@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:twonly/globals.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -15,20 +16,9 @@ class AppearanceView extends StatefulWidget {
 }
 
 class _AppearanceViewState extends State<AppearanceView> {
-  bool showFeedbackShortcut = false;
-
   @override
   void initState() {
     super.initState();
-    unawaited(initAsync());
-  }
-
-  Future<void> initAsync() async {
-    final user = await getUser();
-    if (user == null) return;
-    setState(() {
-      showFeedbackShortcut = user.showFeedbackShortcut;
-    });
   }
 
   Future<void> _showSelectThemeMode(BuildContext context) async {
@@ -87,7 +77,29 @@ class _AppearanceViewState extends State<AppearanceView> {
       u.showFeedbackShortcut = !u.showFeedbackShortcut;
       return u;
     });
-    await initAsync();
+    setState(() {
+      // gUser
+    });
+  }
+
+  Future<void> toggleStartWithCameraOpen() async {
+    await updateUserdata((u) {
+      u.startWithCameraOpen = !u.startWithCameraOpen;
+      return u;
+    });
+    setState(() {
+      // gUser
+    });
+  }
+
+  Future<void> toggleShowImagePreviewWhenSending() async {
+    await updateUserdata((u) {
+      u.showShowImagePreviewWhenSending = !u.showShowImagePreviewWhenSending;
+      return u;
+    });
+    setState(() {
+      // gUser
+    });
   }
 
   @override
@@ -113,8 +125,24 @@ class _AppearanceViewState extends State<AppearanceView> {
             title: Text(context.lang.contactUsShortcut),
             onTap: toggleShowFeedbackIcon,
             trailing: Switch(
-              value: !showFeedbackShortcut,
+              value: !gUser.showFeedbackShortcut,
               onChanged: (a) => toggleShowFeedbackIcon(),
+            ),
+          ),
+          ListTile(
+            title: Text(context.lang.startWithCameraOpen),
+            onTap: toggleStartWithCameraOpen,
+            trailing: Switch(
+              value: gUser.startWithCameraOpen,
+              onChanged: (a) => toggleStartWithCameraOpen(),
+            ),
+          ),
+          ListTile(
+            title: Text(context.lang.showImagePreviewWhenSending),
+            onTap: toggleShowImagePreviewWhenSending,
+            trailing: Switch(
+              value: gUser.showShowImagePreviewWhenSending,
+              onChanged: (a) => toggleShowImagePreviewWhenSending(),
             ),
           ),
         ],

@@ -1570,4 +1570,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get linkPubkeyDoesNotMatch =>
       'Der öffentliche Schlüssel im Link stimmt nicht mit dem für diesen Kontakt gespeicherten öffentlichen Schlüssel überein. Triff die Person persönlich und scanne den QR-Code direkt!';
+
+  @override
+  String get startWithCameraOpen => 'Mit geöffneter Kamera starten';
+
+  @override
+  String get showImagePreviewWhenSending =>
+      'Bildvorschau bei der Auswahl von Empfängern anzeigen';
+
+  @override
+  String verifiedPublicKey(Object username) {
+    return 'Der öffentliche Schlüssel von $username wurde überprüft und ist gültig.';
+  }
+
+  @override
+  String get memoriesAYearAgo => 'Vor einem Jahr';
+
+  @override
+  String memoriesXYearsAgo(Object years) {
+    return 'Vor $years Jahren';
+  }
 }

@@ -456,5 +456,10 @@
     "linkFromUsernameLong": "Wenn du den Link von der Person direkt erhalten hast, kannst du den Kontakt als verifiziert markieren, da der öffentliche Schlüssel im Link mit dem bereits für diesen Benutzer gespeicherten öffentlichen Schlüssel übereinstimmt.",
     "gotLinkFromFriend": "Ja, der Link kommt direkt von der Person.",
     "couldNotVerifyUsername": "{username} konnte nicht verifiziert werden",
-    "linkPubkeyDoesNotMatch": "Der öffentliche Schlüssel im Link stimmt nicht mit dem für diesen Kontakt gespeicherten öffentlichen Schlüssel überein. Triff die Person persönlich und scanne den QR-Code direkt!"
+    "linkPubkeyDoesNotMatch": "Der öffentliche Schlüssel im Link stimmt nicht mit dem für diesen Kontakt gespeicherten öffentlichen Schlüssel überein. Triff die Person persönlich und scanne den QR-Code direkt!",
+    "startWithCameraOpen": "Mit geöffneter Kamera starten",
+    "showImagePreviewWhenSending": "Bildvorschau bei der Auswahl von Empfängern anzeigen",
+    "verifiedPublicKey": "Der öffentliche Schlüssel von {username} wurde überprüft und ist gültig.",
+    "memoriesAYearAgo": "Vor einem Jahr",
+    "memoriesXYearsAgo": "Vor {years} Jahren"
 }

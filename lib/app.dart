@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -93,6 +94,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
       listenable: context.watch<SettingsChangeProvider>(),
       builder: (BuildContext context, Widget? child) {
         return MaterialApp(
+          scaffoldMessengerKey: globalRootScaffoldMessengerKey,
           restorationScopeId: 'app',
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -157,11 +159,13 @@ class _AppMainWidgetState extends State<AppMainWidget> {
   bool _showOnboarding = true;
   bool _isLoaded = false;
   bool _skipBackup = false;
+  int _initialPage = 0;
 
   (Future<int>?, bool) _proofOfWork = (null, false);
 
   @override
   void initState() {
+    _initialPage = widget.initialPage;
     initAsync();
     super.initState();
   }
@@ -172,6 +176,9 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_isUserCreated) {
       if (gUser.appVersion < 62) {
         _showDatabaseMigration = true;
+      }
+      if (!gUser.startWithCameraOpen) {
+        _initialPage = 0;
       }
     }
 
@@ -205,7 +212,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     if (_showDatabaseMigration) {
       child = const DatabaseMigrationView();
     } else if (_isUserCreated) {
-      if (gUser.twonlySafeBackup == null && !_skipBackup) {
+      if (gUser.twonlySafeBackup == null && !_skipBackup && kReleaseMode) {
         child = TwonlyIdentityBackupView(
           callBack: () {
             _skipBackup = true;
@@ -214,7 +221,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
         );
       } else {
         child = HomeView(
-          initialPage: widget.initialPage,
+          initialPage: _initialPage,
         );
       }
     } else if (_showOnboarding) {

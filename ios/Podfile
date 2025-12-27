@@ -43,6 +43,13 @@ target 'Runner' do
   target 'RunnerTests' do
     inherit! :search_paths
   end
+
+  # Share Extension is name of Extension which you created which is in this case 'Share Extension'
+  target 'ShareExtension' do
+    inherit! :search_paths
+    # flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  end
+
 end
 
 post_install do |installer|

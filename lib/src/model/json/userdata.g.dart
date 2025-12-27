@@ -32,6 +32,9 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..requestedAudioPermission =
           json['requestedAudioPermission'] as bool? ?? false
       ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
+      ..showShowImagePreviewWhenSending =
+          json['showShowImagePreviewWhenSending'] as bool? ?? true
+      ..startWithCameraOpen = json['startWithCameraOpen'] as bool? ?? true
       ..preSelectedEmojies = (json['preSelectedEmojies'] as List<dynamic>?)
           ?.map((e) => e as String)
           .toList()
@@ -61,7 +64,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..lastChangeLogHash = (json['lastChangeLogHash'] as List<dynamic>?)
           ?.map((e) => (e as num).toInt())
           .toList()
-      ..hideChangeLog = json['hideChangeLog'] as bool? ?? false
+      ..hideChangeLog = json['hideChangeLog'] as bool? ?? true
       ..updateFCMToken = json['updateFCMToken'] as bool? ?? true
       ..nextTimeToShowBackupNotice = json['nextTimeToShowBackupNotice'] == null
           ? null
@@ -93,6 +96,9 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'defaultShowTime': instance.defaultShowTime,
       'requestedAudioPermission': instance.requestedAudioPermission,
       'showFeedbackShortcut': instance.showFeedbackShortcut,
+      'showShowImagePreviewWhenSending':
+          instance.showShowImagePreviewWhenSending,
+      'startWithCameraOpen': instance.startWithCameraOpen,
       'preSelectedEmojies': instance.preSelectedEmojies,
       'autoDownloadOptions': instance.autoDownloadOptions,
       'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,

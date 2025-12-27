@@ -59,6 +59,12 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool showFeedbackShortcut = true;
 
+  @JsonKey(defaultValue: true)
+  bool showShowImagePreviewWhenSending = true;
+
+  @JsonKey(defaultValue: true)
+  bool startWithCameraOpen = true;
+
   List<String>? preSelectedEmojies;
 
   Map<String, List<String>>? autoDownloadOptions;
