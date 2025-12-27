@@ -449,6 +449,10 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       x.showCustomButtons = false;
     }
     setState(() {});
+
+    // Make a short delay, so the setState does have its effect...
+    await Future.delayed(const Duration(milliseconds: 10));
+
     final image = await screenshotController.capture(
       pixelRatio: pixelRatio,
     );
