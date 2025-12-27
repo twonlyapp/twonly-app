@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.80
+
+- Share images/videos directly from other applications
+- More customization options in the appearance settings
+- Improved UI for changing the display time of images
+- Several minor UI improvements
+- Several bug fixes
+
 ## 0.0.74
 
 - Improving uploading speed

@@ -50,7 +50,7 @@ final lockRetransStore = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
-  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '192.168.178.88:3030';
+  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '192.168.2.178:3030';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
   final String apiSecure = kReleaseMode ? 's' : '';
 
@@ -182,6 +182,7 @@ class ApiService {
 
   Future<void> _onDone() async {
     Log.info('websocket closed without error');
+    _reconnectionDelay = 60 * 2; // the server closed the connection...
     await onClosed();
   }
 

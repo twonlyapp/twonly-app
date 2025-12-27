@@ -237,9 +237,9 @@ class _ShareImageView extends State<ShareImageView> {
         ),
       ),
       floatingActionButton: SizedBox(
-        height: 148,
+        height: 168,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.only(bottom: 20, right: 20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -252,7 +252,7 @@ class _ShareImageView extends State<ShareImageView> {
                     clipBehavior: Clip.hardEdge,
                     decoration: BoxDecoration(
                       border:
-                          Border.all(color: context.color.primary, width: 3),
+                          Border.all(color: context.color.primary, width: 2),
                       color: context.color.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -304,9 +304,9 @@ class _ShareImageView extends State<ShareImageView> {
                     const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
                   ),
                   backgroundColor: WidgetStateProperty.all<Color>(
-                    mediaStoreFutureReady || widget.selectedGroupIds.isEmpty
-                        ? Theme.of(context).colorScheme.secondary
-                        : Theme.of(context).colorScheme.primary,
+                    !mediaStoreFutureReady || widget.selectedGroupIds.isEmpty
+                        ? context.color.onSurface
+                        : context.color.primary,
                   ),
                 ),
                 label: Text(

@@ -163,7 +163,7 @@ Future<void> handleIntentSharedFile(
 
     switch (file.type) {
       case SharedMediaType.URL:
-        await handleIntentUrl(context, Uri.parse(file.value!));
+      // await handleIntentUrl(context, Uri.parse(file.value!));
       case SharedMediaType.IMAGE:
         var type = MediaType.image;
         if (file.value!.endsWith('.gif')) {

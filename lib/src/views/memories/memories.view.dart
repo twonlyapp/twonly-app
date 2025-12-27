@@ -217,7 +217,10 @@ class MemoriesViewState extends State<MemoriesView> {
   }
 
   Future<void> open(
-      BuildContext context, List<MemoryItem> galleryItems, int index) async {
+    BuildContext context,
+    List<MemoryItem> galleryItems,
+    int index,
+  ) async {
     await Navigator.push(
       context,
       PageRouteBuilder(
