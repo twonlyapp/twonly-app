@@ -254,10 +254,10 @@ class _ShareImageView extends State<ShareImageView> {
                       border:
                           Border.all(color: context.color.primary, width: 3),
                       color: context.color.primary,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(7),
+                      borderRadius: BorderRadius.circular(12),
                       child: Image.memory(_imageBytes!),
                     ),
                   ),

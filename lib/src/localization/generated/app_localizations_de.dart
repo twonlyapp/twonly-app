@@ -1582,4 +1582,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String verifiedPublicKey(Object username) {
     return 'Der öffentliche Schlüssel von $username wurde überprüft und ist gültig.';
   }
+
+  @override
+  String get memoriesAYearAgo => 'Vor einem Jahr';
+
+  @override
+  String memoriesXYearsAgo(Object years) {
+    return 'Vor $years Jahren';
+  }
 }

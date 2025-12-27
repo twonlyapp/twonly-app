@@ -2857,6 +2857,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The public key of {username} has been verified and is valid.'**
   String verifiedPublicKey(Object username);
+
+  /// No description provided for @memoriesAYearAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'One year ago'**
+  String get memoriesAYearAgo;
+
+  /// No description provided for @memoriesXYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{years} years ago'**
+  String memoriesXYearsAgo(Object years);
 }
 
 class _AppLocalizationsDelegate
