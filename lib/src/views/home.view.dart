@@ -1,29 +1,22 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:app_links/app_links.dart';
-import 'package:collection/collection.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
+import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/intent/links.intent.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
-import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_list.view.dart';
-import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
-import 'package:twonly/src/views/public_profile.view.dart';
 
 void Function(int) globalUpdateOfHomeViewPageIndex = (a) {};
 
@@ -61,6 +54,7 @@ class HomeViewState extends State<HomeView> {
   final MainCameraController _mainCameraController = MainCameraController();
 
   final PageController homeViewPageController = PageController(initialPage: 1);
+  late StreamSubscription<List<SharedFile>> _intentStreamSub;
   late StreamSubscription<Uri> _deepLinkSub;
 
   double buttonDiameter = 100;
@@ -121,99 +115,21 @@ class HomeViewState extends State<HomeView> {
 
     // Subscribe to all events (initial link and further)
     _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
-      if (!uri.scheme.startsWith('http')) return;
-      if (uri.host != 'me.twonly.eu') return;
-      if (uri.hasEmptyPath) return;
+      if (mounted) await handleIntentUrl(context, uri);
+    });
 
-      final publicKey = uri.hasFragment ? uri.fragment : null;
-      final userPaths = uri.path.split('/');
-      if (userPaths.length != 2) return;
-      final username = userPaths[1];
+    _intentStreamSub = FlutterSharingIntent.instance.getMediaStream().listen(
+      (f) {
+        if (mounted) handleIntentSharedFile(context, f);
+      },
+      // ignore: inference_failure_on_untyped_parameter
+      onError: (err) {
+        Log.error('getIntentDataStream error: $err');
+      },
+    );
 
-      if (!mounted) return;
-
-      if (username == gUser.username) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return const PublicProfileView();
-            },
-          ),
-        );
-        return;
-      }
-
-      Log.info(
-        'Opened via deep link!: username = $username public_key = ${uri.fragment}',
-      );
-      final contacts =
-          await twonlyDB.contactsDao.getContactsByUsername(username);
-      if (contacts.isEmpty) {
-        if (!mounted) return;
-        Uint8List? publicKeyBytes;
-        if (publicKey != null) {
-          publicKeyBytes = base64Url.decode(publicKey);
-        }
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return AddNewUserView(
-                username: username,
-                publicKey: publicKeyBytes,
-              );
-            },
-          ),
-        );
-      } else if (publicKey != null) {
-        try {
-          final contact = contacts.first;
-          final storedPublicKey = await getPublicKeyFromContact(contact.userId);
-          final receivedPublicKey = base64Url.decode(publicKey);
-          if (storedPublicKey == null ||
-              receivedPublicKey.isEmpty ||
-              !mounted) {
-            return;
-          }
-          if (storedPublicKey.equals(receivedPublicKey)) {
-            if (!contact.verified) {
-              final markAsVerified = await showAlertDialog(
-                context,
-                context.lang.linkFromUsername(contact.username),
-                context.lang.linkFromUsernameLong,
-                customOk: context.lang.gotLinkFromFriend,
-              );
-              if (markAsVerified) {
-                await twonlyDB.contactsDao.updateContact(
-                  contact.userId,
-                  const ContactsCompanion(
-                    verified: Value(true),
-                  ),
-                );
-              }
-            } else {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return ContactView(contact.userId);
-                  },
-                ),
-              );
-            }
-          } else {
-            await showAlertDialog(
-              context,
-              context.lang.couldNotVerifyUsername(contact.username),
-              context.lang.linkPubkeyDoesNotMatch,
-              customCancel: '',
-            );
-          }
-        } catch (e) {
-          Log.warn(e);
-        }
-      }
+    FlutterSharingIntent.instance.getInitialSharing().then((f) {
+      if (mounted) handleIntentSharedFile(context, f);
     });
   }
 
@@ -222,6 +138,7 @@ class HomeViewState extends State<HomeView> {
     unawaited(selectNotificationStream.close());
     disableCameraTimer?.cancel();
     _mainCameraController.closeCamera();
+    _intentStreamSub.cancel();
     _deepLinkSub.cancel();
     super.dispose();
   }

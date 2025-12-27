@@ -227,7 +227,8 @@ class MainCameraController {
                     content: Text(
                       globalRootScaffoldMessengerKey.currentContext?.lang
                               .verifiedPublicKey(
-                                  getContactDisplayName(contact)) ??
+                            getContactDisplayName(contact),
+                          ) ??
                           '',
                     ),
                     duration: const Duration(seconds: 6),

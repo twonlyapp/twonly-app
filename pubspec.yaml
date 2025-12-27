@@ -36,6 +36,7 @@ dependencies:
   url_launcher: ^6.3.2
   vector_graphics: ^1.1.19
   video_player: ^2.10.1
+  in_app_purchase: ^3.2.3
 
 
   # Trusted publisher fluttercommunity.dev
@@ -54,44 +55,50 @@ dependencies:
   scrollable_positioned_list: ^0.3.8 # google.dev
 
 
+  # Flutter Favorite 
+  provider: ^6.1.2
+  drift: ^2.25.1
+  drift_flutter: ^0.2.4
+  flutter_local_notifications: ^19.1.0
+  sentry_flutter: ^9.8.0
+
+
+  # With high download
+  app_links: ^7.0.0 # 1.6 mio
+  image: ^4.3.0 # 3.3 mio
+  archive: ^4.0.7 # 6.5 mio
+  file_picker: ^10.3.6 # 2 mio
+  get: ^4.7.2 # 740 k
+  flutter_secure_storage: ^10.0.0 # 1.85 mio
+  permission_handler: ^12.0.0+1 # 2 mio
+
+
   # Not yet checked 
-  archive: ^4.0.7
   audio_waveforms: ^2.0.0
   avatar_maker: ^0.4.0
   background_downloader: ^9.4.0
   cached_network_image: ^3.4.1
   cryptography_flutter_plus: ^2.3.4
   cryptography_plus: ^2.7.0
-  drift: ^2.25.1
-  drift_flutter: ^0.2.4
   ffmpeg_kit_flutter_new: ^4.1.0
-  file_picker: ^10.3.6
   flutter_android_volume_keydown: ^1.0.1
   flutter_image_compress: ^2.4.0
-  flutter_local_notifications: ^19.1.0
-  flutter_secure_storage:
-    git:
-      url: https://github.com/juliansteenbakker/flutter_secure_storage.git
-      ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
-      path: flutter_secure_storage/
   flutter_volume_controller: ^1.3.4
   gal: ^2.3.1
-  get: ^4.7.2
   google_mlkit_barcode_scanning: ^0.14.1
-  image: ^4.3.0
-  no_screenshot: ^0.3.1
-  permission_handler: ^12.0.0+1
-  provider: ^6.1.2
-  restart_app: ^1.3.2
-  sentry_flutter: ^9.8.0
-  app_links: ^7.0.0
-  in_app_purchase: ^3.2.3
+
+  # flutter_secure_storage:
+  #   git:
+  #     url: https://github.com/juliansteenbakker/flutter_secure_storage.git
+  #     ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
+  #     path: flutter_secure_storage/
 
 
   # Overwritten by self-controlled repository
   emoji_picker_flutter: ^4.3.0
 
   # Packages which got overwritten using the twonly-app-dependencies repository
+  restart_app: ^1.3.2
   photo_view: ^0.15.0
   hashlib: ^2.0.0
   libsignal_protocol_dart: ^0.7.4
@@ -100,6 +107,8 @@ dependencies:
   introduction_screen: ^4.0.0
   qr_flutter: ^4.1.0
   hand_signature: ^3.0.3
+  flutter_sharing_intent: ^2.0.4
+  no_screenshot: ^0.3.1
 
 dependency_overrides:
   dots_indicator:
@@ -110,6 +119,8 @@ dependency_overrides:
     path: ./dependencies/introduction_screen
   libsignal_protocol_dart:
     path: ./dependencies/libsignal_protocol_dart
+  flutter_sharing_intent:
+    path: ./dependencies/flutter_sharing_intent
   lottie:
     path: ./dependencies/lottie
   mutex:
@@ -134,6 +145,8 @@ dependency_overrides:
     path: ./dependencies/x25519
   qr_flutter:
     path: ./dependencies/qr_flutter
+  no_screenshot:
+    path: ./dependencies/no_screenshot
   camera_android_camerax: 
     # path: ../flutter-packages/packages/camera/camera_android_camerax
     git:
@@ -149,11 +162,11 @@ dependency_overrides:
     git:
       url: https://github.com/yenchieh/flutter_android_volume_keydown.git
       branch: fix/lStar-not-found-error
-  flutter_secure_storage_darwin:
-    git:
-      url: https://github.com/juliansteenbakker/flutter_secure_storage.git
-      ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
-      path: flutter_secure_storage_darwin/
+  # flutter_secure_storage_darwin:
+  #   git:
+  #     url: https://github.com/juliansteenbakker/flutter_secure_storage.git
+  #     ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
+  #     path: flutter_secure_storage_darwin/
   # hardcoding the mirror mode of the VideCapture to MIRROR_MODE_ON_FRONT_ONLY
 
 dev_dependencies:
