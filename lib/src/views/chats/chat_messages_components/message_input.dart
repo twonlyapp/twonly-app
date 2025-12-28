@@ -151,7 +151,6 @@ class _MessageInputState extends State<MessageInput> {
     await insertMediaFileInMessagesTable(
       mediaFileService,
       [widget.group.groupId],
-      null,
     );
   }
 

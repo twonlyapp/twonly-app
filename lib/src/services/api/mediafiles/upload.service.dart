@@ -87,7 +87,6 @@ Future<MediaFileService?> initializeMediaUpload(
 Future<void> insertMediaFileInMessagesTable(
   MediaFileService mediaService,
   List<String> groupIds,
-  Future<Uint8List?>? imageStoreAwait,
 ) async {
   await twonlyDB.mediaFilesDao.updateAllMediaFiles(
     const MediaFilesCompanion(
@@ -115,13 +114,6 @@ Future<void> insertMediaFileInMessagesTable(
       );
     } else {
       Log.error('Error inserting media upload message in database.');
-    }
-  }
-
-  if (imageStoreAwait != null) {
-    if (await imageStoreAwait == null) {
-      Log.error('image store as original did return false...');
-      return;
     }
   }
 

@@ -35,6 +35,7 @@ class BackgroundLayerData extends Layer {
     required this.image,
   });
   ImageItem image;
+  bool imageLoaded = false;
 }
 
 class FilterLayerData extends Layer {
