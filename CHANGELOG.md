@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.81
+
+- Fixes the issue where black/blank images were sometimes received
+- Fixes an issue in the image editor
+
 ## 0.0.80
 
 - Share images/videos directly from other applications
