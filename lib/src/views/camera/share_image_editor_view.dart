@@ -64,6 +64,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   VideoPlayerController? videoController;
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
+  Timer? _imageLoadingTimer;
 
   MediaFileService get mediaService => widget.mediaFileService;
   MediaFile get media => widget.mediaFileService.mediaFile;
@@ -120,6 +121,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         isDraftMedia: Value(false),
       ),
     );
+    _imageLoadingTimer?.cancel();
     super.dispose();
   }
 
@@ -535,16 +537,34 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       }
     });
 
-    layers.insert(
-      0,
-      BackgroundLayerData(
-        key: GlobalKey(),
-        image: currentImage,
-      ),
-    );
     setState(() {
-      sendingOrLoadingImage = false;
-      loadingImage = false;
+      layers.insert(
+        0,
+        BackgroundLayerData(
+          key: GlobalKey(),
+          image: currentImage,
+        ),
+      );
+    });
+    // It is important that the user can sending the image only when the image is fully loaded otherwise if the user
+    // will click on send before the image is painted the screenshot will be transparent..
+    _imageLoadingTimer =
+        Timer.periodic(const Duration(milliseconds: 10), (timer) {
+      final imageLayer = layers.first;
+      if (imageLayer is BackgroundLayerData) {
+        if (imageLayer.imageLoaded) {
+          timer.cancel();
+          Future.delayed(const Duration(milliseconds: 50), () {
+            Log.info(imageLayer.imageLoaded);
+            if (context.mounted) {
+              setState(() {
+                sendingOrLoadingImage = false;
+                loadingImage = false;
+              });
+            }
+          });
+        }
+      }
     });
   }
 
@@ -556,16 +576,16 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     if (!context.mounted) return;
 
+    // must be awaited so the widget for the screenshot is not already disposed when sending..
+    await storeImageAsOriginal();
+
     // Insert media file into the messages database and start uploading process in the background
-    unawaited(
-      insertMediaFileInMessagesTable(
-        mediaService,
-        [widget.sendToGroup!.groupId],
-        storeImageAsOriginal(),
-      ),
+    await insertMediaFileInMessagesTable(
+      mediaService,
+      [widget.sendToGroup!.groupId],
     );
 
-    if (context.mounted) {
+    if (mounted) {
       Navigator.pop(context, true);
     }
   }

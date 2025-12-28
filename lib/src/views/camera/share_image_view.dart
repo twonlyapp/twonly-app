@@ -286,7 +286,6 @@ class _ShareImageView extends State<ShareImageView> {
                   await insertMediaFileInMessagesTable(
                     widget.mediaFileService,
                     widget.selectedGroupIds.toList(),
-                    null,
                   );
 
                   if (context.mounted) {
