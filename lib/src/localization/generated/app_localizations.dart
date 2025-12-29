@@ -2875,6 +2875,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Migration of media files: {open} still to be processed.'**
   String migrationOfMemories(Object open);
+
+  /// No description provided for @autoStoreAllSendUnlimitedMediaFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Save all sent media'**
+  String get autoStoreAllSendUnlimitedMediaFiles;
+
+  /// No description provided for @autoStoreAllSendUnlimitedMediaFilesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode.'**
+  String get autoStoreAllSendUnlimitedMediaFilesSubtitle;
 }
 
 class _AppLocalizationsDelegate

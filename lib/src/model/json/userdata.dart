@@ -72,6 +72,9 @@ class UserData {
   @JsonKey(defaultValue: false)
   bool storeMediaFilesInGallery = false;
 
+  @JsonKey(defaultValue: false)
+  bool autoStoreAllSendUnlimitedMediaFiles = false;
+
   String? lastPlanBallance;
   String? additionalUserInvites;
 

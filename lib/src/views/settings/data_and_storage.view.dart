@@ -46,6 +46,15 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
     setState(() {});
   }
 
+  Future<void> toggleAutoStoreMediaFiles() async {
+    await updateUserdata((u) {
+      u.autoStoreAllSendUnlimitedMediaFiles =
+          !u.autoStoreAllSendUnlimitedMediaFiles;
+      return u;
+    });
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final autoDownloadOptions =
@@ -63,6 +72,18 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
             trailing: Switch(
               value: gUser.storeMediaFilesInGallery,
               onChanged: (a) => toggleStoreInGallery(),
+            ),
+          ),
+          ListTile(
+            title: Text(context.lang.autoStoreAllSendUnlimitedMediaFiles),
+            subtitle: Text(
+              context.lang.autoStoreAllSendUnlimitedMediaFilesSubtitle,
+              style: const TextStyle(fontSize: 9),
+            ),
+            onTap: toggleAutoStoreMediaFiles,
+            trailing: Switch(
+              value: gUser.autoStoreAllSendUnlimitedMediaFiles,
+              onChanged: (a) => toggleAutoStoreMediaFiles(),
             ),
           ),
           if (Platform.isAndroid)

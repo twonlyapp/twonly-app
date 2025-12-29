@@ -33,7 +33,7 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
           json['requestedAudioPermission'] as bool? ?? false
       ..showFeedbackShortcut = json['showFeedbackShortcut'] as bool? ?? true
       ..showShowImagePreviewWhenSending =
-          json['showShowImagePreviewWhenSending'] as bool? ?? true
+          json['showShowImagePreviewWhenSending'] as bool? ?? false
       ..startWithCameraOpen = json['startWithCameraOpen'] as bool? ?? true
       ..preSelectedEmojies = (json['preSelectedEmojies'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -45,6 +45,8 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       )
       ..storeMediaFilesInGallery =
           json['storeMediaFilesInGallery'] as bool? ?? false
+      ..autoStoreAllSendUnlimitedMediaFiles =
+          json['autoStoreAllSendUnlimitedMediaFiles'] as bool? ?? false
       ..lastPlanBallance = json['lastPlanBallance'] as String?
       ..additionalUserInvites = json['additionalUserInvites'] as String?
       ..tutorialDisplayed = (json['tutorialDisplayed'] as List<dynamic>?)
@@ -102,6 +104,8 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'preSelectedEmojies': instance.preSelectedEmojies,
       'autoDownloadOptions': instance.autoDownloadOptions,
       'storeMediaFilesInGallery': instance.storeMediaFilesInGallery,
+      'autoStoreAllSendUnlimitedMediaFiles':
+          instance.autoStoreAllSendUnlimitedMediaFiles,
       'lastPlanBallance': instance.lastPlanBallance,
       'additionalUserInvites': instance.additionalUserInvites,
       'tutorialDisplayed': instance.tutorialDisplayed,

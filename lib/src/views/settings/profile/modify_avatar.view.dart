@@ -3,7 +3,6 @@ import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
-import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 

@@ -1595,4 +1595,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String migrationOfMemories(Object open) {
     return 'Migration von Mediendateien: $open noch offen.';
   }
+
+  @override
+  String get autoStoreAllSendUnlimitedMediaFiles =>
+      'Alle gesendeten Medien speichern';
+
+  @override
+  String get autoStoreAllSendUnlimitedMediaFilesSubtitle =>
+      'Wenn du diese Option aktivierst, werden alle Bilder, die du sendest, gespeichert, sofern sie mit einem unendlichen Countdown und nicht im twonly-Modus gesendet wurden.';
 }

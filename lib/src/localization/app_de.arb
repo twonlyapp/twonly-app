@@ -462,5 +462,7 @@
     "verifiedPublicKey": "Der öffentliche Schlüssel von {username} wurde überprüft und ist gültig.",
     "memoriesAYearAgo": "Vor einem Jahr",
     "memoriesXYearsAgo": "Vor {years} Jahren",
-    "migrationOfMemories": "Migration von Mediendateien: {open} noch offen."
+    "migrationOfMemories": "Migration von Mediendateien: {open} noch offen.",
+    "autoStoreAllSendUnlimitedMediaFiles": "Alle gesendeten Medien speichern",
+    "autoStoreAllSendUnlimitedMediaFilesSubtitle": "Wenn du diese Option aktivierst, werden alle Bilder, die du sendest, gespeichert, sofern sie mit einem unendlichen Countdown und nicht im twonly-Modus gesendet wurden."
 }
