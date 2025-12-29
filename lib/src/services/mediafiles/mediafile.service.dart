@@ -218,6 +218,15 @@ class MediaFileService {
     }
     if (tempPath.existsSync()) {
       await tempPath.copy(storedPath.path);
+      if (gUser.storeMediaFilesInGallery) {
+        if (mediaFile.type == MediaType.video) {
+          await saveVideoToGallery(storedPath.path);
+        } else {
+          await saveImageToGallery(
+            storedPath.readAsBytesSync(),
+          );
+        }
+      }
     } else {
       Log.error(
         'Could not store image neither as ${tempPath.path} does not exists.',
