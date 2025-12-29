@@ -289,26 +289,18 @@ Future<void> notifyContactAboutOpeningMessage(
   await updateLastMessageId(contactId, biggestMessageId);
 }
 
-Future<void> notifyContactsAboutProfileChange({int? onlyToContact}) async {
-  if (gUser.avatarSvg == null) return;
-
+Future<void> sendContactMyProfileData(int contactId) async {
+  List<int>? avatarSvgCompressed;
+  if (gUser.avatarSvg != null) {
+    avatarSvgCompressed = gzip.encode(utf8.encode(gUser.avatarSvg!));
+  }
   final encryptedContent = pb.EncryptedContent(
     contactUpdate: pb.EncryptedContent_ContactUpdate(
       type: pb.EncryptedContent_ContactUpdate_Type.UPDATE,
-      avatarSvgCompressed: gzip.encode(utf8.encode(gUser.avatarSvg!)),
+      avatarSvgCompressed: avatarSvgCompressed,
       displayName: gUser.displayName,
       username: gUser.username,
     ),
   );
-
-  if (onlyToContact != null) {
-    await sendCipherText(onlyToContact, encryptedContent);
-    return;
-  }
-
-  final contacts = await twonlyDB.contactsDao.getAllNotBlockedContacts();
-
-  for (final contact in contacts) {
-    await sendCipherText(contact.userId, encryptedContent);
-  }
+  await sendCipherText(contactId, encryptedContent);
 }

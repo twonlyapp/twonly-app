@@ -52,7 +52,6 @@ class _ProfileViewState extends State<ProfileView> {
         ..avatarCounter = user.avatarCounter + 1;
       return user;
     });
-    await notifyContactsAboutProfileChange();
     setState(() {}); // gUser has updated
   }
 
@@ -86,7 +85,6 @@ class _ProfileViewState extends State<ProfileView> {
         ..avatarCounter = user.avatarCounter + 1;
       return user;
     });
-    await notifyContactsAboutProfileChange();
     setState(() {}); // gUser has updated
   }
 

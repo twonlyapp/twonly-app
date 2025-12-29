@@ -93,7 +93,7 @@ Future<void> handleContactUpdate(
   switch (contactUpdate.type) {
     case EncryptedContent_ContactUpdate_Type.REQUEST:
       Log.info('Got a contact update request from $fromUserId');
-      await notifyContactsAboutProfileChange(onlyToContact: fromUserId);
+      await sendContactMyProfileData(fromUserId);
 
     case EncryptedContent_ContactUpdate_Type.UPDATE:
       Log.info('Got a contact update $fromUserId');

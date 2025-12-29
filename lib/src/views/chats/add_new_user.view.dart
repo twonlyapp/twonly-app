@@ -284,7 +284,7 @@ class ContactsListView extends StatelessWidget {
               ),
             ),
           );
-          await notifyContactsAboutProfileChange();
+          await sendContactMyProfileData(contact.userId);
         },
       ),
     ];

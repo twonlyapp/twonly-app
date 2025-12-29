@@ -31,7 +31,6 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
         ..avatarCounter = user.avatarCounter + 1;
       return user;
     });
-    await notifyContactsAboutProfileChange();
   }
 
   AvatarMakerThemeData getAvatarMakerTheme(BuildContext context) {
