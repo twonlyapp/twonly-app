@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.82
+
+- Added an option in the settings to automatically save all sent images
+- Hides duplicate images in the memory
+- Fixes a bug where messages were not being received
+- Several other minor improvements
+
 ## 0.0.81
 
 - Fixes the issue where black/blank images were sometimes received
