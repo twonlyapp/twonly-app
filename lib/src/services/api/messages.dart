@@ -21,7 +21,7 @@ final lockRetransmission = Mutex();
 
 Future<void> tryTransmitMessages() async {
   return lockRetransmission.protect(() async {
-    final receipts = await twonlyDB.receiptsDao.getReceiptsNotAckByServer();
+    final receipts = await twonlyDB.receiptsDao.getReceiptsForRetransmission();
 
     if (receipts.isEmpty) return;
 

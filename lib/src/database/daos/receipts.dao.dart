@@ -80,10 +80,18 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     }
   }
 
-  Future<List<Receipt>> getReceiptsNotAckByServer() async {
+  Future<List<Receipt>> getReceiptsForRetransmission() async {
+    final markedRetriesTime = DateTime.now().subtract(
+      const Duration(
+        // give the server time to transmit all messages to the client
+        seconds: 20,
+      ),
+    );
     return (select(receipts)
           ..where(
-            (t) => t.ackByServerAt.isNull(),
+            (t) =>
+                t.ackByServerAt.isNull() |
+                t.markForRetry.isSmallerThanValue(markedRetriesTime),
           ))
         .get();
   }
@@ -98,6 +106,14 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   ) async {
     await (update(receipts)..where((c) => c.receiptId.equals(receiptId)))
         .write(updates);
+  }
+
+  Future<void> markMessagesForRetry(int contactId) async {
+    await (update(receipts)..where((c) => c.contactId.equals(contactId))).write(
+      ReceiptsCompanion(
+        markForRetry: Value(DateTime.now()),
+      ),
+    );
   }
 
   Future<bool> isDuplicated(String receiptId) async {
