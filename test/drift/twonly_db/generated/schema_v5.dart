@@ -1626,6 +1626,9 @@ class MediaFiles extends Table with TableInfo<MediaFiles, MediaFilesData> {
   late final GeneratedColumn<i2.Uint8List> encryptionNonce =
       GeneratedColumn<i2.Uint8List>('encryption_nonce', aliasedName, true,
           type: DriftSqlType.blob, requiredDuringInsert: false);
+  late final GeneratedColumn<i2.Uint8List> storedFileHash =
+      GeneratedColumn<i2.Uint8List>('stored_file_hash', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
       type: DriftSqlType.dateTime,
@@ -1648,6 +1651,7 @@ class MediaFiles extends Table with TableInfo<MediaFiles, MediaFilesData> {
         encryptionKey,
         encryptionMac,
         encryptionNonce,
+        storedFileHash,
         createdAt
       ];
   @override
@@ -1691,6 +1695,8 @@ class MediaFiles extends Table with TableInfo<MediaFiles, MediaFilesData> {
           .read(DriftSqlType.blob, data['${effectivePrefix}encryption_mac']),
       encryptionNonce: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}encryption_nonce']),
+      storedFileHash: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}stored_file_hash']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -1717,6 +1723,7 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
   final i2.Uint8List? encryptionKey;
   final i2.Uint8List? encryptionMac;
   final i2.Uint8List? encryptionNonce;
+  final i2.Uint8List? storedFileHash;
   final DateTime createdAt;
   const MediaFilesData(
       {required this.mediaId,
@@ -1733,6 +1740,7 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       this.encryptionKey,
       this.encryptionMac,
       this.encryptionNonce,
+      this.storedFileHash,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1769,6 +1777,9 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
     }
     if (!nullToAbsent || encryptionNonce != null) {
       map['encryption_nonce'] = Variable<i2.Uint8List>(encryptionNonce);
+    }
+    if (!nullToAbsent || storedFileHash != null) {
+      map['stored_file_hash'] = Variable<i2.Uint8List>(storedFileHash);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1809,6 +1820,9 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       encryptionNonce: encryptionNonce == null && nullToAbsent
           ? const Value.absent()
           : Value(encryptionNonce),
+      storedFileHash: storedFileHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storedFileHash),
       createdAt: Value(createdAt),
     );
   }
@@ -1835,6 +1849,8 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       encryptionMac: serializer.fromJson<i2.Uint8List?>(json['encryptionMac']),
       encryptionNonce:
           serializer.fromJson<i2.Uint8List?>(json['encryptionNonce']),
+      storedFileHash:
+          serializer.fromJson<i2.Uint8List?>(json['storedFileHash']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1857,6 +1873,7 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       'encryptionKey': serializer.toJson<i2.Uint8List?>(encryptionKey),
       'encryptionMac': serializer.toJson<i2.Uint8List?>(encryptionMac),
       'encryptionNonce': serializer.toJson<i2.Uint8List?>(encryptionNonce),
+      'storedFileHash': serializer.toJson<i2.Uint8List?>(storedFileHash),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1876,6 +1893,7 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
           Value<i2.Uint8List?> encryptionKey = const Value.absent(),
           Value<i2.Uint8List?> encryptionMac = const Value.absent(),
           Value<i2.Uint8List?> encryptionNonce = const Value.absent(),
+          Value<i2.Uint8List?> storedFileHash = const Value.absent(),
           DateTime? createdAt}) =>
       MediaFilesData(
         mediaId: mediaId ?? this.mediaId,
@@ -1903,6 +1921,8 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
         encryptionNonce: encryptionNonce.present
             ? encryptionNonce.value
             : this.encryptionNonce,
+        storedFileHash:
+            storedFileHash.present ? storedFileHash.value : this.storedFileHash,
         createdAt: createdAt ?? this.createdAt,
       );
   MediaFilesData copyWithCompanion(MediaFilesCompanion data) {
@@ -1941,6 +1961,9 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       encryptionNonce: data.encryptionNonce.present
           ? data.encryptionNonce.value
           : this.encryptionNonce,
+      storedFileHash: data.storedFileHash.present
+          ? data.storedFileHash.value
+          : this.storedFileHash,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1962,6 +1985,7 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
+          ..write('storedFileHash: $storedFileHash, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1983,6 +2007,7 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       $driftBlobEquality.hash(encryptionKey),
       $driftBlobEquality.hash(encryptionMac),
       $driftBlobEquality.hash(encryptionNonce),
+      $driftBlobEquality.hash(storedFileHash),
       createdAt);
   @override
   bool operator ==(Object other) =>
@@ -2003,6 +2028,8 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
           $driftBlobEquality.equals(other.encryptionMac, this.encryptionMac) &&
           $driftBlobEquality.equals(
               other.encryptionNonce, this.encryptionNonce) &&
+          $driftBlobEquality.equals(
+              other.storedFileHash, this.storedFileHash) &&
           other.createdAt == this.createdAt);
 }
 
@@ -2021,6 +2048,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
   final Value<i2.Uint8List?> encryptionKey;
   final Value<i2.Uint8List?> encryptionMac;
   final Value<i2.Uint8List?> encryptionNonce;
+  final Value<i2.Uint8List?> storedFileHash;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const MediaFilesCompanion({
@@ -2038,6 +2066,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
     this.encryptionNonce = const Value.absent(),
+    this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2056,6 +2085,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
     this.encryptionNonce = const Value.absent(),
+    this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : mediaId = Value(mediaId),
@@ -2075,6 +2105,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
     Expression<i2.Uint8List>? encryptionKey,
     Expression<i2.Uint8List>? encryptionMac,
     Expression<i2.Uint8List>? encryptionNonce,
+    Expression<i2.Uint8List>? storedFileHash,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -2096,6 +2127,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
       if (encryptionKey != null) 'encryption_key': encryptionKey,
       if (encryptionMac != null) 'encryption_mac': encryptionMac,
       if (encryptionNonce != null) 'encryption_nonce': encryptionNonce,
+      if (storedFileHash != null) 'stored_file_hash': storedFileHash,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2116,6 +2148,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
       Value<i2.Uint8List?>? encryptionKey,
       Value<i2.Uint8List?>? encryptionMac,
       Value<i2.Uint8List?>? encryptionNonce,
+      Value<i2.Uint8List?>? storedFileHash,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
     return MediaFilesCompanion(
@@ -2135,6 +2168,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
       encryptionKey: encryptionKey ?? this.encryptionKey,
       encryptionMac: encryptionMac ?? this.encryptionMac,
       encryptionNonce: encryptionNonce ?? this.encryptionNonce,
+      storedFileHash: storedFileHash ?? this.storedFileHash,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2188,6 +2222,9 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
     if (encryptionNonce.present) {
       map['encryption_nonce'] = Variable<i2.Uint8List>(encryptionNonce.value);
     }
+    if (storedFileHash.present) {
+      map['stored_file_hash'] = Variable<i2.Uint8List>(storedFileHash.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2214,6 +2251,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
+          ..write('storedFileHash: $storedFileHash, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))

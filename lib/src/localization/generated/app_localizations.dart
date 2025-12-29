@@ -2869,6 +2869,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{years} years ago'**
   String memoriesXYearsAgo(Object years);
+
+  /// No description provided for @migrationOfMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Migration of media files: {open} still to be processed.'**
+  String migrationOfMemories(Object open);
 }
 
 class _AppLocalizationsDelegate

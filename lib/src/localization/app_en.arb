@@ -491,5 +491,6 @@
   "showImagePreviewWhenSending": "Display image preview when selecting recipients",
   "verifiedPublicKey": "The public key of {username} has been verified and is valid.",
   "memoriesAYearAgo": "One year ago",
-  "memoriesXYearsAgo": "{years} years ago"
+  "memoriesXYearsAgo": "{years} years ago",
+  "migrationOfMemories": "Migration of media files: {open} still to be processed."
 }

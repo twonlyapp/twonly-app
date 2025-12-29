@@ -105,6 +105,10 @@ class TwonlyDB extends _$TwonlyDB {
         },
         from4To5: (m, schema) async {
           await m.addColumn(schema.receipts, schema.receipts.markForRetry);
+          await m.addColumn(
+            schema.mediaFiles,
+            schema.mediaFiles.storedFileHash,
+          );
         },
       ),
     );

@@ -59,8 +59,8 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool showFeedbackShortcut = true;
 
-  @JsonKey(defaultValue: true)
-  bool showShowImagePreviewWhenSending = true;
+  @JsonKey(defaultValue: false)
+  bool showShowImagePreviewWhenSending = false;
 
   @JsonKey(defaultValue: true)
   bool startWithCameraOpen = true;

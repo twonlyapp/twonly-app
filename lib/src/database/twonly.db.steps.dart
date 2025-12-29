@@ -2033,7 +2033,7 @@ final class Schema5 extends i0.VersionedSchema {
         attachedDatabase: database,
       ),
       alias: null);
-  late final Shape2 mediaFiles = Shape2(
+  late final Shape18 mediaFiles = Shape18(
       source: i0.VersionedTable(
         entityName: 'media_files',
         withoutRowId: false,
@@ -2056,6 +2056,7 @@ final class Schema5 extends i0.VersionedSchema {
           _column_47,
           _column_48,
           _column_49,
+          _column_102,
           _column_12,
         ],
         attachedDatabase: database,
@@ -2145,7 +2146,7 @@ final class Schema5 extends i0.VersionedSchema {
         attachedDatabase: database,
       ),
       alias: null);
-  late final Shape18 receipts = Shape18(
+  late final Shape19 receipts = Shape19(
       source: i0.VersionedTable(
         entityName: 'receipts',
         withoutRowId: false,
@@ -2159,7 +2160,7 @@ final class Schema5 extends i0.VersionedSchema {
           _column_75,
           _column_76,
           _column_77,
-          _column_102,
+          _column_103,
           _column_78,
           _column_79,
           _column_80,
@@ -2326,6 +2327,47 @@ final class Schema5 extends i0.VersionedSchema {
 
 class Shape18 extends i0.VersionedTable {
   Shape18({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get mediaId =>
+      columnsByName['media_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get type =>
+      columnsByName['type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get uploadState =>
+      columnsByName['upload_state']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get downloadState =>
+      columnsByName['download_state']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<bool> get requiresAuthentication =>
+      columnsByName['requires_authentication']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get stored =>
+      columnsByName['stored']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get isDraftMedia =>
+      columnsByName['is_draft_media']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<String> get reuploadRequestedBy =>
+      columnsByName['reupload_requested_by']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get displayLimitInMilliseconds =>
+      columnsByName['display_limit_in_milliseconds']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<bool> get removeAudio =>
+      columnsByName['remove_audio']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<i2.Uint8List> get downloadToken =>
+      columnsByName['download_token']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<i2.Uint8List> get encryptionKey =>
+      columnsByName['encryption_key']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<i2.Uint8List> get encryptionMac =>
+      columnsByName['encryption_mac']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<i2.Uint8List> get encryptionNonce =>
+      columnsByName['encryption_nonce']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<i2.Uint8List> get storedFileHash =>
+      columnsByName['stored_file_hash']! as i1.GeneratedColumn<i2.Uint8List>;
+  i1.GeneratedColumn<DateTime> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
+}
+
+i1.GeneratedColumn<i2.Uint8List> _column_102(String aliasedName) =>
+    i1.GeneratedColumn<i2.Uint8List>('stored_file_hash', aliasedName, true,
+        type: i1.DriftSqlType.blob);
+
+class Shape19 extends i0.VersionedTable {
+  Shape19({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get receiptId =>
       columnsByName['receipt_id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<int> get contactId =>
@@ -2348,7 +2390,7 @@ class Shape18 extends i0.VersionedTable {
       columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
 }
 
-i1.GeneratedColumn<DateTime> _column_102(String aliasedName) =>
+i1.GeneratedColumn<DateTime> _column_103(String aliasedName) =>
     i1.GeneratedColumn<DateTime>('mark_for_retry', aliasedName, true,
         type: i1.DriftSqlType.dateTime);
 i0.MigrationStepWithVersion migrationSteps({

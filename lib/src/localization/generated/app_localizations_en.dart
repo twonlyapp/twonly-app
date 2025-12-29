@@ -1580,4 +1580,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String memoriesXYearsAgo(Object years) {
     return '$years years ago';
   }
+
+  @override
+  String migrationOfMemories(Object open) {
+    return 'Migration of media files: $open still to be processed.';
+  }
 }

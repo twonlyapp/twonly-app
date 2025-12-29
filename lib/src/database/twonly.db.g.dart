@@ -1996,6 +1996,12 @@ class $MediaFilesTable extends MediaFiles
   late final GeneratedColumn<Uint8List> encryptionNonce =
       GeneratedColumn<Uint8List>('encryption_nonce', aliasedName, true,
           type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _storedFileHashMeta =
+      const VerificationMeta('storedFileHash');
+  @override
+  late final GeneratedColumn<Uint8List> storedFileHash =
+      GeneratedColumn<Uint8List>('stored_file_hash', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -2020,6 +2026,7 @@ class $MediaFilesTable extends MediaFiles
         encryptionKey,
         encryptionMac,
         encryptionNonce,
+        storedFileHash,
         createdAt
       ];
   @override
@@ -2091,6 +2098,12 @@ class $MediaFilesTable extends MediaFiles
           encryptionNonce.isAcceptableOrUnknown(
               data['encryption_nonce']!, _encryptionNonceMeta));
     }
+    if (data.containsKey('stored_file_hash')) {
+      context.handle(
+          _storedFileHashMeta,
+          storedFileHash.isAcceptableOrUnknown(
+              data['stored_file_hash']!, _storedFileHashMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -2137,6 +2150,8 @@ class $MediaFilesTable extends MediaFiles
           .read(DriftSqlType.blob, data['${effectivePrefix}encryption_mac']),
       encryptionNonce: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}encryption_nonce']),
+      storedFileHash: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}stored_file_hash']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -2181,6 +2196,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final Uint8List? encryptionKey;
   final Uint8List? encryptionMac;
   final Uint8List? encryptionNonce;
+  final Uint8List? storedFileHash;
   final DateTime createdAt;
   const MediaFile(
       {required this.mediaId,
@@ -2197,6 +2213,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       this.encryptionKey,
       this.encryptionMac,
       this.encryptionNonce,
+      this.storedFileHash,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2241,6 +2258,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     if (!nullToAbsent || encryptionNonce != null) {
       map['encryption_nonce'] = Variable<Uint8List>(encryptionNonce);
     }
+    if (!nullToAbsent || storedFileHash != null) {
+      map['stored_file_hash'] = Variable<Uint8List>(storedFileHash);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -2280,6 +2300,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       encryptionNonce: encryptionNonce == null && nullToAbsent
           ? const Value.absent()
           : Value(encryptionNonce),
+      storedFileHash: storedFileHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storedFileHash),
       createdAt: Value(createdAt),
     );
   }
@@ -2308,6 +2331,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       encryptionKey: serializer.fromJson<Uint8List?>(json['encryptionKey']),
       encryptionMac: serializer.fromJson<Uint8List?>(json['encryptionMac']),
       encryptionNonce: serializer.fromJson<Uint8List?>(json['encryptionNonce']),
+      storedFileHash: serializer.fromJson<Uint8List?>(json['storedFileHash']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -2333,6 +2357,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'encryptionKey': serializer.toJson<Uint8List?>(encryptionKey),
       'encryptionMac': serializer.toJson<Uint8List?>(encryptionMac),
       'encryptionNonce': serializer.toJson<Uint8List?>(encryptionNonce),
+      'storedFileHash': serializer.toJson<Uint8List?>(storedFileHash),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -2352,6 +2377,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           Value<Uint8List?> encryptionKey = const Value.absent(),
           Value<Uint8List?> encryptionMac = const Value.absent(),
           Value<Uint8List?> encryptionNonce = const Value.absent(),
+          Value<Uint8List?> storedFileHash = const Value.absent(),
           DateTime? createdAt}) =>
       MediaFile(
         mediaId: mediaId ?? this.mediaId,
@@ -2379,6 +2405,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         encryptionNonce: encryptionNonce.present
             ? encryptionNonce.value
             : this.encryptionNonce,
+        storedFileHash:
+            storedFileHash.present ? storedFileHash.value : this.storedFileHash,
         createdAt: createdAt ?? this.createdAt,
       );
   MediaFile copyWithCompanion(MediaFilesCompanion data) {
@@ -2417,6 +2445,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       encryptionNonce: data.encryptionNonce.present
           ? data.encryptionNonce.value
           : this.encryptionNonce,
+      storedFileHash: data.storedFileHash.present
+          ? data.storedFileHash.value
+          : this.storedFileHash,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -2438,6 +2469,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
+          ..write('storedFileHash: $storedFileHash, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -2459,6 +2491,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       $driftBlobEquality.hash(encryptionKey),
       $driftBlobEquality.hash(encryptionMac),
       $driftBlobEquality.hash(encryptionNonce),
+      $driftBlobEquality.hash(storedFileHash),
       createdAt);
   @override
   bool operator ==(Object other) =>
@@ -2479,6 +2512,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           $driftBlobEquality.equals(other.encryptionMac, this.encryptionMac) &&
           $driftBlobEquality.equals(
               other.encryptionNonce, this.encryptionNonce) &&
+          $driftBlobEquality.equals(
+              other.storedFileHash, this.storedFileHash) &&
           other.createdAt == this.createdAt);
 }
 
@@ -2497,6 +2532,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<Uint8List?> encryptionKey;
   final Value<Uint8List?> encryptionMac;
   final Value<Uint8List?> encryptionNonce;
+  final Value<Uint8List?> storedFileHash;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const MediaFilesCompanion({
@@ -2514,6 +2550,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
     this.encryptionNonce = const Value.absent(),
+    this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2532,6 +2569,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
     this.encryptionNonce = const Value.absent(),
+    this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : mediaId = Value(mediaId),
@@ -2551,6 +2589,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<Uint8List>? encryptionKey,
     Expression<Uint8List>? encryptionMac,
     Expression<Uint8List>? encryptionNonce,
+    Expression<Uint8List>? storedFileHash,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -2572,6 +2611,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (encryptionKey != null) 'encryption_key': encryptionKey,
       if (encryptionMac != null) 'encryption_mac': encryptionMac,
       if (encryptionNonce != null) 'encryption_nonce': encryptionNonce,
+      if (storedFileHash != null) 'stored_file_hash': storedFileHash,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2592,6 +2632,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       Value<Uint8List?>? encryptionKey,
       Value<Uint8List?>? encryptionMac,
       Value<Uint8List?>? encryptionNonce,
+      Value<Uint8List?>? storedFileHash,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
     return MediaFilesCompanion(
@@ -2611,6 +2652,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       encryptionKey: encryptionKey ?? this.encryptionKey,
       encryptionMac: encryptionMac ?? this.encryptionMac,
       encryptionNonce: encryptionNonce ?? this.encryptionNonce,
+      storedFileHash: storedFileHash ?? this.storedFileHash,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2668,6 +2710,9 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (encryptionNonce.present) {
       map['encryption_nonce'] = Variable<Uint8List>(encryptionNonce.value);
     }
+    if (storedFileHash.present) {
+      map['stored_file_hash'] = Variable<Uint8List>(storedFileHash.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2694,6 +2739,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
+          ..write('storedFileHash: $storedFileHash, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -9390,6 +9436,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   Value<Uint8List?> encryptionKey,
   Value<Uint8List?> encryptionMac,
   Value<Uint8List?> encryptionNonce,
+  Value<Uint8List?> storedFileHash,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -9408,6 +9455,7 @@ typedef $$MediaFilesTableUpdateCompanionBuilder = MediaFilesCompanion Function({
   Value<Uint8List?> encryptionKey,
   Value<Uint8List?> encryptionMac,
   Value<Uint8List?> encryptionNonce,
+  Value<Uint8List?> storedFileHash,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -9492,6 +9540,10 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<Uint8List> get encryptionNonce => $composableBuilder(
       column: $table.encryptionNonce,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get storedFileHash => $composableBuilder(
+      column: $table.storedFileHash,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -9579,6 +9631,10 @@ class $$MediaFilesTableOrderingComposer
       column: $table.encryptionNonce,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<Uint8List> get storedFileHash => $composableBuilder(
+      column: $table.storedFileHash,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
@@ -9636,6 +9692,9 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get encryptionNonce => $composableBuilder(
       column: $table.encryptionNonce, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get storedFileHash => $composableBuilder(
+      column: $table.storedFileHash, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -9699,6 +9758,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<Uint8List?> encryptionKey = const Value.absent(),
             Value<Uint8List?> encryptionMac = const Value.absent(),
             Value<Uint8List?> encryptionNonce = const Value.absent(),
+            Value<Uint8List?> storedFileHash = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -9717,6 +9777,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             encryptionKey: encryptionKey,
             encryptionMac: encryptionMac,
             encryptionNonce: encryptionNonce,
+            storedFileHash: storedFileHash,
             createdAt: createdAt,
             rowid: rowid,
           ),
@@ -9735,6 +9796,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<Uint8List?> encryptionKey = const Value.absent(),
             Value<Uint8List?> encryptionMac = const Value.absent(),
             Value<Uint8List?> encryptionNonce = const Value.absent(),
+            Value<Uint8List?> storedFileHash = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -9753,6 +9815,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             encryptionKey: encryptionKey,
             encryptionMac: encryptionMac,
             encryptionNonce: encryptionNonce,
+            storedFileHash: storedFileHash,
             createdAt: createdAt,
             rowid: rowid,
           ),
