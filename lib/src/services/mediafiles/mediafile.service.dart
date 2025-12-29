@@ -239,7 +239,6 @@ class MediaFileService {
 
   Future<void> hashStoredMedia() async {
     if (!storedPath.existsSync()) {
-      Log.error('could not create hash value as media file is not stored.');
       return;
     }
     final checksum = await sha256File(storedPath);
