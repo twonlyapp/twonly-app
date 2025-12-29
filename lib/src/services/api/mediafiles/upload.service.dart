@@ -132,6 +132,15 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
       }
     }
 
+    // if the user has enabled auto storing and the file
+    // was send with unlimited counter not in twonly-Mode then store the file
+    if (gUser.autoStoreAllSendUnlimitedMediaFiles &&
+        !mediaService.mediaFile.requiresAuthentication &&
+        !mediaService.storedPath.existsSync() &&
+        mediaService.mediaFile.displayLimitInMilliseconds == null) {
+      await mediaService.storeMediaFile();
+    }
+
     if (!mediaService.encryptedPath.existsSync()) {
       await _encryptMediaFiles(mediaService);
       if (!mediaService.encryptedPath.existsSync()) {

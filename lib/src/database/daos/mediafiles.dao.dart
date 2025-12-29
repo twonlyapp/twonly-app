@@ -100,6 +100,14 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         .get();
   }
 
+  Future<List<MediaFile>> getAllNonHashedStoredMediaFiles() async {
+    return (select(mediaFiles)
+          ..where(
+            (t) => t.stored.equals(true) & t.storedFileHash.isNull(),
+          ))
+        .get();
+  }
+
   Future<List<MediaFile>> getAllMediaFilesPendingUpload() async {
     return (select(mediaFiles)
           ..where(
@@ -111,7 +119,10 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
   }
 
   Stream<List<MediaFile>> watchAllStoredMediaFiles() {
-    return (select(mediaFiles)..where((t) => t.stored.equals(true))).watch();
+    final query = (select(mediaFiles)..where((t) => t.stored.equals(true)))
+        .join([])
+      ..groupBy([mediaFiles.storedFileHash]);
+    return query.map((row) => row.readTable(mediaFiles)).watch();
   }
 
   Stream<List<MediaFile>> watchNewestMediaFiles() {

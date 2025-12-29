@@ -1580,4 +1580,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String memoriesXYearsAgo(Object years) {
     return '$years years ago';
   }
+
+  @override
+  String migrationOfMemories(Object open) {
+    return 'Migration of media files: $open still to be processed.';
+  }
+
+  @override
+  String get autoStoreAllSendUnlimitedMediaFiles => 'Save all sent media';
+
+  @override
+  String get autoStoreAllSendUnlimitedMediaFilesSubtitle =>
+      'If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode.';
 }

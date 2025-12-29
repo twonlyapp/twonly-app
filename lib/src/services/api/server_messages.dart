@@ -40,7 +40,11 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
       await handleClient2ClientMessage(msg.v0.newMessage);
     } else if (msg.v0.hasNewMessages()) {
       for (final newMessage in msg.v0.newMessages.newMessages) {
-        await handleClient2ClientMessage(newMessage);
+        try {
+          await handleClient2ClientMessage(newMessage);
+        } catch (e) {
+          Log.error(e);
+        }
       }
     } else {
       Log.error('Unknown server message: $msg');
@@ -184,6 +188,15 @@ Future<PlaintextContent?> handleEncryptedMessage(
       ..decryptionErrorMessage = (PlaintextContent_DecryptionErrorMessage()
         ..type = decryptionErrorType!);
   }
+
+  // We got a valid message fromUserId, so mark all messages which where
+  // send to the user but not yet ACK for retransmission. All marked messages
+  // will be either transmitted again after a new server connection (minimum 20 seconds).
+  // In case the server sends the ACK before they will be deleted.
+  // This ensures that 1. all messages will be received by the other person and
+  // that they will be retransmitted in case the server deleted them as they
+  // where not downloaded within the 40 days
+  await twonlyDB.receiptsDao.markMessagesForRetry(fromUserId);
 
   final senderProfileCounter = await checkForProfileUpdate(fromUserId, content);
 

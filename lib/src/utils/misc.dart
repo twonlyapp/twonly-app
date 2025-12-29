@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:convert/convert.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -366,4 +368,13 @@ void printWrapped(String text) {
   final pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
   // ignore: avoid_print
   pattern.allMatches(text).forEach((match) => print(match.group(0)));
+}
+
+Future<List<int>> sha256File(File file) async {
+  final input = file.openRead();
+  final sha256Sink = AccumulatorSink<Digest>();
+  final converter = sha256.startChunkedConversion(sha256Sink);
+  await input.forEach(converter.add);
+  converter.close();
+  return sha256Sink.events.single.bytes;
 }

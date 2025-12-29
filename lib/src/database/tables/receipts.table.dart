@@ -20,6 +20,8 @@ class Receipts extends Table {
   BoolColumn get contactWillSendsReceipt =>
       boolean().withDefault(const Constant(true))();
 
+  DateTimeColumn get markForRetry => dateTime().nullable()();
+
   DateTimeColumn get ackByServerAt => dateTime().nullable()();
 
   IntColumn get retryCount => integer().withDefault(const Constant(0))();

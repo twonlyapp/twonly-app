@@ -1996,6 +1996,12 @@ class $MediaFilesTable extends MediaFiles
   late final GeneratedColumn<Uint8List> encryptionNonce =
       GeneratedColumn<Uint8List>('encryption_nonce', aliasedName, true,
           type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _storedFileHashMeta =
+      const VerificationMeta('storedFileHash');
+  @override
+  late final GeneratedColumn<Uint8List> storedFileHash =
+      GeneratedColumn<Uint8List>('stored_file_hash', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -2020,6 +2026,7 @@ class $MediaFilesTable extends MediaFiles
         encryptionKey,
         encryptionMac,
         encryptionNonce,
+        storedFileHash,
         createdAt
       ];
   @override
@@ -2091,6 +2098,12 @@ class $MediaFilesTable extends MediaFiles
           encryptionNonce.isAcceptableOrUnknown(
               data['encryption_nonce']!, _encryptionNonceMeta));
     }
+    if (data.containsKey('stored_file_hash')) {
+      context.handle(
+          _storedFileHashMeta,
+          storedFileHash.isAcceptableOrUnknown(
+              data['stored_file_hash']!, _storedFileHashMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -2137,6 +2150,8 @@ class $MediaFilesTable extends MediaFiles
           .read(DriftSqlType.blob, data['${effectivePrefix}encryption_mac']),
       encryptionNonce: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}encryption_nonce']),
+      storedFileHash: attachedDatabase.typeMapping
+          .read(DriftSqlType.blob, data['${effectivePrefix}stored_file_hash']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -2181,6 +2196,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final Uint8List? encryptionKey;
   final Uint8List? encryptionMac;
   final Uint8List? encryptionNonce;
+  final Uint8List? storedFileHash;
   final DateTime createdAt;
   const MediaFile(
       {required this.mediaId,
@@ -2197,6 +2213,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       this.encryptionKey,
       this.encryptionMac,
       this.encryptionNonce,
+      this.storedFileHash,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2241,6 +2258,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     if (!nullToAbsent || encryptionNonce != null) {
       map['encryption_nonce'] = Variable<Uint8List>(encryptionNonce);
     }
+    if (!nullToAbsent || storedFileHash != null) {
+      map['stored_file_hash'] = Variable<Uint8List>(storedFileHash);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -2280,6 +2300,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       encryptionNonce: encryptionNonce == null && nullToAbsent
           ? const Value.absent()
           : Value(encryptionNonce),
+      storedFileHash: storedFileHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storedFileHash),
       createdAt: Value(createdAt),
     );
   }
@@ -2308,6 +2331,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       encryptionKey: serializer.fromJson<Uint8List?>(json['encryptionKey']),
       encryptionMac: serializer.fromJson<Uint8List?>(json['encryptionMac']),
       encryptionNonce: serializer.fromJson<Uint8List?>(json['encryptionNonce']),
+      storedFileHash: serializer.fromJson<Uint8List?>(json['storedFileHash']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -2333,6 +2357,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'encryptionKey': serializer.toJson<Uint8List?>(encryptionKey),
       'encryptionMac': serializer.toJson<Uint8List?>(encryptionMac),
       'encryptionNonce': serializer.toJson<Uint8List?>(encryptionNonce),
+      'storedFileHash': serializer.toJson<Uint8List?>(storedFileHash),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -2352,6 +2377,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           Value<Uint8List?> encryptionKey = const Value.absent(),
           Value<Uint8List?> encryptionMac = const Value.absent(),
           Value<Uint8List?> encryptionNonce = const Value.absent(),
+          Value<Uint8List?> storedFileHash = const Value.absent(),
           DateTime? createdAt}) =>
       MediaFile(
         mediaId: mediaId ?? this.mediaId,
@@ -2379,6 +2405,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
         encryptionNonce: encryptionNonce.present
             ? encryptionNonce.value
             : this.encryptionNonce,
+        storedFileHash:
+            storedFileHash.present ? storedFileHash.value : this.storedFileHash,
         createdAt: createdAt ?? this.createdAt,
       );
   MediaFile copyWithCompanion(MediaFilesCompanion data) {
@@ -2417,6 +2445,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       encryptionNonce: data.encryptionNonce.present
           ? data.encryptionNonce.value
           : this.encryptionNonce,
+      storedFileHash: data.storedFileHash.present
+          ? data.storedFileHash.value
+          : this.storedFileHash,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -2438,6 +2469,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
+          ..write('storedFileHash: $storedFileHash, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -2459,6 +2491,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       $driftBlobEquality.hash(encryptionKey),
       $driftBlobEquality.hash(encryptionMac),
       $driftBlobEquality.hash(encryptionNonce),
+      $driftBlobEquality.hash(storedFileHash),
       createdAt);
   @override
   bool operator ==(Object other) =>
@@ -2479,6 +2512,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           $driftBlobEquality.equals(other.encryptionMac, this.encryptionMac) &&
           $driftBlobEquality.equals(
               other.encryptionNonce, this.encryptionNonce) &&
+          $driftBlobEquality.equals(
+              other.storedFileHash, this.storedFileHash) &&
           other.createdAt == this.createdAt);
 }
 
@@ -2497,6 +2532,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<Uint8List?> encryptionKey;
   final Value<Uint8List?> encryptionMac;
   final Value<Uint8List?> encryptionNonce;
+  final Value<Uint8List?> storedFileHash;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const MediaFilesCompanion({
@@ -2514,6 +2550,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
     this.encryptionNonce = const Value.absent(),
+    this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2532,6 +2569,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.encryptionKey = const Value.absent(),
     this.encryptionMac = const Value.absent(),
     this.encryptionNonce = const Value.absent(),
+    this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : mediaId = Value(mediaId),
@@ -2551,6 +2589,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<Uint8List>? encryptionKey,
     Expression<Uint8List>? encryptionMac,
     Expression<Uint8List>? encryptionNonce,
+    Expression<Uint8List>? storedFileHash,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -2572,6 +2611,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       if (encryptionKey != null) 'encryption_key': encryptionKey,
       if (encryptionMac != null) 'encryption_mac': encryptionMac,
       if (encryptionNonce != null) 'encryption_nonce': encryptionNonce,
+      if (storedFileHash != null) 'stored_file_hash': storedFileHash,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2592,6 +2632,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       Value<Uint8List?>? encryptionKey,
       Value<Uint8List?>? encryptionMac,
       Value<Uint8List?>? encryptionNonce,
+      Value<Uint8List?>? storedFileHash,
       Value<DateTime>? createdAt,
       Value<int>? rowid}) {
     return MediaFilesCompanion(
@@ -2611,6 +2652,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       encryptionKey: encryptionKey ?? this.encryptionKey,
       encryptionMac: encryptionMac ?? this.encryptionMac,
       encryptionNonce: encryptionNonce ?? this.encryptionNonce,
+      storedFileHash: storedFileHash ?? this.storedFileHash,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2668,6 +2710,9 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     if (encryptionNonce.present) {
       map['encryption_nonce'] = Variable<Uint8List>(encryptionNonce.value);
     }
+    if (storedFileHash.present) {
+      map['stored_file_hash'] = Variable<Uint8List>(storedFileHash.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2694,6 +2739,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('encryptionKey: $encryptionKey, ')
           ..write('encryptionMac: $encryptionMac, ')
           ..write('encryptionNonce: $encryptionNonce, ')
+          ..write('storedFileHash: $storedFileHash, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -4546,6 +4592,12 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
           defaultConstraints: GeneratedColumn.constraintIsAlways(
               'CHECK ("contact_will_sends_receipt" IN (0, 1))'),
           defaultValue: const Constant(true));
+  static const VerificationMeta _markForRetryMeta =
+      const VerificationMeta('markForRetry');
+  @override
+  late final GeneratedColumn<DateTime> markForRetry = GeneratedColumn<DateTime>(
+      'mark_for_retry', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _ackByServerAtMeta =
       const VerificationMeta('ackByServerAt');
   @override
@@ -4581,6 +4633,7 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
         messageId,
         message,
         contactWillSendsReceipt,
+        markForRetry,
         ackByServerAt,
         retryCount,
         lastRetry,
@@ -4625,6 +4678,12 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
               data['contact_will_sends_receipt']!,
               _contactWillSendsReceiptMeta));
     }
+    if (data.containsKey('mark_for_retry')) {
+      context.handle(
+          _markForRetryMeta,
+          markForRetry.isAcceptableOrUnknown(
+              data['mark_for_retry']!, _markForRetryMeta));
+    }
     if (data.containsKey('ack_by_server_at')) {
       context.handle(
           _ackByServerAtMeta,
@@ -4665,6 +4724,8 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
       contactWillSendsReceipt: attachedDatabase.typeMapping.read(
           DriftSqlType.bool,
           data['${effectivePrefix}contact_will_sends_receipt'])!,
+      markForRetry: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}mark_for_retry']),
       ackByServerAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}ack_by_server_at']),
       retryCount: attachedDatabase.typeMapping
@@ -4690,6 +4751,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
   /// This is the protobuf 'Message'
   final Uint8List message;
   final bool contactWillSendsReceipt;
+  final DateTime? markForRetry;
   final DateTime? ackByServerAt;
   final int retryCount;
   final DateTime? lastRetry;
@@ -4700,6 +4762,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       this.messageId,
       required this.message,
       required this.contactWillSendsReceipt,
+      this.markForRetry,
       this.ackByServerAt,
       required this.retryCount,
       this.lastRetry,
@@ -4714,6 +4777,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
     }
     map['message'] = Variable<Uint8List>(message);
     map['contact_will_sends_receipt'] = Variable<bool>(contactWillSendsReceipt);
+    if (!nullToAbsent || markForRetry != null) {
+      map['mark_for_retry'] = Variable<DateTime>(markForRetry);
+    }
     if (!nullToAbsent || ackByServerAt != null) {
       map['ack_by_server_at'] = Variable<DateTime>(ackByServerAt);
     }
@@ -4734,6 +4800,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           : Value(messageId),
       message: Value(message),
       contactWillSendsReceipt: Value(contactWillSendsReceipt),
+      markForRetry: markForRetry == null && nullToAbsent
+          ? const Value.absent()
+          : Value(markForRetry),
       ackByServerAt: ackByServerAt == null && nullToAbsent
           ? const Value.absent()
           : Value(ackByServerAt),
@@ -4755,6 +4824,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       message: serializer.fromJson<Uint8List>(json['message']),
       contactWillSendsReceipt:
           serializer.fromJson<bool>(json['contactWillSendsReceipt']),
+      markForRetry: serializer.fromJson<DateTime?>(json['markForRetry']),
       ackByServerAt: serializer.fromJson<DateTime?>(json['ackByServerAt']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       lastRetry: serializer.fromJson<DateTime?>(json['lastRetry']),
@@ -4771,6 +4841,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       'message': serializer.toJson<Uint8List>(message),
       'contactWillSendsReceipt':
           serializer.toJson<bool>(contactWillSendsReceipt),
+      'markForRetry': serializer.toJson<DateTime?>(markForRetry),
       'ackByServerAt': serializer.toJson<DateTime?>(ackByServerAt),
       'retryCount': serializer.toJson<int>(retryCount),
       'lastRetry': serializer.toJson<DateTime?>(lastRetry),
@@ -4784,6 +4855,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           Value<String?> messageId = const Value.absent(),
           Uint8List? message,
           bool? contactWillSendsReceipt,
+          Value<DateTime?> markForRetry = const Value.absent(),
           Value<DateTime?> ackByServerAt = const Value.absent(),
           int? retryCount,
           Value<DateTime?> lastRetry = const Value.absent(),
@@ -4795,6 +4867,8 @@ class Receipt extends DataClass implements Insertable<Receipt> {
         message: message ?? this.message,
         contactWillSendsReceipt:
             contactWillSendsReceipt ?? this.contactWillSendsReceipt,
+        markForRetry:
+            markForRetry.present ? markForRetry.value : this.markForRetry,
         ackByServerAt:
             ackByServerAt.present ? ackByServerAt.value : this.ackByServerAt,
         retryCount: retryCount ?? this.retryCount,
@@ -4810,6 +4884,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       contactWillSendsReceipt: data.contactWillSendsReceipt.present
           ? data.contactWillSendsReceipt.value
           : this.contactWillSendsReceipt,
+      markForRetry: data.markForRetry.present
+          ? data.markForRetry.value
+          : this.markForRetry,
       ackByServerAt: data.ackByServerAt.present
           ? data.ackByServerAt.value
           : this.ackByServerAt,
@@ -4828,6 +4905,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           ..write('messageId: $messageId, ')
           ..write('message: $message, ')
           ..write('contactWillSendsReceipt: $contactWillSendsReceipt, ')
+          ..write('markForRetry: $markForRetry, ')
           ..write('ackByServerAt: $ackByServerAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastRetry: $lastRetry, ')
@@ -4843,6 +4921,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       messageId,
       $driftBlobEquality.hash(message),
       contactWillSendsReceipt,
+      markForRetry,
       ackByServerAt,
       retryCount,
       lastRetry,
@@ -4856,6 +4935,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           other.messageId == this.messageId &&
           $driftBlobEquality.equals(other.message, this.message) &&
           other.contactWillSendsReceipt == this.contactWillSendsReceipt &&
+          other.markForRetry == this.markForRetry &&
           other.ackByServerAt == this.ackByServerAt &&
           other.retryCount == this.retryCount &&
           other.lastRetry == this.lastRetry &&
@@ -4868,6 +4948,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
   final Value<String?> messageId;
   final Value<Uint8List> message;
   final Value<bool> contactWillSendsReceipt;
+  final Value<DateTime?> markForRetry;
   final Value<DateTime?> ackByServerAt;
   final Value<int> retryCount;
   final Value<DateTime?> lastRetry;
@@ -4879,6 +4960,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.messageId = const Value.absent(),
     this.message = const Value.absent(),
     this.contactWillSendsReceipt = const Value.absent(),
+    this.markForRetry = const Value.absent(),
     this.ackByServerAt = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastRetry = const Value.absent(),
@@ -4891,6 +4973,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.messageId = const Value.absent(),
     required Uint8List message,
     this.contactWillSendsReceipt = const Value.absent(),
+    this.markForRetry = const Value.absent(),
     this.ackByServerAt = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastRetry = const Value.absent(),
@@ -4905,6 +4988,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     Expression<String>? messageId,
     Expression<Uint8List>? message,
     Expression<bool>? contactWillSendsReceipt,
+    Expression<DateTime>? markForRetry,
     Expression<DateTime>? ackByServerAt,
     Expression<int>? retryCount,
     Expression<DateTime>? lastRetry,
@@ -4918,6 +5002,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       if (message != null) 'message': message,
       if (contactWillSendsReceipt != null)
         'contact_will_sends_receipt': contactWillSendsReceipt,
+      if (markForRetry != null) 'mark_for_retry': markForRetry,
       if (ackByServerAt != null) 'ack_by_server_at': ackByServerAt,
       if (retryCount != null) 'retry_count': retryCount,
       if (lastRetry != null) 'last_retry': lastRetry,
@@ -4932,6 +5017,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       Value<String?>? messageId,
       Value<Uint8List>? message,
       Value<bool>? contactWillSendsReceipt,
+      Value<DateTime?>? markForRetry,
       Value<DateTime?>? ackByServerAt,
       Value<int>? retryCount,
       Value<DateTime?>? lastRetry,
@@ -4944,6 +5030,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       message: message ?? this.message,
       contactWillSendsReceipt:
           contactWillSendsReceipt ?? this.contactWillSendsReceipt,
+      markForRetry: markForRetry ?? this.markForRetry,
       ackByServerAt: ackByServerAt ?? this.ackByServerAt,
       retryCount: retryCount ?? this.retryCount,
       lastRetry: lastRetry ?? this.lastRetry,
@@ -4971,6 +5058,9 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       map['contact_will_sends_receipt'] =
           Variable<bool>(contactWillSendsReceipt.value);
     }
+    if (markForRetry.present) {
+      map['mark_for_retry'] = Variable<DateTime>(markForRetry.value);
+    }
     if (ackByServerAt.present) {
       map['ack_by_server_at'] = Variable<DateTime>(ackByServerAt.value);
     }
@@ -4997,6 +5087,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
           ..write('messageId: $messageId, ')
           ..write('message: $message, ')
           ..write('contactWillSendsReceipt: $contactWillSendsReceipt, ')
+          ..write('markForRetry: $markForRetry, ')
           ..write('ackByServerAt: $ackByServerAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastRetry: $lastRetry, ')
@@ -9345,6 +9436,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   Value<Uint8List?> encryptionKey,
   Value<Uint8List?> encryptionMac,
   Value<Uint8List?> encryptionNonce,
+  Value<Uint8List?> storedFileHash,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -9363,6 +9455,7 @@ typedef $$MediaFilesTableUpdateCompanionBuilder = MediaFilesCompanion Function({
   Value<Uint8List?> encryptionKey,
   Value<Uint8List?> encryptionMac,
   Value<Uint8List?> encryptionNonce,
+  Value<Uint8List?> storedFileHash,
   Value<DateTime> createdAt,
   Value<int> rowid,
 });
@@ -9447,6 +9540,10 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<Uint8List> get encryptionNonce => $composableBuilder(
       column: $table.encryptionNonce,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get storedFileHash => $composableBuilder(
+      column: $table.storedFileHash,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -9534,6 +9631,10 @@ class $$MediaFilesTableOrderingComposer
       column: $table.encryptionNonce,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<Uint8List> get storedFileHash => $composableBuilder(
+      column: $table.storedFileHash,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
@@ -9591,6 +9692,9 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<Uint8List> get encryptionNonce => $composableBuilder(
       column: $table.encryptionNonce, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get storedFileHash => $composableBuilder(
+      column: $table.storedFileHash, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -9654,6 +9758,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<Uint8List?> encryptionKey = const Value.absent(),
             Value<Uint8List?> encryptionMac = const Value.absent(),
             Value<Uint8List?> encryptionNonce = const Value.absent(),
+            Value<Uint8List?> storedFileHash = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -9672,6 +9777,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             encryptionKey: encryptionKey,
             encryptionMac: encryptionMac,
             encryptionNonce: encryptionNonce,
+            storedFileHash: storedFileHash,
             createdAt: createdAt,
             rowid: rowid,
           ),
@@ -9690,6 +9796,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<Uint8List?> encryptionKey = const Value.absent(),
             Value<Uint8List?> encryptionMac = const Value.absent(),
             Value<Uint8List?> encryptionNonce = const Value.absent(),
+            Value<Uint8List?> storedFileHash = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -9708,6 +9815,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             encryptionKey: encryptionKey,
             encryptionMac: encryptionMac,
             encryptionNonce: encryptionNonce,
+            storedFileHash: storedFileHash,
             createdAt: createdAt,
             rowid: rowid,
           ),
@@ -11662,6 +11770,7 @@ typedef $$ReceiptsTableCreateCompanionBuilder = ReceiptsCompanion Function({
   Value<String?> messageId,
   required Uint8List message,
   Value<bool> contactWillSendsReceipt,
+  Value<DateTime?> markForRetry,
   Value<DateTime?> ackByServerAt,
   Value<int> retryCount,
   Value<DateTime?> lastRetry,
@@ -11674,6 +11783,7 @@ typedef $$ReceiptsTableUpdateCompanionBuilder = ReceiptsCompanion Function({
   Value<String?> messageId,
   Value<Uint8List> message,
   Value<bool> contactWillSendsReceipt,
+  Value<DateTime?> markForRetry,
   Value<DateTime?> ackByServerAt,
   Value<int> retryCount,
   Value<DateTime?> lastRetry,
@@ -11734,6 +11844,9 @@ class $$ReceiptsTableFilterComposer
   ColumnFilters<bool> get contactWillSendsReceipt => $composableBuilder(
       column: $table.contactWillSendsReceipt,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get markForRetry => $composableBuilder(
+      column: $table.markForRetry, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get ackByServerAt => $composableBuilder(
       column: $table.ackByServerAt, builder: (column) => ColumnFilters(column));
@@ -11807,6 +11920,10 @@ class $$ReceiptsTableOrderingComposer
       column: $table.contactWillSendsReceipt,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get markForRetry => $composableBuilder(
+      column: $table.markForRetry,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get ackByServerAt => $composableBuilder(
       column: $table.ackByServerAt,
       builder: (column) => ColumnOrderings(column));
@@ -11878,6 +11995,9 @@ class $$ReceiptsTableAnnotationComposer
 
   GeneratedColumn<bool> get contactWillSendsReceipt => $composableBuilder(
       column: $table.contactWillSendsReceipt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get markForRetry => $composableBuilder(
+      column: $table.markForRetry, builder: (column) => column);
 
   GeneratedColumn<DateTime> get ackByServerAt => $composableBuilder(
       column: $table.ackByServerAt, builder: (column) => column);
@@ -11960,6 +12080,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             Value<String?> messageId = const Value.absent(),
             Value<Uint8List> message = const Value.absent(),
             Value<bool> contactWillSendsReceipt = const Value.absent(),
+            Value<DateTime?> markForRetry = const Value.absent(),
             Value<DateTime?> ackByServerAt = const Value.absent(),
             Value<int> retryCount = const Value.absent(),
             Value<DateTime?> lastRetry = const Value.absent(),
@@ -11972,6 +12093,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             messageId: messageId,
             message: message,
             contactWillSendsReceipt: contactWillSendsReceipt,
+            markForRetry: markForRetry,
             ackByServerAt: ackByServerAt,
             retryCount: retryCount,
             lastRetry: lastRetry,
@@ -11984,6 +12106,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             Value<String?> messageId = const Value.absent(),
             required Uint8List message,
             Value<bool> contactWillSendsReceipt = const Value.absent(),
+            Value<DateTime?> markForRetry = const Value.absent(),
             Value<DateTime?> ackByServerAt = const Value.absent(),
             Value<int> retryCount = const Value.absent(),
             Value<DateTime?> lastRetry = const Value.absent(),
@@ -11996,6 +12119,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             messageId: messageId,
             message: message,
             contactWillSendsReceipt: contactWillSendsReceipt,
+            markForRetry: markForRetry,
             ackByServerAt: ackByServerAt,
             retryCount: retryCount,
             lastRetry: lastRetry,

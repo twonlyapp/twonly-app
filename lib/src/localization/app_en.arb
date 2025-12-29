@@ -491,5 +491,8 @@
   "showImagePreviewWhenSending": "Display image preview when selecting recipients",
   "verifiedPublicKey": "The public key of {username} has been verified and is valid.",
   "memoriesAYearAgo": "One year ago",
-  "memoriesXYearsAgo": "{years} years ago"
+  "memoriesXYearsAgo": "{years} years ago",
+  "migrationOfMemories": "Migration of media files: {open} still to be processed.",
+  "autoStoreAllSendUnlimitedMediaFiles": "Save all sent media",
+  "autoStoreAllSendUnlimitedMediaFilesSubtitle": "If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode."
 }

@@ -7,6 +7,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/components/loader.dart';
 import 'package:twonly/src/views/memories/memories_item_thumbnail.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
 
@@ -18,6 +19,7 @@ class MemoriesView extends StatefulWidget {
 }
 
 class MemoriesViewState extends State<MemoriesView> {
+  int _filesToMigrate = 0;
   List<MemoryItem> galleryItems = [];
   Map<String, List<int>> orderedByMonth = {};
   List<String> months = [];
@@ -38,6 +40,21 @@ class MemoriesViewState extends State<MemoriesView> {
   }
 
   Future<void> initAsync() async {
+    final nonHashedFiles =
+        await twonlyDB.mediaFilesDao.getAllNonHashedStoredMediaFiles();
+    if (nonHashedFiles.isNotEmpty) {
+      setState(() {
+        _filesToMigrate = nonHashedFiles.length;
+      });
+      for (final mediaFile in nonHashedFiles) {
+        final mediaService = MediaFileService(mediaFile);
+        await mediaService.hashStoredMedia();
+        setState(() {
+          _filesToMigrate -= 1;
+        });
+      }
+      _filesToMigrate = 0;
+    }
     await messageSub?.cancel();
     final msgStream = twonlyDB.mediaFilesDao.watchAllStoredMediaFiles();
 
@@ -96,122 +113,139 @@ class MemoriesViewState extends State<MemoriesView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Memories')),
-      body: Scrollbar(
-        child: (galleryItems.isEmpty)
-            ? Center(
-                child: Text(
-                  context.lang.memoriesEmpty,
-                  textAlign: TextAlign.center,
-                ),
-              )
-            : ListView.builder(
-                itemCount: (months.length * 2) +
-                    (_galleryItemsLastYears.isEmpty ? 0 : 1),
-                itemBuilder: (context, mIndex) {
-                  if (_galleryItemsLastYears.isNotEmpty && mIndex == 0) {
-                    return SizedBox(
-                      height: 140,
-                      width: MediaQuery.sizeOf(context).width,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: _galleryItemsLastYears.entries.map(
-                          (item) {
-                            var text = context.lang.memoriesAYearAgo;
-                            if (item.key > 1) {
-                              text = context.lang.memoriesXYearsAgo(item.key);
-                            }
-                            return GestureDetector(
-                              onTap: () async {
-                                await open(context, item.value, 0);
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      spreadRadius: -12,
-                                      blurRadius: 12,
-                                    ),
-                                  ],
+    Widget child = Center(
+      child: Text(
+        context.lang.memoriesEmpty,
+        textAlign: TextAlign.center,
+      ),
+    );
+    if (_filesToMigrate > 0) {
+      child = Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ThreeRotatingDots(
+              size: 40,
+              color: context.color.primary,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              context.lang.migrationOfMemories(_filesToMigrate),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    } else if (galleryItems.isNotEmpty) {
+      child = ListView.builder(
+        itemCount:
+            (months.length * 2) + (_galleryItemsLastYears.isEmpty ? 0 : 1),
+        itemBuilder: (context, mIndex) {
+          if (_galleryItemsLastYears.isNotEmpty && mIndex == 0) {
+            return SizedBox(
+              height: 140,
+              width: MediaQuery.sizeOf(context).width,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: _galleryItemsLastYears.entries.map(
+                  (item) {
+                    var text = context.lang.memoriesAYearAgo;
+                    if (item.key > 1) {
+                      text = context.lang.memoriesXYearsAgo(item.key);
+                    }
+                    return GestureDetector(
+                      onTap: () async {
+                        await open(context, item.value, 0);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: const [
+                            BoxShadow(
+                              spreadRadius: -12,
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.hardEdge,
+                        height: 150,
+                        width: 120,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  item.value.first.mediaService.storedPath,
+                                  fit: BoxFit.cover,
                                 ),
-                                clipBehavior: Clip.hardEdge,
-                                height: 150,
-                                width: 120,
-                                child: Stack(
-                                  children: [
-                                    Positioned.fill(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.file(
-                                          item.value.first.mediaService
-                                              .storedPath,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                    Positioned(
-                                      bottom: 10,
-                                      left: 0,
-                                      right: 0,
-                                      child: Text(
-                                        text,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20,
-                                          shadows: [
-                                            Shadow(
-                                              color:
-                                                  Color.fromARGB(122, 0, 0, 0),
-                                              blurRadius: 5,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 10,
+                              left: 0,
+                              right: 0,
+                              child: Text(
+                                text,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  shadows: [
+                                    Shadow(
+                                      color: Color.fromARGB(122, 0, 0, 0),
+                                      blurRadius: 5,
                                     ),
                                   ],
                                 ),
                               ),
-                            );
-                          },
-                        ).toList(),
+                            ),
+                          ],
+                        ),
                       ),
                     );
-                  }
-                  if (_galleryItemsLastYears.isNotEmpty) {
-                    mIndex -= 1;
-                  }
-                  if (mIndex.isEven) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(months[(mIndex ~/ 2)]),
-                    );
-                  }
-                  final index = (mIndex - 1) ~/ 2;
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const ClampingScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      childAspectRatio: 9 / 16,
-                    ),
-                    itemCount: orderedByMonth[months[index]]!.length,
-                    itemBuilder: (context, gIndex) {
-                      final gaIndex = orderedByMonth[months[index]]![gIndex];
-                      return MemoriesItemThumbnail(
-                        galleryItem: galleryItems[gaIndex],
-                        onTap: () async {
-                          await open(context, galleryItems, gaIndex);
-                        },
-                      );
-                    },
-                  );
-                },
+                  },
+                ).toList(),
               ),
+            );
+          }
+          if (_galleryItemsLastYears.isNotEmpty) {
+            mIndex -= 1;
+          }
+          if (mIndex.isEven) {
+            return Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(months[(mIndex ~/ 2)]),
+            );
+          }
+          final index = (mIndex - 1) ~/ 2;
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              childAspectRatio: 9 / 16,
+            ),
+            itemCount: orderedByMonth[months[index]]!.length,
+            itemBuilder: (context, gIndex) {
+              final gaIndex = orderedByMonth[months[index]]![gIndex];
+              return MemoriesItemThumbnail(
+                galleryItem: galleryItems[gaIndex],
+                onTap: () async {
+                  await open(context, galleryItems, gaIndex);
+                },
+              );
+            },
+          );
+        },
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Memories')),
+      body: Scrollbar(
+        child: child,
       ),
     );
   }

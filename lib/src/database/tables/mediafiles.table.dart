@@ -59,6 +59,8 @@ class MediaFiles extends Table {
   BlobColumn get encryptionMac => blob().nullable()();
   BlobColumn get encryptionNonce => blob().nullable()();
 
+  BlobColumn get storedFileHash => blob().nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override

@@ -59,8 +59,8 @@ class UserData {
   @JsonKey(defaultValue: true)
   bool showFeedbackShortcut = true;
 
-  @JsonKey(defaultValue: true)
-  bool showShowImagePreviewWhenSending = true;
+  @JsonKey(defaultValue: false)
+  bool showShowImagePreviewWhenSending = false;
 
   @JsonKey(defaultValue: true)
   bool startWithCameraOpen = true;
@@ -71,6 +71,9 @@ class UserData {
 
   @JsonKey(defaultValue: false)
   bool storeMediaFilesInGallery = false;
+
+  @JsonKey(defaultValue: false)
+  bool autoStoreAllSendUnlimitedMediaFiles = false;
 
   String? lastPlanBallance;
   String? additionalUserInvites;

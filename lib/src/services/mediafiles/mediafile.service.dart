@@ -8,6 +8,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/compression.service.dart';
 import 'package:twonly/src/services/mediafiles/thumbnail.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 class MediaFileService {
   MediaFileService(this.mediaFile);
@@ -223,6 +224,22 @@ class MediaFileService {
       );
     }
     unawaited(createThumbnail());
+    await hashStoredMedia();
+    // updateFromDb is done in hashStoredMedia()
+  }
+
+  Future<void> hashStoredMedia() async {
+    if (!storedPath.existsSync()) {
+      Log.error('could not create hash value as media file is not stored.');
+      return;
+    }
+    final checksum = await sha256File(storedPath);
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaFile.mediaId,
+      MediaFilesCompanion(
+        storedFileHash: Value(Uint8List.fromList(checksum)),
+      ),
+    );
     await updateFromDB();
   }
 
