@@ -105,7 +105,7 @@ Future<SignalContactSignedPreKey?> getSignedPreKeyByContactId(
     }
   } else {
     unawaited(requestNewSignedPreKeyForContact(contactId));
-    Log.error('Contact $contactId does not have a signed pre key!');
+    Log.warn('Contact $contactId does not have a signed pre key!');
   }
   return signedPreKey;
 }

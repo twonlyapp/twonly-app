@@ -50,8 +50,10 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     }
     receiptId = receipt.receiptId;
 
-    if (!onlyReturnEncryptedData && receipt.ackByServerAt != null) {
-      Log.error('message already uploaded!');
+    if (!onlyReturnEncryptedData &&
+        receipt.ackByServerAt != null &&
+        receipt.markForRetry == null) {
+      Log.error('Message already uploaded and mark for retry is not set!');
       return null;
     }
 
@@ -141,6 +143,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
             ackByServerAt: Value(DateTime.now()),
             retryCount: Value(receipt.retryCount + 1),
             lastRetry: Value(DateTime.now()),
+            markForRetry: const Value(null),
           ),
         );
       }
