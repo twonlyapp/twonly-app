@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart'
     show DriftNativeOptions, driftDatabase;
@@ -160,9 +161,9 @@ class TwonlyDB extends _$TwonlyDB {
     await (delete(signalPreKeyStores)
           ..where(
             (t) => (t.createdAt.isSmallerThanValue(
-              DateTime.now().subtract(
-                const Duration(days: 25),
-              ),
+              clock.now().subtract(
+                    const Duration(days: 25),
+                  ),
             )),
           ))
         .go();

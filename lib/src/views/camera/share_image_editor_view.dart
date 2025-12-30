@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:collection';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -509,7 +510,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
         MediaFilesCompanion(
           type: Value(mediaService.mediaFile.type),
-          createdAt: Value(DateTime.now()),
+          createdAt: Value(clock.now()),
           stored: const Value(true),
         ),
       );

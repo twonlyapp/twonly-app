@@ -7,6 +7,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/services/api/utils.dart';
+import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -114,7 +115,7 @@ Future<void> handleMedia(
     await twonlyDB.groupsDao
         .increaseLastMessageExchange(groupId, fromTimestamp(media.timestamp));
     Log.info('Inserted a new media message with ID: ${message.messageId}');
-    await twonlyDB.groupsDao.incFlameCounter(
+    await incFlameCounter(
       message.groupId,
       true,
       fromTimestamp(media.timestamp),

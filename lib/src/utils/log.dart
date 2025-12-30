@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
@@ -96,7 +97,7 @@ Future<void> _writeLogToFile(LogRecord record) async {
 
   // Prepare the log message
   final logMessage =
-      '${DateTime.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
+      '${clock.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
 
   await writeToLogGuard.protect(() async {
     // Append the log message to the file

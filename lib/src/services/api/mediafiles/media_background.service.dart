@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:background_downloader/background_downloader.dart';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:twonly/globals.dart';
@@ -92,7 +93,7 @@ Future<void> handleUploadStatusUpdate(TaskStatusUpdate update) async {
           await twonlyDB.messagesDao.handleMessageAckByServer(
             contact.contactId,
             message.messageId,
-            DateTime.now(),
+            clock.now(),
           );
         }
       }

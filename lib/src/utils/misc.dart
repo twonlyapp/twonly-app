@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:clock/clock.dart';
 import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
@@ -197,7 +198,7 @@ bool isDarkMode(BuildContext context) {
 }
 
 bool isToday(DateTime lastImageSend) {
-  final now = DateTime.now();
+  final now = clock.now();
   return lastImageSend.year == now.year &&
       lastImageSend.month == now.month &&
       lastImageSend.day == now.day;
@@ -235,7 +236,7 @@ String formatDateTime(BuildContext context, DateTime? dateTime) {
   if (dateTime == null) {
     return 'Never';
   }
-  final now = DateTime.now();
+  final now = clock.now();
   final difference = now.difference(dateTime);
 
   final date = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -133,7 +134,7 @@ Future<List<Sticker>> getStickerIndex() async {
 
   if (indexFile.existsSync() && kReleaseMode) {
     final lastModified = indexFile.lastModifiedSync();
-    final difference = DateTime.now().difference(lastModified);
+    final difference = clock.now().difference(lastModified);
     final content = await indexFile.readAsString();
     final jsonList = json.decode(content) as List;
     res = jsonList

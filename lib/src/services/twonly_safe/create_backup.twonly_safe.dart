@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:background_downloader/background_downloader.dart';
+import 'package:clock/clock.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
@@ -34,8 +35,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   final lastUpdateTime = gUser.twonlySafeBackup!.lastBackupDone;
   if (!force && lastUpdateTime != null) {
-    if (lastUpdateTime
-        .isAfter(DateTime.now().subtract(const Duration(days: 1)))) {
+    if (lastUpdateTime.isAfter(clock.now().subtract(const Duration(days: 1)))) {
       return;
     }
   }
@@ -118,7 +118,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
 
   if (gUser.twonlySafeBackup!.lastBackupDone == null ||
       gUser.twonlySafeBackup!.lastBackupDone!
-          .isAfter(DateTime.now().subtract(const Duration(days: 90)))) {
+          .isAfter(clock.now().subtract(const Duration(days: 90)))) {
     force = true;
   }
 
@@ -190,7 +190,7 @@ Future<void> performTwonlySafeBackup({bool force = false}) async {
     Log.info('Starting upload from twonly Backup.');
     await updateUserdata((user) {
       user.twonlySafeBackup!.backupUploadState = LastBackupUploadState.pending;
-      user.twonlySafeBackup!.lastBackupDone = DateTime.now();
+      user.twonlySafeBackup!.lastBackupDone = clock.now();
       user.twonlySafeBackup!.lastBackupSize = encryptedBackupBytes.length;
       return user;
     });

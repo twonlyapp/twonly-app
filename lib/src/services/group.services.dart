@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
@@ -158,7 +159,7 @@ Future<void> fetchMissingGroupPublicKey() async {
     if (member.lastMessage == null) continue;
     // only request if the users has send a message in the last two days.
     if (member.lastMessage!
-        .isAfter(DateTime.now().subtract(const Duration(days: 2)))) {
+        .isAfter(clock.now().subtract(const Duration(days: 2)))) {
       await sendCipherText(
         member.contactId,
         EncryptedContent(

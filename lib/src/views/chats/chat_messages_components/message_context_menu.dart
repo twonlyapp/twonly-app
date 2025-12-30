@@ -1,5 +1,6 @@
 // ignore_for_file: inference_failure_on_function_invocation
 
+import 'package:clock/clock.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -113,7 +114,7 @@ class MessageContextMenu extends StatelessWidget {
                 await twonlyDB.messagesDao.handleMessageDeletion(
                   null,
                   message.messageId,
-                  DateTime.now(),
+                  clock.now(),
                 );
                 await sendCipherTextToGroup(
                   message.groupId,
@@ -203,7 +204,7 @@ Future<void> editTextMessage(BuildContext context, Message message) async {
               if (newText != null &&
                   newText != message.content &&
                   newText != '') {
-                final timestamp = DateTime.now();
+                final timestamp = clock.now();
 
                 await twonlyDB.messagesDao.handleTextEdit(
                   null,

@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart' show DateFormat;
@@ -51,7 +52,7 @@ class FriendlyMessageTime extends StatelessWidget {
 }
 
 String friendlyTime(BuildContext context, DateTime dt) {
-  final now = DateTime.now();
+  final now = clock.now();
   final diff = now.difference(dt);
 
   if (diff.inMinutes >= 0 && diff.inMinutes < 60) {

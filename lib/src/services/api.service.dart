@@ -7,6 +7,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
@@ -206,7 +207,7 @@ class ApiService {
   }
 
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
-    final startTime = DateTime.now();
+    final startTime = clock.now();
 
     const timeout = Duration(seconds: 60);
 
@@ -216,7 +217,7 @@ class ApiService {
         messagesV0.remove(seq);
         return tmp;
       }
-      if (DateTime.now().difference(startTime) > timeout) {
+      if (clock.now().difference(startTime) > timeout) {
         Log.warn('Timeout for message $seq');
         return null;
       }

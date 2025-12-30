@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
@@ -46,7 +47,7 @@ Future<void> setupNotificationWithUsers({
 
   final random = Random.secure();
 
-  final contacts = await twonlyDB.contactsDao.getAllNotBlockedContacts();
+  final contacts = await twonlyDB.contactsDao.getAllContacts();
   for (final contact in contacts) {
     final pushUser =
         pushUsers.firstWhereOrNull((x) => x.userId == contact.userId);
@@ -54,7 +55,7 @@ Future<void> setupNotificationWithUsers({
     if (pushUser != null && pushUser.pushKeys.isNotEmpty) {
       // make it harder to predict the change of the key
       final timeBefore =
-          DateTime.now().subtract(Duration(days: 5 + random.nextInt(5)));
+          clock.now().subtract(Duration(days: 10 + random.nextInt(5)));
       final lastKey = pushUser.pushKeys.last;
       final createdAt = DateTime.fromMillisecondsSinceEpoch(
         lastKey.createdAtUnixTimestamp.toInt(),
@@ -66,7 +67,7 @@ Future<void> setupNotificationWithUsers({
         final pushKey = PushKey(
           id: lastKey.id + random.nextInt(5),
           key: List<int>.generate(32, (index) => random.nextInt(256)),
-          createdAtUnixTimestamp: Int64(DateTime.now().millisecondsSinceEpoch),
+          createdAtUnixTimestamp: Int64(clock.now().millisecondsSinceEpoch),
         );
         await sendNewPushKey(contact.userId, pushKey);
         // only store a maximum of two keys
@@ -86,7 +87,7 @@ Future<void> setupNotificationWithUsers({
       final pushKey = PushKey(
         id: Int64(1),
         key: List<int>.generate(32, (index) => random.nextInt(256)),
-        createdAtUnixTimestamp: Int64(DateTime.now().millisecondsSinceEpoch),
+        createdAtUnixTimestamp: Int64(clock.now().millisecondsSinceEpoch),
       );
       await sendNewPushKey(contact.userId, pushKey);
       pushUsers.add(
@@ -173,7 +174,7 @@ Future<void> handleNewPushKey(int fromUserId, int keyId, List<int> key) async {
     PushKey(
       id: Int64(keyId),
       key: key,
-      createdAtUnixTimestamp: Int64(DateTime.now().millisecondsSinceEpoch),
+      createdAtUnixTimestamp: Int64(clock.now().millisecondsSinceEpoch),
     ),
   );
 
@@ -341,7 +342,7 @@ Future<Uint8List?> encryptPushNotification(
     final createdAt = DateTime.fromMillisecondsSinceEpoch(
       pushUser.pushKeys.last.createdAtUnixTimestamp.toInt(),
     );
-    final timeBefore = DateTime.now().subtract(const Duration(days: 8));
+    final timeBefore = clock.now().subtract(const Duration(days: 8));
     if (createdAt.isBefore(timeBefore)) {
       await requestNewPushKeysForUser(toUserId);
     }

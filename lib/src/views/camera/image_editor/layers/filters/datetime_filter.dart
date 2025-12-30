@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:twonly/src/views/camera/image_editor/layers/filter_layer.dart';
@@ -9,8 +10,8 @@ class DateTimeFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentTime = DateFormat('HH:mm').format(DateTime.now());
-    final currentDate = DateFormat('dd.MM.yyyy').format(DateTime.now());
+    final currentTime = DateFormat('HH:mm').format(clock.now());
+    final currentDate = DateFormat('dd.MM.yyyy').format(clock.now());
     return FilterSkeleton(
       child: Positioned(
         bottom: 80,
