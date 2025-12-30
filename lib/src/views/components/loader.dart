@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:twonly/src/utils/misc.dart';
 
 extension LoadingAnimationControllerX on AnimationController {
   T eval<T>(Tween<T> tween, {Curve curve = Curves.linear}) =>
@@ -25,12 +26,12 @@ extension LoadingAnimationControllerX on AnimationController {
 
 class ThreeRotatingDots extends StatefulWidget {
   const ThreeRotatingDots({
-    required this.color,
     required this.size,
+    this.color,
     super.key,
   });
   final double size;
-  final Color color;
+  final Color? color;
 
   @override
   State<ThreeRotatingDots> createState() => _ThreeRotatingDotsState();
@@ -52,7 +53,7 @@ class _ThreeRotatingDotsState extends State<ThreeRotatingDots>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.color;
+    final color = widget.color ?? context.color.primary;
     final size = widget.size;
     final dotSize = size / 3;
     final edgeOffset = (size - dotSize) / 2;

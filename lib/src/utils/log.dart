@@ -149,5 +149,6 @@ String _getCallerSourceCodeFilename() {
         firstLine.split('/').last.split(':').first; // Extract the file name
     lineNumber = firstLine.split(':')[1]; // Extract the line number
   }
+  lineNumber = lineNumber.replaceAll(')', '');
   return '$fileName:$lineNumber';
 }
