@@ -1111,7 +1111,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uploadLimitReached =>
-      'The upload limit has\been reached. Upgrade to Pro\nor wait until tomorrow.';
+      'The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.';
 
   @override
   String get retransmissionRequested => 'Retransmission requested';

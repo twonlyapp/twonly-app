@@ -2105,7 +2105,7 @@ abstract class AppLocalizations {
   /// No description provided for @uploadLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'The upload limit has\been reached. Upgrade to Pro\nor wait until tomorrow.'**
+  /// **'The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.'**
   String get uploadLimitReached;
 
   /// No description provided for @retransmissionRequested.

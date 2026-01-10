@@ -51,7 +51,7 @@ final lockRetransStore = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
-  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '192.168.2.178:3030';
+  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '10.99.0.140:3030';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
   final String apiSecure = kReleaseMode ? 's' : '';
 

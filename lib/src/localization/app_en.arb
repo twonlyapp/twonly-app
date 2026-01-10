@@ -364,7 +364,7 @@
   "appOutdated": "Your version of twonly is out of date.",
   "appOutdatedBtn": "Update Now",
   "doubleClickToReopen": "Double-click\nto open again",
-  "uploadLimitReached": "The upload limit has\been reached. Upgrade to Pro\nor wait until tomorrow.",
+  "uploadLimitReached": "The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.",
   "retransmissionRequested": "Retransmission requested",
   "testPaymentMethod": "Thanks for the interest in a paid plan. Currently the paid plans are still deactivated. But they will be activated soon!",
   "openChangeLog": "Open changelog automatically",
