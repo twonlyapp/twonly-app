@@ -1612,4 +1612,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String additionalUserSelectButton(Object limit, Object used) {
     return 'Select users ($used/$limit)';
   }
+
+  @override
+  String get storeAsDefault => 'Store as default';
 }

@@ -2919,6 +2919,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select users ({used}/{limit})'**
   String additionalUserSelectButton(Object limit, Object used);
+
+  /// No description provided for @storeAsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Store as default'**
+  String get storeAsDefault;
 }
 
 class _AppLocalizationsDelegate

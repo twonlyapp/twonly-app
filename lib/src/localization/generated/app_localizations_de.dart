@@ -1624,4 +1624,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String additionalUserSelectButton(Object limit, Object used) {
     return 'Benutzer auswählen ($used/$limit)';
   }
+
+  @override
+  String get storeAsDefault => 'Als Standard speichern';
 }
