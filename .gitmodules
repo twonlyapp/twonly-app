@@ -4,5 +4,5 @@
 	url = https://github.com/twonlyapp/twonly-app-dependencies.git
 [submodule "lib/src/localization/translations"]
 	path = lib/src/localization/translations
-	url = ssh://git@git.twonly.eu:22222/twonly/twonly-translations.git
-	# https://git.twonly.eu/twonly/twonly-translations
+	# url = ssh://git@git.twonly.eu:22222/twonly/twonly-translations.git
+	url = https://git.twonly.eu/twonly/twonly-translations
