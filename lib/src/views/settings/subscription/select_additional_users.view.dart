@@ -78,7 +78,9 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
   void toggleSelectedUser(int userId) {
     if (_alreadySelected.contains(userId)) return;
     if (!selectedUsers.contains(userId)) {
-      selectedUsers.add(userId);
+      if (selectedUsers.length < widget.limit) {
+        selectedUsers.add(userId);
+      }
     } else {
       selectedUsers.remove(userId);
     }
