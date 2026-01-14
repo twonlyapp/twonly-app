@@ -36,7 +36,7 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
 
     final currentPlan = context.read<PurchasesProvider>().plan;
     if (currentPlan == SubscriptionPlan.Pro ||
-        currentPlan == SubscriptionPlan.Family) {
+        currentPlan == SubscriptionPlan.Tester) {
       _planLimit = 1;
     } else if (currentPlan == SubscriptionPlan.Family) {
       _planLimit = 4;
