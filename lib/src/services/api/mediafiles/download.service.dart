@@ -57,26 +57,16 @@ Future<bool> isAllowedToDownload(MediaType type) async {
       if (options[ConnectivityResult.mobile.name]!
           .contains(DownloadMediaTypes.video.name)) {
         return true;
-      } else if (type == MediaType.audio) {
-        if (options[ConnectivityResult.mobile.name]!
-            .contains(DownloadMediaTypes.audio.name)) {
-          return true;
-        }
-      } else if (options[ConnectivityResult.mobile.name]!
-          .contains(DownloadMediaTypes.image.name)) {
-        return true;
       }
+    } else if (options[ConnectivityResult.mobile.name]!
+        .contains(DownloadMediaTypes.image.name)) {
+      return true;
     }
   }
   if (connectivityResult.contains(ConnectivityResult.wifi)) {
     if (type == MediaType.video) {
       if (options[ConnectivityResult.wifi.name]!
           .contains(DownloadMediaTypes.video.name)) {
-        return true;
-      }
-    } else if (type == MediaType.audio) {
-      if (options[ConnectivityResult.wifi.name]!
-          .contains(DownloadMediaTypes.audio.name)) {
         return true;
       }
     } else if (options[ConnectivityResult.wifi.name]!
