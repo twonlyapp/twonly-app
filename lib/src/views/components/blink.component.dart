@@ -7,9 +7,9 @@ class BlinkWidget extends StatefulWidget {
     required this.enabled,
     super.key,
     this.blinkDuration = const Duration(milliseconds: 2500),
-    this.interval = const Duration(milliseconds: 250),
+    this.interval = const Duration(milliseconds: 100),
     this.visibleOpacity = 1.0,
-    this.hiddenOpacity = 0.4,
+    this.hiddenOpacity = 0.05,
   });
   final bool enabled;
   final Widget child;
