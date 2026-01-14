@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -120,15 +121,36 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
   }
 
   Future<bool> _verifyPurchase(PurchaseDetails purchaseDetails) async {
+    Log.info('verifying _verifyPurchase');
+    if (Platform.isIOS) {
+      try {
+        var b64Data = purchaseDetails.verificationData.serverVerificationData
+            .split('.')[1];
+
+        final paddingNeeded = (4 - (b64Data.length % 4)) % 4;
+        b64Data += '=' * paddingNeeded;
+
+        final jsonData = base64Decode(b64Data);
+        final data = jsonDecode(utf8.decode(jsonData)) as Map<String, dynamic>;
+        final expiresDate = data['expiresDate'] as int;
+        final dt =
+            DateTime.fromMillisecondsSinceEpoch(expiresDate, isUtc: true);
+        if (dt.isBefore(DateTime.now())) {
+          Log.warn('ExpiresDate is in the past: $dt');
+          if (_userTriggeredBuyButton && Platform.isIOS) {
+            await launchUrl(
+              Uri.parse('https://apps.apple.com/account/subscriptions'),
+              mode: LaunchMode.externalApplication,
+            );
+          }
+          return false;
+        }
+      } catch (e) {
+        Log.error(e);
+      }
+    }
     if (kDebugMode) {
       Log.info(purchaseDetails.productID);
-      Log.info(purchaseDetails.verificationData.serverVerificationData);
-      // if (Platform.isIOS) {
-      // final data = purchaseDetails.verificationData.serverVerificationData;
-      // printWrapped(data);
-      // final datas = data.split('.')[1];
-      // printWrapped(datas);
-      // }
       Log.info(purchaseDetails.verificationData.source);
     }
     final res = await apiService.ipaPurchase(
@@ -163,7 +185,9 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     Log.info(
       '_handlePurchase: ${purchaseDetails.productID}, ${purchaseDetails.status}',
     );
-    if (purchaseDetails.status == PurchaseStatus.purchased) {
+    if (purchaseDetails.status == PurchaseStatus.purchased ||
+        (purchaseDetails.status == PurchaseStatus.restored &&
+            _userTriggeredBuyButton)) {
       await _verifyPurchase(purchaseDetails);
     }
     if (purchaseDetails.status == PurchaseStatus.restored &&

@@ -7,7 +7,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/model/purchases/purchasable_product.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
@@ -115,26 +114,33 @@ class _SubscriptionViewState extends State<SubscriptionView> {
               onPurchase: initAsync,
             ),
           ],
-          if (currentPlan == SubscriptionPlan.Free) ...[
-            const SizedBox(height: 10),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Text(
-                  context.lang.redeemUserInviteCode,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            PlanCard(
-              plan: SubscriptionPlan.Plus,
-              onPurchase: initAsync,
-            ),
-          ],
           const SizedBox(height: 10),
-          if (currentPlan != SubscriptionPlan.Family) const Divider(),
+          BetterListTile(
+            icon: FontAwesomeIcons.fileContract,
+            text: context.lang.termsOfService,
+            trailing:
+                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            onTap: () async {
+              await launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html'));
+            },
+          ),
+          BetterListTile(
+            leading: const FaIcon(
+              FontAwesomeIcons.gavel,
+              size: 15,
+            ),
+            text: context.lang.privacyPolicy,
+            trailing:
+                const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
+            onTap: () async {
+              await launchUrl(
+                Uri.parse('https://twonly.eu/de/legal/privacy.html'),
+              );
+            },
+          ),
+          if (isPayingUser(currentPlan) ||
+              currentPlan == SubscriptionPlan.Tester)
+            const Divider(),
           if (isPayingUser(currentPlan) ||
               currentPlan == SubscriptionPlan.Tester)
             BetterListTile(
@@ -169,7 +175,7 @@ class PlanCard extends StatefulWidget {
     this.paidMonthly,
   });
   final SubscriptionPlan plan;
-  final void Function()? onPurchase;
+  final Future<void> Function()? onPurchase;
   final bool? paidMonthly;
 
   @override
@@ -177,24 +183,22 @@ class PlanCard extends StatefulWidget {
 }
 
 String getFormattedPrice(PurchasableProduct product) {
-  if (product.price.contains('€')) {
-    return product.price.replaceAll(',00', '').replaceAll('.00', '');
-  }
   return product.price;
 }
 
 class _PlanCardState extends State<PlanCard> {
+  PurchasableProduct? _isLoading;
   Future<void> onButtonPressed(PurchasableProduct? product) async {
-    if (widget.onPurchase == null) return;
-    if (widget.plan == SubscriptionPlan.Free ||
-        widget.plan == SubscriptionPlan.Plus) {
-      await redeemUserInviteCode(context, SubscriptionPlan.Plus.name);
-      widget.onPurchase!();
-      return;
-    }
+    if (widget.onPurchase == null || _isLoading != null) return;
     if (product == null) return;
+    setState(() {
+      _isLoading = product;
+    });
     await context.read<PurchasesProvider>().buy(product);
-    widget.onPurchase!();
+    await widget.onPurchase!();
+    setState(() {
+      _isLoading = null;
+    });
   }
 
   @override
@@ -263,43 +267,6 @@ class _PlanCardState extends State<PlanCard> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (yearlyProduct != null && currentPlan != widget.plan)
-                    const SizedBox(height: 10),
-                  if (yearlyProduct != null &&
-                      widget.paidMonthly == null &&
-                      currentPlan != widget.plan)
-                    Column(
-                      children: [
-                        Text(
-                          '${getFormattedPrice(yearlyProduct)}/${context.lang.year}',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        if (monthlyProduct != null)
-                          Text(
-                            '${getFormattedPrice(monthlyProduct)}/${context.lang.month}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                          ),
-                      ],
-                    ),
-                  if (widget.paidMonthly != null)
-                    Text(
-                      (widget.paidMonthly!)
-                          ? '${getFormattedPrice(monthlyProduct!)}/${context.lang.month}'
-                          : '${getFormattedPrice(yearlyProduct!)}/${context.lang.year}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -330,31 +297,43 @@ class _PlanCardState extends State<PlanCard> {
                 ),
               if (widget.onPurchase != null && monthlyProduct != null)
                 OutlinedButton.icon(
-                  onPressed: () => onButtonPressed(monthlyProduct),
-                  label: (widget.plan == SubscriptionPlan.Free ||
-                          widget.plan == SubscriptionPlan.Plus)
-                      ? Text(context.lang.redeemUserInviteCodeTitle)
-                      : Text(
-                          context.lang.upgradeToPaidPlanButton(
-                            widget.plan.name,
-                            ' (${context.lang.monthly})',
-                          ),
-                        ),
+                  onPressed: _isLoading != null
+                      ? null
+                      : () => onButtonPressed(monthlyProduct),
+                  icon: _isLoading == monthlyProduct
+                      ? const SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: CircularProgressIndicator(strokeWidth: 1),
+                        )
+                      : null,
+                  label: Text(
+                    context.lang.upgradeToPaidPlanButton(
+                      widget.plan.name,
+                      ' (${getFormattedPrice(monthlyProduct)}/${context.lang.month})',
+                    ),
+                  ),
                 ),
               if (widget.onPurchase != null &&
                   (yearlyProduct != null ||
                       currentPlan == SubscriptionPlan.Free))
                 FilledButton.icon(
-                  onPressed: () => onButtonPressed(yearlyProduct),
-                  label: (widget.plan == SubscriptionPlan.Free ||
-                          widget.plan == SubscriptionPlan.Plus)
-                      ? Text(context.lang.redeemUserInviteCodeTitle)
-                      : Text(
-                          context.lang.upgradeToPaidPlanButton(
-                            widget.plan.name,
-                            ' (${context.lang.yearly})',
-                          ),
-                        ),
+                  onPressed: _isLoading != null
+                      ? null
+                      : () => onButtonPressed(yearlyProduct),
+                  icon: _isLoading == yearlyProduct
+                      ? const SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: CircularProgressIndicator(strokeWidth: 1),
+                        )
+                      : null,
+                  label: Text(
+                    context.lang.upgradeToPaidPlanButton(
+                      widget.plan.name,
+                      ' (${getFormattedPrice(yearlyProduct!)}/${context.lang.year})',
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -362,76 +341,4 @@ class _PlanCardState extends State<PlanCard> {
       ),
     );
   }
-}
-
-Future<void> redeemUserInviteCode(BuildContext context, String newPlan) async {
-  var inviteCode = '';
-  // ignore: inference_failure_on_function_invocation
-  await showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text(context.lang.redeemUserInviteCodeTitle),
-        content: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: TextField(
-                      onChanged: (value) => setState(() {
-                        inviteCode = value.toUpperCase();
-                      }),
-                      decoration: InputDecoration(
-                        labelText: context.lang.registerTwonlyCodeLabel,
-                        border: const OutlineInputBorder(),
-                      ),
-                      textCapitalization: TextCapitalization.characters,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(context.lang.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final res = await apiService.redeemUserInviteCode(inviteCode);
-              if (!context.mounted) return;
-              if (res.isSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.lang.redeemUserInviteCodeSuccess),
-                  ),
-                );
-                // reconnect to load new plan.
-                await apiService.close(() {});
-                await apiService.connect();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      errorCodeToText(context, res.error as ErrorCode),
-                    ),
-                  ),
-                );
-              }
-              if (!context.mounted) return;
-              Navigator.of(context).pop();
-            },
-            child: Text(context.lang.ok),
-          ),
-        ],
-      );
-    },
-  );
 }

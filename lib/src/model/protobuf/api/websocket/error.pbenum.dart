@@ -89,6 +89,8 @@ class ErrorCode extends $pb.ProtobufEnum {
       ErrorCode._(1033, _omitEnumNames ? '' : 'RegistrationDisabled');
   static const ErrorCode IPAPaymentExpired =
       ErrorCode._(1034, _omitEnumNames ? '' : 'IPAPaymentExpired');
+  static const ErrorCode UserIsNotInFreePlan =
+      ErrorCode._(1035, _omitEnumNames ? '' : 'UserIsNotInFreePlan');
 
   static const $core.List<ErrorCode> values = <ErrorCode>[
     Unknown,
@@ -128,6 +130,7 @@ class ErrorCode extends $pb.ProtobufEnum {
     InvalidProofOfWork,
     RegistrationDisabled,
     IPAPaymentExpired,
+    UserIsNotInFreePlan,
   ];
 
   static final $core.Map<$core.int, ErrorCode> _byValue =

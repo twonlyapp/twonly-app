@@ -1,5 +1,5 @@
-arb-dir: lib/src/localization
-template-arb-file: app_en.arb
+arb-dir: lib/src/localization/translations
+template-arb-file: en.arb
 output-localization-file: app_localizations.dart
 untranslated-messages-file: build/l10n.log
 output-dir: lib/src/localization/generated

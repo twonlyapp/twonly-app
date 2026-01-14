@@ -595,20 +595,6 @@ class ApiService {
     return null;
   }
 
-  Future<List<Response_AddAccountsInvite>?> getAdditionalUserInvites() async {
-    final get = ApplicationData_GetAddAccountsInvites();
-    final appData = ApplicationData()..getAddaccountsInvites = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasAddaccountsinvites()) {
-        return ok.addaccountsinvites.invites;
-      }
-    }
-    return null;
-  }
-
   Future<Result> updatePlanOptions(bool autoRenewal) async {
     final get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
     final appData = ApplicationData()..updatePlanOptions = get;
@@ -619,6 +605,13 @@ class ApiService {
   Future<Result> removeAdditionalUser(Int64 userId) async {
     final get = ApplicationData_RemoveAdditionalUser()..userId = userId;
     final appData = ApplicationData()..removeAdditionalUser = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req, contactId: userId.toInt());
+  }
+
+  Future<Result> addAdditionalUser(Int64 userId) async {
+    final get = ApplicationData_AddAdditionalUser()..userId = userId;
+    final appData = ApplicationData()..addAdditionalUser = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: userId.toInt());
   }

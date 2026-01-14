@@ -735,16 +735,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get familyFeature4 => '✓ twonly unterstützen';
 
   @override
-  String get redeemUserInviteCode => 'Oder löse einen twonly-Code ein.';
-
-  @override
-  String get redeemUserInviteCodeTitle => 'twonly-Code einlösen';
-
-  @override
-  String get redeemUserInviteCodeSuccess =>
-      'Dein Plan wurde erfolgreich angepasst.';
-
-  @override
   String get freeFeature1 => '✓ 10 Medien-Datei-Uploads pro Tag';
 
   @override
@@ -875,7 +865,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get checkoutSubmit => 'Kostenpflichtig bestellen';
 
   @override
-  String get additionalUsersList => 'Ihre zusätzlichen Benutzer';
+  String get additionalUsersList => 'Deine zusätzlichen Benutzer';
 
   @override
   String get additionalUsersPlusTokens => 'twonly-Codes für \"Plus\"-Benutzer';
@@ -1603,4 +1593,35 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get autoStoreAllSendUnlimitedMediaFilesSubtitle =>
       'Wenn du diese Option aktivierst, werden alle Bilder, die du sendest, gespeichert, sofern sie mit einem unendlichen Countdown und nicht im twonly-Modus gesendet wurden.';
+
+  @override
+  String get termsOfService => 'Allgemeine Geschäftsbedingungen';
+
+  @override
+  String get privacyPolicy => 'Datenschutzerklärung';
+
+  @override
+  String get additionalUserAddError =>
+      'Es konnte kein zusätzlicher Nutzer hinzugefügt werden. Versuche es später noch einmal.';
+
+  @override
+  String additionalUserAddButton(Object limit, Object used) {
+    return 'Zusätzlichen Benutzer hinzufügen ($used/$limit)';
+  }
+
+  @override
+  String get additionalUserRemoveTitle =>
+      'Diesen zusätzlichen Benutzer entfernen';
+
+  @override
+  String get additionalUserRemoveDesc =>
+      'Der zusätzliche Nutzer wird nach der Entfernung automatisch auf den kostenlosen Tarif zurückgestuft und du kannst eine andere Person hinzufügen.';
+
+  @override
+  String get additionalUserSelectTitle => 'Zusätzliche Benutzer auswählen';
+
+  @override
+  String additionalUserSelectButton(Object limit, Object used) {
+    return 'Benutzer auswählen ($used/$limit)';
+  }
 }

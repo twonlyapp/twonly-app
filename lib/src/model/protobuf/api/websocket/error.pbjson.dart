@@ -55,6 +55,7 @@ const ErrorCode$json = {
     {'1': 'InvalidProofOfWork', '2': 1032},
     {'1': 'RegistrationDisabled', '2': 1033},
     {'1': 'IPAPaymentExpired', '2': 1034},
+    {'1': 'UserIsNotInFreePlan', '2': 1035},
   ],
 };
 
@@ -76,4 +77,4 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'duZWRQcmVLZXkQgwgSEwoOVXNlcklkTm90Rm91bmQQhAgSFwoSVXNlcklkQWxyZWFkeVRha2Vu'
     'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCBIYChNOZXdEZXZpY2VSZWdpc3RlcmVkEIcIEh'
     'cKEkludmFsaWRQcm9vZk9mV29yaxCICBIZChRSZWdpc3RyYXRpb25EaXNhYmxlZBCJCBIWChFJ'
-    'UEFQYXltZW50RXhwaXJlZBCKCA==');
+    'UEFQYXltZW50RXhwaXJlZBCKCBIYChNVc2VySXNOb3RJbkZyZWVQbGFuEIsI');
