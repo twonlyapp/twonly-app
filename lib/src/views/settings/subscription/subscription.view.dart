@@ -295,7 +295,9 @@ class _PlanCardState extends State<PlanCard> {
                   },
                   label: const Text('Manage subscription'),
                 ),
-              if (widget.onPurchase != null && monthlyProduct != null)
+              if (widget.onPurchase != null &&
+                  monthlyProduct != null &&
+                  !isPayingUser(currentPlan))
                 OutlinedButton.icon(
                   onPressed: _isLoading != null
                       ? null
@@ -315,8 +317,7 @@ class _PlanCardState extends State<PlanCard> {
                   ),
                 ),
               if (widget.onPurchase != null &&
-                  (yearlyProduct != null ||
-                      currentPlan == SubscriptionPlan.Free))
+                  (yearlyProduct != null && !isPayingUser(currentPlan)))
                 FilledButton.icon(
                   onPressed: _isLoading != null
                       ? null
@@ -331,7 +332,7 @@ class _PlanCardState extends State<PlanCard> {
                   label: Text(
                     context.lang.upgradeToPaidPlanButton(
                       widget.plan.name,
-                      ' (${getFormattedPrice(yearlyProduct!)}/${context.lang.year})',
+                      ' (${getFormattedPrice(yearlyProduct)}/${context.lang.year})',
                     ),
                   ),
                 ),
