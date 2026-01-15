@@ -4,20 +4,35 @@
 
 This repository contains the complete source code of the [twonly](https://twonly.eu) apps.
 
-<a href="https://testflight.apple.com/join/U9B3v2rk" >
+<!-- <a href="https://testflight.apple.com/join/U9B3v2rk" >
     <img alt="Get it on Testflight button" src="https://twonly.eu/assets/buttons/get-it-on-testflight.png"
         width="100px" />
-</a>
-<a href="https://releases.twonly.eu/fdroid/repo/">
-    <img alt="Get it on F-Droid button" src="https://twonly.eu/assets/buttons/get-it-on-f-droid.webp" width="100px" />
-</a>
+</a> -->
+<div class="my-5 space-x-4">
+    <div class="flex gap-5 items-center justify-center">
+        <a href="https://apps.apple.com/de/app/twonly/id6743774441">
+            <img alt="Get it on App Store button" src="https://twonly.eu/assets/buttons/download-on-the-app-store.svg"
+                width="100px" />
+        </a>
+        <a href="https://play.google.com/store/apps/details?id=eu.twonly">
+            <img alt="Get it on Google-Play button" src="https://twonly.eu/assets/buttons/get-it-in-google-play.webp"
+                width="110px" />
+        </a>
+        <a href="https://github.com/twonlyapp/twonly-app/releases">
+            <img alt="Get it on Github button" src="https://twonly.eu/assets/buttons/get-it-on-github.webp" width="110px" />
+        </a>
+        <a href="https://releases.twonly.eu/fdroid/repo/">
+            <img alt="Get it on F-Droid button" src="https://twonly.eu/assets/buttons/get-it-on-f-droid.webp" width="105px" />
+        </a>
+    </div>
+</div>
+
 
 ## Features
 
 - Offer a Snapchat™ like experience
 - End-to-End encryption using the [Signal Protocol](https://de.wikipedia.org/wiki/Signal-Protokoll)
-- twonly is Open Source and can be downloaded directly from GitHub
-- Developed by humans not by AI or Vibe Coding
+- Open Source and can be downloaded directly from GitHub
 - No email or phone number required to register
 - Privacy friendly - Everything is stored on the device
 - The backend is hosted exclusively in Europe
@@ -29,6 +44,7 @@ This repository contains the complete source code of the [twonly](https://twonly
 - Implementing [Sealed Sender](https://signal.org/blog/sealed-sender/) to minimize metadata
 
 ## Security Issues
+
 If you discover a security issue in twonly, please adhere to the coordinated vulnerability disclosure model. Please send
 us your report to security@twonly.eu. We also offer for critical security issues a small bug bounties, but we can not
 guarantee a bounty currently :/
