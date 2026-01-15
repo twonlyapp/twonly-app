@@ -226,27 +226,6 @@ class _SubscriptionCustomViewState extends State<SubscriptionCustomView> {
                 await initAsync();
               },
             ),
-          if (!isPayingUser(currentPlan)) ...[
-            const SizedBox(height: 10),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Text(
-                  context.lang.redeemUserInviteCode,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            PlanCard(
-              plan: SubscriptionPlan.Plus,
-              onTap: () async {
-                await redeemUserInviteCode(context, SubscriptionPlan.Plus.name);
-                await initAsync();
-              },
-            ),
-          ],
           const SizedBox(height: 10),
           if (currentPlan != SubscriptionPlan.Family) const Divider(),
           BetterListTile(
@@ -479,13 +458,9 @@ class PlanCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 10),
                     child: FilledButton.icon(
                       onPressed: onTap,
-                      label: (plan == SubscriptionPlan.Free ||
-                              plan == SubscriptionPlan.Plus)
-                          ? Text(context.lang.redeemUserInviteCodeTitle)
-                          : Text(
-                              context.lang
-                                  .upgradeToPaidPlanButton(plan.name, ''),
-                            ),
+                      label: Text(
+                        context.lang.upgradeToPaidPlanButton(plan.name, ''),
+                      ),
                     ),
                   ),
               ],
@@ -495,76 +470,4 @@ class PlanCard extends StatelessWidget {
       ),
     );
   }
-}
-
-Future<void> redeemUserInviteCode(BuildContext context, String newPlan) async {
-  var inviteCode = '';
-  // ignore: inference_failure_on_function_invocation
-  await showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text(context.lang.redeemUserInviteCodeTitle),
-        content: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: TextField(
-                      onChanged: (value) => setState(() {
-                        inviteCode = value.toUpperCase();
-                      }),
-                      decoration: InputDecoration(
-                        labelText: context.lang.registerTwonlyCodeLabel,
-                        border: const OutlineInputBorder(),
-                      ),
-                      textCapitalization: TextCapitalization.characters,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(context.lang.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final res = await apiService.redeemUserInviteCode(inviteCode);
-              if (!context.mounted) return;
-              if (res.isSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.lang.redeemUserInviteCodeSuccess),
-                  ),
-                );
-                // reconnect to load new plan.
-                await apiService.close(() {});
-                await apiService.connect();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      errorCodeToText(context, res.error as ErrorCode),
-                    ),
-                  ),
-                );
-              }
-              if (!context.mounted) return;
-              Navigator.of(context).pop();
-            },
-            child: Text(context.lang.ok),
-          ),
-        ],
-      );
-    },
-  );
 }

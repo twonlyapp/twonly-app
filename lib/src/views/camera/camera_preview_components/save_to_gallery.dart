@@ -2,10 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:twonly/globals.dart';
-import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
-import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 class SaveToGalleryButton extends StatefulWidget {
@@ -48,37 +45,10 @@ class SaveToGalleryButtonState extends State<SaveToGalleryButton> {
               });
 
               await widget.storeImageAsOriginal();
-
-              String? res;
-
-              final storedMediaPath = widget.mediaService.storedPath;
-
               await widget.mediaService.storeMediaFile();
 
-              if (gUser.storeMediaFilesInGallery) {
-                if (widget.mediaService.mediaFile.type == MediaType.video) {
-                  res = await saveVideoToGallery(storedMediaPath.path);
-                } else {
-                  res = await saveImageToGallery(
-                    storedMediaPath.readAsBytesSync(),
-                  );
-                }
-              }
-
-              if (res == null) {
-                setState(() {
-                  _imageSaved = true;
-                });
-              } else if (mounted && context.mounted) {
-                Log.error('Could not store media file in the gallery.');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(res),
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-              }
               setState(() {
+                _imageSaved = true;
                 _imageSaving = false;
               });
             },

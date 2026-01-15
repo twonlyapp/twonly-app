@@ -7,7 +7,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 
 Future<void> createPushAvatars() async {
-  final contacts = await twonlyDB.contactsDao.getAllNotBlockedContacts();
+  final contacts = await twonlyDB.contactsDao.getAllContacts();
 
   for (final contact in contacts) {
     if (contact.avatarSvgCompressed == null) continue;

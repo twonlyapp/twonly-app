@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -28,12 +29,13 @@ class _LastMessageTimeState extends State<LastMessageTime> {
       if (widget.message != null) {
         final lastAction = await twonlyDB.messagesDao
             .getLastMessageAction(widget.message!.messageId);
-        lastMessageInSeconds = DateTime.now()
+        lastMessageInSeconds = clock
+            .now()
             .difference(lastAction?.actionAt ?? widget.message!.createdAt)
             .inSeconds;
       } else if (widget.dateTime != null) {
         lastMessageInSeconds =
-            DateTime.now().difference(widget.dateTime!).inSeconds;
+            clock.now().difference(widget.dateTime!).inSeconds;
       }
       if (mounted) {
         setState(() {

@@ -51,7 +51,7 @@ class _ProfileViewState extends State<ProfileView> {
         ..avatarCounter = user.avatarCounter + 1;
       return user;
     });
-    setState(() {}); // gUser has updated
+    if (mounted) setState(() {}); // gUser has updated
   }
 
   Future<void> _updateUsername(String username) async {

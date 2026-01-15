@@ -99,7 +99,7 @@ class ContactsDao extends DatabaseAccessor<TwonlyDB> with _$ContactsDaoMixin {
         .watchSingleOrNull();
   }
 
-  Future<List<Contact>> getAllNotBlockedContacts() {
+  Future<List<Contact>> getAllContacts() {
     return select(contacts).get();
   }
 

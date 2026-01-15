@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 
 class VideoRecordingTimer extends StatelessWidget {
@@ -12,7 +13,7 @@ class VideoRecordingTimer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (videoRecordingStarted != null) {
-      final currentTime = DateTime.now();
+      final currentTime = clock.now();
       return Positioned(
         top: 50,
         left: 0,

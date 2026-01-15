@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/signal_contact_prekey.table.dart';
@@ -107,9 +108,9 @@ class SignalDao extends DatabaseAccessor<TwonlyDB> with _$SignalDaoMixin {
     await (delete(signalContactPreKeys)
           ..where(
             (t) => (t.createdAt.isSmallerThanValue(
-              DateTime.now().subtract(
-                const Duration(days: 100),
-              ),
+              clock.now().subtract(
+                    const Duration(days: 100),
+                  ),
             )),
           ))
         .go();
@@ -117,9 +118,9 @@ class SignalDao extends DatabaseAccessor<TwonlyDB> with _$SignalDaoMixin {
     await (delete(twonlyDB.signalPreKeyStores)
           ..where(
             (t) => (t.createdAt.isSmallerThanValue(
-              DateTime.now().subtract(
-                const Duration(days: 365),
-              ),
+              clock.now().subtract(
+                    const Duration(days: 365),
+                  ),
             )),
           ))
         .go();

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -291,12 +292,12 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }).catchError(Log.error);
     } else {
       if (currentMediaLocal.mediaFile.displayLimitInMilliseconds != null) {
-        canBeSeenUntil = DateTime.now().add(
-          Duration(
-            milliseconds:
-                currentMediaLocal.mediaFile.displayLimitInMilliseconds!,
-          ),
-        );
+        canBeSeenUntil = clock.now().add(
+              Duration(
+                milliseconds:
+                    currentMediaLocal.mediaFile.displayLimitInMilliseconds!,
+              ),
+            );
         timerRequired = true;
       }
     }
@@ -314,7 +315,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     nextMediaTimer?.cancel();
     progressTimer?.cancel();
     if (canBeSeenUntil != null) {
-      nextMediaTimer = Timer(canBeSeenUntil!.difference(DateTime.now()), () {
+      nextMediaTimer = Timer(canBeSeenUntil!.difference(clock.now()), () {
         if (context.mounted) {
           nextMediaOrExit();
         }
@@ -326,7 +327,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             canBeSeenUntil == null) {
           return;
         }
-        final difference = canBeSeenUntil!.difference(DateTime.now());
+        final difference = canBeSeenUntil!.difference(clock.now());
         // Calculate the progress as a value between 0.0 and 1.0
         progress =
             difference.inMilliseconds / (mediaFile.displayLimitInMilliseconds!);
@@ -357,18 +358,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     );
     setState(() {
       imageSaved = true;
-    });
-
-    if (gUser.storeMediaFilesInGallery) {
-      if (currentMedia!.mediaFile.type == MediaType.video) {
-        await saveVideoToGallery(currentMedia!.storedPath.path);
-      } else if (currentMedia!.mediaFile.type == MediaType.image ||
-          currentMedia!.mediaFile.type == MediaType.gif) {
-        final imageBytes = await currentMedia!.storedPath.readAsBytes();
-        await saveImageToGallery(imageBytes);
-      }
-    }
-    setState(() {
       imageSaving = false;
     });
   }

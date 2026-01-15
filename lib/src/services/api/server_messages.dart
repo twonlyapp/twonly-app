@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:mutex/mutex.dart';
@@ -60,7 +61,7 @@ Future<void> handleServerMessage(server.ServerToClient msg) async {
   await apiService.sendResponse(ClientToServer()..v0 = v0);
 }
 
-DateTime lastPushKeyRequest = DateTime.now().subtract(const Duration(hours: 1));
+DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));
 
 Mutex protectReceiptCheck = Mutex();
 

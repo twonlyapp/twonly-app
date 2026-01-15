@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -17,7 +18,6 @@ Future<void> handleReaction(
   );
 
   if (!reaction.remove) {
-    await twonlyDB.groupsDao
-        .increaseLastMessageExchange(groupId, DateTime.now());
+    await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
   }
 }

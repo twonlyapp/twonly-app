@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:path/path.dart';
 import 'package:twonly/globals.dart';
@@ -61,7 +62,7 @@ class MediaFileService {
             // delete = true; // do not overwrite a previous delete = false
             // this is just to make it easier to understand :)
           } else if (message.openedAt!
-              .isAfter(DateTime.now().subtract(const Duration(days: 2)))) {
+              .isAfter(clock.now().subtract(const Duration(days: 2)))) {
             // In case the image was opened, but send with unlimited time or no authentication.
             if (message.senderId == null) {
               delete = false;
@@ -218,6 +219,15 @@ class MediaFileService {
     }
     if (tempPath.existsSync()) {
       await tempPath.copy(storedPath.path);
+      if (gUser.storeMediaFilesInGallery) {
+        if (mediaFile.type == MediaType.video) {
+          await saveVideoToGallery(storedPath.path);
+        } else {
+          await saveImageToGallery(
+            storedPath.readAsBytesSync(),
+          );
+        }
+      }
     } else {
       Log.error(
         'Could not store image neither as ${tempPath.path} does not exists.',
@@ -230,7 +240,6 @@ class MediaFileService {
 
   Future<void> hashStoredMedia() async {
     if (!storedPath.existsSync()) {
-      Log.error('could not create hash value as media file is not stored.');
       return;
     }
     final checksum = await sha256File(storedPath);

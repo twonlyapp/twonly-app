@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/globals.dart';
@@ -110,11 +111,11 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     final allGroups = await select(groups).get();
 
     for (final group in allGroups) {
-      final deletionTime = DateTime.now().subtract(
-        Duration(
-          milliseconds: group.deleteMessagesAfterMilliseconds,
-        ),
-      );
+      final deletionTime = clock.now().subtract(
+            Duration(
+              milliseconds: group.deleteMessagesAfterMilliseconds,
+            ),
+          );
       await (delete(messages)
             ..where(
               (m) =>
@@ -150,7 +151,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   //               t.messageOtherId.isNull() &
   //               t.errorWhileSending.equals(false) &
   //               t.sendAt.isBiggerThanValue(
-  //                 DateTime.now().subtract(const Duration(minutes: 10)),
+  //                 clock.now().subtract(const Duration(minutes: 10)),
   //               ),
   //         ))
   //       .get();
@@ -178,7 +179,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   // }
 
   Future<void> openedAllTextMessages(String groupId) {
-    final updates = MessagesCompanion(openedAt: Value(DateTime.now()));
+    final updates = MessagesCompanion(openedAt: Value(clock.now()));
     return (update(messages)
           ..where(
             (t) =>
@@ -272,12 +273,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     // Directly show as message opened as soon as one person has opened it
     final openedByAll =
         await haveAllMembers(messageId, MessageActionType.openedAt)
-            ? DateTime.now()
+            ? clock.now()
             : null;
     await twonlyDB.messagesDao.updateMessageId(
       messageId,
       MessagesCompanion(
-        openedAt: Value(DateTime.now()),
+        openedAt: Value(clock.now()),
         openedByAll: Value(openedByAll),
       ),
     );
@@ -298,7 +299,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     );
     await twonlyDB.messagesDao.updateMessageId(
       messageId,
-      MessagesCompanion(ackByServer: Value(DateTime.now())),
+      MessagesCompanion(ackByServer: Value(clock.now())),
     );
   }
 
@@ -378,7 +379,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
       await twonlyDB.groupsDao.updateGroup(
         message.groupId.value,
         GroupsCompanion(
-          lastMessageExchange: Value(DateTime.now()),
+          lastMessageExchange: Value(clock.now()),
           archived: const Value(false),
           deletedContent: const Value(false),
         ),
@@ -389,7 +390,7 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           message.groupId.value,
           message.senderId.value!,
           GroupMembersCompanion(
-            lastMessage: Value(DateTime.now()),
+            lastMessage: Value(clock.now()),
           ),
         );
       }

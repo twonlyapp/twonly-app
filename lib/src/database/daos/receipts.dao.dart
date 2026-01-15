@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
@@ -81,12 +82,12 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   }
 
   Future<List<Receipt>> getReceiptsForRetransmission() async {
-    final markedRetriesTime = DateTime.now().subtract(
-      const Duration(
-        // give the server time to transmit all messages to the client
-        seconds: 20,
-      ),
-    );
+    final markedRetriesTime = clock.now().subtract(
+          const Duration(
+            // give the server time to transmit all messages to the client
+            seconds: 20,
+          ),
+        );
     return (select(receipts)
           ..where(
             (t) =>
@@ -111,7 +112,7 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   Future<void> markMessagesForRetry(int contactId) async {
     await (update(receipts)..where((c) => c.contactId.equals(contactId))).write(
       ReceiptsCompanion(
-        markForRetry: Value(DateTime.now()),
+        markForRetry: Value(clock.now()),
       ),
     );
   }

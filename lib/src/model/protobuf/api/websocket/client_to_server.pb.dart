@@ -2260,6 +2260,69 @@ class ApplicationData_DeleteAccount extends $pb.GeneratedMessage {
   static ApplicationData_DeleteAccount? _defaultInstance;
 }
 
+class ApplicationData_AddAdditionalUser extends $pb.GeneratedMessage {
+  factory ApplicationData_AddAdditionalUser({
+    $fixnum.Int64? userId,
+  }) {
+    final result = create();
+    if (userId != null) result.userId = userId;
+    return result;
+  }
+
+  ApplicationData_AddAdditionalUser._();
+
+  factory ApplicationData_AddAdditionalUser.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory ApplicationData_AddAdditionalUser.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ApplicationData.AddAdditionalUser',
+      package:
+          const $pb.PackageName(_omitMessageNames ? '' : 'client_to_server'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'userId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_AddAdditionalUser clone() =>
+      ApplicationData_AddAdditionalUser()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ApplicationData_AddAdditionalUser copyWith(
+          void Function(ApplicationData_AddAdditionalUser) updates) =>
+      super.copyWith((message) =>
+              updates(message as ApplicationData_AddAdditionalUser))
+          as ApplicationData_AddAdditionalUser;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_AddAdditionalUser create() =>
+      ApplicationData_AddAdditionalUser._();
+  @$core.override
+  ApplicationData_AddAdditionalUser createEmptyInstance() => create();
+  static $pb.PbList<ApplicationData_AddAdditionalUser> createRepeated() =>
+      $pb.PbList<ApplicationData_AddAdditionalUser>();
+  @$core.pragma('dart2js:noInline')
+  static ApplicationData_AddAdditionalUser getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ApplicationData_AddAdditionalUser>(
+          create);
+  static ApplicationData_AddAdditionalUser? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get userId => $_getI64(0);
+  @$pb.TagNumber(1)
+  set userId($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasUserId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUserId() => $_clearField(1);
+}
+
 enum ApplicationData_ApplicationData {
   textMessage,
   getUserByUsername,
@@ -2285,6 +2348,7 @@ enum ApplicationData_ApplicationData {
   changeUsername,
   ipaPurchase,
   ipaForceCheck,
+  addAdditionalUser,
   notSet
 }
 
@@ -2314,6 +2378,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     ApplicationData_ChangeUsername? changeUsername,
     ApplicationData_IPAPurchase? ipaPurchase,
     ApplicationData_IPAForceCheck? ipaForceCheck,
+    ApplicationData_AddAdditionalUser? addAdditionalUser,
   }) {
     final result = create();
     if (textMessage != null) result.textMessage = textMessage;
@@ -2348,6 +2413,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     if (changeUsername != null) result.changeUsername = changeUsername;
     if (ipaPurchase != null) result.ipaPurchase = ipaPurchase;
     if (ipaForceCheck != null) result.ipaForceCheck = ipaForceCheck;
+    if (addAdditionalUser != null) result.addAdditionalUser = addAdditionalUser;
     return result;
   }
 
@@ -2386,6 +2452,7 @@ class ApplicationData extends $pb.GeneratedMessage {
     26: ApplicationData_ApplicationData.changeUsername,
     27: ApplicationData_ApplicationData.ipaPurchase,
     28: ApplicationData_ApplicationData.ipaForceCheck,
+    29: ApplicationData_ApplicationData.addAdditionalUser,
     0: ApplicationData_ApplicationData.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -2417,7 +2484,8 @@ class ApplicationData extends $pb.GeneratedMessage {
       25,
       26,
       27,
-      28
+      28,
+      29
     ])
     ..aOM<ApplicationData_TextMessage>(1, _omitFieldNames ? '' : 'textMessage',
         protoName: 'textMessage',
@@ -2508,6 +2576,10 @@ class ApplicationData extends $pb.GeneratedMessage {
         28, _omitFieldNames ? '' : 'ipaForceCheck',
         protoName: 'ipaForceCheck',
         subBuilder: ApplicationData_IPAForceCheck.create)
+    ..aOM<ApplicationData_AddAdditionalUser>(
+        29, _omitFieldNames ? '' : 'addAdditionalUser',
+        protoName: 'addAdditionalUser',
+        subBuilder: ApplicationData_AddAdditionalUser.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -2822,6 +2894,18 @@ class ApplicationData extends $pb.GeneratedMessage {
   void clearIpaForceCheck() => $_clearField(28);
   @$pb.TagNumber(28)
   ApplicationData_IPAForceCheck ensureIpaForceCheck() => $_ensure(23);
+
+  @$pb.TagNumber(29)
+  ApplicationData_AddAdditionalUser get addAdditionalUser => $_getN(24);
+  @$pb.TagNumber(29)
+  set addAdditionalUser(ApplicationData_AddAdditionalUser value) =>
+      $_setField(29, value);
+  @$pb.TagNumber(29)
+  $core.bool hasAddAdditionalUser() => $_has(24);
+  @$pb.TagNumber(29)
+  void clearAddAdditionalUser() => $_clearField(29);
+  @$pb.TagNumber(29)
+  ApplicationData_AddAdditionalUser ensureAddAdditionalUser() => $_ensure(24);
 }
 
 class Response_PreKey extends $pb.GeneratedMessage {

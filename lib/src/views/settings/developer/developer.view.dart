@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:restart_app/restart_app.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/settings/developer/automated_testing.view.dart';
 import 'package:twonly/src/views/settings/developer/retransmission_data.view.dart';
 
@@ -62,6 +64,23 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                   },
                 ),
               );
+            },
+          ),
+          ListTile(
+            title: const Text('Delete all (!) app data'),
+            onTap: () async {
+              final ok = await showAlertDialog(
+                context,
+                'Sure?',
+                'If you do not have a backup, you have to register with a new account.',
+              );
+              if (ok) {
+                await deleteLocalUserData();
+                await Restart.restartApp(
+                  notificationTitle: 'Account successfully deleted',
+                  notificationBody: 'Click here to open the app again',
+                );
+              }
             },
           ),
           ListTile(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:clock/clock.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -165,7 +166,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   DateTime? _videoRecordingStarted;
   Timer? _videoRecordingTimer;
 
-  DateTime _currentTime = DateTime.now();
+  DateTime _currentTime = clock.now();
   final GlobalKey keyTriggerButton = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -519,7 +520,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       _videoRecordingTimer =
           Timer.periodic(const Duration(milliseconds: 15), (timer) {
         setState(() {
-          _currentTime = DateTime.now();
+          _currentTime = clock.now();
         });
         if (_videoRecordingStarted != null &&
             _currentTime.difference(_videoRecordingStarted!).inSeconds >=
@@ -530,7 +531,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
         }
       });
       setState(() {
-        _videoRecordingStarted = DateTime.now();
+        _videoRecordingStarted = clock.now();
         _isVideoRecording = true;
       });
     } on CameraException catch (e) {

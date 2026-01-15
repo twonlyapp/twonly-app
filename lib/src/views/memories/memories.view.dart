@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:twonly/globals.dart';
@@ -65,7 +66,7 @@ class MemoriesViewState extends State<MemoriesView> {
       var lastMonth = '';
       galleryItems = [];
 
-      final now = DateTime.now();
+      final now = clock.now();
 
       for (final mediaFile in mediaFiles) {
         final mediaService = MediaFileService(mediaFile);

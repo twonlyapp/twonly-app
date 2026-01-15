@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
@@ -22,17 +23,17 @@ class OtherPreKeys {
 }
 
 Mutex requestNewKeys = Mutex();
-DateTime lastPreKeyRequest = DateTime.now().subtract(const Duration(hours: 1));
+DateTime lastPreKeyRequest = clock.now().subtract(const Duration(hours: 1));
 DateTime lastSignedPreKeyRequest =
-    DateTime.now().subtract(const Duration(hours: 1));
+    clock.now().subtract(const Duration(hours: 1));
 
 Future<void> requestNewPrekeysForContact(int contactId) async {
   if (lastPreKeyRequest
-      .isAfter(DateTime.now().subtract(const Duration(seconds: 60)))) {
+      .isAfter(clock.now().subtract(const Duration(seconds: 60)))) {
     return;
   }
   Log.info('[PREKEY] Requesting new PREKEYS for $contactId');
-  lastPreKeyRequest = DateTime.now();
+  lastPreKeyRequest = clock.now();
   await requestNewKeys.protect(() async {
     final otherKeys = await apiService.getPreKeysByUserId(contactId);
     if (otherKeys != null) {
@@ -65,11 +66,11 @@ Future<SignalContactPreKey?> getPreKeyByContactId(int contactId) async {
 
 Future<void> requestNewSignedPreKeyForContact(int contactId) async {
   if (lastSignedPreKeyRequest
-      .isAfter(DateTime.now().subtract(const Duration(seconds: 60)))) {
+      .isAfter(clock.now().subtract(const Duration(seconds: 60)))) {
     Log.info('last signed pre request was 60s before');
     return;
   }
-  lastSignedPreKeyRequest = DateTime.now();
+  lastSignedPreKeyRequest = clock.now();
   await requestNewKeys.protect(() async {
     final signedPreKey = await apiService.getSignedKeyByUserId(contactId);
     if (signedPreKey != null) {
@@ -96,8 +97,7 @@ Future<SignalContactSignedPreKey?> getSignedPreKeyByContactId(
       await twonlyDB.signalDao.getSignedPreKeyByContactId(contactId);
 
   if (signedPreKey != null) {
-    final fortyEightHoursAgo =
-        DateTime.now().subtract(const Duration(hours: 48));
+    final fortyEightHoursAgo = clock.now().subtract(const Duration(hours: 48));
     final isOlderThan48Hours =
         signedPreKey.createdAt.isBefore(fortyEightHoursAgo);
     if (isOlderThan48Hours) {
@@ -105,7 +105,7 @@ Future<SignalContactSignedPreKey?> getSignedPreKeyByContactId(
     }
   } else {
     unawaited(requestNewSignedPreKeyForContact(contactId));
-    Log.error('Contact $contactId does not have a signed pre key!');
+    Log.warn('Contact $contactId does not have a signed pre key!');
   }
   return signedPreKey;
 }

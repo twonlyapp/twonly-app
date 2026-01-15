@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:twonly/globals.dart';
@@ -23,39 +24,22 @@ class MaxFlameListTitle extends StatefulWidget {
 }
 
 class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
-  int _flameCounter = 0;
-  Group? _directChat;
+  Group? _group;
   late String _groupId;
-
-  late StreamSubscription<int> _flameCounterSub;
   late StreamSubscription<Group?> _groupSub;
 
   @override
   void initState() {
     _groupId = getUUIDforDirectChat(widget.contactId, gUser.userId);
-    final stream = twonlyDB.groupsDao.watchFlameCounter(_groupId);
-    _flameCounterSub = stream.listen((counter) {
-      if (mounted) {
-        setState(() {
-          // in the watchFlameCounter a one is added, so remove this here
-          _flameCounter = counter - 1;
-        });
-      }
-    });
-    final stream2 = twonlyDB.groupsDao.watchGroup(_groupId);
-    _groupSub = stream2.listen((update) {
-      if (mounted) {
-        setState(() {
-          _directChat = update;
-        });
-      }
+    final stream = twonlyDB.groupsDao.watchGroup(_groupId);
+    _groupSub = stream.listen((update) {
+      if (mounted) setState(() => _group = update);
     });
     super.initState();
   }
 
   @override
   void dispose() {
-    _flameCounterSub.cancel();
     _groupSub.cancel();
     super.dispose();
   }
@@ -73,13 +57,13 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
       return;
     }
     Log.info(
-      'Restoring flames from ${_directChat!.flameCounter} to ${_directChat!.maxFlameCounter}',
+      'Restoring flames from ${_group!.flameCounter} to ${_group!.maxFlameCounter}',
     );
     await twonlyDB.groupsDao.updateGroup(
       _groupId,
       GroupsCompanion(
-        flameCounter: Value(_directChat!.maxFlameCounter),
-        lastFlameCounterChange: Value(DateTime.now()),
+        flameCounter: Value(_group!.maxFlameCounter),
+        lastFlameCounterChange: Value(clock.now()),
       ),
     );
     await syncFlameCounters(forceForGroup: _groupId);
@@ -87,11 +71,7 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
 
   @override
   Widget build(BuildContext context) {
-    if (_directChat == null ||
-        _directChat!.maxFlameCounter <= 2 ||
-        _flameCounter >= _directChat!.maxFlameCounter ||
-        _directChat!.maxFlameCounterFrom!
-            .isBefore(DateTime.now().subtract(const Duration(days: 4)))) {
+    if (_group == null || !isItPossibleToRestoreFlames(_group!)) {
       return Container();
     }
     return BetterListTile(
@@ -102,7 +82,7 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
           emoji: '🔥',
         ),
       ),
-      text: 'Restore your ${_directChat!.maxFlameCounter + 1} lost flames',
+      text: 'Restore your ${_group!.maxFlameCounter} lost flames',
     );
   }
 }

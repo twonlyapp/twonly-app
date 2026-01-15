@@ -7,6 +7,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 
+import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
@@ -50,7 +51,7 @@ final lockRetransStore = Mutex();
 /// errors or network changes.
 class ApiService {
   ApiService();
-  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '192.168.2.178:3030';
+  final String apiHost = kReleaseMode ? 'api.twonly.eu' : '10.99.0.140:3030';
   // final String apiHost = kReleaseMode ? 'api.twonly.eu' : 'dev.twonly.eu';
   final String apiSecure = kReleaseMode ? 's' : '';
 
@@ -206,7 +207,7 @@ class ApiService {
   }
 
   Future<server.ServerToClient?> _waitForResponse(Int64 seq) async {
-    final startTime = DateTime.now();
+    final startTime = clock.now();
 
     const timeout = Duration(seconds: 60);
 
@@ -216,7 +217,7 @@ class ApiService {
         messagesV0.remove(seq);
         return tmp;
       }
-      if (DateTime.now().difference(startTime) > timeout) {
+      if (clock.now().difference(startTime) > timeout) {
         Log.warn('Timeout for message $seq');
         return null;
       }
@@ -594,20 +595,6 @@ class ApiService {
     return null;
   }
 
-  Future<List<Response_AddAccountsInvite>?> getAdditionalUserInvites() async {
-    final get = ApplicationData_GetAddAccountsInvites();
-    final appData = ApplicationData()..getAddaccountsInvites = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasAddaccountsinvites()) {
-        return ok.addaccountsinvites.invites;
-      }
-    }
-    return null;
-  }
-
   Future<Result> updatePlanOptions(bool autoRenewal) async {
     final get = ApplicationData_UpdatePlanOptions()..autoRenewal = autoRenewal;
     final appData = ApplicationData()..updatePlanOptions = get;
@@ -618,6 +605,13 @@ class ApiService {
   Future<Result> removeAdditionalUser(Int64 userId) async {
     final get = ApplicationData_RemoveAdditionalUser()..userId = userId;
     final appData = ApplicationData()..removeAdditionalUser = get;
+    final req = createClientToServerFromApplicationData(appData);
+    return sendRequestSync(req, contactId: userId.toInt());
+  }
+
+  Future<Result> addAdditionalUser(Int64 userId) async {
+    final get = ApplicationData_AddAdditionalUser()..userId = userId;
+    final appData = ApplicationData()..addAdditionalUser = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req, contactId: userId.toInt());
   }

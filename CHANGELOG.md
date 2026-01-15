@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.83
+
+- Improved view of the diagnostic log
+- Several bug fixes
+
 ## 0.0.82
 
 - Added an option in the settings to automatically save all sent images

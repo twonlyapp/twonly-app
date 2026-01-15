@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -50,8 +51,10 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     }
     receiptId = receipt.receiptId;
 
-    if (!onlyReturnEncryptedData && receipt.ackByServerAt != null) {
-      Log.error('message already uploaded!');
+    if (!onlyReturnEncryptedData &&
+        receipt.ackByServerAt != null &&
+        receipt.markForRetry == null) {
+      Log.error('Message already uploaded and mark for retry is not set!');
       return null;
     }
 
@@ -129,7 +132,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
         await twonlyDB.messagesDao.handleMessageAckByServer(
           receipt.contactId,
           receipt.messageId!,
-          DateTime.now(),
+          clock.now(),
         );
       }
       if (!receipt.contactWillSendsReceipt) {
@@ -138,9 +141,10 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
         await twonlyDB.receiptsDao.updateReceipt(
           receiptId,
           ReceiptsCompanion(
-            ackByServerAt: Value(DateTime.now()),
+            ackByServerAt: Value(clock.now()),
             retryCount: Value(receipt.retryCount + 1),
-            lastRetry: Value(DateTime.now()),
+            lastRetry: Value(clock.now()),
+            markForRetry: const Value(null),
           ),
         );
       }
@@ -207,7 +211,7 @@ Future<void> sendCipherTextToGroup(
 }) async {
   final groupMembers = await twonlyDB.groupsDao.getGroupNonLeftMembers(groupId);
 
-  await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, DateTime.now());
+  await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
 
   encryptedContent.groupId = groupId;
 
@@ -239,7 +243,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
       contactId: Value(contactId),
       message: Value(response.writeToBuffer()),
       messageId: Value(messageId),
-      ackByServerAt: Value(onlyReturnEncryptedData ? DateTime.now() : null),
+      ackByServerAt: Value(onlyReturnEncryptedData ? clock.now() : null),
     ),
   );
 
@@ -265,7 +269,7 @@ Future<void> notifyContactAboutOpeningMessage(
   }
   Log.info('Opened messages: $messageOtherIds');
 
-  final actionAt = DateTime.now();
+  final actionAt = clock.now();
 
   await sendCipherText(
     contactId,

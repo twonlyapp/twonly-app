@@ -57,26 +57,16 @@ Future<bool> isAllowedToDownload(MediaType type) async {
       if (options[ConnectivityResult.mobile.name]!
           .contains(DownloadMediaTypes.video.name)) {
         return true;
-      } else if (type == MediaType.audio) {
-        if (options[ConnectivityResult.mobile.name]!
-            .contains(DownloadMediaTypes.audio.name)) {
-          return true;
-        }
-      } else if (options[ConnectivityResult.mobile.name]!
-          .contains(DownloadMediaTypes.image.name)) {
-        return true;
       }
+    } else if (options[ConnectivityResult.mobile.name]!
+        .contains(DownloadMediaTypes.image.name)) {
+      return true;
     }
   }
   if (connectivityResult.contains(ConnectivityResult.wifi)) {
     if (type == MediaType.video) {
       if (options[ConnectivityResult.wifi.name]!
           .contains(DownloadMediaTypes.video.name)) {
-        return true;
-      }
-    } else if (type == MediaType.audio) {
-      if (options[ConnectivityResult.wifi.name]!
-          .contains(DownloadMediaTypes.audio.name)) {
         return true;
       }
     } else if (options[ConnectivityResult.wifi.name]!
@@ -224,29 +214,25 @@ Future<void> downloadFileFast(
 
 Future<void> requestMediaReupload(String mediaId) async {
   final messages = await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
-  if (messages.length != 1 || messages.first.senderId == null) {
-    Log.error(
-      'Media file has none or more than one sender. That is not possible',
-    );
-    return;
-  }
 
-  await sendCipherText(
-    messages.first.senderId!,
-    EncryptedContent(
-      mediaUpdate: EncryptedContent_MediaUpdate(
-        type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
-        targetMessageId: messages.first.messageId,
+  for (final message in messages) {
+    if (message.openedAt != null) continue;
+    await sendCipherText(
+      messages.first.senderId!,
+      EncryptedContent(
+        mediaUpdate: EncryptedContent_MediaUpdate(
+          type: EncryptedContent_MediaUpdate_Type.DECRYPTION_ERROR,
+          targetMessageId: messages.first.messageId,
+        ),
       ),
-    ),
-  );
-
-  await twonlyDB.mediaFilesDao.updateMedia(
-    mediaId,
-    const MediaFilesCompanion(
-      downloadState: Value(DownloadState.reuploadRequested),
-    ),
-  );
+    );
+    await twonlyDB.mediaFilesDao.updateMedia(
+      mediaId,
+      const MediaFilesCompanion(
+        downloadState: Value(DownloadState.reuploadRequested),
+      ),
+    );
+  }
 }
 
 Future<void> handleEncryptedFile(String mediaId) async {

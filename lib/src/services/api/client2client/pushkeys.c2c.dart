@@ -1,10 +1,11 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 
-DateTime lastPushKeyRequest = DateTime.now().subtract(const Duration(hours: 1));
+DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));
 
 Future<void> handlePushKey(
   int contactId,
@@ -14,8 +15,8 @@ Future<void> handlePushKey(
     case EncryptedContent_PushKeys_Type.REQUEST:
       Log.info('Got a pushkey request from $contactId');
       if (lastPushKeyRequest
-          .isBefore(DateTime.now().subtract(const Duration(seconds: 60)))) {
-        lastPushKeyRequest = DateTime.now();
+          .isBefore(clock.now().subtract(const Duration(seconds: 60)))) {
+        lastPushKeyRequest = clock.now();
         unawaited(setupNotificationWithUsers(forceContact: contactId));
       }
 

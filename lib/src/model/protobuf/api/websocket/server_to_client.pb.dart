@@ -428,7 +428,6 @@ class Response_Plan extends $pb.GeneratedMessage {
     $fixnum.Int64? dailyMediaUploadLimit,
     $fixnum.Int64? maximalUploadSizeOfSingleMediaSize,
     $fixnum.Int64? additionalPlusAccounts,
-    $fixnum.Int64? additionalFreeAccounts,
     $fixnum.Int64? monthlyCostsCent,
     $fixnum.Int64? yearlyCostsCent,
     $core.bool? allowedToSendTextMessages,
@@ -444,8 +443,6 @@ class Response_Plan extends $pb.GeneratedMessage {
           maximalUploadSizeOfSingleMediaSize;
     if (additionalPlusAccounts != null)
       result.additionalPlusAccounts = additionalPlusAccounts;
-    if (additionalFreeAccounts != null)
-      result.additionalFreeAccounts = additionalFreeAccounts;
     if (monthlyCostsCent != null) result.monthlyCostsCent = monthlyCostsCent;
     if (yearlyCostsCent != null) result.yearlyCostsCent = yearlyCostsCent;
     if (allowedToSendTextMessages != null)
@@ -474,7 +471,6 @@ class Response_Plan extends $pb.GeneratedMessage {
     ..aInt64(3, _omitFieldNames ? '' : 'dailyMediaUploadLimit')
     ..aInt64(4, _omitFieldNames ? '' : 'maximalUploadSizeOfSingleMediaSize')
     ..aInt64(5, _omitFieldNames ? '' : 'additionalPlusAccounts')
-    ..aInt64(6, _omitFieldNames ? '' : 'additionalFreeAccounts')
     ..aInt64(7, _omitFieldNames ? '' : 'monthlyCostsCent')
     ..aInt64(8, _omitFieldNames ? '' : 'yearlyCostsCent')
     ..aOB(9, _omitFieldNames ? '' : 'allowedToSendTextMessages')
@@ -548,48 +544,39 @@ class Response_Plan extends $pb.GeneratedMessage {
   @$pb.TagNumber(5)
   void clearAdditionalPlusAccounts() => $_clearField(5);
 
-  @$pb.TagNumber(6)
-  $fixnum.Int64 get additionalFreeAccounts => $_getI64(5);
-  @$pb.TagNumber(6)
-  set additionalFreeAccounts($fixnum.Int64 value) => $_setInt64(5, value);
-  @$pb.TagNumber(6)
-  $core.bool hasAdditionalFreeAccounts() => $_has(5);
-  @$pb.TagNumber(6)
-  void clearAdditionalFreeAccounts() => $_clearField(6);
-
   @$pb.TagNumber(7)
-  $fixnum.Int64 get monthlyCostsCent => $_getI64(6);
+  $fixnum.Int64 get monthlyCostsCent => $_getI64(5);
   @$pb.TagNumber(7)
-  set monthlyCostsCent($fixnum.Int64 value) => $_setInt64(6, value);
+  set monthlyCostsCent($fixnum.Int64 value) => $_setInt64(5, value);
   @$pb.TagNumber(7)
-  $core.bool hasMonthlyCostsCent() => $_has(6);
+  $core.bool hasMonthlyCostsCent() => $_has(5);
   @$pb.TagNumber(7)
   void clearMonthlyCostsCent() => $_clearField(7);
 
   @$pb.TagNumber(8)
-  $fixnum.Int64 get yearlyCostsCent => $_getI64(7);
+  $fixnum.Int64 get yearlyCostsCent => $_getI64(6);
   @$pb.TagNumber(8)
-  set yearlyCostsCent($fixnum.Int64 value) => $_setInt64(7, value);
+  set yearlyCostsCent($fixnum.Int64 value) => $_setInt64(6, value);
   @$pb.TagNumber(8)
-  $core.bool hasYearlyCostsCent() => $_has(7);
+  $core.bool hasYearlyCostsCent() => $_has(6);
   @$pb.TagNumber(8)
   void clearYearlyCostsCent() => $_clearField(8);
 
   @$pb.TagNumber(9)
-  $core.bool get allowedToSendTextMessages => $_getBF(8);
+  $core.bool get allowedToSendTextMessages => $_getBF(7);
   @$pb.TagNumber(9)
-  set allowedToSendTextMessages($core.bool value) => $_setBool(8, value);
+  set allowedToSendTextMessages($core.bool value) => $_setBool(7, value);
   @$pb.TagNumber(9)
-  $core.bool hasAllowedToSendTextMessages() => $_has(8);
+  $core.bool hasAllowedToSendTextMessages() => $_has(7);
   @$pb.TagNumber(9)
   void clearAllowedToSendTextMessages() => $_clearField(9);
 
   @$pb.TagNumber(10)
-  $core.bool get isAdditionalAccount => $_getBF(9);
+  $core.bool get isAdditionalAccount => $_getBF(8);
   @$pb.TagNumber(10)
-  set isAdditionalAccount($core.bool value) => $_setBool(9, value);
+  set isAdditionalAccount($core.bool value) => $_setBool(8, value);
   @$pb.TagNumber(10)
-  $core.bool hasIsAdditionalAccount() => $_has(9);
+  $core.bool hasIsAdditionalAccount() => $_has(8);
   @$pb.TagNumber(10)
   void clearIsAdditionalAccount() => $_clearField(10);
 }

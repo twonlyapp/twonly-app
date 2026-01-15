@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:clock/clock.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/globals.dart';
@@ -21,8 +21,7 @@ Future<IdentityKeyPair?> getSignalIdentityKeyPair() async {
 // It then checks if it should update a new session key
 Future<void> signalHandleNewServerConnection() async {
   if (gUser.signalLastSignedPreKeyUpdated != null) {
-    final fortyEightHoursAgo =
-        DateTime.now().subtract(const Duration(hours: 48));
+    final fortyEightHoursAgo = clock.now().subtract(const Duration(hours: 48));
     final isYoungerThan48Hours =
         (gUser.signalLastSignedPreKeyUpdated!).isAfter(fortyEightHoursAgo);
     if (isYoungerThan48Hours) {
@@ -36,7 +35,7 @@ Future<void> signalHandleNewServerConnection() async {
     return;
   }
   await updateUserdata((user) {
-    user.signalLastSignedPreKeyUpdated = DateTime.now();
+    user.signalLastSignedPreKeyUpdated = clock.now();
     return user;
   });
   final res = await apiService.updateSignedPreKey(

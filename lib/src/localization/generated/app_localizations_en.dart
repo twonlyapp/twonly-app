@@ -729,16 +729,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyFeature4 => '✓ Support twonly';
 
   @override
-  String get redeemUserInviteCode => 'Or redeem a twonly-Code.';
-
-  @override
-  String get redeemUserInviteCodeTitle => 'Redeem twonly-Code';
-
-  @override
-  String get redeemUserInviteCodeSuccess =>
-      'Your plan has been successfully adjusted.';
-
-  @override
   String get freeFeature1 => '✓ 10 Media file uploads per day';
 
   @override
@@ -751,7 +741,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionHistory => 'Your transaction history';
 
   @override
-  String get manageSubscription => 'Manage your subscription';
+  String get manageSubscription => 'Manage subscription';
 
   @override
   String get nextPayment => 'Next payment';
@@ -1111,7 +1101,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uploadLimitReached =>
-      'The upload limit has\been reached. Upgrade to Pro\nor wait until tomorrow.';
+      'The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.';
 
   @override
   String get retransmissionRequested => 'Retransmission requested';
@@ -1592,4 +1582,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autoStoreAllSendUnlimitedMediaFilesSubtitle =>
       'If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode.';
+
+  @override
+  String get termsOfService => 'Terms of service';
+
+  @override
+  String get privacyPolicy => 'Privacy policy';
+
+  @override
+  String get additionalUserAddError =>
+      'Could not add additional user. Try again later.';
+
+  @override
+  String additionalUserAddButton(Object limit, Object used) {
+    return 'Add additional user ($used/$limit)';
+  }
+
+  @override
+  String get additionalUserRemoveTitle => 'Remove this additional user';
+
+  @override
+  String get additionalUserRemoveDesc =>
+      'After removal, the additional user will automatically be downgraded to the free plan, and you can add another person.';
+
+  @override
+  String get additionalUserSelectTitle => 'Select additional users';
+
+  @override
+  String additionalUserSelectButton(Object limit, Object used) {
+    return 'Select users ($used/$limit)';
+  }
+
+  @override
+  String get storeAsDefault => 'Store as default';
 }

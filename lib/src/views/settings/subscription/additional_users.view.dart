@@ -1,38 +1,18 @@
 import 'dart:async';
-import 'dart:convert';
+import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pbserver.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
-import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/providers/purchases.provider.dart';
+import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
+import 'package:twonly/src/views/settings/subscription/select_additional_users.view.dart';
 import 'package:twonly/src/views/settings/subscription_custom/subscription.view.dart';
-
-Future<List<Response_AddAccountsInvite>?> loadAdditionalUserInvites() async {
-  final ballance = await apiService.getAdditionalUserInvites();
-  if (ballance != null) {
-    await updateUserdata((u) {
-      u.additionalUserInvites =
-          jsonEncode(ballance.map((x) => x.writeToJson()).toList());
-      return u;
-    });
-    return ballance;
-  }
-  if (gUser.lastPlanBallance != null) {
-    try {
-      final decoded = jsonDecode(gUser.additionalUserInvites!) as List<String>;
-      return decoded.map(Response_AddAccountsInvite.fromJson).toList();
-    } catch (e) {
-      Log.error('could not parse additional user json: $e');
-    }
-  }
-  return null;
-}
 
 class AdditionalUsersView extends StatefulWidget {
   const AdditionalUsersView({required this.ballance, super.key});
@@ -44,42 +24,94 @@ class AdditionalUsersView extends StatefulWidget {
 }
 
 class _AdditionalUsersViewState extends State<AdditionalUsersView> {
-  List<Response_AddAccountsInvite>? additionalInvites;
   Response_PlanBallance? ballance;
+
+  late int _unusedAdditionalAccounts;
+  int _planLimit = 0;
 
   @override
   void initState() {
     super.initState();
     ballance = widget.ballance;
+
+    final currentPlan = context.read<PurchasesProvider>().plan;
+    if (currentPlan == SubscriptionPlan.Pro ||
+        currentPlan == SubscriptionPlan.Tester) {
+      _planLimit = 1;
+    } else if (currentPlan == SubscriptionPlan.Family) {
+      _planLimit = 4;
+    }
+    _unusedAdditionalAccounts =
+        _planLimit - (ballance?.additionalAccounts.length ?? _planLimit);
     unawaited(initAsync(force: false));
   }
 
   Future<void> initAsync({required bool force}) async {
-    additionalInvites = await loadAdditionalUserInvites();
     if (force) {
       ballance = await loadPlanBalance();
+      _unusedAdditionalAccounts =
+          _planLimit - (ballance?.additionalAccounts.length ?? _planLimit);
     }
     setState(() {});
   }
 
+  Future<void> addAdditionalUser() async {
+    final selectedUserIds = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelectAdditionalUsers(
+          limit: _planLimit,
+          alreadySelected: ballance?.additionalAccounts
+                  .map((e) => e.userId.toInt())
+                  .toList() ??
+              [],
+        ),
+      ),
+    ) as List<int>?;
+    if (selectedUserIds == null) return;
+    for (final selectedUserId in selectedUserIds) {
+      final res = await apiService.addAdditionalUser(Int64(selectedUserId));
+      if (res.isError && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.lang.additionalUserAddError)),
+        );
+      }
+    }
+    await initAsync(force: true);
+  }
+
   @override
   Widget build(BuildContext context) {
-    var plusInvites = <Response_AddAccountsInvite>[];
-    if (additionalInvites != null) {
-      plusInvites =
-          additionalInvites!.where((x) => x.planId == 'Plus').toList();
-    }
     return Scaffold(
       appBar: AppBar(
         title: Text(context.lang.manageAdditionalUsers),
       ),
       body: ListView(
         children: [
+          if (_unusedAdditionalAccounts > 0)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: FilledButton(
+                  onPressed: addAdditionalUser,
+                  child: Text(
+                    context.lang.additionalUserAddButton(
+                      _planLimit,
+                      ballance?.additionalAccounts.length ?? 0,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (ballance != null && ballance!.additionalAccounts.isNotEmpty)
-            ListTile(
-              title: Text(
-                context.lang.additionalUsersList,
-                style: const TextStyle(fontSize: 13),
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: ListTile(
+                title: Text(
+                  context.lang.additionalUsersList,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13),
+                ),
               ),
             ),
           if (ballance != null)
@@ -91,22 +123,6 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
                 },
               ),
             ),
-          if (plusInvites.isNotEmpty)
-            Text(
-              context.lang.additionalUsersPlusTokens,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: GridView.count(
-              crossAxisCount: 2,
-              physics: const NeverScrollableScrollPhysics(),
-              childAspectRatio: 16 / 5,
-              shrinkWrap: true,
-              children: plusInvites.map(AdditionalUserInvite.new).toList(),
-            ),
-          ),
         ],
       ),
     );
@@ -178,8 +194,8 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
               onPressed: () async {
                 final remove = await showAlertDialog(
                   context,
-                  'Remove this additional user',
-                  'The additional user will automatically be downgraded to the free plan after removal and you will receive a new invitation code to give to another person.',
+                  context.lang.additionalUserRemoveTitle,
+                  context.lang.additionalUserRemoveDesc,
                 );
                 if (remove) {
                   final res = await apiService
@@ -203,43 +219,6 @@ class _AdditionalAccountState extends State<AdditionalAccount> {
               },
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class AdditionalUserInvite extends StatefulWidget {
-  const AdditionalUserInvite(this.invite, {super.key});
-  final Response_AddAccountsInvite invite;
-  @override
-  State<AdditionalUserInvite> createState() => _AdditionalUserInviteState();
-}
-
-class _AdditionalUserInviteState extends State<AdditionalUserInvite> {
-  Future<void> _copyVoucherId() async {
-    await Clipboard.setData(ClipboardData(text: widget.invite.inviteCode));
-    await HapticFeedback.heavyImpact();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${widget.invite.inviteCode} copied.')),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _copyVoucherId,
-      child: Card(
-        elevation: 3,
-        child: Center(
-          child: Text(
-            widget.invite.inviteCode.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ),
       ),
     );

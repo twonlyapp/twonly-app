@@ -60,18 +60,18 @@ class _AccountViewState extends State<AccountView> {
       ),
       body: ListView(
         children: [
-          ListTile(
-            title: const Text('Transfer account'),
-            subtitle: const Text('Coming soon'),
-            onTap: () async {
-              await showAlertDialog(
-                context,
-                'Coming soon',
-                'This feature is not yet implemented!',
-              );
-            },
-          ),
-          const Divider(),
+          // ListTile(
+          //   title: const Text('Transfer account'),
+          //   subtitle: const Text('Coming soon'),
+          //   onTap: () async {
+          //     await showAlertDialog(
+          //       context,
+          //       'Coming soon',
+          //       'This feature is not yet implemented!',
+          //     );
+          //   },
+          // ),
+          // const Divider(),
           Container(
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
@@ -99,15 +99,6 @@ class _AccountViewState extends State<AccountView> {
                         ),
                       )
                     : Text(context.lang.settingsAccountDeleteAccountNoBallance),
-            onLongPress: !kReleaseMode
-                ? () async {
-                    await deleteLocalUserData();
-                    await Restart.restartApp(
-                      notificationTitle: 'Account successfully deleted',
-                      notificationBody: 'Click here to open the app again',
-                    );
-                  }
-                : null,
             onTap: (formattedBallance == null)
                 ? null
                 : () async {

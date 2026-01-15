@@ -1,6 +1,7 @@
 import 'dart:collection' show HashSet;
 import 'dart:convert';
 import 'dart:io';
+import 'package:clock/clock.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
@@ -81,7 +82,7 @@ class _DatabaseMigrationViewState extends State<DatabaseMigrationView> {
             lastMessageSend: Value(oldContact.lastMessageSend),
             flameCounter: Value(oldContact.flameCounter),
             maxFlameCounter: Value(oldContact.flameCounter),
-            maxFlameCounterFrom: Value(DateTime.now()),
+            maxFlameCounterFrom: Value(clock.now()),
           ),
         );
       } catch (e) {

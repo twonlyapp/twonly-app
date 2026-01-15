@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:background_downloader/background_downloader.dart';
+import 'package:clock/clock.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
@@ -18,6 +19,7 @@ import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -101,8 +103,7 @@ Future<void> insertMediaFileInMessagesTable(
         type: const Value(MessageType.media),
       ),
     );
-    await twonlyDB.groupsDao
-        .increaseLastMessageExchange(groupId, DateTime.now());
+    await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
     if (message != null) {
       // de-archive contact when sending a new message
       await twonlyDB.groupsDao.updateGroup(
@@ -207,11 +208,7 @@ Future<void> _createUploadRequest(MediaFileService media) async {
         await twonlyDB.groupsDao.getGroupNonLeftMembers(message.groupId);
 
     if (media.mediaFile.reuploadRequestedBy == null) {
-      await twonlyDB.groupsDao.incFlameCounter(
-        message.groupId,
-        false,
-        message.createdAt,
-      );
+      await incFlameCounter(message.groupId, false, message.createdAt);
     }
 
     for (final groupMember in groupMembers) {

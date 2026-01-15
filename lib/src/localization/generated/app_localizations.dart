@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_sv.dart';
 
 // ignore_for_file: type=lint
 
@@ -95,7 +96,8 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('de'),
-    Locale('en')
+    Locale('en'),
+    Locale('sv')
   ];
 
   /// No description provided for @registerTitle.
@@ -1400,24 +1402,6 @@ abstract class AppLocalizations {
   /// **'✓ Support twonly'**
   String get familyFeature4;
 
-  /// No description provided for @redeemUserInviteCode.
-  ///
-  /// In en, this message translates to:
-  /// **'Or redeem a twonly-Code.'**
-  String get redeemUserInviteCode;
-
-  /// No description provided for @redeemUserInviteCodeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Redeem twonly-Code'**
-  String get redeemUserInviteCodeTitle;
-
-  /// No description provided for @redeemUserInviteCodeSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Your plan has been successfully adjusted.'**
-  String get redeemUserInviteCodeSuccess;
-
   /// No description provided for @freeFeature1.
   ///
   /// In en, this message translates to:
@@ -1445,7 +1429,7 @@ abstract class AppLocalizations {
   /// No description provided for @manageSubscription.
   ///
   /// In en, this message translates to:
-  /// **'Manage your subscription'**
+  /// **'Manage subscription'**
   String get manageSubscription;
 
   /// No description provided for @nextPayment.
@@ -2105,7 +2089,7 @@ abstract class AppLocalizations {
   /// No description provided for @uploadLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'The upload limit has\been reached. Upgrade to Pro\nor wait until tomorrow.'**
+  /// **'The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.'**
   String get uploadLimitReached;
 
   /// No description provided for @retransmissionRequested.
@@ -2887,6 +2871,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If you enable this option, all images you send will be saved as long as they were sent with an infinite countdown and not in twonly mode.'**
   String get autoStoreAllSendUnlimitedMediaFilesSubtitle;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of service'**
+  String get termsOfService;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @additionalUserAddError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add additional user. Try again later.'**
+  String get additionalUserAddError;
+
+  /// No description provided for @additionalUserAddButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add additional user ({used}/{limit})'**
+  String additionalUserAddButton(Object limit, Object used);
+
+  /// No description provided for @additionalUserRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this additional user'**
+  String get additionalUserRemoveTitle;
+
+  /// No description provided for @additionalUserRemoveDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'After removal, the additional user will automatically be downgraded to the free plan, and you can add another person.'**
+  String get additionalUserRemoveDesc;
+
+  /// No description provided for @additionalUserSelectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select additional users'**
+  String get additionalUserSelectTitle;
+
+  /// No description provided for @additionalUserSelectButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Select users ({used}/{limit})'**
+  String additionalUserSelectButton(Object limit, Object used);
+
+  /// No description provided for @storeAsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Store as default'**
+  String get storeAsDefault;
 }
 
 class _AppLocalizationsDelegate
@@ -2900,7 +2938,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['de', 'en'].contains(locale.languageCode);
+      <String>['de', 'en', 'sv'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2913,6 +2951,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
+    case 'sv':
+      return AppLocalizationsSv();
   }
 
   throw FlutterError(

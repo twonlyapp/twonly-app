@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
@@ -26,7 +27,7 @@ Future<void> handleTextMessage(
         textMessage.hasQuoteMessageId() ? textMessage.quoteMessageId : null,
       ),
       createdAt: Value(fromTimestamp(textMessage.timestamp)),
-      ackByServer: Value(DateTime.now()),
+      ackByServer: Value(clock.now()),
     ),
   );
   await twonlyDB.groupsDao.increaseLastMessageExchange(

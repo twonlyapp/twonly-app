@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.0.82+82
+version: 0.0.84+84
 
 environment:
   sdk: ^3.6.0
@@ -25,6 +25,7 @@ dependencies:
   web_socket_channel: ^3.0.1
   convert: ^3.1.2
   crypto: ^3.0.7
+  clock: ^1.1.2
 
   
   # Trusted publisher flutter.dev 

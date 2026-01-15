@@ -3,6 +3,7 @@ import 'package:hashlib/random.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -278,89 +279,6 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     return query.map((row) => row.readTable(groups)).getSingleOrNull();
   }
 
-  Future<void> incFlameCounter(
-    String groupId,
-    bool received,
-    DateTime timestamp,
-  ) async {
-    final group = await (select(groups)
-          ..where((t) => t.groupId.equals(groupId)))
-        .getSingle();
-
-    final totalMediaCounter = group.totalMediaCounter + 1;
-    var flameCounter = group.flameCounter;
-    var maxFlameCounter = group.maxFlameCounter;
-    var maxFlameCounterFrom = group.maxFlameCounterFrom;
-
-    if (group.lastMessageReceived != null && group.lastMessageSend != null) {
-      final now = DateTime.now();
-      final startOfToday = DateTime(now.year, now.month, now.day);
-      final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
-      if (group.lastMessageSend!.isBefore(twoDaysAgo) ||
-          group.lastMessageReceived!.isBefore(twoDaysAgo)) {
-        flameCounter = 0;
-      }
-    }
-
-    var lastMessageSend = const Value<DateTime?>.absent();
-    var lastMessageReceived = const Value<DateTime?>.absent();
-    var lastFlameCounterChange = const Value<DateTime?>.absent();
-
-    if (group.lastFlameCounterChange != null) {
-      final now = DateTime.now();
-      final startOfToday = DateTime(now.year, now.month, now.day);
-
-      if (group.lastFlameCounterChange!.isBefore(startOfToday)) {
-        // last flame update was yesterday. check if it can be updated.
-        var updateFlame = false;
-        if (received) {
-          if (group.lastMessageSend != null &&
-              group.lastMessageSend!.isAfter(startOfToday)) {
-            // today a message was already send -> update flame
-            updateFlame = true;
-          }
-        } else if (group.lastMessageReceived != null &&
-            group.lastMessageReceived!.isAfter(startOfToday)) {
-          // today a message was already received -> update flame
-          updateFlame = true;
-        }
-        if (updateFlame) {
-          flameCounter += 1;
-          lastFlameCounterChange = Value(timestamp);
-          // Overwrite max flame counter either the current is bigger or the th max flame counter is older then 4 days
-          if (flameCounter >= maxFlameCounter ||
-              maxFlameCounterFrom == null ||
-              maxFlameCounterFrom
-                  .isBefore(DateTime.now().subtract(const Duration(days: 5)))) {
-            maxFlameCounter = flameCounter;
-            maxFlameCounterFrom = DateTime.now();
-          }
-        }
-      }
-    } else {
-      // There where no message until no...
-      lastFlameCounterChange = Value(timestamp);
-    }
-
-    if (received) {
-      lastMessageReceived = Value(timestamp);
-    } else {
-      lastMessageSend = Value(timestamp);
-    }
-
-    await (update(groups)..where((t) => t.groupId.equals(groupId))).write(
-      GroupsCompanion(
-        totalMediaCounter: Value(totalMediaCounter),
-        lastFlameCounterChange: lastFlameCounterChange,
-        lastMessageReceived: lastMessageReceived,
-        lastMessageSend: lastMessageSend,
-        flameCounter: Value(flameCounter),
-        maxFlameCounter: Value(maxFlameCounter),
-        maxFlameCounterFrom: Value(maxFlameCounterFrom),
-      ),
-    );
-  }
-
   Stream<int> watchSumTotalMediaCounter() {
     final query = selectOnly(groups)
       ..addColumns([groups.totalMediaCounter.sum()]);
@@ -381,25 +299,5 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
                 (t.lastMessageExchange.isSmallerThanValue(newLastMessage)),
           ))
         .write(GroupsCompanion(lastMessageExchange: Value(newLastMessage)));
-  }
-}
-
-int getFlameCounterFromGroup(Group? group) {
-  if (group == null) return 0;
-  if (group.lastMessageSend == null ||
-      group.lastMessageReceived == null ||
-      group.lastFlameCounterChange == null) {
-    return 0;
-  }
-  final now = DateTime.now();
-  final startOfToday = DateTime(now.year, now.month, now.day);
-  final twoDaysAgo = startOfToday.subtract(const Duration(days: 2));
-  final oneDayAgo = startOfToday.subtract(const Duration(days: 1));
-  if (group.lastMessageSend!.isAfter(twoDaysAgo) &&
-          group.lastMessageReceived!.isAfter(twoDaysAgo) ||
-      group.lastFlameCounterChange!.isAfter(oneDayAgo)) {
-    return group.flameCounter + 1;
-  } else {
-    return 0;
   }
 }

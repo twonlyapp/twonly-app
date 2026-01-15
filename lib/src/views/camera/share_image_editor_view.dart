@@ -2,8 +2,8 @@
 
 import 'dart:async';
 import 'dart:collection';
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -24,6 +24,7 @@ import 'package:twonly/src/views/camera/image_editor/data/image_item.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/layers_viewer.dart';
 import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
+import 'package:twonly/src/views/camera/share_image_components/select_show_time.dart';
 import 'package:twonly/src/views/camera/share_image_view.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
@@ -137,14 +138,16 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     setState(() {});
   }
 
-  Future<void> _setMaxShowTime(int? maxShowTime) async {
+  Future<void> _setMaxShowTime(int? maxShowTime, bool storeAsDefault) async {
     await mediaService.setDisplayLimit(maxShowTime);
     if (!mounted) return;
     setState(() {});
-    await updateUserdata((user) {
-      user.defaultShowTime = maxShowTime;
-      return user;
-    });
+    if (storeAsDefault) {
+      await updateUserdata((user) {
+        user.defaultShowTime = maxShowTime;
+        return user;
+      });
+    }
   }
 
   Future<void> _setImageDisplayTime() async {
@@ -180,36 +183,16 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         initialItem = options.length - 1;
       }
     }
-
-    await showCupertinoModalPopup<void>(
+    await showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) => Container(
-        height: 350,
-        padding: const EdgeInsets.only(top: 6),
-        margin:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        color: CupertinoColors.systemBackground.resolveFrom(context),
-        child: SafeArea(
-          top: false,
-          child: CupertinoPicker(
-            magnification: 1.22,
-            squeeze: 1.2,
-            useMagnifier: true,
-            itemExtent: 32,
-            scrollController: FixedExtentScrollController(
-              initialItem: initialItem,
-            ),
-            onSelectedItemChanged: (int selectedItem) {
-              _setMaxShowTime(options[selectedItem]);
-            },
-            children: options.map((e) {
-              return Center(
-                child: Text(e == null ? '∞' : '${e ~/ 1000}s'),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
+      backgroundColor: Colors.black,
+      builder: (BuildContext context) {
+        return SelectShowTime(
+          initialItem: initialItem,
+          setMaxShowTime: _setMaxShowTime,
+          options: options,
+        );
+      },
     );
   }
 
@@ -509,7 +492,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
         MediaFilesCompanion(
           type: Value(mediaService.mediaFile.type),
-          createdAt: Value(DateTime.now()),
+          createdAt: Value(clock.now()),
           stored: const Value(true),
         ),
       );
