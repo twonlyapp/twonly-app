@@ -1601,8 +1601,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get privacyPolicy => 'Datenschutzerklärung';
 
   @override
-  String get additionalUserAddError =>
-      'Es konnte kein zusätzlicher Nutzer hinzugefügt werden. Versuche es später noch einmal.';
+  String additionalUserAddError(Object username) {
+    return '$username konnte nicht hinzugefügt werden, bitte versuche es später noch einmal.';
+  }
+
+  @override
+  String additionalUserAddErrorNotInFreePlan(Object username) {
+    return '$username hat bereits einen bezahlten Tarif und konnte daher nicht hinzugefügt werden.';
+  }
 
   @override
   String additionalUserAddButton(Object limit, Object used) {

@@ -2887,8 +2887,14 @@ abstract class AppLocalizations {
   /// No description provided for @additionalUserAddError.
   ///
   /// In en, this message translates to:
-  /// **'Could not add additional user. Try again later.'**
-  String get additionalUserAddError;
+  /// **'{username} could not be added, please try again later.'**
+  String additionalUserAddError(Object username);
+
+  /// No description provided for @additionalUserAddErrorNotInFreePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} is already on a paid plan and therefore could not be added.'**
+  String additionalUserAddErrorNotInFreePlan(Object username);
 
   /// No description provided for @additionalUserAddButton.
   ///
