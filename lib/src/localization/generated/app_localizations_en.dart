@@ -233,6 +233,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contextMenuUnpin => 'Unpin';
 
   @override
+  String get contextMenuViewAgain => 'View again';
+
+  @override
   String get mediaViewerAuthReason => 'Please authenticate to see this twonly!';
 
   @override
@@ -1630,4 +1633,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupSizeLimitError(Object size) {
     return 'Currently, group size is limited to $size people!';
   }
+
+  @override
+  String get authRequestReopenImage =>
+      'You must authenticate to reopen the image.';
 }

@@ -12,12 +12,14 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     as pb;
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
 import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
 import 'package:twonly/src/views/chats/message_info.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/context_menu.component.dart';
+import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
 
 class MessageContextMenu extends StatelessWidget {
   const MessageContextMenu({
@@ -26,16 +28,55 @@ class MessageContextMenu extends StatelessWidget {
     required this.child,
     required this.onResponseTriggered,
     required this.galleryItems,
+    required this.mediaFileService,
     super.key,
   });
   final Group group;
   final Widget child;
   final Message message;
   final List<MemoryItem> galleryItems;
+  final MediaFileService? mediaFileService;
   final VoidCallback onResponseTriggered;
+
+  Future<void> reopenMediaFile(BuildContext context) async {
+    final isAuth = await authenticateUser(
+      context.lang.authRequestReopenImage,
+      force: false,
+    );
+
+    if (isAuth && context.mounted && mediaFileService != null) {
+      final galleryItems = [
+        MemoryItem(mediaService: mediaFileService!, messages: []),
+      ];
+
+      await Navigator.push(
+        context,
+        PageRouteBuilder(
+          opaque: false,
+          pageBuilder: (context, a1, a2) => MemoriesPhotoSliderView(
+            galleryItems: galleryItems,
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    var canBeOpenedAgain = false;
+    // in case this is a media send from this user...
+    if (mediaFileService != null && message.senderId == null) {
+      // and the media was send with unlimited display limit time and without auth required...
+      if (!mediaFileService!.mediaFile.requiresAuthentication &&
+          mediaFileService!.mediaFile.displayLimitInMilliseconds == null) {
+        // and the temp media file still exists
+        if (mediaFileService!.tempPath.existsSync()) {
+          // the media file can be opened again...
+          canBeOpenedAgain = true;
+        }
+      }
+    }
+
     return ContextMenu(
       items: [
         if (!message.isDeletedFromSender)
@@ -69,6 +110,12 @@ class MessageContextMenu extends StatelessWidget {
               );
             },
             icon: FontAwesomeIcons.faceLaugh,
+          ),
+        if (canBeOpenedAgain)
+          ContextMenuItem(
+            title: context.lang.contextMenuViewAgain,
+            onTap: () => reopenMediaFile(context),
+            icon: FontAwesomeIcons.clockRotateLeft,
           ),
         if (!message.isDeletedFromSender)
           ContextMenuItem(

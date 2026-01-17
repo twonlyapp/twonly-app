@@ -59,6 +59,7 @@ class MediaFileService {
           } else if (service.mediaFile.requiresAuthentication ||
               service.mediaFile.displayLimitInMilliseconds != null) {
             // Message was opened by all persons, and they can not reopen the image.
+            // This branch will prevent to reach the next if condition, with would otherwise store the image for two days
             // delete = true; // do not overwrite a previous delete = false
             // this is just to make it easier to understand :)
           } else if (message.openedAt!

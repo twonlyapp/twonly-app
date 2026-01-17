@@ -8,6 +8,7 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/save_to_gallery.dart';
 import 'package:twonly/src/views/camera/share_image_editor_view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
@@ -92,8 +93,36 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
     }
   }
 
+  Future<void> shareMediaFile() async {
+    final orgMediaService = widget.galleryItems[currentIndex].mediaService;
+
+    final newMediaService = await initializeMediaUpload(
+      orgMediaService.mediaFile.type,
+      gUser.defaultShowTime,
+    );
+    if (newMediaService == null) {
+      Log.error('Could not create new mediaFIle');
+      return;
+    }
+
+    orgMediaService.storedPath.copySync(newMediaService.originalPath.path);
+
+    if (!mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShareImageEditorView(
+          mediaFileService: newMediaService,
+          sharedFromGallery: true,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final orgMediaService = widget.galleryItems[currentIndex].mediaService;
     return Dismissible(
       key: key,
       direction: DismissDirection.vertical,
@@ -117,36 +146,18 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      if (!orgMediaService.storedPath.existsSync())
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: SaveToGalleryButton(
+                            isLoading: false,
+                            displayButtonLabel: true,
+                            mediaService: orgMediaService,
+                          ),
+                        ),
                       FilledButton.icon(
                         icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                        onPressed: () async {
-                          final orgMediaService =
-                              widget.galleryItems[currentIndex].mediaService;
-
-                          final newMediaService = await initializeMediaUpload(
-                            orgMediaService.mediaFile.type,
-                            gUser.defaultShowTime,
-                          );
-                          if (newMediaService == null) {
-                            Log.error('Could not create new mediaFIle');
-                            return;
-                          }
-
-                          orgMediaService.storedPath
-                              .copySync(newMediaService.originalPath.path);
-
-                          if (!context.mounted) return;
-
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ShareImageEditorView(
-                                mediaFileService: newMediaService,
-                                sharedFromGallery: true,
-                              ),
-                            ),
-                          );
-                        },
+                        onPressed: shareMediaFile,
                         style: ButtonStyle(
                           padding: WidgetStateProperty.all<EdgeInsets>(
                             const EdgeInsets.symmetric(
@@ -217,10 +228,16 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
 
   PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
     final item = widget.galleryItems[index];
+
+    var filePath = item.mediaService.storedPath;
+    if (!filePath.existsSync()) {
+      filePath = item.mediaService.tempPath;
+    }
+
     return item.mediaService.mediaFile.type == MediaType.video
         ? PhotoViewGalleryPageOptions.customChild(
             child: VideoPlayerWrapper(
-              videoPath: item.mediaService.storedPath,
+              videoPath: filePath,
             ),
             // childSize: const Size(300, 300),
             initialScale: PhotoViewComputedScale.contained,
@@ -231,7 +248,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
             ),
           )
         : PhotoViewGalleryPageOptions(
-            imageProvider: FileImage(item.mediaService.storedPath),
+            imageProvider: FileImage(filePath),
             initialScale: PhotoViewComputedScale.contained,
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 4.1,

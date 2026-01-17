@@ -44,6 +44,7 @@ class MainCameraController {
   Map<int, ScannedVerifiedContact> contactsVerified = {};
   Map<int, ScannedNewProfile> scannedNewProfiles = {};
   String? scannedUrl;
+  GlobalKey zoomButtonKey = GlobalKey();
 
   Future<void> closeCamera() async {
     contactsVerified = {};
@@ -76,6 +77,7 @@ class MainCameraController {
         CameraLensDirection.back) {
       await cameraController?.startImageStream(_processCameraImage);
     }
+    zoomButtonKey = GlobalKey();
     setState();
     return cameraController;
   }
@@ -89,10 +91,11 @@ class MainCameraController {
     try {
       await cameraController!.stopImageStream();
     } catch (e) {
-      Log.warn(e);
+      // Log.warn(e);
     }
-    await cameraController!.dispose();
+    final tmp = cameraController;
     cameraController = null;
+    await tmp!.dispose();
     await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
   }
 

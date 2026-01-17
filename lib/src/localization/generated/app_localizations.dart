@@ -508,6 +508,12 @@ abstract class AppLocalizations {
   /// **'Unpin'**
   String get contextMenuUnpin;
 
+  /// No description provided for @contextMenuViewAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'View again'**
+  String get contextMenuViewAgain;
+
   /// No description provided for @mediaViewerAuthReason.
   ///
   /// In en, this message translates to:
@@ -2943,6 +2949,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Currently, group size is limited to {size} people!'**
   String groupSizeLimitError(Object size);
+
+  /// No description provided for @authRequestReopenImage.
+  ///
+  /// In en, this message translates to:
+  /// **'You must authenticate to reopen the image.'**
+  String get authRequestReopenImage;
 }
 
 class _AppLocalizationsDelegate

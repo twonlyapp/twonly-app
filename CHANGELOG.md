@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.86
+
+- Allows to reopen send images (if send without time limit or enabled auth) 
+- Added support for front camera zoom
+- Several bug fixes
+
 ## 0.0.83
 
 - Improved view of the diagnostic log
