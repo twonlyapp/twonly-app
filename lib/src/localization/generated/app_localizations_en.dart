@@ -512,7 +512,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactRemoveBody =>
-      'Remove the user and permanently delete the chat and all associated media files. This will also delete YOUR ACCOUNT FROM YOUR CONTACT\'S PHONE.';
+      'Permanently remove the user. If the user tries to send you a new message, you will have to accept the user again first.';
 
   @override
   String get undo => 'Undo';
@@ -1615,4 +1615,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storeAsDefault => 'Store as default';
+
+  @override
+  String get deleteUserErrorMessage =>
+      'You can only delete the contact once the direct chat has been deleted and the contact is no longer a member of a group.';
 }

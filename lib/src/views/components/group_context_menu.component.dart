@@ -83,13 +83,16 @@ class GroupContextMenu extends StatelessWidget {
             );
             if (ok) {
               await twonlyDB.messagesDao.deleteMessagesByGroupId(group.groupId);
-              // await twonlyDB.groupsDao.deleteGroup(group.groupId);
-              await twonlyDB.groupsDao.updateGroup(
-                group.groupId,
-                const GroupsCompanion(
-                  deletedContent: Value(true),
-                ),
-              );
+              if (group.isDirectChat) {
+                await twonlyDB.groupsDao.deleteGroup(group.groupId);
+              } else {
+                await twonlyDB.groupsDao.updateGroup(
+                  group.groupId,
+                  const GroupsCompanion(
+                    deletedContent: Value(true),
+                  ),
+                );
+              }
             }
           },
         ),

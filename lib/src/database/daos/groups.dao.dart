@@ -194,6 +194,14 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
         .watch();
   }
 
+  Stream<List<GroupMember>> watchContactGroupMember(int contactId) {
+    return (select(groupMembers)
+          ..where(
+            (g) => g.contactId.equals(contactId),
+          ))
+        .watch();
+  }
+
   Stream<Group?> watchGroup(String groupId) {
     return (select(groups)..where((t) => t.groupId.equals(groupId)))
         .watchSingleOrNull();

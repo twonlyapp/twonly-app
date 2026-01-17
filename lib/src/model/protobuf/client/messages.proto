@@ -51,6 +51,17 @@ message EncryptedContent {
     optional GroupJoin groupJoin  = 15;
     optional GroupUpdate groupUpdate  = 16;
     optional ResendGroupPublicKey resendGroupPublicKey = 17;
+    optional ErrorMessages error_messages = 18;
+
+
+    message ErrorMessages {
+        enum Type {
+          ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD = 0;
+          UNKNOWN_MESSAGE_TYPE = 2;
+        }
+        Type type = 1;
+        string related_receipt_id = 2;
+    }
 
 
     message GroupCreate {

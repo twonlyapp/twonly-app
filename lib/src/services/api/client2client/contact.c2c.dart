@@ -13,6 +13,43 @@ import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
+Future<bool> handleNewContactRequest(int fromUserId) async {
+  final contact = await twonlyDB.contactsDao
+      .getContactByUserId(fromUserId)
+      .getSingleOrNull();
+  if (contact != null) {
+    if (contact.accepted) {
+      // contact was already accepted, so just accept the request in the background.
+      await sendCipherText(
+        contact.userId,
+        EncryptedContent(
+          contactRequest: EncryptedContent_ContactRequest(
+            type: EncryptedContent_ContactRequest_Type.ACCEPT,
+          ),
+        ),
+      );
+      return true;
+    }
+  }
+  // Request the username by the server so an attacker can not
+  // forge the displayed username in the contact request
+  final user = await apiService.getUserById(fromUserId);
+  if (user == null) {
+    return false;
+  }
+  await twonlyDB.contactsDao.insertOnConflictUpdate(
+    ContactsCompanion(
+      username: Value(utf8.decode(user.username)),
+      userId: Value(fromUserId),
+      requested: const Value(true),
+      deletedByUser: const Value(false),
+    ),
+  );
+  await setupNotificationWithUsers();
+
+  return true;
+}
+
 Future<bool> handleContactRequest(
   int fromUserId,
   EncryptedContent_ContactRequest contactRequest,
@@ -20,38 +57,7 @@ Future<bool> handleContactRequest(
   switch (contactRequest.type) {
     case EncryptedContent_ContactRequest_Type.REQUEST:
       Log.info('Got a contact request from $fromUserId');
-      final contact = await twonlyDB.contactsDao
-          .getContactByUserId(fromUserId)
-          .getSingleOrNull();
-      if (contact != null) {
-        if (contact.accepted) {
-          // contact was already accepted, so just accept the request in the background.
-          await sendCipherText(
-            contact.userId,
-            EncryptedContent(
-              contactRequest: EncryptedContent_ContactRequest(
-                type: EncryptedContent_ContactRequest_Type.ACCEPT,
-              ),
-            ),
-          );
-          return true;
-        }
-      }
-      // Request the username by the server so an attacker can not
-      // forge the displayed username in the contact request
-      final user = await apiService.getUserById(fromUserId);
-      if (user == null) {
-        return false;
-      }
-      await twonlyDB.contactsDao.insertOnConflictUpdate(
-        ContactsCompanion(
-          username: Value(utf8.decode(user.username)),
-          userId: Value(fromUserId),
-          requested: const Value(true),
-          deletedByUser: const Value(false),
-        ),
-      );
-      await setupNotificationWithUsers();
+      return handleNewContactRequest(fromUserId);
     case EncryptedContent_ContactRequest_Type.ACCEPT:
       Log.info('Got a contact accept from $fromUserId');
       await twonlyDB.contactsDao.updateContact(

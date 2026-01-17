@@ -517,7 +517,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactRemoveBody =>
-      'Entferne den Benutzer und lösche den Chat sowie alle zugehörigen Mediendateien dauerhaft. Dadurch wird auch DEIN KONTO VON DEM TELEFON DEINES KONTAKTS gelöscht.';
+      'Den Benutzer dauerhaft entfernen. Wenn der Benutzer versucht, dir eine neue Nachricht zu senden, musst du den Benutzer erst wieder akzeptieren.';
 
   @override
   String get undo => 'Rückgängig';
@@ -1627,4 +1627,8 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get storeAsDefault => 'Als Standard speichern';
+
+  @override
+  String get deleteUserErrorMessage =>
+      'Du kannst den Kontakt erst löschen, wenn der direkte Chat gelöscht wurde und der Kontakt nicht mehr Mitglied einer Gruppe ist.';
 }

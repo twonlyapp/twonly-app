@@ -65,6 +65,32 @@ class PlaintextContent_DecryptionErrorMessage_Type extends $pb.ProtobufEnum {
   const PlaintextContent_DecryptionErrorMessage_Type._(super.value, super.name);
 }
 
+class EncryptedContent_ErrorMessages_Type extends $pb.ProtobufEnum {
+  static const EncryptedContent_ErrorMessages_Type
+      ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD =
+      EncryptedContent_ErrorMessages_Type._(
+          0,
+          _omitEnumNames
+              ? ''
+              : 'ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD');
+  static const EncryptedContent_ErrorMessages_Type UNKNOWN_MESSAGE_TYPE =
+      EncryptedContent_ErrorMessages_Type._(
+          2, _omitEnumNames ? '' : 'UNKNOWN_MESSAGE_TYPE');
+
+  static const $core.List<EncryptedContent_ErrorMessages_Type> values =
+      <EncryptedContent_ErrorMessages_Type>[
+    ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD,
+    UNKNOWN_MESSAGE_TYPE,
+  ];
+
+  static final $core.Map<$core.int, EncryptedContent_ErrorMessages_Type>
+      _byValue = $pb.ProtobufEnum.initByValue(values);
+  static EncryptedContent_ErrorMessages_Type? valueOf($core.int value) =>
+      _byValue[value];
+
+  const EncryptedContent_ErrorMessages_Type._(super.value, super.name);
+}
+
 class EncryptedContent_MessageUpdate_Type extends $pb.ProtobufEnum {
   static const EncryptedContent_MessageUpdate_Type DELETE =
       EncryptedContent_MessageUpdate_Type._(0, _omitEnumNames ? '' : 'DELETE');

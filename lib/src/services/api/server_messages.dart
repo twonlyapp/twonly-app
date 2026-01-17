@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
@@ -15,6 +14,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/client2client/contact.c2c.dart';
+import 'package:twonly/src/services/api/client2client/errors.c2c.dart';
 import 'package:twonly/src/services/api/client2client/groups.c2c.dart';
 import 'package:twonly/src/services/api/client2client/media.c2c.dart';
 import 'package:twonly/src/services/api/client2client/messages.c2c.dart';
@@ -23,6 +23,7 @@ import 'package:twonly/src/services/api/client2client/pushkeys.c2c.dart';
 import 'package:twonly/src/services/api/client2client/reaction.c2c.dart';
 import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -117,47 +118,60 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
     case Message_Type.CIPHERTEXT:
     case Message_Type.PREKEY_BUNDLE:
       if (message.hasEncryptedContent()) {
+        Value<String>? receiptIdDB;
+
         final encryptedContentRaw =
             Uint8List.fromList(message.encryptedContent);
 
-        if (await twonlyDB.contactsDao
-                .getContactByUserId(fromUserId)
-                .getSingleOrNull() ==
-            null) {
-          final user = await apiService.getUserById(fromUserId);
+        Message? response;
 
-          /// In case the user does not exists, just create a dummy user which was deleted by the user, so the message
-          /// can be inserted into the receipts database
-          await twonlyDB.contactsDao.insertContact(
-            ContactsCompanion(
-              userId: Value(fromUserId),
-              deletedByUser: const Value(true),
-              username: Value(
-                user == null ? '[Unknown]' : utf8.decode(user.username),
+        final user = await twonlyDB.contactsDao
+            .getContactByUserId(fromUserId)
+            .getSingleOrNull();
+
+        if (user == null) {
+          if (!await addNewHiddenContact(fromUserId)) {
+            // in case the user could not be added, send a retry error message as this error should only happen in case
+            // it was not possible to load the user from the server
+            response = Message(
+              receiptId: receiptId,
+              type: Message_Type.PLAINTEXT_CONTENT,
+              plaintextContent: PlaintextContent(
+                retryControlError: PlaintextContent_RetryErrorMessage(),
               ),
-            ),
-          );
+            );
+          }
         }
 
-        final responsePlaintextContent = await handleEncryptedMessage(
-          fromUserId,
-          encryptedContentRaw,
-          message.type,
-        );
-        Message response;
-        if (responsePlaintextContent != null) {
-          response = Message()
-            ..receiptId = receiptId
-            ..type = Message_Type.PLAINTEXT_CONTENT
-            ..plaintextContent = responsePlaintextContent;
-        } else {
-          response = Message()..type = Message_Type.SENDER_DELIVERY_RECEIPT;
+        if (response == null) {
+          final (encryptedContent, plainTextContent) =
+              await handleEncryptedMessage(
+            fromUserId,
+            encryptedContentRaw,
+            message.type,
+            receiptId,
+          );
+          if (plainTextContent != null) {
+            response = Message(
+              receiptId: receiptId,
+              type: Message_Type.PLAINTEXT_CONTENT,
+              plaintextContent: plainTextContent,
+            );
+          } else if (encryptedContent != null) {
+            response = Message(
+              type: Message_Type.CIPHERTEXT,
+              encryptedContent: encryptedContent.writeToBuffer(),
+            );
+            receiptIdDB = const Value.absent();
+          }
         }
+
+        response ??= Message(type: Message_Type.SENDER_DELIVERY_RECEIPT);
 
         try {
           await twonlyDB.receiptsDao.insertReceipt(
             ReceiptsCompanion(
-              receiptId: Value(receiptId),
+              receiptId: receiptIdDB ?? Value(receiptId),
               contactId: Value(fromUserId),
               message: Value(response.writeToBuffer()),
               contactWillSendsReceipt: const Value(false),
@@ -173,10 +187,11 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
   }
 }
 
-Future<PlaintextContent?> handleEncryptedMessage(
+Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
   int fromUserId,
   Uint8List encryptedContentRaw,
   Message_Type messageType,
+  String receiptId,
 ) async {
   final (content, decryptionErrorType) = await signalDecryptMessage(
     fromUserId,
@@ -185,9 +200,12 @@ Future<PlaintextContent?> handleEncryptedMessage(
   );
 
   if (content == null) {
-    return PlaintextContent()
-      ..decryptionErrorMessage = (PlaintextContent_DecryptionErrorMessage()
-        ..type = decryptionErrorType!);
+    return (
+      null,
+      PlaintextContent()
+        ..decryptionErrorMessage = (PlaintextContent_DecryptionErrorMessage()
+          ..type = decryptionErrorType!)
+    );
   }
 
   // We got a valid message fromUserId, so mark all messages which where
@@ -203,10 +221,21 @@ Future<PlaintextContent?> handleEncryptedMessage(
 
   if (content.hasContactRequest()) {
     if (!await handleContactRequest(fromUserId, content.contactRequest)) {
-      return PlaintextContent()
-        ..retryControlError = PlaintextContent_RetryErrorMessage();
+      return (
+        null,
+        PlaintextContent()
+          ..retryControlError = PlaintextContent_RetryErrorMessage()
+      );
     }
-    return null;
+    return (null, null);
+  }
+
+  if (content.hasErrorMessages()) {
+    await handleErrorMessage(
+      fromUserId,
+      content.errorMessages,
+    );
+    return (null, null);
   }
 
   if (content.hasContactUpdate()) {
@@ -215,17 +244,17 @@ Future<PlaintextContent?> handleEncryptedMessage(
       content.contactUpdate,
       senderProfileCounter,
     );
-    return null;
+    return (null, null);
   }
 
   if (content.hasFlameSync()) {
     await handleFlameSync(fromUserId, content.flameSync);
-    return null;
+    return (null, null);
   }
 
   if (content.hasPushKeys()) {
     await handlePushKey(fromUserId, content.pushKeys);
-    return null;
+    return (null, null);
   }
 
   if (content.hasMessageUpdate()) {
@@ -233,7 +262,7 @@ Future<PlaintextContent?> handleEncryptedMessage(
       fromUserId,
       content.messageUpdate,
     );
-    return null;
+    return (null, null);
   }
 
   if (content.hasMediaUpdate()) {
@@ -241,12 +270,12 @@ Future<PlaintextContent?> handleEncryptedMessage(
       fromUserId,
       content.mediaUpdate,
     );
-    return null;
+    return (null, null);
   }
 
   if (!content.hasGroupId()) {
     Log.error('Messages should have a groupId $fromUserId.');
-    return null;
+    return (null, null);
   }
 
   if (content.hasGroupCreate()) {
@@ -255,7 +284,7 @@ Future<PlaintextContent?> handleEncryptedMessage(
       content.groupId,
       content.groupCreate,
     );
-    return null;
+    return (null, null);
   }
 
   /// Verify that the user is (still) in that group...
@@ -265,10 +294,20 @@ Future<PlaintextContent?> handleEncryptedMessage(
           .getContactByUserId(fromUserId)
           .getSingleOrNull();
       if (contact == null || contact.deletedByUser) {
+        await handleNewContactRequest(fromUserId);
         Log.error(
           'User tries to send message to direct chat while the user does not exists !',
         );
-        return null;
+        return (
+          EncryptedContent(
+            errorMessages: EncryptedContent_ErrorMessages(
+              type: EncryptedContent_ErrorMessages_Type
+                  .ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD,
+              relatedReceiptId: receiptId,
+            ),
+          ),
+          null
+        );
       }
       Log.info(
         'Creating new DirectChat between two users',
@@ -285,12 +324,15 @@ Future<PlaintextContent?> handleEncryptedMessage(
           'Got group join message, but group does not exists yet, retry later. As probably the GroupCreate was not yet received.',
         );
         // In case the group join was received before the GroupCreate the sender should send it later again.
-        return PlaintextContent()
-          ..retryControlError = PlaintextContent_RetryErrorMessage();
+        return (
+          null,
+          PlaintextContent()
+            ..retryControlError = PlaintextContent_RetryErrorMessage()
+        );
       }
 
       Log.error('User $fromUserId tried to access group ${content.groupId}.');
-      return null;
+      return (null, null);
     }
   }
 
@@ -300,7 +342,7 @@ Future<PlaintextContent?> handleEncryptedMessage(
       content.groupId,
       content.groupUpdate,
     );
-    return null;
+    return (null, null);
   }
 
   if (content.hasGroupJoin()) {
@@ -309,10 +351,13 @@ Future<PlaintextContent?> handleEncryptedMessage(
       content.groupId,
       content.groupJoin,
     )) {
-      return PlaintextContent()
-        ..retryControlError = PlaintextContent_RetryErrorMessage();
+      return (
+        null,
+        PlaintextContent()
+          ..retryControlError = PlaintextContent_RetryErrorMessage()
+      );
     }
-    return null;
+    return (null, null);
   }
 
   if (content.hasResendGroupPublicKey()) {
@@ -321,7 +366,7 @@ Future<PlaintextContent?> handleEncryptedMessage(
       content.groupId,
       content.groupJoin,
     );
-    return null;
+    return (null, null);
   }
 
   if (content.hasTextMessage()) {
@@ -330,7 +375,7 @@ Future<PlaintextContent?> handleEncryptedMessage(
       content.groupId,
       content.textMessage,
     );
-    return null;
+    return (null, null);
   }
 
   if (content.hasReaction()) {
@@ -339,7 +384,7 @@ Future<PlaintextContent?> handleEncryptedMessage(
       content.groupId,
       content.reaction,
     );
-    return null;
+    return (null, null);
   }
 
   if (content.hasMedia()) {
@@ -348,8 +393,8 @@ Future<PlaintextContent?> handleEncryptedMessage(
       content.groupId,
       content.media,
     );
-    return null;
+    return (null, null);
   }
 
-  return null;
+  return (null, null);
 }

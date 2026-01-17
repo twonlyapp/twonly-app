@@ -1021,7 +1021,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactRemoveBody.
   ///
   /// In en, this message translates to:
-  /// **'Remove the user and permanently delete the chat and all associated media files. This will also delete YOUR ACCOUNT FROM YOUR CONTACT\'S PHONE.'**
+  /// **'Permanently remove the user. If the user tries to send you a new message, you will have to accept the user again first.'**
   String get contactRemoveBody;
 
   /// No description provided for @undo.
@@ -2925,6 +2925,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Store as default'**
   String get storeAsDefault;
+
+  /// No description provided for @deleteUserErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only delete the contact once the direct chat has been deleted and the contact is no longer a member of a group.'**
+  String get deleteUserErrorMessage;
 }
 
 class _AppLocalizationsDelegate
