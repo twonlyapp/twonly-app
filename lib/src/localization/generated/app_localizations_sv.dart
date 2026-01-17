@@ -1619,4 +1619,9 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get deleteUserErrorMessage =>
       'You can only delete the contact once the direct chat has been deleted and the contact is no longer a member of a group.';
+
+  @override
+  String groupSizeLimitError(Object size) {
+    return 'Currently, group size is limited to $size people!';
+  }
 }

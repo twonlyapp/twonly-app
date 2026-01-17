@@ -84,6 +84,15 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
   void toggleSelectedUser(int userId) {
     if (alreadyInGroup.contains(userId)) return;
     if (!selectedUsers.contains(userId)) {
+      if (selectedUsers.length + alreadyInGroup.length > 256) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.lang.groupSizeLimitError(256)),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
       selectedUsers.add(userId);
     } else {
       selectedUsers.remove(userId);

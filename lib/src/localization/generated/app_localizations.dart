@@ -2931,6 +2931,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can only delete the contact once the direct chat has been deleted and the contact is no longer a member of a group.'**
   String get deleteUserErrorMessage;
+
+  /// No description provided for @groupSizeLimitError.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently, group size is limited to {size} people!'**
+  String groupSizeLimitError(Object size);
 }
 
 class _AppLocalizationsDelegate
