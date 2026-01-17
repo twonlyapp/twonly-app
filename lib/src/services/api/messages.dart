@@ -28,7 +28,29 @@ Future<void> tryTransmitMessages() async {
 
     Log.info('Reuploading ${receipts.length} messages to the server.');
 
+    final contacts = <int, Contact>{};
+
     for (final receipt in receipts) {
+      if (receipt.markForRetryAfterAccepted != null) {
+        if (!contacts.containsKey(receipt.contactId)) {
+          final contact = await twonlyDB.contactsDao
+              .getContactByUserId(receipt.contactId)
+              .getSingleOrNull();
+          if (contact == null) {
+            Log.error(
+              'Contact does not exists, but has a record in receipts, this should not be possible, because of the DELETE CASCADE relation.',
+            );
+            continue;
+          }
+          contacts[receipt.contactId] = contact;
+        }
+        if (!(contacts[receipt.contactId]?.accepted ?? true)) {
+          Log.warn(
+            'Could not send message as contact has still not yet accepted.',
+          );
+          continue;
+        }
+      }
       await tryToSendCompleteMessage(receipt: receipt);
     }
   });

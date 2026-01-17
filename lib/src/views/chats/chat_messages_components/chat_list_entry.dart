@@ -185,6 +185,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
         group: widget.group,
         onResponseTriggered: widget.onResponseTriggered!,
         galleryItems: widget.galleryItems,
+        mediaFileService: mediaService,
         child: Container(
           child: child,
         ),

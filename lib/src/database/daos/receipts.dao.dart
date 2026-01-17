@@ -92,7 +92,9 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
           ..where(
             (t) =>
                 t.ackByServerAt.isNull() |
-                t.markForRetry.isSmallerThanValue(markedRetriesTime),
+                t.markForRetry.isSmallerThanValue(markedRetriesTime) |
+                t.markForRetryAfterAccepted
+                    .isSmallerThanValue(markedRetriesTime),
           ))
         .get();
   }
@@ -106,6 +108,19 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
     ReceiptsCompanion updates,
   ) async {
     await (update(receipts)..where((c) => c.receiptId.equals(receiptId)))
+        .write(updates);
+  }
+
+  Future<void> updateReceiptWidthUserId(
+    int fromUserId,
+    String receiptId,
+    ReceiptsCompanion updates,
+  ) async {
+    await (update(receipts)
+          ..where(
+            (c) =>
+                c.receiptId.equals(receiptId) & c.contactId.equals(fromUserId),
+          ))
         .write(updates);
   }
 

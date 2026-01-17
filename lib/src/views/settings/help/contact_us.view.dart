@@ -3,6 +3,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
@@ -81,10 +82,7 @@ class _ContactUsState extends State<ContactUsView> {
     return null;
   }
 
-  Future<String> _getFeedbackText() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<String?> _getFeedbackText() async {
     var osVersion = '';
     final locale = context.lang.localeName;
     final deviceInfo = DeviceInfoPlugin();
@@ -95,7 +93,11 @@ class _ContactUsState extends State<ContactUsView> {
     final feedback = _controller.text;
     var debugLogToken = '';
 
-    if (!mounted) return '';
+    if (!mounted) return null;
+
+    setState(() {
+      isLoading = true;
+    });
 
     // Get device information
     if (Theme.of(context).platform == TargetPlatform.android) {
@@ -109,18 +111,23 @@ class _ContactUsState extends State<ContactUsView> {
     }
 
     if (includeDebugLog) {
+      String? token;
       try {
-        final token = await uploadDebugLog();
-        if (token != null) {
-          debugLogToken =
-              'Debug Log: https://api.twonly.eu/api/download/$token';
-        }
+        token = await uploadDebugLog();
       } catch (e) {
-        if (!mounted) return '';
+        Log.error(e);
+      }
+      if (token == null) {
+        if (!mounted) return null;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not upload the debug log!')),
         );
+        setState(() {
+          isLoading = false;
+        });
+        return null;
       }
+      debugLogToken = 'Debug Log: https://api.twonly.eu/api/download/$token';
     }
 
     setState(() {
@@ -238,12 +245,22 @@ $debugLogToken
                   ),
                 ),
               ),
-              ElevatedButton(
+              ElevatedButton.icon(
+                icon: isLoading
+                    ? SizedBox(
+                        height: 12,
+                        width: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                        ),
+                      )
+                    : const FaIcon(FontAwesomeIcons.angleRight),
                 onPressed: isLoading
                     ? null
                     : () async {
                         final fullMessage = await _getFeedbackText();
-                        if (!context.mounted) return;
+                        if (!context.mounted || fullMessage == null) return;
 
                         final feedbackSend = await Navigator.push(
                           context,
@@ -260,7 +277,7 @@ $debugLogToken
                           Navigator.pop(context);
                         }
                       },
-                child: Text(context.lang.next),
+                label: Text(context.lang.next),
               ),
             ],
           ),

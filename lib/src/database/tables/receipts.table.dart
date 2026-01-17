@@ -21,6 +21,7 @@ class Receipts extends Table {
       boolean().withDefault(const Constant(true))();
 
   DateTimeColumn get markForRetry => dateTime().nullable()();
+  DateTimeColumn get markForRetryAfterAccepted => dateTime().nullable()();
 
   DateTimeColumn get ackByServerAt => dateTime().nullable()();
 

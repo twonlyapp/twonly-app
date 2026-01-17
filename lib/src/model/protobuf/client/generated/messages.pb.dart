@@ -311,6 +311,82 @@ class PlaintextContent extends $pb.GeneratedMessage {
   PlaintextContent_RetryErrorMessage ensureRetryControlError() => $_ensure(1);
 }
 
+class EncryptedContent_ErrorMessages extends $pb.GeneratedMessage {
+  factory EncryptedContent_ErrorMessages({
+    EncryptedContent_ErrorMessages_Type? type,
+    $core.String? relatedReceiptId,
+  }) {
+    final result = create();
+    if (type != null) result.type = type;
+    if (relatedReceiptId != null) result.relatedReceiptId = relatedReceiptId;
+    return result;
+  }
+
+  EncryptedContent_ErrorMessages._();
+
+  factory EncryptedContent_ErrorMessages.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_ErrorMessages.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.ErrorMessages',
+      createEmptyInstance: create)
+    ..e<EncryptedContent_ErrorMessages_Type>(
+        1, _omitFieldNames ? '' : 'type', $pb.PbFieldType.OE,
+        defaultOrMaker: EncryptedContent_ErrorMessages_Type
+            .ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD,
+        valueOf: EncryptedContent_ErrorMessages_Type.valueOf,
+        enumValues: EncryptedContent_ErrorMessages_Type.values)
+    ..aOS(2, _omitFieldNames ? '' : 'relatedReceiptId')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_ErrorMessages clone() =>
+      EncryptedContent_ErrorMessages()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_ErrorMessages copyWith(
+          void Function(EncryptedContent_ErrorMessages) updates) =>
+      super.copyWith(
+              (message) => updates(message as EncryptedContent_ErrorMessages))
+          as EncryptedContent_ErrorMessages;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_ErrorMessages create() =>
+      EncryptedContent_ErrorMessages._();
+  @$core.override
+  EncryptedContent_ErrorMessages createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_ErrorMessages> createRepeated() =>
+      $pb.PbList<EncryptedContent_ErrorMessages>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_ErrorMessages getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<EncryptedContent_ErrorMessages>(create);
+  static EncryptedContent_ErrorMessages? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  EncryptedContent_ErrorMessages_Type get type => $_getN(0);
+  @$pb.TagNumber(1)
+  set type(EncryptedContent_ErrorMessages_Type value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasType() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearType() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get relatedReceiptId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set relatedReceiptId($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasRelatedReceiptId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearRelatedReceiptId() => $_clearField(2);
+}
+
 class EncryptedContent_GroupCreate extends $pb.GeneratedMessage {
   factory EncryptedContent_GroupCreate({
     $core.List<$core.int>? stateKey,
@@ -1519,6 +1595,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_GroupJoin? groupJoin,
     EncryptedContent_GroupUpdate? groupUpdate,
     EncryptedContent_ResendGroupPublicKey? resendGroupPublicKey,
+    EncryptedContent_ErrorMessages? errorMessages,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1539,6 +1616,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (groupUpdate != null) result.groupUpdate = groupUpdate;
     if (resendGroupPublicKey != null)
       result.resendGroupPublicKey = resendGroupPublicKey;
+    if (errorMessages != null) result.errorMessages = errorMessages;
     return result;
   }
 
@@ -1599,6 +1677,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
         17, _omitFieldNames ? '' : 'resendGroupPublicKey',
         protoName: 'resendGroupPublicKey',
         subBuilder: EncryptedContent_ResendGroupPublicKey.create)
+    ..aOM<EncryptedContent_ErrorMessages>(
+        18, _omitFieldNames ? '' : 'errorMessages',
+        subBuilder: EncryptedContent_ErrorMessages.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1797,6 +1878,18 @@ class EncryptedContent extends $pb.GeneratedMessage {
   @$pb.TagNumber(17)
   EncryptedContent_ResendGroupPublicKey ensureResendGroupPublicKey() =>
       $_ensure(15);
+
+  @$pb.TagNumber(18)
+  EncryptedContent_ErrorMessages get errorMessages => $_getN(16);
+  @$pb.TagNumber(18)
+  set errorMessages(EncryptedContent_ErrorMessages value) =>
+      $_setField(18, value);
+  @$pb.TagNumber(18)
+  $core.bool hasErrorMessages() => $_has(16);
+  @$pb.TagNumber(18)
+  void clearErrorMessages() => $_clearField(18);
+  @$pb.TagNumber(18)
+  EncryptedContent_ErrorMessages ensureErrorMessages() => $_ensure(16);
 }
 
 const $core.bool _omitFieldNames =

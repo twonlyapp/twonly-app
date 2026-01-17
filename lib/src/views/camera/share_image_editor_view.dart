@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:collection';
-import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -487,20 +486,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       }
     }
 
-    // In case the image was already stored, then rename the stored image.
-    if (mediaService.storedPath.existsSync()) {
-      final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
-        MediaFilesCompanion(
-          type: Value(mediaService.mediaFile.type),
-          createdAt: Value(clock.now()),
-          stored: const Value(true),
-        ),
-      );
-      if (mediaFile != null) {
-        mediaService.storedPath
-            .renameSync(MediaFileService(mediaFile).storedPath.path);
-      }
-    }
     return bytes;
   }
 

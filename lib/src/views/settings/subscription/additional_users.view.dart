@@ -72,9 +72,30 @@ class _AdditionalUsersViewState extends State<AdditionalUsersView> {
     for (final selectedUserId in selectedUserIds) {
       final res = await apiService.addAdditionalUser(Int64(selectedUserId));
       if (res.isError && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.lang.additionalUserAddError)),
-        );
+        final contact =
+            await twonlyDB.contactsDao.getContactById(selectedUserId);
+        if (contact != null && mounted) {
+          if (res.error == ErrorCode.UserIsNotInFreePlan) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  context.lang.additionalUserAddErrorNotInFreePlan(
+                    getContactDisplayName(contact),
+                  ),
+                ),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  context.lang
+                      .additionalUserAddError(getContactDisplayName(contact)),
+                ),
+              ),
+            );
+          }
+        }
       }
     }
     await initAsync(force: true);

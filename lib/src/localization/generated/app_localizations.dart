@@ -508,6 +508,12 @@ abstract class AppLocalizations {
   /// **'Unpin'**
   String get contextMenuUnpin;
 
+  /// No description provided for @contextMenuViewAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'View again'**
+  String get contextMenuViewAgain;
+
   /// No description provided for @mediaViewerAuthReason.
   ///
   /// In en, this message translates to:
@@ -1021,7 +1027,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactRemoveBody.
   ///
   /// In en, this message translates to:
-  /// **'Remove the user and permanently delete the chat and all associated media files. This will also delete YOUR ACCOUNT FROM YOUR CONTACT\'S PHONE.'**
+  /// **'Permanently remove the user. If the user tries to send you a new message, you will have to accept the user again first.'**
   String get contactRemoveBody;
 
   /// No description provided for @undo.
@@ -2887,8 +2893,14 @@ abstract class AppLocalizations {
   /// No description provided for @additionalUserAddError.
   ///
   /// In en, this message translates to:
-  /// **'Could not add additional user. Try again later.'**
-  String get additionalUserAddError;
+  /// **'{username} could not be added, please try again later.'**
+  String additionalUserAddError(Object username);
+
+  /// No description provided for @additionalUserAddErrorNotInFreePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} is already on a paid plan and therefore could not be added.'**
+  String additionalUserAddErrorNotInFreePlan(Object username);
 
   /// No description provided for @additionalUserAddButton.
   ///
@@ -2925,6 +2937,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Store as default'**
   String get storeAsDefault;
+
+  /// No description provided for @deleteUserErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only delete the contact once the direct chat has been deleted and the contact is no longer a member of a group.'**
+  String get deleteUserErrorMessage;
+
+  /// No description provided for @groupSizeLimitError.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently, group size is limited to {size} people!'**
+  String groupSizeLimitError(Object size);
+
+  /// No description provided for @authRequestReopenImage.
+  ///
+  /// In en, this message translates to:
+  /// **'You must authenticate to reopen the image.'**
+  String get authRequestReopenImage;
 }
 
 class _AppLocalizationsDelegate

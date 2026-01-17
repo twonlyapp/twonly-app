@@ -233,6 +233,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contextMenuUnpin => 'Unpin';
 
   @override
+  String get contextMenuViewAgain => 'View again';
+
+  @override
   String get mediaViewerAuthReason => 'Please authenticate to see this twonly!';
 
   @override
@@ -512,7 +515,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactRemoveBody =>
-      'Remove the user and permanently delete the chat and all associated media files. This will also delete YOUR ACCOUNT FROM YOUR CONTACT\'S PHONE.';
+      'Permanently remove the user. If the user tries to send you a new message, you will have to accept the user again first.';
 
   @override
   String get undo => 'Undo';
@@ -1590,8 +1593,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyPolicy => 'Privacy policy';
 
   @override
-  String get additionalUserAddError =>
-      'Could not add additional user. Try again later.';
+  String additionalUserAddError(Object username) {
+    return '$username could not be added, please try again later.';
+  }
+
+  @override
+  String additionalUserAddErrorNotInFreePlan(Object username) {
+    return '$username is already on a paid plan and therefore could not be added.';
+  }
 
   @override
   String additionalUserAddButton(Object limit, Object used) {
@@ -1615,4 +1624,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storeAsDefault => 'Store as default';
+
+  @override
+  String get deleteUserErrorMessage =>
+      'You can only delete the contact once the direct chat has been deleted and the contact is no longer a member of a group.';
+
+  @override
+  String groupSizeLimitError(Object size) {
+    return 'Currently, group size is limited to $size people!';
+  }
+
+  @override
+  String get authRequestReopenImage =>
+      'You must authenticate to reopen the image.';
 }

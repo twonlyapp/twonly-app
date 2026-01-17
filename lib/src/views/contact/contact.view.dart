@@ -26,7 +26,48 @@ class ContactView extends StatefulWidget {
 }
 
 class _ContactViewState extends State<ContactView> {
+  Contact? _contact;
+  bool _contactIsStillAGroupMember = true;
+
+  late StreamSubscription<Contact?> _contactSub;
+  late StreamSubscription<List<GroupMember>> _groupMemberSub;
+
+  @override
+  void initState() {
+    _contactSub =
+        twonlyDB.contactsDao.watchContact(widget.userId).listen((update) {
+      setState(() {
+        _contact = update;
+      });
+    });
+    _groupMemberSub = twonlyDB.groupsDao
+        .watchContactGroupMember(widget.userId)
+        .listen((update) {
+      setState(() {
+        _contactIsStillAGroupMember = update.isNotEmpty;
+      });
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _contactSub.cancel();
+    _groupMemberSub.cancel();
+    super.dispose();
+  }
+
   Future<void> handleUserRemoveRequest(Contact contact) async {
+    if (_contactIsStillAGroupMember) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.lang.deleteUserErrorMessage),
+          duration: const Duration(seconds: 8),
+        ),
+      );
+      return;
+    }
+
     final remove = await showAlertDialog(
       context,
       context.lang
@@ -84,128 +125,117 @@ class _ContactViewState extends State<ContactView> {
 
   @override
   Widget build(BuildContext context) {
-    final contact = twonlyDB.contactsDao
-        .getContactByUserId(widget.userId)
-        .watchSingleOrNull();
+    if (_contact == null) return Container();
+    final contact = _contact!;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(''),
       ),
-      body: StreamBuilder(
-        stream: contact,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data == null) {
-            return Container();
-          }
-          final contact = snapshot.data!;
-          return ListView(
-            key: ValueKey(contact.userId),
+      body: ListView(
+        key: ValueKey(contact.userId),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: AvatarIcon(contactId: contact.userId, fontSize: 30),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.all(10),
-                child: AvatarIcon(contactId: contact.userId, fontSize: 30),
+                padding: const EdgeInsets.only(right: 10),
+                child: VerifiedShield(
+                  key: GlobalKey(),
+                  contact: contact,
+                ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: VerifiedShield(
-                      key: GlobalKey(),
-                      contact: contact,
-                    ),
-                  ),
-                  Text(
-                    getContactDisplayName(contact, maxLength: 20),
-                    style: const TextStyle(fontSize: 20),
-                  ),
-                  FlameCounterWidget(
-                    contactId: contact.userId,
-                    prefix: true,
-                  ),
-                ],
+              Text(
+                getContactDisplayName(contact, maxLength: 20),
+                style: const TextStyle(fontSize: 20),
               ),
-              if (getContactDisplayName(contact) != contact.username)
-                Center(child: Text('(${contact.username})')),
-              const SizedBox(height: 50),
-              BetterListTile(
-                icon: FontAwesomeIcons.pencil,
-                text: context.lang.contactNickname,
-                onTap: () async {
-                  final nickName =
-                      await showNicknameChangeDialog(context, contact);
-
-                  if (context.mounted && nickName != null && nickName != '') {
-                    final update = ContactsCompanion(nickName: Value(nickName));
-                    await twonlyDB.contactsDao
-                        .updateContact(contact.userId, update);
-                  }
-                },
+              FlameCounterWidget(
+                contactId: contact.userId,
+                prefix: true,
               ),
-              const Divider(),
-              SelectChatDeletionTimeListTitle(
-                groupId: getUUIDforDirectChat(widget.userId, gUser.userId),
-              ),
-              const Divider(),
-              MaxFlameListTitle(
-                contactId: widget.userId,
-              ),
-              BetterListTile(
-                icon: FontAwesomeIcons.shieldHeart,
-                text: context.lang.contactVerifyNumberTitle,
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const PublicProfileView();
-                      },
-                    ),
-                  );
-                  setState(() {});
-                },
-              ),
-              // BetterListTile(
-              //   icon: FontAwesomeIcons.eraser,
-              //   iconSize: 16,
-              //   text: context.lang.deleteAllContactMessages,
-              //   onTap: () async {
-              //     final block = await showAlertDialog(
-              //       context,
-              //       context.lang.deleteAllContactMessages,
-              //       context.lang.deleteAllContactMessagesBody(
-              //         getContactDisplayName(contact),
-              //       ),
-              //     );
-              //     if (block) {
-              //       if (context.mounted) {
-              //         await twonlyDB.messagesDao
-              //             .deleteMessagesByContactId(contact.userId);
-              //       }
-              //     }
-              //   },
-              // ),
-              BetterListTile(
-                icon: FontAwesomeIcons.flag,
-                text: context.lang.reportUser,
-                onTap: () => handleReportUser(contact),
-              ),
-              BetterListTile(
-                icon: FontAwesomeIcons.ban,
-                text: context.lang.contactBlock,
-                onTap: () => handleUserBlockRequest(contact),
-              ),
-              // BetterListTile(
-              //   icon: FontAwesomeIcons.userMinus,
-              //   iconSize: 16,
-              //   color: Colors.red,
-              //   text: context.lang.contactRemove,
-              //   onTap: () => handleUserRemoveRequest(contact),
-              // ),
             ],
-          );
-        },
+          ),
+          if (getContactDisplayName(contact) != contact.username)
+            Center(child: Text('(${contact.username})')),
+          const SizedBox(height: 50),
+          BetterListTile(
+            icon: FontAwesomeIcons.pencil,
+            text: context.lang.contactNickname,
+            onTap: () async {
+              final nickName = await showNicknameChangeDialog(context, contact);
+
+              if (context.mounted && nickName != null && nickName != '') {
+                final update = ContactsCompanion(nickName: Value(nickName));
+                await twonlyDB.contactsDao
+                    .updateContact(contact.userId, update);
+              }
+            },
+          ),
+          const Divider(),
+          SelectChatDeletionTimeListTitle(
+            groupId: getUUIDforDirectChat(widget.userId, gUser.userId),
+          ),
+          const Divider(),
+          MaxFlameListTitle(
+            contactId: widget.userId,
+          ),
+          BetterListTile(
+            icon: FontAwesomeIcons.shieldHeart,
+            text: context.lang.contactVerifyNumberTitle,
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const PublicProfileView();
+                  },
+                ),
+              );
+              setState(() {});
+            },
+          ),
+          // BetterListTile(
+          //   icon: FontAwesomeIcons.eraser,
+          //   iconSize: 16,
+          //   text: context.lang.deleteAllContactMessages,
+          //   onTap: () async {
+          //     final block = await showAlertDialog(
+          //       context,
+          //       context.lang.deleteAllContactMessages,
+          //       context.lang.deleteAllContactMessagesBody(
+          //         getContactDisplayName(contact),
+          //       ),
+          //     );
+          //     if (block) {
+          //       if (context.mounted) {
+          //         await twonlyDB.messagesDao
+          //             .deleteMessagesByContactId(contact.userId);
+          //       }
+          //     }
+          //   },
+          // ),
+          BetterListTile(
+            icon: FontAwesomeIcons.flag,
+            text: context.lang.reportUser,
+            onTap: () => handleReportUser(contact),
+          ),
+          BetterListTile(
+            icon: FontAwesomeIcons.ban,
+            text: context.lang.contactBlock,
+            onTap: () => handleUserBlockRequest(contact),
+          ),
+          BetterListTile(
+            icon: FontAwesomeIcons.userMinus,
+            iconSize: 16,
+            color: Colors.red,
+            text: context.lang.contactRemove,
+            onTap: () => handleUserRemoveRequest(contact),
+          ),
+        ],
       ),
     );
   }

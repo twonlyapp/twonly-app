@@ -235,6 +235,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get contextMenuUnpin => 'Lösen';
 
   @override
+  String get contextMenuViewAgain => 'Nochmal anschauen';
+
+  @override
   String get mediaViewerAuthReason =>
       'Bitte authentifiziere dich, um diesen twonly zu sehen!';
 
@@ -517,7 +520,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get contactRemoveBody =>
-      'Entferne den Benutzer und lösche den Chat sowie alle zugehörigen Mediendateien dauerhaft. Dadurch wird auch DEIN KONTO VON DEM TELEFON DEINES KONTAKTS gelöscht.';
+      'Den Benutzer dauerhaft entfernen. Wenn der Benutzer versucht, dir eine neue Nachricht zu senden, musst du den Benutzer erst wieder akzeptieren.';
 
   @override
   String get undo => 'Rückgängig';
@@ -1601,8 +1604,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get privacyPolicy => 'Datenschutzerklärung';
 
   @override
-  String get additionalUserAddError =>
-      'Es konnte kein zusätzlicher Nutzer hinzugefügt werden. Versuche es später noch einmal.';
+  String additionalUserAddError(Object username) {
+    return '$username konnte nicht hinzugefügt werden, bitte versuche es später noch einmal.';
+  }
+
+  @override
+  String additionalUserAddErrorNotInFreePlan(Object username) {
+    return '$username hat bereits einen bezahlten Tarif und konnte daher nicht hinzugefügt werden.';
+  }
 
   @override
   String additionalUserAddButton(Object limit, Object used) {
@@ -1627,4 +1636,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get storeAsDefault => 'Als Standard speichern';
+
+  @override
+  String get deleteUserErrorMessage =>
+      'Du kannst den Kontakt erst löschen, wenn der direkte Chat gelöscht wurde und der Kontakt nicht mehr Mitglied einer Gruppe ist.';
+
+  @override
+  String groupSizeLimitError(Object size) {
+    return 'Derzeit ist die Gruppengröße auf $size Personen begrenzt!';
+  }
+
+  @override
+  String get authRequestReopenImage =>
+      'Um das Bild erneut zu öffnen, musst du dich authentifizieren.';
 }

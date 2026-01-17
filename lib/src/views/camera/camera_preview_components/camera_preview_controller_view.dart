@@ -436,7 +436,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       CameraLensDirection.front;
 
   Future<void> onPanUpdate(dynamic details) async {
-    if (isFront || details == null) {
+    if (details == null) {
       return;
     }
     if (mc.cameraController == null ||
@@ -603,9 +603,6 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       bottomNavigation: Container(),
       child: GestureDetector(
         onPanStart: (details) async {
-          if (isFront) {
-            return;
-          }
           setState(() {
             _basePanY = details.localPosition.dy;
             _baseScaleFactor = mc.selectedCameraDetails.scaleFactor;
@@ -721,12 +718,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     children: [
                       if (mc.cameraController!.value.isInitialized &&
                           mc.selectedCameraDetails.isZoomAble &&
-                          !isFront &&
                           !_isVideoRecording)
                         SizedBox(
                           width: 120,
                           child: CameraZoomButtons(
-                            key: widget.key,
+                            key: mc.zoomButtonKey,
                             scaleFactor: mc.selectedCameraDetails.scaleFactor,
                             updateScaleFactor: updateScaleFactor,
                             selectCamera: mc.selectCamera,

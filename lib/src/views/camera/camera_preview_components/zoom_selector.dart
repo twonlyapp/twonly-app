@@ -62,8 +62,16 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
       _wideCameraIndex = index;
     }
 
-    if (!showWideAngleZoom && Platform.isIOS && _wideCameraIndex != null) {
+    final isFront = widget.controller.description.lensDirection ==
+        CameraLensDirection.front;
+
+    if (!showWideAngleZoom &&
+        Platform.isIOS &&
+        _wideCameraIndex != null &&
+        !isFront) {
       showWideAngleZoomIOS = true;
+    } else {
+      showWideAngleZoomIOS = false;
     }
     if (_isDisposed) return;
     setState(() {});

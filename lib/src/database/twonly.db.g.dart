@@ -4598,6 +4598,13 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
   late final GeneratedColumn<DateTime> markForRetry = GeneratedColumn<DateTime>(
       'mark_for_retry', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _markForRetryAfterAcceptedMeta =
+      const VerificationMeta('markForRetryAfterAccepted');
+  @override
+  late final GeneratedColumn<DateTime> markForRetryAfterAccepted =
+      GeneratedColumn<DateTime>(
+          'mark_for_retry_after_accepted', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _ackByServerAtMeta =
       const VerificationMeta('ackByServerAt');
   @override
@@ -4634,6 +4641,7 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
         message,
         contactWillSendsReceipt,
         markForRetry,
+        markForRetryAfterAccepted,
         ackByServerAt,
         retryCount,
         lastRetry,
@@ -4684,6 +4692,13 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
           markForRetry.isAcceptableOrUnknown(
               data['mark_for_retry']!, _markForRetryMeta));
     }
+    if (data.containsKey('mark_for_retry_after_accepted')) {
+      context.handle(
+          _markForRetryAfterAcceptedMeta,
+          markForRetryAfterAccepted.isAcceptableOrUnknown(
+              data['mark_for_retry_after_accepted']!,
+              _markForRetryAfterAcceptedMeta));
+    }
     if (data.containsKey('ack_by_server_at')) {
       context.handle(
           _ackByServerAtMeta,
@@ -4726,6 +4741,9 @@ class $ReceiptsTable extends Receipts with TableInfo<$ReceiptsTable, Receipt> {
           data['${effectivePrefix}contact_will_sends_receipt'])!,
       markForRetry: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}mark_for_retry']),
+      markForRetryAfterAccepted: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}mark_for_retry_after_accepted']),
       ackByServerAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}ack_by_server_at']),
       retryCount: attachedDatabase.typeMapping
@@ -4752,6 +4770,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
   final Uint8List message;
   final bool contactWillSendsReceipt;
   final DateTime? markForRetry;
+  final DateTime? markForRetryAfterAccepted;
   final DateTime? ackByServerAt;
   final int retryCount;
   final DateTime? lastRetry;
@@ -4763,6 +4782,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       required this.message,
       required this.contactWillSendsReceipt,
       this.markForRetry,
+      this.markForRetryAfterAccepted,
       this.ackByServerAt,
       required this.retryCount,
       this.lastRetry,
@@ -4779,6 +4799,10 @@ class Receipt extends DataClass implements Insertable<Receipt> {
     map['contact_will_sends_receipt'] = Variable<bool>(contactWillSendsReceipt);
     if (!nullToAbsent || markForRetry != null) {
       map['mark_for_retry'] = Variable<DateTime>(markForRetry);
+    }
+    if (!nullToAbsent || markForRetryAfterAccepted != null) {
+      map['mark_for_retry_after_accepted'] =
+          Variable<DateTime>(markForRetryAfterAccepted);
     }
     if (!nullToAbsent || ackByServerAt != null) {
       map['ack_by_server_at'] = Variable<DateTime>(ackByServerAt);
@@ -4803,6 +4827,10 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       markForRetry: markForRetry == null && nullToAbsent
           ? const Value.absent()
           : Value(markForRetry),
+      markForRetryAfterAccepted:
+          markForRetryAfterAccepted == null && nullToAbsent
+              ? const Value.absent()
+              : Value(markForRetryAfterAccepted),
       ackByServerAt: ackByServerAt == null && nullToAbsent
           ? const Value.absent()
           : Value(ackByServerAt),
@@ -4825,6 +4853,8 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       contactWillSendsReceipt:
           serializer.fromJson<bool>(json['contactWillSendsReceipt']),
       markForRetry: serializer.fromJson<DateTime?>(json['markForRetry']),
+      markForRetryAfterAccepted:
+          serializer.fromJson<DateTime?>(json['markForRetryAfterAccepted']),
       ackByServerAt: serializer.fromJson<DateTime?>(json['ackByServerAt']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       lastRetry: serializer.fromJson<DateTime?>(json['lastRetry']),
@@ -4842,6 +4872,8 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       'contactWillSendsReceipt':
           serializer.toJson<bool>(contactWillSendsReceipt),
       'markForRetry': serializer.toJson<DateTime?>(markForRetry),
+      'markForRetryAfterAccepted':
+          serializer.toJson<DateTime?>(markForRetryAfterAccepted),
       'ackByServerAt': serializer.toJson<DateTime?>(ackByServerAt),
       'retryCount': serializer.toJson<int>(retryCount),
       'lastRetry': serializer.toJson<DateTime?>(lastRetry),
@@ -4856,6 +4888,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           Uint8List? message,
           bool? contactWillSendsReceipt,
           Value<DateTime?> markForRetry = const Value.absent(),
+          Value<DateTime?> markForRetryAfterAccepted = const Value.absent(),
           Value<DateTime?> ackByServerAt = const Value.absent(),
           int? retryCount,
           Value<DateTime?> lastRetry = const Value.absent(),
@@ -4869,6 +4902,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
             contactWillSendsReceipt ?? this.contactWillSendsReceipt,
         markForRetry:
             markForRetry.present ? markForRetry.value : this.markForRetry,
+        markForRetryAfterAccepted: markForRetryAfterAccepted.present
+            ? markForRetryAfterAccepted.value
+            : this.markForRetryAfterAccepted,
         ackByServerAt:
             ackByServerAt.present ? ackByServerAt.value : this.ackByServerAt,
         retryCount: retryCount ?? this.retryCount,
@@ -4887,6 +4923,9 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       markForRetry: data.markForRetry.present
           ? data.markForRetry.value
           : this.markForRetry,
+      markForRetryAfterAccepted: data.markForRetryAfterAccepted.present
+          ? data.markForRetryAfterAccepted.value
+          : this.markForRetryAfterAccepted,
       ackByServerAt: data.ackByServerAt.present
           ? data.ackByServerAt.value
           : this.ackByServerAt,
@@ -4906,6 +4945,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           ..write('message: $message, ')
           ..write('contactWillSendsReceipt: $contactWillSendsReceipt, ')
           ..write('markForRetry: $markForRetry, ')
+          ..write('markForRetryAfterAccepted: $markForRetryAfterAccepted, ')
           ..write('ackByServerAt: $ackByServerAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastRetry: $lastRetry, ')
@@ -4922,6 +4962,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
       $driftBlobEquality.hash(message),
       contactWillSendsReceipt,
       markForRetry,
+      markForRetryAfterAccepted,
       ackByServerAt,
       retryCount,
       lastRetry,
@@ -4936,6 +4977,7 @@ class Receipt extends DataClass implements Insertable<Receipt> {
           $driftBlobEquality.equals(other.message, this.message) &&
           other.contactWillSendsReceipt == this.contactWillSendsReceipt &&
           other.markForRetry == this.markForRetry &&
+          other.markForRetryAfterAccepted == this.markForRetryAfterAccepted &&
           other.ackByServerAt == this.ackByServerAt &&
           other.retryCount == this.retryCount &&
           other.lastRetry == this.lastRetry &&
@@ -4949,6 +4991,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
   final Value<Uint8List> message;
   final Value<bool> contactWillSendsReceipt;
   final Value<DateTime?> markForRetry;
+  final Value<DateTime?> markForRetryAfterAccepted;
   final Value<DateTime?> ackByServerAt;
   final Value<int> retryCount;
   final Value<DateTime?> lastRetry;
@@ -4961,6 +5004,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     this.message = const Value.absent(),
     this.contactWillSendsReceipt = const Value.absent(),
     this.markForRetry = const Value.absent(),
+    this.markForRetryAfterAccepted = const Value.absent(),
     this.ackByServerAt = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastRetry = const Value.absent(),
@@ -4974,6 +5018,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     required Uint8List message,
     this.contactWillSendsReceipt = const Value.absent(),
     this.markForRetry = const Value.absent(),
+    this.markForRetryAfterAccepted = const Value.absent(),
     this.ackByServerAt = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.lastRetry = const Value.absent(),
@@ -4989,6 +5034,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     Expression<Uint8List>? message,
     Expression<bool>? contactWillSendsReceipt,
     Expression<DateTime>? markForRetry,
+    Expression<DateTime>? markForRetryAfterAccepted,
     Expression<DateTime>? ackByServerAt,
     Expression<int>? retryCount,
     Expression<DateTime>? lastRetry,
@@ -5003,6 +5049,8 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       if (contactWillSendsReceipt != null)
         'contact_will_sends_receipt': contactWillSendsReceipt,
       if (markForRetry != null) 'mark_for_retry': markForRetry,
+      if (markForRetryAfterAccepted != null)
+        'mark_for_retry_after_accepted': markForRetryAfterAccepted,
       if (ackByServerAt != null) 'ack_by_server_at': ackByServerAt,
       if (retryCount != null) 'retry_count': retryCount,
       if (lastRetry != null) 'last_retry': lastRetry,
@@ -5018,6 +5066,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       Value<Uint8List>? message,
       Value<bool>? contactWillSendsReceipt,
       Value<DateTime?>? markForRetry,
+      Value<DateTime?>? markForRetryAfterAccepted,
       Value<DateTime?>? ackByServerAt,
       Value<int>? retryCount,
       Value<DateTime?>? lastRetry,
@@ -5031,6 +5080,8 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
       contactWillSendsReceipt:
           contactWillSendsReceipt ?? this.contactWillSendsReceipt,
       markForRetry: markForRetry ?? this.markForRetry,
+      markForRetryAfterAccepted:
+          markForRetryAfterAccepted ?? this.markForRetryAfterAccepted,
       ackByServerAt: ackByServerAt ?? this.ackByServerAt,
       retryCount: retryCount ?? this.retryCount,
       lastRetry: lastRetry ?? this.lastRetry,
@@ -5061,6 +5112,10 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
     if (markForRetry.present) {
       map['mark_for_retry'] = Variable<DateTime>(markForRetry.value);
     }
+    if (markForRetryAfterAccepted.present) {
+      map['mark_for_retry_after_accepted'] =
+          Variable<DateTime>(markForRetryAfterAccepted.value);
+    }
     if (ackByServerAt.present) {
       map['ack_by_server_at'] = Variable<DateTime>(ackByServerAt.value);
     }
@@ -5088,6 +5143,7 @@ class ReceiptsCompanion extends UpdateCompanion<Receipt> {
           ..write('message: $message, ')
           ..write('contactWillSendsReceipt: $contactWillSendsReceipt, ')
           ..write('markForRetry: $markForRetry, ')
+          ..write('markForRetryAfterAccepted: $markForRetryAfterAccepted, ')
           ..write('ackByServerAt: $ackByServerAt, ')
           ..write('retryCount: $retryCount, ')
           ..write('lastRetry: $lastRetry, ')
@@ -11771,6 +11827,7 @@ typedef $$ReceiptsTableCreateCompanionBuilder = ReceiptsCompanion Function({
   required Uint8List message,
   Value<bool> contactWillSendsReceipt,
   Value<DateTime?> markForRetry,
+  Value<DateTime?> markForRetryAfterAccepted,
   Value<DateTime?> ackByServerAt,
   Value<int> retryCount,
   Value<DateTime?> lastRetry,
@@ -11784,6 +11841,7 @@ typedef $$ReceiptsTableUpdateCompanionBuilder = ReceiptsCompanion Function({
   Value<Uint8List> message,
   Value<bool> contactWillSendsReceipt,
   Value<DateTime?> markForRetry,
+  Value<DateTime?> markForRetryAfterAccepted,
   Value<DateTime?> ackByServerAt,
   Value<int> retryCount,
   Value<DateTime?> lastRetry,
@@ -11847,6 +11905,10 @@ class $$ReceiptsTableFilterComposer
 
   ColumnFilters<DateTime> get markForRetry => $composableBuilder(
       column: $table.markForRetry, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get markForRetryAfterAccepted => $composableBuilder(
+      column: $table.markForRetryAfterAccepted,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get ackByServerAt => $composableBuilder(
       column: $table.ackByServerAt, builder: (column) => ColumnFilters(column));
@@ -11924,6 +11986,10 @@ class $$ReceiptsTableOrderingComposer
       column: $table.markForRetry,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<DateTime> get markForRetryAfterAccepted => $composableBuilder(
+      column: $table.markForRetryAfterAccepted,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get ackByServerAt => $composableBuilder(
       column: $table.ackByServerAt,
       builder: (column) => ColumnOrderings(column));
@@ -11998,6 +12064,9 @@ class $$ReceiptsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get markForRetry => $composableBuilder(
       column: $table.markForRetry, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get markForRetryAfterAccepted => $composableBuilder(
+      column: $table.markForRetryAfterAccepted, builder: (column) => column);
 
   GeneratedColumn<DateTime> get ackByServerAt => $composableBuilder(
       column: $table.ackByServerAt, builder: (column) => column);
@@ -12081,6 +12150,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             Value<Uint8List> message = const Value.absent(),
             Value<bool> contactWillSendsReceipt = const Value.absent(),
             Value<DateTime?> markForRetry = const Value.absent(),
+            Value<DateTime?> markForRetryAfterAccepted = const Value.absent(),
             Value<DateTime?> ackByServerAt = const Value.absent(),
             Value<int> retryCount = const Value.absent(),
             Value<DateTime?> lastRetry = const Value.absent(),
@@ -12094,6 +12164,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             message: message,
             contactWillSendsReceipt: contactWillSendsReceipt,
             markForRetry: markForRetry,
+            markForRetryAfterAccepted: markForRetryAfterAccepted,
             ackByServerAt: ackByServerAt,
             retryCount: retryCount,
             lastRetry: lastRetry,
@@ -12107,6 +12178,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             required Uint8List message,
             Value<bool> contactWillSendsReceipt = const Value.absent(),
             Value<DateTime?> markForRetry = const Value.absent(),
+            Value<DateTime?> markForRetryAfterAccepted = const Value.absent(),
             Value<DateTime?> ackByServerAt = const Value.absent(),
             Value<int> retryCount = const Value.absent(),
             Value<DateTime?> lastRetry = const Value.absent(),
@@ -12120,6 +12192,7 @@ class $$ReceiptsTableTableManager extends RootTableManager<
             message: message,
             contactWillSendsReceipt: contactWillSendsReceipt,
             markForRetry: markForRetry,
+            markForRetryAfterAccepted: markForRetryAfterAccepted,
             ackByServerAt: ackByServerAt,
             retryCount: retryCount,
             lastRetry: lastRetry,
