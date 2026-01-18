@@ -1,8 +1,10 @@
 # Changelog
 
-## 0.0.87
+## 0.0.89
 
-- Added basic support for face filters
+- Adds option to manual focus in the camera
+- Adds support to switch between front and back camera during video recording
+- Adds basic face filters
 
 ## 0.0.86
 

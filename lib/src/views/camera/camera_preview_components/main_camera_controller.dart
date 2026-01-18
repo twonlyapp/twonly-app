@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:collection/collection.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -50,6 +52,7 @@ class MainCameraController {
   Map<int, ScannedNewProfile> scannedNewProfiles = {};
   String? scannedUrl;
   GlobalKey zoomButtonKey = GlobalKey();
+  GlobalKey cameraPreviewKey = GlobalKey();
   bool isSelectingFaceFilters = false;
 
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
@@ -63,6 +66,7 @@ class MainCameraController {
   bool _isBusyFaces = false;
   CustomPaint? customPaint;
   CustomPaint? facePaint;
+  Offset? focusPointOffset;
 
   FaceFilterType _currentFilterType = FaceFilterType.beardUpperLip;
   FaceFilterType get currentFilterType => _currentFilterType;
@@ -83,42 +87,94 @@ class MainCameraController {
     selectedCameraDetails = SelectedCameraDetails();
   }
 
-  Future<CameraController?> selectCamera(int sCameraId, bool init) async {
+  Future<void> selectCamera(int sCameraId, bool init) async {
     initCameraStarted = true;
-    final opts = await initializeCameraController(
-      selectedCameraDetails,
-      sCameraId,
-      init,
-    );
-    if (opts != null) {
-      selectedCameraDetails = opts.$1;
-      cameraController = opts.$2;
-    }
-    isSelectingFaceFilters = false;
-    setFilter(FaceFilterType.none);
-    await cameraController?.startImageStream(_processCameraImage);
-    zoomButtonKey = GlobalKey();
-    setState();
-    return cameraController;
-  }
 
-  Future<void> toggleSelectedCamera() async {
-    if (cameraController == null) return;
-    // do not allow switching camera when recording
-    if (cameraController!.value.isRecordingVideo) {
+    var cameraId = sCameraId;
+    if (cameraId >= gCameras.length) {
+      Log.warn(
+        'Trying to select a non existing camera $cameraId >= ${gCameras.length}',
+      );
       return;
     }
-    try {
-      await cameraController!.stopImageStream();
-    } catch (e) {
-      // Log.warn(e);
+
+    if (init) {
+      for (; cameraId < gCameras.length; cameraId++) {
+        if (gCameras[cameraId].lensDirection == CameraLensDirection.back) {
+          break;
+        }
+      }
     }
-    final tmp = cameraController;
-    cameraController = null;
+
+    selectedCameraDetails.isZoomAble = false;
+    if (selectedCameraDetails.cameraId != cameraId) {
+      // switched camera so reset the scaleFactor
+      selectedCameraDetails.scaleFactor = 1;
+    }
+
+    if (cameraController == null) {
+      cameraController = CameraController(
+        gCameras[cameraId],
+        ResolutionPreset.high,
+        enableAudio: await Permission.microphone.isGranted,
+        imageFormatGroup: Platform.isAndroid
+            ? ImageFormatGroup.nv21
+            : ImageFormatGroup.bgra8888,
+      );
+      await cameraController?.initialize();
+      await cameraController?.startImageStream(_processCameraImage);
+    } else {
+      await HapticFeedback.lightImpact();
+      await cameraController?.setDescription(gCameras[cameraId]);
+    }
+
+    await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
+    await cameraController
+        ?.lockCaptureOrientation(DeviceOrientation.portraitUp);
+    await cameraController?.setFlashMode(
+      selectedCameraDetails.isFlashOn ? FlashMode.always : FlashMode.off,
+    );
+    selectedCameraDetails.maxAvailableZoom =
+        await cameraController?.getMaxZoomLevel() ?? 1;
+    selectedCameraDetails.minAvailableZoom =
+        await cameraController?.getMinZoomLevel() ?? 1;
+    selectedCameraDetails
+      ..isZoomAble = selectedCameraDetails.maxAvailableZoom !=
+          selectedCameraDetails.minAvailableZoom
+      ..cameraLoaded = true
+      ..cameraId = cameraId;
+
     facePaint = null;
     customPaint = null;
-    await tmp!.dispose();
+    isSelectingFaceFilters = false;
+    setFilter(FaceFilterType.none);
+    zoomButtonKey = GlobalKey();
+    setState();
+  }
+
+  Future<void> onDoubleTap() async {
     await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
+  }
+
+  Future<void> onTapDown(TapDownDetails details) async {
+    final box =
+        cameraPreviewKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final localPosition = box.globalToLocal(details.globalPosition);
+
+    focusPointOffset = Offset(localPosition.dx, localPosition.dy);
+
+    final dx = localPosition.dx / box.size.width;
+    final dy = localPosition.dy / box.size.height;
+
+    setState();
+
+    await HapticFeedback.lightImpact();
+    await cameraController?.setFocusPoint(Offset(dx, dy));
+    await cameraController?.setFocusMode(FocusMode.auto);
+
+    focusPointOffset = null;
+    setState();
   }
 
   void setFilter(FaceFilterType type) {

@@ -37,55 +37,6 @@ import 'package:url_launcher/url_launcher_string.dart';
 
 int maxVideoRecordingTime = 60;
 
-Future<(SelectedCameraDetails, CameraController)?> initializeCameraController(
-  SelectedCameraDetails details,
-  int sCameraId,
-  bool init,
-) async {
-  var cameraId = sCameraId;
-  if (cameraId >= gCameras.length) return null;
-  if (init) {
-    for (; cameraId < gCameras.length; cameraId++) {
-      if (gCameras[cameraId].lensDirection == CameraLensDirection.back) {
-        break;
-      }
-    }
-  }
-  details.isZoomAble = false;
-  if (details.cameraId != cameraId) {
-    // switch between front and back
-    details.scaleFactor = 1;
-  }
-
-  final cameraController = CameraController(
-    gCameras[cameraId],
-    ResolutionPreset.high,
-    enableAudio: await Permission.microphone.isGranted,
-    imageFormatGroup:
-        Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
-  );
-
-  await cameraController.initialize().then((_) async {
-    await cameraController.setZoomLevel(details.scaleFactor);
-    await cameraController.lockCaptureOrientation(DeviceOrientation.portraitUp);
-    await cameraController
-        .setFlashMode(details.isFlashOn ? FlashMode.always : FlashMode.off);
-    await cameraController
-        .getMaxZoomLevel()
-        .then((double value) => details.maxAvailableZoom = value);
-    await cameraController
-        .getMinZoomLevel()
-        .then((double value) => details.minAvailableZoom = value);
-    details
-      ..isZoomAble = details.maxAvailableZoom != details.minAvailableZoom
-      ..cameraLoaded = true
-      ..cameraId = cameraId;
-  }).catchError((Object e) {
-    Log.error('$e');
-  });
-  return (details, cameraController);
-}
-
 class SelectedCameraDetails {
   double maxAvailableZoom = 1;
   double minAvailableZoom = 1;

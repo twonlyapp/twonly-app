@@ -172,9 +172,9 @@ class HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: offsetRatio == 0
-            ? _mainCameraController.toggleSelectedCamera
-            : null,
+        onDoubleTap:
+            offsetRatio == 0 ? _mainCameraController.onDoubleTap : null,
+        onTapDown: offsetRatio == 0 ? _mainCameraController.onTapDown : null,
         child: Stack(
           children: <Widget>[
             MainCameraPreview(mainCameraController: _mainCameraController),

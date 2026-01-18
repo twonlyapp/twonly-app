@@ -36,6 +36,7 @@ class MainCameraPreview extends StatelessWidget {
                   height: mainCameraController
                       .cameraController!.value.previewSize!.width,
                   child: CameraPreview(
+                    key: mainCameraController.cameraPreviewKey,
                     mainCameraController.cameraController!,
                     child: Stack(
                       children: [
@@ -47,6 +48,24 @@ class MainCameraPreview extends StatelessWidget {
                           Positioned.fill(
                             child: mainCameraController.facePaint!,
                           ),
+                        if (mainCameraController.focusPointOffset != null)
+                          Positioned(
+                            top: mainCameraController.focusPointOffset!.dy - 40,
+                            left:
+                                mainCameraController.focusPointOffset!.dx - 40,
+                            child: Container(
+                              height: 80,
+                              width: 80,
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  width: 1,
+                                  color: Colors.white.withAlpha(150),
+                                ),
+                              ),
+                            ),
+                          )
                       ],
                     ),
                   ),

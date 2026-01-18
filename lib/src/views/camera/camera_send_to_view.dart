@@ -34,7 +34,8 @@ class CameraSendToViewState extends State<CameraSendToView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: _mainCameraController.toggleSelectedCamera,
+        onDoubleTap: _mainCameraController.onDoubleTap,
+        onTapDown: _mainCameraController.onTapDown,
         child: Stack(
           children: [
             MainCameraPreview(
