@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -140,7 +141,7 @@ class BeardFilterPainter extends FaceFilterPainter {
       ..save()
       ..translate(position.dx, position.dy)
       ..rotate(rotation)
-      ..scale(scaleX, -1);
+      ..scale(scaleX, Platform.isAndroid ? -1 : 1);
 
     final srcRect =
         Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());

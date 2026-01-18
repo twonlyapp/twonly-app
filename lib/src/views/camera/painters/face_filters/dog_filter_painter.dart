@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -180,9 +181,9 @@ class DogFilterPainter extends FaceFilterPainter {
       ..translate(position.dx, position.dy)
       ..rotate(rotation);
     if (isFlipped) {
-      canvas.scale(-scaleX, -1);
+      canvas.scale(-scaleX, Platform.isAndroid ? -1 : 1);
     } else {
-      canvas.scale(scaleX, -1);
+      canvas.scale(scaleX, Platform.isAndroid ? -1 : 1);
     }
 
     final srcRect =
