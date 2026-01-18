@@ -3,7 +3,7 @@ description: "twonly, a privacy-friendly way to connect with friends through sec
 
 publish_to: 'none'
 
-version: 0.0.85+85
+version: 0.0.86+86
 
 environment:
   sdk: ^3.6.0
@@ -110,6 +110,7 @@ dependencies:
   hand_signature: ^3.0.3
   flutter_sharing_intent: ^2.0.4
   no_screenshot: ^0.3.1
+  google_mlkit_face_detection: ^0.13.1
 
 dependency_overrides:
   dots_indicator:
@@ -203,5 +204,6 @@ flutter:
     - assets/animated_icons/
     - assets/animations/
     - assets/passwords/
+    - assets/filters/
     - CHANGELOG.md
 

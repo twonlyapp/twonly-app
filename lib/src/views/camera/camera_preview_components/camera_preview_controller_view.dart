@@ -21,6 +21,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.dart';
 import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
@@ -506,6 +507,36 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     });
   }
 
+  Future<void> pressSideButtonLeft() async {
+    if (!mc.isSelectingFaceFilters) {
+      return pickImageFromGallery();
+    }
+    if (mc.currentFilterType.index == 1) {
+      mc.setFilter(FaceFilterType.none);
+      setState(() {
+        mc.isSelectingFaceFilters = false;
+      });
+      return;
+    }
+    mc.setFilter(mc.currentFilterType.goLeft());
+  }
+
+  Future<void> pressSideButtonRight() async {
+    if (!mc.isSelectingFaceFilters) {
+      setState(() {
+        mc.isSelectingFaceFilters = true;
+      });
+    }
+    if (mc.currentFilterType.index == FaceFilterType.values.length - 1) {
+      mc.setFilter(FaceFilterType.none);
+      setState(() {
+        mc.isSelectingFaceFilters = false;
+      });
+      return;
+    }
+    mc.setFilter(mc.currentFilterType.goRight());
+  }
+
   Future<void> startVideoRecording() async {
     if (mc.cameraController != null &&
         mc.cameraController!.value.isRecordingVideo) {
@@ -736,15 +767,19 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                         children: [
                           if (!_isVideoRecording)
                             GestureDetector(
-                              onTap: pickImageFromGallery,
+                              onTap: pressSideButtonLeft,
                               child: Align(
                                 child: Container(
                                   height: 50,
                                   width: 80,
                                   padding: const EdgeInsets.all(2),
-                                  child: const Center(
+                                  child: Center(
                                     child: FaIcon(
-                                      FontAwesomeIcons.photoFilm,
+                                      mc.isSelectingFaceFilters
+                                          ? mc.currentFilterType.index == 1
+                                              ? FontAwesomeIcons.xmark
+                                              : FontAwesomeIcons.arrowLeft
+                                          : FontAwesomeIcons.photoFilm,
                                       color: Colors.white,
                                       size: 25,
                                     ),
@@ -771,10 +806,39 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                         : Colors.white,
                                   ),
                                 ),
+                                child: mc.currentFilterType.preview,
                               ),
                             ),
                           ),
-                          if (!_isVideoRecording) const SizedBox(width: 80),
+                          if (!_isVideoRecording)
+                            if (isFront)
+                              GestureDetector(
+                                onTap: pressSideButtonRight,
+                                child: Align(
+                                  child: Container(
+                                    height: 50,
+                                    width: 80,
+                                    padding: const EdgeInsets.all(2),
+                                    child: Center(
+                                      child: FaIcon(
+                                        mc.isSelectingFaceFilters
+                                            ? mc.currentFilterType.index ==
+                                                    FaceFilterType
+                                                            .values.length -
+                                                        1
+                                                ? FontAwesomeIcons.xmark
+                                                : FontAwesomeIcons.arrowRight
+                                            : FontAwesomeIcons
+                                                .faceGrinTongueSquint,
+                                        color: Colors.white,
+                                        size: 25,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              const SizedBox(width: 80),
                         ],
                       ),
                     ],

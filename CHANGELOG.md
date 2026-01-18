@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.87
+
+- Added basic support for face filters
+
 ## 0.0.86
 
 - Allows to reopen send images (if send without time limit or enabled auth) 

@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -15,7 +16,11 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.dart';
 import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/views/camera/painters/barcode_detector_painter.dart';
+import 'package:twonly/src/views/camera/painters/face_filters/beard_filter_painter.dart';
+import 'package:twonly/src/views/camera/painters/face_filters/dog_filter_painter.dart';
+import 'package:twonly/src/views/camera/painters/face_filters/face_filter_painter.dart';
 
 class ScannedVerifiedContact {
   ScannedVerifiedContact({
@@ -45,6 +50,22 @@ class MainCameraController {
   Map<int, ScannedNewProfile> scannedNewProfiles = {};
   String? scannedUrl;
   GlobalKey zoomButtonKey = GlobalKey();
+  bool isSelectingFaceFilters = false;
+
+  final BarcodeScanner _barcodeScanner = BarcodeScanner();
+  final FaceDetector _faceDetector = FaceDetector(
+    options: FaceDetectorOptions(
+      enableContours: true,
+      enableLandmarks: true,
+    ),
+  );
+  bool _isBusy = false;
+  bool _isBusyFaces = false;
+  CustomPaint? customPaint;
+  CustomPaint? facePaint;
+
+  FaceFilterType _currentFilterType = FaceFilterType.beardUpperLip;
+  FaceFilterType get currentFilterType => _currentFilterType;
 
   Future<void> closeCamera() async {
     contactsVerified = {};
@@ -73,10 +94,9 @@ class MainCameraController {
       selectedCameraDetails = opts.$1;
       cameraController = opts.$2;
     }
-    if (cameraController?.description.lensDirection ==
-        CameraLensDirection.back) {
-      await cameraController?.startImageStream(_processCameraImage);
-    }
+    isSelectingFaceFilters = false;
+    setFilter(FaceFilterType.none);
+    await cameraController?.startImageStream(_processCameraImage);
     zoomButtonKey = GlobalKey();
     setState();
     return cameraController;
@@ -95,13 +115,23 @@ class MainCameraController {
     }
     final tmp = cameraController;
     cameraController = null;
+    facePaint = null;
+    customPaint = null;
     await tmp!.dispose();
     await selectCamera((selectedCameraDetails.cameraId + 1) % 2, false);
   }
 
-  final BarcodeScanner _barcodeScanner = BarcodeScanner();
-  bool _isBusy = false;
-  CustomPaint? customPaint;
+  void setFilter(FaceFilterType type) {
+    _currentFilterType = type;
+    if (_currentFilterType == FaceFilterType.none) {
+      faceFilterPainter = null;
+      facePaint = null;
+      _isBusyFaces = false;
+    }
+    setState();
+  }
+
+  FaceFilterPainter? faceFilterPainter;
 
   final Map<DeviceOrientation, int> _orientations = {
     DeviceOrientation.portraitUp: 0,
@@ -113,7 +143,16 @@ class MainCameraController {
   void _processCameraImage(CameraImage image) {
     final inputImage = _inputImageFromCameraImage(image);
     if (inputImage == null) return;
-    _processImage(inputImage);
+    _processBarcode(inputImage);
+    // check if front camera is selected
+    if (cameraController?.description.lensDirection ==
+        CameraLensDirection.front) {
+      if (_currentFilterType != FaceFilterType.none) {
+        _processFaces(inputImage);
+      }
+    } else {
+      _processBarcode(inputImage);
+    }
   }
 
   InputImage? _inputImageFromCameraImage(CameraImage image) {
@@ -175,7 +214,7 @@ class MainCameraController {
     );
   }
 
-  Future<void> _processImage(InputImage inputImage) async {
+  Future<void> _processBarcode(InputImage inputImage) async {
     if (_isBusy) return;
     _isBusy = true;
     final barcodes = await _barcodeScanner.processImage(inputImage);
@@ -253,6 +292,50 @@ class MainCameraController {
       }
     }
     _isBusy = false;
+    setState();
+  }
+
+  Future<void> _processFaces(InputImage inputImage) async {
+    if (_isBusyFaces) return;
+    _isBusyFaces = true;
+    final faces = await _faceDetector.processImage(inputImage);
+    if (inputImage.metadata?.size != null &&
+        inputImage.metadata?.rotation != null &&
+        cameraController != null) {
+      if (faces.isNotEmpty) {
+        CustomPainter? painter;
+        if (_currentFilterType == FaceFilterType.dogBrown) {
+          painter = DogFilterPainter(
+            faces,
+            inputImage.metadata!.size,
+            inputImage.metadata!.rotation,
+            cameraController!.description.lensDirection,
+          );
+        } else if (_currentFilterType == FaceFilterType.beardUpperLip) {
+          painter = BeardFilterPainter(
+            faces,
+            inputImage.metadata!.size,
+            inputImage.metadata!.rotation,
+            cameraController!.description.lensDirection,
+          );
+        }
+
+        if (painter != null) {
+          facePaint = CustomPaint(painter: painter);
+          // Also set the correct FaceFilterPainter reference if needed for other logic,
+          // though currently facePaint is what's used for display.
+          if (painter is FaceFilterPainter) {
+            faceFilterPainter = painter;
+          }
+        } else {
+          facePaint = null;
+          faceFilterPainter = null;
+        }
+      } else {
+        facePaint = null;
+      }
+    }
+    _isBusyFaces = false;
     setState();
   }
 }
