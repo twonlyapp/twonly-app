@@ -55,6 +55,13 @@ class MainCameraController {
   GlobalKey cameraPreviewKey = GlobalKey();
   bool isSelectingFaceFilters = false;
 
+  Uri? sharedLinkForPreview;
+
+  void setSharedLinkForPreview(Uri url) {
+    sharedLinkForPreview = url;
+    setState();
+  }
+
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(

@@ -14,7 +14,7 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dar
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layer_data.dart';
 import 'package:twonly/src/views/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/views/chats/message_info.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';

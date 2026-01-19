@@ -4,7 +4,7 @@ import 'package:hand_signature/signature.dart';
 
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layer_data.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/draw/custom_hand_signature.dart';
 
 class DrawLayer extends StatefulWidget {

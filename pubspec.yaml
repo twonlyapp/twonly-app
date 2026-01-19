@@ -26,6 +26,7 @@ dependencies:
   convert: ^3.1.2
   crypto: ^3.0.7
   clock: ^1.1.2
+  html: ^0.15.6
 
   
   # Trusted publisher flutter.dev 

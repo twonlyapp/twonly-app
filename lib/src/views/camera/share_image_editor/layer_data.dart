@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/image_item.dart';
+import 'package:twonly/src/views/camera/share_image_editor/image_item.dart';
 
 /// Layer class with some common properties
 class Layer {
@@ -28,7 +28,6 @@ class Layer {
   bool showCustomButtons;
 }
 
-/// Attributes used by [BackgroundLayer]
 class BackgroundLayerData extends Layer {
   BackgroundLayerData({
     required super.key,
@@ -36,6 +35,14 @@ class BackgroundLayerData extends Layer {
   });
   ImageItem image;
   bool imageLoaded = false;
+}
+
+class LinkPreviewLayerData extends Layer {
+  LinkPreviewLayerData({
+    required super.key,
+    required this.link,
+  });
+  Uri link;
 }
 
 class FilterLayerData extends Layer {
@@ -46,7 +53,6 @@ class FilterLayerData extends Layer {
   int page = 1;
 }
 
-/// Attributes used by [EmojiLayer]
 class EmojiLayerData extends Layer {
   EmojiLayerData({
     required super.key,
@@ -62,7 +68,6 @@ class EmojiLayerData extends Layer {
   double size;
 }
 
-/// Attributes used by [TextLayer]
 class TextLayerData extends Layer {
   TextLayerData({
     required super.key,
@@ -78,9 +83,7 @@ class TextLayerData extends Layer {
   int textLayersBefore;
 }
 
-/// Attributes used by [DrawLayer]
 class DrawLayerData extends Layer {
-  // String text;
   DrawLayerData({
     required super.key,
     super.offset,

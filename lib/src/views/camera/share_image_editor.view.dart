@@ -22,8 +22,8 @@ import 'package:twonly/src/views/camera/camera_preview_components/save_to_galler
 import 'package:twonly/src/views/camera/share_image_contact_selection.view.dart';
 import 'package:twonly/src/views/camera/share_image_contact_selection/select_show_time.dart';
 import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/image_item.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/image_item.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layer_data.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers_viewer.dart';
 import 'package:twonly/src/views/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
@@ -38,6 +38,7 @@ class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView({
     required this.sharedFromGallery,
     required this.mediaFileService,
+    this.previewLink,
     super.key,
     this.imageBytesFuture,
     this.sendToGroup,
@@ -48,6 +49,7 @@ class ShareImageEditorView extends StatefulWidget {
   final bool sharedFromGallery;
   final MediaFileService mediaFileService;
   final MainCameraController? mainCameraController;
+  final Uri? previewLink;
   @override
   State<ShareImageEditorView> createState() => _ShareImageEditorView();
 }
@@ -76,6 +78,12 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     if (media.type != MediaType.gif) {
       layers.add(FilterLayerData(key: GlobalKey()));
+    }
+
+    if (widget.previewLink != null) {
+      layers.add(
+        LinkPreviewLayerData(key: GlobalKey(), link: widget.previewLink!),
+      );
     }
 
     if (widget.sendToGroup != null) {

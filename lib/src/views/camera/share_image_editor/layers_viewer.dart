@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layer_data.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/background.layer.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/draw.layer.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/emoji.layer.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/filter.layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview.layer.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/text.layer.dart';
 
 /// View stacked layers (unbounded height, width)
@@ -39,6 +40,7 @@ class LayersViewer extends StatelessWidget {
           (layerItem) =>
               layerItem is EmojiLayerData ||
               layerItem is DrawLayerData ||
+              layerItem is LinkPreviewLayerData ||
               layerItem is TextLayerData,
         )
             .map((layerItem) {
@@ -56,6 +58,12 @@ class LayersViewer extends StatelessWidget {
             );
           } else if (layerItem is TextLayerData) {
             return TextLayer(
+              key: layerItem.key,
+              layerData: layerItem,
+              onUpdate: onUpdate,
+            );
+          } else if (layerItem is LinkPreviewLayerData) {
+            return LinkPreviewLayer(
               key: layerItem.key,
               layerData: layerItem,
               onUpdate: onUpdate,

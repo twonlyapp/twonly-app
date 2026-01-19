@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layer_data.dart';
 
 /// Emoji layer
 class EmojiLayer extends StatefulWidget {

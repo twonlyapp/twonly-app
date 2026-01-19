@@ -148,10 +148,8 @@ Future<void> handleIntentMediaFile(
   );
 }
 
-Future<void> handleIntentSharedFile(
-  BuildContext context,
-  List<SharedFile> files,
-) async {
+Future<void> handleIntentSharedFile(BuildContext context,
+    List<SharedFile> files, void Function(Uri) onUrlCallBack) async {
   for (final file in files) {
     if (file.value == null) {
       Log.error(
@@ -163,7 +161,9 @@ Future<void> handleIntentSharedFile(
 
     switch (file.type) {
       case SharedMediaType.URL:
-      // await handleIntentUrl(context, Uri.parse(file.value!));
+        if (file.value?.startsWith('http') ?? false) {
+          onUrlCallBack(Uri.parse(file.value!));
+        }
       case SharedMediaType.IMAGE:
         var type = MediaType.image;
         if (file.value!.endsWith('.gif')) {

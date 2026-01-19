@@ -3,9 +3,9 @@
 ## 0.0.89
 
 - Adds option to manual focus in the camera
-- Adds support to switch between front and back camera during video recording
+- Adds support to switch between front and back cameras during video recording
 - Adds basic face filters
-- Improves image editor like emojies or text under a drawing can be moved
+- Improves image editor, like emojis or text under a drawing can be moved
 - Fixes issue with emojis disappearing in the image editor
 
 ## 0.0.86

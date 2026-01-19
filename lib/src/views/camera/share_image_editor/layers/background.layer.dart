@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layer_data.dart';
 
 class BackgroundLayer extends StatefulWidget {
   const BackgroundLayer({

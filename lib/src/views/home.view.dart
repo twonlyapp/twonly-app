@@ -120,7 +120,13 @@ class HomeViewState extends State<HomeView> {
 
     _intentStreamSub = FlutterSharingIntent.instance.getMediaStream().listen(
       (f) {
-        if (mounted) handleIntentSharedFile(context, f);
+        if (mounted) {
+          handleIntentSharedFile(
+            context,
+            f,
+            _mainCameraController.setSharedLinkForPreview,
+          );
+        }
       },
       // ignore: inference_failure_on_untyped_parameter
       onError: (err) {
@@ -129,7 +135,13 @@ class HomeViewState extends State<HomeView> {
     );
 
     FlutterSharingIntent.instance.getInitialSharing().then((f) {
-      if (mounted) handleIntentSharedFile(context, f);
+      if (mounted) {
+        handleIntentSharedFile(
+          context,
+          f,
+          _mainCameraController.setSharedLinkForPreview,
+        );
+      }
     });
   }
 

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layer_data.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/filters/datetime_filter.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/filters/image_filter.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/filters/location_filter.dart';

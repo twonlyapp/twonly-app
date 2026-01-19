@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -27,8 +28,8 @@ import 'package:twonly/src/views/camera/camera_preview_components/permissions_vi
 import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.dart';
-import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
 import 'package:twonly/src/views/camera/share_image_editor.view.dart';
+import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/loader.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
@@ -351,6 +352,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           sendToGroup: widget.sendToGroup,
           mediaFileService: mediaFileService,
           mainCameraController: mc,
+          previewLink: mc.sharedLinkForPreview,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;
@@ -631,7 +633,18 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
             if (!_sharePreviewIsShown &&
                 widget.sendToGroup != null &&
                 !_isVideoRecording)
-              SendToWidget(sendTo: widget.sendToGroup!.groupName),
+              ShowTitleText(
+                title: widget.sendToGroup!.groupName,
+                desc: context.lang.cameraPreviewSendTo,
+              ),
+            if (!_sharePreviewIsShown &&
+                mc.sharedLinkForPreview != null &&
+                !_isVideoRecording)
+              ShowTitleText(
+                title: mc.sharedLinkForPreview?.host ?? '',
+                desc: 'Link',
+                isLink: true,
+              ),
             if (!_sharePreviewIsShown &&
                 !_isVideoRecording &&
                 !widget.hideControllers)
