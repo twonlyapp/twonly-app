@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
-import 'package:twonly/src/views/camera/image_editor/data/image_item.dart';
+import 'package:twonly/src/views/camera/share_image_editor/data/image_item.dart';
 
 /// Layer class with some common properties
 class Layer {
@@ -51,7 +51,7 @@ class EmojiLayerData extends Layer {
   EmojiLayerData({
     required super.key,
     this.text = '',
-    this.size = 64,
+    this.size = 94,
     super.offset,
     super.opacity,
     super.rotation,

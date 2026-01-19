@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/background_layer.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/draw_layer.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/emoji_layer.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/filter_layer.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/text_layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/background.layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/draw.layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/emoji.layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/filter.layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/text.layer.dart';
 
 /// View stacked layers (unbounded height, width)
 class LayersViewer extends StatelessWidget {
@@ -37,7 +37,9 @@ class LayersViewer extends StatelessWidget {
         ...layers
             .where(
           (layerItem) =>
-              layerItem is EmojiLayerData || layerItem is DrawLayerData,
+              layerItem is EmojiLayerData ||
+              layerItem is DrawLayerData ||
+              layerItem is TextLayerData,
         )
             .map((layerItem) {
           if (layerItem is EmojiLayerData) {
@@ -52,15 +54,14 @@ class LayersViewer extends StatelessWidget {
               layerData: layerItem,
               onUpdate: onUpdate,
             );
+          } else if (layerItem is TextLayerData) {
+            return TextLayer(
+              key: layerItem.key,
+              layerData: layerItem,
+              onUpdate: onUpdate,
+            );
           }
           return Container();
-        }),
-        ...layers.whereType<TextLayerData>().map((layerItem) {
-          return TextLayer(
-            key: layerItem.key,
-            layerData: layerItem,
-            onUpdate: onUpdate,
-          );
         }),
       ],
     );

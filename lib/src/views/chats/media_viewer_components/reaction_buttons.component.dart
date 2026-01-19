@@ -5,8 +5,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
-import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
+import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/views/chats/media_viewer_components/emoji_reactions_row.component.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 

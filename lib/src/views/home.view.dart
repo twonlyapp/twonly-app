@@ -14,7 +14,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/views/chats/chat_list.view.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
 

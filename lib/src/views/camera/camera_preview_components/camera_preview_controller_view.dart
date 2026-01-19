@@ -27,8 +27,8 @@ import 'package:twonly/src/views/camera/camera_preview_components/permissions_vi
 import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.dart';
-import 'package:twonly/src/views/camera/image_editor/action_button.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
+import 'package:twonly/src/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/loader.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';

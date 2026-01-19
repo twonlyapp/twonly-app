@@ -13,7 +13,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/share_image_components/best_friends_selector.dart';
+import 'package:twonly/src/views/camera/share_image_contact_selection/best_friends_selector.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/headline.dart';

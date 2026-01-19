@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/filter_layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/filter.layer.dart';
 
 class DateTimeFilter extends StatelessWidget {
   const DateTimeFilter({super.key, this.color = Colors.white});

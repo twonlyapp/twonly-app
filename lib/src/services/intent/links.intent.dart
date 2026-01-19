@@ -13,7 +13,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';

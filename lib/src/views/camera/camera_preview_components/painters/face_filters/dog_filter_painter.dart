@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/views/camera/painters/coordinates_translator.dart';
-import 'package:twonly/src/views/camera/painters/face_filters/face_filter_painter.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/painters/coordinates_translator.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/painters/face_filters/face_filter_painter.dart';
 
 class DogFilterPainter extends FaceFilterPainter {
   DogFilterPainter(

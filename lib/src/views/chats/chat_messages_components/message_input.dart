@@ -14,7 +14,7 @@ import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
+import 'package:twonly/src/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 
 class MessageInput extends StatefulWidget {

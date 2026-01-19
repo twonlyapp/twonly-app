@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/camera/painters/face_filters/beard_filter_painter.dart';
-import 'package:twonly/src/views/camera/painters/face_filters/dog_filter_painter.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/painters/face_filters/beard_filter_painter.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/painters/face_filters/dog_filter_painter.dart';
 
 enum FaceFilterType {
   none,

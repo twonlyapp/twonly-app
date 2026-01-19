@@ -9,7 +9,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/save_to_gallery.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/video_player_wrapper.dart';

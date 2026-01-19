@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hand_signature/signature.dart';
-// ignore: implementation_imports
-import 'package:hand_signature/src/utils.dart';
+
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/utils/screenshot.dart';
-import 'package:twonly/src/views/camera/image_editor/action_button.dart';
-import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
+import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/draw/custom_hand_signature.dart';
 
 class DrawLayer extends StatefulWidget {
   const DrawLayer({
@@ -22,8 +21,6 @@ class DrawLayer extends StatefulWidget {
 
 class _DrawLayerState extends State<DrawLayer> {
   Color currentColor = Colors.red;
-
-  ScreenshotController screenshotController = ScreenshotController();
 
   List<CubicPath> undoList = [];
   bool skipNextEvent = false;
@@ -85,17 +82,11 @@ class _DrawLayerState extends State<DrawLayer> {
       fit: StackFit.expand,
       children: [
         Positioned.fill(
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.transparent,
-            ),
-            child: Screenshot(
-              controller: screenshotController,
-              child: HandSignature(
-                control: widget.layerData.control,
-                drawer: CustomSignatureDrawer(color: currentColor, width: 7),
-              ),
-            ),
+          child: CustomHandSignature(
+            control: widget.layerData.control,
+            isModificationEnabled: widget.layerData.isEditing,
+            currentColor: currentColor,
+            width: 7,
           ),
         ),
         if (widget.layerData.isEditing && widget.layerData.showCustomButtons)
@@ -211,12 +202,12 @@ class _DrawLayerState extends State<DrawLayer> {
             top: 50 + (185 * _sliderValue),
             child: MagnifyingGlass(color: currentColor),
           ),
-        if (!widget.layerData.isEditing)
-          Positioned.fill(
-            child: Container(
-              color: Colors.transparent,
-            ),
-          ),
+        // if (!widget.layerData.isEditing)
+        //   Positioned.fill(
+        //     child: Container(
+        //       color: Colors.transparent,
+        //     ),
+        //   ),
       ],
     );
   }
@@ -242,35 +233,5 @@ class MagnifyingGlass extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class CustomSignatureDrawer extends HandSignatureDrawer {
-  const CustomSignatureDrawer({
-    this.width = 1.0,
-    this.color = Colors.black,
-  });
-  final Color color;
-  final double width;
-
-  @override
-  void paint(Canvas canvas, Size size, List<CubicPath> paths) {
-    for (final path in paths) {
-      var lineColor = color;
-      if (path.setup.args!['color'] != null) {
-        lineColor = path.setup.args!['color'] as Color;
-      } else {
-        path.setup.args!['color'] = color;
-      }
-      final paint = Paint()
-        ..color = lineColor
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..strokeWidth = width;
-      if (path.isFilled) {
-        canvas.drawPath(PathUtil.toLinePath(path.lines), paint);
-      }
-    }
   }
 }

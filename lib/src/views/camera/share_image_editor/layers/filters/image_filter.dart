@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/filter_layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/filter.layer.dart';
 
 class ImageFilter extends StatelessWidget {
   const ImageFilter({required this.imagePath, super.key});

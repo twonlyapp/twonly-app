@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:collection';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,13 +19,13 @@ import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/save_to_gallery.dart';
-import 'package:twonly/src/views/camera/image_editor/action_button.dart';
-import 'package:twonly/src/views/camera/image_editor/data/image_item.dart';
-import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
-import 'package:twonly/src/views/camera/image_editor/layers_viewer.dart';
-import 'package:twonly/src/views/camera/image_editor/modules/all_emojis.dart';
-import 'package:twonly/src/views/camera/share_image_components/select_show_time.dart';
-import 'package:twonly/src/views/camera/share_image_view.dart';
+import 'package:twonly/src/views/camera/share_image_contact_selection.view.dart';
+import 'package:twonly/src/views/camera/share_image_contact_selection/select_show_time.dart';
+import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
+import 'package:twonly/src/views/camera/share_image_editor/data/image_item.dart';
+import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers_viewer.dart';
+import 'package:twonly/src/views/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
 import 'package:video_player/video_player.dart';

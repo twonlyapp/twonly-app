@@ -22,7 +22,7 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
     String emoji,
     bool remove,
   ) async {
-    if (!isEmoji(emoji)) {
+    if (!isOneEmoji(emoji)) {
       Log.error('Did not update reaction as it is not an emoji!');
       return;
     }
@@ -59,7 +59,7 @@ class ReactionsDao extends DatabaseAccessor<TwonlyDB> with _$ReactionsDaoMixin {
     String emoji,
     bool remove,
   ) async {
-    if (!isEmoji(emoji)) {
+    if (!isOneEmoji(emoji)) {
       Log.error('Did not update reaction as it is not an emoji!');
       return;
     }

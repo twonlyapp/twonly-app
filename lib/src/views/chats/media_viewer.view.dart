@@ -20,7 +20,7 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
+import 'package:twonly/src/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/views/chats/media_viewer_components/reaction_buttons.component.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/loader.dart';

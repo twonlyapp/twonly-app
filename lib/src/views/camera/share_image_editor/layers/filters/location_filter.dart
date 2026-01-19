@@ -11,8 +11,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
 import 'package:twonly/src/utils/log.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/filter_layer.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/filters/datetime_filter.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/filter.layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/filters/datetime_filter.dart';
 
 class LocationFilter extends StatefulWidget {
   const LocationFilter({super.key});

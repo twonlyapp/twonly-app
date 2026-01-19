@@ -19,10 +19,10 @@ import 'package:twonly/src/utils/qr.dart';
 import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/face_filters.dart';
-import 'package:twonly/src/views/camera/painters/barcode_detector_painter.dart';
-import 'package:twonly/src/views/camera/painters/face_filters/beard_filter_painter.dart';
-import 'package:twonly/src/views/camera/painters/face_filters/dog_filter_painter.dart';
-import 'package:twonly/src/views/camera/painters/face_filters/face_filter_painter.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/painters/barcode_detector_painter.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/painters/face_filters/beard_filter_painter.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/painters/face_filters/dog_filter_painter.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/painters/face_filters/face_filter_painter.dart';
 
 class ScannedVerifiedContact {
   ScannedVerifiedContact({

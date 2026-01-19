@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/image_editor/data/layer.dart';
+import 'package:twonly/src/views/camera/share_image_editor/data/layer.dart';
 
 class EmojiPickerBottom extends StatelessWidget {
   const EmojiPickerBottom({super.key});
