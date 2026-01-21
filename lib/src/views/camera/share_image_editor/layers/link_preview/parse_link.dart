@@ -8,13 +8,14 @@ import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/base.dart';
-import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/html_parser.dart';
-import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/json_ld_parser.dart';
-import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/og_parser.dart';
-import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/other_parser.dart';
-import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/twitter_parser.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/html.parser.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/json_ld.parser.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/mastodon.parser.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/og.parser.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/other.parser.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/twitter.parser.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/util.dart';
-import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/youtube_parser.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/youtube.parser.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/utils.dart';
 
 Future<Metadata?> getMetadata(String link) async {
@@ -81,7 +82,7 @@ Future<Metadata?> getInfo(
     final document = responseToDocument(response);
     if (document == null) return info;
 
-    final data_ = _parse(document, url: url);
+    final data_ = _parse(document, url);
 
     return data_;
   } catch (error) {
@@ -103,83 +104,44 @@ Document? responseToDocument(http.Response response) {
   return document;
 }
 
-Metadata _parse(Document? document, {String? url}) {
-  final output = Metadata();
+Metadata _parse(Document? document, String url) {
+  final output = Metadata()..url = url;
 
-  final parsers = [
-    _openGraph(document),
-    _twitterCard(document),
-    _youtubeCard(document),
-    _jsonLdSchema(document),
-    _htmlMeta(document),
-    _otherParser(document),
+  final allParsers = [
+    // start with vendor specific to parse the vendor type
+    MastodonParser(document),
+    YoutubeParser(document, url),
+    TwitterParser(document, url),
+
+    JsonLdParser(document),
+    OpenGraphParser(document),
+    HtmlMetaParser(document),
+    OtherParser(document),
   ];
 
-  for (final p in parsers) {
-    if (p == null) continue;
-
-    output.title ??= p.title;
-    output.desc ??= p.desc;
-    output.image ??= p.image;
-    output.siteName ??= p.siteName;
-    output.url ??= p.url ?? url;
-
-    if (output.hasAllMetadata) break;
-  }
-
-  final url_ = output.url ?? url;
-  final image = output.image;
-  if (url_ != null && image != null) {
-    output.image = Uri.parse(url_).resolve(image).toString();
+  for (final parser in allParsers) {
+    try {
+      output.vendor ??= parser.vendor;
+      output.title ??= parser.title;
+      output.desc ??= parser.desc;
+      if (output.vendor == Vendor.twitterPosting) {
+        if (output.image == null) {
+          if (parser.image?.contains('/media/') ?? false) {
+            output.image ??= parser.image;
+          }
+        }
+      } else {
+        output.image ??= parser.image;
+      }
+      output.siteName ??= parser.siteName;
+      output.publishDate ??= parser.publishDate;
+      output.likeAction ??= parser.likeAction;
+      output.shareAction ??= parser.shareAction;
+      if (output.hasAllMetadata) break;
+    } catch (e) {
+      Log.error(e);
+    }
   }
 
   return output;
-}
-
-Metadata? _openGraph(Document? document) {
-  try {
-    return OpenGraphParser(document).parse();
-  } catch (e) {
-    return null;
-  }
-}
-
-Metadata? _htmlMeta(Document? document) {
-  try {
-    return HtmlMetaParser(document).parse();
-  } catch (e) {
-    return null;
-  }
-}
-
-Metadata? _jsonLdSchema(Document? document) {
-  try {
-    return JsonLdParser(document).parse();
-  } catch (e) {
-    return null;
-  }
-}
-
-Metadata? _youtubeCard(Document? document) {
-  try {
-    return YoutubeParser(document).parse();
-  } catch (e) {
-    return null;
-  }
-}
-
-Metadata? _twitterCard(Document? document) {
-  try {
-    return TwitterParser(document).parse();
-  } catch (e) {
-    return null;
-  }
-}
-
-Metadata? _otherParser(Document? document) {
-  try {
-    return OtherParser(document).parse();
-  } catch (e) {
-    return null;
-  }
 }

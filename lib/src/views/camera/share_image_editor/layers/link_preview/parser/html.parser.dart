@@ -34,7 +34,4 @@ class HtmlMetaParser with BaseMetaInfo {
       ?.querySelector("meta[name='site_name']")
       ?.attributes
       .get('content');
-
-  @override
-  String toString() => parse().toString();
 }

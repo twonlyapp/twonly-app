@@ -4,26 +4,32 @@ import 'base.dart';
 import 'util.dart';
 
 class YoutubeParser with BaseMetaInfo {
-  YoutubeParser(this.document) {
+  YoutubeParser(this.document, this.url) {
     _jsonData = _parseToJson(document);
   }
+
+  @override
+  String url;
 
   Document? document;
   dynamic _jsonData;
 
   dynamic _parseToJson(Document? document) {
-    final data = document?.outerHtml
-        .replaceAll('<html><head></head><body>', '')
-        .replaceAll('</body></html>', '');
-    if (data == null) return null;
-    /* For multiline json file */
-    // Replacing all new line characters with empty space
-    // before performing json decode on data
-    final d = jsonDecode(data.replaceAll('\n', ' '));
-    return d;
+    try {
+      final data = document?.outerHtml
+          .replaceAll('<html><head></head><body>', '')
+          .replaceAll('</body></html>', '');
+      if (data == null) return null;
+      /* For multiline json file */
+      // Replacing all new line characters with empty space
+      // before performing json decode on data
+      final d = jsonDecode(data.replaceAll('\n', ' '));
+      return d;
+    } catch (e) {
+      return null;
+    }
   }
 
-  /// Get the [Metadata.title] from the [<title>] tag
   @override
   String? get title {
     final data = _jsonData;
@@ -35,7 +41,6 @@ class YoutubeParser with BaseMetaInfo {
     return null;
   }
 
-  /// Get the [Metadata.image] from the first <img> tag in the body
   @override
   String? get image {
     final data = _jsonData;
@@ -59,22 +64,13 @@ class YoutubeParser with BaseMetaInfo {
   }
 
   @override
-  String? get url {
-    final data = _jsonData;
-    if (data is List<Map<String, dynamic>>) {
-      return data.first['provider_url'] as String?;
-    } else if (data is Map) {
-      return data.get('provider_url');
-    }
-    return null;
-  }
+  Vendor? get vendor => (Uri.parse(url).host.contains('youtube.com'))
+      ? Vendor.youtubeVideo
+      : null;
 
   String? _imgResultToStr(dynamic result) {
     if (result is List && result.isNotEmpty) result = result.first;
     if (result is String) return result;
     return null;
   }
-
-  @override
-  String toString() => parse().toString();
 }
