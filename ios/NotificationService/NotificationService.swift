@@ -109,10 +109,10 @@ func getPushNotificationData(pushData: String) -> (
             } else if pushUser != nil {
                 return (
                     pushUser!.displayName,
-                    getPushNotificationText(pushNotification: pushNotification, true).0, pushUser!.userID
+                    getPushNotificationText(pushNotification: pushNotification, userKnown: true).0, pushUser!.userID
                 )
             } else {
-                let content = getPushNotificationText(pushNotification: pushNotification, false)
+                let content = getPushNotificationText(pushNotification: pushNotification, userKnown: false)
                 return (
                     content.1, content.0, 1
                 )
@@ -205,7 +205,7 @@ func readFromKeychain(key: String) -> String? {
     return nil
 }
 
-func getPushNotificationText(pushNotification: PushNotification, userKnown: bool) -> (String, String) {
+func getPushNotificationText(pushNotification: PushNotification, userKnown: Bool) -> (String, String) {
     let systemLanguage = Locale.current.language.languageCode?.identifier ?? "en"  // Get the current system language
 
     var pushNotificationText: [PushKind: String] = [:]
@@ -274,7 +274,7 @@ func getPushNotificationText(pushNotification: PushNotification, userKnown: bool
     var content = pushNotificationText[pushNotification.kind] ?? ""
     if (content == "") {
         title = noTranslationFoundTitle
-        body = noTranslationFoundBody
+        content = noTranslationFoundBody
     }
 
     if pushNotification.hasAdditionalContent {
