@@ -690,6 +690,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ),
                 ),
               ),
+            if (currentMessage != null)
+              AdditionalMessageContent(currentMessage!),
             if (currentMedia != null)
               ReactionButtons(
                 show: showShortReactions,
@@ -708,8 +710,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             Positioned.fill(
               child: EmojiFloatWidget(key: emojiKey),
             ),
-            if (currentMessage != null)
-              AdditionalMessageContent(currentMessage!),
           ],
         ),
       ),
