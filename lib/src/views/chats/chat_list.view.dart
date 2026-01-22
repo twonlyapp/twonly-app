@@ -25,6 +25,7 @@ import 'package:twonly/src/views/settings/help/changelog.view.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 import 'package:twonly/src/views/settings/settings_main.view.dart';
 import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
+import 'package:twonly/src/views/user_study/user_study_welcome.view.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -58,31 +59,49 @@ class _ChatListViewState extends State<ChatListView> {
       });
     });
 
-    final changeLog = await rootBundle.loadString('CHANGELOG.md');
-    final changeLogHash =
-        (await compute(Sha256().hash, changeLog.codeUnits)).bytes;
-    if (!gUser.hideChangeLog &&
-        gUser.lastChangeLogHash.toString() != changeLogHash.toString()) {
-      await updateUserdata((u) {
-        u.lastChangeLogHash = changeLogHash;
-        return u;
-      });
-      if (!mounted) return;
-      // only show changelog to people who already have contacts
-      // this prevents that this is shown directly after the user registered
-      if (_groupsNotPinned.isNotEmpty) {
+    // In case the user is already a Tester, ask him for permission.
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (gUser.subscriptionPlan == SubscriptionPlan.Tester.name &&
+          !gUser.askedForUserStudyPermission) {
         await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) {
-              return ChangeLogView(
-                changeLog: changeLog,
+              return const UserStudyWelcomeView(
+                wasOpenedAutomatic: true,
               );
             },
           ),
         );
       }
-    }
+
+      final changeLog = await rootBundle.loadString('CHANGELOG.md');
+      final changeLogHash =
+          (await compute(Sha256().hash, changeLog.codeUnits)).bytes;
+      if (!gUser.hideChangeLog &&
+          gUser.lastChangeLogHash.toString() != changeLogHash.toString()) {
+        await updateUserdata((u) {
+          u.lastChangeLogHash = changeLogHash;
+          return u;
+        });
+        if (!mounted) return;
+        // only show changelog to people who already have contacts
+        // this prevents that this is shown directly after the user registered
+        if (_groupsNotPinned.isNotEmpty) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return ChangeLogView(
+                  changeLog: changeLog,
+                );
+              },
+            ),
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -295,8 +314,8 @@ class _ChatListViewState extends State<ChatListView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            FloatingActionButton.small(
-              backgroundColor: context.color.primary,
+            IconButton.filled(
+              color: context.color.primary,
               onPressed: () {
                 Navigator.push(
                   context,
@@ -307,7 +326,7 @@ class _ChatListViewState extends State<ChatListView> {
                   ),
                 );
               },
-              child: FaIcon(
+              icon: FaIcon(
                 FontAwesomeIcons.qrcode,
                 color: isDarkMode(context) ? Colors.black : Colors.white,
               ),

@@ -41,6 +41,7 @@ import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/user_study/user_study_data_collection.dart';
 import 'package:web_socket_channel/io.dart';
 
 final lockConnecting = Mutex();
@@ -100,6 +101,11 @@ class ApiService {
       unawaited(fetchGroupStatesForUnjoinedGroups());
       unawaited(fetchMissingGroupPublicKey());
       unawaited(checkForDeletedUsernames());
+
+      if (gUser.userStudyParticipantsToken != null) {
+        // In case the user participates in the user study, call the handler after authenticated, to be sure there is a internet connection
+        unawaited(handleUserStudyUpload());
+      }
     }
   }
 
