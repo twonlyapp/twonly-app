@@ -99,9 +99,10 @@ Future<void> handlePushData(String pushDataB64) async {
     }
   } catch (e) {
     Log.error(e);
+    final lang = getLocalizations();
     await customLocalPushNotification(
-      'Du hast eine neue Nachricht.',
-      'Öffne twonly um mehr zu erfahren.',
+      lang.notificationTitleUnknown,
+      lang.notificationBodyUnknown,
     );
   }
 }
@@ -186,16 +187,14 @@ Future<void> showLocalPushNotification(
 Future<void> showLocalPushNotificationWithoutUserId(
   PushNotification pushNotification,
 ) async {
-  String? body;
-
-  body = getPushNotificationText(pushNotification);
-
   final lang = getLocalizations();
 
-  final title = lang.notificationTitleUnknownUser;
+  var title = lang.notificationTitleUnknown;
+  var body = lang.notificationBodyUnknown;
 
-  if (body == '') {
-    Log.error('No push notification type defined!');
+  if (pushNotification.kind == PushKind.contactRequest) {
+    title = lang.you;
+    body = lang.notificationContactRequestUnknownUser;
   }
 
   final androidNotificationDetails = AndroidNotificationDetails(

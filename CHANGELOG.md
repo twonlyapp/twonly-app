@@ -2,6 +2,7 @@
 
 ## 0.0.89
 
+- Adds link preview to images
 - Adds option to manual focus in the camera
 - Adds support to switch between front and back cameras during video recording
 - Adds basic face filters
