@@ -1,5 +1,3 @@
-// ignore_for_file: comment_references
-
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
 import 'package:twonly/src/views/camera/share_image_editor/image_item.dart';

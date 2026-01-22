@@ -4,12 +4,11 @@ import 'base.dart';
 import 'util.dart';
 
 class YoutubeParser with BaseMetaInfo {
-  YoutubeParser(this.document, this.url) {
+  YoutubeParser(this.document, this._url) {
     _jsonData = _parseToJson(document);
   }
 
-  @override
-  String url;
+  final String _url;
 
   Document? document;
   dynamic _jsonData;
@@ -44,7 +43,7 @@ class YoutubeParser with BaseMetaInfo {
   @override
   String? get image {
     final data = _jsonData;
-    if (data is List && data.isNotEmpty) {
+    if (data is List<Map<String, dynamic>> && data.isNotEmpty) {
       return _imgResultToStr(data.first['thumbnail_url']);
     } else if (data is Map) {
       return _imgResultToStr(data.getDynamic('thumbnail_url'));
@@ -64,12 +63,15 @@ class YoutubeParser with BaseMetaInfo {
   }
 
   @override
-  Vendor? get vendor => (Uri.parse(url).host.contains('youtube.com'))
+  Vendor? get vendor => (Uri.parse(_url).host.contains('youtube.com'))
       ? Vendor.youtubeVideo
       : null;
 
   String? _imgResultToStr(dynamic result) {
-    if (result is List && result.isNotEmpty) result = result.first;
+    if (result is List && result.isNotEmpty) {
+      final tmp = result.first;
+      if (tmp is String) return tmp;
+    }
     if (result is String) return result;
     return null;
   }

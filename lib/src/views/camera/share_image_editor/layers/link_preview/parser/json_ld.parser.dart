@@ -91,7 +91,10 @@ class JsonLdParser with BaseMetaInfo {
   String? get siteName => OpenGraphParser(document).siteName;
 
   String? _imgResultToStr(dynamic result) {
-    if (result is List && result.isNotEmpty) result = result.first;
+    if (result is List && result.isNotEmpty) {
+      final tmp = result.first;
+      if (tmp is String) return tmp;
+    }
     if (result is String) return result;
     return null;
   }

@@ -148,8 +148,11 @@ Future<void> handleIntentMediaFile(
   );
 }
 
-Future<void> handleIntentSharedFile(BuildContext context,
-    List<SharedFile> files, void Function(Uri) onUrlCallBack) async {
+Future<void> handleIntentSharedFile(
+  BuildContext context,
+  List<SharedFile> files,
+  void Function(Uri) onUrlCallBack,
+) async {
   for (final file in files) {
     if (file.value == null) {
       Log.error(

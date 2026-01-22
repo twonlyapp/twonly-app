@@ -68,7 +68,7 @@ class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
     return Scaffold(
       appBar: AppBar(title: const Text('Befragung')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -181,7 +181,7 @@ class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
             ..._messengerOptions.map(
               (m) => CheckboxListTile(
                 title: Text(m),
-                visualDensity: const VisualDensity(horizontal: 0, vertical: -4),
+                visualDensity: const VisualDensity(vertical: -4),
                 value: (_responses['messengers'] as List<dynamic>).contains(m),
                 onChanged: (bool? value) {
                   setState(() {
@@ -232,7 +232,7 @@ class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
 
   Widget _buildRadioList(List<String> options, String key) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: DropdownButtonFormField<String>(
         decoration: const InputDecoration(
           border: OutlineInputBorder(),

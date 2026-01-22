@@ -15,10 +15,10 @@ import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_editor/layer_data.dart';
-import 'package:twonly/src/views/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/views/chats/message_info.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/context_menu.component.dart';
+import 'package:twonly/src/views/components/emoji_picker.bottom.dart';
 import 'package:twonly/src/views/memories/memories_photo_slider.view.dart';
 
 class MessageContextMenu extends StatelessWidget {

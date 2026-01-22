@@ -95,7 +95,7 @@ void main() {
             'https://t.co/MQZ7ulHakF',
         image: 'https://pbs.twimg.com/media/ECF8Z5KWwAIBZ6o.jpg:large',
         vendor: Vendor.twitterPosting,
-      )
+      ),
     ];
 
     for (final testCase in testCases) {
