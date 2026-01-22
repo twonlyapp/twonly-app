@@ -61,6 +61,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   String? receiptId,
   Receipt? receipt,
   bool onlyReturnEncryptedData = false,
+  bool blocking = true,
 }) async {
   try {
     if (receiptId == null && receipt == null) return null;
@@ -238,12 +239,11 @@ Future<void> sendCipherTextToGroup(
   encryptedContent.groupId = groupId;
 
   for (final groupMember in groupMembers) {
-    unawaited(
-      sendCipherText(
-        groupMember.contactId,
-        encryptedContent,
-        messageId: messageId,
-      ),
+    await sendCipherText(
+      groupMember.contactId,
+      encryptedContent,
+      messageId: messageId,
+      blocking: false,
     );
   }
 }
@@ -252,6 +252,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   int contactId,
   pb.EncryptedContent encryptedContent, {
   bool onlyReturnEncryptedData = false,
+  bool blocking = true,
   String? messageId,
 }) async {
   encryptedContent.senderProfileCounter = Int64(gUser.avatarCounter);
@@ -270,10 +271,15 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
   );
 
   if (receipt != null) {
-    return tryToSendCompleteMessage(
+    final tmp = tryToSendCompleteMessage(
       receipt: receipt,
       onlyReturnEncryptedData: onlyReturnEncryptedData,
+      blocking: blocking,
     );
+    if (!blocking) {
+      return null;
+    }
+    return tmp;
   }
   return null;
 }
@@ -302,6 +308,7 @@ Future<void> notifyContactAboutOpeningMessage(
         timestamp: Int64(actionAt.millisecondsSinceEpoch),
       ),
     ),
+    blocking: false,
   );
   for (final messageId in messageOtherIds) {
     await twonlyDB.messagesDao.updateMessageId(

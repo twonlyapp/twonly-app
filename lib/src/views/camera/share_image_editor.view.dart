@@ -11,6 +11,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -420,6 +421,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
           updateSelectedGroupIds: updateSelectedGroupIds,
           mediaStoreFuture: mediaStoreFuture,
           mediaFileService: mediaService,
+          additionalData: getAdditionalData(),
         ),
       ),
     ) as bool?;
@@ -545,6 +547,18 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     });
   }
 
+  AdditionalMessageData? getAdditionalData() {
+    AdditionalMessageData? additionalData;
+
+    if (widget.previewLink != null) {
+      additionalData = AdditionalMessageData(
+        type: AdditionalMessageData_Type.LINK,
+        link: widget.previewLink.toString(),
+      );
+    }
+    return additionalData;
+  }
+
   Future<void> sendImageToSinglePerson() async {
     if (sendingOrLoadingImage) return;
     setState(() {
@@ -560,6 +574,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     await insertMediaFileInMessagesTable(
       mediaService,
       [widget.sendToGroup!.groupId],
+      additionalData: getAdditionalData(),
     );
 
     if (mounted) {

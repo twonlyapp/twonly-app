@@ -96,6 +96,13 @@ void main() {
         image: 'https://pbs.twimg.com/media/ECF8Z5KWwAIBZ6o.jpg:large',
         vendor: Vendor.twitterPosting,
       ),
+      LinkParserTest(
+        title: 'twonly Public Launch',
+        desc:
+            'After about a year of development, twonly is finally ready for its public launch.',
+        url: 'https://twonly.eu/en/blog/2026-public-launch.html',
+        image: 'https://twonly.eu/assets/blog/2026-public-launch.webp',
+      ),
     ];
 
     for (final testCase in testCases) {

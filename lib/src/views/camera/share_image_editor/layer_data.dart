@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hand_signature/signature.dart';
 import 'package:twonly/src/views/camera/share_image_editor/image_item.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/link_preview/parser/base.dart';
 
 /// Layer class with some common properties
 class Layer {
@@ -41,6 +42,8 @@ class LinkPreviewLayerData extends Layer {
     required this.link,
   });
   Uri link;
+  Metadata? metadata;
+  bool error = false;
 }
 
 class FilterLayerData extends Layer {

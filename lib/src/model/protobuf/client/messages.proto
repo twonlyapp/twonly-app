@@ -132,6 +132,8 @@ message EncryptedContent {
         optional bytes encryptionKey = 8;
         optional bytes encryptionMac = 9;
         optional bytes encryptionNonce = 10;
+
+        optional bytes additional_message_data = 11;
     }
 
     message MediaUpdate {

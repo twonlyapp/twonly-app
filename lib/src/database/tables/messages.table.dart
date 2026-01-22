@@ -22,6 +22,8 @@ class Messages extends Table {
       .nullable()
       .references(MediaFiles, #mediaId, onDelete: KeyAction.setNull)();
 
+  BlobColumn get additionalMessageData => blob().nullable()();
+
   BoolColumn get mediaStored => boolean().withDefault(const Constant(false))();
   BoolColumn get mediaReopened =>
       boolean().withDefault(const Constant(false))();
@@ -56,7 +58,7 @@ class MessageActions extends Table {
       text().references(Messages, #messageId, onDelete: KeyAction.cascade)();
 
   IntColumn get contactId =>
-      integer().references(Contacts, #contactId, onDelete: KeyAction.cascade)();
+      integer().references(Contacts, #userId, onDelete: KeyAction.cascade)();
 
   TextColumn get type => textEnum<MessageActionType>()();
 
@@ -75,7 +77,7 @@ class MessageHistories extends Table {
 
   IntColumn get contactId => integer()
       .nullable()
-      .references(Contacts, #contactId, onDelete: KeyAction.cascade)();
+      .references(Contacts, #userId, onDelete: KeyAction.cascade)();
 
   TextColumn get content => text().nullable()();
 

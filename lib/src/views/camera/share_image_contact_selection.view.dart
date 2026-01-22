@@ -9,6 +9,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -24,12 +25,14 @@ class ShareImageView extends StatefulWidget {
     required this.updateSelectedGroupIds,
     required this.mediaStoreFuture,
     required this.mediaFileService,
+    required this.additionalData,
     super.key,
   });
   final HashSet<String> selectedGroupIds;
   final void Function(String, bool) updateSelectedGroupIds;
   final Future<Uint8List?>? mediaStoreFuture;
   final MediaFileService mediaFileService;
+  final AdditionalMessageData? additionalData;
 
   @override
   State<ShareImageView> createState() => _ShareImageView();
@@ -286,6 +289,7 @@ class _ShareImageView extends State<ShareImageView> {
                   await insertMediaFileInMessagesTable(
                     widget.mediaFileService,
                     widget.selectedGroupIds.toList(),
+                    additionalData: widget.additionalData,
                   );
 
                   if (context.mounted) {

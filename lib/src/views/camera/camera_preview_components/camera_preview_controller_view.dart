@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_android_volume_keydown/flutter_android_volume_keydown.dart';
@@ -352,7 +353,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
           sendToGroup: widget.sendToGroup,
           mediaFileService: mediaFileService,
           mainCameraController: mc,
-          previewLink: mc.sharedLinkForPreview,
+          // previewLink: mc.sharedLinkForPreview,
+          previewLink: kDebugMode
+              ? Uri.parse(
+                  'https://mastodon.social/@islieb/115883317936171927',
+                )
+              : mc.sharedLinkForPreview,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;

@@ -969,6 +969,7 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
     $core.List<$core.int>? encryptionKey,
     $core.List<$core.int>? encryptionMac,
     $core.List<$core.int>? encryptionNonce,
+    $core.List<$core.int>? additionalMessageData,
   }) {
     final result = create();
     if (senderMessageId != null) result.senderMessageId = senderMessageId;
@@ -983,6 +984,8 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
     if (encryptionKey != null) result.encryptionKey = encryptionKey;
     if (encryptionMac != null) result.encryptionMac = encryptionMac;
     if (encryptionNonce != null) result.encryptionNonce = encryptionNonce;
+    if (additionalMessageData != null)
+      result.additionalMessageData = additionalMessageData;
     return result;
   }
 
@@ -1024,6 +1027,8 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
     ..a<$core.List<$core.int>>(
         10, _omitFieldNames ? '' : 'encryptionNonce', $pb.PbFieldType.OY,
         protoName: 'encryptionNonce')
+    ..a<$core.List<$core.int>>(
+        11, _omitFieldNames ? '' : 'additionalMessageData', $pb.PbFieldType.OY)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1138,6 +1143,16 @@ class EncryptedContent_Media extends $pb.GeneratedMessage {
   $core.bool hasEncryptionNonce() => $_has(9);
   @$pb.TagNumber(10)
   void clearEncryptionNonce() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.List<$core.int> get additionalMessageData => $_getN(10);
+  @$pb.TagNumber(11)
+  set additionalMessageData($core.List<$core.int> value) =>
+      $_setBytes(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasAdditionalMessageData() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearAdditionalMessageData() => $_clearField(11);
 }
 
 class EncryptedContent_MediaUpdate extends $pb.GeneratedMessage {
