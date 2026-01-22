@@ -135,6 +135,7 @@ class _UserListItem extends State<GroupListItem> {
         _previewMessages.where((x) => x.type == MessageType.media).toList();
     if (msgs.isNotEmpty &&
         msgs.first.type == MessageType.media &&
+        !msgs.first.isDeletedFromSender &&
         msgs.first.senderId != null &&
         msgs.first.openedAt == null) {
       _hasNonOpenedMediaFile = true;
