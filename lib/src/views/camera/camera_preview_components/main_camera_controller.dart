@@ -120,10 +120,6 @@ class MainCameraController {
     }
 
     selectedCameraDetails.isZoomAble = false;
-    if (selectedCameraDetails.cameraId != cameraId) {
-      // switched camera so reset the scaleFactor
-      selectedCameraDetails.scaleFactor = 1;
-    }
 
     if (cameraController == null) {
       cameraController = CameraController(
@@ -136,14 +132,28 @@ class MainCameraController {
       );
       await cameraController?.initialize();
       await cameraController?.startImageStream(_processCameraImage);
+      await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
     } else {
-      await HapticFeedback.lightImpact();
-      await cameraController?.stopImageStream();
+      try {
+        if (!isVideoRecording) {
+          await cameraController?.stopImageStream();
+        }
+      } catch (e) {
+        Log.info(e);
+      }
+      selectedCameraDetails.scaleFactor = 1;
+
+      await cameraController?.setZoomLevel(1);
       await cameraController?.setDescription(gCameras[cameraId]);
-      await cameraController?.startImageStream(_processCameraImage);
+      try {
+        if (!isVideoRecording) {
+          await cameraController?.startImageStream(_processCameraImage);
+        }
+      } catch (e) {
+        Log.info(e);
+      }
     }
 
-    await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
     await cameraController
         ?.lockCaptureOrientation(DeviceOrientation.portraitUp);
     await cameraController?.setFlashMode(

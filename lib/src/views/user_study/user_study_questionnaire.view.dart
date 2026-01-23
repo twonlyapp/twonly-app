@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_dynamic_calls
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -30,6 +31,7 @@ class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
     'comp_knowledge': null,
     'security_knowledge': null,
     'messengers': [],
+    'is_release_mode': kReleaseMode,
   };
 
   final List<String> _messengerOptions = [

@@ -92,8 +92,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _noScreenshot.screenshotOn();
     _subscription.cancel();
     downloadStateListener?.cancel();
-    videoController?.dispose();
+    final tmp = videoController;
     videoController = null;
+    tmp?.dispose();
     super.dispose();
   }
 
