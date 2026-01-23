@@ -309,7 +309,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<bool> pushMediaEditor(
-    ScreenshotImage? imageBytes,
+    ScreenshotImage? screenshotImage,
     File? videoFilePath, {
     bool sharedFromGallery = false,
     MediaType? mediaType,
@@ -345,7 +345,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       PageRouteBuilder(
         opaque: false,
         pageBuilder: (context, a1, a2) => ShareImageEditorView(
-          imageBytesFuture: imageBytes,
+          screenshotImage: screenshotImage,
           sharedFromGallery: sharedFromGallery,
           sendToGroup: widget.sendToGroup,
           mediaFileService: mediaFileService,

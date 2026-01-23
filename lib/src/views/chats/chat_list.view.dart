@@ -314,21 +314,32 @@ class _ChatListViewState extends State<ChatListView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            IconButton.filled(
+            Material(
+              elevation: 3,
+              shape: const CircleBorder(),
               color: context.color.primary,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const PublicProfileView();
-                    },
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return const PublicProfileView();
+                      },
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  width: 45,
+                  height: 45,
+                  child: Center(
+                    child: FaIcon(
+                      FontAwesomeIcons.qrcode,
+                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                    ),
                   ),
-                );
-              },
-              icon: FaIcon(
-                FontAwesomeIcons.qrcode,
-                color: isDarkMode(context) ? Colors.black : Colors.white,
+                ),
               ),
             ),
             const SizedBox(height: 12),

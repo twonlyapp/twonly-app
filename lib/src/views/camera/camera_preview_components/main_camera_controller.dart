@@ -92,7 +92,10 @@ class MainCameraController {
     }
     final cameraControllerTemp = cameraController;
     cameraController = null;
-    await cameraControllerTemp?.dispose();
+    // prevents: CameraException(Disposed CameraController, buildPreview() was called on a disposed CameraController.)
+    Future.delayed(const Duration(milliseconds: 100), () async {
+      await cameraControllerTemp?.dispose();
+    });
     initCameraStarted = false;
     selectedCameraDetails = SelectedCameraDetails();
   }

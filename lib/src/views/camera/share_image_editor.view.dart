@@ -39,13 +39,13 @@ class ShareImageEditorView extends StatefulWidget {
   const ShareImageEditorView({
     required this.sharedFromGallery,
     required this.mediaFileService,
+    this.screenshotImage,
     this.previewLink,
     super.key,
-    this.imageBytesFuture,
     this.sendToGroup,
     this.mainCameraController,
   });
-  final ScreenshotImage? imageBytesFuture;
+  final ScreenshotImage? screenshotImage;
   final Group? sendToGroup;
   final bool sharedFromGallery;
   final MediaFileService mediaFileService;
@@ -64,7 +64,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   double widthRatio = 1;
   double heightRatio = 1;
   double pixelRatio = 1;
-  Uint8List? imageBytes;
   VideoPlayerController? videoController;
   ImageItem currentImage = ImageItem();
   ScreenshotController screenshotController = ScreenshotController();
@@ -93,8 +92,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     if (widget.mediaFileService.mediaFile.type == MediaType.image ||
         widget.mediaFileService.mediaFile.type == MediaType.gif) {
-      if (widget.imageBytesFuture != null) {
-        loadImage(widget.imageBytesFuture!);
+      if (widget.screenshotImage != null) {
+        loadImage(widget.screenshotImage!);
       } else {
         if (widget.mediaFileService.tempPath.existsSync()) {
           loadImage(ScreenshotImage(file: widget.mediaFileService.tempPath));
@@ -435,8 +434,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<ScreenshotImage?> getEditedImageBytes() async {
     if (layers.length == 1) {
       if (layers.first is BackgroundLayerData) {
-        final image = (layers.first as BackgroundLayerData).image.bytes;
-        return ScreenshotImage(imageBytes: image);
+        return (layers.first as BackgroundLayerData).image.image;
       }
     }
 
@@ -465,7 +463,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     return image;
   }
 
-  Future<Uint8List?> storeImageAsOriginal() async {
+  Future<ScreenshotImage?> storeImageAsOriginal() async {
     if (mediaService.overlayImagePath.existsSync()) {
       mediaService.overlayImagePath.deleteSync();
     }
@@ -477,11 +475,16 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         mediaService.originalPath.deleteSync();
       }
     }
-    var bytes = imageBytes;
+    ScreenshotImage? image;
+    var bytes = await widget.screenshotImage?.getBytes();
     if (media.type == MediaType.gif) {
-      mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
+      if (bytes != null) {
+        mediaService.originalPath.writeAsBytesSync(bytes.toList());
+      } else {
+        Log.error('Could not load image bytes for gif!');
+      }
     } else {
-      final image = await getEditedImageBytes();
+      image = await getEditedImageBytes();
       if (image == null) return null;
       bytes = await image.getBytes();
       if (bytes == null) {
@@ -496,16 +499,38 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         Log.error('MediaType not supported: ${media.type}');
       }
     }
-
-    return bytes;
+    return image;
   }
 
-  Future<void> loadImage(ScreenshotImage imageBytesFuture) async {
-    imageBytes = await imageBytesFuture.getBytes();
-    // store this image so it can be used as a draft in case the app is restarted
+  Future<void> storeIoImageAsDraft(ScreenshotImage screenshotImage) async {
+    final imageBytes = await screenshotImage.getBytes();
     mediaService.originalPath.writeAsBytesSync(imageBytes!.toList());
+  }
 
-    await currentImage.load(imageBytes);
+  Future<void> loadImage(ScreenshotImage screenshotImage) async {
+    if (screenshotImage.image == null &&
+        screenshotImage.imageBytes == null &&
+        screenshotImage.imageBytesFuture != null) {
+      // this ensures that the imageBytes are defined
+      await storeIoImageAsDraft(screenshotImage);
+    } else {
+      // store this image so it can be used as a draft in case the app is restarted
+      unawaited(storeIoImageAsDraft(screenshotImage));
+    }
+
+    if (screenshotImage.image == null) {
+      final imageBytes = await screenshotImage.getBytes();
+      if (imageBytes != null) {
+        screenshotImage.image = await decodeImageFromList(imageBytes);
+      }
+    }
+    if (screenshotImage.image == null) {
+      Log.error('Could not load screenshotImage.image');
+      return;
+    }
+
+    currentImage.load(screenshotImage);
+
     if (isDisposed) return;
 
     if (!context.mounted) return;

@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:collection';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -14,7 +13,9 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/views/camera/share_image_contact_selection/best_friends_selector.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/background.layer.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/headline.dart';
@@ -30,7 +31,7 @@ class ShareImageView extends StatefulWidget {
   });
   final HashSet<String> selectedGroupIds;
   final void Function(String, bool) updateSelectedGroupIds;
-  final Future<Uint8List?>? mediaStoreFuture;
+  final Future<ScreenshotImage?>? mediaStoreFuture;
   final MediaFileService mediaFileService;
   final AdditionalMessageData? additionalData;
 
@@ -46,7 +47,7 @@ class _ShareImageView extends State<ShareImageView> {
 
   bool sendingImage = false;
   bool mediaStoreFutureReady = false;
-  Uint8List? _imageBytes;
+  ScreenshotImage? _screenshotImage;
   bool hideArchivedUsers = true;
   final TextEditingController searchUserName = TextEditingController();
   late StreamSubscription<List<Group>> allGroupSub;
@@ -69,7 +70,7 @@ class _ShareImageView extends State<ShareImageView> {
 
   Future<void> initAsync() async {
     if (widget.mediaStoreFuture != null) {
-      _imageBytes = await widget.mediaStoreFuture;
+      _screenshotImage = await widget.mediaStoreFuture;
     }
     mediaStoreFutureReady = true;
     if (!mounted) return;
@@ -247,10 +248,11 @@ class _ShareImageView extends State<ShareImageView> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               if (widget.mediaFileService.mediaFile.type == MediaType.image &&
-                  _imageBytes != null &&
+                  _screenshotImage?.image != null &&
                   gUser.showShowImagePreviewWhenSending)
                 SizedBox(
                   height: 100,
+                  width: 100 * 9 / 16,
                   child: Container(
                     clipBehavior: Clip.hardEdge,
                     decoration: BoxDecoration(
@@ -261,7 +263,9 @@ class _ShareImageView extends State<ShareImageView> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.memory(_imageBytes!),
+                      child: CustomPaint(
+                        painter: UiImagePainter(_screenshotImage!.image!),
+                      ),
                     ),
                   ),
                 ),
@@ -286,6 +290,7 @@ class _ShareImageView extends State<ShareImageView> {
                     sendingImage = true;
                   });
 
+                  // in case mediaStoreFutureReady is ready, the image is stored in the originalPath
                   await insertMediaFileInMessagesTable(
                     widget.mediaFileService,
                     widget.selectedGroupIds.toList(),
@@ -294,12 +299,6 @@ class _ShareImageView extends State<ShareImageView> {
 
                   if (context.mounted) {
                     Navigator.pop(context, true);
-                    // if (widget.preselectedUser != null) {
-                    //   Navigator.pop(context, true);
-                    // } else {
-                    // Navigator.popUntil(context, (route) => route.isFirst, true);
-                    // globalUpdateOfHomeViewPageIndex(1);
-                    // }
                   }
                 },
                 style: ButtonStyle(

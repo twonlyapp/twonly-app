@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 
 class SaveToGalleryButton extends StatefulWidget {
   const SaveToGalleryButton({
@@ -17,7 +17,7 @@ class SaveToGalleryButton extends StatefulWidget {
     this.storeImageAsOriginal,
     super.key,
   });
-  final Future<Uint8List?> Function()? storeImageAsOriginal;
+  final Future<ScreenshotImage?> Function()? storeImageAsOriginal;
   final bool displayButtonLabel;
   final MediaFileService mediaService;
   final bool isLoading;

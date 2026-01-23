@@ -1,36 +1,18 @@
 import 'dart:async';
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:twonly/src/utils/screenshot.dart';
 
 class ImageItem {
-  ImageItem([dynamic image]) {
-    if (image != null) unawaited(load(image));
-  }
+  ImageItem();
   int width = 1;
   int height = 1;
-  Uint8List bytes = Uint8List.fromList([]);
+  ScreenshotImage? image;
   Completer<bool> loader = Completer<bool>();
 
-  Future<void> load(dynamic image) async {
-    loader = Completer<bool>();
-
-    if (image is ImageItem) {
-      bytes = image.bytes;
-
-      height = image.height;
-      width = image.width;
-
-      return loader.complete(true);
-    } else if (image is Uint8List) {
-      bytes = image;
-      final decodedImage = await decodeImageFromList(bytes);
-
-      height = decodedImage.height;
-      width = decodedImage.width;
-
-      return loader.complete(true);
-    } else {
-      return loader.complete(false);
+  void load(ScreenshotImage img) {
+    image = img;
+    if (image?.image != null) {
+      height = image!.image!.height;
+      width = image!.image!.width;
     }
   }
 }
