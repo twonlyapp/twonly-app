@@ -58,7 +58,8 @@ class MainCameraPreview extends StatelessWidget {
                 ),
               ),
             ),
-            if (mainCameraController.focusPointOffset != null)
+            if (mainCameraController.focusPointOffset != null &&
+                !mainCameraController.isSharePreviewIsShown)
               AspectRatio(
                 aspectRatio: 9 / 16,
                 child: ClipRect(

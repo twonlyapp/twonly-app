@@ -55,6 +55,9 @@ class MainCameraController {
   GlobalKey cameraPreviewKey = GlobalKey();
   bool isSelectingFaceFilters = false;
 
+  bool isSharePreviewIsShown = false;
+  bool isVideoRecording = false;
+
   Uri? sharedLinkForPreview;
 
   void setSharedLinkForPreview(Uri url) {
@@ -132,7 +135,9 @@ class MainCameraController {
       await cameraController?.startImageStream(_processCameraImage);
     } else {
       await HapticFeedback.lightImpact();
+      await cameraController?.stopImageStream();
       await cameraController?.setDescription(gCameras[cameraId]);
+      await cameraController?.startImageStream(_processCameraImage);
     }
 
     await cameraController?.setZoomLevel(selectedCameraDetails.scaleFactor);
@@ -177,8 +182,12 @@ class MainCameraController {
     setState();
 
     await HapticFeedback.lightImpact();
-    await cameraController?.setFocusPoint(Offset(dx, dy));
-    await cameraController?.setFocusMode(FocusMode.auto);
+    try {
+      await cameraController?.setFocusPoint(Offset(dx, dy));
+      await cameraController?.setFocusMode(FocusMode.auto);
+    } catch (e) {
+      Log.error(e);
+    }
 
     focusPointOffset = null;
     setState();
@@ -204,6 +213,9 @@ class MainCameraController {
   };
 
   void _processCameraImage(CameraImage image) {
+    if (isVideoRecording || isSharePreviewIsShown) {
+      return;
+    }
     final inputImage = _inputImageFromCameraImage(image);
     if (inputImage == null) return;
     _processBarcode(inputImage);

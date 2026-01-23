@@ -109,12 +109,10 @@ class CameraPreviewView extends StatefulWidget {
 }
 
 class _CameraPreviewViewState extends State<CameraPreviewView> {
-  bool _sharePreviewIsShown = false;
   bool _galleryLoadedImageIsShown = false;
   bool _showSelfieFlash = false;
   double _basePanY = 0;
   double _baseScaleFactor = 0;
-  bool _isVideoRecording = false;
   bool _hasAudioPermission = true;
   DateTime? _videoRecordingStarted;
   Timer? _videoRecordingTimer;
@@ -270,10 +268,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> takePicture() async {
-    if (_sharePreviewIsShown || _isVideoRecording) return;
+    if (mc.isSharePreviewIsShown || mc.isVideoRecording) return;
 
     setState(() {
-      _sharePreviewIsShown = true;
+      mc.isSharePreviewIsShown = true;
     });
     if (mc.selectedCameraDetails.isFlashOn) {
       if (isFront) {
@@ -306,7 +304,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
     setState(() {
-      _sharePreviewIsShown = false;
+      mc.isSharePreviewIsShown = false;
     });
   }
 
@@ -363,7 +361,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     ) as bool?;
     if (mounted) {
       setState(() {
-        _sharePreviewIsShown = false;
+        mc.isSharePreviewIsShown = false;
         _showSelfieFlash = false;
       });
     }
@@ -413,7 +411,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Future<void> pickImageFromGallery() async {
     setState(() {
       _galleryLoadedImageIsShown = true;
-      _sharePreviewIsShown = true;
+      mc.isSharePreviewIsShown = true;
     });
     final picker = ImagePicker();
     final pickedFile = await picker.pickMedia();
@@ -456,7 +454,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
     setState(() {
       _galleryLoadedImageIsShown = false;
-      _sharePreviewIsShown = false;
+      mc.isSharePreviewIsShown = false;
     });
   }
 
@@ -496,7 +494,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
     setState(() {
-      _isVideoRecording = true;
+      mc.isVideoRecording = true;
     });
 
     try {
@@ -516,11 +514,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       });
       setState(() {
         _videoRecordingStarted = clock.now();
-        _isVideoRecording = true;
+        mc.isVideoRecording = true;
       });
     } on CameraException catch (e) {
       setState(() {
-        _isVideoRecording = false;
+        mc.isVideoRecording = false;
       });
       _showCameraException(e);
       return;
@@ -535,7 +533,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
     setState(() {
       _videoRecordingStarted = null;
-      _isVideoRecording = false;
+      mc.isVideoRecording = false;
     });
 
     if (mc.cameraController == null ||
@@ -544,7 +542,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
 
     setState(() {
-      _sharePreviewIsShown = true;
+      mc.isSharePreviewIsShown = true;
     });
 
     try {
@@ -630,23 +628,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   ),
                 ),
               ),
-            if (!_sharePreviewIsShown &&
+            if (!mc.isSharePreviewIsShown &&
                 widget.sendToGroup != null &&
-                !_isVideoRecording)
+                !mc.isVideoRecording)
               ShowTitleText(
                 title: widget.sendToGroup!.groupName,
                 desc: context.lang.cameraPreviewSendTo,
               ),
-            if (!_sharePreviewIsShown &&
+            if (!mc.isSharePreviewIsShown &&
                 mc.sharedLinkForPreview != null &&
-                !_isVideoRecording)
+                !mc.isVideoRecording)
               ShowTitleText(
                 title: mc.sharedLinkForPreview?.host ?? '',
                 desc: 'Link',
                 isLink: true,
               ),
-            if (!_sharePreviewIsShown &&
-                !_isVideoRecording &&
+            if (!mc.isSharePreviewIsShown &&
+                !mc.isVideoRecording &&
                 !widget.hideControllers)
               Positioned(
                 right: 5,
@@ -702,7 +700,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   ),
                 ),
               ),
-            if (!_sharePreviewIsShown && !widget.hideControllers)
+            if (!mc.isSharePreviewIsShown && !widget.hideControllers)
               Positioned(
                 bottom: 30,
                 left: 0,
@@ -713,7 +711,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     children: [
                       if (mc.cameraController!.value.isInitialized &&
                           mc.selectedCameraDetails.isZoomAble &&
-                          !_isVideoRecording)
+                          !mc.isVideoRecording)
                         SizedBox(
                           width: 120,
                           child: CameraZoomButtons(
@@ -729,7 +727,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (!_isVideoRecording)
+                          if (!mc.isVideoRecording)
                             GestureDetector(
                               onTap: pressSideButtonLeft,
                               child: Align(
@@ -765,7 +763,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     width: 7,
-                                    color: _isVideoRecording
+                                    color: mc.isVideoRecording
                                         ? Colors.red
                                         : Colors.white,
                                   ),
@@ -774,7 +772,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                               ),
                             ),
                           ),
-                          if (!_isVideoRecording)
+                          if (!mc.isVideoRecording)
                             if (isFront)
                               GestureDetector(
                                 onTap: pressSideButtonRight,
@@ -813,7 +811,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               videoRecordingStarted: _videoRecordingStarted,
               maxVideoRecordingTime: maxVideoRecordingTime,
             ),
-            if (!_sharePreviewIsShown && widget.sendToGroup != null ||
+            if (!mc.isSharePreviewIsShown && widget.sendToGroup != null ||
                 widget.hideControllers)
               Positioned(
                 left: 5,
