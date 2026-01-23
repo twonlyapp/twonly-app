@@ -26,6 +26,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
@@ -319,6 +320,12 @@ class ApiService {
           return user;
         });
         globalCallbackUpdatePlan(planFromString(authenticated.plan));
+
+        // this was triggered by apiService.ipaPurchase, so call the onAuthenticated again
+        if (isAuthenticated) {
+          // Trigger the re-upload from images, after Plan change, in case the limit was reached before...
+          unawaited(finishStartedPreprocessing());
+        }
       }
     }
     if (res.isError) {
