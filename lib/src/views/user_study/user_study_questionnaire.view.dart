@@ -51,7 +51,9 @@ class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
 
     await updateUserdata((u) {
       // generate a random participants id to identify data send later while keeping the user anonym
-      u.userStudyParticipantsToken = getRandomString(25);
+      u
+        ..userStudyParticipantsToken = getRandomString(25)
+        ..askedForUserStudyPermission = true;
       return u;
     });
 
