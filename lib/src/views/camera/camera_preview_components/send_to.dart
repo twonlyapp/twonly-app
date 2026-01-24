@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
-import 'package:twonly/src/utils/misc.dart';
 
-class SendToWidget extends StatelessWidget {
-  const SendToWidget({
-    required this.sendTo,
+class ShowTitleText extends StatelessWidget {
+  const ShowTitleText({
+    required this.desc,
+    required this.title,
+    this.isLink = false,
     super.key,
   });
-  final String sendTo;
+  final String title;
+  final String desc;
+  final bool isLink;
 
   @override
   Widget build(BuildContext context) {
-    const textStyle = TextStyle(
+    final textStyle = TextStyle(
       color: Colors.white,
       fontWeight: FontWeight.bold,
-      fontSize: 24,
+      fontSize: isLink ? 14 : 24,
       decoration: TextDecoration.none,
-      shadows: [
+      shadows: const [
         Shadow(
           color: Color.fromARGB(122, 0, 0, 0),
           blurRadius: 5,
@@ -26,7 +29,7 @@ class SendToWidget extends StatelessWidget {
 
     final boldTextStyle = textStyle.copyWith(
       fontWeight: FontWeight.normal,
-      fontSize: 28,
+      fontSize: isLink ? 17 : 28,
     );
 
     return Positioned(
@@ -36,12 +39,12 @@ class SendToWidget extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            context.lang.cameraPreviewSendTo,
+            desc,
             textAlign: TextAlign.center,
             style: textStyle,
           ),
           Text(
-            substringBy(sendTo, 20),
+            substringBy(title, isLink ? 30 : 20),
             textAlign: TextAlign.center,
             style: boldTextStyle, // Use the bold text style here
           ),

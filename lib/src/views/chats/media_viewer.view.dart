@@ -20,7 +20,8 @@ import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/services/notifications/background.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
+import 'package:twonly/src/views/camera/camera_send_to.view.dart';
+import 'package:twonly/src/views/chats/media_viewer_components/additional_message_content.dart';
 import 'package:twonly/src/views/chats/media_viewer_components/reaction_buttons.component.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
 import 'package:twonly/src/views/components/loader.dart';
@@ -91,8 +92,9 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     _noScreenshot.screenshotOn();
     _subscription.cancel();
     downloadStateListener?.cancel();
-    videoController?.dispose();
+    final tmp = videoController;
     videoController = null;
+    tmp?.dispose();
     super.dispose();
   }
 
@@ -493,6 +495,19 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     );
   }
 
+  Widget _loader() {
+    return Center(
+      child: SizedBox(
+        height: 60,
+        width: 60,
+        child: ThreeRotatingDots(
+          size: 40,
+          color: context.color.primary,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -500,17 +515,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (_showDownloadingLoader)
-              Center(
-                child: SizedBox(
-                  height: 60,
-                  width: 60,
-                  child: ThreeRotatingDots(
-                    size: 40,
-                    color: context.color.primary,
-                  ),
-                ),
-              ),
+            if (_showDownloadingLoader) _loader(),
             if ((currentMedia != null || videoController != null) &&
                 (canBeSeenUntil == null || progress >= 0))
               GestureDetector(
@@ -549,9 +554,7 @@ class _MediaViewerViewState extends State<MediaViewerView> {
             if (displayTwonlyPresent)
               Positioned.fill(
                 child: GestureDetector(
-                  onTap: () {
-                    loadCurrentMediaFile(showTwonly: true);
-                  },
+                  onTap: () => loadCurrentMediaFile(showTwonly: true),
                   child: Column(
                     children: [
                       Expanded(
@@ -575,26 +578,14 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   IconButton(
                     icon: const Icon(Icons.close, size: 30),
                     color: Colors.white,
-                    onPressed: () async {
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
             ),
             if (currentMedia != null &&
                 currentMedia?.mediaFile.downloadState != DownloadState.ready)
-              const Positioned.fill(
-                child: Center(
-                  child: SizedBox(
-                    height: 60,
-                    width: 60,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 6,
-                    ),
-                  ),
-                ),
-              ),
+              Positioned.fill(child: _loader()),
             if (canBeSeenUntil != null || progress >= 0)
               Positioned(
                 right: 20,
@@ -700,6 +691,8 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                   ),
                 ),
               ),
+            if (currentMessage != null)
+              AdditionalMessageContent(currentMessage!),
             if (currentMedia != null)
               ReactionButtons(
                 show: showShortReactions,

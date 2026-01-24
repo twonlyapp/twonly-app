@@ -15,6 +15,7 @@ protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "backup.proto"
 protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "messages.proto"
 protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "groups.proto"
 protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "qr.proto"
+protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "data.proto"
 
 protoc --proto_path="$CLIENT_DIR" --dart_out="$GENERATED_DIR" "push_notification.proto"
 protoc --proto_path="$CLIENT_DIR" --swift_out="./ios/NotificationService/" "push_notification.proto"

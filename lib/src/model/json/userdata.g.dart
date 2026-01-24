@@ -77,7 +77,14 @@ UserData _$UserDataFromJson(Map<String, dynamic> json) => UserData(
       ..twonlySafeBackup = json['twonlySafeBackup'] == null
           ? null
           : TwonlySafeBackup.fromJson(
-              json['twonlySafeBackup'] as Map<String, dynamic>);
+              json['twonlySafeBackup'] as Map<String, dynamic>)
+      ..askedForUserStudyPermission =
+          json['askedForUserStudyPermission'] as bool? ?? false
+      ..userStudyParticipantsToken =
+          json['userStudyParticipantsToken'] as String?
+      ..lastUserStudyDataUpload = json['lastUserStudyDataUpload'] == null
+          ? null
+          : DateTime.parse(json['lastUserStudyDataUpload'] as String);
 
 Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
       'userId': instance.userId,
@@ -122,6 +129,10 @@ Map<String, dynamic> _$UserDataToJson(UserData instance) => <String, dynamic>{
           instance.nextTimeToShowBackupNotice?.toIso8601String(),
       'backupServer': instance.backupServer,
       'twonlySafeBackup': instance.twonlySafeBackup,
+      'askedForUserStudyPermission': instance.askedForUserStudyPermission,
+      'userStudyParticipantsToken': instance.userStudyParticipantsToken,
+      'lastUserStudyDataUpload':
+          instance.lastUserStudyDataUpload?.toIso8601String(),
     };
 
 const _$ThemeModeEnumMap = {

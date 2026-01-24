@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.0.89
+
+- Adds link preview to images
+- Adds option to manual focus in the camera
+- Adds support to switch between front and back cameras during video recording
+- Adds basic face filters
+- Improves image editor, like emojis or text under a drawing can be moved
+- Improves speed after taking a picture  
+- Fixes issue with emojis disappearing in the image editor
+
 ## 0.0.86
 
 - Allows to reopen send images (if send without time limit or enabled auth) 

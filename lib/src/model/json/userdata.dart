@@ -108,6 +108,19 @@ class UserData {
   DateTime? nextTimeToShowBackupNotice;
   BackupServer? backupServer;
   TwonlySafeBackup? twonlySafeBackup;
+
+  // For my master thesis I want to create a anonymous user study:
+  // - users in the "Tester" Plan can, if they want, take part of the user study
+
+  @JsonKey(defaultValue: false)
+  bool askedForUserStudyPermission = false;
+
+  // So update data can be assigned. If set the user choose to participate.
+  String? userStudyParticipantsToken;
+
+  // Once a day the anonymous data is collected and send to the server
+  DateTime? lastUserStudyDataUpload;
+
   Map<String, dynamic> toJson() => _$UserDataToJson(this);
 }
 

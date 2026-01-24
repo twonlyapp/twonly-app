@@ -9,7 +9,7 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/camera_send_to_view.dart';
+import 'package:twonly/src/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/views/chats/chat_list_components/last_message_time.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_send_state_icon.dart';
@@ -135,6 +135,7 @@ class _UserListItem extends State<GroupListItem> {
         _previewMessages.where((x) => x.type == MessageType.media).toList();
     if (msgs.isNotEmpty &&
         msgs.first.type == MessageType.media &&
+        !msgs.first.isDeletedFromSender &&
         msgs.first.senderId != null &&
         msgs.first.openedAt == null) {
       _hasNonOpenedMediaFile = true;

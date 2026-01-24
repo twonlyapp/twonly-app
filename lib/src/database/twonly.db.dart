@@ -68,7 +68,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -85,39 +85,49 @@ class TwonlyDB extends _$TwonlyDB {
       beforeOpen: (details) async {
         await customStatement('PRAGMA foreign_keys = ON');
       },
-      onUpgrade: stepByStep(
-        from1To2: (m, schema) async {
-          await m.addColumn(schema.messages, schema.messages.mediaReopened);
-          await m.dropColumn(schema.mediaFiles, 'reopen_by_contact');
-        },
-        from2To3: (m, schema) async {
-          await m.addColumn(schema.groups, schema.groups.draftMessage);
-        },
-        from3To4: (m, schema) async {
-          await m.alterTable(
-            TableMigration(
-              schema.groupHistories,
-              columnTransformer: {
-                schema.groupHistories.affectedContactId:
-                    schema.groupHistories.affectedContactId,
-              },
-            ),
-          );
-        },
-        from4To5: (m, schema) async {
-          await m.addColumn(schema.receipts, schema.receipts.markForRetry);
-          await m.addColumn(
-            schema.mediaFiles,
-            schema.mediaFiles.storedFileHash,
-          );
-        },
-        from5To6: (m, schema) async {
-          await m.addColumn(
-            schema.receipts,
-            schema.receipts.markForRetryAfterAccepted,
-          );
-        },
-      ),
+      onUpgrade: (m, from, to) async {
+        // disable foreign_keys before migrations
+        await customStatement('PRAGMA foreign_keys = OFF');
+        return stepByStep(
+          from1To2: (m, schema) async {
+            await m.addColumn(schema.messages, schema.messages.mediaReopened);
+            await m.dropColumn(schema.mediaFiles, 'reopen_by_contact');
+          },
+          from2To3: (m, schema) async {
+            await m.addColumn(schema.groups, schema.groups.draftMessage);
+          },
+          from3To4: (m, schema) async {
+            await m.alterTable(
+              TableMigration(
+                schema.groupHistories,
+                columnTransformer: {
+                  schema.groupHistories.affectedContactId:
+                      schema.groupHistories.affectedContactId,
+                },
+              ),
+            );
+          },
+          from4To5: (m, schema) async {
+            await m.addColumn(schema.receipts, schema.receipts.markForRetry);
+            await m.addColumn(
+              schema.mediaFiles,
+              schema.mediaFiles.storedFileHash,
+            );
+          },
+          from5To6: (m, schema) async {
+            await m.addColumn(
+              schema.receipts,
+              schema.receipts.markForRetryAfterAccepted,
+            );
+          },
+          from6To7: (m, schema) async {
+            await m.addColumn(
+              schema.messages,
+              schema.messages.additionalMessageData,
+            );
+          },
+        )(m, from, to);
+      },
     );
   }
 

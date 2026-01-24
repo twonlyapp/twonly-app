@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+
+message AdditionalMessageData {
+    enum Type {
+        LINK = 0;
+    }
+    Type type = 1;
+
+    optional string link = 2;
+}

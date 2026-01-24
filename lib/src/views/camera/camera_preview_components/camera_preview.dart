@@ -23,26 +23,78 @@ class MainCameraPreview extends StatelessWidget {
         requiredHeight: 0,
         additionalPadding: 59,
         bottomNavigation: Container(),
-        child: Screenshot(
-          controller: mainCameraController.screenshotController,
-          child: AspectRatio(
-            aspectRatio: 9 / 16,
-            child: ClipRect(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: mainCameraController
-                      .cameraController!.value.previewSize!.height,
-                  height: mainCameraController
-                      .cameraController!.value.previewSize!.width,
-                  child: CameraPreview(
-                    mainCameraController.cameraController!,
-                    child: mainCameraController.customPaint,
+        child: Stack(
+          children: [
+            Screenshot(
+              controller: mainCameraController.screenshotController,
+              child: AspectRatio(
+                aspectRatio: 9 / 16,
+                child: ClipRect(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: mainCameraController
+                          .cameraController!.value.previewSize!.height,
+                      height: mainCameraController
+                          .cameraController!.value.previewSize!.width,
+                      child: CameraPreview(
+                        key: mainCameraController.cameraPreviewKey,
+                        mainCameraController.cameraController!,
+                        child: Stack(
+                          children: [
+                            if (mainCameraController.customPaint != null)
+                              Positioned.fill(
+                                child: mainCameraController.customPaint!,
+                              ),
+                            if (mainCameraController.facePaint != null)
+                              Positioned.fill(
+                                child: mainCameraController.facePaint!,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
+            if (mainCameraController.focusPointOffset != null &&
+                !mainCameraController.isSharePreviewIsShown)
+              AspectRatio(
+                aspectRatio: 9 / 16,
+                child: ClipRect(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: mainCameraController
+                          .cameraController!.value.previewSize!.height,
+                      height: mainCameraController
+                          .cameraController!.value.previewSize!.width,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: mainCameraController.focusPointOffset!.dy - 40,
+                            left:
+                                mainCameraController.focusPointOffset!.dx - 40,
+                            child: Container(
+                              height: 80,
+                              width: 80,
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withAlpha(150),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

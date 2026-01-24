@@ -8,10 +8,10 @@ import 'package:twonly/src/views/components/animate_icon.dart';
 void main() {
   group('testing utils', () {
     test('test isEmoji function', () {
-      expect(isEmoji('Hallo'), false);
-      expect(isEmoji('😂'), true);
-      expect(isEmoji('😂😂'), false);
-      expect(isEmoji('Hallo 😂'), false);
+      expect(isOneEmoji('Hallo'), false);
+      expect(isOneEmoji('😂'), true);
+      expect(isOneEmoji('😂😂'), false);
+      expect(isOneEmoji('Hallo 😂'), false);
     });
 
     test('test proof-of-work simple', () async {

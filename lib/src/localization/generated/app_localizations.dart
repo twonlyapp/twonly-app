@@ -2518,6 +2518,12 @@ abstract class AppLocalizations {
   /// **'wants to connect with you.'**
   String get notificationContactRequest;
 
+  /// No description provided for @notificationContactRequestUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'have received a new contact request.'**
+  String get notificationContactRequestUnknownUser;
+
   /// No description provided for @notificationAcceptRequest.
   ///
   /// In en, this message translates to:
@@ -2572,11 +2578,17 @@ abstract class AppLocalizations {
   /// **'has responded{inGroup}.'**
   String notificationResponse(Object inGroup);
 
-  /// No description provided for @notificationTitleUnknownUser.
+  /// No description provided for @notificationTitleUnknown.
   ///
   /// In en, this message translates to:
-  /// **'[Unknown]'**
-  String get notificationTitleUnknownUser;
+  /// **'You have a new message.'**
+  String get notificationTitleUnknown;
+
+  /// No description provided for @notificationBodyUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Open twonly to learn more.'**
+  String get notificationBodyUnknown;
 
   /// No description provided for @notificationCategoryMessageTitle.
   ///

@@ -1381,6 +1381,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notificationContactRequest => 'möchte sich mit dir vernetzen.';
 
   @override
+  String get notificationContactRequestUnknownUser =>
+      'hast eine neue Kontaktanfrage erhalten.';
+
+  @override
   String get notificationAcceptRequest => 'ist jetzt mit dir vernetzt.';
 
   @override
@@ -1418,7 +1422,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get notificationTitleUnknownUser => '[Unbekannt]';
+  String get notificationTitleUnknown => 'Du hast eine neue Nachricht.';
+
+  @override
+  String get notificationBodyUnknown => 'Öffne twonly um mehr zu erfahren.';
 
   @override
   String get notificationCategoryMessageTitle => 'Nachrichten';

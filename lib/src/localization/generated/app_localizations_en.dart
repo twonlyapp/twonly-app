@@ -1373,6 +1373,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationContactRequest => 'wants to connect with you.';
 
   @override
+  String get notificationContactRequestUnknownUser =>
+      'have received a new contact request.';
+
+  @override
   String get notificationAcceptRequest => 'is now connected with you.';
 
   @override
@@ -1410,7 +1414,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationTitleUnknownUser => '[Unknown]';
+  String get notificationTitleUnknown => 'You have a new message.';
+
+  @override
+  String get notificationBodyUnknown => 'Open twonly to learn more.';
 
   @override
   String get notificationCategoryMessageTitle => 'Messages';

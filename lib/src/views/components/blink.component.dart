@@ -6,8 +6,8 @@ class BlinkWidget extends StatefulWidget {
     required this.child,
     required this.enabled,
     super.key,
-    this.blinkDuration = const Duration(milliseconds: 2500),
-    this.interval = const Duration(milliseconds: 100),
+    this.blinkDuration = const Duration(milliseconds: 2000),
+    this.interval = const Duration(milliseconds: 300),
     this.visibleOpacity = 1.0,
     this.hiddenOpacity = 0.05,
   });

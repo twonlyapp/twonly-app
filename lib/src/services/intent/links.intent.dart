@@ -13,7 +13,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
@@ -151,6 +151,7 @@ Future<void> handleIntentMediaFile(
 Future<void> handleIntentSharedFile(
   BuildContext context,
   List<SharedFile> files,
+  void Function(Uri) onUrlCallBack,
 ) async {
   for (final file in files) {
     if (file.value == null) {
@@ -163,7 +164,9 @@ Future<void> handleIntentSharedFile(
 
     switch (file.type) {
       case SharedMediaType.URL:
-      // await handleIntentUrl(context, Uri.parse(file.value!));
+        if (file.value?.startsWith('http') ?? false) {
+          onUrlCallBack(Uri.parse(file.value!));
+        }
       case SharedMediaType.IMAGE:
         var type = MediaType.image;
         if (file.value!.endsWith('.gif')) {

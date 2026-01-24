@@ -16,6 +16,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/http/http_requests.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
@@ -88,8 +89,9 @@ Future<MediaFileService?> initializeMediaUpload(
 
 Future<void> insertMediaFileInMessagesTable(
   MediaFileService mediaService,
-  List<String> groupIds,
-) async {
+  List<String> groupIds, {
+  AdditionalMessageData? additionalData,
+}) async {
   await twonlyDB.mediaFilesDao.updateAllMediaFiles(
     const MediaFilesCompanion(
       isDraftMedia: Value(false),
@@ -101,6 +103,8 @@ Future<void> insertMediaFileInMessagesTable(
         groupId: Value(groupId),
         mediaId: Value(mediaService.mediaFile.mediaId),
         type: const Value(MessageType.media),
+        additionalMessageData:
+            Value.absentIfNull(additionalData?.writeToBuffer()),
       ),
     );
     await twonlyDB.groupsDao.increaseLastMessageExchange(groupId, clock.now());
@@ -245,6 +249,7 @@ Future<void> _createUploadRequest(MediaFileService media) async {
           encryptionKey: media.mediaFile.encryptionKey,
           encryptionNonce: media.mediaFile.encryptionNonce,
           encryptionMac: media.mediaFile.encryptionMac,
+          additionalMessageData: message.additionalMessageData,
         ),
       );
 

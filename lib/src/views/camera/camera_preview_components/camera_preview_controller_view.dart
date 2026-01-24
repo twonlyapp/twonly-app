@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:clock/clock.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -21,13 +22,14 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.dart';
 import 'package:twonly/src/utils/screenshot.dart';
 import 'package:twonly/src/utils/storage.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/permissions_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/send_to.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/video_recording_time.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/zoom_selector.dart';
-import 'package:twonly/src/views/camera/image_editor/action_button.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor.view.dart';
+import 'package:twonly/src/views/camera/share_image_editor/action_button.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/loader.dart';
 import 'package:twonly/src/views/components/media_view_sizing.dart';
@@ -35,55 +37,6 @@ import 'package:twonly/src/views/home.view.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 int maxVideoRecordingTime = 60;
-
-Future<(SelectedCameraDetails, CameraController)?> initializeCameraController(
-  SelectedCameraDetails details,
-  int sCameraId,
-  bool init,
-) async {
-  var cameraId = sCameraId;
-  if (cameraId >= gCameras.length) return null;
-  if (init) {
-    for (; cameraId < gCameras.length; cameraId++) {
-      if (gCameras[cameraId].lensDirection == CameraLensDirection.back) {
-        break;
-      }
-    }
-  }
-  details.isZoomAble = false;
-  if (details.cameraId != cameraId) {
-    // switch between front and back
-    details.scaleFactor = 1;
-  }
-
-  final cameraController = CameraController(
-    gCameras[cameraId],
-    ResolutionPreset.high,
-    enableAudio: await Permission.microphone.isGranted,
-    imageFormatGroup:
-        Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
-  );
-
-  await cameraController.initialize().then((_) async {
-    await cameraController.setZoomLevel(details.scaleFactor);
-    await cameraController.lockCaptureOrientation(DeviceOrientation.portraitUp);
-    await cameraController
-        .setFlashMode(details.isFlashOn ? FlashMode.always : FlashMode.off);
-    await cameraController
-        .getMaxZoomLevel()
-        .then((double value) => details.maxAvailableZoom = value);
-    await cameraController
-        .getMinZoomLevel()
-        .then((double value) => details.minAvailableZoom = value);
-    details
-      ..isZoomAble = details.maxAvailableZoom != details.minAvailableZoom
-      ..cameraLoaded = true
-      ..cameraId = cameraId;
-  }).catchError((Object e) {
-    Log.error('$e');
-  });
-  return (details, cameraController);
-}
 
 class SelectedCameraDetails {
   double maxAvailableZoom = 1;
@@ -156,12 +109,10 @@ class CameraPreviewView extends StatefulWidget {
 }
 
 class _CameraPreviewViewState extends State<CameraPreviewView> {
-  bool _sharePreviewIsShown = false;
   bool _galleryLoadedImageIsShown = false;
   bool _showSelfieFlash = false;
   double _basePanY = 0;
   double _baseScaleFactor = 0;
-  bool _isVideoRecording = false;
   bool _hasAudioPermission = true;
   DateTime? _videoRecordingStarted;
   Timer? _videoRecordingTimer;
@@ -317,10 +268,10 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   }
 
   Future<void> takePicture() async {
-    if (_sharePreviewIsShown || _isVideoRecording) return;
+    if (mc.isSharePreviewIsShown || mc.isVideoRecording) return;
 
     setState(() {
-      _sharePreviewIsShown = true;
+      mc.isSharePreviewIsShown = true;
     });
     if (mc.selectedCameraDetails.isFlashOn) {
       if (isFront) {
@@ -353,12 +304,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
     setState(() {
-      _sharePreviewIsShown = false;
+      mc.isSharePreviewIsShown = false;
     });
   }
 
   Future<bool> pushMediaEditor(
-    ScreenshotImage? imageBytes,
+    ScreenshotImage? screenshotImage,
     File? videoFilePath, {
     bool sharedFromGallery = false,
     MediaType? mediaType,
@@ -394,11 +345,12 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       PageRouteBuilder(
         opaque: false,
         pageBuilder: (context, a1, a2) => ShareImageEditorView(
-          imageBytesFuture: imageBytes,
+          screenshotImage: screenshotImage,
           sharedFromGallery: sharedFromGallery,
           sendToGroup: widget.sendToGroup,
           mediaFileService: mediaFileService,
           mainCameraController: mc,
+          previewLink: mc.sharedLinkForPreview,
         ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;
@@ -409,7 +361,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     ) as bool?;
     if (mounted) {
       setState(() {
-        _sharePreviewIsShown = false;
+        mc.isSharePreviewIsShown = false;
         _showSelfieFlash = false;
       });
     }
@@ -459,7 +411,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
   Future<void> pickImageFromGallery() async {
     setState(() {
       _galleryLoadedImageIsShown = true;
-      _sharePreviewIsShown = true;
+      mc.isSharePreviewIsShown = true;
     });
     final picker = ImagePicker();
     final pickedFile = await picker.pickMedia();
@@ -502,8 +454,38 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
     setState(() {
       _galleryLoadedImageIsShown = false;
-      _sharePreviewIsShown = false;
+      mc.isSharePreviewIsShown = false;
     });
+  }
+
+  Future<void> pressSideButtonLeft() async {
+    if (!mc.isSelectingFaceFilters) {
+      return pickImageFromGallery();
+    }
+    if (mc.currentFilterType.index == 1) {
+      mc.setFilter(FaceFilterType.none);
+      setState(() {
+        mc.isSelectingFaceFilters = false;
+      });
+      return;
+    }
+    mc.setFilter(mc.currentFilterType.goLeft());
+  }
+
+  Future<void> pressSideButtonRight() async {
+    if (!mc.isSelectingFaceFilters) {
+      setState(() {
+        mc.isSelectingFaceFilters = true;
+      });
+    }
+    if (mc.currentFilterType.index == FaceFilterType.values.length - 1) {
+      mc.setFilter(FaceFilterType.none);
+      setState(() {
+        mc.isSelectingFaceFilters = false;
+      });
+      return;
+    }
+    mc.setFilter(mc.currentFilterType.goRight());
   }
 
   Future<void> startVideoRecording() async {
@@ -512,7 +494,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       return;
     }
     setState(() {
-      _isVideoRecording = true;
+      mc.isVideoRecording = true;
     });
 
     try {
@@ -532,11 +514,11 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
       });
       setState(() {
         _videoRecordingStarted = clock.now();
-        _isVideoRecording = true;
+        mc.isVideoRecording = true;
       });
     } on CameraException catch (e) {
       setState(() {
-        _isVideoRecording = false;
+        mc.isVideoRecording = false;
       });
       _showCameraException(e);
       return;
@@ -551,7 +533,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
 
     setState(() {
       _videoRecordingStarted = null;
-      _isVideoRecording = false;
+      mc.isVideoRecording = false;
     });
 
     if (mc.cameraController == null ||
@@ -560,7 +542,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
     }
 
     setState(() {
-      _sharePreviewIsShown = true;
+      mc.isSharePreviewIsShown = true;
     });
 
     try {
@@ -646,12 +628,23 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   ),
                 ),
               ),
-            if (!_sharePreviewIsShown &&
+            if (!mc.isSharePreviewIsShown &&
                 widget.sendToGroup != null &&
-                !_isVideoRecording)
-              SendToWidget(sendTo: widget.sendToGroup!.groupName),
-            if (!_sharePreviewIsShown &&
-                !_isVideoRecording &&
+                !mc.isVideoRecording)
+              ShowTitleText(
+                title: widget.sendToGroup!.groupName,
+                desc: context.lang.cameraPreviewSendTo,
+              ),
+            if (!mc.isSharePreviewIsShown &&
+                mc.sharedLinkForPreview != null &&
+                !mc.isVideoRecording)
+              ShowTitleText(
+                title: mc.sharedLinkForPreview?.host ?? '',
+                desc: 'Link',
+                isLink: true,
+              ),
+            if (!mc.isSharePreviewIsShown &&
+                !mc.isVideoRecording &&
                 !widget.hideControllers)
               Positioned(
                 right: 5,
@@ -707,7 +700,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                   ),
                 ),
               ),
-            if (!_sharePreviewIsShown && !widget.hideControllers)
+            if (!mc.isSharePreviewIsShown && !widget.hideControllers)
               Positioned(
                 bottom: 30,
                 left: 0,
@@ -718,7 +711,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                     children: [
                       if (mc.cameraController!.value.isInitialized &&
                           mc.selectedCameraDetails.isZoomAble &&
-                          !_isVideoRecording)
+                          !mc.isVideoRecording)
                         SizedBox(
                           width: 120,
                           child: CameraZoomButtons(
@@ -734,17 +727,21 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (!_isVideoRecording)
+                          if (!mc.isVideoRecording)
                             GestureDetector(
-                              onTap: pickImageFromGallery,
+                              onTap: pressSideButtonLeft,
                               child: Align(
                                 child: Container(
                                   height: 50,
                                   width: 80,
                                   padding: const EdgeInsets.all(2),
-                                  child: const Center(
+                                  child: Center(
                                     child: FaIcon(
-                                      FontAwesomeIcons.photoFilm,
+                                      mc.isSelectingFaceFilters
+                                          ? mc.currentFilterType.index == 1
+                                              ? FontAwesomeIcons.xmark
+                                              : FontAwesomeIcons.arrowLeft
+                                          : FontAwesomeIcons.photoFilm,
                                       color: Colors.white,
                                       size: 25,
                                     ),
@@ -766,15 +763,44 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                   shape: BoxShape.circle,
                                   border: Border.all(
                                     width: 7,
-                                    color: _isVideoRecording
+                                    color: mc.isVideoRecording
                                         ? Colors.red
                                         : Colors.white,
                                   ),
                                 ),
+                                child: mc.currentFilterType.preview,
                               ),
                             ),
                           ),
-                          if (!_isVideoRecording) const SizedBox(width: 80),
+                          if (!mc.isVideoRecording)
+                            if (isFront)
+                              GestureDetector(
+                                onTap: pressSideButtonRight,
+                                child: Align(
+                                  child: Container(
+                                    height: 50,
+                                    width: 80,
+                                    padding: const EdgeInsets.all(2),
+                                    child: Center(
+                                      child: FaIcon(
+                                        mc.isSelectingFaceFilters
+                                            ? mc.currentFilterType.index ==
+                                                    FaceFilterType
+                                                            .values.length -
+                                                        1
+                                                ? FontAwesomeIcons.xmark
+                                                : FontAwesomeIcons.arrowRight
+                                            : FontAwesomeIcons
+                                                .faceGrinTongueSquint,
+                                        color: Colors.white,
+                                        size: 25,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              const SizedBox(width: 80),
                         ],
                       ),
                     ],
@@ -785,7 +811,7 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
               videoRecordingStarted: _videoRecordingStarted,
               maxVideoRecordingTime: maxVideoRecordingTime,
             ),
-            if (!_sharePreviewIsShown && widget.sendToGroup != null ||
+            if (!mc.isSharePreviewIsShown && widget.sendToGroup != null ||
                 widget.hideControllers)
               Positioned(
                 left: 5,

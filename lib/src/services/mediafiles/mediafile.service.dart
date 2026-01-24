@@ -24,66 +24,71 @@ class MediaFileService {
   }
 
   static Future<void> purgeTempFolder() async {
-    final tempDirectory = MediaFileService.buildDirectoryPath(
-      'tmp',
-      globalApplicationSupportDirectory,
-    );
+    try {
+      final tempDirectory = MediaFileService.buildDirectoryPath(
+        'tmp',
+        globalApplicationSupportDirectory,
+      );
 
-    final files = tempDirectory.listSync();
-    for (final file in files) {
-      final mediaId = basename(file.path).split('.').first;
+      final files = tempDirectory.listSync();
+      for (final file in files) {
+        final mediaId = basename(file.path).split('.').first;
 
-      // in case the mediaID is unknown the file will be deleted
-      var delete = true;
+        // in case the mediaID is unknown the file will be deleted
+        var delete = true;
 
-      final service = await MediaFileService.fromMediaId(mediaId);
+        final service = await MediaFileService.fromMediaId(mediaId);
 
-      if (service != null) {
-        if (service.mediaFile.isDraftMedia) {
-          delete = false;
-        }
-
-        final messages =
-            await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
-
-        // in case messages in empty the file will be deleted, as delete is true by default
-
-        for (final message in messages) {
-          if (service.mediaFile.type == MediaType.audio) {
-            delete = false; // do not delete voice messages
-          }
-
-          if (message.openedAt == null) {
-            // Message was not yet opened from all persons, so wait...
+        if (service != null) {
+          if (service.mediaFile.isDraftMedia) {
             delete = false;
-          } else if (service.mediaFile.requiresAuthentication ||
-              service.mediaFile.displayLimitInMilliseconds != null) {
-            // Message was opened by all persons, and they can not reopen the image.
-            // This branch will prevent to reach the next if condition, with would otherwise store the image for two days
-            // delete = true; // do not overwrite a previous delete = false
-            // this is just to make it easier to understand :)
-          } else if (message.openedAt!
-              .isAfter(clock.now().subtract(const Duration(days: 2)))) {
-            // In case the image was opened, but send with unlimited time or no authentication.
-            if (message.senderId == null) {
-              delete = false;
-            } else {
-              // Check weather the image was send in a group. Then the images is preserved for two days in case another person stores the image.
-              // This also allows to reopen this image for two days.
-              final group = await twonlyDB.groupsDao.getGroup(message.groupId);
-              if (group != null && !group.isDirectChat) {
-                delete = false;
-              }
+          }
+
+          final messages =
+              await twonlyDB.messagesDao.getMessagesByMediaId(mediaId);
+
+          // in case messages in empty the file will be deleted, as delete is true by default
+
+          for (final message in messages) {
+            if (service.mediaFile.type == MediaType.audio) {
+              delete = false; // do not delete voice messages
             }
-            // In case the app was send in a direct chat, then it can be deleted.
+
+            if (message.openedAt == null) {
+              // Message was not yet opened from all persons, so wait...
+              delete = false;
+            } else if (service.mediaFile.requiresAuthentication ||
+                service.mediaFile.displayLimitInMilliseconds != null) {
+              // Message was opened by all persons, and they can not reopen the image.
+              // This branch will prevent to reach the next if condition, with would otherwise store the image for two days
+              // delete = true; // do not overwrite a previous delete = false
+              // this is just to make it easier to understand :)
+            } else if (message.openedAt!
+                .isAfter(clock.now().subtract(const Duration(days: 2)))) {
+              // In case the image was opened, but send with unlimited time or no authentication.
+              if (message.senderId == null) {
+                delete = false;
+              } else {
+                // Check weather the image was send in a group. Then the images is preserved for two days in case another person stores the image.
+                // This also allows to reopen this image for two days.
+                final group =
+                    await twonlyDB.groupsDao.getGroup(message.groupId);
+                if (group != null && !group.isDirectChat) {
+                  delete = false;
+                }
+              }
+              // In case the app was send in a direct chat, then it can be deleted.
+            }
           }
         }
-      }
 
-      if (delete) {
-        Log.info('Purging media file $mediaId');
-        file.deleteSync();
+        if (delete) {
+          Log.info('Purging media file $mediaId');
+          file.deleteSync();
+        }
       }
+    } catch (e) {
+      Log.error(e);
     }
   }
 

@@ -105,6 +105,11 @@ Future<void> handleMedia(
       groupId: Value(groupId),
       mediaId: Value(mediaFile.mediaId),
       type: const Value(MessageType.media),
+      additionalMessageData: Value.absentIfNull(
+        media.hasAdditionalMessageData()
+            ? Uint8List.fromList(media.additionalMessageData)
+            : null,
+      ),
       quotesMessageId: Value(
         media.hasQuoteMessageId() ? media.quoteMessageId : null,
       ),

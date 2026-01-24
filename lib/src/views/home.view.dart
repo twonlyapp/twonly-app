@@ -14,7 +14,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
-import 'package:twonly/src/views/camera/share_image_editor_view.dart';
+import 'package:twonly/src/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/views/chats/chat_list.view.dart';
 import 'package:twonly/src/views/memories/memories.view.dart';
 
@@ -120,7 +120,13 @@ class HomeViewState extends State<HomeView> {
 
     _intentStreamSub = FlutterSharingIntent.instance.getMediaStream().listen(
       (f) {
-        if (mounted) handleIntentSharedFile(context, f);
+        if (mounted) {
+          handleIntentSharedFile(
+            context,
+            f,
+            _mainCameraController.setSharedLinkForPreview,
+          );
+        }
       },
       // ignore: inference_failure_on_untyped_parameter
       onError: (err) {
@@ -129,7 +135,13 @@ class HomeViewState extends State<HomeView> {
     );
 
     FlutterSharingIntent.instance.getInitialSharing().then((f) {
-      if (mounted) handleIntentSharedFile(context, f);
+      if (mounted) {
+        handleIntentSharedFile(
+          context,
+          f,
+          _mainCameraController.setSharedLinkForPreview,
+        );
+      }
     });
   }
 
@@ -172,9 +184,9 @@ class HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: offsetRatio == 0
-            ? _mainCameraController.toggleSelectedCamera
-            : null,
+        onDoubleTap:
+            offsetRatio == 0 ? _mainCameraController.onDoubleTap : null,
+        onTapDown: offsetRatio == 0 ? _mainCameraController.onTapDown : null,
         child: Stack(
           children: <Widget>[
             MainCameraPreview(mainCameraController: _mainCameraController),

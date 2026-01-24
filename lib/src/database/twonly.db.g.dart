@@ -2796,6 +2796,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES media_files (media_id) ON DELETE SET NULL'));
+  static const VerificationMeta _additionalMessageDataMeta =
+      const VerificationMeta('additionalMessageData');
+  @override
+  late final GeneratedColumn<Uint8List> additionalMessageData =
+      GeneratedColumn<Uint8List>('additional_message_data', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   static const VerificationMeta _mediaStoredMeta =
       const VerificationMeta('mediaStored');
   @override
@@ -2884,6 +2890,7 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
         type,
         content,
         mediaId,
+        additionalMessageData,
         mediaStored,
         mediaReopened,
         downloadToken,
@@ -2929,6 +2936,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
     if (data.containsKey('media_id')) {
       context.handle(_mediaIdMeta,
           mediaId.isAcceptableOrUnknown(data['media_id']!, _mediaIdMeta));
+    }
+    if (data.containsKey('additional_message_data')) {
+      context.handle(
+          _additionalMessageDataMeta,
+          additionalMessageData.isAcceptableOrUnknown(
+              data['additional_message_data']!, _additionalMessageDataMeta));
     }
     if (data.containsKey('media_stored')) {
       context.handle(
@@ -3013,6 +3026,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           .read(DriftSqlType.string, data['${effectivePrefix}content']),
       mediaId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}media_id']),
+      additionalMessageData: attachedDatabase.typeMapping.read(
+          DriftSqlType.blob, data['${effectivePrefix}additional_message_data']),
       mediaStored: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}media_stored'])!,
       mediaReopened: attachedDatabase.typeMapping
@@ -3054,6 +3069,7 @@ class Message extends DataClass implements Insertable<Message> {
   final MessageType type;
   final String? content;
   final String? mediaId;
+  final Uint8List? additionalMessageData;
   final bool mediaStored;
   final bool mediaReopened;
   final Uint8List? downloadToken;
@@ -3072,6 +3088,7 @@ class Message extends DataClass implements Insertable<Message> {
       required this.type,
       this.content,
       this.mediaId,
+      this.additionalMessageData,
       required this.mediaStored,
       required this.mediaReopened,
       this.downloadToken,
@@ -3099,6 +3116,10 @@ class Message extends DataClass implements Insertable<Message> {
     }
     if (!nullToAbsent || mediaId != null) {
       map['media_id'] = Variable<String>(mediaId);
+    }
+    if (!nullToAbsent || additionalMessageData != null) {
+      map['additional_message_data'] =
+          Variable<Uint8List>(additionalMessageData);
     }
     map['media_stored'] = Variable<bool>(mediaStored);
     map['media_reopened'] = Variable<bool>(mediaReopened);
@@ -3142,6 +3163,9 @@ class Message extends DataClass implements Insertable<Message> {
       mediaId: mediaId == null && nullToAbsent
           ? const Value.absent()
           : Value(mediaId),
+      additionalMessageData: additionalMessageData == null && nullToAbsent
+          ? const Value.absent()
+          : Value(additionalMessageData),
       mediaStored: Value(mediaStored),
       mediaReopened: Value(mediaReopened),
       downloadToken: downloadToken == null && nullToAbsent
@@ -3181,6 +3205,8 @@ class Message extends DataClass implements Insertable<Message> {
           .fromJson(serializer.fromJson<String>(json['type'])),
       content: serializer.fromJson<String?>(json['content']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
+      additionalMessageData:
+          serializer.fromJson<Uint8List?>(json['additionalMessageData']),
       mediaStored: serializer.fromJson<bool>(json['mediaStored']),
       mediaReopened: serializer.fromJson<bool>(json['mediaReopened']),
       downloadToken: serializer.fromJson<Uint8List?>(json['downloadToken']),
@@ -3206,6 +3232,8 @@ class Message extends DataClass implements Insertable<Message> {
           serializer.toJson<String>($MessagesTable.$convertertype.toJson(type)),
       'content': serializer.toJson<String?>(content),
       'mediaId': serializer.toJson<String?>(mediaId),
+      'additionalMessageData':
+          serializer.toJson<Uint8List?>(additionalMessageData),
       'mediaStored': serializer.toJson<bool>(mediaStored),
       'mediaReopened': serializer.toJson<bool>(mediaReopened),
       'downloadToken': serializer.toJson<Uint8List?>(downloadToken),
@@ -3227,6 +3255,7 @@ class Message extends DataClass implements Insertable<Message> {
           MessageType? type,
           Value<String?> content = const Value.absent(),
           Value<String?> mediaId = const Value.absent(),
+          Value<Uint8List?> additionalMessageData = const Value.absent(),
           bool? mediaStored,
           bool? mediaReopened,
           Value<Uint8List?> downloadToken = const Value.absent(),
@@ -3245,6 +3274,9 @@ class Message extends DataClass implements Insertable<Message> {
         type: type ?? this.type,
         content: content.present ? content.value : this.content,
         mediaId: mediaId.present ? mediaId.value : this.mediaId,
+        additionalMessageData: additionalMessageData.present
+            ? additionalMessageData.value
+            : this.additionalMessageData,
         mediaStored: mediaStored ?? this.mediaStored,
         mediaReopened: mediaReopened ?? this.mediaReopened,
         downloadToken:
@@ -3268,6 +3300,9 @@ class Message extends DataClass implements Insertable<Message> {
       type: data.type.present ? data.type.value : this.type,
       content: data.content.present ? data.content.value : this.content,
       mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
+      additionalMessageData: data.additionalMessageData.present
+          ? data.additionalMessageData.value
+          : this.additionalMessageData,
       mediaStored:
           data.mediaStored.present ? data.mediaStored.value : this.mediaStored,
       mediaReopened: data.mediaReopened.present
@@ -3303,6 +3338,7 @@ class Message extends DataClass implements Insertable<Message> {
           ..write('type: $type, ')
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
+          ..write('additionalMessageData: $additionalMessageData, ')
           ..write('mediaStored: $mediaStored, ')
           ..write('mediaReopened: $mediaReopened, ')
           ..write('downloadToken: $downloadToken, ')
@@ -3326,6 +3362,7 @@ class Message extends DataClass implements Insertable<Message> {
       type,
       content,
       mediaId,
+      $driftBlobEquality.hash(additionalMessageData),
       mediaStored,
       mediaReopened,
       $driftBlobEquality.hash(downloadToken),
@@ -3347,6 +3384,8 @@ class Message extends DataClass implements Insertable<Message> {
           other.type == this.type &&
           other.content == this.content &&
           other.mediaId == this.mediaId &&
+          $driftBlobEquality.equals(
+              other.additionalMessageData, this.additionalMessageData) &&
           other.mediaStored == this.mediaStored &&
           other.mediaReopened == this.mediaReopened &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
@@ -3367,6 +3406,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<MessageType> type;
   final Value<String?> content;
   final Value<String?> mediaId;
+  final Value<Uint8List?> additionalMessageData;
   final Value<bool> mediaStored;
   final Value<bool> mediaReopened;
   final Value<Uint8List?> downloadToken;
@@ -3386,6 +3426,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     this.type = const Value.absent(),
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
+    this.additionalMessageData = const Value.absent(),
     this.mediaStored = const Value.absent(),
     this.mediaReopened = const Value.absent(),
     this.downloadToken = const Value.absent(),
@@ -3406,6 +3447,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     required MessageType type,
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
+    this.additionalMessageData = const Value.absent(),
     this.mediaStored = const Value.absent(),
     this.mediaReopened = const Value.absent(),
     this.downloadToken = const Value.absent(),
@@ -3428,6 +3470,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     Expression<String>? type,
     Expression<String>? content,
     Expression<String>? mediaId,
+    Expression<Uint8List>? additionalMessageData,
     Expression<bool>? mediaStored,
     Expression<bool>? mediaReopened,
     Expression<Uint8List>? downloadToken,
@@ -3448,6 +3491,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       if (type != null) 'type': type,
       if (content != null) 'content': content,
       if (mediaId != null) 'media_id': mediaId,
+      if (additionalMessageData != null)
+        'additional_message_data': additionalMessageData,
       if (mediaStored != null) 'media_stored': mediaStored,
       if (mediaReopened != null) 'media_reopened': mediaReopened,
       if (downloadToken != null) 'download_token': downloadToken,
@@ -3471,6 +3516,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       Value<MessageType>? type,
       Value<String?>? content,
       Value<String?>? mediaId,
+      Value<Uint8List?>? additionalMessageData,
       Value<bool>? mediaStored,
       Value<bool>? mediaReopened,
       Value<Uint8List?>? downloadToken,
@@ -3490,6 +3536,8 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       type: type ?? this.type,
       content: content ?? this.content,
       mediaId: mediaId ?? this.mediaId,
+      additionalMessageData:
+          additionalMessageData ?? this.additionalMessageData,
       mediaStored: mediaStored ?? this.mediaStored,
       mediaReopened: mediaReopened ?? this.mediaReopened,
       downloadToken: downloadToken ?? this.downloadToken,
@@ -3526,6 +3574,10 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     }
     if (mediaId.present) {
       map['media_id'] = Variable<String>(mediaId.value);
+    }
+    if (additionalMessageData.present) {
+      map['additional_message_data'] =
+          Variable<Uint8List>(additionalMessageData.value);
     }
     if (mediaStored.present) {
       map['media_stored'] = Variable<bool>(mediaStored.value);
@@ -3575,6 +3627,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
           ..write('type: $type, ')
           ..write('content: $content, ')
           ..write('mediaId: $mediaId, ')
+          ..write('additionalMessageData: $additionalMessageData, ')
           ..write('mediaStored: $mediaStored, ')
           ..write('mediaReopened: $mediaReopened, ')
           ..write('downloadToken: $downloadToken, ')
@@ -3621,7 +3674,10 @@ class $MessageHistoriesTable extends MessageHistories
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
       'contact_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
   static const VerificationMeta _contentMeta =
       const VerificationMeta('content');
   @override
@@ -6964,7 +7020,10 @@ class $MessageActionsTable extends MessageActions
   @override
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
       'contact_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES contacts (user_id) ON DELETE CASCADE'));
   @override
   late final GeneratedColumnWithTypeConverter<MessageActionType, String> type =
       GeneratedColumn<String>('type', aliasedName, false,
@@ -7838,6 +7897,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
             ],
           ),
           WritePropagation(
+            on: TableUpdateQuery.onTableName('contacts',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('message_histories', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
             on: TableUpdateQuery.onTableName('messages',
                 limitUpdateKind: UpdateKind.delete),
             result: [
@@ -7889,6 +7955,13 @@ abstract class _$TwonlyDB extends GeneratedDatabase {
           ),
           WritePropagation(
             on: TableUpdateQuery.onTableName('messages',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('message_actions', kind: UpdateKind.delete),
+            ],
+          ),
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('contacts',
                 limitUpdateKind: UpdateKind.delete),
             result: [
               TableUpdate('message_actions', kind: UpdateKind.delete),
@@ -7951,6 +8024,23 @@ final class $$ContactsTableReferences
         (f) => f.senderId.userId.sqlEquals($_itemColumn<int>('user_id')!));
 
     final cache = $_typedResult.readTableOrNull(_messagesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$MessageHistoriesTable, List<MessageHistory>>
+      _messageHistoriesRefsTable(_$TwonlyDB db) =>
+          MultiTypedResultKey.fromTable(db.messageHistories,
+              aliasName: $_aliasNameGenerator(
+                  db.contacts.userId, db.messageHistories.contactId));
+
+  $$MessageHistoriesTableProcessedTableManager get messageHistoriesRefs {
+    final manager =
+        $$MessageHistoriesTableTableManager($_db, $_db.messageHistories).filter(
+            (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_messageHistoriesRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -8041,6 +8131,22 @@ final class $$ContactsTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$MessageActionsTable, List<MessageAction>>
+      _messageActionsRefsTable(_$TwonlyDB db) =>
+          MultiTypedResultKey.fromTable(db.messageActions,
+              aliasName: $_aliasNameGenerator(
+                  db.contacts.userId, db.messageActions.contactId));
+
+  $$MessageActionsTableProcessedTableManager get messageActionsRefs {
+    final manager = $$MessageActionsTableTableManager($_db, $_db.messageActions)
+        .filter(
+            (f) => f.contactId.userId.sqlEquals($_itemColumn<int>('user_id')!));
+
+    final cache = $_typedResult.readTableOrNull(_messageActionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$GroupHistoriesTable, List<GroupHistory>>
       _groupHistoriesRefsTable(_$TwonlyDB db) =>
           MultiTypedResultKey.fromTable(db.groupHistories,
@@ -8122,6 +8228,27 @@ class $$ContactsTableFilterComposer
             $$MessagesTableFilterComposer(
               $db: $db,
               $table: $db.messages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> messageHistoriesRefs(
+      Expression<bool> Function($$MessageHistoriesTableFilterComposer f) f) {
+    final $$MessageHistoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.messageHistories,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessageHistoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.messageHistories,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -8236,6 +8363,27 @@ class $$ContactsTableFilterComposer
                   $removeJoinBuilderFromRootComposer:
                       $removeJoinBuilderFromRootComposer,
                 ));
+    return f(composer);
+  }
+
+  Expression<bool> messageActionsRefs(
+      Expression<bool> Function($$MessageActionsTableFilterComposer f) f) {
+    final $$MessageActionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.messageActions,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessageActionsTableFilterComposer(
+              $db: $db,
+              $table: $db.messageActions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 
@@ -8383,6 +8531,27 @@ class $$ContactsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> messageHistoriesRefs<T extends Object>(
+      Expression<T> Function($$MessageHistoriesTableAnnotationComposer a) f) {
+    final $$MessageHistoriesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.messageHistories,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessageHistoriesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.messageHistories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> reactionsRefs<T extends Object>(
       Expression<T> Function($$ReactionsTableAnnotationComposer a) f) {
     final $$ReactionsTableAnnotationComposer composer = $composerBuilder(
@@ -8493,6 +8662,27 @@ class $$ContactsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> messageActionsRefs<T extends Object>(
+      Expression<T> Function($$MessageActionsTableAnnotationComposer a) f) {
+    final $$MessageActionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.userId,
+        referencedTable: $db.messageActions,
+        getReferencedColumn: (t) => t.contactId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$MessageActionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.messageActions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> groupHistoriesRefs<T extends Object>(
       Expression<T> Function($$GroupHistoriesTableAnnotationComposer a) f) {
     final $$GroupHistoriesTableAnnotationComposer composer = $composerBuilder(
@@ -8528,11 +8718,13 @@ class $$ContactsTableTableManager extends RootTableManager<
     Contact,
     PrefetchHooks Function(
         {bool messagesRefs,
+        bool messageHistoriesRefs,
         bool reactionsRefs,
         bool groupMembersRefs,
         bool receiptsRefs,
         bool signalContactPreKeysRefs,
         bool signalContactSignedPreKeysRefs,
+        bool messageActionsRefs,
         bool groupHistoriesRefs})> {
   $$ContactsTableTableManager(_$TwonlyDB db, $ContactsTable table)
       : super(TableManagerState(
@@ -8610,22 +8802,26 @@ class $$ContactsTableTableManager extends RootTableManager<
               .toList(),
           prefetchHooksCallback: (
               {messagesRefs = false,
+              messageHistoriesRefs = false,
               reactionsRefs = false,
               groupMembersRefs = false,
               receiptsRefs = false,
               signalContactPreKeysRefs = false,
               signalContactSignedPreKeysRefs = false,
+              messageActionsRefs = false,
               groupHistoriesRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (messagesRefs) db.messages,
+                if (messageHistoriesRefs) db.messageHistories,
                 if (reactionsRefs) db.reactions,
                 if (groupMembersRefs) db.groupMembers,
                 if (receiptsRefs) db.receipts,
                 if (signalContactPreKeysRefs) db.signalContactPreKeys,
                 if (signalContactSignedPreKeysRefs)
                   db.signalContactSignedPreKeys,
+                if (messageActionsRefs) db.messageActions,
                 if (groupHistoriesRefs) db.groupHistories
               ],
               addJoins: null,
@@ -8642,6 +8838,19 @@ class $$ContactsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.senderId == item.userId),
+                        typedResults: items),
+                  if (messageHistoriesRefs)
+                    await $_getPrefetchedData<Contact, $ContactsTable,
+                            MessageHistory>(
+                        currentTable: table,
+                        referencedTable: $$ContactsTableReferences
+                            ._messageHistoriesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ContactsTableReferences(db, table, p0)
+                                .messageHistoriesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.contactId == item.userId),
                         typedResults: items),
                   if (reactionsRefs)
                     await $_getPrefetchedData<Contact, $ContactsTable,
@@ -8707,6 +8916,19 @@ class $$ContactsTableTableManager extends RootTableManager<
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.contactId == item.userId),
                         typedResults: items),
+                  if (messageActionsRefs)
+                    await $_getPrefetchedData<Contact, $ContactsTable,
+                            MessageAction>(
+                        currentTable: table,
+                        referencedTable: $$ContactsTableReferences
+                            ._messageActionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ContactsTableReferences(db, table, p0)
+                                .messageActionsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.contactId == item.userId),
+                        typedResults: items),
                   if (groupHistoriesRefs)
                     await $_getPrefetchedData<Contact, $ContactsTable,
                             GroupHistory>(
@@ -8740,11 +8962,13 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
     Contact,
     PrefetchHooks Function(
         {bool messagesRefs,
+        bool messageHistoriesRefs,
         bool reactionsRefs,
         bool groupMembersRefs,
         bool receiptsRefs,
         bool signalContactPreKeysRefs,
         bool signalContactSignedPreKeysRefs,
+        bool messageActionsRefs,
         bool groupHistoriesRefs})>;
 typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   required String groupId,
@@ -9927,6 +10151,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   required MessageType type,
   Value<String?> content,
   Value<String?> mediaId,
+  Value<Uint8List?> additionalMessageData,
   Value<bool> mediaStored,
   Value<bool> mediaReopened,
   Value<Uint8List?> downloadToken,
@@ -9947,6 +10172,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<MessageType> type,
   Value<String?> content,
   Value<String?> mediaId,
+  Value<Uint8List?> additionalMessageData,
   Value<bool> mediaStored,
   Value<bool> mediaReopened,
   Value<Uint8List?> downloadToken,
@@ -10095,6 +10321,10 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get additionalMessageData => $composableBuilder(
+      column: $table.additionalMessageData,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get mediaStored => $composableBuilder(
       column: $table.mediaStored, builder: (column) => ColumnFilters(column));
@@ -10294,6 +10524,10 @@ class $$MessagesTableOrderingComposer
   ColumnOrderings<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<Uint8List> get additionalMessageData => $composableBuilder(
+      column: $table.additionalMessageData,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get mediaStored => $composableBuilder(
       column: $table.mediaStored, builder: (column) => ColumnOrderings(column));
 
@@ -10409,6 +10643,9 @@ class $$MessagesTableAnnotationComposer
 
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get additionalMessageData => $composableBuilder(
+      column: $table.additionalMessageData, builder: (column) => column);
 
   GeneratedColumn<bool> get mediaStored => $composableBuilder(
       column: $table.mediaStored, builder: (column) => column);
@@ -10624,6 +10861,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<MessageType> type = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
+            Value<Uint8List?> additionalMessageData = const Value.absent(),
             Value<bool> mediaStored = const Value.absent(),
             Value<bool> mediaReopened = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
@@ -10644,6 +10882,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             type: type,
             content: content,
             mediaId: mediaId,
+            additionalMessageData: additionalMessageData,
             mediaStored: mediaStored,
             mediaReopened: mediaReopened,
             downloadToken: downloadToken,
@@ -10664,6 +10903,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             required MessageType type,
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
+            Value<Uint8List?> additionalMessageData = const Value.absent(),
             Value<bool> mediaStored = const Value.absent(),
             Value<bool> mediaReopened = const Value.absent(),
             Value<Uint8List?> downloadToken = const Value.absent(),
@@ -10684,6 +10924,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             type: type,
             content: content,
             mediaId: mediaId,
+            additionalMessageData: additionalMessageData,
             mediaStored: mediaStored,
             mediaReopened: mediaReopened,
             downloadToken: downloadToken,
@@ -10878,6 +11119,21 @@ final class $$MessageHistoriesTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
+
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias($_aliasNameGenerator(
+          db.messageHistories.contactId, db.contacts.userId));
+
+  $$ContactsTableProcessedTableManager? get contactId {
+    final $_column = $_itemColumn<int>('contact_id');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
+        .filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
 }
 
 class $$MessageHistoriesTableFilterComposer
@@ -10891,9 +11147,6 @@ class $$MessageHistoriesTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get contactId => $composableBuilder(
-      column: $table.contactId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnFilters(column));
@@ -10920,6 +11173,26 @@ class $$MessageHistoriesTableFilterComposer
             ));
     return composer;
   }
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableFilterComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$MessageHistoriesTableOrderingComposer
@@ -10933,9 +11206,6 @@ class $$MessageHistoriesTableOrderingComposer
   });
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get contactId => $composableBuilder(
-      column: $table.contactId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnOrderings(column));
@@ -10962,6 +11232,26 @@ class $$MessageHistoriesTableOrderingComposer
             ));
     return composer;
   }
+
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableOrderingComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$MessageHistoriesTableAnnotationComposer
@@ -10975,9 +11265,6 @@ class $$MessageHistoriesTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get contactId =>
-      $composableBuilder(column: $table.contactId, builder: (column) => column);
 
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
@@ -11004,6 +11291,26 @@ class $$MessageHistoriesTableAnnotationComposer
             ));
     return composer;
   }
+
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$MessageHistoriesTableTableManager extends RootTableManager<
@@ -11017,7 +11324,7 @@ class $$MessageHistoriesTableTableManager extends RootTableManager<
     $$MessageHistoriesTableUpdateCompanionBuilder,
     (MessageHistory, $$MessageHistoriesTableReferences),
     MessageHistory,
-    PrefetchHooks Function({bool messageId})> {
+    PrefetchHooks Function({bool messageId, bool contactId})> {
   $$MessageHistoriesTableTableManager(
       _$TwonlyDB db, $MessageHistoriesTable table)
       : super(TableManagerState(
@@ -11063,7 +11370,7 @@ class $$MessageHistoriesTableTableManager extends RootTableManager<
                     $$MessageHistoriesTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({messageId = false}) {
+          prefetchHooksCallback: ({messageId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -11091,6 +11398,17 @@ class $$MessageHistoriesTableTableManager extends RootTableManager<
                         .messageId,
                   ) as T;
                 }
+                if (contactId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.contactId,
+                    referencedTable:
+                        $$MessageHistoriesTableReferences._contactIdTable(db),
+                    referencedColumn: $$MessageHistoriesTableReferences
+                        ._contactIdTable(db)
+                        .userId,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -11113,7 +11431,7 @@ typedef $$MessageHistoriesTableProcessedTableManager = ProcessedTableManager<
     $$MessageHistoriesTableUpdateCompanionBuilder,
     (MessageHistory, $$MessageHistoriesTableReferences),
     MessageHistory,
-    PrefetchHooks Function({bool messageId})>;
+    PrefetchHooks Function({bool messageId, bool contactId})>;
 typedef $$ReactionsTableCreateCompanionBuilder = ReactionsCompanion Function({
   required String messageId,
   required String emoji,
@@ -13581,6 +13899,21 @@ final class $$MessageActionsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
+
+  static $ContactsTable _contactIdTable(_$TwonlyDB db) =>
+      db.contacts.createAlias($_aliasNameGenerator(
+          db.messageActions.contactId, db.contacts.userId));
+
+  $$ContactsTableProcessedTableManager get contactId {
+    final $_column = $_itemColumn<int>('contact_id')!;
+
+    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
+        .filter((f) => f.userId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
 }
 
 class $$MessageActionsTableFilterComposer
@@ -13592,9 +13925,6 @@ class $$MessageActionsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get contactId => $composableBuilder(
-      column: $table.contactId, builder: (column) => ColumnFilters(column));
-
   ColumnWithTypeConverterFilters<MessageActionType, MessageActionType, String>
       get type => $composableBuilder(
           column: $table.type,
@@ -13622,6 +13952,26 @@ class $$MessageActionsTableFilterComposer
             ));
     return composer;
   }
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableFilterComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$MessageActionsTableOrderingComposer
@@ -13633,9 +13983,6 @@ class $$MessageActionsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get contactId => $composableBuilder(
-      column: $table.contactId, builder: (column) => ColumnOrderings(column));
-
   ColumnOrderings<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnOrderings(column));
 
@@ -13661,6 +14008,26 @@ class $$MessageActionsTableOrderingComposer
             ));
     return composer;
   }
+
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableOrderingComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$MessageActionsTableAnnotationComposer
@@ -13672,9 +14039,6 @@ class $$MessageActionsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get contactId =>
-      $composableBuilder(column: $table.contactId, builder: (column) => column);
-
   GeneratedColumnWithTypeConverter<MessageActionType, String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
@@ -13700,6 +14064,26 @@ class $$MessageActionsTableAnnotationComposer
             ));
     return composer;
   }
+
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactId,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.userId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
 }
 
 class $$MessageActionsTableTableManager extends RootTableManager<
@@ -13713,7 +14097,7 @@ class $$MessageActionsTableTableManager extends RootTableManager<
     $$MessageActionsTableUpdateCompanionBuilder,
     (MessageAction, $$MessageActionsTableReferences),
     MessageAction,
-    PrefetchHooks Function({bool messageId})> {
+    PrefetchHooks Function({bool messageId, bool contactId})> {
   $$MessageActionsTableTableManager(_$TwonlyDB db, $MessageActionsTable table)
       : super(TableManagerState(
           db: db,
@@ -13758,7 +14142,7 @@ class $$MessageActionsTableTableManager extends RootTableManager<
                     $$MessageActionsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({messageId = false}) {
+          prefetchHooksCallback: ({messageId = false, contactId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -13786,6 +14170,17 @@ class $$MessageActionsTableTableManager extends RootTableManager<
                         .messageId,
                   ) as T;
                 }
+                if (contactId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.contactId,
+                    referencedTable:
+                        $$MessageActionsTableReferences._contactIdTable(db),
+                    referencedColumn: $$MessageActionsTableReferences
+                        ._contactIdTable(db)
+                        .userId,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -13808,7 +14203,7 @@ typedef $$MessageActionsTableProcessedTableManager = ProcessedTableManager<
     $$MessageActionsTableUpdateCompanionBuilder,
     (MessageAction, $$MessageActionsTableReferences),
     MessageAction,
-    PrefetchHooks Function({bool messageId})>;
+    PrefetchHooks Function({bool messageId, bool contactId})>;
 typedef $$GroupHistoriesTableCreateCompanionBuilder = GroupHistoriesCompanion
     Function({
   required String groupHistoryId,

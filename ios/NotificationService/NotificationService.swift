@@ -109,10 +109,10 @@ func getPushNotificationData(pushData: String) -> (
             } else if pushUser != nil {
                 return (
                     pushUser!.displayName,
-                    getPushNotificationText(pushNotification: pushNotification).0, pushUser!.userID
+                    getPushNotificationText(pushNotification: pushNotification, userKnown: true).0, pushUser!.userID
                 )
             } else {
-                let content = getPushNotificationText(pushNotification: pushNotification)
+                let content = getPushNotificationText(pushNotification: pushNotification, userKnown: false)
                 return (
                     content.1, content.0, 1
                 )
@@ -205,57 +205,77 @@ func readFromKeychain(key: String) -> String? {
     return nil
 }
 
-func getPushNotificationText(pushNotification: PushNotification) -> (String, String) {
+func getPushNotificationText(pushNotification: PushNotification, userKnown: Bool) -> (String, String) {
     let systemLanguage = Locale.current.language.languageCode?.identifier ?? "en"  // Get the current system language
 
     var pushNotificationText: [PushKind: String] = [:]
-    var title = "[Unknown]"
+    var title = "You"
+    var noTranslationFoundTitle = "You have a new message."
+    var noTranslationFoundBody = "Open twonly to learn more."
 
     // Define the messages based on the system language
     if systemLanguage.contains("de") {  // German
-        title = "[Unbekannt]"
-        pushNotificationText = [
-            .text: "hat eine Nachricht{inGroup} gesendet.",
-            .twonly: "hat ein twonly{inGroup} gesendet.",
-            .video: "hat ein Video{inGroup} gesendet.",
-            .image: "hat ein Bild{inGroup} gesendet.",
-            .audio: "hat eine Sprachnachricht{inGroup} gesendet.",
-            .contactRequest: "möchte sich mit dir vernetzen.",
-            .acceptRequest: "ist jetzt mit dir vernetzt.",
-            .storedMediaFile: "hat dein Bild gespeichert.",
-            .reaction: "hat auf dein Bild reagiert.",
-            .testNotification: "Das ist eine Testbenachrichtigung.",
-            .reopenedMedia: "hat dein Bild erneut geöffnet.",
-            .reactionToVideo: "hat mit {{content}} auf dein Video reagiert.",
-            .reactionToText: "hat mit {{content}} auf deinen Text reagiert.",
-            .reactionToImage: "hat mit {{content}} auf dein Bild reagiert.",
-            .reactionToAudio: "hat mit {{content}} auf deine Sprachnachricht reagiert.",
-            .response: "hat dir{inGroup} geantwortet.",
-            .addedToGroup: "hat dich zu \"{{content}}\" hinzugefügt.",
-        ]
-    } else {  // Default to English
-        pushNotificationText = [
-            .text: "sent a message{inGroup}.",
-            .twonly: "sent a twonly{inGroup}.",
-            .video: "sent a video{inGroup}.",
-            .image: "sent an image{inGroup}.",
-            .audio: "sent a voice message{inGroup}.",
-            .contactRequest: "wants to connect with you.",
-            .acceptRequest: "is now connected with you.",
-            .storedMediaFile: "has stored your image.",
-            .reaction: "has reacted to your image.",
-            .testNotification: "This is a test notification.",
-            .reopenedMedia: "has reopened your image.",
-            .reactionToVideo: "has reacted with {{content}} to your video.",
-            .reactionToText: "has reacted with {{content}} to your text.",
-            .reactionToImage: "has reacted with {{content}} to your image.",
-            .reactionToAudio: "has reacted with {{content}} to your voice message.",
-            .response: "has responded{inGroup}.",
-            .addedToGroup: "has added you to \"{{content}}\"",
-        ]
+        title = "Du"
+        noTranslationFoundTitle = "Du hast eine neue Nachricht."
+        noTranslationFoundBody = "Öffne twonly um mehr zu erfahren."
+        if (userKnown) {
+            pushNotificationText = [
+                .text: "hat eine Nachricht{inGroup} gesendet.",
+                .twonly: "hat ein twonly{inGroup} gesendet.",
+                .video: "hat ein Video{inGroup} gesendet.",
+                .image: "hat ein Bild{inGroup} gesendet.",
+                .audio: "hat eine Sprachnachricht{inGroup} gesendet.",
+                .contactRequest: "möchte sich mit dir vernetzen.",
+                .acceptRequest: "ist jetzt mit dir vernetzt.",
+                .storedMediaFile: "hat dein Bild gespeichert.",
+                .reaction: "hat auf dein Bild reagiert.",
+                .testNotification: "Das ist eine Testbenachrichtigung.",
+                .reopenedMedia: "hat dein Bild erneut geöffnet.",
+                .reactionToVideo: "hat mit {{content}} auf dein Video reagiert.",
+                .reactionToText: "hat mit {{content}} auf deinen Text reagiert.",
+                .reactionToImage: "hat mit {{content}} auf dein Bild reagiert.",
+                .reactionToAudio: "hat mit {{content}} auf deine Sprachnachricht reagiert.",
+                .response: "hat dir{inGroup} geantwortet.",
+                .addedToGroup: "hat dich zu \"{{content}}\" hinzugefügt.",
+            ]
+        } else {
+            pushNotificationText = [
+                .contactRequest: "hast eine neue Kontaktanfrage erhalten.",
+            ]
+        }
+    } else { 
+        if (userKnown) {
+            pushNotificationText = [
+                .text: "sent a message{inGroup}.",
+                .twonly: "sent a twonly{inGroup}.",
+                .video: "sent a video{inGroup}.",
+                .image: "sent an image{inGroup}.",
+                .audio: "sent a voice message{inGroup}.",
+                .contactRequest: "wants to connect with you.",
+                .acceptRequest: "is now connected with you.",
+                .storedMediaFile: "has stored your image.",
+                .reaction: "has reacted to your image.",
+                .testNotification: "This is a test notification.",
+                .reopenedMedia: "has reopened your image.",
+                .reactionToVideo: "has reacted with {{content}} to your video.",
+                .reactionToText: "has reacted with {{content}} to your text.",
+                .reactionToImage: "has reacted with {{content}} to your image.",
+                .reactionToAudio: "has reacted with {{content}} to your voice message.",
+                .response: "has responded{inGroup}.",
+                .addedToGroup: "has added you to \"{{content}}\"",
+            ]
+        } else {
+            pushNotificationText = [
+                .contactRequest: "have received a new contact request.",
+            ]
+        }
     }
 
     var content = pushNotificationText[pushNotification.kind] ?? ""
+    if (content == "") {
+        title = noTranslationFoundTitle
+        content = noTranslationFoundBody
+    }
 
     if pushNotification.hasAdditionalContent {
         content.replace("{{content}}", with: pushNotification.additionalContent)

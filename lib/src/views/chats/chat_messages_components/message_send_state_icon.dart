@@ -112,7 +112,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.receivedOpened:
           icon = Icon(Icons.crop_square, size: 14, color: color);
           if (message.content != null) {
-            if (isEmoji(message.content!)) {
+            if (isOneEmoji(message.content!)) {
               icon = Text(
                 message.content!,
                 style: const TextStyle(fontSize: 12),

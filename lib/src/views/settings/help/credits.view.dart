@@ -4,7 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/image_editor/layers/filters/location_filter.dart';
+import 'package:twonly/src/views/camera/share_image_editor/layers/filters/location_filter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UrlListTitle extends StatelessWidget {

@@ -18,7 +18,7 @@ class FriendlyMessageTime extends StatelessWidget {
         padding: const EdgeInsets.only(left: 6),
         child: Row(
           children: [
-            if (message.modifiedAt != null)
+            if (message.modifiedAt != null && !message.isDeletedFromSender)
               Padding(
                 padding: const EdgeInsets.only(right: 5),
                 child: SizedBox(

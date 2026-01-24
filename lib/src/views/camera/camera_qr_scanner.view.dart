@@ -32,7 +32,8 @@ class QrCodeScannerState extends State<QrCodeScanner> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onDoubleTap: _mainCameraController.toggleSelectedCamera,
+        onDoubleTap: _mainCameraController.onDoubleTap,
+        onTapDown: _mainCameraController.onTapDown,
         child: Stack(
           children: [
             MainCameraPreview(

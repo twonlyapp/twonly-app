@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -10,6 +11,7 @@ import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/help/credits.view.dart';
 import 'package:twonly/src/views/settings/help/diagnostics.view.dart';
 import 'package:twonly/src/views/settings/help/faq.view.dart';
+import 'package:twonly/src/views/user_study/user_study_welcome.view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpView extends StatefulWidget {
@@ -109,6 +111,21 @@ class _HelpViewState extends State<HelpView> {
             },
           ),
           const Divider(),
+          if (gUser.userStudyParticipantsToken == null || kDebugMode)
+            ListTile(
+              title: const Text('Teilnahme an Nutzerstudie'),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const UserStudyWelcomeView();
+                    },
+                  ),
+                );
+                setState(() {}); // gUser has changed
+              },
+            ),
           FutureBuilder(
             future: PackageInfo.fromPlatform(),
             builder: (context, snap) {
