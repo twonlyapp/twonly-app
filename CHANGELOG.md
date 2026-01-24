@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.89
+## 0.0.87
 
 - Adds link preview to images
 - Adds option to manual focus in the camera
