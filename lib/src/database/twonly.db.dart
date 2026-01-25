@@ -166,6 +166,7 @@ class TwonlyDB extends _$TwonlyDB {
           ))
         .go();
     await delete(receipts).go();
+    await delete(receivedReceipts).go();
     await update(contacts).write(
       const ContactsCompanion(
         avatarSvgCompressed: Value(null),
