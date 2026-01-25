@@ -49,8 +49,9 @@ class MastodonPostCard extends StatelessWidget {
             if (info.desc != null && info.desc != 'null')
               Text(
                 substringBy(
-                    info.desc!.replaceAll('Attached: 1 image', '').trim(),
-                    info.image == null ? 500 : 300),
+                  info.desc!.replaceAll('Attached: 1 image', '').trim(),
+                  info.image == null ? 500 : 300,
+                ),
                 style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
             if (info.image != null && info.image != 'null')
