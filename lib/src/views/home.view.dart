@@ -87,6 +87,7 @@ class HomeViewState extends State<HomeView> {
     if (offsetRatio == 1) {
       disableCameraTimer = Timer(const Duration(milliseconds: 500), () async {
         await _mainCameraController.closeCamera();
+        _mainCameraController.sharedLinkForPreview = null;
         disableCameraTimer = null;
       });
     }
