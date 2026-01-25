@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 const userStudySurveyKey = 'user_study_survey';
@@ -34,9 +35,8 @@ Future<void> handleUserStudyUpload() async {
       await KeyValueStore.delete(userStudySurveyKey);
     }
 
-    if (gUser.lastUserStudyDataUpload
-            ?.isAfter(DateTime.now().subtract(const Duration(days: 1))) ??
-        false) {
+    if (gUser.lastUserStudyDataUpload != null &&
+        isToday(gUser.lastUserStudyDataUpload!)) {
       // Only send updates once a day.
       // This enables to see if improvements to actually work.
       return;
