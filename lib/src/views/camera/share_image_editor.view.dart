@@ -424,6 +424,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
       ),
     ) as bool?;
     if (wasSend != null && wasSend && mounted) {
+      widget.mainCameraController?.onImageSend();
       Navigator.pop(context, true);
     } else {
       await videoController?.play();
@@ -590,6 +591,8 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     });
 
     if (!context.mounted) return;
+
+    widget.mainCameraController?.onImageSend();
 
     // must be awaited so the widget for the screenshot is not already disposed when sending..
     await storeImageAsOriginal();

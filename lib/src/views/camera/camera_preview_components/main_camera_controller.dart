@@ -65,6 +65,11 @@ class MainCameraController {
     setState();
   }
 
+  void onImageSend() {
+    scannedUrl = '';
+    setState();
+  }
+
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
