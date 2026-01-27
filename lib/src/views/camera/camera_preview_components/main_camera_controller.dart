@@ -65,6 +65,11 @@ class MainCameraController {
     setState();
   }
 
+  void onImageSend() {
+    scannedUrl = '';
+    setState();
+  }
+
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
@@ -392,20 +397,25 @@ class MainCameraController {
         cameraController != null) {
       if (faces.isNotEmpty) {
         CustomPainter? painter;
-        if (_currentFilterType == FaceFilterType.dogBrown) {
-          painter = DogFilterPainter(
-            faces,
-            inputImage.metadata!.size,
-            inputImage.metadata!.rotation,
-            cameraController!.description.lensDirection,
-          );
-        } else if (_currentFilterType == FaceFilterType.beardUpperLip) {
-          painter = BeardFilterPainter(
-            faces,
-            inputImage.metadata!.size,
-            inputImage.metadata!.rotation,
-            cameraController!.description.lensDirection,
-          );
+        switch (_currentFilterType) {
+          case FaceFilterType.dogBrown:
+            painter = DogFilterPainter(
+              faces,
+              inputImage.metadata!.size,
+              inputImage.metadata!.rotation,
+              cameraController!.description.lensDirection,
+            );
+          case FaceFilterType.beardUpperLip:
+          case FaceFilterType.beardUpperLipGreen:
+            painter = BeardFilterPainter(
+              _currentFilterType,
+              faces,
+              inputImage.metadata!.size,
+              inputImage.metadata!.rotation,
+              cameraController!.description.lensDirection,
+            );
+          case FaceFilterType.none:
+            break;
         }
 
         if (painter != null) {

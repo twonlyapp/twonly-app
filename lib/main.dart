@@ -65,6 +65,7 @@ void main() async {
   twonlyDB = TwonlyDB();
 
   await twonlyDB.messagesDao.purgeMessageTable();
+  await twonlyDB.receiptsDao.purgeReceivedReceipts();
   unawaited(MediaFileService.purgeTempFolder());
 
   await initFileDownloader();

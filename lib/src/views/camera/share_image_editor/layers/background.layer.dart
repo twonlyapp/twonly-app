@@ -33,7 +33,7 @@ class _BackgroundLayerState extends State<BackgroundLayer> {
       width: widget.layerData.image.width.toDouble(),
       height: widget.layerData.image.height.toDouble(),
       padding: EdgeInsets.zero,
-      color: Colors.green,
+      color: Colors.transparent,
       child: CustomPaint(
         painter: UiImagePainter(scImage.image!),
       ),
@@ -47,16 +47,25 @@ class UiImagePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    final imageSize = Size(image.width.toDouble(), image.height.toDouble());
+
+    final sizes = applyBoxFit(BoxFit.contain, imageSize, size);
+
+    final destRect = Alignment.center.inscribe(
+      sizes.destination,
+      Rect.fromLTWH(0, 0, size.width, size.height),
+    );
+
     canvas.drawImageRect(
       image,
-      Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-      Rect.fromLTWH(0, 0, size.width, size.height),
+      Rect.fromLTWH(0, 0, imageSize.width, imageSize.height),
+      destRect,
       Paint(),
     );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+  bool shouldRepaint(covariant UiImagePainter oldDelegate) {
+    return image != oldDelegate.image;
   }
 }

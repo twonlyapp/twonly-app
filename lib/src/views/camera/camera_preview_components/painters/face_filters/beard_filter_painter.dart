@@ -6,27 +6,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/views/camera/camera_preview_components/face_filters.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/painters/coordinates_translator.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/painters/face_filters/face_filter_painter.dart';
 
 class BeardFilterPainter extends FaceFilterPainter {
   BeardFilterPainter(
+    FaceFilterType beardType,
     super.faces,
     super.imageSize,
     super.rotation,
     super.cameraLensDirection,
   ) {
-    _loadAssets();
+    _loadAssets(beardType);
   }
 
+  static FaceFilterType? _lastLoadedBeardType;
   static ui.Image? _beardImage;
   static bool _loading = false;
 
-  static Future<void> _loadAssets() async {
-    if (_loading || _beardImage != null) return;
+  static String getAssetPath(FaceFilterType beardType) {
+    switch (beardType) {
+      case FaceFilterType.beardUpperLip:
+        return 'assets/filters/beard_upper_lip.webp';
+      case FaceFilterType.beardUpperLipGreen:
+        return 'assets/filters/beard_upper_lip_green.webp';
+      case FaceFilterType.dogBrown:
+      case FaceFilterType.none:
+        return '';
+    }
+  }
+
+  static Future<void> _loadAssets(FaceFilterType beardType) async {
+    if ((_loading || _beardImage != null) &&
+        _lastLoadedBeardType == beardType) {
+      return;
+    }
     _loading = true;
     try {
-      _beardImage = await _loadImage('assets/filters/beard_upper_lip.webp');
+      _beardImage = await _loadImage(getAssetPath(beardType));
     } catch (e) {
       Log.error('Failed to load filter assets: $e');
     } finally {
@@ -161,12 +179,12 @@ class BeardFilterPainter extends FaceFilterPainter {
       ..restore();
   }
 
-  static Widget getPreview() {
+  static Widget getPreview(FaceFilterType beardType) {
     return Preview(
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Image.asset(
-          'assets/filters/beard_upper_lip.webp',
+          getAssetPath(beardType),
           fit: BoxFit.contain,
         ),
       ),

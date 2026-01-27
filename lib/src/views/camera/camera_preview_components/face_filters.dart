@@ -5,6 +5,7 @@ import 'package:twonly/src/views/camera/camera_preview_components/painters/face_
 enum FaceFilterType {
   none,
   dogBrown,
+  beardUpperLipGreen,
   beardUpperLip,
 }
 
@@ -27,7 +28,9 @@ extension FaceFilterTypeExtension on FaceFilterType {
       case FaceFilterType.dogBrown:
         return DogFilterPainter.getPreview();
       case FaceFilterType.beardUpperLip:
-        return BeardFilterPainter.getPreview();
+        return BeardFilterPainter.getPreview(this);
+      case FaceFilterType.beardUpperLipGreen:
+        return BeardFilterPainter.getPreview(this);
     }
   }
 }

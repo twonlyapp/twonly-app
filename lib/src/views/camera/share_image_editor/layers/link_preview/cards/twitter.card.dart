@@ -55,7 +55,7 @@ class TwitterPostCard extends StatelessWidget {
             const SizedBox(height: 8),
             if (info.desc != null && info.desc != 'null')
               Text(
-                substringBy(info.desc!, 1000),
+                substringBy(info.desc!, info.image == null ? 500 : 300),
                 style: const TextStyle(
                   color: primaryText,
                   fontSize: 15,
@@ -73,7 +73,7 @@ class TwitterPostCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 300),
+                      constraints: const BoxConstraints(maxHeight: 200),
                       child: CachedNetworkImage(
                         imageUrl: info.image!,
                         fit: BoxFit.cover,

@@ -32,13 +32,24 @@ If you decide to give twonly a try, please keep in mind that it is still in its 
 - Privacy friendly - Everything is stored on the device
 - The backend is hosted exclusively in Europe
 
-## Planned
+## Roadmap
 
-- For Android: Optional support for [UnifiedPush](https://unifiedpush.org/)
-- For Android: Reproducible Builds
-- Implementing [Sealed Sender](https://signal.org/blog/sealed-sender/) to minimize metadata
-- Switch from the Signal-Protocol to [MLS](https://github.com/openmls/openmls) for Post-Quantum-Crypto support
-- And, of course, many more features such as dog filters, E2EE cloud backup, and more.
+### Currently
+
+- Focus on user-friendliness so that people enjoy using the app
+    - User discovery without a phone number
+    - Passwordless recovery without a phone number
+- Implementation of features so that Snapchat can actually be replaced
+    - E2EE cloud backup of memories
+    - Importing memories from Snapchat
+
+### Next on the bucket list
+
+- For Android: Support for [UnifiedPush] (https://unifiedpush.org/)
+- For Android: Reproducible builds
+- Implementation of [Sealed Sender](https://signal.org/blog/sealed-sender/) (or a similar protocol) to minimize metadata
+- Switch from the Signal protocol to [MLS](https://github.com/openmls/openmls) for post-quantum crypto support
+- Decentralize the server so that anyone can run their own server
 
 ## Security Issues
 
@@ -46,9 +57,9 @@ If you discover a security issue in twonly, please adhere to the coordinated vul
 us your report to security@twonly.eu. We also offer for critical security issues a small bug bounties, but we can not
 guarantee a bounty currently :/
 
-## Contribution
+<!-- ## Contribution
 
-If you have any questions or feature requests, feel free to start a new discussion. Issues are limited to bugs, and for maintainers only.
+If you have any questions or feature requests, feel free to start a new discussion. Issues are limited to bugs, and for maintainers only. -->
 
 ## Development
 
