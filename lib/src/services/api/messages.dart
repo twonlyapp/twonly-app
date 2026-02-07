@@ -74,6 +74,14 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     }
     receiptId = receipt.receiptId;
 
+    final contact =
+        await twonlyDB.contactsDao.getContactById(receipt.contactId);
+    if (contact == null || contact.accountDeleted) {
+      Log.warn('Will not send message again as user does not exist anymore.');
+      await twonlyDB.receiptsDao.deleteReceipt(receiptId);
+      return null;
+    }
+
     if (!onlyReturnEncryptedData &&
         receipt.ackByServerAt != null &&
         receipt.markForRetry == null) {
@@ -176,9 +184,6 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     Log.error('Unknown Error when sending message: $e');
     if (receiptId != null) {
       await twonlyDB.receiptsDao.deleteReceipt(receiptId);
-    }
-    if (receipt != null) {
-      await twonlyDB.receiptsDao.deleteReceipt(receipt.receiptId);
     }
   }
   return null;
