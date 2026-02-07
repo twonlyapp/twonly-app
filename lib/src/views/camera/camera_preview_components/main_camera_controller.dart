@@ -83,7 +83,7 @@ class MainCameraController {
   CustomPaint? facePaint;
   Offset? focusPointOffset;
 
-  FaceFilterType _currentFilterType = FaceFilterType.beardUpperLip;
+  FaceFilterType _currentFilterType = FaceFilterType.none;
   FaceFilterType get currentFilterType => _currentFilterType;
 
   Future<void> closeCamera() async {
