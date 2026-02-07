@@ -131,4 +131,18 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
           ..limit(100))
         .watch();
   }
+
+  Future<void> updateAllRetransmissionUploadingState() async {
+    await (update(mediaFiles)
+          ..where(
+            (t) =>
+                t.uploadState.equals(UploadState.uploading.name) &
+                t.reuploadRequestedBy.isNotNull(),
+          ))
+        .write(
+      const MediaFilesCompanion(
+        uploadState: Value(UploadState.preprocessing),
+      ),
+    );
+  }
 }

@@ -6,6 +6,7 @@ import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
+import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
@@ -178,9 +179,10 @@ Future<void> handleMediaUpdate(
       await twonlyDB.mediaFilesDao.updateMedia(
         mediaFile.mediaId,
         MediaFilesCompanion(
-          uploadState: const Value(UploadState.uploading),
+          uploadState: const Value(UploadState.preprocessing),
           reuploadRequestedBy: Value(reuploadRequestedBy),
         ),
       );
+      unawaited(startBackgroundMediaUpload(MediaFileService(mediaFile)));
   }
 }

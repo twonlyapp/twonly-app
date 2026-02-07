@@ -44,6 +44,15 @@ void main() async {
     }
 
     unawaited(performTwonlySafeBackup());
+
+    if (gUser.appVersion < 90) {
+      // BUG: Requested media files for reupload where not reuploaded because the wrong state...
+      await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
+      await updateUserdata((u) {
+        u.appVersion = 90;
+        return u;
+      });
+    }
   }
 
   globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
