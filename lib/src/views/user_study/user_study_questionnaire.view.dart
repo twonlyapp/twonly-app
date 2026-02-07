@@ -16,8 +16,6 @@ class UserStudyQuestionnaire extends StatefulWidget {
 
 class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
   final Map<String, dynamic> _responses = {
-    'gender': null,
-    'gender_free': '',
     'age': null,
     'education': null,
     'education_free': '',
@@ -77,15 +75,6 @@ class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionTitle('Demografische Daten'),
-            _questionText('Was ist dein Geschlecht?'),
-            _buildRadioList(
-              ['Männlich', 'Weiblich', 'Divers', 'Keine Angabe'],
-              'gender',
-            ),
-            _buildTextField(
-              'Freitext (optional)',
-              (val) => _responses['gender_free'] = val,
-            ),
             _questionText('Wie alt bist du?'),
             _buildRadioList(
               [
