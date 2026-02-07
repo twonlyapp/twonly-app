@@ -152,7 +152,8 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                 ),
                 onPressed: () async {
                   if (showWideAngleZoomIOS &&
-                      widget.selectedCameraDetails.cameraId == 2) {
+                      widget.selectedCameraDetails.cameraId ==
+                          _wideCameraIndex) {
                     await widget.selectCamera(0, true);
                   } else {
                     widget.updateScaleFactor(1.0);
@@ -175,6 +176,12 @@ class _CameraZoomButtonsState extends State<CameraZoomButtons> {
                   final level =
                       min(await widget.controller.getMaxZoomLevel(), 2)
                           .toDouble();
+
+                  if (showWideAngleZoomIOS &&
+                      widget.selectedCameraDetails.cameraId ==
+                          _wideCameraIndex) {
+                    await widget.selectCamera(0, true);
+                  }
                   widget.updateScaleFactor(level);
                 },
                 child: Text(
