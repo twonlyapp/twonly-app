@@ -75,6 +75,7 @@ class TwonlyDB extends _$TwonlyDB {
       name: 'twonly',
       native: const DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
+        shareAcrossIsolates: true,
       ),
     );
   }
