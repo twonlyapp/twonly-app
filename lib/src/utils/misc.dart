@@ -159,8 +159,12 @@ Future<bool> authenticateUser(
     }
   } on LocalAuthException catch (e) {
     Log.error(e.toString());
-    if (!force) {
-      return true;
+    if (e.code == LocalAuthExceptionCode.noBiometricHardware ||
+        e.code == LocalAuthExceptionCode.noBiometricsEnrolled ||
+        e.code == LocalAuthExceptionCode.noCredentialsSet) {
+      if (!force) {
+        return true;
+      }
     }
   }
   return false;
