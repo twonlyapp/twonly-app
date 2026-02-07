@@ -313,7 +313,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsProfileEditDisplayNameNew => 'New Displayname';
 
   @override
-  String get settingsAccount => 'Konto';
+  String get settingsAccount => 'Account';
 
   @override
   String get settingsSubscription => 'Subscription';

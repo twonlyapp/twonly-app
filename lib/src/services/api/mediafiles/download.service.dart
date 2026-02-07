@@ -23,8 +23,42 @@ Future<void> tryDownloadAllMediaFiles({bool force = false}) async {
       await twonlyDB.mediaFilesDao.getAllMediaFilesPendingDownload();
 
   for (final mediaFile in mediaFiles) {
-    await startDownloadMedia(mediaFile, force);
+    if (await canMediaFileBeDownloaded(mediaFile)) {
+      await startDownloadMedia(mediaFile, force);
+    }
   }
+}
+
+Future<bool> canMediaFileBeDownloaded(MediaFile mediaFile) async {
+  final messages =
+      await twonlyDB.messagesDao.getMessagesByMediaId(mediaFile.mediaId);
+
+  // Verify that the sender of the original image / message does still exists.
+  // If not delete the message as it can not be downloaded from the server anymore.
+
+  if (messages.length != 1) {
+    Log.error('A media for download must have one original message.');
+    return false;
+  }
+
+  if (messages.first.senderId == null) {
+    Log.error('A media for download must have a sender id.');
+    return false;
+  }
+
+  final contact =
+      await twonlyDB.contactsDao.getContactById(messages.first.senderId!);
+
+  if (contact == null || contact.accountDeleted) {
+    Log.info(
+      'Sender does not exists anymore. Delete media file and message.',
+    );
+    await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+    await twonlyDB.messagesDao.deleteMessagesById(messages.first.messageId);
+    return false;
+  }
+
+  return true;
 }
 
 enum DownloadMediaTypes {
@@ -90,11 +124,9 @@ Future<void> handleDownloadStatusUpdate(TaskStatusUpdate update) async {
       failed = false;
     } else {
       failed = true;
-      if (update.responseStatusCode != null) {
-        Log.error(
-          'Got invalid response status code: ${update.responseStatusCode}',
-        );
-      }
+      Log.error(
+        'Got invalid response status code: ${update.responseStatusCode}',
+      );
     }
   } else {
     Log.info('Got ${update.status} for $mediaId');

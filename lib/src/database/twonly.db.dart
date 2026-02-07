@@ -75,6 +75,7 @@ class TwonlyDB extends _$TwonlyDB {
       name: 'twonly',
       native: const DriftNativeOptions(
         databaseDirectory: getApplicationSupportDirectory,
+        shareAcrossIsolates: true,
       ),
     );
   }
@@ -166,6 +167,7 @@ class TwonlyDB extends _$TwonlyDB {
           ))
         .go();
     await delete(receipts).go();
+    await delete(receivedReceipts).go();
     await update(contacts).write(
       const ContactsCompanion(
         avatarSvgCompressed: Value(null),

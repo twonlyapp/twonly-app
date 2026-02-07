@@ -131,53 +131,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     }
   }
 
-  // Future<List<Message>> getAllMessagesPendingDownloading() {
-  //   return (select(messages)
-  //         ..where(
-  //           (t) =>
-  //               t.downloadState.equals(DownloadState.downloaded.index).not() &
-  //               t.messageOtherId.isNotNull() &
-  //               t.errorWhileSending.equals(false) &
-  //               t.kind.equals(MessageKind.media.name),
-  //         ))
-  //       .get();
-  // }
-
-  // Future<List<Message>> getAllNonACKMessagesFromUser() {
-  //   return (select(messages)
-  //         ..where(
-  //           (t) =>
-  //               t.acknowledgeByUser.equals(false) &
-  //               t.messageOtherId.isNull() &
-  //               t.errorWhileSending.equals(false) &
-  //               t.sendAt.isBiggerThanValue(
-  //                 clock.now().subtract(const Duration(minutes: 10)),
-  //               ),
-  //         ))
-  //       .get();
-  // }
-
-  // Stream<List<Message>> getAllStoredMediaFiles() {
-  //   return (select(messages)
-  //         ..where((t) => t.mediaStored.equals(true))
-  //         ..orderBy([(t) => OrderingTerm.desc(t.sendAt)]))
-  //       .watch();
-  // }
-
-  // Future<List<Message>> getAllMessagesPendingUpload() {
-  //   return (select(messages)
-  //         ..where(
-  //           (t) =>
-  //               t.acknowledgeByServer.equals(false) &
-  //               t.messageOtherId.isNull() &
-  //               t.mediaUploadId.isNotNull() &
-  //               t.downloadState.equals(DownloadState.pending.index) &
-  //               t.errorWhileSending.equals(false) &
-  //               t.kind.equals(MessageKind.media.name),
-  //         ))
-  //       .get();
-  // }
-
   Future<void> openedAllTextMessages(String groupId) {
     final updates = MessagesCompanion(openedAt: Value(clock.now()));
     return (update(messages)
@@ -322,32 +275,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     return members.length == actions.length;
   }
 
-  // Future<void> updateMessageByOtherUser(
-  //   int userId,
-  //   int messageId,
-  //   MessagesCompanion updatedValues,
-  // ) {
-  //   return (update(messages)
-  //         ..where(
-  //           (c) => c.contactId.equals(userId) & c.messageId.equals(messageId),
-  //         ))
-  //       .write(updatedValues);
-  // }
-
-  // Future<void> updateMessageByOtherMessageId(
-  //   int userId,
-  //   int messageOtherId,
-  //   MessagesCompanion updatedValues,
-  // ) {
-  //   return (update(messages)
-  //         ..where(
-  //           (c) =>
-  //               c.contactId.equals(userId) &
-  //               c.messageOtherId.equals(messageOtherId),
-  //         ))
-  //       .write(updatedValues);
-  // }
-
   Future<void> updateMessageId(
     String messageId,
     MessagesCompanion updatedValues,
@@ -445,27 +372,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     });
   }
 
-  // Future<void> deleteMessagesByContactId(int contactId) {
-  //   return (delete(messages)
-  //         ..where(
-  //           (t) => t.contactId.equals(contactId) & t.mediaStored.equals(false),
-  //         ))
-  //       .go();
-  // }
-
-  // Future<void> deleteMessagesByContactIdAndOtherMessageId(
-  //   int contactId,
-  //   int messageOtherId,
-  // ) {
-  //   return (delete(messages)
-  //         ..where(
-  //           (t) =>
-  //               t.contactId.equals(contactId) &
-  //               t.messageOtherId.equals(messageOtherId),
-  //         ))
-  //       .go();
-  // }
-
   Future<void> deleteMessagesById(String messageId) {
     return (delete(messages)..where((t) => t.messageId.equals(messageId))).go();
   }
@@ -473,24 +379,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
   Future<void> deleteMessagesByGroupId(String groupId) {
     return (delete(messages)..where((t) => t.groupId.equals(groupId))).go();
   }
-
-  // Future<void> deleteAllMessagesByContactId(int contactId) {
-  //   return (delete(messages)..where((t) => t.contactId.equals(contactId))).go();
-  // }
-
-  // Future<bool> containsOtherMessageId(
-  //   int fromUserId,
-  //   int messageOtherId,
-  // ) async {
-  //   final query = select(messages)
-  //     ..where(
-  //       (t) =>
-  //           t.messageOtherId.equals(messageOtherId) &
-  //           t.contactId.equals(fromUserId),
-  //     );
-  //   final entry = await query.get();
-  //   return entry.isNotEmpty;
-  // }
 
   SingleOrNullSelectable<Message> getMessageById(String messageId) {
     return select(messages)..where((t) => t.messageId.equals(messageId));
@@ -519,31 +407,4 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .watch();
   }
-
-  // Future<List<Message>> getMessagesByMediaUploadId(int mediaUploadId) async {
-  //   return (select(messages)
-  //         ..where((t) => t.mediaUploadId.equals(mediaUploadId)))
-  //       .get();
-  // }
-
-  // SingleOrNullSelectable<Message> getMessageByOtherMessageId(
-  //   int fromUserId,
-  //   int messageId,
-  // ) {
-  //   return select(messages)
-  //     ..where(
-  //       (t) =>
-  //           t.messageOtherId.equals(messageId) & t.contactId.equals(fromUserId),
-  //     );
-  // }
-
-  // SingleOrNullSelectable<Message> getMessageByIdAndContactId(
-  //   int fromUserId,
-  //   int messageId,
-  // ) {
-  //   return select(messages)
-  //     ..where(
-  //       (t) => t.messageId.equals(messageId) & t.contactId.equals(fromUserId),
-  //     );
-  // }
 }
