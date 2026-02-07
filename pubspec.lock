@@ -905,7 +905,7 @@ packages:
       path: "dependencies/hashlib"
       relative: true
     source: path
-    version: "2.2.0"
+    version: "2.3.0"
   hashlib_codecs:
     dependency: "direct overridden"
     description:
@@ -1259,7 +1259,7 @@ packages:
       path: "dependencies/no_screenshot"
       relative: true
     source: path
-    version: "0.3.2-beta.3"
+    version: "0.3.2"
   objective_c:
     dependency: transitive
     description:

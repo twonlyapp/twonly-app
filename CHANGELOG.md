@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.0.90
+
+- Fixes issue that media files where not reuploaded  
+- Fixes iOS zooming issue when switching between .5 and x1
+- Fixes biometric auth bypass when opening a twonly/reopen send image
+- Fixes that media files could not be downloaded in case the contact deleted his account 
+- Fixes database issue in case twonly is opened multiple times 
+- Fixes typos in translation
+
 ## 0.0.87
 
 - Adds link preview to images
