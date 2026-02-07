@@ -19,17 +19,17 @@ import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/contact/contact.view.dart';
 import 'package:twonly/src/views/public_profile.view.dart';
 
-Future<void> handleIntentUrl(BuildContext context, Uri uri) async {
-  if (!uri.scheme.startsWith('http')) return;
-  if (uri.host != 'me.twonly.eu') return;
-  if (uri.hasEmptyPath) return;
+Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
+  if (!uri.scheme.startsWith('http')) return false;
+  if (uri.host != 'me.twonly.eu') return false;
+  if (uri.hasEmptyPath) return false;
 
   final publicKey = uri.hasFragment ? uri.fragment : null;
   final userPaths = uri.path.split('/');
-  if (userPaths.length != 2) return;
+  if (userPaths.length != 2) return false;
   final username = userPaths[1];
 
-  if (!context.mounted) return;
+  if (!context.mounted) return false;
 
   if (username == gUser.username) {
     await Navigator.push(
@@ -40,7 +40,7 @@ Future<void> handleIntentUrl(BuildContext context, Uri uri) async {
         },
       ),
     );
-    return;
+    return true;
   }
 
   Log.info(
@@ -48,7 +48,7 @@ Future<void> handleIntentUrl(BuildContext context, Uri uri) async {
   );
   final contacts = await twonlyDB.contactsDao.getContactsByUsername(username);
   if (contacts.isEmpty) {
-    if (!context.mounted) return;
+    if (!context.mounted) return true;
     Uint8List? publicKeyBytes;
     if (publicKey != null) {
       publicKeyBytes = base64Url.decode(publicKey);
@@ -72,7 +72,7 @@ Future<void> handleIntentUrl(BuildContext context, Uri uri) async {
       if (storedPublicKey == null ||
           receivedPublicKey.isEmpty ||
           !context.mounted) {
-        return;
+        return true;
       }
       if (storedPublicKey.equals(receivedPublicKey)) {
         if (!contact.verified) {
@@ -112,6 +112,7 @@ Future<void> handleIntentUrl(BuildContext context, Uri uri) async {
       Log.warn(e);
     }
   }
+  return true;
 }
 
 Future<void> handleIntentMediaFile(
@@ -160,12 +161,15 @@ Future<void> handleIntentSharedFile(
       );
       continue;
     }
-    Log.info('got file via intent ${file.type} ${file.value}');
+
+    Log.info('got file via intent ${file.type}');
 
     switch (file.type) {
       case SharedMediaType.URL:
         if (file.value?.startsWith('http') ?? false) {
-          onUrlCallBack(Uri.parse(file.value!));
+          final uri = Uri.parse(file.value!);
+          Log.info('Got link via handle intent share file: ${uri.scheme}');
+          onUrlCallBack(uri);
         }
       case SharedMediaType.IMAGE:
         var type = MediaType.image;

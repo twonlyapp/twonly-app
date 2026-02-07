@@ -116,7 +116,14 @@ class HomeViewState extends State<HomeView> {
 
     // Subscribe to all events (initial link and further)
     _deepLinkSub = AppLinks().uriLinkStream.listen((uri) async {
-      if (mounted) await handleIntentUrl(context, uri);
+      if (mounted) {
+        Log.info('Got link via app links: ${uri.scheme}');
+        if (!await handleIntentUrl(context, uri)) {
+          if (uri.scheme.startsWith('http')) {
+            _mainCameraController.setSharedLinkForPreview(uri);
+          }
+        }
+      }
     });
 
     _intentStreamSub = FlutterSharingIntent.instance.getMediaStream().listen(
