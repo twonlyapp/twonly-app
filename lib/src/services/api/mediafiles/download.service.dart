@@ -37,7 +37,9 @@ Future<bool> canMediaFileBeDownloaded(MediaFile mediaFile) async {
   // If not delete the message as it can not be downloaded from the server anymore.
 
   if (messages.length != 1) {
-    Log.error('A media for download must have one original message.');
+    Log.warn(
+      'A media for download must have one original message, but it has ${messages.length}.',
+    );
     return false;
   }
 

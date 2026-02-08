@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.91
+
+- Fixes link preview on iOS
+- Fixes sharing images from other apps on iOS
+
 ## 0.0.90
 
 - Fixes issue that media files where not reuploaded  
@@ -11,7 +16,7 @@
 
 ## 0.0.87
 
-- Adds link preview to images
+- Adds link preview to shared links
 - Adds option to manual focus in the camera
 - Adds support to switch between front and back cameras during video recording
 - Adds basic face filters
