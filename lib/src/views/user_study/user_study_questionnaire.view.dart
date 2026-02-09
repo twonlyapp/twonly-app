@@ -2,19 +2,22 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/user_study/user_study_data_collection.dart';
 
-class UserStudyQuestionnaire extends StatefulWidget {
-  const UserStudyQuestionnaire({super.key});
+class UserStudyQuestionnaireView extends StatefulWidget {
+  const UserStudyQuestionnaireView({super.key});
 
   @override
-  State<UserStudyQuestionnaire> createState() => _UserStudyQuestionnaireState();
+  State<UserStudyQuestionnaireView> createState() =>
+      _UserStudyQuestionnaireViewState();
 }
 
-class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
+class _UserStudyQuestionnaireViewState
+    extends State<UserStudyQuestionnaireView> {
   final Map<String, dynamic> _responses = {
     'age': null,
     'education': null,
@@ -62,7 +65,7 @@ class _UserStudyQuestionnaireState extends State<UserStudyQuestionnaire> {
       const SnackBar(content: Text('Vielen Dank für deine Teilnahme!')),
     );
 
-    Navigator.pop(context);
+    context.pop();
   }
 
   @override

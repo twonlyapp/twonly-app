@@ -7,8 +7,11 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/localization/generated/app_localizations.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
+import 'package:twonly/src/providers/routing.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
+import 'package:twonly/src/themes/dark.dart';
+import 'package:twonly/src/themes/light.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/utils/storage.dart';
@@ -16,7 +19,7 @@ import 'package:twonly/src/views/components/app_outdated.dart';
 import 'package:twonly/src/views/home.view.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/onboarding/register.view.dart';
-import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
+import 'package:twonly/src/views/settings/backup/setup_backup.view.dart';
 import 'package:twonly/src/views/updates/62_database_migration.view.dart';
 
 class App extends StatefulWidget {
@@ -93,50 +96,24 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     return ListenableBuilder(
       listenable: context.watch<SettingsChangeProvider>(),
       builder: (BuildContext context, Widget? child) {
-        return MaterialApp(
+        return MaterialApp.router(
+          routerConfig: routerProvider,
           scaffoldMessengerKey: globalRootScaffoldMessengerKey,
-          restorationScopeId: 'app',
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+          debugShowCheckedModeBanner: false,
           supportedLocales: const [
             Locale('en', ''),
             Locale('de', ''),
           ],
-          onGenerateTitle: (BuildContext context) => 'twonly',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF57CC99),
-            ),
-            pageTransitionsTheme: const PageTransitionsTheme(
-              builders: {
-                TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
-              },
-            ),
-            inputDecorationTheme: const InputDecorationTheme(
-              border: OutlineInputBorder(),
-            ),
-          ),
-          darkTheme: ThemeData.dark().copyWith(
-            colorScheme: ColorScheme.fromSeed(
-              brightness: Brightness.dark,
-              seedColor: const Color(0xFF57CC99),
-              surface: const Color.fromARGB(255, 20, 18, 23),
-              surfaceContainer: const Color.fromARGB(255, 33, 30, 39),
-            ),
-            inputDecorationTheme: const InputDecorationTheme(
-              border: OutlineInputBorder(),
-            ),
-          ),
+          title: 'twonly',
+          theme: lightTheme,
+          darkTheme: darkTheme,
           themeMode: context.watch<SettingsChangeProvider>().themeMode,
-          initialRoute: '/',
-          routes: {
-            '/': (context) => const AppMainWidget(initialPage: 1),
-            '/chats': (context) => const AppMainWidget(initialPage: 0),
-          },
         );
       },
     );
@@ -213,7 +190,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
       child = const DatabaseMigrationView();
     } else if (_isUserCreated) {
       if (gUser.twonlySafeBackup == null && !_skipBackup && kReleaseMode) {
-        child = TwonlyIdentityBackupView(
+        child = SetupBackupView(
           callBack: () {
             _skipBackup = true;
             setState(() {});

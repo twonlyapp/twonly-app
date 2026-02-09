@@ -19,16 +19,16 @@ import 'package:twonly/src/views/groups/group_member.context.dart';
 import 'package:twonly/src/views/settings/profile/profile.view.dart';
 
 class GroupView extends StatefulWidget {
-  const GroupView(this.group, {super.key});
+  const GroupView(this.groupId, {super.key});
 
-  final Group group;
+  final String groupId;
 
   @override
   State<GroupView> createState() => _GroupViewState();
 }
 
 class _GroupViewState extends State<GroupView> {
-  late Group group;
+  Group? _group;
 
   List<(Contact, GroupMember)> members = [];
 
@@ -37,7 +37,6 @@ class _GroupViewState extends State<GroupView> {
 
   @override
   void initState() {
-    group = widget.group;
     initAsync();
     super.initState();
   }
@@ -50,16 +49,15 @@ class _GroupViewState extends State<GroupView> {
   }
 
   Future<void> initAsync() async {
-    final groupStream = twonlyDB.groupsDao.watchGroup(widget.group.groupId);
+    final groupStream = twonlyDB.groupsDao.watchGroup(widget.groupId);
     groupSub = groupStream.listen((update) {
       if (update != null) {
         setState(() {
-          group = update;
+          _group = update;
         });
       }
     });
-    final membersStream =
-        twonlyDB.groupsDao.watchGroupMembers(widget.group.groupId);
+    final membersStream = twonlyDB.groupsDao.watchGroupMembers(widget.groupId);
     membersSub = membersStream.listen((update) {
       setState(() {
         members = update;
@@ -71,13 +69,13 @@ class _GroupViewState extends State<GroupView> {
   }
 
   Future<void> _updateGroupName() async {
-    final newGroupName = await showGroupNameChangeDialog(context, group);
+    final newGroupName = await showGroupNameChangeDialog(context, _group!);
 
     if (context.mounted &&
         newGroupName != null &&
         newGroupName != '' &&
-        newGroupName != group.groupName) {
-      if (!await updateGroupName(group, newGroupName)) {
+        newGroupName != _group!.groupName) {
+      if (!await updateGroupName(_group!, newGroupName)) {
         if (mounted) {
           showNetworkIssue(context);
         }
@@ -89,11 +87,13 @@ class _GroupViewState extends State<GroupView> {
     final selectedUserIds = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => GroupCreateSelectMembersView(group: group),
+        builder: (context) => GroupCreateSelectMembersView(
+          groupId: _group?.groupId,
+        ),
       ),
     ) as List<int>?;
     if (selectedUserIds == null) return;
-    if (!await addNewGroupMembers(group, selectedUserIds)) {
+    if (!await addNewGroupMembers(_group!, selectedUserIds)) {
       if (mounted) {
         showNetworkIssue(context);
       }
@@ -115,7 +115,7 @@ class _GroupViewState extends State<GroupView> {
     if (members.isNotEmpty) {
       // In case there are other members, check that there is at least one other admin before I leave the group.
 
-      if (group.isGroupAdmin) {
+      if (_group!.isGroupAdmin) {
         if (!members.any((m) => m.$2.memberState == MemberState.admin)) {
           if (!mounted) return;
           await showAlertDialog(
@@ -131,16 +131,17 @@ class _GroupViewState extends State<GroupView> {
 
     late bool success;
 
-    if (group.isGroupAdmin) {
+    if (_group!.isGroupAdmin) {
       // Current user is a admin, to the state can be updated by the user him self.
-      final keyPair = IdentityKeyPair.fromSerialized(group.myGroupPrivateKey!);
+      final keyPair =
+          IdentityKeyPair.fromSerialized(_group!.myGroupPrivateKey!);
       success = await removeMemberFromGroup(
-        group,
+        _group!,
         keyPair.getPublicKey().serialize(),
         gUser.userId,
       );
     } else {
-      success = await leaveAsNonAdminFromGroup(group);
+      success = await leaveAsNonAdminFromGroup(_group!);
     }
 
     if (!success) {
@@ -153,6 +154,9 @@ class _GroupViewState extends State<GroupView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_group == null) {
+      return Container();
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text(''),
@@ -162,7 +166,7 @@ class _GroupViewState extends State<GroupView> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: AvatarIcon(
-              group: group,
+              group: _group,
               fontSize: 30,
             ),
           ),
@@ -171,24 +175,24 @@ class _GroupViewState extends State<GroupView> {
             children: [
               Padding(
                 padding: const EdgeInsets.only(right: 10),
-                child: VerifiedShield(key: Key(group.groupId), group: group),
+                child: VerifiedShield(key: Key(_group!.groupId), group: _group),
               ),
               Text(
-                substringBy(group.groupName, 25),
+                substringBy(_group!.groupName, 25),
                 style: const TextStyle(fontSize: 20),
               ),
             ],
           ),
           const SizedBox(height: 50),
-          if (group.isGroupAdmin && !group.leftGroup)
+          if (_group!.isGroupAdmin && !_group!.leftGroup)
             BetterListTile(
               icon: FontAwesomeIcons.pencil,
               text: context.lang.groupNameInput,
               onTap: _updateGroupName,
             ),
           SelectChatDeletionTimeListTitle(
-            groupId: widget.group.groupId,
-            disabled: !group.isGroupAdmin,
+            groupId: widget.groupId,
+            disabled: !_group!.isGroupAdmin,
           ),
           const Divider(),
           ListTile(
@@ -203,7 +207,7 @@ class _GroupViewState extends State<GroupView> {
               ),
             ),
           ),
-          if (group.isGroupAdmin && !group.leftGroup)
+          if (_group!.isGroupAdmin && !_group!.leftGroup)
             BetterListTile(
               icon: FontAwesomeIcons.plus,
               text: context.lang.addMember,
@@ -216,7 +220,7 @@ class _GroupViewState extends State<GroupView> {
               fontSize: 16,
             ),
             text: context.lang.you,
-            trailing: (group.isGroupAdmin) ? Text(context.lang.admin) : null,
+            trailing: (_group!.isGroupAdmin) ? Text(context.lang.admin) : null,
             onTap: () async {
               await Navigator.push(
                 context,
@@ -229,7 +233,7 @@ class _GroupViewState extends State<GroupView> {
           ...members.map((member) {
             return GroupMemberContextMenu(
               key: ValueKey(member.$1.userId),
-              group: group,
+              group: _group!,
               contact: member.$1,
               member: member.$2,
               child: BetterListTile(
@@ -256,7 +260,7 @@ class _GroupViewState extends State<GroupView> {
           const SizedBox(height: 10),
           const Divider(),
           const SizedBox(height: 10),
-          if (!group.leftGroup)
+          if (!_group!.leftGroup)
             BetterListTile(
               icon: FontAwesomeIcons.rightFromBracket,
               color: Colors.red,

@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart'
     hide MessageActions;
@@ -17,7 +19,6 @@ import 'package:twonly/src/views/chats/chat_messages_components/message_actions.
 import 'package:twonly/src/views/chats/chat_messages_components/message_context_menu.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
-import 'package:twonly/src/views/contact/contact.view.dart';
 
 class ChatListEntry extends StatefulWidget {
   const ChatListEntry({
@@ -204,15 +205,9 @@ class _ChatListEntryState extends State<ChatListEntry> {
               hideContactAvatar
                   ? const SizedBox(width: 24)
                   : GestureDetector(
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ContactView(widget.message.senderId!),
-                          ),
-                        );
-                      },
+                      onTap: () => context.push(
+                        Routes.profileContact(widget.message.senderId!),
+                      ),
                       child: AvatarIcon(
                         contactId: widget.message.senderId,
                         fontSize: 12,

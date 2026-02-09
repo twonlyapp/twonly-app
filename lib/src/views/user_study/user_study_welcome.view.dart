@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/user_study/user_study_questionnaire.view.dart';
 
 class UserStudyWelcomeView extends StatefulWidget {
   const UserStudyWelcomeView({super.key, this.wasOpenedAutomatic = false});
@@ -54,16 +55,8 @@ class _UserStudyWelcomeViewState extends State<UserStudyWelcomeView> {
             const SizedBox(height: 40),
             Center(
               child: FilledButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const UserStudyQuestionnaire();
-                      },
-                    ),
-                  );
-                },
+                onPressed: () => context
+                    .pushReplacement(Routes.settingsHelpUserStudyQuestionnaire),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   child: Text(
@@ -77,9 +70,7 @@ class _UserStudyWelcomeViewState extends State<UserStudyWelcomeView> {
             if (widget.wasOpenedAutomatic)
               Center(
                 child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => context.pop(),
                   child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: Text(
@@ -98,7 +89,7 @@ class _UserStudyWelcomeViewState extends State<UserStudyWelcomeView> {
                       u.askedForUserStudyPermission = true;
                       return u;
                     });
-                    if (context.mounted) Navigator.pop(context);
+                    if (context.mounted) context.pop();
                   },
                   child: const Text(
                     'Nicht mehr anzeigen',

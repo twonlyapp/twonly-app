@@ -11,14 +11,14 @@ import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-class TwonlySafeServerView extends StatefulWidget {
-  const TwonlySafeServerView({super.key});
+class BackupServerView extends StatefulWidget {
+  const BackupServerView({super.key});
 
   @override
-  State<TwonlySafeServerView> createState() => _TwonlySafeServerViewState();
+  State<BackupServerView> createState() => _BackupServerViewState();
 }
 
-class _TwonlySafeServerViewState extends State<TwonlySafeServerView> {
+class _BackupServerViewState extends State<BackupServerView> {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();

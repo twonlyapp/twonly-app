@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -126,31 +125,10 @@ class HomeViewState extends State<HomeView> {
       }
     });
 
-    _intentStreamSub = FlutterSharingIntent.instance.getMediaStream().listen(
-      (f) {
-        if (mounted) {
-          handleIntentSharedFile(
-            context,
-            f,
-            _mainCameraController.setSharedLinkForPreview,
-          );
-        }
-      },
-      // ignore: inference_failure_on_untyped_parameter
-      onError: (err) {
-        Log.error('getIntentDataStream error: $err');
-      },
+    _intentStreamSub = initIntentStreams(
+      context,
+      _mainCameraController.setSharedLinkForPreview,
     );
-
-    FlutterSharingIntent.instance.getInitialSharing().then((f) {
-      if (mounted) {
-        handleIntentSharedFile(
-          context,
-          f,
-          _mainCameraController.setSharedLinkForPreview,
-        );
-      }
-    });
   }
 
   @override

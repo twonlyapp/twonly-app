@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:collection';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mutex/mutex.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -21,8 +22,6 @@ import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/blink.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
-import 'package:twonly/src/views/contact/contact.view.dart';
-import 'package:twonly/src/views/groups/group.view.dart';
 
 Color getMessageColor(Message message) {
   return (message.senderId == null)
@@ -291,23 +290,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     await twonlyDB.groupsDao.getAllGroupMembers(group.groupId);
                 if (!context.mounted) return;
                 if (member.isEmpty) return;
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return ContactView(member.first.contactId);
-                    },
-                  ),
-                );
+                await context
+                    .push(Routes.profileContact(member.first.contactId));
               } else {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return GroupView(group);
-                    },
-                  ),
-                );
+                await context.push(Routes.profileGroup(group.groupId));
               }
             },
             child: Row(

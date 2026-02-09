@@ -4,13 +4,13 @@ import 'package:twonly/src/views/camera/camera_preview_components/camera_preview
 import 'package:twonly/src/views/camera/camera_preview_components/camera_preview_controller_view.dart';
 import 'package:twonly/src/views/camera/camera_preview_components/main_camera_controller.dart';
 
-class QrCodeScanner extends StatefulWidget {
-  const QrCodeScanner({super.key});
+class QrCodeScannerView extends StatefulWidget {
+  const QrCodeScannerView({super.key});
   @override
-  State<QrCodeScanner> createState() => QrCodeScannerState();
+  State<QrCodeScannerView> createState() => QrCodeScannerViewState();
 }
 
-class QrCodeScannerState extends State<QrCodeScanner> {
+class QrCodeScannerViewState extends State<QrCodeScannerView> {
   final MainCameraController _mainCameraController = MainCameraController();
 
   @override

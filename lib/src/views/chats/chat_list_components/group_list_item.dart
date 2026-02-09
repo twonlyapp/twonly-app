@@ -1,24 +1,22 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/camera/camera_send_to.view.dart';
 import 'package:twonly/src/views/chats/chat_list_components/last_message_time.dart';
-import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_send_state_icon.dart';
-import 'package:twonly/src/views/chats/media_viewer.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/group_context_menu.component.dart';
-import 'package:twonly/src/views/contact/contact.view.dart';
-import 'package:twonly/src/views/groups/group.view.dart';
 
 class GroupListItem extends StatefulWidget {
   const GroupListItem({
@@ -161,13 +159,9 @@ class _UserListItem extends State<GroupListItem> {
 
   Future<void> onTap() async {
     if (_currentMessage == null && widget.group.totalMediaCounter == 0) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            return CameraSendToView(widget.group);
-          },
-        ),
+      await context.push(
+        Routes.chatsCameraSendTo,
+        extra: widget.group,
       );
       return;
     }
@@ -185,26 +179,18 @@ class _UserListItem extends State<GroupListItem> {
         }
         if (mediaFile.downloadState! == DownloadState.ready) {
           if (!mounted) return;
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                return MediaViewerView(widget.group);
-              },
-            ),
+          await context.push(
+            Routes.chatsMediaViewer,
+            extra: widget.group,
           );
           return;
         }
       }
     }
     if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return ChatMessagesView(widget.group);
-        },
-      ),
+    await context.push(
+      Routes.chatsMessages,
+      extra: widget.group,
     );
   }
 
@@ -250,42 +236,27 @@ class _UserListItem extends State<GroupListItem> {
               ),
         leading: GestureDetector(
           onTap: () async {
-            Widget pushWidget = GroupView(widget.group);
-
             if (widget.group.isDirectChat) {
               final contacts = await twonlyDB.groupsDao
                   .getGroupContact(widget.group.groupId);
-              pushWidget = ContactView(contacts.first.userId);
+              if (!context.mounted) return;
+              await context.push(Routes.profileContact(contacts.first.userId));
+              return;
+            } else {
+              await context.push(Routes.profileGroup(widget.group.groupId));
             }
-            if (!context.mounted) return;
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return pushWidget;
-                },
-              ),
-            );
           },
           child: AvatarIcon(group: widget.group),
         ),
         trailing: (widget.group.leftGroup)
             ? null
             : IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        if (_hasNonOpenedMediaFile) {
-                          return ChatMessagesView(widget.group);
-                        } else {
-                          return CameraSendToView(widget.group);
-                        }
-                      },
-                    ),
-                  );
-                },
+                onPressed: () => context.push(
+                  _hasNonOpenedMediaFile
+                      ? Routes.chatsMessages
+                      : Routes.chatsCameraSendTo,
+                  extra: widget.group,
+                ),
                 icon: FaIcon(
                   _hasNonOpenedMediaFile
                       ? FontAwesomeIcons.solidComments

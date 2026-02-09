@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/chat/chat_reactions.view.dart';
 
 class ChatSettingsView extends StatefulWidget {
   const ChatSettingsView({super.key});
@@ -25,16 +26,7 @@ class _ChatSettingsViewState extends State<ChatSettingsView> {
         children: [
           ListTile(
             title: Text(context.lang.settingsPreSelectedReactions),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const ChatReactionSelectionView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsChatsReactions),
           ),
         ],
       ),

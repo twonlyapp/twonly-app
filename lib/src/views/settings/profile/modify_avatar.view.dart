@@ -6,14 +6,14 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-class ModifyAvatar extends StatefulWidget {
-  const ModifyAvatar({super.key});
+class ModifyAvatarView extends StatefulWidget {
+  const ModifyAvatarView({super.key});
 
   @override
-  State<ModifyAvatar> createState() => _ModifyAvatarState();
+  State<ModifyAvatarView> createState() => _ModifyAvatarViewState();
 }
 
-class _ModifyAvatarState extends State<ModifyAvatar> {
+class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   final AvatarMakerController _avatarMakerController =
       PersistentAvatarMakerController(customizedPropertyCategories: []);
 

@@ -12,8 +12,8 @@ import 'package:twonly/src/views/components/user_context_menu.component.dart';
 import 'package:twonly/src/views/groups/group_create_select_group_name.view.dart';
 
 class GroupCreateSelectMembersView extends StatefulWidget {
-  const GroupCreateSelectMembersView({this.group, super.key});
-  final Group? group;
+  const GroupCreateSelectMembersView({this.groupId, super.key});
+  final String? groupId;
   @override
   State<GroupCreateSelectMembersView> createState() => _StartNewChatView();
 }
@@ -46,9 +46,8 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
   }
 
   Future<void> initAsync() async {
-    if (widget.group != null) {
-      final members =
-          await twonlyDB.groupsDao.getGroupContact(widget.group!.groupId);
+    if (widget.groupId != null) {
+      final members = await twonlyDB.groupsDao.getGroupContact(widget.groupId!);
       for (final member in members) {
         alreadyInGroup.add(member.userId);
       }
@@ -101,7 +100,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
   }
 
   Future<void> submitChanges() async {
-    if (widget.group != null) {
+    if (widget.groupId != null) {
       Navigator.pop(context, selectedUsers.toList());
       return;
     }
@@ -125,7 +124,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            widget.group == null
+            widget.groupId == null
                 ? context.lang.selectMembers
                 : context.lang.addMember,
           ),
@@ -133,7 +132,9 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
         floatingActionButton: FilledButton.icon(
           onPressed: selectedUsers.isEmpty ? null : submitChanges,
           label: Text(
-            widget.group == null ? context.lang.next : context.lang.updateGroup,
+            widget.groupId == null
+                ? context.lang.next
+                : context.lang.updateGroup,
           ),
           icon: const FaIcon(FontAwesomeIcons.penToSquare),
         ),

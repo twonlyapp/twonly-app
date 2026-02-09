@@ -2,17 +2,17 @@ import 'dart:async';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/group_context_menu.component.dart';
 import 'package:twonly/src/views/components/user_context_menu.component.dart';
-import 'package:twonly/src/views/groups/group_create_select_members.view.dart';
 
 class StartNewChatView extends StatefulWidget {
   const StartNewChatView({super.key});
@@ -165,15 +165,8 @@ class _StartNewChatView extends State<StartNewChatView> {
                               size: 13,
                             ),
                           ),
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const GroupCreateSelectMembersView(),
-                              ),
-                            );
-                          },
+                          onTap: () => context
+                              .push(Routes.groupCreateSelectMember(null)),
                         );
                       }
                       if (i == 1) {
@@ -185,14 +178,7 @@ class _StartNewChatView extends State<StartNewChatView> {
                               size: 13,
                             ),
                           ),
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const AddNewUserView(),
-                              ),
-                            );
-                          },
+                          onTap: () => context.push(Routes.chatsAddNewUser),
                         );
                       }
                       if (i == 2) {

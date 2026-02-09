@@ -4,28 +4,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/providers/connection.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/chats/add_new_user.view.dart';
-import 'package:twonly/src/views/chats/archived_chats.view.dart';
 import 'package:twonly/src/views/chats/chat_list_components/connection_info.comp.dart';
 import 'package:twonly/src/views/chats/chat_list_components/feedback_btn.dart';
 import 'package:twonly/src/views/chats/chat_list_components/group_list_item.dart';
-import 'package:twonly/src/views/chats/start_new_chat.view.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/notification_badge.dart';
-import 'package:twonly/src/views/public_profile.view.dart';
-import 'package:twonly/src/views/settings/help/changelog.view.dart';
-import 'package:twonly/src/views/settings/profile/profile.view.dart';
-import 'package:twonly/src/views/settings/settings_main.view.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
-import 'package:twonly/src/views/user_study/user_study_welcome.view.dart';
 
 class ChatListView extends StatefulWidget {
   const ChatListView({super.key});
@@ -64,15 +57,9 @@ class _ChatListViewState extends State<ChatListView> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (gUser.subscriptionPlan == SubscriptionPlan.Tester.name &&
           !gUser.askedForUserStudyPermission) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return const UserStudyWelcomeView(
-                wasOpenedAutomatic: true,
-              );
-            },
-          ),
+        await context.push(
+          Routes.settingsHelpUserStudy,
+          extra: true,
         );
       }
 
@@ -89,15 +76,9 @@ class _ChatListViewState extends State<ChatListView> {
         // only show changelog to people who already have contacts
         // this prevents that this is shown directly after the user registered
         if (_groupsNotPinned.isNotEmpty) {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                return ChangeLogView(
-                  changeLog: changeLog,
-                );
-              },
-            ),
+          await context.push(
+            Routes.settingsHelpChangelog,
+            extra: changeLog,
           );
         }
       }
@@ -120,14 +101,7 @@ class _ChatListViewState extends State<ChatListView> {
           children: [
             GestureDetector(
               onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const ProfileView();
-                    },
-                  ),
-                );
+                await context.push(Routes.settingsProfile);
                 if (!mounted) return;
                 setState(() {}); // gUser has updated
               },
@@ -141,16 +115,7 @@ class _ChatListViewState extends State<ChatListView> {
             const Text('twonly '),
             if (plan != SubscriptionPlan.Free)
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const SubscriptionView();
-                      },
-                    ),
-                  );
-                },
+                onTap: () => context.push(Routes.settingsSubscription),
                 child: Container(
                   decoration: BoxDecoration(
                     color: context.color.primary,
@@ -184,28 +149,15 @@ class _ChatListViewState extends State<ChatListView> {
                 child: IconButton(
                   key: searchForOtherUsers,
                   icon: const FaIcon(FontAwesomeIcons.userPlus, size: 18),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddNewUserView(),
-                      ),
-                    );
-                  },
+                  onPressed: () => context.push(Routes.chatsAddNewUser),
                 ),
               );
             },
           ),
           IconButton(
             onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SettingsMainView(),
-                ),
-              );
-              if (!mounted) return;
-              setState(() {}); // gUser may has changed...
+              await context.push(Routes.settings);
+              if (mounted) setState(() {}); // gUser may has changed...
             },
             icon: const FaIcon(FontAwesomeIcons.gear, size: 19),
           ),
@@ -234,14 +186,7 @@ class _ChatListViewState extends State<ChatListView> {
                         padding: const EdgeInsets.all(10),
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.person_add),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const AddNewUserView(),
-                              ),
-                            );
-                          },
+                          onPressed: () => context.push(Routes.chatsAddNewUser),
                           label: Text(
                             context.lang.chatListViewSearchUserNameBtn,
                           ),
@@ -265,16 +210,7 @@ class _ChatListViewState extends State<ChatListView> {
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontSize: 13),
                             ),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) {
-                                    return const ArchivedChatsView();
-                                  },
-                                ),
-                              );
-                            },
+                            onTap: () => context.push(Routes.chatsArchived),
                           );
                         }
                         // Check if the index is for the pinned users
@@ -320,16 +256,7 @@ class _ChatListViewState extends State<ChatListView> {
               color: context.color.primary,
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const PublicProfileView();
-                      },
-                    ),
-                  );
-                },
+                onTap: () => context.push(Routes.settingsPublicProfile),
                 child: SizedBox(
                   width: 45,
                   height: 45,
@@ -345,16 +272,7 @@ class _ChatListViewState extends State<ChatListView> {
             const SizedBox(height: 12),
             FloatingActionButton(
               backgroundColor: context.color.primary,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const StartNewChatView();
-                    },
-                  ),
-                );
-              },
+              onPressed: () => context.push(Routes.chatsStartNewChat),
               child: FaIcon(
                 FontAwesomeIcons.penToSquare,
                 color: isDarkMode(context) ? Colors.black : Colors.white,

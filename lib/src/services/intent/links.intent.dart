@@ -5,8 +5,11 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
@@ -16,8 +19,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/share_image_editor.view.dart';
 import 'package:twonly/src/views/chats/add_new_user.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/views/contact/contact.view.dart';
-import 'package:twonly/src/views/public_profile.view.dart';
 
 Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   if (!uri.scheme.startsWith('http')) return false;
@@ -32,14 +33,7 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
   if (!context.mounted) return false;
 
   if (username == gUser.username) {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return const PublicProfileView();
-        },
-      ),
-    );
+    await context.push(Routes.settingsPublicProfile);
     return true;
   }
 
@@ -91,14 +85,7 @@ Future<bool> handleIntentUrl(BuildContext context, Uri uri) async {
             );
           }
         } else {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                return ContactView(contact.userId);
-              },
-            ),
-          );
+          await context.push(Routes.profileContact(contact.userId));
         }
       } else {
         await showAlertDialog(
@@ -146,6 +133,27 @@ Future<void> handleIntentMediaFile(
         sharedFromGallery: true,
       ),
     ),
+  );
+}
+
+StreamSubscription<List<SharedFile>> initIntentStreams(
+  BuildContext context,
+  void Function(Uri) onUrlCallBack,
+) {
+  FlutterSharingIntent.instance.getInitialSharing().then((f) {
+    if (!context.mounted) return;
+    handleIntentSharedFile(context, f, onUrlCallBack);
+  });
+
+  return FlutterSharingIntent.instance.getMediaStream().listen(
+    (f) {
+      if (!context.mounted) return;
+      handleIntentSharedFile(context, f, onUrlCallBack);
+    },
+    // ignore: inference_failure_on_untyped_parameter
+    onError: (err) {
+      Log.error('getIntentDataStream error: $err');
+    },
   );
 }
 

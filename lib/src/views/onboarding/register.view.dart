@@ -2,11 +2,12 @@
 
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/constants/secure_storage_keys.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
@@ -17,7 +18,6 @@ import 'package:twonly/src/utils/pow.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
-import 'package:twonly/src/views/onboarding/recover.view.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({
@@ -302,16 +302,8 @@ class _RegisterViewState extends State<RegisterView> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       OutlinedButton.icon(
-                        onPressed: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return const BackupRecoveryView();
-                              },
-                            ),
-                          );
-                        },
+                        onPressed: () =>
+                            context.push(Routes.settingsBackupRecovery),
                         label: Text(context.lang.twonlySafeRecoverBtn),
                       ),
                     ],

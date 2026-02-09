@@ -2,13 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/views/settings/backup/twonly_safe_server.view.dart';
 
-class TwonlyIdentityBackupView extends StatefulWidget {
-  const TwonlyIdentityBackupView({
+class SetupBackupView extends StatefulWidget {
+  const SetupBackupView({
     this.isPasswordChangeOnly = false,
     this.callBack,
     super.key,
@@ -20,11 +21,10 @@ class TwonlyIdentityBackupView extends StatefulWidget {
   final bool isPasswordChangeOnly;
 
   @override
-  State<TwonlyIdentityBackupView> createState() =>
-      _TwonlyIdentityBackupViewState();
+  State<SetupBackupView> createState() => _SetupBackupViewState();
 }
 
-class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
+class _SetupBackupViewState extends State<SetupBackupView> {
   bool obscureText = true;
   bool isLoading = false;
   final TextEditingController passwordCtrl = TextEditingController();
@@ -179,16 +179,7 @@ class _TwonlyIdentityBackupViewState extends State<TwonlyIdentityBackupView> {
               const SizedBox(height: 10),
               Center(
                 child: OutlinedButton(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return const TwonlySafeServerView();
-                        },
-                      ),
-                    );
-                  },
+                  onPressed: () => context.push(Routes.settingsBackupServer),
                   child: Text(context.lang.backupExpertSettings),
                 ),
               ),

@@ -1,10 +1,11 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/context_menu.component.dart';
 
@@ -45,16 +46,10 @@ class GroupContextMenu extends StatelessWidget {
           ),
         ContextMenuItem(
           title: context.lang.contextMenuOpenChat,
-          onTap: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return ChatMessagesView(group);
-                },
-              ),
-            );
-          },
+          onTap: () => context.push(
+            Routes.chatsMessages,
+            extra: group,
+          ),
           icon: FontAwesomeIcons.comments,
         ),
         if (!group.archived)
