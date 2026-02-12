@@ -218,20 +218,11 @@ Future<void> startDownloadMedia(MediaFile media, bool force) async {
   }
 }
 
-int failCounter = 0;
-
 Future<void> downloadFileFast(
   MediaFile media,
   String apiUrl,
   File filePath,
 ) async {
-  if (failCounter < 2) {
-    failCounter += 1;
-    await requestMediaReupload(media.mediaId);
-    return;
-  }
-  failCounter = 0;
-
   final response =
       await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 10));
 

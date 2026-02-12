@@ -378,7 +378,7 @@ Future<void> uploadFileFastOrEnqueue(
   try {
     Log.info('Uploading fast: ${task.taskId}');
     final response =
-        await requestMultipart.send().timeout(const Duration(seconds: 4));
+        await requestMultipart.send().timeout(const Duration(seconds: 8));
     var status = TaskStatus.failed;
     if (response.statusCode == 200) {
       status = TaskStatus.complete;

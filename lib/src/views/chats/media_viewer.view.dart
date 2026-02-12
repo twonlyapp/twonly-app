@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart'
@@ -536,15 +537,22 @@ class _MediaViewerViewState extends State<MediaViewerView> {
                     children: [
                       if (videoController != null)
                         Positioned.fill(
-                          child: VideoPlayer(videoController!),
+                          child: PhotoView.customChild(
+                            initialScale: PhotoViewComputedScale.contained,
+                            minScale: PhotoViewComputedScale.contained,
+                            child: VideoPlayer(videoController!),
+                          ),
                         )
                       else if (currentMedia != null &&
                               currentMedia!.mediaFile.type == MediaType.image ||
                           currentMedia!.mediaFile.type == MediaType.gif)
                         Positioned.fill(
-                          child: Image.file(
-                            currentMedia!.tempPath,
-                            fit: BoxFit.contain,
+                          child: PhotoView(
+                            imageProvider: FileImage(
+                              currentMedia!.tempPath,
+                            ),
+                            initialScale: PhotoViewComputedScale.contained,
+                            minScale: PhotoViewComputedScale.contained,
                           ),
                         ),
                     ],
