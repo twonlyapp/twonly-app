@@ -231,9 +231,7 @@ Future<void> downloadFileFast(
     await handleEncryptedFile(media.mediaId);
     return;
   } else {
-    if (response.statusCode == 404 ||
-        response.statusCode == 403 ||
-        response.statusCode == 400) {
+    if (response.statusCode == 404 || response.statusCode == 403) {
       Log.error(
         'Got ${response.statusCode} from server. Requesting upload again',
       );

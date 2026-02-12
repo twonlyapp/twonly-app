@@ -139,12 +139,21 @@ Future<void> handleMediaUpdate(
       .getMessageById(mediaUpdate.targetMessageId)
       .getSingleOrNull();
   if (message == null) {
-    Log.error(
-      'Got media update to  message ${mediaUpdate.targetMessageId} but message not found.',
+    // this can happen, in case the message was already deleted.
+    Log.info(
+      'Got media update to message ${mediaUpdate.targetMessageId} but message not found.',
     );
+    return;
+  }
+  if (message.mediaId == null) {
+    // this can happen, in case the message was already deleted.
+    Log.warn(
+      'Got media update for message ${mediaUpdate.targetMessageId} which does not have a mediaId defined.',
+    );
+    return;
   }
   final mediaFile =
-      await twonlyDB.mediaFilesDao.getMediaFileById(message!.mediaId!);
+      await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
   if (mediaFile == null) {
     Log.info(
       'Got media file update, but media file was not found ${message.mediaId}',
