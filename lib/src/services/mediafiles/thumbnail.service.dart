@@ -9,8 +9,12 @@ Future<void> createThumbnailsForVideo(
 ) async {
   final stopwatch = Stopwatch()..start();
 
+  if (destinationFile.existsSync()) {
+    return;
+  }
+
   final command =
-      '-i "${sourceFile.path}" -ss 00:00:00 -vframes 1 -vf "scale=iw:ih:flags=lanczos" -c:v libwebp  -q:v 100 -compression_level 6 "${destinationFile.path}"';
+      '-y -i "${sourceFile.path}" -ss 00:00:00 -vframes 1 -vf "scale=iw:ih:flags=lanczos" -c:v libwebp  -q:v 100 -compression_level 6 "${destinationFile.path}"';
 
   final session = await FFmpegKit.execute(command);
   final returnCode = await session.getReturnCode();
