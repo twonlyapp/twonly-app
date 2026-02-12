@@ -189,8 +189,7 @@ class ApiService {
   bool get isConnected => _channel != null && _channel!.closeCode != null;
 
   Future<void> _onDone() async {
-    Log.info('websocket closed without error');
-    _reconnectionDelay = 60 * 2; // the server closed the connection...
+    _reconnectionDelay = 3;
     await onClosed();
   }
 
@@ -408,7 +407,7 @@ class ApiService {
       }
       if (result.isError) {
         if (result.error != ErrorCode.AuthTokenNotValid) {
-          Log.error('got error while authenticating to the server', result);
+          Log.error('got error while authenticating to the server: $result');
           return false;
         }
       }

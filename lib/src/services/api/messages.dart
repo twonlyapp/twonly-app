@@ -89,7 +89,7 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
       return null;
     }
 
-    Log.info('Uploading $receiptId (Message to ${receipt.contactId})');
+    Log.info('Uploading $receiptId');
 
     final message = pb.Message.fromBuffer(receipt.message)
       ..receiptId = receiptId;

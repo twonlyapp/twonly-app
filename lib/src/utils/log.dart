@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
-import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -66,8 +65,6 @@ class Log {
   }
 }
 
-Mutex writeToLogGuard = Mutex();
-
 Future<String> loadLogFile() async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
@@ -95,14 +92,23 @@ Future<void> _writeLogToFile(LogRecord record) async {
     logFile.createSync(recursive: true);
   }
 
-  // Prepare the log message
   final logMessage =
       '${clock.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
 
-  await writeToLogGuard.protect(() async {
-    // Append the log message to the file
-    await logFile.writeAsString(logMessage, mode: FileMode.append);
-  });
+  final raf = await logFile.open(mode: FileMode.writeOnlyAppend);
+
+  try {
+    // Use FileLock.blockingExclusive to wait until the lock is available
+    await raf.lock(FileLock.blockingExclusive);
+    await raf.writeString(logMessage);
+    await raf.flush();
+  } catch (e) {
+    // ignore: avoid_print
+    print('Error during file access: $e');
+  } finally {
+    await raf.unlock();
+    await raf.close();
+  }
 }
 
 Future<void> cleanLogFile() async {
@@ -112,10 +118,10 @@ Future<void> cleanLogFile() async {
   if (logFile.existsSync()) {
     final lines = await logFile.readAsLines();
 
-    if (lines.length <= 5000) return;
+    if (lines.length <= 10000) return;
 
-    final removeCount = lines.length - 5000;
-    final remaining = lines.sublist(removeCount);
+    final removeCount = lines.length - 10000;
+    final remaining = lines.sublist(removeCount, lines.length);
 
     final sink = logFile.openWrite()..writeAll(remaining, '\n');
     await sink.close();
