@@ -143,7 +143,7 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'modify_avatar',
               builder: (context, state) => const ModifyAvatarView(),
-            )
+            ),
           ],
         ),
         GoRoute(
@@ -199,7 +199,7 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'block_users',
               builder: (context, state) => const PrivacyViewBlockUsersView(),
-            )
+            ),
           ],
         ),
         GoRoute(

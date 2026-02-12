@@ -132,7 +132,7 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
                     restorationId: 'new_message_users_list',
                     itemCount:
                         contacts.length + (selectedUsers.isEmpty ? 0 : 2),
-                    itemBuilder: (BuildContext context, int i) {
+                    itemBuilder: (context, i) {
                       if (selectedUsers.isNotEmpty) {
                         final selected = selectedUsers.toList();
                         if (i == 0) {
@@ -198,7 +198,7 @@ class _SelectAdditionalUsers extends State<SelectAdditionalUsers> {
                                 );
                               },
                             ),
-                            onChanged: (bool? value) {
+                            onChanged: (value) {
                               toggleSelectedUser(user.userId);
                             },
                           ),

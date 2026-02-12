@@ -51,7 +51,7 @@ class _SelectShowTimeState extends State<SelectShowTime> {
                 scrollController: FixedExtentScrollController(
                   initialItem: widget.initialItem,
                 ),
-                onSelectedItemChanged: (int selectedItem) {
+                onSelectedItemChanged: (selectedItem) {
                   _selectedItem = selectedItem;
                   widget.setMaxShowTime(
                     widget.options[selectedItem],

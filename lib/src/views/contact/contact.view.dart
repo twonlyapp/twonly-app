@@ -250,7 +250,7 @@ Future<String?> showNicknameChangeDialog(
 
   return showDialog<String>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title: Text(context.lang.contactNickname),
         content: TextField(
@@ -287,7 +287,7 @@ Future<String?> showReportDialog(
 
   return showDialog<String>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title:
             Text(context.lang.reportUserTitle(getContactDisplayName(contact))),

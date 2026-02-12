@@ -129,7 +129,7 @@ class _SelectPaymentViewState extends State<SelectPaymentView> {
                             Checkbox(
                               value:
                                   paymentMethods == PaymentMethods.twonlyCredit,
-                              onChanged: (bool? value) {
+                              onChanged: (value) {
                                 setState(() {
                                   paymentMethods = PaymentMethods.twonlyCredit;
                                 });

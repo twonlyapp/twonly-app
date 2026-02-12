@@ -61,7 +61,7 @@ class _SelectChatDeletionTimeListTitleState
   Future<void> _showDialog(Widget child) async {
     await showCupertinoModalPopup<void>(
       context: context,
-      builder: (BuildContext context) => Container(
+      builder: (context) => Container(
         height: 216,
         padding: const EdgeInsets.only(top: 6),
         // The Bottom margin is provided to align the popup above the system navigation bar.
@@ -138,13 +138,13 @@ class _SelectChatDeletionTimeListTitleState
                     initialItem: _selectedDeletionTime,
                   ),
                   // This is called when selected item is changed.
-                  onSelectedItemChanged: (int selectedItem) {
+                  onSelectedItemChanged: (selectedItem) {
                     setState(() {
                       _selectedDeletionTime = selectedItem;
                     });
                   },
                   children:
-                      List<Widget>.generate(_getOptions().length, (int index) {
+                      List<Widget>.generate(_getOptions().length, (index) {
                     return Center(
                       child: Text(_getOptions()[index].$2),
                     );

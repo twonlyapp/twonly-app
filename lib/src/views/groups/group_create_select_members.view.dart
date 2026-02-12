@@ -163,7 +163,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                     restorationId: 'new_message_users_list',
                     itemCount:
                         contacts.length + (selectedUsers.isEmpty ? 0 : 2),
-                    itemBuilder: (BuildContext context, int i) {
+                    itemBuilder: (context, i) {
                       if (selectedUsers.isNotEmpty) {
                         final selected = selectedUsers.toList();
                         if (i == 0) {
@@ -230,7 +230,7 @@ class _StartNewChatView extends State<GroupCreateSelectMembersView> {
                                 );
                               },
                             ),
-                            onChanged: (bool? value) {
+                            onChanged: (value) {
                               toggleSelectedUser(user.userId);
                             },
                           ),

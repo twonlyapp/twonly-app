@@ -193,7 +193,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.black,
-      builder: (BuildContext context) {
+      builder: (context) {
         return SelectShowTime(
           initialItem: initialItem,
           setMaxShowTime: _setMaxShowTime,
@@ -249,7 +249,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
             final layer = await showModalBottomSheet(
               context: context,
               backgroundColor: Colors.black,
-              builder: (BuildContext context) {
+              builder: (context) {
                 return const EmojiPickerBottom();
               },
             ) as Layer?;
@@ -315,7 +315,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
   Future<bool?> _showBackDialog() {
     return showDialog<bool>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: Text(
             context.lang.dialogAskDeleteMediaFilePopTitle,
@@ -559,7 +559,6 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
         if (imageLayer.imageLoaded) {
           timer.cancel();
           Future.delayed(const Duration(milliseconds: 50), () {
-            Log.info(imageLayer.imageLoaded);
             if (context.mounted) {
               setState(() {
                 sendingOrLoadingImage = false;
@@ -615,7 +614,7 @@ class _ShareImageEditorView extends State<ShareImageEditorView> {
 
     return PopScope<bool?>(
       canPop: false,
-      onPopInvokedWithResult: (bool didPop, bool? result) async {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         await askToCloseThenClose();
       },

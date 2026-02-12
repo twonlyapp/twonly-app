@@ -79,7 +79,7 @@ class _ContextMenuState extends State<ContextMenu> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onLongPress: _showCustomMenu,
-      onTapDown: (TapDownDetails details) {
+      onTapDown: (details) {
         _tapPosition = details.globalPosition;
       },
       child: widget.child,

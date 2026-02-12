@@ -75,7 +75,7 @@ Future<String?> showUserNameDialog(
 
   await showDialog<String>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title: const Text('Username'),
         content: TextField(

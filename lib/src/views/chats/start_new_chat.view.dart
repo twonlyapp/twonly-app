@@ -154,7 +154,7 @@ class _StartNewChatView extends State<StartNewChatView> {
                   restorationId: 'new_message_users_list',
                   itemCount:
                       filteredContacts.length + 3 + filteredGroups.length,
-                  itemBuilder: (BuildContext context, int i) {
+                  itemBuilder: (context, i) {
                     if (searchUserName.text.isEmpty) {
                       if (i == 0) {
                         return ListTile(

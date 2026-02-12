@@ -30,12 +30,15 @@ Future<void> handleMedia(
       if (message == null ||
           message.senderId != fromUserId ||
           message.mediaId == null) {
+        Log.warn(
+          'Got reupload for a message that either does not exists or sender != fromUserId or not a media file',
+        );
         return;
       }
 
       // in case there was already a downloaded file delete it...
       final mediaService = await MediaFileService.fromMediaId(message.mediaId!);
-      if (mediaService != null) {
+      if (mediaService != null && mediaService.tempPath.existsSync()) {
         mediaService.tempPath.deleteSync();
       }
 
@@ -66,6 +69,14 @@ Future<void> handleMedia(
       mediaType = MediaType.gif;
     case EncryptedContent_Media_Type.AUDIO:
       mediaType = MediaType.audio;
+  }
+
+  final messageTmp = await twonlyDB.messagesDao
+      .getMessageById(media.senderMessageId)
+      .getSingleOrNull();
+  if (messageTmp != null) {
+    Log.warn('This message already exit. Message is dropped.');
+    return;
   }
 
   int? displayLimitInMilliseconds;
@@ -192,6 +203,13 @@ Future<void> handleMediaUpdate(
           reuploadRequestedBy: Value(reuploadRequestedBy),
         ),
       );
-      unawaited(startBackgroundMediaUpload(MediaFileService(mediaFile)));
+      final mediaFileUpdated =
+          await MediaFileService.fromMediaId(mediaFile.mediaId);
+      if (mediaFileUpdated != null) {
+        if (mediaFileUpdated.uploadRequestPath.existsSync()) {
+          mediaFileUpdated.uploadRequestPath.deleteSync();
+        }
+        unawaited(startBackgroundMediaUpload(mediaFileUpdated));
+      }
   }
 }

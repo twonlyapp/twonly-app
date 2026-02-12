@@ -23,7 +23,7 @@ class ReactionRow extends StatelessWidget {
     await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.black,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AllReactionsView(
           message: message,
         );

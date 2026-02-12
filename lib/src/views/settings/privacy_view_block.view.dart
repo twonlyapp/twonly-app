@@ -102,7 +102,7 @@ class UserList extends StatelessWidget {
     return ListView.builder(
       restorationId: 'new_message_users_list',
       itemCount: users.length,
-      itemBuilder: (BuildContext context, int i) {
+      itemBuilder: (context, i) {
         final user = users[i];
         return UserContextMenu(
           key: ValueKey(user.userId),
@@ -116,7 +116,7 @@ class UserList extends StatelessWidget {
             leading: AvatarIcon(contactId: user.userId, fontSize: 15),
             trailing: Checkbox(
               value: user.blocked,
-              onChanged: (bool? value) async {
+              onChanged: (value) async {
                 await block(context, user.userId, value);
               },
             ),

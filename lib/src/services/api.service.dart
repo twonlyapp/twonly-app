@@ -153,9 +153,8 @@ class ApiService {
     if (connectivitySubscription != null) {
       return;
     }
-    connectivitySubscription = Connectivity()
-        .onConnectivityChanged
-        .listen((List<ConnectivityResult> result) async {
+    connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen((result) async {
       if (!result.contains(ConnectivityResult.none)) {
         await connect();
       }

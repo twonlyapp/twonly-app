@@ -195,7 +195,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                     Positioned(
                       right: 5,
                       child: PopupMenuButton<String>(
-                        onSelected: (String result) async {
+                        onSelected: (result) async {
                           if (result == 'delete') {
                             await deleteFile();
                           }
@@ -203,8 +203,7 @@ class _MemoriesPhotoSliderViewState extends State<MemoriesPhotoSliderView> {
                             await exportFile();
                           }
                         },
-                        itemBuilder: (BuildContext context) =>
-                            <PopupMenuEntry<String>>[
+                        itemBuilder: (context) => <PopupMenuEntry<String>>[
                           PopupMenuItem<String>(
                             value: 'delete',
                             child: Text(context.lang.galleryDelete),

@@ -193,7 +193,7 @@ Future<String?> showDisplayNameChangeDialog(
 
   return showDialog<String>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title: Text(title),
         content: TextField(

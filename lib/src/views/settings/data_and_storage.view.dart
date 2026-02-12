@@ -24,7 +24,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
     // ignore: inference_failure_on_function_invocation
     await showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AutoDownloadOptionsDialog(
           autoDownloadOptions:
               gUser.autoDownloadOptions ?? defaultAutoDownloadOptions,
@@ -172,7 +172,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
             title: const Text('Image'),
             value: autoDownloadOptions[widget.connectionMode.name]!
                 .contains(DownloadMediaTypes.image.name),
-            onChanged: (bool? value) async {
+            onChanged: (value) async {
               await _updateAutoDownloadSetting(DownloadMediaTypes.image, value);
             },
           ),
@@ -180,7 +180,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
             title: const Text('Video'),
             value: autoDownloadOptions[widget.connectionMode.name]!
                 .contains(DownloadMediaTypes.video.name),
-            onChanged: (bool? value) async {
+            onChanged: (value) async {
               await _updateAutoDownloadSetting(DownloadMediaTypes.video, value);
             },
           ),

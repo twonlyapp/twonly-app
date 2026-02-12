@@ -37,14 +37,14 @@ class _AppState extends State<App> with WidgetsBindingObserver {
     globalIsAppInBackground = false;
     WidgetsBinding.instance.addObserver(this);
 
-    globalCallbackConnectionState = ({required bool isConnected}) async {
+    globalCallbackConnectionState = ({required isConnected}) async {
       await context
           .read<CustomChangeProvider>()
           .updateConnectionState(isConnected);
       await setUserPlan();
     };
 
-    globalCallbackUpdatePlan = (SubscriptionPlan plan) {
+    globalCallbackUpdatePlan = (plan) {
       context.read<PurchasesProvider>().updatePlan(plan);
     };
 
@@ -86,8 +86,8 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    globalCallbackConnectionState = ({required bool isConnected}) {};
-    globalCallbackUpdatePlan = (SubscriptionPlan planId) {};
+    globalCallbackConnectionState = ({required isConnected}) {};
+    globalCallbackUpdatePlan = (planId) {};
     super.dispose();
   }
 
@@ -95,7 +95,7 @@ class _AppState extends State<App> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: context.watch<SettingsChangeProvider>(),
-      builder: (BuildContext context, Widget? child) {
+      builder: (context, child) {
         return MaterialApp.router(
           routerConfig: routerProvider,
           scaffoldMessengerKey: globalRootScaffoldMessengerKey,

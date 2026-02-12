@@ -86,7 +86,7 @@ class MessageContextMenu extends StatelessWidget {
               final layer = await showModalBottomSheet(
                 context: context,
                 backgroundColor: Colors.black,
-                builder: (BuildContext context) {
+                builder: (context) {
                   return const EmojiPickerBottom();
                 },
               ) as EmojiLayerData?;
@@ -210,10 +210,10 @@ Future<void> editTextMessage(BuildContext context, Message message) async {
   final controller = TextEditingController(text: message.content);
   await showDialog(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         content: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
+          builder: (context, setState) {
             return SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

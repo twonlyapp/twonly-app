@@ -197,7 +197,7 @@ class _BackupViewState extends State<BackupView> {
             label: context.lang.backupData,
           ),
         ],
-        onTap: (int index) async {
+        onTap: (index) async {
           activePageIdx = index;
           await pageController.animateToPage(
             index,

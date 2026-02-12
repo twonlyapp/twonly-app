@@ -119,7 +119,7 @@ class _ReactionButtonsState extends State<ReactionButtons> {
                       final layer = await showModalBottomSheet(
                         context: context,
                         backgroundColor: context.color.surface,
-                        builder: (BuildContext context) {
+                        builder: (context) {
                           return const EmojiPickerBottom();
                         },
                       ) as EmojiLayerData?;

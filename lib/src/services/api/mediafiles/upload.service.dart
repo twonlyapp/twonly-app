@@ -160,7 +160,9 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
     if (mediaService.uploadRequestPath.existsSync()) {
       await mediaService.setUploadState(UploadState.uploading);
       // at this point the original file is not used any more, so it can be deleted
-      mediaService.originalPath.deleteSync();
+      if (mediaService.originalPath.existsSync()) {
+        mediaService.originalPath.deleteSync();
+      }
     }
   }
 
@@ -236,6 +238,10 @@ Future<void> _createUploadRequest(MediaFileService media) async {
           type = EncryptedContent_Media_Type.GIF;
         case MediaType.video:
           type = EncryptedContent_Media_Type.VIDEO;
+      }
+
+      if (media.mediaFile.reuploadRequestedBy != null) {
+        type = EncryptedContent_Media_Type.REUPLOAD;
       }
 
       final notEncryptedContent = EncryptedContent(

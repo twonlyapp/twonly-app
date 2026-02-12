@@ -293,7 +293,7 @@ Future<String?> showGroupNameChangeDialog(
 
   return showDialog<String>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title: Text(context.lang.groupNameInput),
         content: TextField(

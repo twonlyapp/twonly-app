@@ -211,7 +211,7 @@ class _MessageInfoViewState extends State<MessageInfoView> {
                   await showModalBottomSheet(
                     context: context,
                     backgroundColor: Colors.black,
-                    builder: (BuildContext context) {
+                    builder: (context) {
                       return MessageHistoryView(
                         message: widget.message,
                         changes: messageHistory,

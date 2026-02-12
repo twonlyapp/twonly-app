@@ -79,7 +79,7 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   Future<bool?> _showBackDialog() {
     return showDialog<bool>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: Text(
             context.lang.avatarSaveChanges,
@@ -117,7 +117,7 @@ class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   Widget build(BuildContext context) {
     return PopScope<bool?>(
       canPop: false,
-      onPopInvokedWithResult: (bool didPop, bool? result) async {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         if (_avatarMakerController.getJsonOptionsSync() != gUser.avatarJson) {
           // there where changes

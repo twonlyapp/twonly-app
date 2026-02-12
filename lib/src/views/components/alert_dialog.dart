@@ -42,7 +42,7 @@ Future<bool> showAlertDialog(
   // ignore: inference_failure_on_function_invocation
   await showDialog(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return alert;
     },
   );

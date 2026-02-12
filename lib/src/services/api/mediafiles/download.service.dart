@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cryptography_flutter_plus/cryptography_flutter_plus.dart';
 import 'package:cryptography_plus/cryptography_plus.dart';
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:mutex/mutex.dart';
 import 'package:path/path.dart';
@@ -217,11 +218,20 @@ Future<void> startDownloadMedia(MediaFile media, bool force) async {
   }
 }
 
+int failCounter = 0;
+
 Future<void> downloadFileFast(
   MediaFile media,
   String apiUrl,
   File filePath,
 ) async {
+  if (failCounter < 2) {
+    failCounter += 1;
+    await requestMediaReupload(media.mediaId);
+    return;
+  }
+  failCounter = 0;
+
   final response =
       await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 10));
 
@@ -326,4 +336,12 @@ Future<void> handleEncryptedFile(String mediaId) async {
   mediaService.encryptedPath.deleteSync();
 
   unawaited(apiService.downloadDone(mediaService.mediaFile.downloadToken!));
+}
+
+Future<void> makeMigrationToVersion91() async {
+  final messages =
+      await twonlyDB.mediaFilesDao.getAllMediaFilesReuploadRequested();
+  for (final message in messages) {
+    await requestMediaReupload(message.mediaId);
+  }
 }

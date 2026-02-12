@@ -163,8 +163,7 @@ class UserCheckbox extends StatelessWidget {
               Checkbox(
                 value: isChecked,
                 side: WidgetStateBorderSide.resolveWith(
-                  // ignore: strict_raw_type
-                  (Set states) {
+                  (states) {
                     if (states.contains(WidgetState.selected)) {
                       return const BorderSide(width: 0);
                     }
@@ -173,7 +172,7 @@ class UserCheckbox extends StatelessWidget {
                     );
                   },
                 ),
-                onChanged: (bool? value) {
+                onChanged: (value) {
                   onChanged(group.groupId, value ?? false);
                 },
               ),

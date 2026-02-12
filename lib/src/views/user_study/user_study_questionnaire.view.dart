@@ -179,7 +179,7 @@ class _UserStudyQuestionnaireViewState
                 title: Text(m),
                 visualDensity: const VisualDensity(vertical: -4),
                 value: (_responses['messengers'] as List<dynamic>).contains(m),
-                onChanged: (bool? value) {
+                onChanged: (value) {
                   setState(() {
                     value!
                         ? _responses['messengers'].add(m)
@@ -236,7 +236,7 @@ class _UserStudyQuestionnaireViewState
           labelText: 'Bitte wählen...',
         ),
         initialValue: _responses[key] as String?,
-        items: options.map((String value) {
+        items: options.map((value) {
           return DropdownMenuItem<String>(
             value: value,
             child: Text(value),
