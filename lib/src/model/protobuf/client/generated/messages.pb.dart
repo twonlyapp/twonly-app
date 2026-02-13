@@ -767,6 +767,106 @@ class EncryptedContent_TextMessage extends $pb.GeneratedMessage {
   void clearQuoteMessageId() => $_clearField(4);
 }
 
+class EncryptedContent_AdditionalDataMessage extends $pb.GeneratedMessage {
+  factory EncryptedContent_AdditionalDataMessage({
+    $core.String? senderMessageId,
+    $fixnum.Int64? timestamp,
+    $core.String? type,
+    $core.List<$core.int>? additionalMessageData,
+  }) {
+    final result = create();
+    if (senderMessageId != null) result.senderMessageId = senderMessageId;
+    if (timestamp != null) result.timestamp = timestamp;
+    if (type != null) result.type = type;
+    if (additionalMessageData != null)
+      result.additionalMessageData = additionalMessageData;
+    return result;
+  }
+
+  EncryptedContent_AdditionalDataMessage._();
+
+  factory EncryptedContent_AdditionalDataMessage.fromBuffer(
+          $core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory EncryptedContent_AdditionalDataMessage.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'EncryptedContent.AdditionalDataMessage',
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'senderMessageId')
+    ..aInt64(2, _omitFieldNames ? '' : 'timestamp')
+    ..aOS(3, _omitFieldNames ? '' : 'type')
+    ..a<$core.List<$core.int>>(
+        4, _omitFieldNames ? '' : 'additionalMessageData', $pb.PbFieldType.OY)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_AdditionalDataMessage clone() =>
+      EncryptedContent_AdditionalDataMessage()..mergeFromMessage(this);
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  EncryptedContent_AdditionalDataMessage copyWith(
+          void Function(EncryptedContent_AdditionalDataMessage) updates) =>
+      super.copyWith((message) =>
+              updates(message as EncryptedContent_AdditionalDataMessage))
+          as EncryptedContent_AdditionalDataMessage;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_AdditionalDataMessage create() =>
+      EncryptedContent_AdditionalDataMessage._();
+  @$core.override
+  EncryptedContent_AdditionalDataMessage createEmptyInstance() => create();
+  static $pb.PbList<EncryptedContent_AdditionalDataMessage> createRepeated() =>
+      $pb.PbList<EncryptedContent_AdditionalDataMessage>();
+  @$core.pragma('dart2js:noInline')
+  static EncryptedContent_AdditionalDataMessage getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<
+          EncryptedContent_AdditionalDataMessage>(create);
+  static EncryptedContent_AdditionalDataMessage? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get senderMessageId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set senderMessageId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasSenderMessageId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSenderMessageId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get timestamp => $_getI64(1);
+  @$pb.TagNumber(2)
+  set timestamp($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTimestamp() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTimestamp() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get type => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set type($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasType() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearType() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get additionalMessageData => $_getN(3);
+  @$pb.TagNumber(4)
+  set additionalMessageData($core.List<$core.int> value) =>
+      $_setBytes(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasAdditionalMessageData() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearAdditionalMessageData() => $_clearField(4);
+}
+
 class EncryptedContent_Reaction extends $pb.GeneratedMessage {
   factory EncryptedContent_Reaction({
     $core.String? targetMessageId,
@@ -1611,6 +1711,7 @@ class EncryptedContent extends $pb.GeneratedMessage {
     EncryptedContent_GroupUpdate? groupUpdate,
     EncryptedContent_ResendGroupPublicKey? resendGroupPublicKey,
     EncryptedContent_ErrorMessages? errorMessages,
+    EncryptedContent_AdditionalDataMessage? additionalDataMessage,
   }) {
     final result = create();
     if (groupId != null) result.groupId = groupId;
@@ -1632,6 +1733,8 @@ class EncryptedContent extends $pb.GeneratedMessage {
     if (resendGroupPublicKey != null)
       result.resendGroupPublicKey = resendGroupPublicKey;
     if (errorMessages != null) result.errorMessages = errorMessages;
+    if (additionalDataMessage != null)
+      result.additionalDataMessage = additionalDataMessage;
     return result;
   }
 
@@ -1695,6 +1798,9 @@ class EncryptedContent extends $pb.GeneratedMessage {
     ..aOM<EncryptedContent_ErrorMessages>(
         18, _omitFieldNames ? '' : 'errorMessages',
         subBuilder: EncryptedContent_ErrorMessages.create)
+    ..aOM<EncryptedContent_AdditionalDataMessage>(
+        19, _omitFieldNames ? '' : 'additionalDataMessage',
+        subBuilder: EncryptedContent_AdditionalDataMessage.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -1905,6 +2011,20 @@ class EncryptedContent extends $pb.GeneratedMessage {
   void clearErrorMessages() => $_clearField(18);
   @$pb.TagNumber(18)
   EncryptedContent_ErrorMessages ensureErrorMessages() => $_ensure(16);
+
+  @$pb.TagNumber(19)
+  EncryptedContent_AdditionalDataMessage get additionalDataMessage =>
+      $_getN(17);
+  @$pb.TagNumber(19)
+  set additionalDataMessage(EncryptedContent_AdditionalDataMessage value) =>
+      $_setField(19, value);
+  @$pb.TagNumber(19)
+  $core.bool hasAdditionalDataMessage() => $_has(17);
+  @$pb.TagNumber(19)
+  void clearAdditionalDataMessage() => $_clearField(19);
+  @$pb.TagNumber(19)
+  EncryptedContent_AdditionalDataMessage ensureAdditionalDataMessage() =>
+      $_ensure(17);
 }
 
 const $core.bool _omitFieldNames =

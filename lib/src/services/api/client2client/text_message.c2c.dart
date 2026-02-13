@@ -22,7 +22,7 @@ Future<void> handleTextMessage(
       senderId: Value(fromUserId),
       groupId: Value(groupId),
       content: Value(textMessage.text),
-      type: const Value(MessageType.text),
+      type: Value(MessageType.text.name),
       quotesMessageId: Value(
         textMessage.hasQuoteMessageId() ? textMessage.quoteMessageId : null,
       ),

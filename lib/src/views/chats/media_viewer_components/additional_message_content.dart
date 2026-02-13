@@ -45,6 +45,7 @@ class AdditionalMessageContent extends StatelessWidget {
               ],
             ),
           );
+        // ignore: no_default_cases
         default:
       }
       // ignore: empty_catches

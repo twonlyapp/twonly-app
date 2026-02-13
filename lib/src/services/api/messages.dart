@@ -7,14 +7,17 @@ import 'package:fixnum/fixnum.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     as pb;
 import 'package:twonly/src/model/protobuf/client/generated/push_notification.pb.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -204,7 +207,7 @@ Future<void> insertAndSendTextMessage(
     MessagesCompanion(
       groupId: Value(groupId),
       content: Value(textMessage),
-      type: const Value(MessageType.text),
+      type: Value(MessageType.text.name),
       quotesMessageId: Value(quotesMessageId),
     ),
   );
@@ -224,6 +227,61 @@ Future<void> insertAndSendTextMessage(
   if (quotesMessageId != null) {
     encryptedContent.textMessage.quoteMessageId = quotesMessageId;
   }
+
+  await sendCipherTextToGroup(
+    groupId,
+    encryptedContent,
+    messageId: message.messageId,
+  );
+}
+
+Future<void> insertAndSendContactShareMessage(
+  String groupId,
+  List<int> contactsToShare,
+) async {
+  final contacts = <SharedContact>[];
+
+  for (final contactId in contactsToShare) {
+    final contact = await twonlyDB.contactsDao.getContactById(contactId);
+    if (contact != null) {
+      final publicIdentityKey = await getPublicKeyFromContact(contactId);
+
+      contacts.add(
+        SharedContact(
+          userId: Int64(contact.userId),
+          publicIdentityKey: publicIdentityKey,
+          displayName: getContactDisplayName(contact),
+        ),
+      );
+    }
+  }
+
+  final additionalMessageData = AdditionalMessageData(
+    type: AdditionalMessageData_Type.CONTACTS,
+    contacts: contacts,
+  );
+
+  final message = await twonlyDB.messagesDao.insertMessage(
+    MessagesCompanion(
+      groupId: Value(groupId),
+      type: Value(MessageType.contacts.name),
+      additionalMessageData: Value(additionalMessageData.writeToBuffer()),
+    ),
+  );
+
+  if (message == null) {
+    Log.error('Could not insert message into database');
+    return;
+  }
+
+  final encryptedContent = pb.EncryptedContent(
+    additionalDataMessage: pb.EncryptedContent_AdditionalDataMessage(
+      senderMessageId: message.messageId,
+      additionalMessageData: additionalMessageData.writeToBuffer(),
+      timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
+      type: MessageType.contacts.name,
+    ),
+  );
 
   await sendCipherTextToGroup(
     groupId,

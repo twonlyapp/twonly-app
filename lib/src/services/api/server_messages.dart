@@ -13,6 +13,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/api/client2client/additional_data.c2c.dart';
 import 'package:twonly/src/services/api/client2client/contact.c2c.dart';
 import 'package:twonly/src/services/api/client2client/errors.c2c.dart';
 import 'package:twonly/src/services/api/client2client/groups.c2c.dart';
@@ -370,6 +371,15 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.groupJoin,
+    );
+    return (null, null);
+  }
+
+  if (content.hasAdditionalDataMessage()) {
+    await handleAdditionalDataMessage(
+      fromUserId,
+      content.groupId,
+      content.additionalDataMessage,
     );
     return (null, null);
   }

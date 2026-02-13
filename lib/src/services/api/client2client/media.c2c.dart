@@ -116,7 +116,7 @@ Future<void> handleMedia(
       senderId: Value(fromUserId),
       groupId: Value(groupId),
       mediaId: Value(mediaFile.mediaId),
-      type: const Value(MessageType.media),
+      type: Value(MessageType.media.name),
       additionalMessageData: Value.absentIfNull(
         media.hasAdditionalMessageData()
             ? Uint8List.fromList(media.additionalMessageData)

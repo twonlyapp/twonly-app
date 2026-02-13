@@ -117,7 +117,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     return GestureDetector(
       key: reopenMediaFile,
       onDoubleTap: onDoubleTap,
-      onTap: (widget.message.type == MessageType.media) ? onTap : null,
+      onTap: (widget.message.type == MessageType.media.name) ? onTap : null,
       child: SizedBox(
         width: (widget.minWidth > 150) ? widget.minWidth : 150,
         height: (widget.message.mediaStored &&

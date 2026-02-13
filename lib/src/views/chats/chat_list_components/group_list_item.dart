@@ -129,10 +129,11 @@ class _UserListItem extends State<GroupListItem> {
       _previewMessages = [newLastMessage];
     }
 
-    final msgs =
-        _previewMessages.where((x) => x.type == MessageType.media).toList();
+    final msgs = _previewMessages
+        .where((x) => x.type == MessageType.media.name)
+        .toList();
     if (msgs.isNotEmpty &&
-        msgs.first.type == MessageType.media &&
+        msgs.first.type == MessageType.media.name &&
         !msgs.first.isDeletedFromSender &&
         msgs.first.senderId != null &&
         msgs.first.openedAt == null) {
@@ -167,8 +168,9 @@ class _UserListItem extends State<GroupListItem> {
     }
 
     if (_hasNonOpenedMediaFile) {
-      final msgs =
-          _previewMessages.where((x) => x.type == MessageType.media).toList();
+      final msgs = _previewMessages
+          .where((x) => x.type == MessageType.media.name)
+          .toList();
       final mediaFile =
           await twonlyDB.mediaFilesDao.getMediaFileById(msgs.first.mediaId!);
       if (mediaFile?.type != MediaType.audio) {

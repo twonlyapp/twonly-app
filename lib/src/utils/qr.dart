@@ -4,12 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/qr.pb.dart';
-import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
+import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 
 Future<Uint8List> getProfileQrCodeData() async {
@@ -80,21 +77,5 @@ Future<void> addNewContactFromPublicProfile(PublicProfile profile) async {
     ),
   );
 
-  if (added > 0) {
-    if (await createNewSignalSession(userdata)) {
-      // 1. Setup notifications keys with the other user
-      await setupNotificationWithUsers(
-        forceContact: userdata.userId.toInt(),
-      );
-      // 2. Then send user request
-      await sendCipherText(
-        userdata.userId.toInt(),
-        EncryptedContent(
-          contactRequest: EncryptedContent_ContactRequest(
-            type: EncryptedContent_ContactRequest_Type.REQUEST,
-          ),
-        ),
-      );
-    }
-  }
+  if (added > 0) await importSignalContactAndCreateRequest(userdata);
 }

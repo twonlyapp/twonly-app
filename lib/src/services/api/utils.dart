@@ -12,6 +12,8 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
 import 'package:twonly/src/model/protobuf/client/generated/messages.pbserver.dart'
     hide Message;
 import 'package:twonly/src/services/api/messages.dart';
+import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 
 class Result<T, E> {
   Result.error(this.error) : value = null;
@@ -77,4 +79,24 @@ Future<void> handleMediaError(MediaFile media) async {
       ),
     ),
   );
+}
+
+Future<void> importSignalContactAndCreateRequest(
+  server.Response_UserData userdata,
+) async {
+  if (await createNewSignalSession(userdata)) {
+    // 1. Setup notifications keys with the other user
+    await setupNotificationWithUsers(
+      forceContact: userdata.userId.toInt(),
+    );
+    // 2. Then send user request
+    await sendCipherText(
+      userdata.userId.toInt(),
+      EncryptedContent(
+        contactRequest: EncryptedContent_ContactRequest(
+          type: EncryptedContent_ContactRequest_Type.REQUEST,
+        ),
+      ),
+    );
+  }
 }

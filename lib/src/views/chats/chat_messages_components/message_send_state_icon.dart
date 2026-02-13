@@ -87,7 +87,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     var text = '';
     Widget? textWidget;
     textWidget = null;
-    final kindsAlreadyShown = HashSet<MessageType>();
+    final kindsAlreadyShown = HashSet<String>();
 
     var hasLoader = false;
     GestureTapCallback? onTap;
@@ -133,7 +133,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.received:
           icon = Icon(Icons.square_rounded, size: 14, color: color);
           text = context.lang.messageSendState_Received;
-          if (message.type == MessageType.media && mediaFile != null) {
+          if (message.type == MessageType.media.name && mediaFile != null) {
             if (mediaFile.downloadState == DownloadState.pending) {
               text = context.lang.messageSendState_TapToLoad;
             }
@@ -210,7 +210,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         break;
       }
 
-      if (message.type == MessageType.media) {
+      if (message.type == MessageType.media.name) {
         icons.insert(0, icon);
       } else {
         icons.add(icon);

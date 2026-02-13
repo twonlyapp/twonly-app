@@ -200,7 +200,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         }
       }
       index += 1;
-      if (msg.type == MessageType.text &&
+      if (msg.type != MessageType.media.name &&
           msg.senderId != null &&
           msg.openedAt == null) {
         if (openedMessages[msg.senderId!] == null) {
@@ -209,7 +209,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         openedMessages[msg.senderId!]!.add(msg.messageId);
       }
 
-      if (msg.type == MessageType.media && msg.mediaStored) {
+      if (msg.type == MessageType.media.name && msg.mediaStored) {
         storedMediaFiles.add(msg);
       }
 

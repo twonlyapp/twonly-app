@@ -127,7 +127,7 @@ class MessageContextMenu extends StatelessWidget {
           ),
         if (!message.isDeletedFromSender &&
             message.senderId == null &&
-            message.type == MessageType.text)
+            message.type == MessageType.text.name)
           ContextMenuItem(
             title: context.lang.edit,
             onTap: () async {

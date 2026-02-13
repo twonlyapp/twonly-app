@@ -24,6 +24,16 @@ extension ShortCutsExtension on BuildContext {
   AppLocalizations get lang => AppLocalizations.of(this)!;
   TwonlyDB get db => Provider.of<TwonlyDB>(this);
   ColorScheme get color => Theme.of(this).colorScheme;
+  Future<dynamic> navPush(Widget route) async {
+    return Navigator.push(
+      this,
+      MaterialPageRoute(
+        builder: (context) {
+          return route;
+        },
+      ),
+    );
+  }
 }
 
 Future<String?> saveImageToGallery(Uint8List imageBytes) async {
@@ -292,7 +302,7 @@ Color getMessageColorFromType(
 ) {
   Color color;
 
-  if (message.type == MessageType.text) {
+  if (message.type == MessageType.text.name) {
     color = Colors.blueAccent;
   } else if (mediaFile != null) {
     if (mediaFile.requiresAuthentication) {

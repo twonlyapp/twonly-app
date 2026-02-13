@@ -102,7 +102,7 @@ Future<void> insertMediaFileInMessagesTable(
       MessagesCompanion(
         groupId: Value(groupId),
         mediaId: Value(mediaService.mediaFile.mediaId),
-        type: const Value(MessageType.media),
+        type: Value(MessageType.media.name),
         additionalMessageData:
             Value.absentIfNull(additionalData?.writeToBuffer()),
       ),

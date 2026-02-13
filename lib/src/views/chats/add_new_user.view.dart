@@ -9,8 +9,7 @@ import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
-import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
-import 'package:twonly/src/services/signal/session.signal.dart';
+import 'package:twonly/src/services/api/utils.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
@@ -110,23 +109,7 @@ class _SearchUsernameView extends State<AddNewUserView> {
       ),
     );
 
-    if (added > 0) {
-      if (await createNewSignalSession(userdata)) {
-        // 1. Setup notifications keys with the other user
-        await setupNotificationWithUsers(
-          forceContact: userdata.userId.toInt(),
-        );
-        // 2. Then send user request
-        await sendCipherText(
-          userdata.userId.toInt(),
-          EncryptedContent(
-            contactRequest: EncryptedContent_ContactRequest(
-              type: EncryptedContent_ContactRequest_Type.REQUEST,
-            ),
-          ),
-        );
-      }
-    }
+    if (added > 0) await importSignalContactAndCreateRequest(userdata);
   }
 
   InputDecoration getInputDecoration(String hintText) {
@@ -212,7 +195,7 @@ class ContactsListView extends StatelessWidget {
         child: IconButton(
           icon: const FaIcon(Icons.archive_outlined, size: 15),
           onPressed: () async {
-            const update = ContactsCompanion(requested: Value(false));
+            const update = ContactsCompanion(deletedByUser: Value(true));
             await twonlyDB.contactsDao.updateContact(contact.userId, update);
           },
         ),
