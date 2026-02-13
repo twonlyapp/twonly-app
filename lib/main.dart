@@ -13,6 +13,7 @@ import 'package:twonly/src/providers/image_editor.provider.dart';
 import 'package:twonly/src/providers/purchases.provider.dart';
 import 'package:twonly/src/providers/settings.provider.dart';
 import 'package:twonly/src/services/api.service.dart';
+import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/fcm.service.dart';
@@ -70,6 +71,14 @@ void main() async {
       await twonlyDB.mediaFilesDao.updateAllRetransmissionUploadingState();
       await updateUserdata((u) {
         u.appVersion = 90;
+        return u;
+      });
+    }
+    if (gUser.appVersion < 91) {
+      // BUG: Requested media files for reupload where not reuploaded because the wrong state...
+      await makeMigrationToVersion91();
+      await updateUserdata((u) {
+        u.appVersion = 91;
         return u;
       });
     }

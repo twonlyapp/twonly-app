@@ -1,7 +1,9 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -9,7 +11,6 @@ import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/chats/chat_messages.view.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 import 'package:twonly/src/views/components/context_menu.component.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
@@ -128,12 +129,7 @@ class GroupMemberContextMenu extends StatelessWidget {
                 return;
               }
               if (!context.mounted) return;
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatMessagesView(directChat),
-                ),
-              );
+              await context.push(Routes.chatsMessages, extra: directChat);
             },
             icon: FontAwesomeIcons.message,
           ),

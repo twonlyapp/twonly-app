@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart'
     hide MessageActions;
@@ -10,14 +12,15 @@ import 'package:twonly/src/model/memory_item.model.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/chat_reaction_row.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_contacts.entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_media_entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_text_entry.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_unkown.entry.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_actions.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/message_context_menu.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/response_container.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
-import 'package:twonly/src/views/contact/contact.view.dart';
 
 class ChatListEntry extends StatefulWidget {
   const ChatListEntry({
@@ -89,6 +92,49 @@ class _ChatListEntryState extends State<ChatListEntry> {
     setState(() {});
   }
 
+  Widget? _getChatEntry(BorderRadius borderRadius, int reactionsForWidth) {
+    if (widget.message.type == MessageType.text.name) {
+      return ChatTextEntry(
+        message: widget.message,
+        nextMessage: widget.nextMessage,
+        prevMessage: widget.prevMessage,
+        userIdToContact: widget.userIdToContact,
+        borderRadius: borderRadius,
+        minWidth: reactionsForWidth * 43,
+      );
+    }
+
+    if (widget.message.type == MessageType.media.name) {
+      if (mediaService == null) return null;
+      if (mediaService!.mediaFile.type == MediaType.audio) {
+        return ChatAudioEntry(
+          message: widget.message,
+          nextMessage: widget.nextMessage,
+          prevMessage: widget.prevMessage,
+          mediaService: mediaService!,
+          userIdToContact: widget.userIdToContact,
+          borderRadius: borderRadius,
+          minWidth: reactionsForWidth * 43,
+        );
+      }
+      return ChatMediaEntry(
+        message: widget.message,
+        group: widget.group,
+        mediaService: mediaService!,
+        galleryItems: widget.galleryItems,
+        minWidth: reactionsForWidth * 43,
+      );
+    }
+
+    if (widget.message.type == MessageType.contacts.name) {
+      return ChatContactsEntry(
+        message: widget.message,
+      );
+    }
+
+    return const ChatUnknownEntry();
+  }
+
   @override
   Widget build(BuildContext context) {
     final right = widget.message.senderId == null;
@@ -128,34 +174,7 @@ class _ChatListEntryState extends State<ChatListEntry> {
                 mediaService: mediaService,
                 borderRadius: borderRadius,
                 scrollToMessage: widget.scrollToMessage,
-                child: (widget.message.type == MessageType.text)
-                    ? ChatTextEntry(
-                        message: widget.message,
-                        nextMessage: widget.nextMessage,
-                        prevMessage: widget.prevMessage,
-                        userIdToContact: widget.userIdToContact,
-                        borderRadius: borderRadius,
-                        minWidth: reactionsForWidth * 43,
-                      )
-                    : (mediaService == null)
-                        ? null
-                        : (mediaService!.mediaFile.type == MediaType.audio)
-                            ? ChatAudioEntry(
-                                message: widget.message,
-                                nextMessage: widget.nextMessage,
-                                prevMessage: widget.prevMessage,
-                                mediaService: mediaService!,
-                                userIdToContact: widget.userIdToContact,
-                                borderRadius: borderRadius,
-                                minWidth: reactionsForWidth * 43,
-                              )
-                            : ChatMediaEntry(
-                                message: widget.message,
-                                group: widget.group,
-                                mediaService: mediaService!,
-                                galleryItems: widget.galleryItems,
-                                minWidth: reactionsForWidth * 43,
-                              ),
+                child: _getChatEntry(borderRadius, reactionsForWidth),
               ),
               if (reactionsForWidth > 0) const SizedBox(height: 20, width: 10),
             ],
@@ -204,15 +223,9 @@ class _ChatListEntryState extends State<ChatListEntry> {
               hideContactAvatar
                   ? const SizedBox(width: 24)
                   : GestureDetector(
-                      onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ContactView(widget.message.senderId!),
-                          ),
-                        );
-                      },
+                      onTap: () => context.push(
+                        Routes.profileContact(widget.message.senderId!),
+                      ),
                       child: AvatarIcon(
                         contactId: widget.message.senderId,
                         fontSize: 12,

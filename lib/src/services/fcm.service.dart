@@ -109,7 +109,7 @@ Future<void> initFCMService() async {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   initLogger();
-  Log.info('Handling a background message: ${message.messageId}');
+  // Log.info('Handling a background message: ${message.messageId}');
   await handleRemoteMessage(message);
   // make sure every thing run...
   await Future.delayed(const Duration(milliseconds: 2000));

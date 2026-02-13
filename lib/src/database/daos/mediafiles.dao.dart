@@ -100,6 +100,14 @@ class MediaFilesDao extends DatabaseAccessor<TwonlyDB>
         .get();
   }
 
+  Future<List<MediaFile>> getAllMediaFilesReuploadRequested() async {
+    return (select(mediaFiles)
+          ..where(
+            (t) => t.downloadState.equals(DownloadState.reuploadRequested.name),
+          ))
+        .get();
+  }
+
   Future<List<MediaFile>> getAllNonHashedStoredMediaFiles() async {
     return (select(mediaFiles)
           ..where(

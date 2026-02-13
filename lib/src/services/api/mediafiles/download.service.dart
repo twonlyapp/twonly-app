@@ -231,9 +231,7 @@ Future<void> downloadFileFast(
     await handleEncryptedFile(media.mediaId);
     return;
   } else {
-    if (response.statusCode == 404 ||
-        response.statusCode == 403 ||
-        response.statusCode == 400) {
+    if (response.statusCode == 404 || response.statusCode == 403) {
       Log.error(
         'Got ${response.statusCode} from server. Requesting upload again',
       );
@@ -328,4 +326,12 @@ Future<void> handleEncryptedFile(String mediaId) async {
   mediaService.encryptedPath.deleteSync();
 
   unawaited(apiService.downloadDone(mediaService.mediaFile.downloadToken!));
+}
+
+Future<void> makeMigrationToVersion91() async {
+  final messages =
+      await twonlyDB.mediaFilesDao.getAllMediaFilesReuploadRequested();
+  for (final message in messages) {
+    await requestMediaReupload(message.mediaId);
+  }
 }

@@ -71,12 +71,14 @@ Future<bool> handleContactRequest(
       final contact = await twonlyDB.contactsDao
           .getContactByUserId(fromUserId)
           .getSingleOrNull();
-      await twonlyDB.groupsDao.createNewDirectChat(
-        fromUserId,
-        GroupsCompanion(
-          groupName: Value(getContactDisplayName(contact!)),
-        ),
-      );
+      if (contact != null) {
+        await twonlyDB.groupsDao.createNewDirectChat(
+          fromUserId,
+          GroupsCompanion(
+            groupName: Value(getContactDisplayName(contact)),
+          ),
+        );
+      }
     case EncryptedContent_ContactRequest_Type.REJECT:
       Log.info('Got a contact reject from $fromUserId');
       await twonlyDB.contactsDao.updateContact(

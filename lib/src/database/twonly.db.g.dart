@@ -2776,11 +2776,11 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES contacts (user_id)'));
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
-  late final GeneratedColumnWithTypeConverter<MessageType, String> type =
-      GeneratedColumn<String>('type', aliasedName, false,
-              type: DriftSqlType.string, requiredDuringInsert: true)
-          .withConverter<MessageType>($MessagesTable.$convertertype);
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _contentMeta =
       const VerificationMeta('content');
   @override
@@ -2929,6 +2929,12 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
       context.handle(_senderIdMeta,
           senderId.isAcceptableOrUnknown(data['sender_id']!, _senderIdMeta));
     }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
     if (data.containsKey('content')) {
       context.handle(_contentMeta,
           content.isAcceptableOrUnknown(data['content']!, _contentMeta));
@@ -3020,8 +3026,8 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
           .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
       senderId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}sender_id']),
-      type: $MessagesTable.$convertertype.fromSql(attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!),
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
       content: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}content']),
       mediaId: attachedDatabase.typeMapping
@@ -3057,16 +3063,13 @@ class $MessagesTable extends Messages with TableInfo<$MessagesTable, Message> {
   $MessagesTable createAlias(String alias) {
     return $MessagesTable(attachedDatabase, alias);
   }
-
-  static JsonTypeConverter2<MessageType, String, String> $convertertype =
-      const EnumNameConverter<MessageType>(MessageType.values);
 }
 
 class Message extends DataClass implements Insertable<Message> {
   final String groupId;
   final String messageId;
   final int? senderId;
-  final MessageType type;
+  final String type;
   final String? content;
   final String? mediaId;
   final Uint8List? additionalMessageData;
@@ -3108,9 +3111,7 @@ class Message extends DataClass implements Insertable<Message> {
     if (!nullToAbsent || senderId != null) {
       map['sender_id'] = Variable<int>(senderId);
     }
-    {
-      map['type'] = Variable<String>($MessagesTable.$convertertype.toSql(type));
-    }
+    map['type'] = Variable<String>(type);
     if (!nullToAbsent || content != null) {
       map['content'] = Variable<String>(content);
     }
@@ -3201,8 +3202,7 @@ class Message extends DataClass implements Insertable<Message> {
       groupId: serializer.fromJson<String>(json['groupId']),
       messageId: serializer.fromJson<String>(json['messageId']),
       senderId: serializer.fromJson<int?>(json['senderId']),
-      type: $MessagesTable.$convertertype
-          .fromJson(serializer.fromJson<String>(json['type'])),
+      type: serializer.fromJson<String>(json['type']),
       content: serializer.fromJson<String?>(json['content']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
       additionalMessageData:
@@ -3228,8 +3228,7 @@ class Message extends DataClass implements Insertable<Message> {
       'groupId': serializer.toJson<String>(groupId),
       'messageId': serializer.toJson<String>(messageId),
       'senderId': serializer.toJson<int?>(senderId),
-      'type':
-          serializer.toJson<String>($MessagesTable.$convertertype.toJson(type)),
+      'type': serializer.toJson<String>(type),
       'content': serializer.toJson<String?>(content),
       'mediaId': serializer.toJson<String?>(mediaId),
       'additionalMessageData':
@@ -3252,7 +3251,7 @@ class Message extends DataClass implements Insertable<Message> {
           {String? groupId,
           String? messageId,
           Value<int?> senderId = const Value.absent(),
-          MessageType? type,
+          String? type,
           Value<String?> content = const Value.absent(),
           Value<String?> mediaId = const Value.absent(),
           Value<Uint8List?> additionalMessageData = const Value.absent(),
@@ -3403,7 +3402,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
   final Value<String> groupId;
   final Value<String> messageId;
   final Value<int?> senderId;
-  final Value<MessageType> type;
+  final Value<String> type;
   final Value<String?> content;
   final Value<String?> mediaId;
   final Value<Uint8List?> additionalMessageData;
@@ -3444,7 +3443,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
     required String groupId,
     required String messageId,
     this.senderId = const Value.absent(),
-    required MessageType type,
+    required String type,
     this.content = const Value.absent(),
     this.mediaId = const Value.absent(),
     this.additionalMessageData = const Value.absent(),
@@ -3513,7 +3512,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       {Value<String>? groupId,
       Value<String>? messageId,
       Value<int?>? senderId,
-      Value<MessageType>? type,
+      Value<String>? type,
       Value<String?>? content,
       Value<String?>? mediaId,
       Value<Uint8List?>? additionalMessageData,
@@ -3566,8 +3565,7 @@ class MessagesCompanion extends UpdateCompanion<Message> {
       map['sender_id'] = Variable<int>(senderId.value);
     }
     if (type.present) {
-      map['type'] =
-          Variable<String>($MessagesTable.$convertertype.toSql(type.value));
+      map['type'] = Variable<String>(type.value);
     }
     if (content.present) {
       map['content'] = Variable<String>(content.value);
@@ -10148,7 +10146,7 @@ typedef $$MessagesTableCreateCompanionBuilder = MessagesCompanion Function({
   required String groupId,
   required String messageId,
   Value<int?> senderId,
-  required MessageType type,
+  required String type,
   Value<String?> content,
   Value<String?> mediaId,
   Value<Uint8List?> additionalMessageData,
@@ -10169,7 +10167,7 @@ typedef $$MessagesTableUpdateCompanionBuilder = MessagesCompanion Function({
   Value<String> groupId,
   Value<String> messageId,
   Value<int?> senderId,
-  Value<MessageType> type,
+  Value<String> type,
   Value<String?> content,
   Value<String?> mediaId,
   Value<Uint8List?> additionalMessageData,
@@ -10314,10 +10312,8 @@ class $$MessagesTableFilterComposer
   ColumnFilters<String> get messageId => $composableBuilder(
       column: $table.messageId, builder: (column) => ColumnFilters(column));
 
-  ColumnWithTypeConverterFilters<MessageType, MessageType, String> get type =>
-      $composableBuilder(
-          column: $table.type,
-          builder: (column) => ColumnWithTypeConverterFilters(column));
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get content => $composableBuilder(
       column: $table.content, builder: (column) => ColumnFilters(column));
@@ -10638,7 +10634,7 @@ class $$MessagesTableAnnotationComposer
   GeneratedColumn<String> get messageId =>
       $composableBuilder(column: $table.messageId, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<MessageType, String> get type =>
+  GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
   GeneratedColumn<String> get content =>
@@ -10858,7 +10854,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             Value<String> groupId = const Value.absent(),
             Value<String> messageId = const Value.absent(),
             Value<int?> senderId = const Value.absent(),
-            Value<MessageType> type = const Value.absent(),
+            Value<String> type = const Value.absent(),
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
             Value<Uint8List?> additionalMessageData = const Value.absent(),
@@ -10900,7 +10896,7 @@ class $$MessagesTableTableManager extends RootTableManager<
             required String groupId,
             required String messageId,
             Value<int?> senderId = const Value.absent(),
-            required MessageType type,
+            required String type,
             Value<String?> content = const Value.absent(),
             Value<String?> mediaId = const Value.absent(),
             Value<Uint8List?> additionalMessageData = const Value.absent(),

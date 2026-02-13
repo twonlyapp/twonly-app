@@ -2,13 +2,14 @@ import 'dart:collection';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/animate_icon.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 enum MessageSendState {
   received,
@@ -86,7 +87,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
     var text = '';
     Widget? textWidget;
     textWidget = null;
-    final kindsAlreadyShown = HashSet<MessageType>();
+    final kindsAlreadyShown = HashSet<String>();
 
     var hasLoader = false;
     GestureTapCallback? onTap;
@@ -132,7 +133,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         case MessageSendState.received:
           icon = Icon(Icons.square_rounded, size: 14, color: color);
           text = context.lang.messageSendState_Received;
-          if (message.type == MessageType.media && mediaFile != null) {
+          if (message.type == MessageType.media.name && mediaFile != null) {
             if (mediaFile.downloadState == DownloadState.pending) {
               text = context.lang.messageSendState_TapToLoad;
             }
@@ -163,16 +164,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
                 style: const TextStyle(fontSize: 9),
               );
 
-              onTap = () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const SubscriptionView();
-                    },
-                  ),
-                );
-              };
+              onTap = () => context.push(Routes.settingsSubscription);
             }
             if (mediaFile.uploadState == UploadState.preprocessing ||
                 mediaFile.uploadState == UploadState.initialized) {
@@ -218,7 +210,7 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
         break;
       }
 
-      if (message.type == MessageType.media) {
+      if (message.type == MessageType.media.name) {
         icons.insert(0, icon);
       } else {
         icons.add(icon);

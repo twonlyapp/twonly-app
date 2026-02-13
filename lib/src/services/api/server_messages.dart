@@ -13,6 +13,7 @@ import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pb.dart
     as server;
 import 'package:twonly/src/model/protobuf/api/websocket/server_to_client.pbserver.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/services/api/client2client/additional_data.c2c.dart';
 import 'package:twonly/src/services/api/client2client/contact.c2c.dart';
 import 'package:twonly/src/services/api/client2client/errors.c2c.dart';
 import 'package:twonly/src/services/api/client2client/groups.c2c.dart';
@@ -90,6 +91,11 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
       var retry = false;
       if (message.hasPlaintextContent()) {
         if (message.plaintextContent.hasDecryptionErrorMessage()) {
+          if (message.plaintextContent.decryptionErrorMessage.type ==
+              PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN) {
+            // in case there was a pre key error remove all downloaded pre keys. New pre keys will be fetched automatically.
+            await twonlyDB.signalDao.purgePreKeysFromContact(fromUserId);
+          }
           Log.info(
             'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
           );
@@ -365,6 +371,15 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       fromUserId,
       content.groupId,
       content.groupJoin,
+    );
+    return (null, null);
+  }
+
+  if (content.hasAdditionalDataMessage()) {
+    await handleAdditionalDataMessage(
+      fromUserId,
+      content.groupId,
+      content.additionalDataMessage,
     );
     return (null, null);
   }

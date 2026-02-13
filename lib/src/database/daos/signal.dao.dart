@@ -93,17 +93,15 @@ class SignalDao extends DatabaseAccessor<TwonlyDB> with _$SignalDaoMixin {
     await into(signalContactSignedPreKeys).insert(signedPreKey);
   }
 
-  Future<void> purgeOutDatedPreKeys() async {
-    // Deletion is a workaround for the issue, that own pre keys where deleted after 40 days, while they could be 30days
-    // on the server + 25 days on the others device old, resulting in the issue that the receiver could not decrypt the
-    // messages...
+  Future<void> purgePreKeysFromContact(int contactId) async {
     await (delete(signalContactPreKeys)
           ..where(
-            (t) => (t.createdAt.isSmallerThanValue(
-              DateTime(2025, 10, 10),
-            )),
+            (t) => (t.contactId.equals(contactId)),
           ))
         .go();
+  }
+
+  Future<void> purgeOutDatedPreKeys() async {
     // other pre keys are valid 100 days
     await (delete(signalContactPreKeys)
           ..where(

@@ -22,12 +22,11 @@ late UserData gUser;
 
 // This callback called by the apiProvider
 void Function({required bool isConnected}) globalCallbackConnectionState = ({
-  required bool isConnected,
+  required isConnected,
 }) {};
 void Function() globalCallbackAppIsOutdated = () {};
 void Function() globalCallbackNewDeviceRegistered = () {};
-void Function(SubscriptionPlan plan) globalCallbackUpdatePlan =
-    (SubscriptionPlan plan) {};
+void Function(SubscriptionPlan plan) globalCallbackUpdatePlan = (plan) {};
 
 Map<String, VoidCallback> globalUserDataChangedCallBack = {};
 

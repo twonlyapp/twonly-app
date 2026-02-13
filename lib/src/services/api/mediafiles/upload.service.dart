@@ -102,7 +102,7 @@ Future<void> insertMediaFileInMessagesTable(
       MessagesCompanion(
         groupId: Value(groupId),
         mediaId: Value(mediaService.mediaFile.mediaId),
-        type: const Value(MessageType.media),
+        type: Value(MessageType.media.name),
         additionalMessageData:
             Value.absentIfNull(additionalData?.writeToBuffer()),
       ),
@@ -160,7 +160,9 @@ Future<void> startBackgroundMediaUpload(MediaFileService mediaService) async {
     if (mediaService.uploadRequestPath.existsSync()) {
       await mediaService.setUploadState(UploadState.uploading);
       // at this point the original file is not used any more, so it can be deleted
-      mediaService.originalPath.deleteSync();
+      if (mediaService.originalPath.existsSync()) {
+        mediaService.originalPath.deleteSync();
+      }
     }
   }
 
@@ -236,6 +238,10 @@ Future<void> _createUploadRequest(MediaFileService media) async {
           type = EncryptedContent_Media_Type.GIF;
         case MediaType.video:
           type = EncryptedContent_Media_Type.VIDEO;
+      }
+
+      if (media.mediaFile.reuploadRequestedBy != null) {
+        type = EncryptedContent_Media_Type.REUPLOAD;
       }
 
       final notEncryptedContent = EncryptedContent(
@@ -372,7 +378,7 @@ Future<void> uploadFileFastOrEnqueue(
   try {
     Log.info('Uploading fast: ${task.taskId}');
     final response =
-        await requestMultipart.send().timeout(const Duration(seconds: 4));
+        await requestMultipart.send().timeout(const Duration(seconds: 8));
     var status = TaskStatus.failed;
     if (response.statusCode == 200) {
       status = TaskStatus.complete;

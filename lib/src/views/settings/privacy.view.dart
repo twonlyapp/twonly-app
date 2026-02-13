@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/privacy_view_block.users.dart';
 
 class PrivacyView extends StatefulWidget {
   const PrivacyView({super.key});
@@ -40,16 +41,7 @@ class _PrivacyViewState extends State<PrivacyView> {
                 }
               },
             ),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const PrivacyViewBlockUsers();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsPrivacyBlockUsers),
           ),
         ],
       ),

@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/misc.dart';
@@ -14,7 +16,6 @@ import 'package:twonly/src/views/components/max_flame_list_title.dart';
 import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
-import 'package:twonly/src/views/public_profile.view.dart';
 
 class ContactView extends StatefulWidget {
   const ContactView(this.userId, {super.key});
@@ -187,14 +188,7 @@ class _ContactViewState extends State<ContactView> {
             icon: FontAwesomeIcons.shieldHeart,
             text: context.lang.contactVerifyNumberTitle,
             onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const PublicProfileView();
-                  },
-                ),
-              );
+              await context.push(Routes.settingsPublicProfile);
               setState(() {});
             },
           ),
@@ -250,7 +244,7 @@ Future<String?> showNicknameChangeDialog(
 
   return showDialog<String>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title: Text(context.lang.contactNickname),
         content: TextField(
@@ -287,7 +281,7 @@ Future<String?> showReportDialog(
 
   return showDialog<String>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title:
             Text(context.lang.reportUserTitle(getContactDisplayName(contact))),

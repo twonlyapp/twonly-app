@@ -1,11 +1,18 @@
 syntax = "proto3";
 
+message SharedContact {
+    int64 user_id = 1;
+    bytes public_identity_key = 2;
+    string display_name = 3;
+}
 
 message AdditionalMessageData {
     enum Type {
         LINK = 0;
+        CONTACTS = 1;
     }
     Type type = 1;
 
     optional string link = 2;
+    repeated SharedContact contacts = 3;
 }

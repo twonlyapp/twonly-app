@@ -1,17 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/views/settings/help/changelog.view.dart';
-import 'package:twonly/src/views/settings/help/contact_us.view.dart';
-import 'package:twonly/src/views/settings/help/credits.view.dart';
-import 'package:twonly/src/views/settings/help/diagnostics.view.dart';
-import 'package:twonly/src/views/settings/help/faq.view.dart';
-import 'package:twonly/src/views/user_study/user_study_welcome.view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HelpView extends StatefulWidget {
@@ -40,50 +36,12 @@ class _HelpViewState extends State<HelpView> {
         children: [
           ListTile(
             title: Text(context.lang.settingsHelpFAQ),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const FaqView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsHelpFaq),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpContactUs),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const ContactUsView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsHelpContactUs),
           ),
-          // ListTile(
-          //   title: Text(context.lang.settingsResetTutorials),
-          //   subtitle: Text(
-          //     context.lang.settingsResetTutorialsDesc,
-          //     style: const TextStyle(fontSize: 12),
-          //   ),
-          //   onTap: () async {
-          //     await updateUserdata((user) {
-          //       user.tutorialDisplayed = [];
-          //       return user;
-          //     });
-          //     if (!context.mounted) return;
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       SnackBar(
-          //         content: Text(context.lang.settingsResetTutorialsSuccess),
-          //         duration: const Duration(seconds: 3),
-          //       ),
-          //     );
-          //   },
-          // ),
           const Divider(),
           ListTile(
             title: Text(context.lang.allowErrorTracking),
@@ -99,32 +57,13 @@ class _HelpViewState extends State<HelpView> {
           ),
           ListTile(
             title: Text(context.lang.settingsHelpDiagnostics),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const DiagnosticsView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsHelpDiagnostics),
           ),
           const Divider(),
           if (gUser.userStudyParticipantsToken == null || kDebugMode)
             ListTile(
               title: const Text('Teilnahme an Nutzerstudie'),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const UserStudyWelcomeView();
-                    },
-                  ),
-                );
-                setState(() {}); // gUser has changed
-              },
+              onTap: () => context.push(Routes.settingsHelpUserStudy),
             ),
           FutureBuilder(
             future: PackageInfo.fromPlatform(),
@@ -141,59 +80,34 @@ class _HelpViewState extends State<HelpView> {
           ),
           ListTile(
             title: Text(context.lang.settingsHelpLicenses),
-            onTap: () {
-              showLicensePage(context: context);
-            },
+            onTap: () => showLicensePage(context: context),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpCredits),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const CreditsView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsHelpCredits),
           ),
           ListTile(
             title: const Text('Changelog'),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const ChangeLogView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsHelpChangelog),
           ),
           ListTile(
             title: const Text('Open Source'),
-            onTap: () async {
-              await launchUrl(
-                Uri.parse('https://github.com/twonlyapp/twonly-app'),
-              );
-            },
+            onTap: () => launchUrl(
+              Uri.parse('https://github.com/twonlyapp/twonly-app'),
+            ),
             trailing:
                 const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpImprint),
-            onTap: () async {
-              await launchUrl(Uri.parse('https://twonly.eu/de/legal/'));
-            },
+            onTap: () => launchUrl(Uri.parse('https://twonly.eu/de/legal/')),
             trailing:
                 const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),
           ListTile(
             title: Text(context.lang.settingsHelpTerms),
-            onTap: () async {
-              await launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html'));
-            },
+            onTap: () =>
+                launchUrl(Uri.parse('https://twonly.eu/de/legal/agb.html')),
             trailing:
                 const FaIcon(FontAwesomeIcons.arrowUpRightFromSquare, size: 15),
           ),

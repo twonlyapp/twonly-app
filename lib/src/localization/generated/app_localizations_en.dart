@@ -1644,4 +1644,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authRequestReopenImage =>
       'You must authenticate to reopen the image.';
+
+  @override
+  String get shareContactsMenu => 'Contact';
+
+  @override
+  String get shareContactsTitle => 'Select contacts';
+
+  @override
+  String get shareContactsSubmit => 'Share now';
+
+  @override
+  String get updateTwonlyMessage =>
+      'To see this message, you need to update twonly.';
 }

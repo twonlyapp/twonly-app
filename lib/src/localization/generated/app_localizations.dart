@@ -2967,6 +2967,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You must authenticate to reopen the image.'**
   String get authRequestReopenImage;
+
+  /// No description provided for @shareContactsMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get shareContactsMenu;
+
+  /// No description provided for @shareContactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select contacts'**
+  String get shareContactsTitle;
+
+  /// No description provided for @shareContactsSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Share now'**
+  String get shareContactsSubmit;
+
+  /// No description provided for @updateTwonlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'To see this message, you need to update twonly.'**
+  String get updateTwonlyMessage;
 }
 
 class _AppLocalizationsDelegate

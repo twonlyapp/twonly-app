@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
-import 'package:twonly/src/views/settings/data_and_storage/export_media.view.dart';
-import 'package:twonly/src/views/settings/data_and_storage/import_media.view.dart';
 
 class DataAndStorageView extends StatefulWidget {
   const DataAndStorageView({super.key});
@@ -25,7 +24,7 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
     // ignore: inference_failure_on_function_invocation
     await showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AutoDownloadOptionsDialog(
           autoDownloadOptions:
               gUser.autoDownloadOptions ?? defaultAutoDownloadOptions,
@@ -91,32 +90,14 @@ class _DataAndStorageViewState extends State<DataAndStorageView> {
               title: Text(
                 context.lang.exportMemories,
               ),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) {
-                      return const ExportMediaView();
-                    },
-                  ),
-                );
-              },
+              onTap: () => context.push(Routes.settingsStorageExport),
             ),
           if (Platform.isAndroid)
             ListTile(
               title: Text(
                 context.lang.importMemories,
               ),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) {
-                      return const ImportMediaView();
-                    },
-                  ),
-                );
-              },
+              onTap: () => context.push(Routes.settingsStorageImport),
             ),
           const Divider(),
           ListTile(
@@ -191,7 +172,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
             title: const Text('Image'),
             value: autoDownloadOptions[widget.connectionMode.name]!
                 .contains(DownloadMediaTypes.image.name),
-            onChanged: (bool? value) async {
+            onChanged: (value) async {
               await _updateAutoDownloadSetting(DownloadMediaTypes.image, value);
             },
           ),
@@ -199,7 +180,7 @@ class _AutoDownloadOptionsDialogState extends State<AutoDownloadOptionsDialog> {
             title: const Text('Video'),
             value: autoDownloadOptions[widget.connectionMode.name]!
                 .contains(DownloadMediaTypes.video.name),
-            onChanged: (bool? value) async {
+            onChanged: (value) async {
               await _updateAutoDownloadSetting(DownloadMediaTypes.video, value);
             },
           ),

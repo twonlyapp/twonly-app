@@ -153,11 +153,11 @@ Future<void> redeemVoucher(BuildContext context) async {
   // ignore: inference_failure_on_function_invocation
   await showDialog(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title: Text(context.lang.redeemVoucher),
         content: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
+          builder: (context, setState) {
             return SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -227,11 +227,11 @@ Future<void> showBuyVoucher(BuildContext context) async {
   // ignore: inference_failure_on_function_invocation
   await showDialog(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title: Text(context.lang.createVoucher),
         content: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
+          builder: (context, setState) {
             return SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

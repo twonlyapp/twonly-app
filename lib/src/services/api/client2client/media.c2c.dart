@@ -30,12 +30,15 @@ Future<void> handleMedia(
       if (message == null ||
           message.senderId != fromUserId ||
           message.mediaId == null) {
+        Log.warn(
+          'Got reupload for a message that either does not exists or sender != fromUserId or not a media file',
+        );
         return;
       }
 
       // in case there was already a downloaded file delete it...
       final mediaService = await MediaFileService.fromMediaId(message.mediaId!);
-      if (mediaService != null) {
+      if (mediaService != null && mediaService.tempPath.existsSync()) {
         mediaService.tempPath.deleteSync();
       }
 
@@ -66,6 +69,14 @@ Future<void> handleMedia(
       mediaType = MediaType.gif;
     case EncryptedContent_Media_Type.AUDIO:
       mediaType = MediaType.audio;
+  }
+
+  final messageTmp = await twonlyDB.messagesDao
+      .getMessageById(media.senderMessageId)
+      .getSingleOrNull();
+  if (messageTmp != null) {
+    Log.warn('This message already exit. Message is dropped.');
+    return;
   }
 
   int? displayLimitInMilliseconds;
@@ -105,7 +116,7 @@ Future<void> handleMedia(
       senderId: Value(fromUserId),
       groupId: Value(groupId),
       mediaId: Value(mediaFile.mediaId),
-      type: const Value(MessageType.media),
+      type: Value(MessageType.media.name),
       additionalMessageData: Value.absentIfNull(
         media.hasAdditionalMessageData()
             ? Uint8List.fromList(media.additionalMessageData)
@@ -139,12 +150,21 @@ Future<void> handleMediaUpdate(
       .getMessageById(mediaUpdate.targetMessageId)
       .getSingleOrNull();
   if (message == null) {
-    Log.error(
-      'Got media update to  message ${mediaUpdate.targetMessageId} but message not found.',
+    // this can happen, in case the message was already deleted.
+    Log.info(
+      'Got media update to message ${mediaUpdate.targetMessageId} but message not found.',
     );
+    return;
+  }
+  if (message.mediaId == null) {
+    // this can happen, in case the message was already deleted.
+    Log.warn(
+      'Got media update for message ${mediaUpdate.targetMessageId} which does not have a mediaId defined.',
+    );
+    return;
   }
   final mediaFile =
-      await twonlyDB.mediaFilesDao.getMediaFileById(message!.mediaId!);
+      await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
   if (mediaFile == null) {
     Log.info(
       'Got media file update, but media file was not found ${message.mediaId}',
@@ -183,6 +203,13 @@ Future<void> handleMediaUpdate(
           reuploadRequestedBy: Value(reuploadRequestedBy),
         ),
       );
-      unawaited(startBackgroundMediaUpload(MediaFileService(mediaFile)));
+      final mediaFileUpdated =
+          await MediaFileService.fromMediaId(mediaFile.mediaId);
+      if (mediaFileUpdated != null) {
+        if (mediaFileUpdated.uploadRequestPath.existsSync()) {
+          mediaFileUpdated.uploadRequestPath.deleteSync();
+        }
+        unawaited(startBackgroundMediaUpload(mediaFileUpdated));
+      }
   }
 }

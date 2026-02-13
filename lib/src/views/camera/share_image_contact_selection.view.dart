@@ -1,5 +1,3 @@
-// ignore_for_file: strict_raw_type
-
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/material.dart';
@@ -208,7 +206,7 @@ class _ShareImageView extends State<ShareImageView> {
                             child: Checkbox(
                               value: !hideArchivedUsers,
                               side: WidgetStateBorderSide.resolveWith(
-                                (Set states) {
+                                (states) {
                                   if (states.contains(WidgetState.selected)) {
                                     return const BorderSide(width: 0);
                                   }
@@ -344,7 +342,7 @@ class UserList extends StatelessWidget {
     return ListView.builder(
       restorationId: 'new_message_users_list',
       itemCount: groups.length,
-      itemBuilder: (BuildContext context, int i) {
+      itemBuilder: (context, i) {
         final group = groups[i];
         return ListTile(
           key: ValueKey(group.groupId),
@@ -364,14 +362,14 @@ class UserList extends StatelessWidget {
           trailing: Checkbox(
             value: selectedGroupIds.contains(group.groupId),
             side: WidgetStateBorderSide.resolveWith(
-              (Set states) {
+              (states) {
                 if (states.contains(WidgetState.selected)) {
                   return const BorderSide(width: 0);
                 }
                 return BorderSide(color: Theme.of(context).colorScheme.outline);
               },
             ),
-            onChanged: (bool? value) {
+            onChanged: (value) {
               if (value == null) return;
               updateSelectedGroupIds(group.groupId, value);
             },

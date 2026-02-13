@@ -242,6 +242,11 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
       additionalContent = group.groupName;
     }
   }
+
+  if (content.hasAdditionalDataMessage()) {
+    kind = PushKind.text;
+  }
+
   if (content.hasMedia()) {
     switch (content.media.type) {
       case EncryptedContent_Media_Type.REUPLOAD:

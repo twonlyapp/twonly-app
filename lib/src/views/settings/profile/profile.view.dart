@@ -3,7 +3,9 @@ import 'package:avatar_maker/avatar_maker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/protobuf/api/websocket/error.pb.dart';
 import 'package:twonly/src/services/twonly_safe/common.twonly_safe.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
@@ -11,7 +13,6 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
-import 'package:twonly/src/views/settings/profile/modify_avatar.view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -110,12 +111,7 @@ class _ProfileViewState extends State<ProfileView> {
                 icon: const Icon(Icons.edit),
                 label: Text(context.lang.settingsProfileCustomizeAvatar),
                 onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ModifyAvatar(),
-                    ),
-                  );
+                  await context.push(Routes.settingsProfileModifyAvatar);
                   await _avatarMakerController.performRestore();
                   setState(() {});
                 },
@@ -197,7 +193,7 @@ Future<String?> showDisplayNameChangeDialog(
 
   return showDialog<String>(
     context: context,
-    builder: (BuildContext context) {
+    builder: (context) {
       return AlertDialog(
         title: Text(title),
         content: TextField(

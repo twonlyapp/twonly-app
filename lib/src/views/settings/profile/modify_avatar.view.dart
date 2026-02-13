@@ -6,14 +6,14 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
-class ModifyAvatar extends StatefulWidget {
-  const ModifyAvatar({super.key});
+class ModifyAvatarView extends StatefulWidget {
+  const ModifyAvatarView({super.key});
 
   @override
-  State<ModifyAvatar> createState() => _ModifyAvatarState();
+  State<ModifyAvatarView> createState() => _ModifyAvatarViewState();
 }
 
-class _ModifyAvatarState extends State<ModifyAvatar> {
+class _ModifyAvatarViewState extends State<ModifyAvatarView> {
   final AvatarMakerController _avatarMakerController =
       PersistentAvatarMakerController(customizedPropertyCategories: []);
 
@@ -79,7 +79,7 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
   Future<bool?> _showBackDialog() {
     return showDialog<bool>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: Text(
             context.lang.avatarSaveChanges,
@@ -117,7 +117,7 @@ class _ModifyAvatarState extends State<ModifyAvatar> {
   Widget build(BuildContext context) {
     return PopScope<bool?>(
       canPop: false,
-      onPopInvokedWithResult: (bool didPop, bool? result) async {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         if (_avatarMakerController.getJsonOptionsSync() != gUser.avatarJson) {
           // there where changes

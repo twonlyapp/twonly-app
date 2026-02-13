@@ -9,4 +9,19 @@ mixin _$SignalDaoMixin on DatabaseAccessor<TwonlyDB> {
       attachedDatabase.signalContactPreKeys;
   $SignalContactSignedPreKeysTable get signalContactSignedPreKeys =>
       attachedDatabase.signalContactSignedPreKeys;
+  SignalDaoManager get managers => SignalDaoManager(this);
+}
+
+class SignalDaoManager {
+  final _$SignalDaoMixin _db;
+  SignalDaoManager(this._db);
+  $$ContactsTableTableManager get contacts =>
+      $$ContactsTableTableManager(_db.attachedDatabase, _db.contacts);
+  $$SignalContactPreKeysTableTableManager get signalContactPreKeys =>
+      $$SignalContactPreKeysTableTableManager(
+          _db.attachedDatabase, _db.signalContactPreKeys);
+  $$SignalContactSignedPreKeysTableTableManager
+      get signalContactSignedPreKeys =>
+          $$SignalContactSignedPreKeysTableTableManager(
+              _db.attachedDatabase, _db.signalContactSignedPreKeys);
 }

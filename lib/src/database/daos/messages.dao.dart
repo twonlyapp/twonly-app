@@ -75,10 +75,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
             (t) =>
                 t.groupId.equals(groupId) &
                 (t.isDeletedFromSender.equals(true) |
-                    ((t.type.equals(MessageType.text.name) &
-                            t.content.isNotNull()) |
-                        (t.type.equals(MessageType.media.name) &
-                            t.mediaId.isNotNull()))),
+                    (t.type.equals(MessageType.text.name).not() |
+                        t.type.equals(MessageType.media.name).not()) |
+                    (t.type.equals(MessageType.text.name) &
+                        t.content.isNotNull()) |
+                    (t.type.equals(MessageType.media.name) &
+                        t.mediaId.isNotNull())),
           ))
           ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
         .watch();

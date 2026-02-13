@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/qr.dart';
-import 'package:twonly/src/views/camera/camera_qr_scanner.view.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
 
 class PublicProfileView extends StatefulWidget {
@@ -96,14 +96,7 @@ class _PublicProfileViewState extends State<PublicProfileView> {
           BetterListTile(
             leading: const FaIcon(FontAwesomeIcons.qrcode),
             text: context.lang.scanOtherProfile,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const QrCodeScanner(),
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.cameraQRScanner),
           ),
           BetterListTile(
             leading: const FaIcon(

@@ -27,7 +27,7 @@ class _AppearanceViewState extends State<AppearanceView> {
     // ignore: inference_failure_on_function_invocation
     await showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return AlertDialog(
           title: Text(context.lang.settingsAppearanceTheme),
           content: Column(
@@ -37,7 +37,7 @@ class _AppearanceViewState extends State<AppearanceView> {
                 value: ThemeMode.system,
                 groupValue: selectedValue,
                 label: 'System default',
-                onChanged: (ThemeMode? value) {
+                onChanged: (value) {
                   selectedValue = value;
                   Navigator.of(context).pop();
                 },
@@ -46,7 +46,7 @@ class _AppearanceViewState extends State<AppearanceView> {
                 value: ThemeMode.light,
                 groupValue: selectedValue,
                 label: 'Light',
-                onChanged: (ThemeMode? value) {
+                onChanged: (value) {
                   selectedValue = value;
                   Navigator.of(context).pop();
                 },
@@ -55,7 +55,7 @@ class _AppearanceViewState extends State<AppearanceView> {
                 value: ThemeMode.dark,
                 groupValue: selectedValue,
                 label: 'Dark',
-                onChanged: (ThemeMode? value) {
+                onChanged: (value) {
                   selectedValue = value;
                   Navigator.of(context).pop();
                 },

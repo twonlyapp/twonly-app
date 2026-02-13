@@ -15,6 +15,7 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/camera/camera_send_to.view.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/bottom_sheets/share_additional.bottom_sheet.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/entries/chat_audio_entry.dart';
 
 class MessageInput extends StatefulWidget {
@@ -167,6 +168,19 @@ class _MessageInputState extends State<MessageInput> {
     }
   }
 
+  Future<void> _showAdditionalShareModal(BuildContext context) async {
+    // ignore: inference_failure_on_function_invocation
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black,
+      builder: (context) {
+        return ShareAdditionalView(
+          group: widget.group,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -313,6 +327,20 @@ class _MessageInputState extends State<MessageInput> {
                         ),
                       ),
                       if (_textFieldController.text == '')
+                        IconButton(
+                          icon: const FaIcon(FontAwesomeIcons.camera),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) {
+                                  return CameraSendToView(widget.group);
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      if (_textFieldController.text == '')
                         GestureDetector(
                           onLongPressMoveUpdate: (details) {
                             if (_audioRecordingLock) return;
@@ -452,18 +480,9 @@ class _MessageInputState extends State<MessageInput> {
                 )
               else
                 IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.camera),
+                  icon: const FaIcon(FontAwesomeIcons.plus),
                   padding: const EdgeInsets.all(15),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return CameraSendToView(widget.group);
-                        },
-                      ),
-                    );
-                  },
+                  onPressed: () => _showAdditionalShareModal(context),
                 ),
             ],
           ),

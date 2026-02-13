@@ -7,14 +7,14 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/user_context_menu.component.dart';
 
-class PrivacyViewBlockUsers extends StatefulWidget {
-  const PrivacyViewBlockUsers({super.key});
+class PrivacyViewBlockUsersView extends StatefulWidget {
+  const PrivacyViewBlockUsersView({super.key});
 
   @override
-  State<PrivacyViewBlockUsers> createState() => _PrivacyViewBlockUsers();
+  State<PrivacyViewBlockUsersView> createState() => _PrivacyViewBlockUsers();
 }
 
-class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsers> {
+class _PrivacyViewBlockUsers extends State<PrivacyViewBlockUsersView> {
   late Stream<List<Contact>> allUsers;
   List<Contact> filteredUsers = [];
   String filter = '';
@@ -102,7 +102,7 @@ class UserList extends StatelessWidget {
     return ListView.builder(
       restorationId: 'new_message_users_list',
       itemCount: users.length,
-      itemBuilder: (BuildContext context, int i) {
+      itemBuilder: (context, i) {
         final user = users[i];
         return UserContextMenu(
           key: ValueKey(user.userId),
@@ -116,7 +116,7 @@ class UserList extends StatelessWidget {
             leading: AvatarIcon(contactId: user.userId, fontSize: 15),
             trailing: Checkbox(
               value: user.blocked,
-              onChanged: (bool? value) async {
+              onChanged: (value) async {
                 await block(context, user.userId, value);
               },
             ),

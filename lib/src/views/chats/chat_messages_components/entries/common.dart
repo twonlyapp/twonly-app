@@ -85,8 +85,8 @@ double measureTextWidth(
 bool combineTextMessageWithNext(Message message, Message? nextMessage) {
   if (nextMessage != null && nextMessage.content != null) {
     if (nextMessage.senderId == message.senderId) {
-      if (nextMessage.type == MessageType.text &&
-          message.type == MessageType.text) {
+      if (nextMessage.type == MessageType.text.name &&
+          message.type == MessageType.text.name) {
         if (!EmojiAnimation.supported(nextMessage.content!)) {
           final diff =
               nextMessage.createdAt.difference(message.createdAt).inMinutes;

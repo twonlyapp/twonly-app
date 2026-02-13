@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.92
+
+- Adds the option to share contacts
+- Adds option to zoom in received images / videos 
+- Fixes issue with "reuploaded requested" not working
+- Fixes race condition while writing to the log file
+
 ## 0.0.91
 
 - Fixes link preview on iOS

@@ -98,7 +98,7 @@ class _GroupCreateSelectGroupNameViewState
                   child: ListView.builder(
                     restorationId: 'new_message_users_list',
                     itemCount: widget.selectedUsers.length,
-                    itemBuilder: (BuildContext context, int i) {
+                    itemBuilder: (context, i) {
                       final user = widget.selectedUsers[i];
                       return UserContextMenu(
                         key: ValueKey(user.userId),

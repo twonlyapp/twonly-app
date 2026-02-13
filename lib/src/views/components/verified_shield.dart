@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/views/public_profile.view.dart';
 
 class VerifiedShield extends StatefulWidget {
   const VerifiedShield({
@@ -58,16 +59,7 @@ class _VerifiedShieldState extends State<VerifiedShield> {
     return GestureDetector(
       onTap: (contact == null)
           ? null
-          : () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const PublicProfileView();
-                  },
-                ),
-              );
-            },
+          : () => context.push(Routes.settingsPublicProfile),
       child: Tooltip(
         message: isVerified
             ? 'You verified this contact'

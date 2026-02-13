@@ -169,12 +169,12 @@ class _ResponsePreviewState extends State<ResponsePreview> {
     var color = const Color.fromARGB(233, 68, 137, 255);
 
     if (_message != null) {
-      if (_message!.type == MessageType.text) {
+      if (_message!.type == MessageType.text.name) {
         if (_message!.content != null) {
           subtitle = truncateString(_message!.content!);
         }
       }
-      if (_message!.type == MessageType.media && _mediaService != null) {
+      if (_message!.type == MessageType.media.name && _mediaService != null) {
         switch (_mediaService!.mediaFile.type) {
           case MediaType.image:
             subtitle = context.lang.image;

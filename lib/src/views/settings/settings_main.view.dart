@@ -1,23 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/avatar_icon.component.dart';
 import 'package:twonly/src/views/components/better_list_title.dart';
-import 'package:twonly/src/views/public_profile.view.dart';
-import 'package:twonly/src/views/settings/account.view.dart';
-import 'package:twonly/src/views/settings/appearance.view.dart';
-import 'package:twonly/src/views/settings/backup/backup.view.dart';
-import 'package:twonly/src/views/settings/chat/chat_settings.view.dart';
-import 'package:twonly/src/views/settings/data_and_storage.view.dart';
-import 'package:twonly/src/views/settings/developer/developer.view.dart';
-import 'package:twonly/src/views/settings/help/help.view.dart';
-import 'package:twonly/src/views/settings/notification.view.dart';
-import 'package:twonly/src/views/settings/privacy.view.dart';
-import 'package:twonly/src/views/settings/profile/profile.view.dart';
-import 'package:twonly/src/views/settings/share_with_friends.view.dart';
-import 'package:twonly/src/views/settings/subscription/subscription.view.dart';
 
 class SettingsMainView extends StatefulWidget {
   const SettingsMainView({super.key});
@@ -42,14 +31,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return const ProfileView();
-                          },
-                        ),
-                      );
+                      await context.push(Routes.settingsProfile);
                       setState(() {});
                     },
                     child: ColoredBox(
@@ -86,16 +68,7 @@ class _SettingsMainViewState extends State<SettingsMainView> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return const PublicProfileView();
-                          },
-                        ),
-                      );
-                    },
+                    onPressed: () => context.push(Routes.settingsPublicProfile),
                     icon: const FaIcon(FontAwesomeIcons.qrcode),
                   ),
                 ),
@@ -105,160 +78,61 @@ class _SettingsMainViewState extends State<SettingsMainView> {
           BetterListTile(
             icon: FontAwesomeIcons.user,
             text: context.lang.settingsAccount,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const AccountView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsAccount),
           ),
           BetterListTile(
             icon: FontAwesomeIcons.shieldHeart,
             text: context.lang.settingsSubscription,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const SubscriptionView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsSubscription),
           ),
           BetterListTile(
             icon: Icons.lock_clock_rounded,
             text: context.lang.settingsBackup,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const BackupView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsBackup),
           ),
           const Divider(),
           BetterListTile(
             icon: FontAwesomeIcons.sun,
             text: context.lang.settingsAppearance,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const AppearanceView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsAppearance),
           ),
           BetterListTile(
             icon: FontAwesomeIcons.comment,
             text: context.lang.settingsChats,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const ChatSettingsView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsChats),
           ),
           BetterListTile(
             icon: FontAwesomeIcons.lock,
             text: context.lang.settingsPrivacy,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const PrivacyView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsPrivacy),
           ),
           BetterListTile(
             icon: FontAwesomeIcons.bell,
             text: context.lang.settingsNotification,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const NotificationView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsNotification),
           ),
           BetterListTile(
             icon: FontAwesomeIcons.chartPie,
             iconSize: 15,
             text: context.lang.settingsStorageData,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const DataAndStorageView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsStorage),
           ),
           const Divider(),
           BetterListTile(
             icon: FontAwesomeIcons.circleQuestion,
             text: context.lang.settingsHelp,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const HelpView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsHelp),
           ),
           if (gUser.isDeveloper)
             BetterListTile(
               icon: FontAwesomeIcons.code,
               text: 'Developer Settings',
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const DeveloperSettingsView();
-                    },
-                  ),
-                );
-              },
+              onTap: () => context.push(Routes.settingsDeveloper),
             ),
           BetterListTile(
             icon: FontAwesomeIcons.shareFromSquare,
             text: context.lang.inviteFriends,
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const ShareWithFriendsView();
-                  },
-                ),
-              );
-            },
+            onTap: () => context.push(Routes.settingsInvite),
           ),
         ],
       ),

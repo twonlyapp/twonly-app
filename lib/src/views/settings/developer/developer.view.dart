@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
-import 'package:twonly/src/views/settings/developer/automated_testing.view.dart';
-import 'package:twonly/src/views/settings/developer/retransmission_data.view.dart';
 
 class DeveloperSettingsView extends StatefulWidget {
   const DeveloperSettingsView({super.key});
@@ -55,16 +55,8 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
           ),
           ListTile(
             title: const Text('Show Retransmission Database'),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return const RetransmissionDataView();
-                  },
-                ),
-              );
-            },
+            onTap: () =>
+                context.push(Routes.settingsDeveloperRetransmissionDatabase),
           ),
           ListTile(
             title: const Text('Delete all (!) app data'),
@@ -97,16 +89,8 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
           if (!kReleaseMode)
             ListTile(
               title: const Text('Automated Testing'),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return const AutomatedTestingView();
-                    },
-                  ),
-                );
-              },
+              onTap: () =>
+                  context.push(Routes.settingsDeveloperAutomatedTesting),
             ),
         ],
       ),

@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/userdata.dart';
 import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
 import 'package:twonly/src/utils/misc.dart';
-import 'package:twonly/src/views/settings/backup/twonly_safe_backup.view.dart';
 
 void Function() gUpdateBackupView = () {};
 
@@ -60,16 +61,7 @@ class _BackupViewState extends State<BackupView> {
   }
 
   Future<void> changeTwonlySafePassword() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) {
-          return const TwonlyIdentityBackupView(
-            isPasswordChangeOnly: true,
-          );
-        },
-      ),
-    );
+    await context.push(Routes.settingsBackupSetup, extra: true);
     setState(() {
       // gUser was updated
     });
@@ -205,7 +197,7 @@ class _BackupViewState extends State<BackupView> {
             label: context.lang.backupData,
           ),
         ],
-        onTap: (int index) async {
+        onTap: (index) async {
           activePageIdx = index;
           await pageController.animateToPage(
             index,

@@ -1656,4 +1656,17 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get authRequestReopenImage =>
       'Um das Bild erneut zu öffnen, musst du dich authentifizieren.';
+
+  @override
+  String get shareContactsMenu => 'Kontakt';
+
+  @override
+  String get shareContactsTitle => 'Kontakte auswählen';
+
+  @override
+  String get shareContactsSubmit => 'Jetzt teilen';
+
+  @override
+  String get updateTwonlyMessage =>
+      'Um diese Nachricht zu sehen, musst du twonly aktualisieren.';
 }

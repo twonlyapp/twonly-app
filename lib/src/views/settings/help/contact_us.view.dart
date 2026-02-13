@@ -194,12 +194,12 @@ $debugLogToken
                 hint: Text(context.lang.contactUsSelectOption),
                 underline: const SizedBox.shrink(),
                 value: _selectedReason,
-                onChanged: (String? newValue) {
+                onChanged: (newValue) {
                   setState(() {
                     _selectedReason = newValue;
                   });
                 },
-                items: reasons.map<DropdownMenuItem<String>>((String reason) {
+                items: reasons.map<DropdownMenuItem<String>>((reason) {
                   return DropdownMenuItem<String>(
                     value: reason,
                     child: Text(reason),
@@ -211,7 +211,7 @@ $debugLogToken
               const SizedBox(height: 5),
               FeedbackEmojiRow(
                 selectedFeedback: _selectedFeedback,
-                onFeedbackChanged: (int? newValue) {
+                onFeedbackChanged: (newValue) {
                   setState(() {
                     _selectedFeedback = newValue;
                   });
@@ -317,7 +317,7 @@ class _IncludeDebugLogState extends State<IncludeDebugLog> {
         Checkbox(
           value: widget.isChecked,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          onChanged: (bool? value) {
+          onChanged: (value) {
             if (value != null) {
               widget.onChanged(value);
             }

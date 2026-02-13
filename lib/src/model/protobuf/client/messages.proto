@@ -52,7 +52,7 @@ message EncryptedContent {
     optional GroupUpdate groupUpdate  = 16;
     optional ResendGroupPublicKey resendGroupPublicKey = 17;
     optional ErrorMessages error_messages = 18;
-
+    optional AdditionalDataMessage additional_data_message = 19;
 
     message ErrorMessages {
         enum Type {
@@ -91,6 +91,13 @@ message EncryptedContent {
         string text = 2;
         int64 timestamp = 3;
         optional string quoteMessageId = 4;
+    }
+
+    message AdditionalDataMessage {
+        string sender_message_id = 1;
+        int64 timestamp = 2;
+        string type = 3;
+        optional bytes additional_message_data = 4;
     }
 
     message Reaction {
