@@ -46,7 +46,7 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
   }
 
   Future<void> _restoreFlames() async {
-    if (!isPayingUser(getCurrentPlan())) {
+    if (!isUserAllowed(getCurrentPlan(), PremiumFeatures.RestoreFlames)) {
       await context.push(Routes.settingsSubscription);
       return;
     }
