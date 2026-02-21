@@ -11,6 +11,7 @@
 - Fix: Increase recent limit in emoji keyboard
 - Fix: Increase show time of the focus indication
 - Fix: Quoted text message not shown properly
+- Fix: Push notification in groups when someone saves an image
 
 ## 0.0.92
 

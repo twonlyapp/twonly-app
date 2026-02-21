@@ -281,6 +281,13 @@ Future<PushNotification?> getPushNotificationFromEncryptedContent(
   }
 
   if (content.hasMediaUpdate()) {
+    final msg = await twonlyDB.messagesDao
+        .getMessageById(content.reaction.targetMessageId)
+        .getSingleOrNull();
+    // These notifications should only be send to the original sender.
+    if (msg == null || msg.senderId == null || msg.senderId != toUserId) {
+      return null;
+    }
     switch (content.mediaUpdate.type) {
       case EncryptedContent_MediaUpdate_Type.REOPENED:
         kind = PushKind.reopenedMedia;
