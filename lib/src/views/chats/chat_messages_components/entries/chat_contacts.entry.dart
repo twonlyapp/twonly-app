@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/services/api/utils.dart';
@@ -99,7 +101,15 @@ class _ContactRow extends StatefulWidget {
 class _ContactRowState extends State<_ContactRow> {
   bool _isLoading = false;
 
-  Future<void> _onContactClick() async {
+  Future<void> _onContactClick(bool isAdded) async {
+    if (widget.contact.userId.toInt() == gUser.userId) {
+      await context.push(Routes.settingsProfile);
+      return;
+    }
+    if (isAdded) {
+      await context.push(Routes.profileContact(widget.contact.userId.toInt()));
+      return;
+    }
     setState(() {
       _isLoading = true;
     });
@@ -152,46 +162,48 @@ class _ContactRowState extends State<_ContactRow> {
             widget.contact.userId.toInt() == gUser.userId;
 
         return GestureDetector(
-          onTap: (widget.message.senderId == null || isAdded || _isLoading)
-              ? null
-              : _onContactClick,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const FaIcon(
-                  FontAwesomeIcons.user,
-                  color: Colors.white,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: BetterText(
-                    text: widget.contact.displayName,
-                    textColor: Colors.white,
+          onTap: _isLoading ? null : () => _onContactClick(isAdded),
+          child: ColoredBox(
+            color: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const FaIcon(
+                    FontAwesomeIcons.user,
+                    color: Colors.white,
+                    size: 16,
                   ),
-                ),
-                if (widget.message.senderId != null && !isAdded) ...[
-                  const Spacer(),
                   const SizedBox(width: 8),
-                  if (_isLoading)
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  else
-                    const FaIcon(
-                      FontAwesomeIcons.userPlus,
-                      color: Colors.white,
-                      size: 16,
+                  Flexible(
+                    child: BetterText(
+                      text: widget.contact.displayName,
+                      textColor: Colors.white,
                     ),
+                  ),
+                  if (widget.message.senderId != null && !isAdded) ...[
+                    const Spacer(),
+                    const SizedBox(width: 8),
+                    if (_isLoading)
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    else
+                      const FaIcon(
+                        FontAwesomeIcons.userPlus,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );
