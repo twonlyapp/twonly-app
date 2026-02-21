@@ -22,7 +22,7 @@ class OnboardingView extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 100),
                   // child: Image.asset('assets/animations/messages.gif'),
                   child: Lottie.asset(
-                    'assets/animations/selfie2.json',
+                    'assets/animations/selfie2.lottie',
                   ),
                 ),
               ),
@@ -34,7 +34,7 @@ class OnboardingView extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 100),
                   child: Lottie.asset(
-                    'assets/animations/e2e.json',
+                    'assets/animations/e2e.lottie',
                     repeat: false,
                   ),
                 ),
@@ -47,7 +47,7 @@ class OnboardingView extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 100),
                   child: Lottie.asset(
-                    'assets/animations/takephoto.json',
+                    'assets/animations/takephoto.lottie',
                     repeat: false,
                   ),
                 ),
@@ -60,7 +60,7 @@ class OnboardingView extends StatelessWidget {
             //     child: Padding(
             //       padding: const EdgeInsets.only(top: 100),
             //       child: Lottie.asset(
-            //         'assets/animations/twonlies.json',
+            //         'assets/animations/twonlies.lottie',
             //         repeat: false,
             //       ),
             //     ),
@@ -89,7 +89,7 @@ class OnboardingView extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 60),
                   child: Lottie.asset(
-                    'assets/animations/donation.json',
+                    'assets/animations/donation.lottie',
                   ),
                 ),
               ),
@@ -100,7 +100,7 @@ class OnboardingView extends StatelessWidget {
             //     child: Padding(
             //       padding: const EdgeInsets.only(top: 100),
             //       child: Lottie.asset(
-            //         'assets/animations/rocket.json',
+            //         'assets/animations/rocket.lottie',
             //       ),
             //     ),
             //   ),
