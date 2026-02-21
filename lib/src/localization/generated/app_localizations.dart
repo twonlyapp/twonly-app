@@ -943,7 +943,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactVerifyNumberTitle.
   ///
   /// In en, this message translates to:
-  /// **'Verify safety number'**
+  /// **'Verify contact'**
   String get contactVerifyNumberTitle;
 
   /// No description provided for @contactVerifyNumberTapToScan.
@@ -969,6 +969,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To verify the end-to-end encryption with {username}, compare the numbers with their device. The person can also scan your code with their device.'**
   String contactVerifyNumberLongDesc(Object username);
+
+  /// No description provided for @contactViewMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get contactViewMessage;
 
   /// No description provided for @contactNickname.
   ///
@@ -2991,6 +2997,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To see this message, you need to update twonly.'**
   String get updateTwonlyMessage;
+
+  /// No description provided for @verificationBadgeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You can verify your friends by scanning their public QR code. Click to learn more.'**
+  String get verificationBadgeNote;
+
+  /// No description provided for @verificationBadgeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification'**
+  String get verificationBadgeTitle;
+
+  /// No description provided for @verificationBadgeGeneralDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The green checkmark gives you the certainty that you are messaging the right person.'**
+  String get verificationBadgeGeneralDesc;
+
+  /// No description provided for @verificationBadgeGreenDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact that you have personally verified via QR code. This also verified their public key.'**
+  String get verificationBadgeGreenDesc;
+
+  /// No description provided for @verificationBadgeYellowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'(Coming soon) Contact whose QR code was scanned by one of your personally verified contacts.'**
+  String get verificationBadgeYellowDesc;
+
+  /// No description provided for @verificationBadgeRedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown contact whose identity has not yet been verified.'**
+  String get verificationBadgeRedDesc;
 }
 
 class _AppLocalizationsDelegate

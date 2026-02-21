@@ -39,6 +39,8 @@ class Routes {
   static const String settingsStorageExport = '/settings/storage_data/export';
   static const String settingsHelp = '/settings/help';
   static const String settingsHelpFaq = '/settings/help/faq';
+  static const String settingsHelpFaqVerifyBadge =
+      '/settings/help/faq/verifybadge';
   static const String settingsHelpContactUs = '/settings/help/contact_us';
   static const String settingsHelpDiagnostics = '/settings/help/diagnostics';
   static const String settingsHelpUserStudy = '/settings/help/user_study';

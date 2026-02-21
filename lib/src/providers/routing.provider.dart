@@ -32,6 +32,7 @@ import 'package:twonly/src/views/settings/help/contact_us.view.dart';
 import 'package:twonly/src/views/settings/help/credits.view.dart';
 import 'package:twonly/src/views/settings/help/diagnostics.view.dart';
 import 'package:twonly/src/views/settings/help/faq.view.dart';
+import 'package:twonly/src/views/settings/help/faq/verifybadge.dart';
 import 'package:twonly/src/views/settings/help/help.view.dart';
 import 'package:twonly/src/views/settings/notification.view.dart';
 import 'package:twonly/src/views/settings/privacy.view.dart';
@@ -227,6 +228,12 @@ final routerProvider = GoRouter(
             GoRoute(
               path: 'faq',
               builder: (context, state) => const FaqView(),
+              routes: [
+                GoRoute(
+                  path: 'verifybadge',
+                  builder: (context, state) => const VerificationBadeFaqView(),
+                ),
+              ],
             ),
             GoRoute(
               path: 'contact_us',
@@ -280,6 +287,11 @@ final routerProvider = GoRouter(
           builder: (context, state) => const ShareWithFriendsView(),
         ),
       ],
+    ),
+    // Fallback instead of showing a Page Not Found error redirect to home
+    GoRoute(
+      path: '/:path(.*)',
+      redirect: (context, state) => '/',
     ),
   ],
 );

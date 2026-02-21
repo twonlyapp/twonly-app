@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/views/components/svg_icon.dart';
 
 class VerifiedShield extends StatefulWidget {
   const VerifiedShield({
     this.contact,
     this.group,
     super.key,
-    this.size = 18,
+    this.size = 15,
   });
   final Group? group;
   final Contact? contact;
@@ -64,11 +64,13 @@ class _VerifiedShieldState extends State<VerifiedShield> {
         message: isVerified
             ? 'You verified this contact'
             : 'You have not verifies this contact.',
-        child: FaIcon(
-          isVerified ? FontAwesomeIcons.shieldHeart : Icons.gpp_maybe_rounded,
-          color:
-              isVerified ? Theme.of(context).colorScheme.primary : Colors.red,
-          size: widget.size,
+        child: Padding(
+          padding: const EdgeInsetsGeometry.only(top: 2),
+          child: SvgIcon(
+            assetPath:
+                isVerified ? SvgIcons.verifiedGreen : SvgIcons.verifiedRed,
+            size: widget.size,
+          ),
         ),
       ),
     );

@@ -45,9 +45,29 @@ class _PublicProfileViewState extends State<PublicProfileView> {
       body: Column(
         children: [
           Container(width: double.infinity),
-          const SizedBox(
-            height: 30,
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () => context.push(Routes.settingsHelpFaqVerifyBadge),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 30),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: context.color.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Text(context.lang.verificationBadgeNote),
+                  ),
+                  const SizedBox(width: 10),
+                  const FaIcon(FontAwesomeIcons.angleRight),
+                ],
+              ),
+            ),
           ),
+          const SizedBox(height: 20),
           if (_qrCode != null && _userAvatar != null)
             Container(
               decoration: BoxDecoration(
