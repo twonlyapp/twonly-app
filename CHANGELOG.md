@@ -4,7 +4,7 @@
 ## 0.0.93
 
 - Feature: Verification checkmark for friends   
-- Fix: Added contacts in contact sharing where not click able
+- Fix: Added contacts in contact sharing that were not clickable.
 - Fix: Open chat after the image expires in case a draft message exists 
 - Fix: Restore flames as a plus user
 - Fix: Route not found when sharing image
@@ -12,6 +12,7 @@
 - Fix: Increase show time of the focus indication
 - Fix: Quoted text message not shown properly
 - Fix: Push notification in groups when someone saves an image
+- Fix: Dark mode in diagnostics view
 
 ## 0.0.92
 
