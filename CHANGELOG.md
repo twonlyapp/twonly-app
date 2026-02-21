@@ -5,6 +5,7 @@
 
 - Feature: Verification checkmark for friends   
 - Fix: Added contacts in contact sharing where not click able
+- Fix: Open chat after the image expires in case a draft message exists 
 - Fix: Restore flames as a plus user
 - Fix: Route not found when sharing image
 - Fix: Increase recent limit in emoji keyboard
