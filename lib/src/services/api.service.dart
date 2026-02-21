@@ -193,7 +193,11 @@ class ApiService {
   }
 
   Future<void> _onError(dynamic e) async {
-    Log.warn('websocket error: $e');
+    if (e.toString().contains('Failed host lookup')) {
+      Log.info('WebSocket connection failed: Host not reachable.');
+    } else {
+      Log.warn('websocket error: $e');
+    }
     await onClosed();
   }
 

@@ -37,6 +37,14 @@ Future<bool> canMediaFileBeDownloaded(MediaFile mediaFile) async {
   // If not delete the message as it can not be downloaded from the server anymore.
 
   if (messages.length != 1) {
+    if (messages.isEmpty) {
+      MediaFileService(mediaFile).fullMediaRemoval();
+      await twonlyDB.mediaFilesDao.deleteMediaFile(mediaFile.mediaId);
+      Log.warn(
+        'Media file which is in downloading status has not text message. Deleting media file. ${mediaFile.mediaId}.',
+      );
+      return false;
+    }
     Log.warn(
       'A media for download must have one original message, but it has ${messages.length}.',
     );
