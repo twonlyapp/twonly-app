@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:go_router/go_router.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/views/components/loader.dart';
 
@@ -13,8 +13,6 @@ class DiagnosticsView extends StatefulWidget {
 }
 
 class _DiagnosticsViewState extends State<DiagnosticsView> {
-  final ScrollController _scrollController = ScrollController();
-
   String? _debugLogText;
 
   @override
@@ -26,41 +24,6 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
   Future<void> initAsync() async {
     _debugLogText = await readLast1000Lines();
     setState(() {});
-  }
-
-  Future<void> _scrollToBottom() async {
-    // Assuming the button is at the bottom of the scroll view
-    await _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent, // Scroll to the bottom
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  Future<void> _shareDebugLog() async {
-    if (_debugLogText == null) return;
-    final directory = await getApplicationSupportDirectory();
-    final logFile = XFile('${directory.path}/app.log');
-
-    final params = ShareParams(
-      text: 'Debug log',
-      files: [logFile],
-    );
-
-    final result = await SharePlus.instance.share(params);
-
-    if (result.status != ShareResultStatus.success) {
-      await Clipboard.setData(
-        ClipboardData(text: _debugLogText!),
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Log copied to clipboard!'),
-          ),
-        );
-      }
-    }
   }
 
   Future<void> _deleteDebugLog() async {
@@ -100,12 +63,9 @@ class _DiagnosticsViewState extends State<DiagnosticsView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       TextButton(
-                        onPressed: _shareDebugLog,
+                        onPressed: () =>
+                            context.push(Routes.settingsHelpContactUs),
                         child: const Text('Share debug log'),
-                      ),
-                      TextButton(
-                        onPressed: _scrollToBottom,
-                        child: const Text('Scroll to Bottom'),
                       ),
                       TextButton(
                         onPressed: _deleteDebugLog,
@@ -186,7 +146,6 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
       selected: selected,
       onSelected: (_) => _setFilter(label),
       selectedColor: _colorForLevel(label).withAlpha(120),
-      backgroundColor: Colors.grey.shade200,
     );
   }
 
@@ -198,7 +157,7 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
       fontWeight: FontWeight.bold,
       fontFamily: 'monospace',
     );
-    const msgStyle = TextStyle(color: Colors.black87, fontFamily: 'monospace');
+    const msgStyle = TextStyle(fontFamily: 'monospace');
 
     return TextSpan(
       children: [
@@ -249,12 +208,7 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
         ),
         Expanded(
           child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
+            padding: const EdgeInsets.only(left: 8),
             child: Scrollbar(
               controller: _controller,
               child: ListView.builder(

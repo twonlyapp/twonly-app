@@ -4,10 +4,12 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:twonly/globals.dart';
+import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/database/daos/contacts.dao.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart'
     show DownloadState, MediaType;
@@ -131,7 +133,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
       setState(() {});
       if (firstRun) {
-        // ignore: parameter_assignments
         firstRun = false;
         await loadCurrentMediaFile();
       }
@@ -154,7 +155,16 @@ class _MediaViewerViewState extends State<MediaViewerView> {
     progressTimer?.cancel();
 
     if (allMediaFiles.isEmpty) {
-      Navigator.pop(context);
+      final group = await twonlyDB.groupsDao.getGroup(widget.group.groupId);
+      if (mounted) {
+        if (group != null &&
+            group.draftMessage != null &&
+            group.draftMessage != '') {
+          context.replace(Routes.chatsMessages, extra: group);
+        } else {
+          Navigator.pop(context);
+        }
+      }
     } else {
       await loadCurrentMediaFile();
     }

@@ -10,8 +10,20 @@ enum SubscriptionPlan {
   Plus,
 }
 
-bool isAdditionalAccount(SubscriptionPlan plan) {
-  return plan == SubscriptionPlan.Free || plan == SubscriptionPlan.Plus;
+enum PremiumFeatures { RestoreFlames }
+
+const Map<PremiumFeatures, List<SubscriptionPlan>> planPermissions = {
+  PremiumFeatures.RestoreFlames: [
+    SubscriptionPlan.Family,
+    SubscriptionPlan.Plus,
+    SubscriptionPlan.Tester,
+    SubscriptionPlan.Pro,
+  ],
+};
+
+bool isUserAllowed(SubscriptionPlan plan, PremiumFeatures feature) {
+  final allowedPlans = planPermissions[feature] ?? [];
+  return allowedPlans.contains(plan);
 }
 
 bool isPayingUser(SubscriptionPlan plan) {

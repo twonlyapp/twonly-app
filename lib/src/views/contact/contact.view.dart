@@ -14,6 +14,7 @@ import 'package:twonly/src/views/components/better_list_title.dart';
 import 'package:twonly/src/views/components/flame.dart';
 import 'package:twonly/src/views/components/max_flame_list_title.dart';
 import 'package:twonly/src/views/components/select_chat_deletion_time.comp.dart';
+import 'package:twonly/src/views/components/svg_icon.dart';
 import 'package:twonly/src/views/components/verified_shield.dart';
 import 'package:twonly/src/views/groups/group.view.dart';
 
@@ -164,6 +165,21 @@ class _ContactViewState extends State<ContactView> {
             Center(child: Text('(${contact.username})')),
           const SizedBox(height: 50),
           BetterListTile(
+            icon: FontAwesomeIcons.solidComments,
+            text: context.lang.contactViewMessage,
+            onTap: () async {
+              final group =
+                  await twonlyDB.groupsDao.getDirectChat(contact.userId);
+              if (group != null && context.mounted) {
+                await context.push(
+                  Routes.chatsMessages,
+                  extra: group,
+                );
+              }
+            },
+          ),
+          const Divider(),
+          BetterListTile(
             icon: FontAwesomeIcons.pencil,
             text: context.lang.contactNickname,
             onTap: () async {
@@ -176,7 +192,6 @@ class _ContactViewState extends State<ContactView> {
               }
             },
           ),
-          const Divider(),
           SelectChatDeletionTimeListTitle(
             groupId: getUUIDforDirectChat(widget.userId, gUser.userId),
           ),
@@ -185,7 +200,11 @@ class _ContactViewState extends State<ContactView> {
             contactId: widget.userId,
           ),
           BetterListTile(
-            icon: FontAwesomeIcons.shieldHeart,
+            leading: SvgIcon(
+              assetPath: SvgIcons.verifiedGreen,
+              size: 20,
+              color: IconTheme.of(context).color,
+            ),
             text: context.lang.contactVerifyNumberTitle,
             onTap: () async {
               await context.push(Routes.settingsPublicProfile);

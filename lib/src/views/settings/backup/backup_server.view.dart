@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_dynamic_calls
+// ignore_for_file: parameter_assignments, avoid_dynamic_calls
 
 import 'dart:async';
 import 'dart:convert';

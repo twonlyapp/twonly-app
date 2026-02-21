@@ -207,6 +207,9 @@ class MainCameraController {
       Log.error(e);
     }
 
+    // display the focus point at least 500ms
+    await Future.delayed(const Duration(milliseconds: 500));
+
     focusPointOffset = null;
     setState();
   }

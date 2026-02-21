@@ -463,7 +463,7 @@ class AppLocalizationsSv extends AppLocalizations {
       'Your account will be deleted. There is no change to restore it.';
 
   @override
-  String get contactVerifyNumberTitle => 'Verify safety number';
+  String get contactVerifyNumberTitle => 'Verify contact';
 
   @override
   String get contactVerifyNumberTapToScan => 'Tap to scan';
@@ -478,6 +478,9 @@ class AppLocalizationsSv extends AppLocalizations {
   String contactVerifyNumberLongDesc(Object username) {
     return 'To verify the end-to-end encryption with $username, compare the numbers with their device. The person can also scan your code with their device.';
   }
+
+  @override
+  String get contactViewMessage => 'Message';
 
   @override
   String get contactNickname => 'Nickname';
@@ -1657,4 +1660,27 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get updateTwonlyMessage =>
       'To see this message, you need to update twonly.';
+
+  @override
+  String get verificationBadgeNote =>
+      'You can verify your friends by scanning their public QR code. Click to learn more.';
+
+  @override
+  String get verificationBadgeTitle => 'Verification';
+
+  @override
+  String get verificationBadgeGeneralDesc =>
+      'The green checkmark gives you the certainty that you are messaging the right person.';
+
+  @override
+  String get verificationBadgeGreenDesc =>
+      'Contact that you have personally verified via QR code. This also verified their public key.';
+
+  @override
+  String get verificationBadgeYellowDesc =>
+      '(Coming soon) Contact whose QR code was scanned by one of your personally verified contacts.';
+
+  @override
+  String get verificationBadgeRedDesc =>
+      'Unknown contact whose identity has not yet been verified.';
 }

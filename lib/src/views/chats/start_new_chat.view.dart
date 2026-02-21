@@ -1,3 +1,5 @@
+// ignore_for_file: parameter_assignments
+
 import 'dart:async';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';

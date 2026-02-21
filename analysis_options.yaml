@@ -11,6 +11,7 @@ analyzer:
     avoid_positional_boolean_parameters: ignore
     inference_failure_on_collection_literal: ignore
     matching_super_parameters: ignore
+    parameter_assignments: ignore
   exclude: 
     - "lib/src/model/protobuf/**"
     - "lib/src/model/protobuf/api/websocket/**"

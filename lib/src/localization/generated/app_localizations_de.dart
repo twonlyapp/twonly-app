@@ -468,7 +468,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dein Konto wird gelöscht. Es gibt keine Möglichkeit, es wiederherzustellen.';
 
   @override
-  String get contactVerifyNumberTitle => 'Sicherheitsnummer verifizieren';
+  String get contactVerifyNumberTitle => 'Benutzer verifizieren';
 
   @override
   String get contactVerifyNumberTapToScan => 'Zum Scannen tippen';
@@ -483,6 +483,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String contactVerifyNumberLongDesc(Object username) {
     return 'Um die Ende-zu-Ende-Verschlüsselung mit $username zu verifizieren, vergleiche die Zahlen mit ihrem Gerät. Die Person kann auch deinen Code mit ihrem Gerät scannen.';
   }
+
+  @override
+  String get contactViewMessage => 'Nachricht';
 
   @override
   String get contactNickname => 'Spitzname';
@@ -1669,4 +1672,27 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get updateTwonlyMessage =>
       'Um diese Nachricht zu sehen, musst du twonly aktualisieren.';
+
+  @override
+  String get verificationBadgeNote =>
+      'Du kannst deine Freunde verifizieren, indem du deren öffentlichen QR-Code scannst. Klicke, um mehr zu erfahren.';
+
+  @override
+  String get verificationBadgeTitle => 'Verifizierung';
+
+  @override
+  String get verificationBadgeGeneralDesc =>
+      'Der grüne Haken gibt dir die Sicherheit, dass du mit der richtigen Person schreibst.';
+
+  @override
+  String get verificationBadgeGreenDesc =>
+      'Kontakt, den du durch den QR-Code persönlich verifiziert hast. Dadurch wurde auch sein öffentlicher Schlüssel überprüft.';
+
+  @override
+  String get verificationBadgeYellowDesc =>
+      '(Coming soon) Kontakt, dessen QR-Code von einem deiner persönlich verifizierten Kontakte gescannt wurde.';
+
+  @override
+  String get verificationBadgeRedDesc =>
+      'Unbekannter Kontakt, dessen Identität bisher nicht verifiziert wurde.';
 }

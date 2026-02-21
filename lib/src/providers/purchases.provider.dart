@@ -83,7 +83,7 @@ class PurchasesProvider with ChangeNotifier, DiagnosticableTreeMixin {
     if (user != null && isPayingUser(planFromString(user.subscriptionPlan))) {
       Log.info('Started IPA timer for verification.');
       globalForceIpaCheck = Timer(const Duration(seconds: 5), () async {
-        Log.warn('Force Ipa check was not stopped. Requesting forced check...');
+        Log.info('Force Ipa check was not stopped. Requesting forced check...');
         await apiService.forceIpaCheck();
       });
     }

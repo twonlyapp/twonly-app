@@ -27,20 +27,17 @@ class BetterListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Padding(
-        padding: (padding == null)
-            ? const EdgeInsets.only(
-                right: 10,
-                left: 19,
-              )
-            : padding!,
-        child: (leading != null)
-            ? leading
-            : FaIcon(
-                icon,
-                size: iconSize,
-                color: color,
-              ),
+      leading: SizedBox(
+        width: 50,
+        child: Center(
+          child: (leading != null)
+              ? leading
+              : FaIcon(
+                  icon,
+                  size: iconSize,
+                  color: color,
+                ),
+        ),
       ),
       trailing: trailing,
       title: Text(

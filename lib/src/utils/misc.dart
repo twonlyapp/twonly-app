@@ -241,7 +241,7 @@ InputDecoration inputTextMessageDeco(BuildContext context) {
 
 String truncateString(String input, {int maxLength = 20}) {
   if (input.length > maxLength) {
-    return '${input.substring(0, maxLength)}...';
+    return '${input.characters.take(maxLength)}...';
   }
   return input;
 }
