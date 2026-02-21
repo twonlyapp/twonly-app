@@ -1,3 +1,5 @@
+// ignore_for_file: parameter_assignments
+
 import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';

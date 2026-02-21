@@ -1,5 +1,16 @@
 # Changelog
 
+
+## 0.0.93
+
+- Feature: Verification checkmark for friends   
+- Fix: Added contacts in contact sharing where not click able
+- Fix: Restore flames as a plus user
+- Fix: Route not found when sharing image
+- Fix: Increase recent limit in emoji keyboard
+- Fix: Increase show time of the focus indication
+- Fix: Quoted text message not shown properly
+
 ## 0.0.92
 
 - Adds the option to share contacts

@@ -131,7 +131,6 @@ class _MediaViewerViewState extends State<MediaViewerView> {
       }
       setState(() {});
       if (firstRun) {
-        // ignore: parameter_assignments
         firstRun = false;
         await loadCurrentMediaFile();
       }

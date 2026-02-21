@@ -69,12 +69,14 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
   try {
     if (receiptId == null && receipt == null) return null;
     if (receipt == null) {
+      // ignore: parameter_assignments
       receipt = await twonlyDB.receiptsDao.getReceiptById(receiptId!);
       if (receipt == null) {
         Log.warn('Receipt not found.');
         return null;
       }
     }
+    // ignore: parameter_assignments
     receiptId = receipt.receiptId;
 
     final contact =
