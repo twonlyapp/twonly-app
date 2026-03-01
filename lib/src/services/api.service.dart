@@ -35,7 +35,6 @@ import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
-import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/keyvalue.dart';
@@ -733,45 +732,6 @@ class ApiService {
     final appData = ApplicationData()..updateSignedPrekey = get;
     final req = createClientToServerFromApplicationData(appData);
     return sendRequestSync(req);
-  }
-
-  Future<Response_SignedPreKey?> getSignedKeyByUserId(int userId) async {
-    final get = ApplicationData_GetSignedPreKeyByUserId()
-      ..userId = Int64(userId);
-    final appData = ApplicationData()..getSignedPrekeyByUserid = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req, contactId: userId);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasSignedprekey()) {
-        return ok.signedprekey;
-      }
-    }
-    return null;
-  }
-
-  Future<OtherPreKeys?> getPreKeysByUserId(int userId) async {
-    final get = ApplicationData_GetPrekeysByUserId()..userId = Int64(userId);
-    final appData = ApplicationData()..getPrekeysByUserId = get;
-    final req = createClientToServerFromApplicationData(appData);
-    final res = await sendRequestSync(req, contactId: userId);
-    if (res.isSuccess) {
-      final ok = res.value as server.Response_Ok;
-      if (ok.hasUserdata()) {
-        final data = ok.userdata;
-        if (data.hasSignedPrekey() &&
-            data.hasSignedPrekeyId() &&
-            data.hasSignedPrekeySignature()) {
-          return OtherPreKeys(
-            preKeys: ok.userdata.prekeys,
-            signedPreKey: data.signedPrekey,
-            signedPreKeyId: data.signedPrekeyId.toInt(),
-            signedPreKeySignature: data.signedPrekeySignature,
-          );
-        }
-      }
-    }
-    return null;
   }
 
   Future<Response_PlanBallance?> loadPlanBalance({bool useCache = true}) async {

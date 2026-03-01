@@ -91,11 +91,6 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
       var retry = false;
       if (message.hasPlaintextContent()) {
         if (message.plaintextContent.hasDecryptionErrorMessage()) {
-          if (message.plaintextContent.decryptionErrorMessage.type ==
-              PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN) {
-            // in case there was a pre key error remove all downloaded pre keys. New pre keys will be fetched automatically.
-            await twonlyDB.signalDao.purgePreKeysFromContact(fromUserId);
-          }
           Log.info(
             'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
           );

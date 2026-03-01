@@ -4,7 +4,6 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:mutex/mutex.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
 import 'package:twonly/src/services/signal/consts.signal.dart';
-import 'package:twonly/src/services/signal/prekeys.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -19,62 +18,7 @@ Future<CiphertextMessage?> signalEncryptMessage(
     try {
       final signalStore = (await getSignalStore())!;
       final address = SignalProtocolAddress(target.toString(), defaultDeviceId);
-
       final session = SessionCipher.fromStore(signalStore, address);
-
-      final preKey = await getPreKeyByContactId(target);
-      final signedPreKey = await getSignedPreKeyByContactId(target);
-
-      if (signedPreKey != null) {
-        final sessionBuilder = SessionBuilder.fromSignalStore(
-          signalStore,
-          address,
-        );
-
-        ECPublicKey? tempPrePublicKey;
-
-        if (preKey != null) {
-          tempPrePublicKey = Curve.decodePoint(
-            DjbECPublicKey(
-              Uint8List.fromList(preKey.preKey),
-            ).serialize(),
-            1,
-          );
-        }
-
-        final tempSignedPreKeyPublic = Curve.decodePoint(
-          DjbECPublicKey(Uint8List.fromList(signedPreKey.signedPreKey))
-              .serialize(),
-          1,
-        );
-
-        final tempSignedPreKeySignature = Uint8List.fromList(
-          signedPreKey.signedPreKeySignature,
-        );
-
-        final tempIdentityKey = await signalStore.getIdentity(address);
-        if (tempIdentityKey != null) {
-          final registrationId = await session.getRemoteRegistrationId();
-          final preKeyBundle = PreKeyBundle(
-            registrationId,
-            defaultDeviceId,
-            preKey?.preKeyId,
-            tempPrePublicKey,
-            signedPreKey.signedPreKeyId,
-            tempSignedPreKeyPublic,
-            tempSignedPreKeySignature,
-            tempIdentityKey,
-          );
-
-          try {
-            await sessionBuilder.processPreKeyBundle(preKeyBundle);
-          } catch (e) {
-            Log.error('could not process pre key bundle: $e');
-          }
-        } else {
-          Log.error('did not get the identity of the remote address');
-        }
-      }
       return await session.encrypt(plaintextContent);
     } catch (e) {
       Log.error(e.toString());

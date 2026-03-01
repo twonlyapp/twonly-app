@@ -2,7 +2,6 @@ import 'package:drift/drift.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/database/twonly_database_old.dart' as old;
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/utils/log.dart';
 
@@ -161,22 +160,6 @@ String substringBy(String string, int maxLength) {
     return '${string.substring(0, maxLength - 3)}...';
   }
   return string;
-}
-
-String getContactDisplayNameOld(old.Contact user) {
-  var name = user.username;
-  if (user.nickName != null && user.nickName != '') {
-    name = user.nickName!;
-  } else if (user.displayName != null) {
-    name = user.displayName!;
-  }
-  if (user.deleted) {
-    name = applyStrikethrough(name);
-  }
-  if (name.length > 12) {
-    return '${name.substring(0, 12)}...';
-  }
-  return name;
 }
 
 String applyStrikethrough(String text) {

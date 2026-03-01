@@ -9,15 +9,12 @@ import 'package:twonly/src/database/daos/mediafiles.dao.dart';
 import 'package:twonly/src/database/daos/messages.dao.dart';
 import 'package:twonly/src/database/daos/reactions.dao.dart';
 import 'package:twonly/src/database/daos/receipts.dao.dart';
-import 'package:twonly/src/database/daos/signal.dao.dart';
 import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/groups.table.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/reactions.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
-import 'package:twonly/src/database/tables/signal_contact_prekey.table.dart';
-import 'package:twonly/src/database/tables/signal_contact_signed_prekey.table.dart';
 import 'package:twonly/src/database/tables/signal_identity_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_pre_key_store.table.dart';
 import 'package:twonly/src/database/tables/signal_sender_key_store.table.dart';
@@ -43,15 +40,12 @@ part 'twonly.db.g.dart';
     SignalPreKeyStores,
     SignalSenderKeyStores,
     SignalSessionStores,
-    SignalContactPreKeys,
-    SignalContactSignedPreKeys,
     MessageActions,
     GroupHistories,
   ],
   daos: [
     MessagesDao,
     ContactsDao,
-    SignalDao,
     ReceiptsDao,
     GroupsDao,
     ReactionsDao,
@@ -68,7 +62,7 @@ class TwonlyDB extends _$TwonlyDB {
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -99,6 +93,7 @@ class TwonlyDB extends _$TwonlyDB {
           },
           from3To4: (m, schema) async {
             await m.alterTable(
+              // ignore: experimental_member_use
               TableMigration(
                 schema.groupHistories,
                 columnTransformer: {
@@ -126,6 +121,15 @@ class TwonlyDB extends _$TwonlyDB {
               schema.messages,
               schema.messages.additionalMessageData,
             );
+          },
+          from7To8: (m, schema) async {
+            await m.deleteTable('signal_contact_pre_keys');
+            await m.deleteTable('signal_contact_signed_pre_keys');
+            // For message_actions
+            // ignore: experimental_member_use
+            await m.alterTable(TableMigration(schema.messageHistories));
+            // ignore: experimental_member_use
+            await m.alterTable(TableMigration(schema.messageActions));
           },
         )(m, from, to);
       },
@@ -174,8 +178,6 @@ class TwonlyDB extends _$TwonlyDB {
         senderProfileCounter: Value(0),
       ),
     );
-    await delete(signalContactPreKeys).go();
-    await delete(signalContactSignedPreKeys).go();
     await (delete(signalPreKeyStores)
           ..where(
             (t) => (t.createdAt.isSmallerThanValue(

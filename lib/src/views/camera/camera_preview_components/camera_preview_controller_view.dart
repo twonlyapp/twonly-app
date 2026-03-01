@@ -918,8 +918,8 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                                   width: 30,
                                   child: Lottie.asset(
                                     c.verificationOk
-                                        ? 'assets/animations/success.json'
-                                        : 'assets/animations/failed.json',
+                                        ? 'assets/animations/success.lottie'
+                                        : 'assets/animations/failed.lottie',
                                     repeat: false,
                                     onLoaded: (p0) {
                                       Future.delayed(const Duration(seconds: 4),
