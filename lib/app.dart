@@ -20,7 +20,6 @@ import 'package:twonly/src/views/home.view.dart';
 import 'package:twonly/src/views/onboarding/onboarding.view.dart';
 import 'package:twonly/src/views/onboarding/register.view.dart';
 import 'package:twonly/src/views/settings/backup/setup_backup.view.dart';
-import 'package:twonly/src/views/updates/62_database_migration.view.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -187,7 +186,7 @@ class _AppMainWidgetState extends State<AppMainWidget> {
     late Widget child;
 
     if (_showDatabaseMigration) {
-      child = const DatabaseMigrationView();
+      child = const Center(child: Text('Please reinstall twonly.'));
     } else if (_isUserCreated) {
       if (gUser.twonlySafeBackup == null && !_skipBackup && kReleaseMode) {
         child = SetupBackupView(
