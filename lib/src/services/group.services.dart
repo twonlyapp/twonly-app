@@ -472,7 +472,7 @@ Future<bool> addNewHiddenContact(int contactId) async {
           const Value(true), // this will hide the contact in the contact list
     ),
   );
-  await createNewSignalSession(userData);
+  await processSignalUserData(userData);
   unawaited(setupNotificationWithUsers(forceContact: contactId));
   return true;
 }

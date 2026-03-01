@@ -30,7 +30,11 @@ class _VerificationBadeFaqViewState extends State<VerificationBadeFaqView> {
             description: context.lang.verificationBadgeGreenDesc,
           ),
           _buildItem(
-            icon: const SvgIcon(assetPath: SvgIcons.verifiedYellow, size: 40),
+            icon: const SvgIcon(
+              assetPath: SvgIcons.verifiedGreen,
+              size: 40,
+              color: Color.fromARGB(255, 227, 227, 3),
+            ),
             description: context.lang.verificationBadgeYellowDesc,
           ),
           _buildItem(

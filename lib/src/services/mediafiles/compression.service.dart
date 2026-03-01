@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:drift/drift.dart' show Value;
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:pro_video_editor/pro_video_editor.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:video_compress/video_compress.dart';
 
 Future<void> compressImage(
   File sourceFile,
@@ -69,51 +69,47 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
     media.ffmpegOutputPath.deleteSync();
   }
 
-  if (gUser.disableVideoCompression) {
-    media.originalPath.copySync(media.tempPath.path);
-    return;
-  }
-
-  var overLayCommand = '';
-  if (media.overlayImagePath.existsSync()) {
-    if (Platform.isAndroid) {
-      overLayCommand =
-          '-i "${media.overlayImagePath.path}" -filter_complex "[1:v]format=yuva420p[ovr_in];[0:v]format=yuv420p[base_in];[ovr_in][base_in]scale2ref=w=rw:h=rh[ovr_out][base_out];[base_out][ovr_out]overlay=0:0"';
-    } else {
-      overLayCommand =
-          '-i "${media.overlayImagePath.path}" -filter_complex "[1:v][0:v]scale2ref=w=ref_w:h=ref_h[ovr][base];[base][ovr]overlay=0:0"';
-    }
-  }
-
   final stopwatch = Stopwatch()..start();
 
-  var additionalParams = '';
+  try {
+    final task = VideoRenderData(
+      video: EditorVideo.file(media.originalPath),
+      // qualityPreset: VideoQualityPreset.p720High,
+      imageBytes: media.overlayImagePath.readAsBytesSync(),
+      enableAudio: !media.removeAudio,
+    );
 
-  if (Platform.isAndroid) {
-    additionalParams += ' -c:v libx264';
-  }
+    final result = await ProVideoEditor.instance.renderVideo(task);
+    media.ffmpegOutputPath.writeAsBytesSync(result);
 
-  var command =
-      '-i "${media.originalPath.path}" $overLayCommand  -map "0:a?" $additionalParams -preset veryfast -crf 28 -c:a aac -b:a 64k "${media.ffmpegOutputPath.path}"';
+    MediaInfo? mediaInfo;
+    try {
+      mediaInfo = await VideoCompress.compressVideo(
+        media.ffmpegOutputPath.path,
+        quality: VideoQuality.Res640x480Quality,
+        includeAudio: true,
+      );
+      Log.info('Video has now size of ${mediaInfo!.filesize} bytes.');
+    } catch (e) {
+      Log.error('during video compression: $e');
+    }
 
-  if (media.removeAudio) {
-    command =
-        '-i "${media.originalPath.path}" $overLayCommand $additionalParams -preset veryfast -crf 28 -an "${media.ffmpegOutputPath.path}"';
-  }
+    if (mediaInfo == null) {
+      Log.error('Could not compress video using original video.');
+      // as a fall back use the non compressed version
+      media.ffmpegOutputPath.copySync(media.tempPath.path);
+    } else {
+      mediaInfo.file!.copySync(media.tempPath.path);
+    }
 
-  final session = await FFmpegKit.execute(command);
-  final returnCode = await session.getReturnCode();
-
-  if (ReturnCode.isSuccess(returnCode)) {
-    media.ffmpegOutputPath.copySync(media.tempPath.path);
     stopwatch.stop();
     Log.info(
-      'It took ${stopwatch.elapsedMilliseconds}ms to compress the video',
+      'It took ${stopwatch.elapsedMilliseconds}ms to compress the video. Reduced from ${media.ffmpegOutputPath.statSync().size} to ${media.tempPath.statSync().size} bytes.',
     );
-  } else {
-    Log.info(command);
-    Log.error('Compression failed for the video with exit code $returnCode.');
-    Log.error(await session.getAllLogsAsString());
+  } catch (e) {
+    Log.error(e);
+    // Log.error('Compression failed for the video with exit code $returnCode.');
+    // Log.error(await session.getAllLogsAsString());
     // This should not happen, but in case "notify" the user that the video was not send... This is absolutely bad, but
     // better this way then sending an uncompressed media file which potentially is 100MB big :/
     // Hopefully the user will report the strange behavior <3

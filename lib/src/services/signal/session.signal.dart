@@ -6,17 +6,14 @@ import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 
-Future<bool> createNewSignalSession(Response_UserData userData) async {
+Future<bool> processSignalUserData(Response_UserData userData) async {
   final SignalProtocolStore? signalStore = await getSignalStore();
 
   if (signalStore == null) {
     return false;
   }
 
-  final targetAddress = SignalProtocolAddress(
-    userData.userId.toString(),
-    defaultDeviceId,
-  );
+  final targetAddress = getSignalAddress(userData.userId.toInt());
 
   final sessionBuilder = SessionBuilder.fromSignalStore(
     signalStore,
@@ -82,30 +79,6 @@ Future<void> deleteSessionWithTarget(int target) async {
   await signalStore.sessionStore.deleteSession(address);
 }
 
-Future<Fingerprint?> generateSessionFingerPrint(int target) async {
-  final signalStore = await getSignalStore();
-  if (signalStore == null) return null;
-  try {
-    final targetIdentity = await signalStore
-        .getIdentity(SignalProtocolAddress(target.toString(), defaultDeviceId));
-    if (targetIdentity != null) {
-      final generator = NumericFingerprintGenerator(5200);
-      final localFingerprint = generator.createFor(
-        1,
-        Uint8List.fromList([gUser.userId]),
-        (await signalStore.getIdentityKeyPair()).getPublicKey(),
-        Uint8List.fromList([target]),
-        targetIdentity,
-      );
-
-      return localFingerprint;
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
-}
-
 Future<Uint8List?> getPublicKeyFromContact(int contactId) async {
   final signalStore = await getSignalStore();
   if (signalStore == null) return null;
@@ -123,4 +96,14 @@ Future<Uint8List?> getPublicKeyFromContact(int contactId) async {
   } catch (e) {
     return null;
   }
+}
+
+Future<bool> handleSessionResync(int fromUserId) async {
+  final userData = await apiService.getUserById(fromUserId);
+  if (userData != null) {
+    Log.info('Got new session data from the server to re-sync the session');
+    return processSignalUserData(userData);
+  }
+  Log.info('Could not download userdata from the server.');
+  return false;
 }

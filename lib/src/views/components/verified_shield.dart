@@ -37,7 +37,7 @@ class _VerifiedShieldState extends State<VerifiedShield> {
           contact = contacts.first;
         }
         setState(() {
-          isVerified = contacts.any((t) => t.verified);
+          isVerified = contacts.every((t) => t.verified);
         });
       });
     } else if (widget.contact != null) {

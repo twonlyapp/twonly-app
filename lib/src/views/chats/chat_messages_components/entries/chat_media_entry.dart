@@ -6,6 +6,7 @@ import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/model/memory_item.model.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
 import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
     hide Message;
 import 'package:twonly/src/services/api/mediafiles/download.service.dart'
@@ -13,8 +14,10 @@ import 'package:twonly/src/services/api/mediafiles/download.service.dart'
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:twonly/src/views/chats/chat_messages_components/entries/common.dart';
 import 'package:twonly/src/views/chats/chat_messages_components/in_chat_media_viewer.dart';
 import 'package:twonly/src/views/chats/media_viewer.view.dart';
+import 'package:twonly/src/views/components/better_text.dart';
 
 class ChatMediaEntry extends StatefulWidget {
   const ChatMediaEntry({
@@ -114,31 +117,81 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       context,
     );
 
-    return GestureDetector(
-      key: reopenMediaFile,
-      onDoubleTap: onDoubleTap,
-      onTap: (widget.message.type == MessageType.media.name) ? onTap : null,
-      child: SizedBox(
-        width: (widget.minWidth > 150) ? widget.minWidth : 150,
-        height: (widget.message.mediaStored &&
-                widget.mediaService.imagePreviewAvailable)
-            ? 271
-            : null,
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: InChatMediaViewer(
-              message: widget.message,
-              group: widget.group,
-              mediaService: widget.mediaService,
-              color: color,
-              galleryItems: widget.galleryItems,
-              canBeReopened: _canBeReopened,
+    var imageBorderRadius = BorderRadius.circular(12);
+
+    Widget additionalMessageData = Container();
+
+    final addData = widget.message.additionalMessageData;
+    if (addData != null) {
+      final info =
+          getBubbleInfo(context, widget.message, null, null, null, 200);
+      final data = AdditionalMessageData.fromBuffer(addData);
+      if (data.hasLink() && widget.message.mediaStored) {
+        imageBorderRadius = const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+          bottomLeft: Radius.circular(5),
+          bottomRight: Radius.circular(5),
+        );
+
+        additionalMessageData = Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
+          ),
+          padding:
+              const EdgeInsets.only(left: 10, top: 6, bottom: 6, right: 10),
+          decoration: BoxDecoration(
+            color: info.color,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(5),
+              topRight: Radius.circular(12),
+              bottomLeft: Radius.circular(12),
+              bottomRight: Radius.circular(12),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              BetterText(text: data.link, textColor: info.textColor),
+            ],
+          ),
+        );
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: widget.message.senderId == null
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          key: reopenMediaFile,
+          onDoubleTap: onDoubleTap,
+          onTap: (widget.message.type == MessageType.media.name) ? onTap : null,
+          child: SizedBox(
+            width: (widget.minWidth > 150) ? widget.minWidth : 150,
+            height: (widget.message.mediaStored &&
+                    widget.mediaService.imagePreviewAvailable)
+                ? 271
+                : null,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: ClipRRect(
+                borderRadius: imageBorderRadius,
+                child: InChatMediaViewer(
+                  message: widget.message,
+                  group: widget.group,
+                  mediaService: widget.mediaService,
+                  color: color,
+                  galleryItems: widget.galleryItems,
+                  canBeReopened: _canBeReopened,
+                ),
+              ),
             ),
           ),
         ),
-      ),
+        additionalMessageData,
+      ],
     );
   }
 }

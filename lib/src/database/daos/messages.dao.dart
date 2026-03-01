@@ -212,31 +212,40 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     );
   }
 
-  Future<void> handleMessageOpened(
+  Future<void> handleMessagesOpened(
     int contactId,
-    String messageId,
+    List<String> messageIds,
     DateTime timestamp,
   ) async {
-    await into(messageActions).insertOnConflictUpdate(
-      MessageActionsCompanion(
-        messageId: Value(messageId),
-        contactId: Value(contactId),
-        type: const Value(MessageActionType.openedAt),
-        actionAt: Value(timestamp),
-      ),
-    );
-    // Directly show as message opened as soon as one person has opened it
-    final openedByAll =
-        await haveAllMembers(messageId, MessageActionType.openedAt)
-            ? clock.now()
-            : null;
-    await twonlyDB.messagesDao.updateMessageId(
-      messageId,
-      MessagesCompanion(
-        openedAt: Value(clock.now()),
-        openedByAll: Value(openedByAll),
-      ),
-    );
+    await batch((batch) async {
+      for (final messageId in messageIds) {
+        batch.insert(
+          messageActions,
+          MessageActionsCompanion(
+            messageId: Value(messageId),
+            contactId: Value(contactId),
+            type: const Value(MessageActionType.openedAt),
+            actionAt: Value(timestamp),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+      }
+
+      for (final messageId in messageIds) {
+        final isOpenedByAll =
+            await haveAllMembers(messageId, MessageActionType.openedAt);
+        final now = clock.now();
+
+        batch.update(
+          twonlyDB.messages,
+          MessagesCompanion(
+            openedAt: Value(now),
+            openedByAll: Value(isOpenedByAll ? now : null),
+          ),
+          where: (tbl) => tbl.messageId.equals(messageId),
+        );
+      }
+    });
   }
 
   Future<void> handleMessageAckByServer(
@@ -340,38 +349,6 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
           ..orderBy([(t) => OrderingTerm.desc(t.actionAt)]))
           ..limit(1))
         .getSingleOrNull();
-  }
-
-  Stream<Future<List<(Message, Contact)>>> watchLastOpenedMessagePerContact(
-    String groupId,
-  ) {
-    const sql = '''
-      SELECT m.*, c.*
-      FROM (
-        SELECT ma.contact_id, ma.message_id,
-               ROW_NUMBER() OVER (PARTITION BY ma.contact_id
-                                  ORDER BY ma.action_at DESC, ma.message_id DESC) AS rn
-        FROM message_actions ma
-        WHERE ma.type = 'openedAt'
-      ) last_open
-      JOIN messages m ON m.message_id = last_open.message_id
-      JOIN contacts c ON c.user_id = last_open.contact_id
-      WHERE last_open.rn = 1 AND m.group_id = ?;
-    ''';
-
-    return customSelect(
-      sql,
-      variables: [Variable.withString(groupId)],
-      readsFrom: {messages, messageActions, contacts},
-    ).watch().map((rows) async {
-      final res = <(Message, Contact)>[];
-      for (final row in rows) {
-        final message = await messages.mapFromRow(row);
-        final contact = await contacts.mapFromRow(row);
-        res.add((message, contact));
-      }
-      return res;
-    });
   }
 
   Future<void> deleteMessagesById(String messageId) {

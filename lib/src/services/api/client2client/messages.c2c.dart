@@ -9,19 +9,17 @@ Future<void> handleMessageUpdate(
 ) async {
   switch (messageUpdate.type) {
     case EncryptedContent_MessageUpdate_Type.OPENED:
-      for (final targetMessageId in messageUpdate.multipleTargetMessageIds) {
-        Log.info(
-          'Opened message $targetMessageId',
+      Log.info(
+        'Opened message ${messageUpdate.multipleTargetMessageIds}',
+      );
+      try {
+        await twonlyDB.messagesDao.handleMessagesOpened(
+          contactId,
+          messageUpdate.multipleTargetMessageIds,
+          fromTimestamp(messageUpdate.timestamp),
         );
-        try {
-          await twonlyDB.messagesDao.handleMessageOpened(
-            contactId,
-            targetMessageId,
-            fromTimestamp(messageUpdate.timestamp),
-          );
-        } catch (e) {
-          Log.warn(e);
-        }
+      } catch (e) {
+        Log.warn(e);
       }
     case EncryptedContent_MessageUpdate_Type.DELETE:
       if (!await isSender(contactId, messageUpdate.senderMessageId)) {

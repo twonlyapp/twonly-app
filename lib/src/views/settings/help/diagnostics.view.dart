@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/utils/log.dart';
+import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/loader.dart';
 
 class DiagnosticsView extends StatefulWidget {
@@ -150,14 +151,19 @@ class _LogViewerWidgetState extends State<LogViewerWidget> {
   }
 
   TextSpan _formatLineSpan(_LogEntry e) {
-    final tsStyle =
-        TextStyle(color: Colors.grey.shade500, fontFamily: 'monospace');
+    final tsStyle = TextStyle(
+      color: isDarkMode(context) ? Colors.white : Colors.black,
+      fontFamily: 'monospace',
+    );
     final levelStyle = TextStyle(
       color: Colors.blueGrey.shade600,
       fontWeight: FontWeight.bold,
       fontFamily: 'monospace',
     );
-    const msgStyle = TextStyle(fontFamily: 'monospace');
+    final msgStyle = TextStyle(
+      color: isDarkMode(context) ? Colors.white : Colors.black,
+      fontFamily: 'monospace',
+    );
 
     return TextSpan(
       children: [

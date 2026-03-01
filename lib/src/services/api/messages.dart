@@ -375,15 +375,18 @@ Future<void> notifyContactAboutOpeningMessage(
     ),
     blocking: false,
   );
-  for (final messageId in messageOtherIds) {
-    await twonlyDB.messagesDao.updateMessageId(
-      messageId,
-      MessagesCompanion(
-        openedAt: Value(actionAt),
-        openedByAll: Value(actionAt),
-      ),
-    );
-  }
+  await twonlyDB.batch((batch) {
+    for (final messageId in messageOtherIds) {
+      batch.update(
+        twonlyDB.messages,
+        MessagesCompanion(
+          openedAt: Value(actionAt),
+          openedByAll: Value(actionAt),
+        ),
+        where: (tbl) => tbl.messageId.equals(messageId),
+      );
+    }
+  });
   await updateLastMessageId(contactId, biggestMessageId);
 }
 

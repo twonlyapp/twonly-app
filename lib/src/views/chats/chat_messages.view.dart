@@ -33,7 +33,6 @@ class ChatItem {
   const ChatItem._({
     this.message,
     this.date,
-    this.lastOpenedPosition,
     this.groupAction,
   });
   factory ChatItem.date(DateTime date) {
@@ -42,20 +41,15 @@ class ChatItem {
   factory ChatItem.message(Message message) {
     return ChatItem._(message: message);
   }
-  factory ChatItem.lastOpenedPosition(List<Contact> contacts) {
-    return ChatItem._(lastOpenedPosition: contacts);
-  }
   factory ChatItem.groupAction(GroupHistory groupAction) {
     return ChatItem._(groupAction: groupAction);
   }
   final GroupHistory? groupAction;
   final Message? message;
   final DateTime? date;
-  final List<Contact>? lastOpenedPosition;
   bool get isMessage => message != null;
   bool get isDate => date != null;
   bool get isGroupAction => groupAction != null;
-  bool get isLastOpenedPosition => lastOpenedPosition != null;
 }
 
 /// Displays detailed information about a SampleItem.
@@ -75,14 +69,11 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
   late StreamSubscription<List<Message>> messageSub;
   StreamSubscription<List<GroupHistory>>? groupActionsSub;
   StreamSubscription<List<Contact>>? contactSub;
-  StreamSubscription<Future<List<(Message, Contact)>>>?
-      lastOpenedMessageByContactSub;
 
   Map<int, Contact> userIdToContact = {};
 
   List<ChatItem> messages = [];
   List<Message> allMessages = [];
-  List<(Message, Contact)> lastOpenedMessageByContact = [];
   List<GroupHistory> groupActions = [];
   List<MemoryItem> galleryItems = [];
   Message? quotesMessage;
@@ -105,7 +96,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     messageSub.cancel();
     contactSub?.cancel();
     groupActionsSub?.cancel();
-    lastOpenedMessageByContactSub?.cancel();
     super.dispose();
   }
 
@@ -121,19 +111,10 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     });
 
     if (!widget.group.isDirectChat) {
-      final lastOpenedStream =
-          twonlyDB.messagesDao.watchLastOpenedMessagePerContact(group.groupId);
-      lastOpenedMessageByContactSub =
-          lastOpenedStream.listen((lastActionsFuture) async {
-        final update = await lastActionsFuture;
-        lastOpenedMessageByContact = update;
-        await setMessages(allMessages, update, groupActions);
-      });
-
       final actionsStream = twonlyDB.groupsDao.watchGroupActions(group.groupId);
       groupActionsSub = actionsStream.listen((update) async {
         groupActions = update;
-        await setMessages(allMessages, lastOpenedMessageByContact, update);
+        await setMessages(allMessages, update);
       });
 
       final contactsStream = twonlyDB.contactsDao.watchAllContacts();
@@ -147,21 +128,14 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     final msgStream = twonlyDB.messagesDao.watchByGroupId(group.groupId);
     messageSub = msgStream.listen((update) async {
       allMessages = update;
-
-      /// In case a message is not open yet the message is updated, which will trigger this watch to be called again.
-      /// So as long as the Mutex is locked just return...
-      if (protectMessageUpdating.isLocked) {
-        // return;
-      }
       await protectMessageUpdating.protect(() async {
-        await setMessages(update, lastOpenedMessageByContact, groupActions);
+        await setMessages(update, groupActions);
       });
     });
   }
 
   Future<void> setMessages(
     List<Message> newMessages,
-    List<(Message, Contact)> lastOpenedMessageByContact,
     List<GroupHistory> groupActions,
   ) async {
     await flutterLocalNotificationsPlugin.cancelAll();
@@ -172,19 +146,7 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     DateTime? lastDate;
 
     final openedMessages = <int, List<String>>{};
-    final lastOpenedMessageToContact = <String, List<Contact>>{};
 
-    final myLastMessageIndex =
-        newMessages.lastIndexWhere((t) => t.senderId == null);
-
-    for (final opened in lastOpenedMessageByContact) {
-      if (!lastOpenedMessageToContact.containsKey(opened.$1.messageId)) {
-        lastOpenedMessageToContact[opened.$1.messageId] = [opened.$2];
-      } else {
-        lastOpenedMessageToContact[opened.$1.messageId]!.add(opened.$2);
-      }
-    }
-    var index = 0;
     var groupHistoryIndex = 0;
 
     for (final msg in newMessages) {
@@ -199,7 +161,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
           }
         }
       }
-      index += 1;
       if (msg.type != MessageType.media.name &&
           msg.senderId != null &&
           msg.openedAt == null) {
@@ -221,16 +182,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
         lastDate = msg.createdAt;
       }
       chatItems.add(ChatItem.message(msg));
-
-      if (index <= myLastMessageIndex || index == newMessages.length) {
-        if (lastOpenedMessageToContact.containsKey(msg.messageId)) {
-          chatItems.add(
-            ChatItem.lastOpenedPosition(
-              lastOpenedMessageToContact[msg.messageId]!,
-            ),
-          );
-        }
-      }
     }
     if (groupHistoryIndex < groupActions.length) {
       for (var i = groupHistoryIndex; i < groupActions.length; i++) {
@@ -340,17 +291,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
                     if (messages[i].isDate) {
                       return ChatDateChip(
                         item: messages[i],
-                      );
-                    } else if (messages[i].isLastOpenedPosition) {
-                      return Wrap(
-                        spacing: 8,
-                        alignment: WrapAlignment.center,
-                        children: messages[i].lastOpenedPosition!.map((w) {
-                          return AvatarIcon(
-                            contactId: w.userId,
-                            fontSize: 12,
-                          );
-                        }).toList(),
                       );
                     } else if (messages[i].isGroupAction) {
                       return ChatGroupAction(

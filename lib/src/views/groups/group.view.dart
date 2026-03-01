@@ -242,7 +242,18 @@ class _GroupViewState extends State<GroupView> {
                   contactId: member.$1.userId,
                   fontSize: 16,
                 ),
-                text: getContactDisplayName(member.$1, maxLength: 25),
+                textWidget: Row(
+                  children: [
+                    Text(getContactDisplayName(member.$1, maxLength: 25)),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 5),
+                      child: VerifiedShield(
+                        key: Key(member.$2.contactId.toString()),
+                        contact: member.$1,
+                      ),
+                    ),
+                  ],
+                ),
                 trailing: (member.$2.memberState == MemberState.admin)
                     ? Text(context.lang.admin)
                     : null,

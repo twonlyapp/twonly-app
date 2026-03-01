@@ -58,6 +58,7 @@ message EncryptedContent {
         enum Type {
           ERROR_PROCESSING_MESSAGE_CREATED_ACCOUNT_REQUEST_INSTEAD = 0;
           UNKNOWN_MESSAGE_TYPE = 2;
+          SESSION_OUT_OF_SYNC = 3;
         }
         Type type = 1;
         string related_receipt_id = 2;
