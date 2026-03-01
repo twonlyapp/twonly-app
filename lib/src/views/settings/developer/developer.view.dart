@@ -29,14 +29,6 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
     setState(() {});
   }
 
-  Future<void> toggleVideoCompression() async {
-    await updateUserdata((u) {
-      u.disableVideoCompression = !u.disableVideoCompression;
-      return u;
-    });
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,17 +66,6 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 );
               }
             },
-          ),
-          ListTile(
-            title: const Text('Disable ffmpeg'),
-            subtitle: const Text(
-              'If your smartphone crashes, you can disable ffmpeg. This will prevent your videos from being compressed and NO FILTER will be applied to the video! This is a workaround, until the root-cause in ffmpeg is found.',
-            ),
-            onTap: toggleVideoCompression,
-            trailing: Switch(
-              value: gUser.disableVideoCompression,
-              onChanged: (a) => toggleVideoCompression(),
-            ),
           ),
           if (!kReleaseMode)
             ListTile(
