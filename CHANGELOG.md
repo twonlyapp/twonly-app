@@ -6,9 +6,6 @@ Feature: Show link in chat if the saved media file contains one
 Improve: Verification badge for groups 
 Improve: Huge reduction in app size
 Fix: Crash on older devices when compressing a video
-
-## 0.0.94
-
 Fix: Problem with decrypting messages fixed
 
 ## 0.0.93

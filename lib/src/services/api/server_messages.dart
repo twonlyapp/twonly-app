@@ -32,38 +32,41 @@ import 'package:twonly/src/utils/misc.dart';
 final lockHandleServerMessage = Mutex();
 
 Future<void> handleServerMessage(server.ServerToClient msg) async {
-  /// Returns means, that the server can delete the message from the server.
-  final ok = client.Response_Ok()..none = true;
-  var response = client.Response()..ok = ok;
+  return lockHandleServerMessage.protect(() async {
+    /// Returns means, that the server can delete the message from the server.
+    final ok = client.Response_Ok()..none = true;
+    var response = client.Response()..ok = ok;
 
-  try {
-    if (msg.v0.hasRequestNewPreKeys()) {
-      response = await handleRequestNewPreKey();
-    } else if (msg.v0.hasNewMessage()) {
-      await handleClient2ClientMessage(msg.v0.newMessage);
-    } else if (msg.v0.hasNewMessages()) {
-      for (final newMessage in msg.v0.newMessages.newMessages) {
-        try {
-          await handleClient2ClientMessage(newMessage);
-        } catch (e) {
-          Log.error(e);
+    try {
+      if (msg.v0.hasRequestNewPreKeys()) {
+        response = await handleRequestNewPreKey();
+      } else if (msg.v0.hasNewMessage()) {
+        await handleClient2ClientMessage(msg.v0.newMessage);
+      } else if (msg.v0.hasNewMessages()) {
+        for (final newMessage in msg.v0.newMessages.newMessages) {
+          try {
+            await handleClient2ClientMessage(newMessage);
+          } catch (e) {
+            Log.error(e);
+          }
         }
+      } else {
+        Log.error('Unknown server message: $msg');
       }
-    } else {
-      Log.error('Unknown server message: $msg');
+    } catch (e) {
+      Log.error(e);
     }
-  } catch (e) {
-    Log.error(e);
-  }
 
-  final v0 = client.V0()
-    ..seq = msg.v0.seq
-    ..response = response;
+    final v0 = client.V0()
+      ..seq = msg.v0.seq
+      ..response = response;
 
-  await apiService.sendResponse(ClientToServer()..v0 = v0);
+    await apiService.sendResponse(ClientToServer()..v0 = v0);
+  });
 }
 
 DateTime lastPushKeyRequest = clock.now().subtract(const Duration(hours: 1));
+bool alreadyPerformedAnResync = false;
 
 Mutex protectReceiptCheck = Mutex();
 

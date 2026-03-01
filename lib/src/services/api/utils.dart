@@ -84,7 +84,7 @@ Future<void> handleMediaError(MediaFile media) async {
 Future<void> importSignalContactAndCreateRequest(
   server.Response_UserData userdata,
 ) async {
-  if (await createNewSignalSession(userdata)) {
+  if (await processSignalUserData(userdata)) {
     // 1. Setup notifications keys with the other user
     await setupNotificationWithUsers(
       forceContact: userdata.userId.toInt(),

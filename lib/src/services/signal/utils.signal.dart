@@ -1,6 +1,7 @@
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:twonly/src/database/signal/connect_signal_protocol_store.dart';
 import 'package:twonly/src/model/json/signal_identity.dart';
+import 'package:twonly/src/services/signal/consts.signal.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 
 Future<ConnectSignalProtocolStore?> getSignalStore() async {
@@ -17,4 +18,8 @@ Future<ConnectSignalProtocolStore> getSignalStoreFromIdentity(
     identityKeyPair,
     signalIdentity.registrationId,
   );
+}
+
+SignalProtocolAddress getSignalAddress(int userId) {
+  return SignalProtocolAddress(userId.toString(), defaultDeviceId);
 }
