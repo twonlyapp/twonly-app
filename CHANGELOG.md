@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.0.95
+## 0.0.96
 
 Feature: Show link in chat if the saved media file contains one
 Improve: Verification badge for groups 

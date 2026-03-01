@@ -97,9 +97,9 @@ Future<void> compressAndOverlayVideo(MediaFileService media) async {
     if (mediaInfo == null) {
       Log.error('Could not compress video using original video.');
       // as a fall back use the non compressed version
-      media.ffmpegOutputPath.renameSync(media.tempPath.path);
+      media.ffmpegOutputPath.copySync(media.tempPath.path);
     } else {
-      mediaInfo.file!.renameSync(media.tempPath.path);
+      mediaInfo.file!.copySync(media.tempPath.path);
     }
 
     stopwatch.stop();
