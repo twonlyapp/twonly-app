@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.0.94
+
+Fix: Problem with decrypting messages fixed
 
 ## 0.0.93
 
