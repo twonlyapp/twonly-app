@@ -126,7 +126,7 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
       final info =
           getBubbleInfo(context, widget.message, null, null, null, 200);
       final data = AdditionalMessageData.fromBuffer(addData);
-      if (data.hasLink()) {
+      if (data.hasLink() && widget.message.mediaStored) {
         imageBorderRadius = const BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -160,7 +160,9 @@ class _ChatMediaEntryState extends State<ChatMediaEntry> {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: widget.message.senderId == null
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
       children: [
         GestureDetector(
           key: reopenMediaFile,
