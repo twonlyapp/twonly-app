@@ -3,6 +3,7 @@
 ## 0.0.95
 
 Feature: Show link in chat if the saved media file contains one
+Improve: Verification badge for groups 
 Fix: Problem with decrypting messages fixed
 
 ## 0.0.93

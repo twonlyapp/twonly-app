@@ -3,7 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class BetterListTile extends StatelessWidget {
   const BetterListTile({
-    required this.text,
+    this.text,
+    this.textWidget,
     this.onTap,
     this.icon,
     this.leading,
@@ -17,7 +18,8 @@ class BetterListTile extends StatelessWidget {
   final IconData? icon;
   final Widget? leading;
   final Widget? trailing;
-  final String text;
+  final String? text;
+  final Widget? textWidget;
   final Widget? subtitle;
   final Color? color;
   final VoidCallback? onTap;
@@ -40,10 +42,12 @@ class BetterListTile extends StatelessWidget {
         ),
       ),
       trailing: trailing,
-      title: Text(
-        text,
-        style: TextStyle(color: color),
-      ),
+      title: text != null
+          ? Text(
+              text!,
+              style: TextStyle(color: color),
+            )
+          : textWidget,
       subtitle: subtitle,
       onTap: onTap,
     );

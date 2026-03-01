@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class SvgIcons {
   static const String verifiedGreen = 'assets/icons/verified_badge_green.svg';
-  static const String verifiedYellow = 'assets/icons/verified_badge_yellow.svg';
   static const String verifiedRed = 'assets/icons/verified_badge_red.svg';
 }
 
