@@ -82,7 +82,4 @@ class MessageHistories extends Table {
   TextColumn get content => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-
-  @override
-  Set<Column> get primaryKey => {id};
 }
