@@ -212,31 +212,40 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
     );
   }
 
-  Future<void> handleMessageOpened(
+  Future<void> handleMessagesOpened(
     int contactId,
-    String messageId,
+    List<String> messageIds,
     DateTime timestamp,
   ) async {
-    await into(messageActions).insertOnConflictUpdate(
-      MessageActionsCompanion(
-        messageId: Value(messageId),
-        contactId: Value(contactId),
-        type: const Value(MessageActionType.openedAt),
-        actionAt: Value(timestamp),
-      ),
-    );
-    // Directly show as message opened as soon as one person has opened it
-    final openedByAll =
-        await haveAllMembers(messageId, MessageActionType.openedAt)
-            ? clock.now()
-            : null;
-    await twonlyDB.messagesDao.updateMessageId(
-      messageId,
-      MessagesCompanion(
-        openedAt: Value(clock.now()),
-        openedByAll: Value(openedByAll),
-      ),
-    );
+    await batch((batch) async {
+      for (final messageId in messageIds) {
+        batch.insert(
+          messageActions,
+          MessageActionsCompanion(
+            messageId: Value(messageId),
+            contactId: Value(contactId),
+            type: const Value(MessageActionType.openedAt),
+            actionAt: Value(timestamp),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+      }
+
+      for (final messageId in messageIds) {
+        final isOpenedByAll =
+            await haveAllMembers(messageId, MessageActionType.openedAt);
+        final now = clock.now();
+
+        batch.update(
+          twonlyDB.messages,
+          MessagesCompanion(
+            openedAt: Value(now),
+            openedByAll: Value(isOpenedByAll ? now : null),
+          ),
+          where: (tbl) => tbl.messageId.equals(messageId),
+        );
+      }
+    });
   }
 
   Future<void> handleMessageAckByServer(

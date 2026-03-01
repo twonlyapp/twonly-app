@@ -128,12 +128,6 @@ class _ChatMessagesViewState extends State<ChatMessagesView> {
     final msgStream = twonlyDB.messagesDao.watchByGroupId(group.groupId);
     messageSub = msgStream.listen((update) async {
       allMessages = update;
-
-      /// In case a message is not open yet the message is updated, which will trigger this watch to be called again.
-      /// So as long as the Mutex is locked just return...
-      if (protectMessageUpdating.isLocked) {
-        // return;
-      }
       await protectMessageUpdating.protect(() async {
         await setMessages(update, groupActions);
       });
