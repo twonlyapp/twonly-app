@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+import 'package:mutex/mutex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
@@ -85,6 +86,8 @@ Future<String> readLast1000Lines() async {
   return all.sublist(start).join('\n');
 }
 
+Mutex sameProcessProtection = Mutex();
+
 Future<void> _writeLogToFile(LogRecord record) async {
   final directory = await getApplicationSupportDirectory();
   final logFile = File('${directory.path}/app.log');
@@ -95,20 +98,24 @@ Future<void> _writeLogToFile(LogRecord record) async {
   final logMessage =
       '${clock.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
 
-  final raf = await logFile.open(mode: FileMode.writeOnlyAppend);
+  // > Note that this does not actually lock the file for access. Also note that advisory locks are on a process level.
+  // > This means that several isolates in the same process can obtain an exclusive lock on the same file.
+  return sameProcessProtection.protect(() async {
+    final raf = await logFile.open(mode: FileMode.writeOnlyAppend);
 
-  try {
-    // Use FileLock.blockingExclusive to wait until the lock is available
-    await raf.lock(FileLock.blockingExclusive);
-    await raf.writeString(logMessage);
-    await raf.flush();
-  } catch (e) {
-    // ignore: avoid_print
-    print('Error during file access: $e');
-  } finally {
-    await raf.unlock();
-    await raf.close();
-  }
+    try {
+      // Use FileLock.blockingExclusive to wait until the lock is available
+      await raf.lock(FileLock.blockingExclusive);
+      await raf.writeString(logMessage);
+      await raf.flush();
+    } catch (e) {
+      // ignore: avoid_print
+      print('Error during file access: $e');
+    } finally {
+      await raf.unlock();
+      await raf.close();
+    }
+  });
 }
 
 Future<void> cleanLogFile() async {
