@@ -229,10 +229,20 @@ const Handshake_Authenticate$json = {
       '10': 'deviceId',
       '17': true
     },
+    {
+      '1': 'in_background',
+      '3': 5,
+      '4': 1,
+      '5': 8,
+      '9': 2,
+      '10': 'inBackground',
+      '17': true
+    },
   ],
   '8': [
     {'1': '_app_version'},
     {'1': '_device_id'},
+    {'1': '_in_background'},
   ],
 };
 
@@ -254,10 +264,11 @@ final $typed_data.Uint8List handshakeDescriptor = $convert.base64Decode(
     'QSFQoGaXNfaW9zGAggASgIUgVpc0lvcxIbCglsYW5nX2NvZGUYCSABKAlSCGxhbmdDb2RlEiIK'
     'DXByb29mX29mX3dvcmsYCiABKANSC3Byb29mT2ZXb3JrQg4KDF9pbnZpdGVfY29kZRoSChBHZX'
     'RBdXRoQ2hhbGxlbmdlGkMKDEdldEF1dGhUb2tlbhIXCgd1c2VyX2lkGAEgASgDUgZ1c2VySWQS'
-    'GgoIcmVzcG9uc2UYAiABKAxSCHJlc3BvbnNlGqwBCgxBdXRoZW50aWNhdGUSFwoHdXNlcl9pZB'
+    'GgoIcmVzcG9uc2UYAiABKAxSCHJlc3BvbnNlGugBCgxBdXRoZW50aWNhdGUSFwoHdXNlcl9pZB'
     'gBIAEoA1IGdXNlcklkEh0KCmF1dGhfdG9rZW4YAiABKAxSCWF1dGhUb2tlbhIkCgthcHBfdmVy'
     'c2lvbhgDIAEoCUgAUgphcHBWZXJzaW9uiAEBEiAKCWRldmljZV9pZBgEIAEoA0gBUghkZXZpY2'
-    'VJZIgBAUIOCgxfYXBwX3ZlcnNpb25CDAoKX2RldmljZV9pZEILCglIYW5kc2hha2U=');
+    'VJZIgBARIoCg1pbl9iYWNrZ3JvdW5kGAUgASgISAJSDGluQmFja2dyb3VuZIgBAUIOCgxfYXBw'
+    'X3ZlcnNpb25CDAoKX2RldmljZV9pZEIQCg5faW5fYmFja2dyb3VuZEILCglIYW5kc2hha2U=');
 
 @$core.Deprecated('Use applicationDataDescriptor instead')
 const ApplicationData$json = {

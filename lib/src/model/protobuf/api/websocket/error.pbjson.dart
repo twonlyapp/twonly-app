@@ -56,6 +56,7 @@ const ErrorCode$json = {
     {'1': 'RegistrationDisabled', '2': 1033},
     {'1': 'IPAPaymentExpired', '2': 1034},
     {'1': 'UserIsNotInFreePlan', '2': 1035},
+    {'1': 'ForegroundSessionConnected', '2': 1036},
   ],
 };
 
@@ -77,4 +78,5 @@ final $typed_data.Uint8List errorCodeDescriptor = $convert.base64Decode(
     'duZWRQcmVLZXkQgwgSEwoOVXNlcklkTm90Rm91bmQQhAgSFwoSVXNlcklkQWxyZWFkeVRha2Vu'
     'EIUIEhcKEkFwcFZlcnNpb25PdXRkYXRlZBCGCBIYChNOZXdEZXZpY2VSZWdpc3RlcmVkEIcIEh'
     'cKEkludmFsaWRQcm9vZk9mV29yaxCICBIZChRSZWdpc3RyYXRpb25EaXNhYmxlZBCJCBIWChFJ'
-    'UEFQYXltZW50RXhwaXJlZBCKCBIYChNVc2VySXNOb3RJbkZyZWVQbGFuEIsI');
+    'UEFQYXltZW50RXhwaXJlZBCKCBIYChNVc2VySXNOb3RJbkZyZWVQbGFuEIsIEh8KGkZvcmVncm'
+    '91bmRTZXNzaW9uQ29ubmVjdGVkEIwI');

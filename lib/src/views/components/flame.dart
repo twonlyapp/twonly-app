@@ -67,6 +67,16 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
   @override
   Widget build(BuildContext context) {
     if (flameCounter < 1) return Container();
+
+    var flameEmoji = '🔥';
+
+    if (isBestFriend) flameEmoji = '❤️‍🔥';
+    if (flameCounter == 100) flameEmoji = '💯';
+
+    if (flameCounter >= 365 && flameCounter % 365 == 0) {
+      flameEmoji = '🎂';
+    }
+
     return Row(
       children: [
         if (widget.prefix) const SizedBox(width: 5),
@@ -79,7 +89,7 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
         SizedBox(
           height: 15,
           child: EmojiAnimation(
-            emoji: isBestFriend ? '❤️‍🔥' : '🔥',
+            emoji: flameEmoji,
           ),
         ),
       ],

@@ -536,12 +536,14 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
     $core.List<$core.int>? authToken,
     $core.String? appVersion,
     $fixnum.Int64? deviceId,
+    $core.bool? inBackground,
   }) {
     final result = create();
     if (userId != null) result.userId = userId;
     if (authToken != null) result.authToken = authToken;
     if (appVersion != null) result.appVersion = appVersion;
     if (deviceId != null) result.deviceId = deviceId;
+    if (inBackground != null) result.inBackground = inBackground;
     return result;
   }
 
@@ -564,6 +566,7 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
         2, _omitFieldNames ? '' : 'authToken', $pb.PbFieldType.OY)
     ..aOS(3, _omitFieldNames ? '' : 'appVersion')
     ..aInt64(4, _omitFieldNames ? '' : 'deviceId')
+    ..aOB(5, _omitFieldNames ? '' : 'inBackground')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -624,6 +627,15 @@ class Handshake_Authenticate extends $pb.GeneratedMessage {
   $core.bool hasDeviceId() => $_has(3);
   @$pb.TagNumber(4)
   void clearDeviceId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.bool get inBackground => $_getBF(4);
+  @$pb.TagNumber(5)
+  set inBackground($core.bool value) => $_setBool(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasInBackground() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearInBackground() => $_clearField(5);
 }
 
 enum Handshake_Handshake {
