@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.98
+
+- Fix: Issue with contact requests
+
 ## 0.0.96
 
 - Feature: Show link in chat if the saved media file contains one
