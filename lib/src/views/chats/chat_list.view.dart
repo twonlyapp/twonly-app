@@ -138,7 +138,7 @@ class _ChatListViewState extends State<ChatListView> {
         actions: [
           const FeedbackIconButton(),
           StreamBuilder(
-            stream: twonlyDB.contactsDao.watchContactsRequested(),
+            stream: twonlyDB.contactsDao.watchContactsRequestedCount(),
             builder: (context, snapshot) {
               var count = 0;
               if (snapshot.hasData && snapshot.data != null) {

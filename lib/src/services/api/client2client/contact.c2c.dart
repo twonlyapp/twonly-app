@@ -18,7 +18,15 @@ Future<bool> handleNewContactRequest(int fromUserId) async {
       .getContactByUserId(fromUserId)
       .getSingleOrNull();
   if (contact != null) {
-    if (contact.accepted) {
+    // Either the contact has accepted the fromUserId already: Then just blindly accept the request.
+    // Or the user has also requested fromUserId. This means that both user have requested each other (while been
+    // offline for example): In this case the contact can also be accepted blindly.
+    if (contact.accepted || (!contact.requested && !contact.deletedByUser)) {
+      if (!contact.accepted) {
+        // User has also requested the fromUserId, so mark the user as accepted.
+        await handleContactAccept(fromUserId);
+      }
+
       // contact was already accepted, so just accept the request in the background.
       await sendCipherText(
         contact.userId,
@@ -50,6 +58,28 @@ Future<bool> handleNewContactRequest(int fromUserId) async {
   return true;
 }
 
+Future<void> handleContactAccept(int fromUserId) async {
+  await twonlyDB.contactsDao.updateContact(
+    fromUserId,
+    const ContactsCompanion(
+      requested: Value(false),
+      accepted: Value(true),
+      deletedByUser: Value(false),
+    ),
+  );
+  final contact = await twonlyDB.contactsDao
+      .getContactByUserId(fromUserId)
+      .getSingleOrNull();
+  if (contact != null) {
+    await twonlyDB.groupsDao.createNewDirectChat(
+      fromUserId,
+      GroupsCompanion(
+        groupName: Value(getContactDisplayName(contact)),
+      ),
+    );
+  }
+}
+
 Future<bool> handleContactRequest(
   int fromUserId,
   EncryptedContent_ContactRequest contactRequest,
@@ -60,25 +90,7 @@ Future<bool> handleContactRequest(
       return handleNewContactRequest(fromUserId);
     case EncryptedContent_ContactRequest_Type.ACCEPT:
       Log.info('Got a contact accept from $fromUserId');
-      await twonlyDB.contactsDao.updateContact(
-        fromUserId,
-        const ContactsCompanion(
-          requested: Value(false),
-          accepted: Value(true),
-          deletedByUser: Value(false),
-        ),
-      );
-      final contact = await twonlyDB.contactsDao
-          .getContactByUserId(fromUserId)
-          .getSingleOrNull();
-      if (contact != null) {
-        await twonlyDB.groupsDao.createNewDirectChat(
-          fromUserId,
-          GroupsCompanion(
-            groupName: Value(getContactDisplayName(contact)),
-          ),
-        );
-      }
+      await handleContactAccept(fromUserId);
     case EncryptedContent_ContactRequest_Type.REJECT:
       Log.info('Got a contact reject from $fromUserId');
       await twonlyDB.contactsDao.updateContact(

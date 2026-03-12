@@ -26,6 +26,7 @@ import 'package:twonly/src/services/api/client2client/text_message.c2c.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/group.services.dart';
 import 'package:twonly/src/services/signal/encryption.signal.dart';
+import 'package:twonly/src/services/signal/session.signal.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 
@@ -94,6 +95,11 @@ Future<void> handleClient2ClientMessage(NewMessage newMessage) async {
       var retry = false;
       if (message.hasPlaintextContent()) {
         if (message.plaintextContent.hasDecryptionErrorMessage()) {
+          if (message.plaintextContent.decryptionErrorMessage.type ==
+              PlaintextContent_DecryptionErrorMessage_Type.PREKEY_UNKNOWN) {
+            // Get a new prekey from the server, and establish a new signal session.
+            await handleSessionResync(fromUserId);
+          }
           Log.info(
             'Got decryption error: ${message.plaintextContent.decryptionErrorMessage.type} for $receiptId',
           );
