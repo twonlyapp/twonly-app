@@ -3,6 +3,7 @@
 ## 0.0.98
 
 - Fix: Issue with contact requests
+- Improve: Video compression with progress updates
 
 ## 0.0.96
 

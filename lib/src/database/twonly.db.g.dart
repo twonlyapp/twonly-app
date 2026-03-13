@@ -1950,6 +1950,12 @@ class $MediaFilesTable extends MediaFiles
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_draft_media" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _preProgressingProcessMeta =
+      const VerificationMeta('preProgressingProcess');
+  @override
+  late final GeneratedColumn<int> preProgressingProcess = GeneratedColumn<int>(
+      'pre_progressing_process', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   late final GeneratedColumnWithTypeConverter<List<int>?, String>
       reuploadRequestedBy = GeneratedColumn<String>(
@@ -2019,6 +2025,7 @@ class $MediaFilesTable extends MediaFiles
         requiresAuthentication,
         stored,
         isDraftMedia,
+        preProgressingProcess,
         reuploadRequestedBy,
         displayLimitInMilliseconds,
         removeAudio,
@@ -2060,6 +2067,12 @@ class $MediaFilesTable extends MediaFiles
           _isDraftMediaMeta,
           isDraftMedia.isAcceptableOrUnknown(
               data['is_draft_media']!, _isDraftMediaMeta));
+    }
+    if (data.containsKey('pre_progressing_process')) {
+      context.handle(
+          _preProgressingProcessMeta,
+          preProgressingProcess.isAcceptableOrUnknown(
+              data['pre_progressing_process']!, _preProgressingProcessMeta));
     }
     if (data.containsKey('display_limit_in_milliseconds')) {
       context.handle(
@@ -2134,6 +2147,8 @@ class $MediaFilesTable extends MediaFiles
           .read(DriftSqlType.bool, data['${effectivePrefix}stored'])!,
       isDraftMedia: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_draft_media'])!,
+      preProgressingProcess: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}pre_progressing_process']),
       reuploadRequestedBy: $MediaFilesTable.$converterreuploadRequestedByn
           .fromSql(attachedDatabase.typeMapping.read(DriftSqlType.string,
               data['${effectivePrefix}reupload_requested_by'])),
@@ -2189,6 +2204,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
   final bool requiresAuthentication;
   final bool stored;
   final bool isDraftMedia;
+  final int? preProgressingProcess;
   final List<int>? reuploadRequestedBy;
   final int? displayLimitInMilliseconds;
   final bool? removeAudio;
@@ -2206,6 +2222,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       required this.requiresAuthentication,
       required this.stored,
       required this.isDraftMedia,
+      this.preProgressingProcess,
       this.reuploadRequestedBy,
       this.displayLimitInMilliseconds,
       this.removeAudio,
@@ -2234,6 +2251,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
     map['requires_authentication'] = Variable<bool>(requiresAuthentication);
     map['stored'] = Variable<bool>(stored);
     map['is_draft_media'] = Variable<bool>(isDraftMedia);
+    if (!nullToAbsent || preProgressingProcess != null) {
+      map['pre_progressing_process'] = Variable<int>(preProgressingProcess);
+    }
     if (!nullToAbsent || reuploadRequestedBy != null) {
       map['reupload_requested_by'] = Variable<String>($MediaFilesTable
           .$converterreuploadRequestedByn
@@ -2278,6 +2298,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication: Value(requiresAuthentication),
       stored: Value(stored),
       isDraftMedia: Value(isDraftMedia),
+      preProgressingProcess: preProgressingProcess == null && nullToAbsent
+          ? const Value.absent()
+          : Value(preProgressingProcess),
       reuploadRequestedBy: reuploadRequestedBy == null && nullToAbsent
           ? const Value.absent()
           : Value(reuploadRequestedBy),
@@ -2322,6 +2345,8 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           serializer.fromJson<bool>(json['requiresAuthentication']),
       stored: serializer.fromJson<bool>(json['stored']),
       isDraftMedia: serializer.fromJson<bool>(json['isDraftMedia']),
+      preProgressingProcess:
+          serializer.fromJson<int?>(json['preProgressingProcess']),
       reuploadRequestedBy:
           serializer.fromJson<List<int>?>(json['reuploadRequestedBy']),
       displayLimitInMilliseconds:
@@ -2349,6 +2374,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       'requiresAuthentication': serializer.toJson<bool>(requiresAuthentication),
       'stored': serializer.toJson<bool>(stored),
       'isDraftMedia': serializer.toJson<bool>(isDraftMedia),
+      'preProgressingProcess': serializer.toJson<int?>(preProgressingProcess),
       'reuploadRequestedBy': serializer.toJson<List<int>?>(reuploadRequestedBy),
       'displayLimitInMilliseconds':
           serializer.toJson<int?>(displayLimitInMilliseconds),
@@ -2370,6 +2396,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           bool? requiresAuthentication,
           bool? stored,
           bool? isDraftMedia,
+          Value<int?> preProgressingProcess = const Value.absent(),
           Value<List<int>?> reuploadRequestedBy = const Value.absent(),
           Value<int?> displayLimitInMilliseconds = const Value.absent(),
           Value<bool?> removeAudio = const Value.absent(),
@@ -2389,6 +2416,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
             requiresAuthentication ?? this.requiresAuthentication,
         stored: stored ?? this.stored,
         isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+        preProgressingProcess: preProgressingProcess.present
+            ? preProgressingProcess.value
+            : this.preProgressingProcess,
         reuploadRequestedBy: reuploadRequestedBy.present
             ? reuploadRequestedBy.value
             : this.reuploadRequestedBy,
@@ -2425,6 +2455,9 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       isDraftMedia: data.isDraftMedia.present
           ? data.isDraftMedia.value
           : this.isDraftMedia,
+      preProgressingProcess: data.preProgressingProcess.present
+          ? data.preProgressingProcess.value
+          : this.preProgressingProcess,
       reuploadRequestedBy: data.reuploadRequestedBy.present
           ? data.reuploadRequestedBy.value
           : this.reuploadRequestedBy,
@@ -2462,6 +2495,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('preProgressingProcess: $preProgressingProcess, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('removeAudio: $removeAudio, ')
@@ -2484,6 +2518,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
       requiresAuthentication,
       stored,
       isDraftMedia,
+      preProgressingProcess,
       reuploadRequestedBy,
       displayLimitInMilliseconds,
       removeAudio,
@@ -2504,6 +2539,7 @@ class MediaFile extends DataClass implements Insertable<MediaFile> {
           other.requiresAuthentication == this.requiresAuthentication &&
           other.stored == this.stored &&
           other.isDraftMedia == this.isDraftMedia &&
+          other.preProgressingProcess == this.preProgressingProcess &&
           other.reuploadRequestedBy == this.reuploadRequestedBy &&
           other.displayLimitInMilliseconds == this.displayLimitInMilliseconds &&
           other.removeAudio == this.removeAudio &&
@@ -2525,6 +2561,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
   final Value<bool> requiresAuthentication;
   final Value<bool> stored;
   final Value<bool> isDraftMedia;
+  final Value<int?> preProgressingProcess;
   final Value<List<int>?> reuploadRequestedBy;
   final Value<int?> displayLimitInMilliseconds;
   final Value<bool?> removeAudio;
@@ -2543,6 +2580,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.preProgressingProcess = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.removeAudio = const Value.absent(),
@@ -2562,6 +2600,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     this.requiresAuthentication = const Value.absent(),
     this.stored = const Value.absent(),
     this.isDraftMedia = const Value.absent(),
+    this.preProgressingProcess = const Value.absent(),
     this.reuploadRequestedBy = const Value.absent(),
     this.displayLimitInMilliseconds = const Value.absent(),
     this.removeAudio = const Value.absent(),
@@ -2582,6 +2621,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     Expression<bool>? requiresAuthentication,
     Expression<bool>? stored,
     Expression<bool>? isDraftMedia,
+    Expression<int>? preProgressingProcess,
     Expression<String>? reuploadRequestedBy,
     Expression<int>? displayLimitInMilliseconds,
     Expression<bool>? removeAudio,
@@ -2602,6 +2642,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
         'requires_authentication': requiresAuthentication,
       if (stored != null) 'stored': stored,
       if (isDraftMedia != null) 'is_draft_media': isDraftMedia,
+      if (preProgressingProcess != null)
+        'pre_progressing_process': preProgressingProcess,
       if (reuploadRequestedBy != null)
         'reupload_requested_by': reuploadRequestedBy,
       if (displayLimitInMilliseconds != null)
@@ -2625,6 +2667,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
       Value<bool>? requiresAuthentication,
       Value<bool>? stored,
       Value<bool>? isDraftMedia,
+      Value<int?>? preProgressingProcess,
       Value<List<int>?>? reuploadRequestedBy,
       Value<int?>? displayLimitInMilliseconds,
       Value<bool?>? removeAudio,
@@ -2644,6 +2687,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           requiresAuthentication ?? this.requiresAuthentication,
       stored: stored ?? this.stored,
       isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+      preProgressingProcess:
+          preProgressingProcess ?? this.preProgressingProcess,
       reuploadRequestedBy: reuploadRequestedBy ?? this.reuploadRequestedBy,
       displayLimitInMilliseconds:
           displayLimitInMilliseconds ?? this.displayLimitInMilliseconds,
@@ -2685,6 +2730,10 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
     }
     if (isDraftMedia.present) {
       map['is_draft_media'] = Variable<bool>(isDraftMedia.value);
+    }
+    if (preProgressingProcess.present) {
+      map['pre_progressing_process'] =
+          Variable<int>(preProgressingProcess.value);
     }
     if (reuploadRequestedBy.present) {
       map['reupload_requested_by'] = Variable<String>($MediaFilesTable
@@ -2732,6 +2781,7 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFile> {
           ..write('requiresAuthentication: $requiresAuthentication, ')
           ..write('stored: $stored, ')
           ..write('isDraftMedia: $isDraftMedia, ')
+          ..write('preProgressingProcess: $preProgressingProcess, ')
           ..write('reuploadRequestedBy: $reuploadRequestedBy, ')
           ..write('displayLimitInMilliseconds: $displayLimitInMilliseconds, ')
           ..write('removeAudio: $removeAudio, ')
@@ -8902,6 +8952,7 @@ typedef $$MediaFilesTableCreateCompanionBuilder = MediaFilesCompanion Function({
   Value<bool> requiresAuthentication,
   Value<bool> stored,
   Value<bool> isDraftMedia,
+  Value<int?> preProgressingProcess,
   Value<List<int>?> reuploadRequestedBy,
   Value<int?> displayLimitInMilliseconds,
   Value<bool?> removeAudio,
@@ -8921,6 +8972,7 @@ typedef $$MediaFilesTableUpdateCompanionBuilder = MediaFilesCompanion Function({
   Value<bool> requiresAuthentication,
   Value<bool> stored,
   Value<bool> isDraftMedia,
+  Value<int?> preProgressingProcess,
   Value<List<int>?> reuploadRequestedBy,
   Value<int?> displayLimitInMilliseconds,
   Value<bool?> removeAudio,
@@ -8989,6 +9041,10 @@ class $$MediaFilesTableFilterComposer
 
   ColumnFilters<bool> get isDraftMedia => $composableBuilder(
       column: $table.isDraftMedia, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get preProgressingProcess => $composableBuilder(
+      column: $table.preProgressingProcess,
+      builder: (column) => ColumnFilters(column));
 
   ColumnWithTypeConverterFilters<List<int>?, List<int>, String>
       get reuploadRequestedBy => $composableBuilder(
@@ -9077,6 +9133,10 @@ class $$MediaFilesTableOrderingComposer
       column: $table.isDraftMedia,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get preProgressingProcess => $composableBuilder(
+      column: $table.preProgressingProcess,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get reuploadRequestedBy => $composableBuilder(
       column: $table.reuploadRequestedBy,
       builder: (column) => ColumnOrderings(column));
@@ -9143,6 +9203,9 @@ class $$MediaFilesTableAnnotationComposer
 
   GeneratedColumn<bool> get isDraftMedia => $composableBuilder(
       column: $table.isDraftMedia, builder: (column) => column);
+
+  GeneratedColumn<int> get preProgressingProcess => $composableBuilder(
+      column: $table.preProgressingProcess, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<List<int>?, String>
       get reuploadRequestedBy => $composableBuilder(
@@ -9224,6 +9287,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<bool> requiresAuthentication = const Value.absent(),
             Value<bool> stored = const Value.absent(),
             Value<bool> isDraftMedia = const Value.absent(),
+            Value<int?> preProgressingProcess = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
             Value<int?> displayLimitInMilliseconds = const Value.absent(),
             Value<bool?> removeAudio = const Value.absent(),
@@ -9243,6 +9307,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             requiresAuthentication: requiresAuthentication,
             stored: stored,
             isDraftMedia: isDraftMedia,
+            preProgressingProcess: preProgressingProcess,
             reuploadRequestedBy: reuploadRequestedBy,
             displayLimitInMilliseconds: displayLimitInMilliseconds,
             removeAudio: removeAudio,
@@ -9262,6 +9327,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             Value<bool> requiresAuthentication = const Value.absent(),
             Value<bool> stored = const Value.absent(),
             Value<bool> isDraftMedia = const Value.absent(),
+            Value<int?> preProgressingProcess = const Value.absent(),
             Value<List<int>?> reuploadRequestedBy = const Value.absent(),
             Value<int?> displayLimitInMilliseconds = const Value.absent(),
             Value<bool?> removeAudio = const Value.absent(),
@@ -9281,6 +9347,7 @@ class $$MediaFilesTableTableManager extends RootTableManager<
             requiresAuthentication: requiresAuthentication,
             stored: stored,
             isDraftMedia: isDraftMedia,
+            preProgressingProcess: preProgressingProcess,
             reuploadRequestedBy: reuploadRequestedBy,
             displayLimitInMilliseconds: displayLimitInMilliseconds,
             removeAudio: removeAudio,

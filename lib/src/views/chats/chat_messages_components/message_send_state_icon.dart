@@ -166,9 +166,16 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
 
               onTap = () => context.push(Routes.settingsSubscription);
             }
-            if (mediaFile.uploadState == UploadState.preprocessing ||
-                mediaFile.uploadState == UploadState.initialized) {
+            if (mediaFile.uploadState == UploadState.initialized) {
               text = context.lang.inProcess;
+            }
+            if (mediaFile.uploadState == UploadState.preprocessing) {
+              final progress = mediaFile.preProgressingProcess ?? 0;
+              if (progress > 0) {
+                text = '${context.lang.inProcess} ($progress%)';
+              } else {
+                text = context.lang.inProcess;
+              }
             }
           }
 

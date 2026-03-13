@@ -12,6 +12,11 @@ import flutter_sharing_intent
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     UNUserNotificationCenter.current().delegate = self
+    
+    if let registrar = self.registrar(forPlugin: "VideoCompressionChannel") {
+      VideoCompressionChannel.register(with: registrar.messenger())
+    }
+    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

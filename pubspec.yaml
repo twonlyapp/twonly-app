@@ -106,7 +106,6 @@ dependencies:
   gal: ^2.3.1
   google_mlkit_barcode_scanning: ^0.14.1
   pro_video_editor: ^1.6.1
-  video_compress: ^3.1.4
 
 dependency_overrides:
   dots_indicator:

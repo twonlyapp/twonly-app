@@ -48,6 +48,8 @@ class MediaFiles extends Table {
   BoolColumn get stored => boolean().withDefault(const Constant(false))();
   BoolColumn get isDraftMedia => boolean().withDefault(const Constant(false))();
 
+  IntColumn get preProgressingProcess => integer().nullable()();
+
   TextColumn get reuploadRequestedBy =>
       text().map(IntListTypeConverter()).nullable()();
 
