@@ -322,7 +322,7 @@ class AppLocalizationsSv extends AppLocalizations {
   String get settingsAppearance => 'Appearance';
 
   @override
-  String get settingsPrivacy => 'Privacy';
+  String get settingsPrivacy => 'Privacy & Security';
 
   @override
   String get settingsPrivacyBlockUsers => 'Block users';
@@ -1688,4 +1688,12 @@ class AppLocalizationsSv extends AppLocalizations {
   String chatEntryFlameRestored(Object count) {
     return '$count flames restored';
   }
+
+  @override
+  String requestedUserToastText(Object username) {
+    return '$username was successfully requested.';
+  }
+
+  @override
+  String get profileYourQrCode => 'Your QR code';
 }

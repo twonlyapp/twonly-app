@@ -2,9 +2,11 @@
 
 ## 0.0.98
 
-- Fix: Issue with contact requests
+- Fix: Problem during contact requests
+- Fix: Problem with deleting a contact
 - Improve: Video compression with progress updates
 - Improve: Show message "Flames restored"
+- Improve: Show toast message if user was added via QR 
 
 ## 0.0.96
 

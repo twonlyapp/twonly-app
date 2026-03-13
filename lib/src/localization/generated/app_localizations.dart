@@ -685,7 +685,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacy.
   ///
   /// In en, this message translates to:
-  /// **'Privacy'**
+  /// **'Privacy & Security'**
   String get settingsPrivacy;
 
   /// No description provided for @settingsPrivacyBlockUsers.
@@ -3039,6 +3039,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} flames restored'**
   String chatEntryFlameRestored(Object count);
+
+  /// No description provided for @requestedUserToastText.
+  ///
+  /// In en, this message translates to:
+  /// **'{username} was successfully requested.'**
+  String requestedUserToastText(Object username);
+
+  /// No description provided for @profileYourQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Your QR code'**
+  String get profileYourQrCode;
 }
 
 class _AppLocalizationsDelegate

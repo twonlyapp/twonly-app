@@ -29,7 +29,7 @@ class ContactView extends StatefulWidget {
 
 class _ContactViewState extends State<ContactView> {
   Contact? _contact;
-  bool _contactIsStillAGroupMember = true;
+  List<GroupMember> _memberOfGroups = [];
 
   late StreamSubscription<Contact?> _contactSub;
   late StreamSubscription<List<GroupMember>> _groupMemberSub;
@@ -44,10 +44,8 @@ class _ContactViewState extends State<ContactView> {
     });
     _groupMemberSub = twonlyDB.groupsDao
         .watchContactGroupMember(widget.userId)
-        .listen((update) {
-      setState(() {
-        _contactIsStillAGroupMember = update.isNotEmpty;
-      });
+        .listen((groups) async {
+      _memberOfGroups = groups;
     });
     super.initState();
   }
@@ -60,7 +58,18 @@ class _ContactViewState extends State<ContactView> {
   }
 
   Future<void> handleUserRemoveRequest(Contact contact) async {
-    if (_contactIsStillAGroupMember) {
+    var delete = true;
+    for (final groupM in _memberOfGroups) {
+      final group = await twonlyDB.groupsDao.getGroup(groupM.groupId);
+      if (group?.deletedContent ?? false) {
+        await twonlyDB.groupsDao.deleteGroup(group!.groupId);
+      } else {
+        delete = false;
+      }
+    }
+    if (!mounted) return;
+
+    if (!delete) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(context.lang.deleteUserErrorMessage),
@@ -211,26 +220,6 @@ class _ContactViewState extends State<ContactView> {
               setState(() {});
             },
           ),
-          // BetterListTile(
-          //   icon: FontAwesomeIcons.eraser,
-          //   iconSize: 16,
-          //   text: context.lang.deleteAllContactMessages,
-          //   onTap: () async {
-          //     final block = await showAlertDialog(
-          //       context,
-          //       context.lang.deleteAllContactMessages,
-          //       context.lang.deleteAllContactMessagesBody(
-          //         getContactDisplayName(contact),
-          //       ),
-          //     );
-          //     if (block) {
-          //       if (context.mounted) {
-          //         await twonlyDB.messagesDao
-          //             .deleteMessagesByContactId(contact.userId);
-          //       }
-          //     }
-          //   },
-          // ),
           BetterListTile(
             icon: FontAwesomeIcons.flag,
             text: context.lang.reportUser,

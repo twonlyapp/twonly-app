@@ -55,7 +55,7 @@ PublicProfile? parseQrCodeData(Uint8List rawBytes) {
   return null;
 }
 
-Future<void> addNewContactFromPublicProfile(PublicProfile profile) async {
+Future<bool> addNewContactFromPublicProfile(PublicProfile profile) async {
   final userdata = Response_UserData(
     userId: profile.userId,
     publicIdentityKey: profile.publicIdentityKey,
@@ -77,5 +77,8 @@ Future<void> addNewContactFromPublicProfile(PublicProfile profile) async {
     ),
   );
 
-  if (added > 0) await importSignalContactAndCreateRequest(userdata);
+  if (added > 0) {
+    return importSignalContactAndCreateRequest(userdata);
+  }
+  return false;
 }

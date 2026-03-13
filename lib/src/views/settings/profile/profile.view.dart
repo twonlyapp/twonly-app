@@ -124,6 +124,17 @@ class _ProfileViewState extends State<ProfileView> {
             leading: const Padding(
               padding: EdgeInsets.only(right: 5, left: 1),
               child: FaIcon(
+                FontAwesomeIcons.qrcode,
+                size: 20,
+              ),
+            ),
+            onTap: () => context.push(Routes.settingsPublicProfile),
+            text: context.lang.profileYourQrCode,
+          ),
+          BetterListTile(
+            leading: const Padding(
+              padding: EdgeInsets.only(right: 5, left: 1),
+              child: FaIcon(
                 FontAwesomeIcons.at,
                 size: 20,
               ),

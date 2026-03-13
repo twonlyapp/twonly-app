@@ -761,7 +761,21 @@ class _CameraPreviewViewState extends State<CameraPreviewView> {
                           onTap: () async {
                             c.isLoading = true;
                             widget.mainCameraController.setState();
-                            await addNewContactFromPublicProfile(c.profile);
+                            if (await addNewContactFromPublicProfile(
+                                  c.profile,
+                                ) &&
+                                context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.lang.requestedUserToastText(
+                                      c.profile.username,
+                                    ),
+                                  ),
+                                  duration: const Duration(seconds: 8),
+                                ),
+                              );
+                            }
                           },
                           child: Container(
                             padding: const EdgeInsets.all(12),
