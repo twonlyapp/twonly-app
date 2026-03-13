@@ -10,9 +10,11 @@ message AdditionalMessageData {
     enum Type {
         LINK = 0;
         CONTACTS = 1;
+        RESTORED_FLAME_COUNTER = 2;
     }
     Type type = 1;
 
     optional string link = 2;
     repeated SharedContact contacts = 3;
+    optional int64 restored_flame_counter = 4;
 }

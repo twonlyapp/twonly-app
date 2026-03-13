@@ -1,11 +1,18 @@
 import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:fixnum/fixnum.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
+import 'package:twonly/src/model/protobuf/client/generated/data.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    as pb;
+import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/subscription.service.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -46,7 +53,8 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
   }
 
   Future<void> _restoreFlames() async {
-    if (!isUserAllowed(getCurrentPlan(), PremiumFeatures.RestoreFlames)) {
+    if (!isUserAllowed(getCurrentPlan(), PremiumFeatures.RestoreFlames) &&
+        kReleaseMode) {
       await context.push(Routes.settingsSubscription);
       return;
     }
@@ -60,7 +68,40 @@ class _MaxFlameListTitleState extends State<MaxFlameListTitle> {
         lastFlameCounterChange: Value(clock.now()),
       ),
     );
+
+    final addData = AdditionalMessageData(
+      type: AdditionalMessageData_Type.RESTORED_FLAME_COUNTER,
+      restoredFlameCounter: Int64(_group!.maxFlameCounter),
+    );
+
+    final message = await twonlyDB.messagesDao.insertMessage(
+      MessagesCompanion(
+        groupId: Value(_groupId),
+        type: Value(MessageType.restoreFlameCounter.name),
+        additionalMessageData: Value(addData.writeToBuffer()),
+      ),
+    );
+
+    if (message == null) {
+      Log.error('Could not insert message into database');
+      return;
+    }
+
+    final encryptedContent = pb.EncryptedContent(
+      additionalDataMessage: pb.EncryptedContent_AdditionalDataMessage(
+        senderMessageId: message.messageId,
+        additionalMessageData: addData.writeToBuffer(),
+        timestamp: Int64(message.createdAt.millisecondsSinceEpoch),
+        type: MessageType.restoreFlameCounter.name,
+      ),
+    );
+
     await syncFlameCounters(forceForGroup: _groupId);
+    await sendCipherTextToGroup(
+      _groupId,
+      encryptedContent,
+      messageId: message.messageId,
+    );
   }
 
   @override

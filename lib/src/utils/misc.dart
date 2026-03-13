@@ -303,6 +303,8 @@ Color getMessageColorFromType(
   Color color;
 
   if (message.type == MessageType.text.name) {
+    color = Colors.orange;
+  } else if (message.type == MessageType.text.name) {
     color = Colors.blueAccent;
   } else if (mediaFile != null) {
     if (mediaFile.requiresAuthentication) {

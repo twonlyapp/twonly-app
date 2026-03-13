@@ -82,10 +82,11 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
         if (widget.prefix) const SizedBox(width: 5),
         if (widget.prefix) const Text('•'),
         if (widget.prefix) const SizedBox(width: 5),
-        Text(
-          flameCounter.toString(),
-          style: const TextStyle(fontSize: 13),
-        ),
+        if (flameCounter != 100)
+          Text(
+            flameCounter.toString(),
+            style: const TextStyle(fontSize: 13),
+          ),
         SizedBox(
           height: 15,
           child: EmojiAnimation(

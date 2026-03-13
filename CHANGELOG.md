@@ -4,6 +4,7 @@
 
 - Fix: Issue with contact requests
 - Improve: Video compression with progress updates
+- Improve: Show message "Flames restored"
 
 ## 0.0.96
 

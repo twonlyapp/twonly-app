@@ -1683,4 +1683,9 @@ class AppLocalizationsSv extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'Unknown contact whose identity has not yet been verified.';
+
+  @override
+  String chatEntryFlameRestored(Object count) {
+    return '$count flames restored';
+  }
 }

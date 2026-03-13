@@ -1695,4 +1695,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get verificationBadgeRedDesc =>
       'Unbekannter Kontakt, dessen Identität bisher nicht verifiziert wurde.';
+
+  @override
+  String chatEntryFlameRestored(Object count) {
+    return '$count Flammen wiederhergestellt';
+  }
 }

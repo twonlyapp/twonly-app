@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'package:clock/clock.dart';
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
+import 'package:twonly/src/database/twonly.db.dart';
 import 'package:twonly/src/utils/storage.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
 
@@ -67,6 +70,24 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
               }
             },
           ),
+          if (!kReleaseMode)
+            ListTile(
+              title: const Text('Make it possible to reset flames'),
+              onTap: () async {
+                final chats = await twonlyDB.groupsDao.getAllDirectChats();
+
+                for (final chat in chats) {
+                  await twonlyDB.groupsDao.updateGroup(
+                    chat.groupId,
+                    GroupsCompanion(
+                      flameCounter: const Value(0),
+                      maxFlameCounter: const Value(365),
+                      lastFlameCounterChange: Value(clock.now()),
+                    ),
+                  );
+                }
+              },
+            ),
           if (!kReleaseMode)
             ListTile(
               title: const Text('Automated Testing'),

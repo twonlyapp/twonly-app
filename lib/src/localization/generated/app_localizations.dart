@@ -3033,6 +3033,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown contact whose identity has not yet been verified.'**
   String get verificationBadgeRedDesc;
+
+  /// No description provided for @chatEntryFlameRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} flames restored'**
+  String chatEntryFlameRestored(Object count);
 }
 
 class _AppLocalizationsDelegate
