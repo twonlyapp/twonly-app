@@ -21,12 +21,12 @@ Future<bool> isUserCreated() async {
 }
 
 Future<UserData?> getUser() async {
-  final userJson =
-      await const FlutterSecureStorage().read(key: SecureStorageKeys.userData);
-  if (userJson == null) {
-    return null;
-  }
   try {
+    final userJson = await const FlutterSecureStorage()
+        .read(key: SecureStorageKeys.userData);
+    if (userJson == null) {
+      return null;
+    }
     final userMap = jsonDecode(userJson) as Map<String, dynamic>;
     final user = UserData.fromJson(userMap);
     return user;

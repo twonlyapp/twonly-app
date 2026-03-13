@@ -5,7 +5,7 @@ import 'package:hashlib/hashlib.dart';
 import 'package:http/http.dart' as http;
 import 'package:twonly/globals.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/services/twonly_safe/create_backup.twonly_safe.dart';
+import 'package:twonly/src/services/backup/create.backup.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';

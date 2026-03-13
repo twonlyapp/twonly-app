@@ -110,6 +110,8 @@ dependencies:
 dependency_overrides:
   dots_indicator:
     path: ./dependencies/dots_indicator
+  restart_app:
+    path: ./dependencies/restart_app
   hashlib:
     path: ./dependencies/hashlib
   introduction_screen:

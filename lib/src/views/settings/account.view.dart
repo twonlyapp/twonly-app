@@ -140,6 +140,7 @@ class _AccountViewState extends State<AccountView> {
                       await Restart.restartApp(
                         notificationTitle: 'Account successfully deleted',
                         notificationBody: 'Click here to open the app again',
+                        forceKill: true,
                       );
                     }
                   },

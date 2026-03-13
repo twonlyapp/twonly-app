@@ -66,6 +66,7 @@ class _DeveloperSettingsViewState extends State<DeveloperSettingsView> {
                 await Restart.restartApp(
                   notificationTitle: 'Account successfully deleted',
                   notificationBody: 'Click here to open the app again',
+                  forceKill: true,
                 );
               }
             },

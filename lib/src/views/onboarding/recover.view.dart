@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:twonly/src/constants/routes.keys.dart';
 import 'package:twonly/src/model/json/userdata.dart';
-import 'package:twonly/src/services/twonly_safe/restore.twonly_safe.dart';
+import 'package:twonly/src/services/backup/restore.backup.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/views/components/alert_dialog.dart';
@@ -29,7 +29,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
     });
 
     try {
-      await recoverTwonlySafe(
+      await recoverBackup(
         usernameCtrl.text,
         passwordCtrl.text,
         backupServer,
@@ -38,6 +38,7 @@ class _BackupRecoveryViewState extends State<BackupRecoveryView> {
       await Restart.restartApp(
         notificationTitle: 'Backup successfully recovered.',
         notificationBody: 'Click here to open the app again',
+        forceKill: true,
       );
     } catch (e) {
       // in case something was already written from the backup...

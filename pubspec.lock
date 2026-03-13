@@ -1259,7 +1259,7 @@ packages:
       path: "dependencies/no_screenshot"
       relative: true
     source: path
-    version: "0.4.0"
+    version: "1.0.0"
   objective_c:
     dependency: transitive
     description:
@@ -1538,11 +1538,10 @@ packages:
   restart_app:
     dependency: "direct main"
     description:
-      name: restart_app
-      sha256: "0fd0a14cedfcd65d429588c204de44493866438391a9ee97ecf910ce591323ae"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.7.2"
+      path: "dependencies/restart_app"
+      relative: true
+    source: path
+    version: "1.7.3"
   rxdart:
     dependency: transitive
     description:
