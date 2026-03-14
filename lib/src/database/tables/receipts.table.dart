@@ -20,6 +20,9 @@ class Receipts extends Table {
   BoolColumn get contactWillSendsReceipt =>
       boolean().withDefault(const Constant(true))();
 
+  BoolColumn get willBeRetriedByMediaUpload =>
+      boolean().withDefault(const Constant(false))();
+
   DateTimeColumn get markForRetry => dateTime().nullable()();
   DateTimeColumn get markForRetryAfterAccepted => dateTime().nullable()();
 

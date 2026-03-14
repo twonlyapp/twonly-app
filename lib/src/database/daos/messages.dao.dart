@@ -51,6 +51,12 @@ class MessagesDao extends DatabaseAccessor<TwonlyDB> with _$MessagesDaoMixin {
         mediaFiles.downloadState
                 .equals(DownloadState.reuploadRequested.name)
                 .not() &
+            mediaFiles.uploadState
+                .equals(UploadState.fileLimitReached.name)
+                .not() &
+            mediaFiles.uploadState
+                .equals(UploadState.uploadLimitReached.name)
+                .not() &
             mediaFiles.type.equals(MediaType.audio.name).not() &
             messages.openedAt.isNull() &
             messages.groupId.equals(groupId) &

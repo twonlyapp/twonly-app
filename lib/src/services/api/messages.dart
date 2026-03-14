@@ -79,8 +79,9 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     // ignore: parameter_assignments
     receiptId = receipt.receiptId;
 
-    final contact =
-        await twonlyDB.contactsDao.getContactById(receipt.contactId);
+    final contact = await twonlyDB.contactsDao.getContactById(
+      receipt.contactId,
+    );
     if (contact == null || contact.accountDeleted) {
       Log.warn('Will not send message again as user does not exist anymore.');
       await twonlyDB.receiptsDao.deleteReceipt(receiptId);
@@ -99,8 +100,9 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     final message = pb.Message.fromBuffer(receipt.message)
       ..receiptId = receiptId;
 
-    final encryptedContent =
-        pb.EncryptedContent.fromBuffer(message.encryptedContent);
+    final encryptedContent = pb.EncryptedContent.fromBuffer(
+      message.encryptedContent,
+    );
 
     final pushNotification = await getPushNotificationFromEncryptedContent(
       receipt.contactId,
@@ -111,8 +113,10 @@ Future<(Uint8List, Uint8List?)?> tryToSendCompleteMessage({
     Uint8List? pushData;
     if (pushNotification != null && receipt.retryCount <= 3) {
       /// In case the message has to be resend more than three times, do not show a notification again...
-      pushData =
-          await encryptPushNotification(receipt.contactId, pushNotification);
+      pushData = await encryptPushNotification(
+        receipt.contactId,
+        pushNotification,
+      );
     }
 
     if (message.type == pb.Message_Type.TEST_NOTIFICATION) {
@@ -331,7 +335,7 @@ Future<(Uint8List, Uint8List?)?> sendCipherText(
       contactId: Value(contactId),
       message: Value(response.writeToBuffer()),
       messageId: Value(messageId),
-      ackByServerAt: Value(onlyReturnEncryptedData ? clock.now() : null),
+      willBeRetriedByMediaUpload: Value(onlyReturnEncryptedData),
     ),
   );
 

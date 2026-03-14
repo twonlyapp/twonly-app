@@ -569,8 +569,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: HEAD
-      resolved-ref: e8b6a650b9fbe76a077539272bbdd422509e6e44
+      ref: "fix/lStar-not-found-error"
+      resolved-ref: e926724e0c7e62bce4f94905f9805a264b736d11
       url: "https://github.com/yenchieh/flutter_android_volume_keydown.git"
     source: git
     version: "1.0.1"

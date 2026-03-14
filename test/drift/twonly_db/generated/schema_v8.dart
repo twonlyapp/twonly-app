@@ -11,98 +11,137 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
   final String? _alias;
   Contacts(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> userId = GeneratedColumn<int>(
-      'user_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL');
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> username = GeneratedColumn<String>(
-      'username', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'username',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
-      'display_name', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'display_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<String> nickName = GeneratedColumn<String>(
-      'nick_name', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'nick_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<i2.Uint8List> avatarSvgCompressed =
-      GeneratedColumn<i2.Uint8List>('avatar_svg_compressed', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'avatar_svg_compressed',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<int> senderProfileCounter = GeneratedColumn<int>(
-      'sender_profile_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const CustomExpression('0'));
+    'sender_profile_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> accepted = GeneratedColumn<int>(
-      'accepted', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (accepted IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'accepted',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (accepted IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> deletedByUser = GeneratedColumn<int>(
-      'deleted_by_user', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT 0 CHECK (deleted_by_user IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'deleted_by_user',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (deleted_by_user IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> requested = GeneratedColumn<int>(
-      'requested', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (requested IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'requested',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (requested IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> blocked = GeneratedColumn<int>(
-      'blocked', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (blocked IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'blocked',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (blocked IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> verified = GeneratedColumn<int>(
-      'verified', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (verified IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'verified',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (verified IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> accountDeleted = GeneratedColumn<int>(
-      'account_deleted', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT 0 CHECK (account_deleted IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'account_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (account_deleted IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        userId,
-        username,
-        displayName,
-        nickName,
-        avatarSvgCompressed,
-        senderProfileCounter,
-        accepted,
-        deletedByUser,
-        requested,
-        blocked,
-        verified,
-        accountDeleted,
-        createdAt
-      ];
+    userId,
+    username,
+    displayName,
+    nickName,
+    avatarSvgCompressed,
+    senderProfileCounter,
+    accepted,
+    deletedByUser,
+    requested,
+    blocked,
+    verified,
+    accountDeleted,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -114,32 +153,58 @@ class Contacts extends Table with TableInfo<Contacts, ContactsData> {
   ContactsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContactsData(
-      userId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}user_id'])!,
-      username: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}username'])!,
-      displayName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}display_name']),
-      nickName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}nick_name']),
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}user_id'],
+      )!,
+      username: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      )!,
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      ),
+      nickName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nick_name'],
+      ),
       avatarSvgCompressed: attachedDatabase.typeMapping.read(
-          DriftSqlType.blob, data['${effectivePrefix}avatar_svg_compressed']),
+        DriftSqlType.blob,
+        data['${effectivePrefix}avatar_svg_compressed'],
+      ),
       senderProfileCounter: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}sender_profile_counter'])!,
-      accepted: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}accepted'])!,
-      deletedByUser: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}deleted_by_user'])!,
-      requested: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}requested'])!,
-      blocked: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}blocked'])!,
-      verified: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}verified'])!,
-      accountDeleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}account_deleted'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}sender_profile_counter'],
+      )!,
+      accepted: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}accepted'],
+      )!,
+      deletedByUser: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_by_user'],
+      )!,
+      requested: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}requested'],
+      )!,
+      blocked: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}blocked'],
+      )!,
+      verified: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}verified'],
+      )!,
+      accountDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}account_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -168,20 +233,21 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
   final int verified;
   final int accountDeleted;
   final int createdAt;
-  const ContactsData(
-      {required this.userId,
-      required this.username,
-      this.displayName,
-      this.nickName,
-      this.avatarSvgCompressed,
-      required this.senderProfileCounter,
-      required this.accepted,
-      required this.deletedByUser,
-      required this.requested,
-      required this.blocked,
-      required this.verified,
-      required this.accountDeleted,
-      required this.createdAt});
+  const ContactsData({
+    required this.userId,
+    required this.username,
+    this.displayName,
+    this.nickName,
+    this.avatarSvgCompressed,
+    required this.senderProfileCounter,
+    required this.accepted,
+    required this.deletedByUser,
+    required this.requested,
+    required this.blocked,
+    required this.verified,
+    required this.accountDeleted,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -194,8 +260,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       map['nick_name'] = Variable<String>(nickName);
     }
     if (!nullToAbsent || avatarSvgCompressed != null) {
-      map['avatar_svg_compressed'] =
-          Variable<i2.Uint8List>(avatarSvgCompressed);
+      map['avatar_svg_compressed'] = Variable<i2.Uint8List>(
+        avatarSvgCompressed,
+      );
     }
     map['sender_profile_counter'] = Variable<int>(senderProfileCounter);
     map['accepted'] = Variable<int>(accepted);
@@ -232,18 +299,22 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     );
   }
 
-  factory ContactsData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory ContactsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContactsData(
       userId: serializer.fromJson<int>(json['userId']),
       username: serializer.fromJson<String>(json['username']),
       displayName: serializer.fromJson<String?>(json['displayName']),
       nickName: serializer.fromJson<String?>(json['nickName']),
-      avatarSvgCompressed:
-          serializer.fromJson<i2.Uint8List?>(json['avatarSvgCompressed']),
-      senderProfileCounter:
-          serializer.fromJson<int>(json['senderProfileCounter']),
+      avatarSvgCompressed: serializer.fromJson<i2.Uint8List?>(
+        json['avatarSvgCompressed'],
+      ),
+      senderProfileCounter: serializer.fromJson<int>(
+        json['senderProfileCounter'],
+      ),
       accepted: serializer.fromJson<int>(json['accepted']),
       deletedByUser: serializer.fromJson<int>(json['deletedByUser']),
       requested: serializer.fromJson<int>(json['requested']),
@@ -261,8 +332,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
       'username': serializer.toJson<String>(username),
       'displayName': serializer.toJson<String?>(displayName),
       'nickName': serializer.toJson<String?>(nickName),
-      'avatarSvgCompressed':
-          serializer.toJson<i2.Uint8List?>(avatarSvgCompressed),
+      'avatarSvgCompressed': serializer.toJson<i2.Uint8List?>(
+        avatarSvgCompressed,
+      ),
       'senderProfileCounter': serializer.toJson<int>(senderProfileCounter),
       'accepted': serializer.toJson<int>(accepted),
       'deletedByUser': serializer.toJson<int>(deletedByUser),
@@ -274,43 +346,44 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
     };
   }
 
-  ContactsData copyWith(
-          {int? userId,
-          String? username,
-          Value<String?> displayName = const Value.absent(),
-          Value<String?> nickName = const Value.absent(),
-          Value<i2.Uint8List?> avatarSvgCompressed = const Value.absent(),
-          int? senderProfileCounter,
-          int? accepted,
-          int? deletedByUser,
-          int? requested,
-          int? blocked,
-          int? verified,
-          int? accountDeleted,
-          int? createdAt}) =>
-      ContactsData(
-        userId: userId ?? this.userId,
-        username: username ?? this.username,
-        displayName: displayName.present ? displayName.value : this.displayName,
-        nickName: nickName.present ? nickName.value : this.nickName,
-        avatarSvgCompressed: avatarSvgCompressed.present
-            ? avatarSvgCompressed.value
-            : this.avatarSvgCompressed,
-        senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
-        accepted: accepted ?? this.accepted,
-        deletedByUser: deletedByUser ?? this.deletedByUser,
-        requested: requested ?? this.requested,
-        blocked: blocked ?? this.blocked,
-        verified: verified ?? this.verified,
-        accountDeleted: accountDeleted ?? this.accountDeleted,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  ContactsData copyWith({
+    int? userId,
+    String? username,
+    Value<String?> displayName = const Value.absent(),
+    Value<String?> nickName = const Value.absent(),
+    Value<i2.Uint8List?> avatarSvgCompressed = const Value.absent(),
+    int? senderProfileCounter,
+    int? accepted,
+    int? deletedByUser,
+    int? requested,
+    int? blocked,
+    int? verified,
+    int? accountDeleted,
+    int? createdAt,
+  }) => ContactsData(
+    userId: userId ?? this.userId,
+    username: username ?? this.username,
+    displayName: displayName.present ? displayName.value : this.displayName,
+    nickName: nickName.present ? nickName.value : this.nickName,
+    avatarSvgCompressed: avatarSvgCompressed.present
+        ? avatarSvgCompressed.value
+        : this.avatarSvgCompressed,
+    senderProfileCounter: senderProfileCounter ?? this.senderProfileCounter,
+    accepted: accepted ?? this.accepted,
+    deletedByUser: deletedByUser ?? this.deletedByUser,
+    requested: requested ?? this.requested,
+    blocked: blocked ?? this.blocked,
+    verified: verified ?? this.verified,
+    accountDeleted: accountDeleted ?? this.accountDeleted,
+    createdAt: createdAt ?? this.createdAt,
+  );
   ContactsData copyWithCompanion(ContactsCompanion data) {
     return ContactsData(
       userId: data.userId.present ? data.userId.value : this.userId,
       username: data.username.present ? data.username.value : this.username,
-      displayName:
-          data.displayName.present ? data.displayName.value : this.displayName,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
       nickName: data.nickName.present ? data.nickName.value : this.nickName,
       avatarSvgCompressed: data.avatarSvgCompressed.present
           ? data.avatarSvgCompressed.value
@@ -354,19 +427,20 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
 
   @override
   int get hashCode => Object.hash(
-      userId,
-      username,
-      displayName,
-      nickName,
-      $driftBlobEquality.hash(avatarSvgCompressed),
-      senderProfileCounter,
-      accepted,
-      deletedByUser,
-      requested,
-      blocked,
-      verified,
-      accountDeleted,
-      createdAt);
+    userId,
+    username,
+    displayName,
+    nickName,
+    $driftBlobEquality.hash(avatarSvgCompressed),
+    senderProfileCounter,
+    accepted,
+    deletedByUser,
+    requested,
+    blocked,
+    verified,
+    accountDeleted,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -376,7 +450,9 @@ class ContactsData extends DataClass implements Insertable<ContactsData> {
           other.displayName == this.displayName &&
           other.nickName == this.nickName &&
           $driftBlobEquality.equals(
-              other.avatarSvgCompressed, this.avatarSvgCompressed) &&
+            other.avatarSvgCompressed,
+            this.avatarSvgCompressed,
+          ) &&
           other.senderProfileCounter == this.senderProfileCounter &&
           other.accepted == this.accepted &&
           other.deletedByUser == this.deletedByUser &&
@@ -465,20 +541,21 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
     });
   }
 
-  ContactsCompanion copyWith(
-      {Value<int>? userId,
-      Value<String>? username,
-      Value<String?>? displayName,
-      Value<String?>? nickName,
-      Value<i2.Uint8List?>? avatarSvgCompressed,
-      Value<int>? senderProfileCounter,
-      Value<int>? accepted,
-      Value<int>? deletedByUser,
-      Value<int>? requested,
-      Value<int>? blocked,
-      Value<int>? verified,
-      Value<int>? accountDeleted,
-      Value<int>? createdAt}) {
+  ContactsCompanion copyWith({
+    Value<int>? userId,
+    Value<String>? username,
+    Value<String?>? displayName,
+    Value<String?>? nickName,
+    Value<i2.Uint8List?>? avatarSvgCompressed,
+    Value<int>? senderProfileCounter,
+    Value<int>? accepted,
+    Value<int>? deletedByUser,
+    Value<int>? requested,
+    Value<int>? blocked,
+    Value<int>? verified,
+    Value<int>? accountDeleted,
+    Value<int>? createdAt,
+  }) {
     return ContactsCompanion(
       userId: userId ?? this.userId,
       username: username ?? this.username,
@@ -512,8 +589,9 @@ class ContactsCompanion extends UpdateCompanion<ContactsData> {
       map['nick_name'] = Variable<String>(nickName.value);
     }
     if (avatarSvgCompressed.present) {
-      map['avatar_svg_compressed'] =
-          Variable<i2.Uint8List>(avatarSvgCompressed.value);
+      map['avatar_svg_compressed'] = Variable<i2.Uint8List>(
+        avatarSvgCompressed.value,
+      );
     }
     if (senderProfileCounter.present) {
       map['sender_profile_counter'] = Variable<int>(senderProfileCounter.value);
@@ -569,180 +647,257 @@ class Groups extends Table with TableInfo<Groups, GroupsData> {
   final String? _alias;
   Groups(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<int> isGroupAdmin = GeneratedColumn<int>(
-      'is_group_admin', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_group_admin IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'is_group_admin',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_group_admin IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> isDirectChat = GeneratedColumn<int>(
-      'is_direct_chat', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_direct_chat IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'is_direct_chat',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_direct_chat IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> pinned = GeneratedColumn<int>(
-      'pinned', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'pinned',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> archived = GeneratedColumn<int>(
-      'archived', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'archived',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (archived IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> joinedGroup = GeneratedColumn<int>(
-      'joined_group', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (joined_group IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'joined_group',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (joined_group IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> leftGroup = GeneratedColumn<int>(
-      'left_group', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (left_group IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'left_group',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (left_group IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> deletedContent = GeneratedColumn<int>(
-      'deleted_content', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT 0 CHECK (deleted_content IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'deleted_content',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (deleted_content IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> stateVersionId = GeneratedColumn<int>(
-      'state_version_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const CustomExpression('0'));
+    'state_version_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<i2.Uint8List> stateEncryptionKey =
-      GeneratedColumn<i2.Uint8List>('state_encryption_key', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'state_encryption_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<i2.Uint8List> myGroupPrivateKey =
-      GeneratedColumn<i2.Uint8List>('my_group_private_key', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'my_group_private_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<String> groupName = GeneratedColumn<String>(
-      'group_name', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'group_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> draftMessage = GeneratedColumn<String>(
-      'draft_message', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'draft_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> totalMediaCounter = GeneratedColumn<int>(
-      'total_media_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const CustomExpression('0'));
+    'total_media_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> alsoBestFriend = GeneratedColumn<int>(
-      'also_best_friend', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT 0 CHECK (also_best_friend IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'also_best_friend',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (also_best_friend IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> deleteMessagesAfterMilliseconds =
       GeneratedColumn<int>(
-          'delete_messages_after_milliseconds', aliasedName, false,
-          type: DriftSqlType.int,
-          requiredDuringInsert: false,
-          $customConstraints: 'NOT NULL DEFAULT 86400000',
-          defaultValue: const CustomExpression('86400000'));
+        'delete_messages_after_milliseconds',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        $customConstraints: 'NOT NULL DEFAULT 86400000',
+        defaultValue: const CustomExpression('86400000'),
+      );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   late final GeneratedColumn<int> lastMessageSend = GeneratedColumn<int>(
-      'last_message_send', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'last_message_send',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> lastMessageReceived = GeneratedColumn<int>(
-      'last_message_received', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'last_message_received',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> lastFlameCounterChange = GeneratedColumn<int>(
-      'last_flame_counter_change', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'last_flame_counter_change',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> lastFlameSync = GeneratedColumn<int>(
-      'last_flame_sync', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'last_flame_sync',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> flameCounter = GeneratedColumn<int>(
-      'flame_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const CustomExpression('0'));
+    'flame_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> maxFlameCounter = GeneratedColumn<int>(
-      'max_flame_counter', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const CustomExpression('0'));
+    'max_flame_counter',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> maxFlameCounterFrom = GeneratedColumn<int>(
-      'max_flame_counter_from', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'max_flame_counter_from',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> lastMessageExchange = GeneratedColumn<int>(
-      'last_message_exchange', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'last_message_exchange',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        groupId,
-        isGroupAdmin,
-        isDirectChat,
-        pinned,
-        archived,
-        joinedGroup,
-        leftGroup,
-        deletedContent,
-        stateVersionId,
-        stateEncryptionKey,
-        myGroupPrivateKey,
-        groupName,
-        draftMessage,
-        totalMediaCounter,
-        alsoBestFriend,
-        deleteMessagesAfterMilliseconds,
-        createdAt,
-        lastMessageSend,
-        lastMessageReceived,
-        lastFlameCounterChange,
-        lastFlameSync,
-        flameCounter,
-        maxFlameCounter,
-        maxFlameCounterFrom,
-        lastMessageExchange
-      ];
+    groupId,
+    isGroupAdmin,
+    isDirectChat,
+    pinned,
+    archived,
+    joinedGroup,
+    leftGroup,
+    deletedContent,
+    stateVersionId,
+    stateEncryptionKey,
+    myGroupPrivateKey,
+    groupName,
+    draftMessage,
+    totalMediaCounter,
+    alsoBestFriend,
+    deleteMessagesAfterMilliseconds,
+    createdAt,
+    lastMessageSend,
+    lastMessageReceived,
+    lastFlameCounterChange,
+    lastFlameSync,
+    flameCounter,
+    maxFlameCounter,
+    maxFlameCounterFrom,
+    lastMessageExchange,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -754,58 +909,106 @@ class Groups extends Table with TableInfo<Groups, GroupsData> {
   GroupsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return GroupsData(
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      isGroupAdmin: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}is_group_admin'])!,
-      isDirectChat: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}is_direct_chat'])!,
-      pinned: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}pinned'])!,
-      archived: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}archived'])!,
-      joinedGroup: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}joined_group'])!,
-      leftGroup: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}left_group'])!,
-      deletedContent: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}deleted_content'])!,
-      stateVersionId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}state_version_id'])!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      isGroupAdmin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_group_admin'],
+      )!,
+      isDirectChat: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_direct_chat'],
+      )!,
+      pinned: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pinned'],
+      )!,
+      archived: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}archived'],
+      )!,
+      joinedGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}joined_group'],
+      )!,
+      leftGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}left_group'],
+      )!,
+      deletedContent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_content'],
+      )!,
+      stateVersionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}state_version_id'],
+      )!,
       stateEncryptionKey: attachedDatabase.typeMapping.read(
-          DriftSqlType.blob, data['${effectivePrefix}state_encryption_key']),
+        DriftSqlType.blob,
+        data['${effectivePrefix}state_encryption_key'],
+      ),
       myGroupPrivateKey: attachedDatabase.typeMapping.read(
-          DriftSqlType.blob, data['${effectivePrefix}my_group_private_key']),
-      groupName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_name'])!,
-      draftMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}draft_message']),
+        DriftSqlType.blob,
+        data['${effectivePrefix}my_group_private_key'],
+      ),
+      groupName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_name'],
+      )!,
+      draftMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}draft_message'],
+      ),
       totalMediaCounter: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}total_media_counter'])!,
-      alsoBestFriend: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}also_best_friend'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}total_media_counter'],
+      )!,
+      alsoBestFriend: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}also_best_friend'],
+      )!,
       deleteMessagesAfterMilliseconds: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}delete_messages_after_milliseconds'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
-      lastMessageSend: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}last_message_send']),
+        DriftSqlType.int,
+        data['${effectivePrefix}delete_messages_after_milliseconds'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      lastMessageSend: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_message_send'],
+      ),
       lastMessageReceived: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}last_message_received']),
+        DriftSqlType.int,
+        data['${effectivePrefix}last_message_received'],
+      ),
       lastFlameCounterChange: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}last_flame_counter_change']),
-      lastFlameSync: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}last_flame_sync']),
-      flameCounter: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}flame_counter'])!,
-      maxFlameCounter: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}max_flame_counter'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}last_flame_counter_change'],
+      ),
+      lastFlameSync: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_flame_sync'],
+      ),
+      flameCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}flame_counter'],
+      )!,
+      maxFlameCounter: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}max_flame_counter'],
+      )!,
       maxFlameCounterFrom: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}max_flame_counter_from']),
+        DriftSqlType.int,
+        data['${effectivePrefix}max_flame_counter_from'],
+      ),
       lastMessageExchange: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}last_message_exchange'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}last_message_exchange'],
+      )!,
     );
   }
 
@@ -846,32 +1049,33 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
   final int maxFlameCounter;
   final int? maxFlameCounterFrom;
   final int lastMessageExchange;
-  const GroupsData(
-      {required this.groupId,
-      required this.isGroupAdmin,
-      required this.isDirectChat,
-      required this.pinned,
-      required this.archived,
-      required this.joinedGroup,
-      required this.leftGroup,
-      required this.deletedContent,
-      required this.stateVersionId,
-      this.stateEncryptionKey,
-      this.myGroupPrivateKey,
-      required this.groupName,
-      this.draftMessage,
-      required this.totalMediaCounter,
-      required this.alsoBestFriend,
-      required this.deleteMessagesAfterMilliseconds,
-      required this.createdAt,
-      this.lastMessageSend,
-      this.lastMessageReceived,
-      this.lastFlameCounterChange,
-      this.lastFlameSync,
-      required this.flameCounter,
-      required this.maxFlameCounter,
-      this.maxFlameCounterFrom,
-      required this.lastMessageExchange});
+  const GroupsData({
+    required this.groupId,
+    required this.isGroupAdmin,
+    required this.isDirectChat,
+    required this.pinned,
+    required this.archived,
+    required this.joinedGroup,
+    required this.leftGroup,
+    required this.deletedContent,
+    required this.stateVersionId,
+    this.stateEncryptionKey,
+    this.myGroupPrivateKey,
+    required this.groupName,
+    this.draftMessage,
+    required this.totalMediaCounter,
+    required this.alsoBestFriend,
+    required this.deleteMessagesAfterMilliseconds,
+    required this.createdAt,
+    this.lastMessageSend,
+    this.lastMessageReceived,
+    this.lastFlameCounterChange,
+    this.lastFlameSync,
+    required this.flameCounter,
+    required this.maxFlameCounter,
+    this.maxFlameCounterFrom,
+    required this.lastMessageExchange,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -896,8 +1100,9 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
     }
     map['total_media_counter'] = Variable<int>(totalMediaCounter);
     map['also_best_friend'] = Variable<int>(alsoBestFriend);
-    map['delete_messages_after_milliseconds'] =
-        Variable<int>(deleteMessagesAfterMilliseconds);
+    map['delete_messages_after_milliseconds'] = Variable<int>(
+      deleteMessagesAfterMilliseconds,
+    );
     map['created_at'] = Variable<int>(createdAt);
     if (!nullToAbsent || lastMessageSend != null) {
       map['last_message_send'] = Variable<int>(lastMessageSend);
@@ -966,8 +1171,10 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
     );
   }
 
-  factory GroupsData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory GroupsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return GroupsData(
       groupId: serializer.fromJson<String>(json['groupId']),
@@ -979,29 +1186,36 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
       leftGroup: serializer.fromJson<int>(json['leftGroup']),
       deletedContent: serializer.fromJson<int>(json['deletedContent']),
       stateVersionId: serializer.fromJson<int>(json['stateVersionId']),
-      stateEncryptionKey:
-          serializer.fromJson<i2.Uint8List?>(json['stateEncryptionKey']),
-      myGroupPrivateKey:
-          serializer.fromJson<i2.Uint8List?>(json['myGroupPrivateKey']),
+      stateEncryptionKey: serializer.fromJson<i2.Uint8List?>(
+        json['stateEncryptionKey'],
+      ),
+      myGroupPrivateKey: serializer.fromJson<i2.Uint8List?>(
+        json['myGroupPrivateKey'],
+      ),
       groupName: serializer.fromJson<String>(json['groupName']),
       draftMessage: serializer.fromJson<String?>(json['draftMessage']),
       totalMediaCounter: serializer.fromJson<int>(json['totalMediaCounter']),
       alsoBestFriend: serializer.fromJson<int>(json['alsoBestFriend']),
-      deleteMessagesAfterMilliseconds:
-          serializer.fromJson<int>(json['deleteMessagesAfterMilliseconds']),
+      deleteMessagesAfterMilliseconds: serializer.fromJson<int>(
+        json['deleteMessagesAfterMilliseconds'],
+      ),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       lastMessageSend: serializer.fromJson<int?>(json['lastMessageSend']),
-      lastMessageReceived:
-          serializer.fromJson<int?>(json['lastMessageReceived']),
-      lastFlameCounterChange:
-          serializer.fromJson<int?>(json['lastFlameCounterChange']),
+      lastMessageReceived: serializer.fromJson<int?>(
+        json['lastMessageReceived'],
+      ),
+      lastFlameCounterChange: serializer.fromJson<int?>(
+        json['lastFlameCounterChange'],
+      ),
       lastFlameSync: serializer.fromJson<int?>(json['lastFlameSync']),
       flameCounter: serializer.fromJson<int>(json['flameCounter']),
       maxFlameCounter: serializer.fromJson<int>(json['maxFlameCounter']),
-      maxFlameCounterFrom:
-          serializer.fromJson<int?>(json['maxFlameCounterFrom']),
-      lastMessageExchange:
-          serializer.fromJson<int>(json['lastMessageExchange']),
+      maxFlameCounterFrom: serializer.fromJson<int?>(
+        json['maxFlameCounterFrom'],
+      ),
+      lastMessageExchange: serializer.fromJson<int>(
+        json['lastMessageExchange'],
+      ),
     );
   }
   @override
@@ -1017,15 +1231,17 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
       'leftGroup': serializer.toJson<int>(leftGroup),
       'deletedContent': serializer.toJson<int>(deletedContent),
       'stateVersionId': serializer.toJson<int>(stateVersionId),
-      'stateEncryptionKey':
-          serializer.toJson<i2.Uint8List?>(stateEncryptionKey),
+      'stateEncryptionKey': serializer.toJson<i2.Uint8List?>(
+        stateEncryptionKey,
+      ),
       'myGroupPrivateKey': serializer.toJson<i2.Uint8List?>(myGroupPrivateKey),
       'groupName': serializer.toJson<String>(groupName),
       'draftMessage': serializer.toJson<String?>(draftMessage),
       'totalMediaCounter': serializer.toJson<int>(totalMediaCounter),
       'alsoBestFriend': serializer.toJson<int>(alsoBestFriend),
-      'deleteMessagesAfterMilliseconds':
-          serializer.toJson<int>(deleteMessagesAfterMilliseconds),
+      'deleteMessagesAfterMilliseconds': serializer.toJson<int>(
+        deleteMessagesAfterMilliseconds,
+      ),
       'createdAt': serializer.toJson<int>(createdAt),
       'lastMessageSend': serializer.toJson<int?>(lastMessageSend),
       'lastMessageReceived': serializer.toJson<int?>(lastMessageReceived),
@@ -1038,74 +1254,74 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
     };
   }
 
-  GroupsData copyWith(
-          {String? groupId,
-          int? isGroupAdmin,
-          int? isDirectChat,
-          int? pinned,
-          int? archived,
-          int? joinedGroup,
-          int? leftGroup,
-          int? deletedContent,
-          int? stateVersionId,
-          Value<i2.Uint8List?> stateEncryptionKey = const Value.absent(),
-          Value<i2.Uint8List?> myGroupPrivateKey = const Value.absent(),
-          String? groupName,
-          Value<String?> draftMessage = const Value.absent(),
-          int? totalMediaCounter,
-          int? alsoBestFriend,
-          int? deleteMessagesAfterMilliseconds,
-          int? createdAt,
-          Value<int?> lastMessageSend = const Value.absent(),
-          Value<int?> lastMessageReceived = const Value.absent(),
-          Value<int?> lastFlameCounterChange = const Value.absent(),
-          Value<int?> lastFlameSync = const Value.absent(),
-          int? flameCounter,
-          int? maxFlameCounter,
-          Value<int?> maxFlameCounterFrom = const Value.absent(),
-          int? lastMessageExchange}) =>
-      GroupsData(
-        groupId: groupId ?? this.groupId,
-        isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
-        isDirectChat: isDirectChat ?? this.isDirectChat,
-        pinned: pinned ?? this.pinned,
-        archived: archived ?? this.archived,
-        joinedGroup: joinedGroup ?? this.joinedGroup,
-        leftGroup: leftGroup ?? this.leftGroup,
-        deletedContent: deletedContent ?? this.deletedContent,
-        stateVersionId: stateVersionId ?? this.stateVersionId,
-        stateEncryptionKey: stateEncryptionKey.present
-            ? stateEncryptionKey.value
-            : this.stateEncryptionKey,
-        myGroupPrivateKey: myGroupPrivateKey.present
-            ? myGroupPrivateKey.value
-            : this.myGroupPrivateKey,
-        groupName: groupName ?? this.groupName,
-        draftMessage:
-            draftMessage.present ? draftMessage.value : this.draftMessage,
-        totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
-        alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
-        deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds ??
-            this.deleteMessagesAfterMilliseconds,
-        createdAt: createdAt ?? this.createdAt,
-        lastMessageSend: lastMessageSend.present
-            ? lastMessageSend.value
-            : this.lastMessageSend,
-        lastMessageReceived: lastMessageReceived.present
-            ? lastMessageReceived.value
-            : this.lastMessageReceived,
-        lastFlameCounterChange: lastFlameCounterChange.present
-            ? lastFlameCounterChange.value
-            : this.lastFlameCounterChange,
-        lastFlameSync:
-            lastFlameSync.present ? lastFlameSync.value : this.lastFlameSync,
-        flameCounter: flameCounter ?? this.flameCounter,
-        maxFlameCounter: maxFlameCounter ?? this.maxFlameCounter,
-        maxFlameCounterFrom: maxFlameCounterFrom.present
-            ? maxFlameCounterFrom.value
-            : this.maxFlameCounterFrom,
-        lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
-      );
+  GroupsData copyWith({
+    String? groupId,
+    int? isGroupAdmin,
+    int? isDirectChat,
+    int? pinned,
+    int? archived,
+    int? joinedGroup,
+    int? leftGroup,
+    int? deletedContent,
+    int? stateVersionId,
+    Value<i2.Uint8List?> stateEncryptionKey = const Value.absent(),
+    Value<i2.Uint8List?> myGroupPrivateKey = const Value.absent(),
+    String? groupName,
+    Value<String?> draftMessage = const Value.absent(),
+    int? totalMediaCounter,
+    int? alsoBestFriend,
+    int? deleteMessagesAfterMilliseconds,
+    int? createdAt,
+    Value<int?> lastMessageSend = const Value.absent(),
+    Value<int?> lastMessageReceived = const Value.absent(),
+    Value<int?> lastFlameCounterChange = const Value.absent(),
+    Value<int?> lastFlameSync = const Value.absent(),
+    int? flameCounter,
+    int? maxFlameCounter,
+    Value<int?> maxFlameCounterFrom = const Value.absent(),
+    int? lastMessageExchange,
+  }) => GroupsData(
+    groupId: groupId ?? this.groupId,
+    isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
+    isDirectChat: isDirectChat ?? this.isDirectChat,
+    pinned: pinned ?? this.pinned,
+    archived: archived ?? this.archived,
+    joinedGroup: joinedGroup ?? this.joinedGroup,
+    leftGroup: leftGroup ?? this.leftGroup,
+    deletedContent: deletedContent ?? this.deletedContent,
+    stateVersionId: stateVersionId ?? this.stateVersionId,
+    stateEncryptionKey: stateEncryptionKey.present
+        ? stateEncryptionKey.value
+        : this.stateEncryptionKey,
+    myGroupPrivateKey: myGroupPrivateKey.present
+        ? myGroupPrivateKey.value
+        : this.myGroupPrivateKey,
+    groupName: groupName ?? this.groupName,
+    draftMessage: draftMessage.present ? draftMessage.value : this.draftMessage,
+    totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
+    alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
+    deleteMessagesAfterMilliseconds:
+        deleteMessagesAfterMilliseconds ?? this.deleteMessagesAfterMilliseconds,
+    createdAt: createdAt ?? this.createdAt,
+    lastMessageSend: lastMessageSend.present
+        ? lastMessageSend.value
+        : this.lastMessageSend,
+    lastMessageReceived: lastMessageReceived.present
+        ? lastMessageReceived.value
+        : this.lastMessageReceived,
+    lastFlameCounterChange: lastFlameCounterChange.present
+        ? lastFlameCounterChange.value
+        : this.lastFlameCounterChange,
+    lastFlameSync: lastFlameSync.present
+        ? lastFlameSync.value
+        : this.lastFlameSync,
+    flameCounter: flameCounter ?? this.flameCounter,
+    maxFlameCounter: maxFlameCounter ?? this.maxFlameCounter,
+    maxFlameCounterFrom: maxFlameCounterFrom.present
+        ? maxFlameCounterFrom.value
+        : this.maxFlameCounterFrom,
+    lastMessageExchange: lastMessageExchange ?? this.lastMessageExchange,
+  );
   GroupsData copyWithCompanion(GroupsCompanion data) {
     return GroupsData(
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
@@ -1117,8 +1333,9 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
           : this.isDirectChat,
       pinned: data.pinned.present ? data.pinned.value : this.pinned,
       archived: data.archived.present ? data.archived.value : this.archived,
-      joinedGroup:
-          data.joinedGroup.present ? data.joinedGroup.value : this.joinedGroup,
+      joinedGroup: data.joinedGroup.present
+          ? data.joinedGroup.value
+          : this.joinedGroup,
       leftGroup: data.leftGroup.present ? data.leftGroup.value : this.leftGroup,
       deletedContent: data.deletedContent.present
           ? data.deletedContent.value
@@ -1144,8 +1361,8 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
           : this.alsoBestFriend,
       deleteMessagesAfterMilliseconds:
           data.deleteMessagesAfterMilliseconds.present
-              ? data.deleteMessagesAfterMilliseconds.value
-              : this.deleteMessagesAfterMilliseconds,
+          ? data.deleteMessagesAfterMilliseconds.value
+          : this.deleteMessagesAfterMilliseconds,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       lastMessageSend: data.lastMessageSend.present
           ? data.lastMessageSend.value
@@ -1193,7 +1410,8 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write(
-              'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ')
+            'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
@@ -1209,32 +1427,32 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
 
   @override
   int get hashCode => Object.hashAll([
-        groupId,
-        isGroupAdmin,
-        isDirectChat,
-        pinned,
-        archived,
-        joinedGroup,
-        leftGroup,
-        deletedContent,
-        stateVersionId,
-        $driftBlobEquality.hash(stateEncryptionKey),
-        $driftBlobEquality.hash(myGroupPrivateKey),
-        groupName,
-        draftMessage,
-        totalMediaCounter,
-        alsoBestFriend,
-        deleteMessagesAfterMilliseconds,
-        createdAt,
-        lastMessageSend,
-        lastMessageReceived,
-        lastFlameCounterChange,
-        lastFlameSync,
-        flameCounter,
-        maxFlameCounter,
-        maxFlameCounterFrom,
-        lastMessageExchange
-      ]);
+    groupId,
+    isGroupAdmin,
+    isDirectChat,
+    pinned,
+    archived,
+    joinedGroup,
+    leftGroup,
+    deletedContent,
+    stateVersionId,
+    $driftBlobEquality.hash(stateEncryptionKey),
+    $driftBlobEquality.hash(myGroupPrivateKey),
+    groupName,
+    draftMessage,
+    totalMediaCounter,
+    alsoBestFriend,
+    deleteMessagesAfterMilliseconds,
+    createdAt,
+    lastMessageSend,
+    lastMessageReceived,
+    lastFlameCounterChange,
+    lastFlameSync,
+    flameCounter,
+    maxFlameCounter,
+    maxFlameCounterFrom,
+    lastMessageExchange,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1249,9 +1467,13 @@ class GroupsData extends DataClass implements Insertable<GroupsData> {
           other.deletedContent == this.deletedContent &&
           other.stateVersionId == this.stateVersionId &&
           $driftBlobEquality.equals(
-              other.stateEncryptionKey, this.stateEncryptionKey) &&
+            other.stateEncryptionKey,
+            this.stateEncryptionKey,
+          ) &&
           $driftBlobEquality.equals(
-              other.myGroupPrivateKey, this.myGroupPrivateKey) &&
+            other.myGroupPrivateKey,
+            this.myGroupPrivateKey,
+          ) &&
           other.groupName == this.groupName &&
           other.draftMessage == this.draftMessage &&
           other.totalMediaCounter == this.totalMediaCounter &&
@@ -1351,8 +1573,8 @@ class GroupsCompanion extends UpdateCompanion<GroupsData> {
     this.maxFlameCounterFrom = const Value.absent(),
     this.lastMessageExchange = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupId = Value(groupId),
-        groupName = Value(groupName);
+  }) : groupId = Value(groupId),
+       groupName = Value(groupName);
   static Insertable<GroupsData> custom({
     Expression<String>? groupId,
     Expression<int>? isGroupAdmin,
@@ -1417,33 +1639,34 @@ class GroupsCompanion extends UpdateCompanion<GroupsData> {
     });
   }
 
-  GroupsCompanion copyWith(
-      {Value<String>? groupId,
-      Value<int>? isGroupAdmin,
-      Value<int>? isDirectChat,
-      Value<int>? pinned,
-      Value<int>? archived,
-      Value<int>? joinedGroup,
-      Value<int>? leftGroup,
-      Value<int>? deletedContent,
-      Value<int>? stateVersionId,
-      Value<i2.Uint8List?>? stateEncryptionKey,
-      Value<i2.Uint8List?>? myGroupPrivateKey,
-      Value<String>? groupName,
-      Value<String?>? draftMessage,
-      Value<int>? totalMediaCounter,
-      Value<int>? alsoBestFriend,
-      Value<int>? deleteMessagesAfterMilliseconds,
-      Value<int>? createdAt,
-      Value<int?>? lastMessageSend,
-      Value<int?>? lastMessageReceived,
-      Value<int?>? lastFlameCounterChange,
-      Value<int?>? lastFlameSync,
-      Value<int>? flameCounter,
-      Value<int>? maxFlameCounter,
-      Value<int?>? maxFlameCounterFrom,
-      Value<int>? lastMessageExchange,
-      Value<int>? rowid}) {
+  GroupsCompanion copyWith({
+    Value<String>? groupId,
+    Value<int>? isGroupAdmin,
+    Value<int>? isDirectChat,
+    Value<int>? pinned,
+    Value<int>? archived,
+    Value<int>? joinedGroup,
+    Value<int>? leftGroup,
+    Value<int>? deletedContent,
+    Value<int>? stateVersionId,
+    Value<i2.Uint8List?>? stateEncryptionKey,
+    Value<i2.Uint8List?>? myGroupPrivateKey,
+    Value<String>? groupName,
+    Value<String?>? draftMessage,
+    Value<int>? totalMediaCounter,
+    Value<int>? alsoBestFriend,
+    Value<int>? deleteMessagesAfterMilliseconds,
+    Value<int>? createdAt,
+    Value<int?>? lastMessageSend,
+    Value<int?>? lastMessageReceived,
+    Value<int?>? lastFlameCounterChange,
+    Value<int?>? lastFlameSync,
+    Value<int>? flameCounter,
+    Value<int>? maxFlameCounter,
+    Value<int?>? maxFlameCounterFrom,
+    Value<int>? lastMessageExchange,
+    Value<int>? rowid,
+  }) {
     return GroupsCompanion(
       groupId: groupId ?? this.groupId,
       isGroupAdmin: isGroupAdmin ?? this.isGroupAdmin,
@@ -1460,7 +1683,8 @@ class GroupsCompanion extends UpdateCompanion<GroupsData> {
       draftMessage: draftMessage ?? this.draftMessage,
       totalMediaCounter: totalMediaCounter ?? this.totalMediaCounter,
       alsoBestFriend: alsoBestFriend ?? this.alsoBestFriend,
-      deleteMessagesAfterMilliseconds: deleteMessagesAfterMilliseconds ??
+      deleteMessagesAfterMilliseconds:
+          deleteMessagesAfterMilliseconds ??
           this.deleteMessagesAfterMilliseconds,
       createdAt: createdAt ?? this.createdAt,
       lastMessageSend: lastMessageSend ?? this.lastMessageSend,
@@ -1507,12 +1731,14 @@ class GroupsCompanion extends UpdateCompanion<GroupsData> {
       map['state_version_id'] = Variable<int>(stateVersionId.value);
     }
     if (stateEncryptionKey.present) {
-      map['state_encryption_key'] =
-          Variable<i2.Uint8List>(stateEncryptionKey.value);
+      map['state_encryption_key'] = Variable<i2.Uint8List>(
+        stateEncryptionKey.value,
+      );
     }
     if (myGroupPrivateKey.present) {
-      map['my_group_private_key'] =
-          Variable<i2.Uint8List>(myGroupPrivateKey.value);
+      map['my_group_private_key'] = Variable<i2.Uint8List>(
+        myGroupPrivateKey.value,
+      );
     }
     if (groupName.present) {
       map['group_name'] = Variable<String>(groupName.value);
@@ -1527,8 +1753,9 @@ class GroupsCompanion extends UpdateCompanion<GroupsData> {
       map['also_best_friend'] = Variable<int>(alsoBestFriend.value);
     }
     if (deleteMessagesAfterMilliseconds.present) {
-      map['delete_messages_after_milliseconds'] =
-          Variable<int>(deleteMessagesAfterMilliseconds.value);
+      map['delete_messages_after_milliseconds'] = Variable<int>(
+        deleteMessagesAfterMilliseconds.value,
+      );
     }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
@@ -1540,8 +1767,9 @@ class GroupsCompanion extends UpdateCompanion<GroupsData> {
       map['last_message_received'] = Variable<int>(lastMessageReceived.value);
     }
     if (lastFlameCounterChange.present) {
-      map['last_flame_counter_change'] =
-          Variable<int>(lastFlameCounterChange.value);
+      map['last_flame_counter_change'] = Variable<int>(
+        lastFlameCounterChange.value,
+      );
     }
     if (lastFlameSync.present) {
       map['last_flame_sync'] = Variable<int>(lastFlameSync.value);
@@ -1583,7 +1811,8 @@ class GroupsCompanion extends UpdateCompanion<GroupsData> {
           ..write('totalMediaCounter: $totalMediaCounter, ')
           ..write('alsoBestFriend: $alsoBestFriend, ')
           ..write(
-              'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ')
+            'deleteMessagesAfterMilliseconds: $deleteMessagesAfterMilliseconds, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('lastMessageSend: $lastMessageSend, ')
           ..write('lastMessageReceived: $lastMessageReceived, ')
@@ -1605,111 +1834,167 @@ class MediaFiles extends Table with TableInfo<MediaFiles, MediaFilesData> {
   final String? _alias;
   MediaFiles(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> mediaId = GeneratedColumn<String>(
-      'media_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'media_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> uploadState = GeneratedColumn<String>(
-      'upload_state', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'upload_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<String> downloadState = GeneratedColumn<String>(
-      'download_state', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'download_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> requiresAuthentication = GeneratedColumn<int>(
-      'requires_authentication', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT 0 CHECK (requires_authentication IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'requires_authentication',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT 0 CHECK (requires_authentication IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> stored = GeneratedColumn<int>(
-      'stored', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK ("stored" IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'stored',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK ("stored" IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> isDraftMedia = GeneratedColumn<int>(
-      'is_draft_media', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_draft_media IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'is_draft_media',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_draft_media IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<String> reuploadRequestedBy =
-      GeneratedColumn<String>('reupload_requested_by', aliasedName, true,
-          type: DriftSqlType.string,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<String>(
+        'reupload_requested_by',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<int> displayLimitInMilliseconds =
-      GeneratedColumn<int>('display_limit_in_milliseconds', aliasedName, true,
-          type: DriftSqlType.int,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<int>(
+        'display_limit_in_milliseconds',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<int> removeAudio = GeneratedColumn<int>(
-      'remove_audio', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL CHECK (remove_audio IN (0, 1))');
+    'remove_audio',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL CHECK (remove_audio IN (0, 1))',
+  );
   late final GeneratedColumn<i2.Uint8List> downloadToken =
-      GeneratedColumn<i2.Uint8List>('download_token', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'download_token',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<i2.Uint8List> encryptionKey =
-      GeneratedColumn<i2.Uint8List>('encryption_key', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'encryption_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<i2.Uint8List> encryptionMac =
-      GeneratedColumn<i2.Uint8List>('encryption_mac', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'encryption_mac',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<i2.Uint8List> encryptionNonce =
-      GeneratedColumn<i2.Uint8List>('encryption_nonce', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'encryption_nonce',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<i2.Uint8List> storedFileHash =
-      GeneratedColumn<i2.Uint8List>('stored_file_hash', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'stored_file_hash',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        mediaId,
-        type,
-        uploadState,
-        downloadState,
-        requiresAuthentication,
-        stored,
-        isDraftMedia,
-        reuploadRequestedBy,
-        displayLimitInMilliseconds,
-        removeAudio,
-        downloadToken,
-        encryptionKey,
-        encryptionMac,
-        encryptionNonce,
-        storedFileHash,
-        createdAt
-      ];
+    mediaId,
+    type,
+    uploadState,
+    downloadState,
+    requiresAuthentication,
+    stored,
+    isDraftMedia,
+    reuploadRequestedBy,
+    displayLimitInMilliseconds,
+    removeAudio,
+    downloadToken,
+    encryptionKey,
+    encryptionMac,
+    encryptionNonce,
+    storedFileHash,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1721,39 +2006,70 @@ class MediaFiles extends Table with TableInfo<MediaFiles, MediaFilesData> {
   MediaFilesData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MediaFilesData(
-      mediaId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}media_id'])!,
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      uploadState: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}upload_state']),
-      downloadState: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}download_state']),
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      uploadState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}upload_state'],
+      ),
+      downloadState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}download_state'],
+      ),
       requiresAuthentication: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}requires_authentication'])!,
-      stored: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}stored'])!,
-      isDraftMedia: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}is_draft_media'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}requires_authentication'],
+      )!,
+      stored: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}stored'],
+      )!,
+      isDraftMedia: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_draft_media'],
+      )!,
       reuploadRequestedBy: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}reupload_requested_by']),
+        DriftSqlType.string,
+        data['${effectivePrefix}reupload_requested_by'],
+      ),
       displayLimitInMilliseconds: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}display_limit_in_milliseconds']),
-      removeAudio: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}remove_audio']),
-      downloadToken: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}download_token']),
-      encryptionKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}encryption_key']),
-      encryptionMac: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}encryption_mac']),
-      encryptionNonce: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}encryption_nonce']),
-      storedFileHash: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}stored_file_hash']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}display_limit_in_milliseconds'],
+      ),
+      removeAudio: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}remove_audio'],
+      ),
+      downloadToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}download_token'],
+      ),
+      encryptionKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}encryption_key'],
+      ),
+      encryptionMac: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}encryption_mac'],
+      ),
+      encryptionNonce: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}encryption_nonce'],
+      ),
+      storedFileHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}stored_file_hash'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -1785,23 +2101,24 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
   final i2.Uint8List? encryptionNonce;
   final i2.Uint8List? storedFileHash;
   final int createdAt;
-  const MediaFilesData(
-      {required this.mediaId,
-      required this.type,
-      this.uploadState,
-      this.downloadState,
-      required this.requiresAuthentication,
-      required this.stored,
-      required this.isDraftMedia,
-      this.reuploadRequestedBy,
-      this.displayLimitInMilliseconds,
-      this.removeAudio,
-      this.downloadToken,
-      this.encryptionKey,
-      this.encryptionMac,
-      this.encryptionNonce,
-      this.storedFileHash,
-      required this.createdAt});
+  const MediaFilesData({
+    required this.mediaId,
+    required this.type,
+    this.uploadState,
+    this.downloadState,
+    required this.requiresAuthentication,
+    required this.stored,
+    required this.isDraftMedia,
+    this.reuploadRequestedBy,
+    this.displayLimitInMilliseconds,
+    this.removeAudio,
+    this.downloadToken,
+    this.encryptionKey,
+    this.encryptionMac,
+    this.encryptionNonce,
+    this.storedFileHash,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1820,8 +2137,9 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       map['reupload_requested_by'] = Variable<String>(reuploadRequestedBy);
     }
     if (!nullToAbsent || displayLimitInMilliseconds != null) {
-      map['display_limit_in_milliseconds'] =
-          Variable<int>(displayLimitInMilliseconds);
+      map['display_limit_in_milliseconds'] = Variable<int>(
+        displayLimitInMilliseconds,
+      );
     }
     if (!nullToAbsent || removeAudio != null) {
       map['remove_audio'] = Variable<int>(removeAudio);
@@ -1863,8 +2181,8 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
           : Value(reuploadRequestedBy),
       displayLimitInMilliseconds:
           displayLimitInMilliseconds == null && nullToAbsent
-              ? const Value.absent()
-              : Value(displayLimitInMilliseconds),
+          ? const Value.absent()
+          : Value(displayLimitInMilliseconds),
       removeAudio: removeAudio == null && nullToAbsent
           ? const Value.absent()
           : Value(removeAudio),
@@ -1887,30 +2205,37 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
     );
   }
 
-  factory MediaFilesData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory MediaFilesData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MediaFilesData(
       mediaId: serializer.fromJson<String>(json['mediaId']),
       type: serializer.fromJson<String>(json['type']),
       uploadState: serializer.fromJson<String?>(json['uploadState']),
       downloadState: serializer.fromJson<String?>(json['downloadState']),
-      requiresAuthentication:
-          serializer.fromJson<int>(json['requiresAuthentication']),
+      requiresAuthentication: serializer.fromJson<int>(
+        json['requiresAuthentication'],
+      ),
       stored: serializer.fromJson<int>(json['stored']),
       isDraftMedia: serializer.fromJson<int>(json['isDraftMedia']),
-      reuploadRequestedBy:
-          serializer.fromJson<String?>(json['reuploadRequestedBy']),
-      displayLimitInMilliseconds:
-          serializer.fromJson<int?>(json['displayLimitInMilliseconds']),
+      reuploadRequestedBy: serializer.fromJson<String?>(
+        json['reuploadRequestedBy'],
+      ),
+      displayLimitInMilliseconds: serializer.fromJson<int?>(
+        json['displayLimitInMilliseconds'],
+      ),
       removeAudio: serializer.fromJson<int?>(json['removeAudio']),
       downloadToken: serializer.fromJson<i2.Uint8List?>(json['downloadToken']),
       encryptionKey: serializer.fromJson<i2.Uint8List?>(json['encryptionKey']),
       encryptionMac: serializer.fromJson<i2.Uint8List?>(json['encryptionMac']),
-      encryptionNonce:
-          serializer.fromJson<i2.Uint8List?>(json['encryptionNonce']),
-      storedFileHash:
-          serializer.fromJson<i2.Uint8List?>(json['storedFileHash']),
+      encryptionNonce: serializer.fromJson<i2.Uint8List?>(
+        json['encryptionNonce'],
+      ),
+      storedFileHash: serializer.fromJson<i2.Uint8List?>(
+        json['storedFileHash'],
+      ),
       createdAt: serializer.fromJson<int>(json['createdAt']),
     );
   }
@@ -1926,8 +2251,9 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       'stored': serializer.toJson<int>(stored),
       'isDraftMedia': serializer.toJson<int>(isDraftMedia),
       'reuploadRequestedBy': serializer.toJson<String?>(reuploadRequestedBy),
-      'displayLimitInMilliseconds':
-          serializer.toJson<int?>(displayLimitInMilliseconds),
+      'displayLimitInMilliseconds': serializer.toJson<int?>(
+        displayLimitInMilliseconds,
+      ),
       'removeAudio': serializer.toJson<int?>(removeAudio),
       'downloadToken': serializer.toJson<i2.Uint8List?>(downloadToken),
       'encryptionKey': serializer.toJson<i2.Uint8List?>(encryptionKey),
@@ -1938,59 +2264,65 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
     };
   }
 
-  MediaFilesData copyWith(
-          {String? mediaId,
-          String? type,
-          Value<String?> uploadState = const Value.absent(),
-          Value<String?> downloadState = const Value.absent(),
-          int? requiresAuthentication,
-          int? stored,
-          int? isDraftMedia,
-          Value<String?> reuploadRequestedBy = const Value.absent(),
-          Value<int?> displayLimitInMilliseconds = const Value.absent(),
-          Value<int?> removeAudio = const Value.absent(),
-          Value<i2.Uint8List?> downloadToken = const Value.absent(),
-          Value<i2.Uint8List?> encryptionKey = const Value.absent(),
-          Value<i2.Uint8List?> encryptionMac = const Value.absent(),
-          Value<i2.Uint8List?> encryptionNonce = const Value.absent(),
-          Value<i2.Uint8List?> storedFileHash = const Value.absent(),
-          int? createdAt}) =>
-      MediaFilesData(
-        mediaId: mediaId ?? this.mediaId,
-        type: type ?? this.type,
-        uploadState: uploadState.present ? uploadState.value : this.uploadState,
-        downloadState:
-            downloadState.present ? downloadState.value : this.downloadState,
-        requiresAuthentication:
-            requiresAuthentication ?? this.requiresAuthentication,
-        stored: stored ?? this.stored,
-        isDraftMedia: isDraftMedia ?? this.isDraftMedia,
-        reuploadRequestedBy: reuploadRequestedBy.present
-            ? reuploadRequestedBy.value
-            : this.reuploadRequestedBy,
-        displayLimitInMilliseconds: displayLimitInMilliseconds.present
-            ? displayLimitInMilliseconds.value
-            : this.displayLimitInMilliseconds,
-        removeAudio: removeAudio.present ? removeAudio.value : this.removeAudio,
-        downloadToken:
-            downloadToken.present ? downloadToken.value : this.downloadToken,
-        encryptionKey:
-            encryptionKey.present ? encryptionKey.value : this.encryptionKey,
-        encryptionMac:
-            encryptionMac.present ? encryptionMac.value : this.encryptionMac,
-        encryptionNonce: encryptionNonce.present
-            ? encryptionNonce.value
-            : this.encryptionNonce,
-        storedFileHash:
-            storedFileHash.present ? storedFileHash.value : this.storedFileHash,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  MediaFilesData copyWith({
+    String? mediaId,
+    String? type,
+    Value<String?> uploadState = const Value.absent(),
+    Value<String?> downloadState = const Value.absent(),
+    int? requiresAuthentication,
+    int? stored,
+    int? isDraftMedia,
+    Value<String?> reuploadRequestedBy = const Value.absent(),
+    Value<int?> displayLimitInMilliseconds = const Value.absent(),
+    Value<int?> removeAudio = const Value.absent(),
+    Value<i2.Uint8List?> downloadToken = const Value.absent(),
+    Value<i2.Uint8List?> encryptionKey = const Value.absent(),
+    Value<i2.Uint8List?> encryptionMac = const Value.absent(),
+    Value<i2.Uint8List?> encryptionNonce = const Value.absent(),
+    Value<i2.Uint8List?> storedFileHash = const Value.absent(),
+    int? createdAt,
+  }) => MediaFilesData(
+    mediaId: mediaId ?? this.mediaId,
+    type: type ?? this.type,
+    uploadState: uploadState.present ? uploadState.value : this.uploadState,
+    downloadState: downloadState.present
+        ? downloadState.value
+        : this.downloadState,
+    requiresAuthentication:
+        requiresAuthentication ?? this.requiresAuthentication,
+    stored: stored ?? this.stored,
+    isDraftMedia: isDraftMedia ?? this.isDraftMedia,
+    reuploadRequestedBy: reuploadRequestedBy.present
+        ? reuploadRequestedBy.value
+        : this.reuploadRequestedBy,
+    displayLimitInMilliseconds: displayLimitInMilliseconds.present
+        ? displayLimitInMilliseconds.value
+        : this.displayLimitInMilliseconds,
+    removeAudio: removeAudio.present ? removeAudio.value : this.removeAudio,
+    downloadToken: downloadToken.present
+        ? downloadToken.value
+        : this.downloadToken,
+    encryptionKey: encryptionKey.present
+        ? encryptionKey.value
+        : this.encryptionKey,
+    encryptionMac: encryptionMac.present
+        ? encryptionMac.value
+        : this.encryptionMac,
+    encryptionNonce: encryptionNonce.present
+        ? encryptionNonce.value
+        : this.encryptionNonce,
+    storedFileHash: storedFileHash.present
+        ? storedFileHash.value
+        : this.storedFileHash,
+    createdAt: createdAt ?? this.createdAt,
+  );
   MediaFilesData copyWithCompanion(MediaFilesCompanion data) {
     return MediaFilesData(
       mediaId: data.mediaId.present ? data.mediaId.value : this.mediaId,
       type: data.type.present ? data.type.value : this.type,
-      uploadState:
-          data.uploadState.present ? data.uploadState.value : this.uploadState,
+      uploadState: data.uploadState.present
+          ? data.uploadState.value
+          : this.uploadState,
       downloadState: data.downloadState.present
           ? data.downloadState.value
           : this.downloadState,
@@ -2007,8 +2339,9 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
       displayLimitInMilliseconds: data.displayLimitInMilliseconds.present
           ? data.displayLimitInMilliseconds.value
           : this.displayLimitInMilliseconds,
-      removeAudio:
-          data.removeAudio.present ? data.removeAudio.value : this.removeAudio,
+      removeAudio: data.removeAudio.present
+          ? data.removeAudio.value
+          : this.removeAudio,
       downloadToken: data.downloadToken.present
           ? data.downloadToken.value
           : this.downloadToken,
@@ -2053,22 +2386,23 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
 
   @override
   int get hashCode => Object.hash(
-      mediaId,
-      type,
-      uploadState,
-      downloadState,
-      requiresAuthentication,
-      stored,
-      isDraftMedia,
-      reuploadRequestedBy,
-      displayLimitInMilliseconds,
-      removeAudio,
-      $driftBlobEquality.hash(downloadToken),
-      $driftBlobEquality.hash(encryptionKey),
-      $driftBlobEquality.hash(encryptionMac),
-      $driftBlobEquality.hash(encryptionNonce),
-      $driftBlobEquality.hash(storedFileHash),
-      createdAt);
+    mediaId,
+    type,
+    uploadState,
+    downloadState,
+    requiresAuthentication,
+    stored,
+    isDraftMedia,
+    reuploadRequestedBy,
+    displayLimitInMilliseconds,
+    removeAudio,
+    $driftBlobEquality.hash(downloadToken),
+    $driftBlobEquality.hash(encryptionKey),
+    $driftBlobEquality.hash(encryptionMac),
+    $driftBlobEquality.hash(encryptionNonce),
+    $driftBlobEquality.hash(storedFileHash),
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2087,9 +2421,13 @@ class MediaFilesData extends DataClass implements Insertable<MediaFilesData> {
           $driftBlobEquality.equals(other.encryptionKey, this.encryptionKey) &&
           $driftBlobEquality.equals(other.encryptionMac, this.encryptionMac) &&
           $driftBlobEquality.equals(
-              other.encryptionNonce, this.encryptionNonce) &&
+            other.encryptionNonce,
+            this.encryptionNonce,
+          ) &&
           $driftBlobEquality.equals(
-              other.storedFileHash, this.storedFileHash) &&
+            other.storedFileHash,
+            this.storedFileHash,
+          ) &&
           other.createdAt == this.createdAt);
 }
 
@@ -2148,8 +2486,8 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
     this.storedFileHash = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : mediaId = Value(mediaId),
-        type = Value(type);
+  }) : mediaId = Value(mediaId),
+       type = Value(type);
   static Insertable<MediaFilesData> custom({
     Expression<String>? mediaId,
     Expression<String>? type,
@@ -2193,24 +2531,25 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
     });
   }
 
-  MediaFilesCompanion copyWith(
-      {Value<String>? mediaId,
-      Value<String>? type,
-      Value<String?>? uploadState,
-      Value<String?>? downloadState,
-      Value<int>? requiresAuthentication,
-      Value<int>? stored,
-      Value<int>? isDraftMedia,
-      Value<String?>? reuploadRequestedBy,
-      Value<int?>? displayLimitInMilliseconds,
-      Value<int?>? removeAudio,
-      Value<i2.Uint8List?>? downloadToken,
-      Value<i2.Uint8List?>? encryptionKey,
-      Value<i2.Uint8List?>? encryptionMac,
-      Value<i2.Uint8List?>? encryptionNonce,
-      Value<i2.Uint8List?>? storedFileHash,
-      Value<int>? createdAt,
-      Value<int>? rowid}) {
+  MediaFilesCompanion copyWith({
+    Value<String>? mediaId,
+    Value<String>? type,
+    Value<String?>? uploadState,
+    Value<String?>? downloadState,
+    Value<int>? requiresAuthentication,
+    Value<int>? stored,
+    Value<int>? isDraftMedia,
+    Value<String?>? reuploadRequestedBy,
+    Value<int?>? displayLimitInMilliseconds,
+    Value<int?>? removeAudio,
+    Value<i2.Uint8List?>? downloadToken,
+    Value<i2.Uint8List?>? encryptionKey,
+    Value<i2.Uint8List?>? encryptionMac,
+    Value<i2.Uint8List?>? encryptionNonce,
+    Value<i2.Uint8List?>? storedFileHash,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
     return MediaFilesCompanion(
       mediaId: mediaId ?? this.mediaId,
       type: type ?? this.type,
@@ -2250,8 +2589,9 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
       map['download_state'] = Variable<String>(downloadState.value);
     }
     if (requiresAuthentication.present) {
-      map['requires_authentication'] =
-          Variable<int>(requiresAuthentication.value);
+      map['requires_authentication'] = Variable<int>(
+        requiresAuthentication.value,
+      );
     }
     if (stored.present) {
       map['stored'] = Variable<int>(stored.value);
@@ -2260,12 +2600,14 @@ class MediaFilesCompanion extends UpdateCompanion<MediaFilesData> {
       map['is_draft_media'] = Variable<int>(isDraftMedia.value);
     }
     if (reuploadRequestedBy.present) {
-      map['reupload_requested_by'] =
-          Variable<String>(reuploadRequestedBy.value);
+      map['reupload_requested_by'] = Variable<String>(
+        reuploadRequestedBy.value,
+      );
     }
     if (displayLimitInMilliseconds.present) {
-      map['display_limit_in_milliseconds'] =
-          Variable<int>(displayLimitInMilliseconds.value);
+      map['display_limit_in_milliseconds'] = Variable<int>(
+        displayLimitInMilliseconds.value,
+      );
     }
     if (removeAudio.present) {
       map['remove_audio'] = Variable<int>(removeAudio.value);
@@ -2325,126 +2667,182 @@ class Messages extends Table with TableInfo<Messages, MessagesData> {
   final String? _alias;
   Messages(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints:
-          'NOT NULL REFERENCES "groups"(group_id)ON DELETE CASCADE');
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL REFERENCES "groups"(group_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<int> senderId = GeneratedColumn<int>(
-      'sender_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL REFERENCES contacts(user_id)');
+    'sender_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL REFERENCES contacts(user_id)',
+  );
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
-      'content', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'content',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<String> mediaId = GeneratedColumn<String>(
-      'media_id', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NULL REFERENCES media_files(media_id)ON DELETE SET NULL');
+    'media_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NULL REFERENCES media_files(media_id)ON DELETE SET NULL',
+  );
   late final GeneratedColumn<i2.Uint8List> additionalMessageData =
       GeneratedColumn<i2.Uint8List>(
-          'additional_message_data', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+        'additional_message_data',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<int> mediaStored = GeneratedColumn<int>(
-      'media_stored', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (media_stored IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'media_stored',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (media_stored IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> mediaReopened = GeneratedColumn<int>(
-      'media_reopened', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (media_reopened IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'media_reopened',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (media_reopened IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<i2.Uint8List> downloadToken =
-      GeneratedColumn<i2.Uint8List>('download_token', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'download_token',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<String> quotesMessageId = GeneratedColumn<String>(
-      'quotes_message_id', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'quotes_message_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> isDeletedFromSender = GeneratedColumn<int>(
-      'is_deleted_from_sender', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT 0 CHECK (is_deleted_from_sender IN (0, 1))',
-      defaultValue: const CustomExpression('0'));
+    'is_deleted_from_sender',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT 0 CHECK (is_deleted_from_sender IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> openedAt = GeneratedColumn<int>(
-      'opened_at', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'opened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> openedByAll = GeneratedColumn<int>(
-      'opened_by_all', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'opened_by_all',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   late final GeneratedColumn<int> modifiedAt = GeneratedColumn<int>(
-      'modified_at', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'modified_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> ackByUser = GeneratedColumn<int>(
-      'ack_by_user', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'ack_by_user',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> ackByServer = GeneratedColumn<int>(
-      'ack_by_server', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'ack_by_server',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        groupId,
-        messageId,
-        senderId,
-        type,
-        content,
-        mediaId,
-        additionalMessageData,
-        mediaStored,
-        mediaReopened,
-        downloadToken,
-        quotesMessageId,
-        isDeletedFromSender,
-        openedAt,
-        openedByAll,
-        createdAt,
-        modifiedAt,
-        ackByUser,
-        ackByServer
-      ];
+    groupId,
+    messageId,
+    senderId,
+    type,
+    content,
+    mediaId,
+    additionalMessageData,
+    mediaStored,
+    mediaReopened,
+    downloadToken,
+    quotesMessageId,
+    isDeletedFromSender,
+    openedAt,
+    openedByAll,
+    createdAt,
+    modifiedAt,
+    ackByUser,
+    ackByServer,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2456,42 +2854,78 @@ class Messages extends Table with TableInfo<Messages, MessagesData> {
   MessagesData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MessagesData(
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
-      senderId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sender_id']),
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      content: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}content']),
-      mediaId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}media_id']),
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      senderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sender_id'],
+      ),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      ),
+      mediaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}media_id'],
+      ),
       additionalMessageData: attachedDatabase.typeMapping.read(
-          DriftSqlType.blob, data['${effectivePrefix}additional_message_data']),
-      mediaStored: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}media_stored'])!,
-      mediaReopened: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}media_reopened'])!,
-      downloadToken: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}download_token']),
+        DriftSqlType.blob,
+        data['${effectivePrefix}additional_message_data'],
+      ),
+      mediaStored: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}media_stored'],
+      )!,
+      mediaReopened: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}media_reopened'],
+      )!,
+      downloadToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}download_token'],
+      ),
       quotesMessageId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}quotes_message_id']),
+        DriftSqlType.string,
+        data['${effectivePrefix}quotes_message_id'],
+      ),
       isDeletedFromSender: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}is_deleted_from_sender'])!,
-      openedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}opened_at']),
-      openedByAll: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}opened_by_all']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
-      modifiedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}modified_at']),
-      ackByUser: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}ack_by_user']),
-      ackByServer: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}ack_by_server']),
+        DriftSqlType.int,
+        data['${effectivePrefix}is_deleted_from_sender'],
+      )!,
+      openedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opened_at'],
+      ),
+      openedByAll: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opened_by_all'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      modifiedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}modified_at'],
+      ),
+      ackByUser: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ack_by_user'],
+      ),
+      ackByServer: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ack_by_server'],
+      ),
     );
   }
 
@@ -2525,25 +2959,26 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
   final int? modifiedAt;
   final int? ackByUser;
   final int? ackByServer;
-  const MessagesData(
-      {required this.groupId,
-      required this.messageId,
-      this.senderId,
-      required this.type,
-      this.content,
-      this.mediaId,
-      this.additionalMessageData,
-      required this.mediaStored,
-      required this.mediaReopened,
-      this.downloadToken,
-      this.quotesMessageId,
-      required this.isDeletedFromSender,
-      this.openedAt,
-      this.openedByAll,
-      required this.createdAt,
-      this.modifiedAt,
-      this.ackByUser,
-      this.ackByServer});
+  const MessagesData({
+    required this.groupId,
+    required this.messageId,
+    this.senderId,
+    required this.type,
+    this.content,
+    this.mediaId,
+    this.additionalMessageData,
+    required this.mediaStored,
+    required this.mediaReopened,
+    this.downloadToken,
+    this.quotesMessageId,
+    required this.isDeletedFromSender,
+    this.openedAt,
+    this.openedByAll,
+    required this.createdAt,
+    this.modifiedAt,
+    this.ackByUser,
+    this.ackByServer,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2560,8 +2995,9 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       map['media_id'] = Variable<String>(mediaId);
     }
     if (!nullToAbsent || additionalMessageData != null) {
-      map['additional_message_data'] =
-          Variable<i2.Uint8List>(additionalMessageData);
+      map['additional_message_data'] = Variable<i2.Uint8List>(
+        additionalMessageData,
+      );
     }
     map['media_stored'] = Variable<int>(mediaStored);
     map['media_reopened'] = Variable<int>(mediaReopened);
@@ -2636,8 +3072,10 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
     );
   }
 
-  factory MessagesData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory MessagesData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MessagesData(
       groupId: serializer.fromJson<String>(json['groupId']),
@@ -2646,14 +3084,16 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       type: serializer.fromJson<String>(json['type']),
       content: serializer.fromJson<String?>(json['content']),
       mediaId: serializer.fromJson<String?>(json['mediaId']),
-      additionalMessageData:
-          serializer.fromJson<i2.Uint8List?>(json['additionalMessageData']),
+      additionalMessageData: serializer.fromJson<i2.Uint8List?>(
+        json['additionalMessageData'],
+      ),
       mediaStored: serializer.fromJson<int>(json['mediaStored']),
       mediaReopened: serializer.fromJson<int>(json['mediaReopened']),
       downloadToken: serializer.fromJson<i2.Uint8List?>(json['downloadToken']),
       quotesMessageId: serializer.fromJson<String?>(json['quotesMessageId']),
-      isDeletedFromSender:
-          serializer.fromJson<int>(json['isDeletedFromSender']),
+      isDeletedFromSender: serializer.fromJson<int>(
+        json['isDeletedFromSender'],
+      ),
       openedAt: serializer.fromJson<int?>(json['openedAt']),
       openedByAll: serializer.fromJson<int?>(json['openedByAll']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
@@ -2672,8 +3112,9 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       'type': serializer.toJson<String>(type),
       'content': serializer.toJson<String?>(content),
       'mediaId': serializer.toJson<String?>(mediaId),
-      'additionalMessageData':
-          serializer.toJson<i2.Uint8List?>(additionalMessageData),
+      'additionalMessageData': serializer.toJson<i2.Uint8List?>(
+        additionalMessageData,
+      ),
       'mediaStored': serializer.toJson<int>(mediaStored),
       'mediaReopened': serializer.toJson<int>(mediaReopened),
       'downloadToken': serializer.toJson<i2.Uint8List?>(downloadToken),
@@ -2688,50 +3129,51 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
     };
   }
 
-  MessagesData copyWith(
-          {String? groupId,
-          String? messageId,
-          Value<int?> senderId = const Value.absent(),
-          String? type,
-          Value<String?> content = const Value.absent(),
-          Value<String?> mediaId = const Value.absent(),
-          Value<i2.Uint8List?> additionalMessageData = const Value.absent(),
-          int? mediaStored,
-          int? mediaReopened,
-          Value<i2.Uint8List?> downloadToken = const Value.absent(),
-          Value<String?> quotesMessageId = const Value.absent(),
-          int? isDeletedFromSender,
-          Value<int?> openedAt = const Value.absent(),
-          Value<int?> openedByAll = const Value.absent(),
-          int? createdAt,
-          Value<int?> modifiedAt = const Value.absent(),
-          Value<int?> ackByUser = const Value.absent(),
-          Value<int?> ackByServer = const Value.absent()}) =>
-      MessagesData(
-        groupId: groupId ?? this.groupId,
-        messageId: messageId ?? this.messageId,
-        senderId: senderId.present ? senderId.value : this.senderId,
-        type: type ?? this.type,
-        content: content.present ? content.value : this.content,
-        mediaId: mediaId.present ? mediaId.value : this.mediaId,
-        additionalMessageData: additionalMessageData.present
-            ? additionalMessageData.value
-            : this.additionalMessageData,
-        mediaStored: mediaStored ?? this.mediaStored,
-        mediaReopened: mediaReopened ?? this.mediaReopened,
-        downloadToken:
-            downloadToken.present ? downloadToken.value : this.downloadToken,
-        quotesMessageId: quotesMessageId.present
-            ? quotesMessageId.value
-            : this.quotesMessageId,
-        isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
-        openedAt: openedAt.present ? openedAt.value : this.openedAt,
-        openedByAll: openedByAll.present ? openedByAll.value : this.openedByAll,
-        createdAt: createdAt ?? this.createdAt,
-        modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
-        ackByUser: ackByUser.present ? ackByUser.value : this.ackByUser,
-        ackByServer: ackByServer.present ? ackByServer.value : this.ackByServer,
-      );
+  MessagesData copyWith({
+    String? groupId,
+    String? messageId,
+    Value<int?> senderId = const Value.absent(),
+    String? type,
+    Value<String?> content = const Value.absent(),
+    Value<String?> mediaId = const Value.absent(),
+    Value<i2.Uint8List?> additionalMessageData = const Value.absent(),
+    int? mediaStored,
+    int? mediaReopened,
+    Value<i2.Uint8List?> downloadToken = const Value.absent(),
+    Value<String?> quotesMessageId = const Value.absent(),
+    int? isDeletedFromSender,
+    Value<int?> openedAt = const Value.absent(),
+    Value<int?> openedByAll = const Value.absent(),
+    int? createdAt,
+    Value<int?> modifiedAt = const Value.absent(),
+    Value<int?> ackByUser = const Value.absent(),
+    Value<int?> ackByServer = const Value.absent(),
+  }) => MessagesData(
+    groupId: groupId ?? this.groupId,
+    messageId: messageId ?? this.messageId,
+    senderId: senderId.present ? senderId.value : this.senderId,
+    type: type ?? this.type,
+    content: content.present ? content.value : this.content,
+    mediaId: mediaId.present ? mediaId.value : this.mediaId,
+    additionalMessageData: additionalMessageData.present
+        ? additionalMessageData.value
+        : this.additionalMessageData,
+    mediaStored: mediaStored ?? this.mediaStored,
+    mediaReopened: mediaReopened ?? this.mediaReopened,
+    downloadToken: downloadToken.present
+        ? downloadToken.value
+        : this.downloadToken,
+    quotesMessageId: quotesMessageId.present
+        ? quotesMessageId.value
+        : this.quotesMessageId,
+    isDeletedFromSender: isDeletedFromSender ?? this.isDeletedFromSender,
+    openedAt: openedAt.present ? openedAt.value : this.openedAt,
+    openedByAll: openedByAll.present ? openedByAll.value : this.openedByAll,
+    createdAt: createdAt ?? this.createdAt,
+    modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
+    ackByUser: ackByUser.present ? ackByUser.value : this.ackByUser,
+    ackByServer: ackByServer.present ? ackByServer.value : this.ackByServer,
+  );
   MessagesData copyWithCompanion(MessagesCompanion data) {
     return MessagesData(
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
@@ -2743,8 +3185,9 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
       additionalMessageData: data.additionalMessageData.present
           ? data.additionalMessageData.value
           : this.additionalMessageData,
-      mediaStored:
-          data.mediaStored.present ? data.mediaStored.value : this.mediaStored,
+      mediaStored: data.mediaStored.present
+          ? data.mediaStored.value
+          : this.mediaStored,
       mediaReopened: data.mediaReopened.present
           ? data.mediaReopened.value
           : this.mediaReopened,
@@ -2758,14 +3201,17 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
           ? data.isDeletedFromSender.value
           : this.isDeletedFromSender,
       openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
-      openedByAll:
-          data.openedByAll.present ? data.openedByAll.value : this.openedByAll,
+      openedByAll: data.openedByAll.present
+          ? data.openedByAll.value
+          : this.openedByAll,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      modifiedAt:
-          data.modifiedAt.present ? data.modifiedAt.value : this.modifiedAt,
+      modifiedAt: data.modifiedAt.present
+          ? data.modifiedAt.value
+          : this.modifiedAt,
       ackByUser: data.ackByUser.present ? data.ackByUser.value : this.ackByUser,
-      ackByServer:
-          data.ackByServer.present ? data.ackByServer.value : this.ackByServer,
+      ackByServer: data.ackByServer.present
+          ? data.ackByServer.value
+          : this.ackByServer,
     );
   }
 
@@ -2796,24 +3242,25 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
 
   @override
   int get hashCode => Object.hash(
-      groupId,
-      messageId,
-      senderId,
-      type,
-      content,
-      mediaId,
-      $driftBlobEquality.hash(additionalMessageData),
-      mediaStored,
-      mediaReopened,
-      $driftBlobEquality.hash(downloadToken),
-      quotesMessageId,
-      isDeletedFromSender,
-      openedAt,
-      openedByAll,
-      createdAt,
-      modifiedAt,
-      ackByUser,
-      ackByServer);
+    groupId,
+    messageId,
+    senderId,
+    type,
+    content,
+    mediaId,
+    $driftBlobEquality.hash(additionalMessageData),
+    mediaStored,
+    mediaReopened,
+    $driftBlobEquality.hash(downloadToken),
+    quotesMessageId,
+    isDeletedFromSender,
+    openedAt,
+    openedByAll,
+    createdAt,
+    modifiedAt,
+    ackByUser,
+    ackByServer,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2825,7 +3272,9 @@ class MessagesData extends DataClass implements Insertable<MessagesData> {
           other.content == this.content &&
           other.mediaId == this.mediaId &&
           $driftBlobEquality.equals(
-              other.additionalMessageData, this.additionalMessageData) &&
+            other.additionalMessageData,
+            this.additionalMessageData,
+          ) &&
           other.mediaStored == this.mediaStored &&
           other.mediaReopened == this.mediaReopened &&
           $driftBlobEquality.equals(other.downloadToken, this.downloadToken) &&
@@ -2900,9 +3349,9 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
     this.ackByUser = const Value.absent(),
     this.ackByServer = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupId = Value(groupId),
-        messageId = Value(messageId),
-        type = Value(type);
+  }) : groupId = Value(groupId),
+       messageId = Value(messageId),
+       type = Value(type);
   static Insertable<MessagesData> custom({
     Expression<String>? groupId,
     Expression<String>? messageId,
@@ -2949,26 +3398,27 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
     });
   }
 
-  MessagesCompanion copyWith(
-      {Value<String>? groupId,
-      Value<String>? messageId,
-      Value<int?>? senderId,
-      Value<String>? type,
-      Value<String?>? content,
-      Value<String?>? mediaId,
-      Value<i2.Uint8List?>? additionalMessageData,
-      Value<int>? mediaStored,
-      Value<int>? mediaReopened,
-      Value<i2.Uint8List?>? downloadToken,
-      Value<String?>? quotesMessageId,
-      Value<int>? isDeletedFromSender,
-      Value<int?>? openedAt,
-      Value<int?>? openedByAll,
-      Value<int>? createdAt,
-      Value<int?>? modifiedAt,
-      Value<int?>? ackByUser,
-      Value<int?>? ackByServer,
-      Value<int>? rowid}) {
+  MessagesCompanion copyWith({
+    Value<String>? groupId,
+    Value<String>? messageId,
+    Value<int?>? senderId,
+    Value<String>? type,
+    Value<String?>? content,
+    Value<String?>? mediaId,
+    Value<i2.Uint8List?>? additionalMessageData,
+    Value<int>? mediaStored,
+    Value<int>? mediaReopened,
+    Value<i2.Uint8List?>? downloadToken,
+    Value<String?>? quotesMessageId,
+    Value<int>? isDeletedFromSender,
+    Value<int?>? openedAt,
+    Value<int?>? openedByAll,
+    Value<int>? createdAt,
+    Value<int?>? modifiedAt,
+    Value<int?>? ackByUser,
+    Value<int?>? ackByServer,
+    Value<int>? rowid,
+  }) {
     return MessagesCompanion(
       groupId: groupId ?? this.groupId,
       messageId: messageId ?? this.messageId,
@@ -3015,8 +3465,9 @@ class MessagesCompanion extends UpdateCompanion<MessagesData> {
       map['media_id'] = Variable<String>(mediaId.value);
     }
     if (additionalMessageData.present) {
-      map['additional_message_data'] =
-          Variable<i2.Uint8List>(additionalMessageData.value);
+      map['additional_message_data'] = Variable<i2.Uint8List>(
+        additionalMessageData.value,
+      );
     }
     if (mediaStored.present) {
       map['media_stored'] = Variable<int>(mediaStored.value);
@@ -3091,38 +3542,59 @@ class MessageHistories extends Table
   final String? _alias;
   MessageHistories(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+  );
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints:
-          'NOT NULL REFERENCES messages(message_id)ON DELETE CASCADE');
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL REFERENCES messages(message_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL REFERENCES contacts(user_id)ON DELETE CASCADE');
+    'contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
-      'content', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'content',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, messageId, contactId, content, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    messageId,
+    contactId,
+    content,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3134,16 +3606,26 @@ class MessageHistories extends Table
   MessageHistoriesData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MessageHistoriesData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id']),
-      content: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}content']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      ),
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -3163,12 +3645,13 @@ class MessageHistoriesData extends DataClass
   final int? contactId;
   final String? content;
   final int createdAt;
-  const MessageHistoriesData(
-      {required this.id,
-      required this.messageId,
-      this.contactId,
-      this.content,
-      required this.createdAt});
+  const MessageHistoriesData({
+    required this.id,
+    required this.messageId,
+    this.contactId,
+    this.content,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3198,8 +3681,10 @@ class MessageHistoriesData extends DataClass
     );
   }
 
-  factory MessageHistoriesData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory MessageHistoriesData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MessageHistoriesData(
       id: serializer.fromJson<int>(json['id']),
@@ -3221,19 +3706,19 @@ class MessageHistoriesData extends DataClass
     };
   }
 
-  MessageHistoriesData copyWith(
-          {int? id,
-          String? messageId,
-          Value<int?> contactId = const Value.absent(),
-          Value<String?> content = const Value.absent(),
-          int? createdAt}) =>
-      MessageHistoriesData(
-        id: id ?? this.id,
-        messageId: messageId ?? this.messageId,
-        contactId: contactId.present ? contactId.value : this.contactId,
-        content: content.present ? content.value : this.content,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  MessageHistoriesData copyWith({
+    int? id,
+    String? messageId,
+    Value<int?> contactId = const Value.absent(),
+    Value<String?> content = const Value.absent(),
+    int? createdAt,
+  }) => MessageHistoriesData(
+    id: id ?? this.id,
+    messageId: messageId ?? this.messageId,
+    contactId: contactId.present ? contactId.value : this.contactId,
+    content: content.present ? content.value : this.content,
+    createdAt: createdAt ?? this.createdAt,
+  );
   MessageHistoriesData copyWithCompanion(MessageHistoriesCompanion data) {
     return MessageHistoriesData(
       id: data.id.present ? data.id.value : this.id,
@@ -3305,12 +3790,13 @@ class MessageHistoriesCompanion extends UpdateCompanion<MessageHistoriesData> {
     });
   }
 
-  MessageHistoriesCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? messageId,
-      Value<int?>? contactId,
-      Value<String?>? content,
-      Value<int>? createdAt}) {
+  MessageHistoriesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? messageId,
+    Value<int?>? contactId,
+    Value<String?>? content,
+    Value<int>? createdAt,
+  }) {
     return MessageHistoriesCompanion(
       id: id ?? this.id,
       messageId: messageId ?? this.messageId,
@@ -3360,29 +3846,42 @@ class Reactions extends Table with TableInfo<Reactions, ReactionsData> {
   final String? _alias;
   Reactions(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints:
-          'NOT NULL REFERENCES messages(message_id)ON DELETE CASCADE');
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL REFERENCES messages(message_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
-      'emoji', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'emoji',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<int> senderId = GeneratedColumn<int>(
-      'sender_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL REFERENCES contacts(user_id)ON DELETE CASCADE');
+    'sender_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [messageId, emoji, senderId, createdAt];
   @override
@@ -3396,14 +3895,22 @@ class Reactions extends Table with TableInfo<Reactions, ReactionsData> {
   ReactionsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ReactionsData(
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
-      emoji: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}emoji'])!,
-      senderId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sender_id']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      emoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}emoji'],
+      )!,
+      senderId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sender_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -3413,8 +3920,9 @@ class Reactions extends Table with TableInfo<Reactions, ReactionsData> {
   }
 
   @override
-  List<String> get customConstraints =>
-      const ['PRIMARY KEY(message_id, sender_id, emoji)'];
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(message_id, sender_id, emoji)',
+  ];
   @override
   bool get dontWriteConstraints => true;
 }
@@ -3424,11 +3932,12 @@ class ReactionsData extends DataClass implements Insertable<ReactionsData> {
   final String emoji;
   final int? senderId;
   final int createdAt;
-  const ReactionsData(
-      {required this.messageId,
-      required this.emoji,
-      this.senderId,
-      required this.createdAt});
+  const ReactionsData({
+    required this.messageId,
+    required this.emoji,
+    this.senderId,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3452,8 +3961,10 @@ class ReactionsData extends DataClass implements Insertable<ReactionsData> {
     );
   }
 
-  factory ReactionsData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory ReactionsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ReactionsData(
       messageId: serializer.fromJson<String>(json['messageId']),
@@ -3473,17 +3984,17 @@ class ReactionsData extends DataClass implements Insertable<ReactionsData> {
     };
   }
 
-  ReactionsData copyWith(
-          {String? messageId,
-          String? emoji,
-          Value<int?> senderId = const Value.absent(),
-          int? createdAt}) =>
-      ReactionsData(
-        messageId: messageId ?? this.messageId,
-        emoji: emoji ?? this.emoji,
-        senderId: senderId.present ? senderId.value : this.senderId,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  ReactionsData copyWith({
+    String? messageId,
+    String? emoji,
+    Value<int?> senderId = const Value.absent(),
+    int? createdAt,
+  }) => ReactionsData(
+    messageId: messageId ?? this.messageId,
+    emoji: emoji ?? this.emoji,
+    senderId: senderId.present ? senderId.value : this.senderId,
+    createdAt: createdAt ?? this.createdAt,
+  );
   ReactionsData copyWithCompanion(ReactionsCompanion data) {
     return ReactionsData(
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
@@ -3535,8 +4046,8 @@ class ReactionsCompanion extends UpdateCompanion<ReactionsData> {
     this.senderId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : messageId = Value(messageId),
-        emoji = Value(emoji);
+  }) : messageId = Value(messageId),
+       emoji = Value(emoji);
   static Insertable<ReactionsData> custom({
     Expression<String>? messageId,
     Expression<String>? emoji,
@@ -3553,12 +4064,13 @@ class ReactionsCompanion extends UpdateCompanion<ReactionsData> {
     });
   }
 
-  ReactionsCompanion copyWith(
-      {Value<String>? messageId,
-      Value<String>? emoji,
-      Value<int?>? senderId,
-      Value<int>? createdAt,
-      Value<int>? rowid}) {
+  ReactionsCompanion copyWith({
+    Value<String>? messageId,
+    Value<String>? emoji,
+    Value<int?>? senderId,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
     return ReactionsCompanion(
       messageId: messageId ?? this.messageId,
       emoji: emoji ?? this.emoji,
@@ -3609,42 +4121,68 @@ class GroupMembers extends Table
   final String? _alias;
   GroupMembers(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints:
-          'NOT NULL REFERENCES "groups"(group_id)ON DELETE CASCADE');
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL REFERENCES "groups"(group_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL REFERENCES contacts(user_id)');
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL REFERENCES contacts(user_id)',
+  );
   late final GeneratedColumn<String> memberState = GeneratedColumn<String>(
-      'member_state', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'member_state',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<i2.Uint8List> groupPublicKey =
-      GeneratedColumn<i2.Uint8List>('group_public_key', aliasedName, true,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'group_public_key',
+        aliasedName,
+        true,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<int> lastMessage = GeneratedColumn<int>(
-      'last_message', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'last_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [groupId, contactId, memberState, groupPublicKey, lastMessage, createdAt];
+  List<GeneratedColumn> get $columns => [
+    groupId,
+    contactId,
+    memberState,
+    groupPublicKey,
+    lastMessage,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3656,18 +4194,30 @@ class GroupMembers extends Table
   GroupMembersData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return GroupMembersData(
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
-      memberState: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}member_state']),
-      groupPublicKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}group_public_key']),
-      lastMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}last_message']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
+      memberState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}member_state'],
+      ),
+      groupPublicKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}group_public_key'],
+      ),
+      lastMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_message'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -3677,8 +4227,9 @@ class GroupMembers extends Table
   }
 
   @override
-  List<String> get customConstraints =>
-      const ['PRIMARY KEY(group_id, contact_id)'];
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(group_id, contact_id)',
+  ];
   @override
   bool get dontWriteConstraints => true;
 }
@@ -3691,13 +4242,14 @@ class GroupMembersData extends DataClass
   final i2.Uint8List? groupPublicKey;
   final int? lastMessage;
   final int createdAt;
-  const GroupMembersData(
-      {required this.groupId,
-      required this.contactId,
-      this.memberState,
-      this.groupPublicKey,
-      this.lastMessage,
-      required this.createdAt});
+  const GroupMembersData({
+    required this.groupId,
+    required this.contactId,
+    this.memberState,
+    this.groupPublicKey,
+    this.lastMessage,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3733,15 +4285,18 @@ class GroupMembersData extends DataClass
     );
   }
 
-  factory GroupMembersData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory GroupMembersData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return GroupMembersData(
       groupId: serializer.fromJson<String>(json['groupId']),
       contactId: serializer.fromJson<int>(json['contactId']),
       memberState: serializer.fromJson<String?>(json['memberState']),
-      groupPublicKey:
-          serializer.fromJson<i2.Uint8List?>(json['groupPublicKey']),
+      groupPublicKey: serializer.fromJson<i2.Uint8List?>(
+        json['groupPublicKey'],
+      ),
       lastMessage: serializer.fromJson<int?>(json['lastMessage']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
     );
@@ -3759,33 +4314,36 @@ class GroupMembersData extends DataClass
     };
   }
 
-  GroupMembersData copyWith(
-          {String? groupId,
-          int? contactId,
-          Value<String?> memberState = const Value.absent(),
-          Value<i2.Uint8List?> groupPublicKey = const Value.absent(),
-          Value<int?> lastMessage = const Value.absent(),
-          int? createdAt}) =>
-      GroupMembersData(
-        groupId: groupId ?? this.groupId,
-        contactId: contactId ?? this.contactId,
-        memberState: memberState.present ? memberState.value : this.memberState,
-        groupPublicKey:
-            groupPublicKey.present ? groupPublicKey.value : this.groupPublicKey,
-        lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  GroupMembersData copyWith({
+    String? groupId,
+    int? contactId,
+    Value<String?> memberState = const Value.absent(),
+    Value<i2.Uint8List?> groupPublicKey = const Value.absent(),
+    Value<int?> lastMessage = const Value.absent(),
+    int? createdAt,
+  }) => GroupMembersData(
+    groupId: groupId ?? this.groupId,
+    contactId: contactId ?? this.contactId,
+    memberState: memberState.present ? memberState.value : this.memberState,
+    groupPublicKey: groupPublicKey.present
+        ? groupPublicKey.value
+        : this.groupPublicKey,
+    lastMessage: lastMessage.present ? lastMessage.value : this.lastMessage,
+    createdAt: createdAt ?? this.createdAt,
+  );
   GroupMembersData copyWithCompanion(GroupMembersCompanion data) {
     return GroupMembersData(
       groupId: data.groupId.present ? data.groupId.value : this.groupId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
-      memberState:
-          data.memberState.present ? data.memberState.value : this.memberState,
+      memberState: data.memberState.present
+          ? data.memberState.value
+          : this.memberState,
       groupPublicKey: data.groupPublicKey.present
           ? data.groupPublicKey.value
           : this.groupPublicKey,
-      lastMessage:
-          data.lastMessage.present ? data.lastMessage.value : this.lastMessage,
+      lastMessage: data.lastMessage.present
+          ? data.lastMessage.value
+          : this.lastMessage,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -3804,8 +4362,14 @@ class GroupMembersData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(groupId, contactId, memberState,
-      $driftBlobEquality.hash(groupPublicKey), lastMessage, createdAt);
+  int get hashCode => Object.hash(
+    groupId,
+    contactId,
+    memberState,
+    $driftBlobEquality.hash(groupPublicKey),
+    lastMessage,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3814,7 +4378,9 @@ class GroupMembersData extends DataClass
           other.contactId == this.contactId &&
           other.memberState == this.memberState &&
           $driftBlobEquality.equals(
-              other.groupPublicKey, this.groupPublicKey) &&
+            other.groupPublicKey,
+            this.groupPublicKey,
+          ) &&
           other.lastMessage == this.lastMessage &&
           other.createdAt == this.createdAt);
 }
@@ -3844,8 +4410,8 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMembersData> {
     this.lastMessage = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupId = Value(groupId),
-        contactId = Value(contactId);
+  }) : groupId = Value(groupId),
+       contactId = Value(contactId);
   static Insertable<GroupMembersData> custom({
     Expression<String>? groupId,
     Expression<int>? contactId,
@@ -3866,14 +4432,15 @@ class GroupMembersCompanion extends UpdateCompanion<GroupMembersData> {
     });
   }
 
-  GroupMembersCompanion copyWith(
-      {Value<String>? groupId,
-      Value<int>? contactId,
-      Value<String?>? memberState,
-      Value<i2.Uint8List?>? groupPublicKey,
-      Value<int?>? lastMessage,
-      Value<int>? createdAt,
-      Value<int>? rowid}) {
+  GroupMembersCompanion copyWith({
+    Value<String>? groupId,
+    Value<int>? contactId,
+    Value<String?>? memberState,
+    Value<i2.Uint8List?>? groupPublicKey,
+    Value<int?>? lastMessage,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
     return GroupMembersCompanion(
       groupId: groupId ?? this.groupId,
       contactId: contactId ?? this.contactId,
@@ -3933,82 +4500,118 @@ class Receipts extends Table with TableInfo<Receipts, ReceiptsData> {
   final String? _alias;
   Receipts(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> receiptId = GeneratedColumn<String>(
-      'receipt_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'receipt_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      $customConstraints:
-          'NOT NULL REFERENCES contacts(user_id)ON DELETE CASCADE');
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NULL REFERENCES messages(message_id)ON DELETE CASCADE');
+    'message_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL REFERENCES messages(message_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<i2.Uint8List> message =
-      GeneratedColumn<i2.Uint8List>('message', aliasedName, false,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: true,
-          $customConstraints: 'NOT NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'message',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+        $customConstraints: 'NOT NULL',
+      );
   late final GeneratedColumn<int> contactWillSendsReceipt =
-      GeneratedColumn<int>('contact_will_sends_receipt', aliasedName, false,
-          type: DriftSqlType.int,
-          requiredDuringInsert: false,
-          $customConstraints:
-              'NOT NULL DEFAULT 1 CHECK (contact_will_sends_receipt IN (0, 1))',
-          defaultValue: const CustomExpression('1'));
+      GeneratedColumn<int>(
+        'contact_will_sends_receipt',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        $customConstraints:
+            'NOT NULL DEFAULT 1 CHECK (contact_will_sends_receipt IN (0, 1))',
+        defaultValue: const CustomExpression('1'),
+      );
   late final GeneratedColumn<int> markForRetry = GeneratedColumn<int>(
-      'mark_for_retry', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'mark_for_retry',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> markForRetryAfterAccepted =
-      GeneratedColumn<int>('mark_for_retry_after_accepted', aliasedName, true,
-          type: DriftSqlType.int,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+      GeneratedColumn<int>(
+        'mark_for_retry_after_accepted',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<int> ackByServerAt = GeneratedColumn<int>(
-      'ack_by_server_at', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'ack_by_server_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
-      'retry_count', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const CustomExpression('0'));
+    'retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
   late final GeneratedColumn<int> lastRetry = GeneratedColumn<int>(
-      'last_retry', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'last_retry',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        receiptId,
-        contactId,
-        messageId,
-        message,
-        contactWillSendsReceipt,
-        markForRetry,
-        markForRetryAfterAccepted,
-        ackByServerAt,
-        retryCount,
-        lastRetry,
-        createdAt
-      ];
+    receiptId,
+    contactId,
+    messageId,
+    message,
+    contactWillSendsReceipt,
+    markForRetry,
+    markForRetryAfterAccepted,
+    ackByServerAt,
+    retryCount,
+    lastRetry,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4020,30 +4623,50 @@ class Receipts extends Table with TableInfo<Receipts, ReceiptsData> {
   ReceiptsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ReceiptsData(
-      receiptId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}receipt_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id']),
-      message: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}message'])!,
+      receiptId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}receipt_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      ),
+      message: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}message'],
+      )!,
       contactWillSendsReceipt: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}contact_will_sends_receipt'])!,
-      markForRetry: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}mark_for_retry']),
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_will_sends_receipt'],
+      )!,
+      markForRetry: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}mark_for_retry'],
+      ),
       markForRetryAfterAccepted: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}mark_for_retry_after_accepted']),
-      ackByServerAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}ack_by_server_at']),
-      retryCount: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}retry_count'])!,
-      lastRetry: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}last_retry']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}mark_for_retry_after_accepted'],
+      ),
+      ackByServerAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ack_by_server_at'],
+      ),
+      retryCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}retry_count'],
+      )!,
+      lastRetry: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_retry'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -4070,18 +4693,19 @@ class ReceiptsData extends DataClass implements Insertable<ReceiptsData> {
   final int retryCount;
   final int? lastRetry;
   final int createdAt;
-  const ReceiptsData(
-      {required this.receiptId,
-      required this.contactId,
-      this.messageId,
-      required this.message,
-      required this.contactWillSendsReceipt,
-      this.markForRetry,
-      this.markForRetryAfterAccepted,
-      this.ackByServerAt,
-      required this.retryCount,
-      this.lastRetry,
-      required this.createdAt});
+  const ReceiptsData({
+    required this.receiptId,
+    required this.contactId,
+    this.messageId,
+    required this.message,
+    required this.contactWillSendsReceipt,
+    this.markForRetry,
+    this.markForRetryAfterAccepted,
+    this.ackByServerAt,
+    required this.retryCount,
+    this.lastRetry,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4096,8 +4720,9 @@ class ReceiptsData extends DataClass implements Insertable<ReceiptsData> {
       map['mark_for_retry'] = Variable<int>(markForRetry);
     }
     if (!nullToAbsent || markForRetryAfterAccepted != null) {
-      map['mark_for_retry_after_accepted'] =
-          Variable<int>(markForRetryAfterAccepted);
+      map['mark_for_retry_after_accepted'] = Variable<int>(
+        markForRetryAfterAccepted,
+      );
     }
     if (!nullToAbsent || ackByServerAt != null) {
       map['ack_by_server_at'] = Variable<int>(ackByServerAt);
@@ -4124,8 +4749,8 @@ class ReceiptsData extends DataClass implements Insertable<ReceiptsData> {
           : Value(markForRetry),
       markForRetryAfterAccepted:
           markForRetryAfterAccepted == null && nullToAbsent
-              ? const Value.absent()
-              : Value(markForRetryAfterAccepted),
+          ? const Value.absent()
+          : Value(markForRetryAfterAccepted),
       ackByServerAt: ackByServerAt == null && nullToAbsent
           ? const Value.absent()
           : Value(ackByServerAt),
@@ -4137,19 +4762,23 @@ class ReceiptsData extends DataClass implements Insertable<ReceiptsData> {
     );
   }
 
-  factory ReceiptsData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory ReceiptsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ReceiptsData(
       receiptId: serializer.fromJson<String>(json['receiptId']),
       contactId: serializer.fromJson<int>(json['contactId']),
       messageId: serializer.fromJson<String?>(json['messageId']),
       message: serializer.fromJson<i2.Uint8List>(json['message']),
-      contactWillSendsReceipt:
-          serializer.fromJson<int>(json['contactWillSendsReceipt']),
+      contactWillSendsReceipt: serializer.fromJson<int>(
+        json['contactWillSendsReceipt'],
+      ),
       markForRetry: serializer.fromJson<int?>(json['markForRetry']),
-      markForRetryAfterAccepted:
-          serializer.fromJson<int?>(json['markForRetryAfterAccepted']),
+      markForRetryAfterAccepted: serializer.fromJson<int?>(
+        json['markForRetryAfterAccepted'],
+      ),
       ackByServerAt: serializer.fromJson<int?>(json['ackByServerAt']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       lastRetry: serializer.fromJson<int?>(json['lastRetry']),
@@ -4164,11 +4793,13 @@ class ReceiptsData extends DataClass implements Insertable<ReceiptsData> {
       'contactId': serializer.toJson<int>(contactId),
       'messageId': serializer.toJson<String?>(messageId),
       'message': serializer.toJson<i2.Uint8List>(message),
-      'contactWillSendsReceipt':
-          serializer.toJson<int>(contactWillSendsReceipt),
+      'contactWillSendsReceipt': serializer.toJson<int>(
+        contactWillSendsReceipt,
+      ),
       'markForRetry': serializer.toJson<int?>(markForRetry),
-      'markForRetryAfterAccepted':
-          serializer.toJson<int?>(markForRetryAfterAccepted),
+      'markForRetryAfterAccepted': serializer.toJson<int?>(
+        markForRetryAfterAccepted,
+      ),
       'ackByServerAt': serializer.toJson<int?>(ackByServerAt),
       'retryCount': serializer.toJson<int>(retryCount),
       'lastRetry': serializer.toJson<int?>(lastRetry),
@@ -4176,36 +4807,36 @@ class ReceiptsData extends DataClass implements Insertable<ReceiptsData> {
     };
   }
 
-  ReceiptsData copyWith(
-          {String? receiptId,
-          int? contactId,
-          Value<String?> messageId = const Value.absent(),
-          i2.Uint8List? message,
-          int? contactWillSendsReceipt,
-          Value<int?> markForRetry = const Value.absent(),
-          Value<int?> markForRetryAfterAccepted = const Value.absent(),
-          Value<int?> ackByServerAt = const Value.absent(),
-          int? retryCount,
-          Value<int?> lastRetry = const Value.absent(),
-          int? createdAt}) =>
-      ReceiptsData(
-        receiptId: receiptId ?? this.receiptId,
-        contactId: contactId ?? this.contactId,
-        messageId: messageId.present ? messageId.value : this.messageId,
-        message: message ?? this.message,
-        contactWillSendsReceipt:
-            contactWillSendsReceipt ?? this.contactWillSendsReceipt,
-        markForRetry:
-            markForRetry.present ? markForRetry.value : this.markForRetry,
-        markForRetryAfterAccepted: markForRetryAfterAccepted.present
-            ? markForRetryAfterAccepted.value
-            : this.markForRetryAfterAccepted,
-        ackByServerAt:
-            ackByServerAt.present ? ackByServerAt.value : this.ackByServerAt,
-        retryCount: retryCount ?? this.retryCount,
-        lastRetry: lastRetry.present ? lastRetry.value : this.lastRetry,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  ReceiptsData copyWith({
+    String? receiptId,
+    int? contactId,
+    Value<String?> messageId = const Value.absent(),
+    i2.Uint8List? message,
+    int? contactWillSendsReceipt,
+    Value<int?> markForRetry = const Value.absent(),
+    Value<int?> markForRetryAfterAccepted = const Value.absent(),
+    Value<int?> ackByServerAt = const Value.absent(),
+    int? retryCount,
+    Value<int?> lastRetry = const Value.absent(),
+    int? createdAt,
+  }) => ReceiptsData(
+    receiptId: receiptId ?? this.receiptId,
+    contactId: contactId ?? this.contactId,
+    messageId: messageId.present ? messageId.value : this.messageId,
+    message: message ?? this.message,
+    contactWillSendsReceipt:
+        contactWillSendsReceipt ?? this.contactWillSendsReceipt,
+    markForRetry: markForRetry.present ? markForRetry.value : this.markForRetry,
+    markForRetryAfterAccepted: markForRetryAfterAccepted.present
+        ? markForRetryAfterAccepted.value
+        : this.markForRetryAfterAccepted,
+    ackByServerAt: ackByServerAt.present
+        ? ackByServerAt.value
+        : this.ackByServerAt,
+    retryCount: retryCount ?? this.retryCount,
+    lastRetry: lastRetry.present ? lastRetry.value : this.lastRetry,
+    createdAt: createdAt ?? this.createdAt,
+  );
   ReceiptsData copyWithCompanion(ReceiptsCompanion data) {
     return ReceiptsData(
       receiptId: data.receiptId.present ? data.receiptId.value : this.receiptId,
@@ -4224,8 +4855,9 @@ class ReceiptsData extends DataClass implements Insertable<ReceiptsData> {
       ackByServerAt: data.ackByServerAt.present
           ? data.ackByServerAt.value
           : this.ackByServerAt,
-      retryCount:
-          data.retryCount.present ? data.retryCount.value : this.retryCount,
+      retryCount: data.retryCount.present
+          ? data.retryCount.value
+          : this.retryCount,
       lastRetry: data.lastRetry.present ? data.lastRetry.value : this.lastRetry,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -4251,17 +4883,18 @@ class ReceiptsData extends DataClass implements Insertable<ReceiptsData> {
 
   @override
   int get hashCode => Object.hash(
-      receiptId,
-      contactId,
-      messageId,
-      $driftBlobEquality.hash(message),
-      contactWillSendsReceipt,
-      markForRetry,
-      markForRetryAfterAccepted,
-      ackByServerAt,
-      retryCount,
-      lastRetry,
-      createdAt);
+    receiptId,
+    contactId,
+    messageId,
+    $driftBlobEquality.hash(message),
+    contactWillSendsReceipt,
+    markForRetry,
+    markForRetryAfterAccepted,
+    ackByServerAt,
+    retryCount,
+    lastRetry,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4319,9 +4952,9 @@ class ReceiptsCompanion extends UpdateCompanion<ReceiptsData> {
     this.lastRetry = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : receiptId = Value(receiptId),
-        contactId = Value(contactId),
-        message = Value(message);
+  }) : receiptId = Value(receiptId),
+       contactId = Value(contactId),
+       message = Value(message);
   static Insertable<ReceiptsData> custom({
     Expression<String>? receiptId,
     Expression<int>? contactId,
@@ -4354,19 +4987,20 @@ class ReceiptsCompanion extends UpdateCompanion<ReceiptsData> {
     });
   }
 
-  ReceiptsCompanion copyWith(
-      {Value<String>? receiptId,
-      Value<int>? contactId,
-      Value<String?>? messageId,
-      Value<i2.Uint8List>? message,
-      Value<int>? contactWillSendsReceipt,
-      Value<int?>? markForRetry,
-      Value<int?>? markForRetryAfterAccepted,
-      Value<int?>? ackByServerAt,
-      Value<int>? retryCount,
-      Value<int?>? lastRetry,
-      Value<int>? createdAt,
-      Value<int>? rowid}) {
+  ReceiptsCompanion copyWith({
+    Value<String>? receiptId,
+    Value<int>? contactId,
+    Value<String?>? messageId,
+    Value<i2.Uint8List>? message,
+    Value<int>? contactWillSendsReceipt,
+    Value<int?>? markForRetry,
+    Value<int?>? markForRetryAfterAccepted,
+    Value<int?>? ackByServerAt,
+    Value<int>? retryCount,
+    Value<int?>? lastRetry,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
     return ReceiptsCompanion(
       receiptId: receiptId ?? this.receiptId,
       contactId: contactId ?? this.contactId,
@@ -4401,15 +5035,17 @@ class ReceiptsCompanion extends UpdateCompanion<ReceiptsData> {
       map['message'] = Variable<i2.Uint8List>(message.value);
     }
     if (contactWillSendsReceipt.present) {
-      map['contact_will_sends_receipt'] =
-          Variable<int>(contactWillSendsReceipt.value);
+      map['contact_will_sends_receipt'] = Variable<int>(
+        contactWillSendsReceipt.value,
+      );
     }
     if (markForRetry.present) {
       map['mark_for_retry'] = Variable<int>(markForRetry.value);
     }
     if (markForRetryAfterAccepted.present) {
-      map['mark_for_retry_after_accepted'] =
-          Variable<int>(markForRetryAfterAccepted.value);
+      map['mark_for_retry_after_accepted'] = Variable<int>(
+        markForRetryAfterAccepted.value,
+      );
     }
     if (ackByServerAt.present) {
       map['ack_by_server_at'] = Variable<int>(ackByServerAt.value);
@@ -4456,18 +5092,25 @@ class ReceivedReceipts extends Table
   final String? _alias;
   ReceivedReceipts(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> receiptId = GeneratedColumn<String>(
-      'receipt_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'receipt_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [receiptId, createdAt];
   @override
@@ -4481,10 +5124,14 @@ class ReceivedReceipts extends Table
   ReceivedReceiptsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ReceivedReceiptsData(
-      receiptId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}receipt_id'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      receiptId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}receipt_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -4503,8 +5150,10 @@ class ReceivedReceiptsData extends DataClass
     implements Insertable<ReceivedReceiptsData> {
   final String receiptId;
   final int createdAt;
-  const ReceivedReceiptsData(
-      {required this.receiptId, required this.createdAt});
+  const ReceivedReceiptsData({
+    required this.receiptId,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4520,8 +5169,10 @@ class ReceivedReceiptsData extends DataClass
     );
   }
 
-  factory ReceivedReceiptsData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory ReceivedReceiptsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ReceivedReceiptsData(
       receiptId: serializer.fromJson<String>(json['receiptId']),
@@ -4594,8 +5245,11 @@ class ReceivedReceiptsCompanion extends UpdateCompanion<ReceivedReceiptsData> {
     });
   }
 
-  ReceivedReceiptsCompanion copyWith(
-      {Value<String>? receiptId, Value<int>? createdAt, Value<int>? rowid}) {
+  ReceivedReceiptsCompanion copyWith({
+    Value<String>? receiptId,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
     return ReceivedReceiptsCompanion(
       receiptId: receiptId ?? this.receiptId,
       createdAt: createdAt ?? this.createdAt,
@@ -4636,31 +5290,49 @@ class SignalIdentityKeyStores extends Table
   final String? _alias;
   SignalIdentityKeyStores(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
-      'device_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<i2.Uint8List> identityKey =
-      GeneratedColumn<i2.Uint8List>('identity_key', aliasedName, false,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: true,
-          $customConstraints: 'NOT NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'identity_key',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+        $customConstraints: 'NOT NULL',
+      );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [deviceId, name, identityKey, createdAt];
+  List<GeneratedColumn> get $columns => [
+    deviceId,
+    name,
+    identityKey,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4669,18 +5341,28 @@ class SignalIdentityKeyStores extends Table
   @override
   Set<GeneratedColumn> get $primaryKey => {deviceId, name};
   @override
-  SignalIdentityKeyStoresData map(Map<String, dynamic> data,
-      {String? tablePrefix}) {
+  SignalIdentityKeyStoresData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SignalIdentityKeyStoresData(
-      deviceId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}device_id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      identityKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}identity_key'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      identityKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}identity_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -4701,11 +5383,12 @@ class SignalIdentityKeyStoresData extends DataClass
   final String name;
   final i2.Uint8List identityKey;
   final int createdAt;
-  const SignalIdentityKeyStoresData(
-      {required this.deviceId,
-      required this.name,
-      required this.identityKey,
-      required this.createdAt});
+  const SignalIdentityKeyStoresData({
+    required this.deviceId,
+    required this.name,
+    required this.identityKey,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4725,8 +5408,10 @@ class SignalIdentityKeyStoresData extends DataClass
     );
   }
 
-  factory SignalIdentityKeyStoresData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SignalIdentityKeyStoresData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalIdentityKeyStoresData(
       deviceId: serializer.fromJson<int>(json['deviceId']),
@@ -4746,24 +5431,26 @@ class SignalIdentityKeyStoresData extends DataClass
     };
   }
 
-  SignalIdentityKeyStoresData copyWith(
-          {int? deviceId,
-          String? name,
-          i2.Uint8List? identityKey,
-          int? createdAt}) =>
-      SignalIdentityKeyStoresData(
-        deviceId: deviceId ?? this.deviceId,
-        name: name ?? this.name,
-        identityKey: identityKey ?? this.identityKey,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  SignalIdentityKeyStoresData copyWith({
+    int? deviceId,
+    String? name,
+    i2.Uint8List? identityKey,
+    int? createdAt,
+  }) => SignalIdentityKeyStoresData(
+    deviceId: deviceId ?? this.deviceId,
+    name: name ?? this.name,
+    identityKey: identityKey ?? this.identityKey,
+    createdAt: createdAt ?? this.createdAt,
+  );
   SignalIdentityKeyStoresData copyWithCompanion(
-      SignalIdentityKeyStoresCompanion data) {
+    SignalIdentityKeyStoresCompanion data,
+  ) {
     return SignalIdentityKeyStoresData(
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       name: data.name.present ? data.name.value : this.name,
-      identityKey:
-          data.identityKey.present ? data.identityKey.value : this.identityKey,
+      identityKey: data.identityKey.present
+          ? data.identityKey.value
+          : this.identityKey,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -4781,7 +5468,11 @@ class SignalIdentityKeyStoresData extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      deviceId, name, $driftBlobEquality.hash(identityKey), createdAt);
+    deviceId,
+    name,
+    $driftBlobEquality.hash(identityKey),
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4812,9 +5503,9 @@ class SignalIdentityKeyStoresCompanion
     required i2.Uint8List identityKey,
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : deviceId = Value(deviceId),
-        name = Value(name),
-        identityKey = Value(identityKey);
+  }) : deviceId = Value(deviceId),
+       name = Value(name),
+       identityKey = Value(identityKey);
   static Insertable<SignalIdentityKeyStoresData> custom({
     Expression<int>? deviceId,
     Expression<String>? name,
@@ -4831,12 +5522,13 @@ class SignalIdentityKeyStoresCompanion
     });
   }
 
-  SignalIdentityKeyStoresCompanion copyWith(
-      {Value<int>? deviceId,
-      Value<String>? name,
-      Value<i2.Uint8List>? identityKey,
-      Value<int>? createdAt,
-      Value<int>? rowid}) {
+  SignalIdentityKeyStoresCompanion copyWith({
+    Value<int>? deviceId,
+    Value<String>? name,
+    Value<i2.Uint8List>? identityKey,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
     return SignalIdentityKeyStoresCompanion(
       deviceId: deviceId ?? this.deviceId,
       name: name ?? this.name,
@@ -4887,23 +5579,34 @@ class SignalPreKeyStores extends Table
   final String? _alias;
   SignalPreKeyStores(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> preKeyId = GeneratedColumn<int>(
-      'pre_key_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NOT NULL');
+    'pre_key_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<i2.Uint8List> preKey =
-      GeneratedColumn<i2.Uint8List>('pre_key', aliasedName, false,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: true,
-          $customConstraints: 'NOT NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'pre_key',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+        $customConstraints: 'NOT NULL',
+      );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [preKeyId, preKey, createdAt];
   @override
@@ -4917,12 +5620,18 @@ class SignalPreKeyStores extends Table
   SignalPreKeyStoresData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SignalPreKeyStoresData(
-      preKeyId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}pre_key_id'])!,
-      preKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}pre_key'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      preKeyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pre_key_id'],
+      )!,
+      preKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}pre_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -4942,8 +5651,11 @@ class SignalPreKeyStoresData extends DataClass
   final int preKeyId;
   final i2.Uint8List preKey;
   final int createdAt;
-  const SignalPreKeyStoresData(
-      {required this.preKeyId, required this.preKey, required this.createdAt});
+  const SignalPreKeyStoresData({
+    required this.preKeyId,
+    required this.preKey,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4961,8 +5673,10 @@ class SignalPreKeyStoresData extends DataClass
     );
   }
 
-  factory SignalPreKeyStoresData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SignalPreKeyStoresData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalPreKeyStoresData(
       preKeyId: serializer.fromJson<int>(json['preKeyId']),
@@ -4980,13 +5694,15 @@ class SignalPreKeyStoresData extends DataClass
     };
   }
 
-  SignalPreKeyStoresData copyWith(
-          {int? preKeyId, i2.Uint8List? preKey, int? createdAt}) =>
-      SignalPreKeyStoresData(
-        preKeyId: preKeyId ?? this.preKeyId,
-        preKey: preKey ?? this.preKey,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  SignalPreKeyStoresData copyWith({
+    int? preKeyId,
+    i2.Uint8List? preKey,
+    int? createdAt,
+  }) => SignalPreKeyStoresData(
+    preKeyId: preKeyId ?? this.preKeyId,
+    preKey: preKey ?? this.preKey,
+    createdAt: createdAt ?? this.createdAt,
+  );
   SignalPreKeyStoresData copyWithCompanion(SignalPreKeyStoresCompanion data) {
     return SignalPreKeyStoresData(
       preKeyId: data.preKeyId.present ? data.preKeyId.value : this.preKeyId,
@@ -5044,10 +5760,11 @@ class SignalPreKeyStoresCompanion
     });
   }
 
-  SignalPreKeyStoresCompanion copyWith(
-      {Value<int>? preKeyId,
-      Value<i2.Uint8List>? preKey,
-      Value<int>? createdAt}) {
+  SignalPreKeyStoresCompanion copyWith({
+    Value<int>? preKeyId,
+    Value<i2.Uint8List>? preKey,
+    Value<int>? createdAt,
+  }) {
     return SignalPreKeyStoresCompanion(
       preKeyId: preKeyId ?? this.preKeyId,
       preKey: preKey ?? this.preKey,
@@ -5088,15 +5805,22 @@ class SignalSenderKeyStores extends Table
   final String? _alias;
   SignalSenderKeyStores(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> senderKeyName = GeneratedColumn<String>(
-      'sender_key_name', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'sender_key_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<i2.Uint8List> senderKey =
-      GeneratedColumn<i2.Uint8List>('sender_key', aliasedName, false,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: true,
-          $customConstraints: 'NOT NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'sender_key',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+        $customConstraints: 'NOT NULL',
+      );
   @override
   List<GeneratedColumn> get $columns => [senderKeyName, senderKey];
   @override
@@ -5107,14 +5831,20 @@ class SignalSenderKeyStores extends Table
   @override
   Set<GeneratedColumn> get $primaryKey => {senderKeyName};
   @override
-  SignalSenderKeyStoresData map(Map<String, dynamic> data,
-      {String? tablePrefix}) {
+  SignalSenderKeyStoresData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SignalSenderKeyStoresData(
       senderKeyName: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}sender_key_name'])!,
-      senderKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}sender_key'])!,
+        DriftSqlType.string,
+        data['${effectivePrefix}sender_key_name'],
+      )!,
+      senderKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}sender_key'],
+      )!,
     );
   }
 
@@ -5133,8 +5863,10 @@ class SignalSenderKeyStoresData extends DataClass
     implements Insertable<SignalSenderKeyStoresData> {
   final String senderKeyName;
   final i2.Uint8List senderKey;
-  const SignalSenderKeyStoresData(
-      {required this.senderKeyName, required this.senderKey});
+  const SignalSenderKeyStoresData({
+    required this.senderKeyName,
+    required this.senderKey,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5150,8 +5882,10 @@ class SignalSenderKeyStoresData extends DataClass
     );
   }
 
-  factory SignalSenderKeyStoresData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SignalSenderKeyStoresData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalSenderKeyStoresData(
       senderKeyName: serializer.fromJson<String>(json['senderKeyName']),
@@ -5167,14 +5901,16 @@ class SignalSenderKeyStoresData extends DataClass
     };
   }
 
-  SignalSenderKeyStoresData copyWith(
-          {String? senderKeyName, i2.Uint8List? senderKey}) =>
-      SignalSenderKeyStoresData(
-        senderKeyName: senderKeyName ?? this.senderKeyName,
-        senderKey: senderKey ?? this.senderKey,
-      );
+  SignalSenderKeyStoresData copyWith({
+    String? senderKeyName,
+    i2.Uint8List? senderKey,
+  }) => SignalSenderKeyStoresData(
+    senderKeyName: senderKeyName ?? this.senderKeyName,
+    senderKey: senderKey ?? this.senderKey,
+  );
   SignalSenderKeyStoresData copyWithCompanion(
-      SignalSenderKeyStoresCompanion data) {
+    SignalSenderKeyStoresCompanion data,
+  ) {
     return SignalSenderKeyStoresData(
       senderKeyName: data.senderKeyName.present
           ? data.senderKeyName.value
@@ -5217,8 +5953,8 @@ class SignalSenderKeyStoresCompanion
     required String senderKeyName,
     required i2.Uint8List senderKey,
     this.rowid = const Value.absent(),
-  })  : senderKeyName = Value(senderKeyName),
-        senderKey = Value(senderKey);
+  }) : senderKeyName = Value(senderKeyName),
+       senderKey = Value(senderKey);
   static Insertable<SignalSenderKeyStoresData> custom({
     Expression<String>? senderKeyName,
     Expression<i2.Uint8List>? senderKey,
@@ -5231,10 +5967,11 @@ class SignalSenderKeyStoresCompanion
     });
   }
 
-  SignalSenderKeyStoresCompanion copyWith(
-      {Value<String>? senderKeyName,
-      Value<i2.Uint8List>? senderKey,
-      Value<int>? rowid}) {
+  SignalSenderKeyStoresCompanion copyWith({
+    Value<String>? senderKeyName,
+    Value<i2.Uint8List>? senderKey,
+    Value<int>? rowid,
+  }) {
     return SignalSenderKeyStoresCompanion(
       senderKeyName: senderKeyName ?? this.senderKeyName,
       senderKey: senderKey ?? this.senderKey,
@@ -5275,31 +6012,49 @@ class SignalSessionStores extends Table
   final String? _alias;
   SignalSessionStores(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
-      'device_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<i2.Uint8List> sessionRecord =
-      GeneratedColumn<i2.Uint8List>('session_record', aliasedName, false,
-          type: DriftSqlType.blob,
-          requiredDuringInsert: true,
-          $customConstraints: 'NOT NULL');
+      GeneratedColumn<i2.Uint8List>(
+        'session_record',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+        $customConstraints: 'NOT NULL',
+      );
   late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [deviceId, name, sessionRecord, createdAt];
+  List<GeneratedColumn> get $columns => [
+    deviceId,
+    name,
+    sessionRecord,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5308,18 +6063,28 @@ class SignalSessionStores extends Table
   @override
   Set<GeneratedColumn> get $primaryKey => {deviceId, name};
   @override
-  SignalSessionStoresData map(Map<String, dynamic> data,
-      {String? tablePrefix}) {
+  SignalSessionStoresData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SignalSessionStoresData(
-      deviceId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}device_id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      sessionRecord: attachedDatabase.typeMapping
-          .read(DriftSqlType.blob, data['${effectivePrefix}session_record'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      sessionRecord: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}session_record'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -5340,11 +6105,12 @@ class SignalSessionStoresData extends DataClass
   final String name;
   final i2.Uint8List sessionRecord;
   final int createdAt;
-  const SignalSessionStoresData(
-      {required this.deviceId,
-      required this.name,
-      required this.sessionRecord,
-      required this.createdAt});
+  const SignalSessionStoresData({
+    required this.deviceId,
+    required this.name,
+    required this.sessionRecord,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5364,8 +6130,10 @@ class SignalSessionStoresData extends DataClass
     );
   }
 
-  factory SignalSessionStoresData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SignalSessionStoresData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SignalSessionStoresData(
       deviceId: serializer.fromJson<int>(json['deviceId']),
@@ -5385,17 +6153,17 @@ class SignalSessionStoresData extends DataClass
     };
   }
 
-  SignalSessionStoresData copyWith(
-          {int? deviceId,
-          String? name,
-          i2.Uint8List? sessionRecord,
-          int? createdAt}) =>
-      SignalSessionStoresData(
-        deviceId: deviceId ?? this.deviceId,
-        name: name ?? this.name,
-        sessionRecord: sessionRecord ?? this.sessionRecord,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  SignalSessionStoresData copyWith({
+    int? deviceId,
+    String? name,
+    i2.Uint8List? sessionRecord,
+    int? createdAt,
+  }) => SignalSessionStoresData(
+    deviceId: deviceId ?? this.deviceId,
+    name: name ?? this.name,
+    sessionRecord: sessionRecord ?? this.sessionRecord,
+    createdAt: createdAt ?? this.createdAt,
+  );
   SignalSessionStoresData copyWithCompanion(SignalSessionStoresCompanion data) {
     return SignalSessionStoresData(
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
@@ -5420,7 +6188,11 @@ class SignalSessionStoresData extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      deviceId, name, $driftBlobEquality.hash(sessionRecord), createdAt);
+    deviceId,
+    name,
+    $driftBlobEquality.hash(sessionRecord),
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5451,9 +6223,9 @@ class SignalSessionStoresCompanion
     required i2.Uint8List sessionRecord,
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : deviceId = Value(deviceId),
-        name = Value(name),
-        sessionRecord = Value(sessionRecord);
+  }) : deviceId = Value(deviceId),
+       name = Value(name),
+       sessionRecord = Value(sessionRecord);
   static Insertable<SignalSessionStoresData> custom({
     Expression<int>? deviceId,
     Expression<String>? name,
@@ -5470,12 +6242,13 @@ class SignalSessionStoresCompanion
     });
   }
 
-  SignalSessionStoresCompanion copyWith(
-      {Value<int>? deviceId,
-      Value<String>? name,
-      Value<i2.Uint8List>? sessionRecord,
-      Value<int>? createdAt,
-      Value<int>? rowid}) {
+  SignalSessionStoresCompanion copyWith({
+    Value<int>? deviceId,
+    Value<String>? name,
+    Value<i2.Uint8List>? sessionRecord,
+    Value<int>? createdAt,
+    Value<int>? rowid,
+  }) {
     return SignalSessionStoresCompanion(
       deviceId: deviceId ?? this.deviceId,
       name: name ?? this.name,
@@ -5526,30 +6299,43 @@ class MessageActions extends Table
   final String? _alias;
   MessageActions(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> messageId = GeneratedColumn<String>(
-      'message_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints:
-          'NOT NULL REFERENCES messages(message_id)ON DELETE CASCADE');
+    'message_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL REFERENCES messages(message_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      $customConstraints:
-          'NOT NULL REFERENCES contacts(user_id)ON DELETE CASCADE');
+    'contact_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL REFERENCES contacts(user_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<int> actionAt = GeneratedColumn<int>(
-      'action_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'action_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [messageId, contactId, type, actionAt];
   @override
@@ -5563,14 +6349,22 @@ class MessageActions extends Table
   MessageActionsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return MessageActionsData(
-      messageId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id'])!,
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      actionAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}action_at'])!,
+      messageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      actionAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}action_at'],
+      )!,
     );
   }
 
@@ -5580,8 +6374,9 @@ class MessageActions extends Table
   }
 
   @override
-  List<String> get customConstraints =>
-      const ['PRIMARY KEY(message_id, contact_id, type)'];
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(message_id, contact_id, type)',
+  ];
   @override
   bool get dontWriteConstraints => true;
 }
@@ -5592,11 +6387,12 @@ class MessageActionsData extends DataClass
   final int contactId;
   final String type;
   final int actionAt;
-  const MessageActionsData(
-      {required this.messageId,
-      required this.contactId,
-      required this.type,
-      required this.actionAt});
+  const MessageActionsData({
+    required this.messageId,
+    required this.contactId,
+    required this.type,
+    required this.actionAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5616,8 +6412,10 @@ class MessageActionsData extends DataClass
     );
   }
 
-  factory MessageActionsData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory MessageActionsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return MessageActionsData(
       messageId: serializer.fromJson<String>(json['messageId']),
@@ -5637,14 +6435,17 @@ class MessageActionsData extends DataClass
     };
   }
 
-  MessageActionsData copyWith(
-          {String? messageId, int? contactId, String? type, int? actionAt}) =>
-      MessageActionsData(
-        messageId: messageId ?? this.messageId,
-        contactId: contactId ?? this.contactId,
-        type: type ?? this.type,
-        actionAt: actionAt ?? this.actionAt,
-      );
+  MessageActionsData copyWith({
+    String? messageId,
+    int? contactId,
+    String? type,
+    int? actionAt,
+  }) => MessageActionsData(
+    messageId: messageId ?? this.messageId,
+    contactId: contactId ?? this.contactId,
+    type: type ?? this.type,
+    actionAt: actionAt ?? this.actionAt,
+  );
   MessageActionsData copyWithCompanion(MessageActionsCompanion data) {
     return MessageActionsData(
       messageId: data.messageId.present ? data.messageId.value : this.messageId,
@@ -5696,9 +6497,9 @@ class MessageActionsCompanion extends UpdateCompanion<MessageActionsData> {
     required String type,
     this.actionAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : messageId = Value(messageId),
-        contactId = Value(contactId),
-        type = Value(type);
+  }) : messageId = Value(messageId),
+       contactId = Value(contactId),
+       type = Value(type);
   static Insertable<MessageActionsData> custom({
     Expression<String>? messageId,
     Expression<int>? contactId,
@@ -5715,12 +6516,13 @@ class MessageActionsCompanion extends UpdateCompanion<MessageActionsData> {
     });
   }
 
-  MessageActionsCompanion copyWith(
-      {Value<String>? messageId,
-      Value<int>? contactId,
-      Value<String>? type,
-      Value<int>? actionAt,
-      Value<int>? rowid}) {
+  MessageActionsCompanion copyWith({
+    Value<String>? messageId,
+    Value<int>? contactId,
+    Value<String>? type,
+    Value<int>? actionAt,
+    Value<int>? rowid,
+  }) {
     return MessageActionsCompanion(
       messageId: messageId ?? this.messageId,
       contactId: contactId ?? this.contactId,
@@ -5771,67 +6573,95 @@ class GroupHistories extends Table
   final String? _alias;
   GroupHistories(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> groupHistoryId = GeneratedColumn<String>(
-      'group_history_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'group_history_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<String> groupId = GeneratedColumn<String>(
-      'group_id', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints:
-          'NOT NULL REFERENCES "groups"(group_id)ON DELETE CASCADE');
+    'group_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL REFERENCES "groups"(group_id)ON DELETE CASCADE',
+  );
   late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
-      'contact_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL REFERENCES contacts(user_id)');
+    'contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL REFERENCES contacts(user_id)',
+  );
   late final GeneratedColumn<int> affectedContactId = GeneratedColumn<int>(
-      'affected_contact_id', aliasedName, true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'affected_contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<String> oldGroupName = GeneratedColumn<String>(
-      'old_group_name', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'old_group_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<String> newGroupName = GeneratedColumn<String>(
-      'new_group_name', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      $customConstraints: 'NULL');
+    'new_group_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> newDeleteMessagesAfterMilliseconds =
       GeneratedColumn<int>(
-          'new_delete_messages_after_milliseconds', aliasedName, true,
-          type: DriftSqlType.int,
-          requiredDuringInsert: false,
-          $customConstraints: 'NULL');
+        'new_delete_messages_after_milliseconds',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      $customConstraints: 'NOT NULL');
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
   late final GeneratedColumn<int> actionAt = GeneratedColumn<int>(
-      'action_at', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      $customConstraints:
-          'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-      defaultValue: const CustomExpression(
-          'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)'));
+    'action_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        groupHistoryId,
-        groupId,
-        contactId,
-        affectedContactId,
-        oldGroupName,
-        newGroupName,
-        newDeleteMessagesAfterMilliseconds,
-        type,
-        actionAt
-      ];
+    groupHistoryId,
+    groupId,
+    contactId,
+    affectedContactId,
+    oldGroupName,
+    newGroupName,
+    newDeleteMessagesAfterMilliseconds,
+    type,
+    actionAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5844,24 +6674,41 @@ class GroupHistories extends Table
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return GroupHistoriesData(
       groupHistoryId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}group_history_id'])!,
-      groupId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}group_id'])!,
-      contactId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}contact_id']),
+        DriftSqlType.string,
+        data['${effectivePrefix}group_history_id'],
+      )!,
+      groupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      ),
       affectedContactId: attachedDatabase.typeMapping.read(
-          DriftSqlType.int, data['${effectivePrefix}affected_contact_id']),
-      oldGroupName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}old_group_name']),
-      newGroupName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}new_group_name']),
+        DriftSqlType.int,
+        data['${effectivePrefix}affected_contact_id'],
+      ),
+      oldGroupName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}old_group_name'],
+      ),
+      newGroupName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}new_group_name'],
+      ),
       newDeleteMessagesAfterMilliseconds: attachedDatabase.typeMapping.read(
-          DriftSqlType.int,
-          data['${effectivePrefix}new_delete_messages_after_milliseconds']),
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      actionAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}action_at'])!,
+        DriftSqlType.int,
+        data['${effectivePrefix}new_delete_messages_after_milliseconds'],
+      ),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      actionAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}action_at'],
+      )!,
     );
   }
 
@@ -5887,16 +6734,17 @@ class GroupHistoriesData extends DataClass
   final int? newDeleteMessagesAfterMilliseconds;
   final String type;
   final int actionAt;
-  const GroupHistoriesData(
-      {required this.groupHistoryId,
-      required this.groupId,
-      this.contactId,
-      this.affectedContactId,
-      this.oldGroupName,
-      this.newGroupName,
-      this.newDeleteMessagesAfterMilliseconds,
-      required this.type,
-      required this.actionAt});
+  const GroupHistoriesData({
+    required this.groupHistoryId,
+    required this.groupId,
+    this.contactId,
+    this.affectedContactId,
+    this.oldGroupName,
+    this.newGroupName,
+    this.newDeleteMessagesAfterMilliseconds,
+    required this.type,
+    required this.actionAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5915,8 +6763,9 @@ class GroupHistoriesData extends DataClass
       map['new_group_name'] = Variable<String>(newGroupName);
     }
     if (!nullToAbsent || newDeleteMessagesAfterMilliseconds != null) {
-      map['new_delete_messages_after_milliseconds'] =
-          Variable<int>(newDeleteMessagesAfterMilliseconds);
+      map['new_delete_messages_after_milliseconds'] = Variable<int>(
+        newDeleteMessagesAfterMilliseconds,
+      );
     }
     map['type'] = Variable<String>(type);
     map['action_at'] = Variable<int>(actionAt);
@@ -5941,15 +6790,17 @@ class GroupHistoriesData extends DataClass
           : Value(newGroupName),
       newDeleteMessagesAfterMilliseconds:
           newDeleteMessagesAfterMilliseconds == null && nullToAbsent
-              ? const Value.absent()
-              : Value(newDeleteMessagesAfterMilliseconds),
+          ? const Value.absent()
+          : Value(newDeleteMessagesAfterMilliseconds),
       type: Value(type),
       actionAt: Value(actionAt),
     );
   }
 
-  factory GroupHistoriesData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory GroupHistoriesData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return GroupHistoriesData(
       groupHistoryId: serializer.fromJson<String>(json['groupHistoryId']),
@@ -5958,8 +6809,9 @@ class GroupHistoriesData extends DataClass
       affectedContactId: serializer.fromJson<int?>(json['affectedContactId']),
       oldGroupName: serializer.fromJson<String?>(json['oldGroupName']),
       newGroupName: serializer.fromJson<String?>(json['newGroupName']),
-      newDeleteMessagesAfterMilliseconds:
-          serializer.fromJson<int?>(json['newDeleteMessagesAfterMilliseconds']),
+      newDeleteMessagesAfterMilliseconds: serializer.fromJson<int?>(
+        json['newDeleteMessagesAfterMilliseconds'],
+      ),
       type: serializer.fromJson<String>(json['type']),
       actionAt: serializer.fromJson<int>(json['actionAt']),
     );
@@ -5974,41 +6826,40 @@ class GroupHistoriesData extends DataClass
       'affectedContactId': serializer.toJson<int?>(affectedContactId),
       'oldGroupName': serializer.toJson<String?>(oldGroupName),
       'newGroupName': serializer.toJson<String?>(newGroupName),
-      'newDeleteMessagesAfterMilliseconds':
-          serializer.toJson<int?>(newDeleteMessagesAfterMilliseconds),
+      'newDeleteMessagesAfterMilliseconds': serializer.toJson<int?>(
+        newDeleteMessagesAfterMilliseconds,
+      ),
       'type': serializer.toJson<String>(type),
       'actionAt': serializer.toJson<int>(actionAt),
     };
   }
 
-  GroupHistoriesData copyWith(
-          {String? groupHistoryId,
-          String? groupId,
-          Value<int?> contactId = const Value.absent(),
-          Value<int?> affectedContactId = const Value.absent(),
-          Value<String?> oldGroupName = const Value.absent(),
-          Value<String?> newGroupName = const Value.absent(),
-          Value<int?> newDeleteMessagesAfterMilliseconds = const Value.absent(),
-          String? type,
-          int? actionAt}) =>
-      GroupHistoriesData(
-        groupHistoryId: groupHistoryId ?? this.groupHistoryId,
-        groupId: groupId ?? this.groupId,
-        contactId: contactId.present ? contactId.value : this.contactId,
-        affectedContactId: affectedContactId.present
-            ? affectedContactId.value
-            : this.affectedContactId,
-        oldGroupName:
-            oldGroupName.present ? oldGroupName.value : this.oldGroupName,
-        newGroupName:
-            newGroupName.present ? newGroupName.value : this.newGroupName,
-        newDeleteMessagesAfterMilliseconds:
-            newDeleteMessagesAfterMilliseconds.present
-                ? newDeleteMessagesAfterMilliseconds.value
-                : this.newDeleteMessagesAfterMilliseconds,
-        type: type ?? this.type,
-        actionAt: actionAt ?? this.actionAt,
-      );
+  GroupHistoriesData copyWith({
+    String? groupHistoryId,
+    String? groupId,
+    Value<int?> contactId = const Value.absent(),
+    Value<int?> affectedContactId = const Value.absent(),
+    Value<String?> oldGroupName = const Value.absent(),
+    Value<String?> newGroupName = const Value.absent(),
+    Value<int?> newDeleteMessagesAfterMilliseconds = const Value.absent(),
+    String? type,
+    int? actionAt,
+  }) => GroupHistoriesData(
+    groupHistoryId: groupHistoryId ?? this.groupHistoryId,
+    groupId: groupId ?? this.groupId,
+    contactId: contactId.present ? contactId.value : this.contactId,
+    affectedContactId: affectedContactId.present
+        ? affectedContactId.value
+        : this.affectedContactId,
+    oldGroupName: oldGroupName.present ? oldGroupName.value : this.oldGroupName,
+    newGroupName: newGroupName.present ? newGroupName.value : this.newGroupName,
+    newDeleteMessagesAfterMilliseconds:
+        newDeleteMessagesAfterMilliseconds.present
+        ? newDeleteMessagesAfterMilliseconds.value
+        : this.newDeleteMessagesAfterMilliseconds,
+    type: type ?? this.type,
+    actionAt: actionAt ?? this.actionAt,
+  );
   GroupHistoriesData copyWithCompanion(GroupHistoriesCompanion data) {
     return GroupHistoriesData(
       groupHistoryId: data.groupHistoryId.present
@@ -6027,8 +6878,8 @@ class GroupHistoriesData extends DataClass
           : this.newGroupName,
       newDeleteMessagesAfterMilliseconds:
           data.newDeleteMessagesAfterMilliseconds.present
-              ? data.newDeleteMessagesAfterMilliseconds.value
-              : this.newDeleteMessagesAfterMilliseconds,
+          ? data.newDeleteMessagesAfterMilliseconds.value
+          : this.newDeleteMessagesAfterMilliseconds,
       type: data.type.present ? data.type.value : this.type,
       actionAt: data.actionAt.present ? data.actionAt.value : this.actionAt,
     );
@@ -6044,7 +6895,8 @@ class GroupHistoriesData extends DataClass
           ..write('oldGroupName: $oldGroupName, ')
           ..write('newGroupName: $newGroupName, ')
           ..write(
-              'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ')
+            'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ',
+          )
           ..write('type: $type, ')
           ..write('actionAt: $actionAt')
           ..write(')'))
@@ -6053,15 +6905,16 @@ class GroupHistoriesData extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      groupHistoryId,
-      groupId,
-      contactId,
-      affectedContactId,
-      oldGroupName,
-      newGroupName,
-      newDeleteMessagesAfterMilliseconds,
-      type,
-      actionAt);
+    groupHistoryId,
+    groupId,
+    contactId,
+    affectedContactId,
+    oldGroupName,
+    newGroupName,
+    newDeleteMessagesAfterMilliseconds,
+    type,
+    actionAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6112,9 +6965,9 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistoriesData> {
     required String type,
     this.actionAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  })  : groupHistoryId = Value(groupHistoryId),
-        groupId = Value(groupId),
-        type = Value(type);
+  }) : groupHistoryId = Value(groupHistoryId),
+       groupId = Value(groupId),
+       type = Value(type);
   static Insertable<GroupHistoriesData> custom({
     Expression<String>? groupHistoryId,
     Expression<String>? groupId,
@@ -6143,17 +6996,18 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistoriesData> {
     });
   }
 
-  GroupHistoriesCompanion copyWith(
-      {Value<String>? groupHistoryId,
-      Value<String>? groupId,
-      Value<int?>? contactId,
-      Value<int?>? affectedContactId,
-      Value<String?>? oldGroupName,
-      Value<String?>? newGroupName,
-      Value<int?>? newDeleteMessagesAfterMilliseconds,
-      Value<String>? type,
-      Value<int>? actionAt,
-      Value<int>? rowid}) {
+  GroupHistoriesCompanion copyWith({
+    Value<String>? groupHistoryId,
+    Value<String>? groupId,
+    Value<int?>? contactId,
+    Value<int?>? affectedContactId,
+    Value<String?>? oldGroupName,
+    Value<String?>? newGroupName,
+    Value<int?>? newDeleteMessagesAfterMilliseconds,
+    Value<String>? type,
+    Value<int>? actionAt,
+    Value<int>? rowid,
+  }) {
     return GroupHistoriesCompanion(
       groupHistoryId: groupHistoryId ?? this.groupHistoryId,
       groupId: groupId ?? this.groupId,
@@ -6161,7 +7015,8 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistoriesData> {
       affectedContactId: affectedContactId ?? this.affectedContactId,
       oldGroupName: oldGroupName ?? this.oldGroupName,
       newGroupName: newGroupName ?? this.newGroupName,
-      newDeleteMessagesAfterMilliseconds: newDeleteMessagesAfterMilliseconds ??
+      newDeleteMessagesAfterMilliseconds:
+          newDeleteMessagesAfterMilliseconds ??
           this.newDeleteMessagesAfterMilliseconds,
       type: type ?? this.type,
       actionAt: actionAt ?? this.actionAt,
@@ -6191,8 +7046,9 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistoriesData> {
       map['new_group_name'] = Variable<String>(newGroupName.value);
     }
     if (newDeleteMessagesAfterMilliseconds.present) {
-      map['new_delete_messages_after_milliseconds'] =
-          Variable<int>(newDeleteMessagesAfterMilliseconds.value);
+      map['new_delete_messages_after_milliseconds'] = Variable<int>(
+        newDeleteMessagesAfterMilliseconds.value,
+      );
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
@@ -6216,7 +7072,8 @@ class GroupHistoriesCompanion extends UpdateCompanion<GroupHistoriesData> {
           ..write('oldGroupName: $oldGroupName, ')
           ..write('newGroupName: $newGroupName, ')
           ..write(
-              'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ')
+            'newDeleteMessagesAfterMilliseconds: $newDeleteMessagesAfterMilliseconds, ',
+          )
           ..write('type: $type, ')
           ..write('actionAt: $actionAt, ')
           ..write('rowid: $rowid')
@@ -6241,8 +7098,9 @@ class DatabaseAtV8 extends GeneratedDatabase {
   late final SignalPreKeyStores signalPreKeyStores = SignalPreKeyStores(this);
   late final SignalSenderKeyStores signalSenderKeyStores =
       SignalSenderKeyStores(this);
-  late final SignalSessionStores signalSessionStores =
-      SignalSessionStores(this);
+  late final SignalSessionStores signalSessionStores = SignalSessionStores(
+    this,
+  );
   late final MessageActions messageActions = MessageActions(this);
   late final GroupHistories groupHistories = GroupHistories(this);
   @override
@@ -6250,111 +7108,109 @@ class DatabaseAtV8 extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-        contacts,
-        groups,
-        mediaFiles,
-        messages,
-        messageHistories,
-        reactions,
-        groupMembers,
-        receipts,
-        receivedReceipts,
-        signalIdentityKeyStores,
-        signalPreKeyStores,
-        signalSenderKeyStores,
-        signalSessionStores,
-        messageActions,
-        groupHistories
-      ];
+    contacts,
+    groups,
+    mediaFiles,
+    messages,
+    messageHistories,
+    reactions,
+    groupMembers,
+    receipts,
+    receivedReceipts,
+    signalIdentityKeyStores,
+    signalPreKeyStores,
+    signalSenderKeyStores,
+    signalSessionStores,
+    messageActions,
+    groupHistories,
+  ];
   @override
-  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
-        [
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('groups',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('messages', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('media_files',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('messages', kind: UpdateKind.update),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('messages',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('message_histories', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('contacts',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('message_histories', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('messages',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('reactions', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('contacts',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('reactions', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('groups',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('group_members', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('contacts',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('receipts', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('messages',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('receipts', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('messages',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('message_actions', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('contacts',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('message_actions', kind: UpdateKind.delete),
-            ],
-          ),
-          WritePropagation(
-            on: TableUpdateQuery.onTableName('groups',
-                limitUpdateKind: UpdateKind.delete),
-            result: [
-              TableUpdate('group_histories', kind: UpdateKind.delete),
-            ],
-          ),
-        ],
-      );
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('messages', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'media_files',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('messages', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('message_histories', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('message_histories', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('reactions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('reactions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('group_members', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('receipts', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('receipts', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'messages',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('message_actions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('message_actions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'groups',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('group_histories', kind: UpdateKind.delete)],
+    ),
+  ]);
   @override
   int get schemaVersion => 8;
 }

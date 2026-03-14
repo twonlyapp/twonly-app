@@ -8,6 +8,7 @@
 - Improve: Video compression with progress updates
 - Improve: Show message "Flames restored"
 - Improve: Show toast message if user was added via QR 
+- Fix: Issue with media files required to be reuploaded
 - Fix: Problem during contact requests
 - Fix: Problem with deleting a contact
 - Fix: Problem with restoring from backup

@@ -54,15 +54,15 @@ part 'twonly.db.g.dart';
 )
 class TwonlyDB extends _$TwonlyDB {
   TwonlyDB([QueryExecutor? e])
-      : super(
-          e ?? _openConnection(),
-        );
+    : super(
+        e ?? _openConnection(),
+      );
 
   // ignore: matching_super_parameters
   TwonlyDB.forTesting(DatabaseConnection super.connection);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -137,6 +137,12 @@ class TwonlyDB extends _$TwonlyDB {
               schema.mediaFiles.preProgressingProcess,
             );
           },
+          from9To10: (m, schema) async {
+            await m.addColumn(
+              schema.receipts,
+              schema.receipts.willBeRetriedByMediaUpload,
+            );
+          },
         )(m, from, to);
       },
     );
@@ -160,21 +166,20 @@ class TwonlyDB extends _$TwonlyDB {
   }
 
   Future<void> deleteDataForTwonlySafe() async {
-    await (delete(messages)
-          ..where(
-            (t) => (t.mediaStored.equals(false) &
-                t.isDeletedFromSender.equals(false)),
-          ))
+    await (delete(messages)..where(
+          (t) =>
+              (t.mediaStored.equals(false) &
+              t.isDeletedFromSender.equals(false)),
+        ))
         .go();
     await update(messages).write(
       const MessagesCompanion(
         downloadToken: Value(null),
       ),
     );
-    await (delete(mediaFiles)
-          ..where(
-            (t) => (t.stored.equals(false)),
-          ))
+    await (delete(mediaFiles)..where(
+          (t) => (t.stored.equals(false)),
+        ))
         .go();
     await delete(receipts).go();
     await delete(receivedReceipts).go();
@@ -184,14 +189,13 @@ class TwonlyDB extends _$TwonlyDB {
         senderProfileCounter: Value(0),
       ),
     );
-    await (delete(signalPreKeyStores)
-          ..where(
-            (t) => (t.createdAt.isSmallerThanValue(
-              clock.now().subtract(
-                    const Duration(days: 25),
-                  ),
-            )),
-          ))
+    await (delete(signalPreKeyStores)..where(
+          (t) => (t.createdAt.isSmallerThanValue(
+            clock.now().subtract(
+              const Duration(days: 25),
+            ),
+          )),
+        ))
         .go();
   }
 }

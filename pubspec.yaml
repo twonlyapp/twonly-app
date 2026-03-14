@@ -6,7 +6,7 @@ publish_to: 'none'
 version: 0.0.97+97
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.11.0
 
 dependencies:
   flutter:
@@ -161,13 +161,7 @@ dependency_overrides:
   flutter_android_volume_keydown:
     git:
       url: https://github.com/yenchieh/flutter_android_volume_keydown.git
-      branch: fix/lStar-not-found-error
-  # flutter_secure_storage_darwin:
-  #   git:
-  #     url: https://github.com/juliansteenbakker/flutter_secure_storage.git
-  #     ref: a06ead81809c900e7fc421a30db0adf3b5919139 # from develop
-  #     path: flutter_secure_storage_darwin/
-  # hardcoding the mirror mode of the VideCapture to MIRROR_MODE_ON_FRONT_ONLY
+      ref: fix/lStar-not-found-error
 
 dev_dependencies:
   build_runner: ^2.4.15

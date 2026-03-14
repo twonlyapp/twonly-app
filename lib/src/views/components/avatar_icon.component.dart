@@ -52,8 +52,7 @@ class _AvatarIconState extends State<AvatarIcon> {
     super.dispose();
   }
 
-  // ignore: strict_top_level_inference
-  Widget errorBuilder(_, __, ___) {
+  Widget errorBuilder(_, _, _) {
     return const SvgPicture(
       AssetBytesLoader('assets/images/default_avatar.svg.vec'),
     );
@@ -81,20 +80,20 @@ class _AvatarIconState extends State<AvatarIcon> {
       groupStream = twonlyDB.groupsDao
           .watchGroupContact(widget.group!.groupId)
           .listen((contacts) {
-        _avatarContacts = [];
-        if (contacts.length == 1) {
-          if (contacts.first.avatarSvgCompressed != null) {
-            _avatarContacts.add(contacts.first);
-          }
-        } else {
-          for (final contact in contacts) {
-            if (contact.avatarSvgCompressed != null) {
-              _avatarContacts.add(contact);
+            _avatarContacts = [];
+            if (contacts.length == 1) {
+              if (contacts.first.avatarSvgCompressed != null) {
+                _avatarContacts.add(contacts.first);
+              }
+            } else {
+              for (final contact in contacts) {
+                if (contact.avatarSvgCompressed != null) {
+                  _avatarContacts.add(contact);
+                }
+              }
             }
-          }
-        }
-        setState(() {});
-      });
+            setState(() {});
+          });
     } else if (widget.myAvatar) {
       _globalUserDataCallBackId = 'avatar_${getRandomString(10)}';
       globalUserDataChangedCallBack[_globalUserDataCallBackId!] = () {
@@ -113,11 +112,11 @@ class _AvatarIconState extends State<AvatarIcon> {
       contactStream = twonlyDB.contactsDao
           .watchContact(widget.contactId!)
           .listen((contact) {
-        if (contact != null && contact.avatarSvgCompressed != null) {
-          _avatarContacts = [contact];
-          setState(() {});
-        }
-      });
+            if (contact != null && contact.avatarSvgCompressed != null) {
+              _avatarContacts = [contact];
+              setState(() {});
+            }
+          });
     }
     if (mounted) setState(() {});
   }
