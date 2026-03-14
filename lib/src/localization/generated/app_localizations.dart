@@ -2104,6 +2104,12 @@ abstract class AppLocalizations {
   /// **'The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.'**
   String get uploadLimitReached;
 
+  /// No description provided for @fileLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum file size\nexceeded'**
+  String get fileLimitReached;
+
   /// No description provided for @retransmissionRequested.
   ///
   /// In en, this message translates to:

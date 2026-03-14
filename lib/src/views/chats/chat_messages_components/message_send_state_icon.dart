@@ -163,6 +163,19 @@ class _MessageSendStateIconState extends State<MessageSendStateIcon> {
                 context.lang.uploadLimitReached,
                 style: const TextStyle(fontSize: 9),
               );
+            }
+
+            if (mediaFile.uploadState == UploadState.fileLimitReached) {
+              icon = FaIcon(
+                FontAwesomeIcons.triangleExclamation,
+                size: 12,
+                color: color,
+              );
+
+              textWidget = Text(
+                context.lang.fileLimitReached,
+                style: const TextStyle(fontSize: 9),
+              );
 
               onTap = () => context.push(Routes.settingsSubscription);
             }

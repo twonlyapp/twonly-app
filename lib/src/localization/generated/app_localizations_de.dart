@@ -1117,6 +1117,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das Upload-Limit wurde\nerreicht. Upgrade auf Pro\noder warte bis morgen.';
 
   @override
+  String get fileLimitReached => 'Maximale Dateigröße\nerreicht';
+
+  @override
   String get retransmissionRequested => 'Wird erneut versucht.';
 
   @override

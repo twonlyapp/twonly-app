@@ -20,6 +20,9 @@ enum UploadState {
   uploaded,
 
   uploadLimitReached,
+
+  // File is to big to be uploaded
+  fileLimitReached,
   // readyToUpload,
   // uploadTaskStarted,
   // receiverNotified,

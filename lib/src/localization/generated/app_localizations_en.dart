@@ -1110,6 +1110,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'The upload limit has\nbeen reached. Upgrade to Pro\nor wait until tomorrow.';
 
   @override
+  String get fileLimitReached => 'Maximum file size\nexceeded';
+
+  @override
   String get retransmissionRequested => 'Retransmission requested';
 
   @override

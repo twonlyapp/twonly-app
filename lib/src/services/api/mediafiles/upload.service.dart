@@ -343,6 +343,11 @@ Future<void> _createUploadRequest(MediaFileService media) async {
 
   final uploadRequestBytes = uploadRequest.writeToBuffer();
 
+  if (uploadRequestBytes.length > 49_000_000) {
+    await media.setUploadState(UploadState.fileLimitReached);
+    return;
+  }
+
   await media.uploadRequestPath.writeAsBytes(uploadRequestBytes);
 }
 
