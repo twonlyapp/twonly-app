@@ -30,9 +30,9 @@ import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/messages.dart';
 import 'package:twonly/src/services/api/server_messages.dart';
 import 'package:twonly/src/services/api/utils.dart';
-import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/group.services.dart';
+import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/pushkeys.notifications.dart';
 import 'package:twonly/src/services/signal/identity.signal.dart';
 import 'package:twonly/src/services/signal/utils.signal.dart';
@@ -90,7 +90,11 @@ class ApiService {
     await initFCMAfterAuthenticated();
     globalCallbackConnectionState(isConnected: true);
 
-    if (!globalIsAppInBackground) {
+    if (globalIsInBackgroundTask) {
+      await retransmitRawBytes();
+      await tryTransmitMessages();
+      await tryDownloadAllMediaFiles();
+    } else if (!globalIsAppInBackground) {
       unawaited(retransmitRawBytes());
       unawaited(tryTransmitMessages());
       unawaited(tryDownloadAllMediaFiles());
@@ -124,6 +128,7 @@ class ApiService {
   }
 
   Future<void> startReconnectionTimer() async {
+    if (globalIsInBackgroundTask) return;
     if (reconnectionTimer?.isActive ?? false) {
       return;
     }
@@ -330,7 +335,9 @@ class ApiService {
       }
     }
     if (res.isError) {
-      Log.warn('Got error from server: ${res.error}');
+      if (res.error != ErrorCode.ForegroundSessionConnected) {
+        Log.warn('Got error from server: ${res.error}');
+      }
       if (res.error == ErrorCode.AppVersionOutdated) {
         globalCallbackAppIsOutdated();
         Log.warn('App Version is OUTDATED.');
@@ -395,6 +402,7 @@ class ApiService {
         ..userId = Int64(userId)
         ..appVersion = (await PackageInfo.fromPlatform()).version
         ..deviceId = Int64(user.deviceId)
+        ..inBackground = globalIsInBackgroundTask
         ..authToken = base64Decode(apiAuthToken);
 
       final handshake = Handshake()..authenticate = authenticate;
@@ -404,12 +412,19 @@ class ApiService {
 
       if (result.isSuccess) {
         Log.info('websocket is authenticated');
-        unawaited(onAuthenticated());
+        if (globalIsInBackgroundTask) {
+          await onAuthenticated();
+        } else {
+          unawaited(onAuthenticated());
+        }
         return true;
       }
       if (result.isError) {
-        if (result.error != ErrorCode.AuthTokenNotValid) {
-          Log.error('got error while authenticating to the server: $result');
+        if (result.error != ErrorCode.AuthTokenNotValid &&
+            result.error != ErrorCode.ForegroundSessionConnected) {
+          Log.error(
+            'got error while authenticating to the server: ${result.error}',
+          );
           return false;
         }
       }

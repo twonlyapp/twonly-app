@@ -24,10 +24,13 @@ import 'package:twonly/src/services/flame.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
 import 'package:twonly/src/utils/log.dart';
 import 'package:twonly/src/utils/misc.dart';
+import 'package:workmanager/workmanager.dart' hide TaskStatus;
 
 Future<void> finishStartedPreprocessing() async {
   final mediaFiles =
       await twonlyDB.mediaFilesDao.getAllMediaFilesPendingUpload();
+
+  Log.info('There are ${mediaFiles.length} media files pending');
 
   for (final mediaFile in mediaFiles) {
     if (mediaFile.isDraftMedia) {
@@ -51,6 +54,47 @@ Future<void> finishStartedPreprocessing() async {
       await startBackgroundMediaUpload(service);
     } catch (e) {
       Log.warn(e);
+    }
+  }
+}
+
+/// It can happen, that a media files is uploaded but not yet marked for been uploaded.
+/// For example because the background_downloader plugin has not yet reported the finished upload.
+/// In case the the message receipts or a reaction was received, mark the media file as been uploaded.
+Future<void> handleMediaRelatedResponseFromReceiver(String messageId) async {
+  final message =
+      await twonlyDB.messagesDao.getMessageById(messageId).getSingleOrNull();
+  if (message == null || message.mediaId == null) return;
+  final media = await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+  if (media == null) return;
+
+  if (media.uploadState != UploadState.uploaded) {
+    Log.info('Media was not yet marked as uploaded. Doing it now.');
+    await markUploadAsSuccessful(media);
+  }
+}
+
+Future<void> markUploadAsSuccessful(MediaFile media) async {
+  await twonlyDB.mediaFilesDao.updateMedia(
+    media.mediaId,
+    const MediaFilesCompanion(
+      uploadState: Value(UploadState.uploaded),
+    ),
+  );
+
+  /// As the messages where send in a bulk acknowledge all messages.
+
+  final messages =
+      await twonlyDB.messagesDao.getMessagesByMediaId(media.mediaId);
+  for (final message in messages) {
+    final contacts =
+        await twonlyDB.groupsDao.getGroupNonLeftMembers(message.groupId);
+    for (final contact in contacts) {
+      await twonlyDB.messagesDao.handleMessageAckByServer(
+        contact.contactId,
+        message.messageId,
+        clock.now(),
+      );
     }
   }
 }
@@ -344,8 +388,9 @@ Future<void> _uploadUploadRequest(MediaFileService media) async {
 
     final connectivityResult = await Connectivity().checkConnectivity();
 
-    if (!connectivityResult.contains(ConnectivityResult.mobile) &&
-        !connectivityResult.contains(ConnectivityResult.wifi)) {
+    if (globalIsInBackgroundTask ||
+        !connectivityResult.contains(ConnectivityResult.mobile) &&
+            !connectivityResult.contains(ConnectivityResult.wifi)) {
       // no internet, directly put it into the background...
       await FileDownloader().enqueue(task);
       await media.setUploadState(UploadState.backgroundUploadTaskStarted);
@@ -376,15 +421,30 @@ Future<void> uploadFileFastOrEnqueue(
   );
 
   try {
+    final workmanagerUniqueName =
+        'progressing_finish_uploads_${media.mediaFile.mediaId}';
+
+    await Workmanager().registerOneOffTask(
+      workmanagerUniqueName,
+      'eu.twonly.processing_task',
+      initialDelay: const Duration(minutes: 15),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+    );
+
     Log.info('Uploading fast: ${task.taskId}');
-    final response =
-        await requestMultipart.send().timeout(const Duration(seconds: 8));
+
+    final response = await requestMultipart.send();
     var status = TaskStatus.failed;
     if (response.statusCode == 200) {
       status = TaskStatus.complete;
     } else if (response.statusCode == 404) {
       status = TaskStatus.notFound;
     }
+
+    await Workmanager().cancelByUniqueName(workmanagerUniqueName);
+
     await handleUploadStatusUpdate(
       TaskStatusUpdate(
         task,

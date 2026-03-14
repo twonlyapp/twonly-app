@@ -31,7 +31,9 @@ void Function(SubscriptionPlan plan) globalCallbackUpdatePlan = (plan) {};
 Map<String, VoidCallback> globalUserDataChangedCallBack = {};
 
 bool globalIsAppInBackground = true;
+bool globalIsInBackgroundTask = false;
 bool globalAllowErrorTrackingViaSentry = false;
+bool globalGotMessageFromServer = false;
 
 late String globalApplicationCacheDirectory;
 late String globalApplicationSupportDirectory;

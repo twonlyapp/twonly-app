@@ -17,9 +17,10 @@ import 'package:twonly/src/services/api.service.dart';
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/services/api/mediafiles/media_background.service.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
+import 'package:twonly/src/services/background/callback_dispatcher.background.dart';
 import 'package:twonly/src/services/backup/create.backup.dart';
-import 'package:twonly/src/services/fcm.service.dart';
 import 'package:twonly/src/services/mediafiles/mediafile.service.dart';
+import 'package:twonly/src/services/notifications/fcm.notifications.dart';
 import 'package:twonly/src/services/notifications/setup.notifications.dart';
 import 'package:twonly/src/utils/avatars.dart';
 import 'package:twonly/src/utils/log.dart';
@@ -46,6 +47,7 @@ void main() async {
     }
 
     unawaited(performTwonlySafeBackup());
+    unawaited(initializeBackgroundTaskManager());
   } else {
     Log.info('User is not yet register. Ensure all local data is removed.');
     await deleteLocalUserData();
