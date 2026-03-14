@@ -46,6 +46,9 @@ void main() async {
     }
 
     unawaited(performTwonlySafeBackup());
+  } else {
+    Log.info('User is not yet register. Ensure all local data is removed.');
+    await deleteLocalUserData();
   }
 
   globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;

@@ -2,6 +2,7 @@
 
 ## 0.0.98
 
+- New: Adds a link if the image contains a QR code
 - Improve: Video compression with progress updates
 - Improve: Show message "Flames restored"
 - Improve: Show toast message if user was added via QR 

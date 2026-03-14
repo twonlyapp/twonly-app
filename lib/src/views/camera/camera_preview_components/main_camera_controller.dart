@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:clock/clock.dart';
 import 'package:collection/collection.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
@@ -45,10 +46,11 @@ class MainCameraController {
 
   bool isSharePreviewIsShown = false;
   bool isVideoRecording = false;
+  DateTime? timeSharedLinkWasSetWithQr;
 
   Uri? sharedLinkForPreview;
 
-  void setSharedLinkForPreview(Uri url) {
+  void setSharedLinkForPreview(Uri? url) {
     sharedLinkForPreview = url;
     setState();
   }
@@ -279,11 +281,22 @@ class MainCameraController {
       );
       customPaint = CustomPaint(painter: painter);
 
+      if (barcodes.isEmpty && timeSharedLinkWasSetWithQr != null) {
+        if (timeSharedLinkWasSetWithQr!
+            .isAfter(DateTime.now().subtract(const Duration(seconds: 2)))) {
+          setSharedLinkForPreview(null);
+        }
+      }
+
       for (final barcode in barcodes) {
         if (barcode.displayValue != null) {
           if (barcode.displayValue!.startsWith('http://') ||
               barcode.displayValue!.startsWith('https://')) {
             scannedUrl = barcode.displayValue;
+            if (sharedLinkForPreview == null) {
+              timeSharedLinkWasSetWithQr = clock.now();
+              setSharedLinkForPreview(Uri.parse(scannedUrl!));
+            }
           }
         }
         if (barcode.rawBytes == null) continue;
