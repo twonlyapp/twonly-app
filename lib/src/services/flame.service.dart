@@ -10,7 +10,7 @@ import 'package:twonly/src/utils/misc.dart';
 import 'package:twonly/src/utils/storage.dart';
 
 Future<void> syncFlameCounters({String? forceForGroup}) async {
-  final groups = await twonlyDB.groupsDao.getAllDirectChats();
+  final groups = await twonlyDB.groupsDao.getAllGroups();
   if (groups.isEmpty) return;
   final maxMessageCounter = groups.map((x) => x.totalMediaCounter).max;
   final bestFriend =
@@ -37,14 +37,8 @@ Future<void> syncFlameCounters({String? forceForGroup}) async {
     // only sync when flame counter is higher three or when they are bestFriends
     if (flameCounter <= 2 && bestFriend.groupId != group.groupId) continue;
 
-    final groupMembers =
-        await twonlyDB.groupsDao.getGroupNonLeftMembers(group.groupId);
-    if (groupMembers.length != 1) {
-      continue; // flame sync is only done for groups of two
-    }
-
-    await sendCipherText(
-      groupMembers.first.contactId,
+    await sendCipherTextToGroup(
+      group.groupId,
       EncryptedContent(
         flameSync: EncryptedContent_FlameSync(
           flameCounter: Int64(flameCounter),

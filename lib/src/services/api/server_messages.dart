@@ -257,11 +257,6 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
     return (null, null);
   }
 
-  if (content.hasFlameSync()) {
-    await handleFlameSync(fromUserId, content.flameSync);
-    return (null, null);
-  }
-
   if (content.hasPushKeys()) {
     await handlePushKey(fromUserId, content.pushKeys);
     return (null, null);
@@ -344,6 +339,11 @@ Future<(EncryptedContent?, PlaintextContent?)> handleEncryptedMessage(
       Log.error('User $fromUserId tried to access group ${content.groupId}.');
       return (null, null);
     }
+  }
+
+  if (content.hasFlameSync()) {
+    await handleFlameSync(content.groupId, content.flameSync);
+    return (null, null);
   }
 
   if (content.hasGroupUpdate()) {

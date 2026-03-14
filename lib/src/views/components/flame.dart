@@ -44,11 +44,7 @@ class _FlameCounterWidgetState extends State<FlameCounterWidget> {
       group = await twonlyDB.groupsDao.getDirectChat(widget.contactId!);
       groupId = group?.groupId;
     } else if (groupId != null) {
-      // do not display the flame counter for groups
       group = await twonlyDB.groupsDao.getGroup(groupId);
-      if (!(group?.isDirectChat ?? false)) {
-        return;
-      }
     }
     if (groupId != null && group != null) {
       isBestFriend =

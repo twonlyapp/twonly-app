@@ -137,12 +137,12 @@ Future<void> handleContactUpdate(
 }
 
 Future<void> handleFlameSync(
-  int contactId,
+  String groupId,
   EncryptedContent_FlameSync flameSync,
 ) async {
-  Log.info('Got a flameSync from $contactId');
+  Log.info('Got a flameSync for group $groupId');
 
-  final group = await twonlyDB.groupsDao.getDirectChat(contactId);
+  final group = await twonlyDB.groupsDao.getGroup(groupId);
   if (group == null || group.lastFlameCounterChange == null) return;
 
   var updates = GroupsCompanion(

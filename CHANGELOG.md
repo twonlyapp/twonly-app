@@ -2,6 +2,7 @@
 
 ## 0.0.98
 
+- New: Groups can now collect flames as well
 - New: Adds a link if the image contains a QR code
 - Improve: Video compression with progress updates
 - Improve: Show message "Flames restored"

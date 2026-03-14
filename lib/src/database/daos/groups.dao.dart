@@ -248,6 +248,10 @@ class GroupsDao extends DatabaseAccessor<TwonlyDB> with _$GroupsDaoMixin {
     return (select(groups)..where((t) => t.isDirectChat.equals(true))).get();
   }
 
+  Future<List<Group>> getAllGroups() {
+    return select(groups).get();
+  }
+
   Future<List<Group>> getAllNotJoinedGroups() {
     return (select(groups)
           ..where(
