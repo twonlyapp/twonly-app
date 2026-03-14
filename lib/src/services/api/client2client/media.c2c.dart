@@ -4,7 +4,8 @@ import 'package:twonly/globals.dart';
 import 'package:twonly/src/database/tables/mediafiles.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
-import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart';
+import 'package:twonly/src/model/protobuf/client/generated/messages.pb.dart'
+    hide Message;
 import 'package:twonly/src/services/api/mediafiles/download.service.dart';
 import 'package:twonly/src/services/api/mediafiles/upload.service.dart';
 import 'package:twonly/src/services/api/utils.dart';
@@ -31,7 +32,7 @@ Future<void> handleMedia(
           message.senderId != fromUserId ||
           message.mediaId == null) {
         Log.warn(
-          'Got reupload for a message that either does not exists or sender != fromUserId or not a media file',
+          'Got reupload from $fromUserId for a message that either does not exists (${message == null}) or senderId = ${message?.senderId}',
         );
         return;
       }
@@ -53,8 +54,9 @@ Future<void> handleMedia(
         ),
       );
 
-      final mediaFile =
-          await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+      final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+        message.mediaId!,
+      );
 
       if (mediaFile != null) {
         unawaited(startDownloadMedia(mediaFile, false));
@@ -89,56 +91,64 @@ Future<void> handleMedia(
     }
   }
 
-  final mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
-    MediaFilesCompanion(
-      downloadState: const Value(DownloadState.pending),
-      type: Value(mediaType),
-      requiresAuthentication: Value(media.requiresAuthentication),
-      displayLimitInMilliseconds: Value(
-        displayLimitInMilliseconds,
-      ),
-      downloadToken: Value(Uint8List.fromList(media.downloadToken)),
-      encryptionKey: Value(Uint8List.fromList(media.encryptionKey)),
-      encryptionMac: Value(Uint8List.fromList(media.encryptionMac)),
-      encryptionNonce: Value(Uint8List.fromList(media.encryptionNonce)),
-      createdAt: Value(fromTimestamp(media.timestamp)),
-    ),
-  );
+  late MediaFile? mediaFile;
+  late Message? message;
 
-  if (mediaFile == null) {
-    Log.error('Could not insert media file into database');
-    return;
-  }
+  await twonlyDB.transaction(() async {
+    mediaFile = await twonlyDB.mediaFilesDao.insertMedia(
+      MediaFilesCompanion(
+        downloadState: const Value(DownloadState.pending),
+        type: Value(mediaType),
+        requiresAuthentication: Value(media.requiresAuthentication),
+        displayLimitInMilliseconds: Value(
+          displayLimitInMilliseconds,
+        ),
+        downloadToken: Value(Uint8List.fromList(media.downloadToken)),
+        encryptionKey: Value(Uint8List.fromList(media.encryptionKey)),
+        encryptionMac: Value(Uint8List.fromList(media.encryptionMac)),
+        encryptionNonce: Value(Uint8List.fromList(media.encryptionNonce)),
+        createdAt: Value(fromTimestamp(media.timestamp)),
+      ),
+    );
 
-  final message = await twonlyDB.messagesDao.insertMessage(
-    MessagesCompanion(
-      messageId: Value(media.senderMessageId),
-      senderId: Value(fromUserId),
-      groupId: Value(groupId),
-      mediaId: Value(mediaFile.mediaId),
-      type: Value(MessageType.media.name),
-      additionalMessageData: Value.absentIfNull(
-        media.hasAdditionalMessageData()
-            ? Uint8List.fromList(media.additionalMessageData)
-            : null,
+    if (mediaFile == null) {
+      Log.error('Could not insert media file into database');
+      return;
+    }
+
+    message = await twonlyDB.messagesDao.insertMessage(
+      MessagesCompanion(
+        messageId: Value(media.senderMessageId),
+        senderId: Value(fromUserId),
+        groupId: Value(groupId),
+        mediaId: Value(mediaFile!.mediaId),
+        type: Value(MessageType.media.name),
+        additionalMessageData: Value.absentIfNull(
+          media.hasAdditionalMessageData()
+              ? Uint8List.fromList(media.additionalMessageData)
+              : null,
+        ),
+        quotesMessageId: Value(
+          media.hasQuoteMessageId() ? media.quoteMessageId : null,
+        ),
+        createdAt: Value(fromTimestamp(media.timestamp)),
       ),
-      quotesMessageId: Value(
-        media.hasQuoteMessageId() ? media.quoteMessageId : null,
-      ),
-      createdAt: Value(fromTimestamp(media.timestamp)),
-    ),
-  );
+    );
+  });
+
   if (message != null) {
-    await twonlyDB.groupsDao
-        .increaseLastMessageExchange(groupId, fromTimestamp(media.timestamp));
-    Log.info('Inserted a new media message with ID: ${message.messageId}');
+    await twonlyDB.groupsDao.increaseLastMessageExchange(
+      groupId,
+      fromTimestamp(media.timestamp),
+    );
+    Log.info('Inserted a new media message with ID: ${message!.messageId}');
     await incFlameCounter(
-      message.groupId,
+      message!.groupId,
       true,
       fromTimestamp(media.timestamp),
     );
 
-    unawaited(startDownloadMedia(mediaFile, false));
+    unawaited(startDownloadMedia(mediaFile!, false));
   }
 }
 
@@ -163,8 +173,9 @@ Future<void> handleMediaUpdate(
     );
     return;
   }
-  final mediaFile =
-      await twonlyDB.mediaFilesDao.getMediaFileById(message.mediaId!);
+  final mediaFile = await twonlyDB.mediaFilesDao.getMediaFileById(
+    message.mediaId!,
+  );
   if (mediaFile == null) {
     Log.info(
       'Got media file update, but media file was not found ${message.mediaId}',
@@ -203,8 +214,9 @@ Future<void> handleMediaUpdate(
           reuploadRequestedBy: Value(reuploadRequestedBy),
         ),
       );
-      final mediaFileUpdated =
-          await MediaFileService.fromMediaId(mediaFile.mediaId);
+      final mediaFileUpdated = await MediaFileService.fromMediaId(
+        mediaFile.mediaId,
+      );
       if (mediaFileUpdated != null) {
         if (mediaFileUpdated.uploadRequestPath.existsSync()) {
           mediaFileUpdated.uploadRequestPath.deleteSync();

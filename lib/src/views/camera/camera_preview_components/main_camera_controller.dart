@@ -88,9 +88,8 @@ class MainCameraController {
     scannedUrl = null;
     try {
       await cameraController?.stopImageStream();
-    } catch (e) {
-      Log.warn(e);
-    }
+      // ignore: empty_catches
+    } catch (e) {}
     final cameraControllerTemp = cameraController;
     cameraController = null;
     // prevents: CameraException(Disposed CameraController, buildPreview() was called on a disposed CameraController.)
@@ -166,7 +165,8 @@ class MainCameraController {
     selectedCameraDetails.minAvailableZoom =
         await cameraController?.getMinZoomLevel() ?? 1;
     selectedCameraDetails
-      ..isZoomAble = selectedCameraDetails.maxAvailableZoom !=
+      ..isZoomAble =
+          selectedCameraDetails.maxAvailableZoom !=
           selectedCameraDetails.minAvailableZoom
       ..cameraLoaded = true
       ..cameraId = cameraId;
@@ -323,8 +323,9 @@ class MainCameraController {
       customPaint = CustomPaint(painter: painter);
 
       if (barcodes.isEmpty && timeSharedLinkWasSetWithQr != null) {
-        if (timeSharedLinkWasSetWithQr!
-            .isAfter(DateTime.now().subtract(const Duration(seconds: 2)))) {
+        if (timeSharedLinkWasSetWithQr!.isAfter(
+          DateTime.now().subtract(const Duration(seconds: 2)),
+        )) {
           setSharedLinkForPreview(null);
         }
       }
@@ -376,8 +377,8 @@ class MainCameraController {
                     content: Text(
                       globalRootScaffoldMessengerKey.currentContext?.lang
                               .verifiedPublicKey(
-                            getContactDisplayName(contact),
-                          ) ??
+                                getContactDisplayName(contact),
+                              ) ??
                           '',
                     ),
                     duration: const Duration(seconds: 6),

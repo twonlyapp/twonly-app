@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:mutex/mutex.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:twonly/globals.dart';
 
@@ -11,7 +11,7 @@ void initLogger() {
   // Logger.root.level = kReleaseMode ? Level.INFO : Level.ALL;
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((record) async {
-    await _writeLogToFile(record);
+    unawaited(_writeLogToFile(record));
     if (!kReleaseMode) {
       // ignore: avoid_print
       print(
@@ -67,83 +67,123 @@ class Log {
 }
 
 Future<String> loadLogFile() async {
-  final directory = await getApplicationSupportDirectory();
-  final logFile = File('${directory.path}/app.log');
+  return _protectFileAccess(() async {
+    final logFile = File('$globalApplicationSupportDirectory/app.log');
 
-  if (logFile.existsSync()) {
-    return logFile.readAsString();
-  } else {
-    return 'Log file does not exist.';
-  }
+    if (logFile.existsSync()) {
+      return logFile.readAsString();
+    } else {
+      return 'Log file does not exist.';
+    }
+  });
 }
 
 Future<String> readLast1000Lines() async {
-  final dir = await getApplicationSupportDirectory();
-  final file = File('${dir.path}/app.log');
-  if (!file.existsSync()) return '';
-  final all = await file.readAsLines();
-  final start = all.length > 1000 ? all.length - 1000 : 0;
-  return all.sublist(start).join('\n');
+  return _protectFileAccess(() async {
+    final file = File('$globalApplicationSupportDirectory/app.log');
+    if (!file.existsSync()) return '';
+    final all = await file.readAsLines();
+    final start = all.length > 1000 ? all.length - 1000 : 0;
+    return all.sublist(start).join('\n');
+  });
 }
 
-Mutex sameProcessProtection = Mutex();
+final Mutex _logMutex = Mutex();
+
+Future<T> _protectFileAccess<T>(Future<T> Function() action) async {
+  return _logMutex.protect(() async {
+    final lockFile = File('$globalApplicationSupportDirectory/app.log.lock');
+    var lockAcquired = false;
+
+    while (!lockAcquired) {
+      try {
+        lockFile.createSync(exclusive: true);
+        lockAcquired = true;
+      } on FileSystemException catch (e) {
+        final isExists = e is PathExistsException || e.osError?.errorCode == 17;
+        if (!isExists) {
+          break;
+        }
+        try {
+          final stat = lockFile.statSync();
+          if (stat.type != FileSystemEntityType.notFound) {
+            final age = DateTime.now().difference(stat.modified).inMilliseconds;
+            if (age > 1000) {
+              lockFile.deleteSync();
+              continue;
+            }
+          }
+        } catch (_) {}
+        await Future.delayed(const Duration(milliseconds: 50));
+      } catch (_) {
+        break;
+      }
+    }
+    try {
+      return await action();
+    } finally {
+      if (lockAcquired) {
+        try {
+          if (lockFile.existsSync()) {
+            lockFile.deleteSync();
+          }
+        } catch (_) {}
+      }
+    }
+  });
+}
 
 Future<void> _writeLogToFile(LogRecord record) async {
-  final directory = await getApplicationSupportDirectory();
-  final logFile = File('${directory.path}/app.log');
-  if (!logFile.existsSync()) {
-    logFile.createSync(recursive: true);
-  }
+  final logFile = File('$globalApplicationSupportDirectory/app.log');
 
   final logMessage =
       '${clock.now().toString().split(".")[0]} ${record.level.name} [twonly] ${record.loggerName} > ${record.message}\n';
 
-  // > Note that this does not actually lock the file for access. Also note that advisory locks are on a process level.
-  // > This means that several isolates in the same process can obtain an exclusive lock on the same file.
-  return sameProcessProtection.protect(() async {
+  return _protectFileAccess(() async {
+    if (!logFile.existsSync()) {
+      logFile.createSync(recursive: true);
+    }
     final raf = await logFile.open(mode: FileMode.writeOnlyAppend);
-
     try {
-      // Use FileLock.blockingExclusive to wait until the lock is available
-      await raf.lock(FileLock.blockingExclusive);
       await raf.writeString(logMessage);
       await raf.flush();
     } catch (e) {
       // ignore: avoid_print
       print('Error during file access: $e');
     } finally {
-      await raf.unlock();
       await raf.close();
     }
   });
 }
 
 Future<void> cleanLogFile() async {
-  final directory = await getApplicationSupportDirectory();
-  final logFile = File('${directory.path}/app.log');
+  return _protectFileAccess(() async {
+    final logFile = File('$globalApplicationSupportDirectory/app.log');
 
-  if (logFile.existsSync()) {
-    final lines = await logFile.readAsLines();
+    if (logFile.existsSync()) {
+      final lines = await logFile.readAsLines();
 
-    if (lines.length <= 10000) return;
+      if (lines.length <= 10000) return;
 
-    final removeCount = lines.length - 10000;
-    final remaining = lines.sublist(removeCount, lines.length);
+      final removeCount = lines.length - 10000;
+      final remaining = lines.sublist(removeCount, lines.length);
 
-    final sink = logFile.openWrite()..writeAll(remaining, '\n');
-    await sink.close();
-  }
+      final sink = logFile.openWrite()..writeAll(remaining, '\n');
+      await sink.close();
+    }
+  });
 }
 
 Future<bool> deleteLogFile() async {
-  final directory = await getApplicationSupportDirectory();
-  final logFile = File('${directory.path}/app.log');
+  return _protectFileAccess(() async {
+    final logFile = File('$globalApplicationSupportDirectory/app.log');
 
-  if (logFile.existsSync()) {
-    await logFile.delete();
-    return true;
-  }
-  return false;
+    if (logFile.existsSync()) {
+      await logFile.delete();
+      return true;
+    }
+    return false;
+  });
 }
 
 String _getCallerSourceCodeFilename() {
@@ -159,8 +199,11 @@ String _getCallerSourceCodeFilename() {
     lineNumber = parts.last.split(':')[1]; // Extract the line number
   } else {
     final firstLine = stackTraceString.split('\n')[0];
-    fileName =
-        firstLine.split('/').last.split(':').first; // Extract the file name
+    fileName = firstLine
+        .split('/')
+        .last
+        .split(':')
+        .first; // Extract the file name
     lineNumber = firstLine.split(':')[1]; // Extract the line number
   }
   lineNumber = lineNumber.replaceAll(')', '');

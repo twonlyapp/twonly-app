@@ -38,7 +38,7 @@ void main() {
         image:
             'https://files.mastodon.social/media_attachments/files/115/883/317/526/523/824/original/6fa7ef90ec68f1f1.jpg',
         vendor: Vendor.mastodonSocialMediaPosting,
-        shareAction: 90,
+        shareAction: 80,
         likeAction: 290,
       ),
       LinkParserTest(

@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:hashlib/random.dart';
+import 'package:twonly/src/database/tables/contacts.table.dart';
 import 'package:twonly/src/database/tables/messages.table.dart';
 import 'package:twonly/src/database/tables/receipts.table.dart';
 import 'package:twonly/src/database/twonly.db.dart';
@@ -9,7 +10,9 @@ import 'package:twonly/src/utils/log.dart';
 
 part 'receipts.dao.g.dart';
 
-@DriftAccessor(tables: [Receipts, Messages, MessageActions, ReceivedReceipts])
+@DriftAccessor(
+  tables: [Receipts, Messages, MessageActions, ReceivedReceipts, Contacts],
+)
 class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
   // this constructor is required so that the main database can create an instance
   // of this object.
@@ -60,6 +63,17 @@ class ReceiptsDao extends DatabaseAccessor<TwonlyDB> with _$ReceiptsDaoMixin {
           )),
         ))
         .go();
+
+    final deletedContacts = await (select(
+      contacts,
+    )..where((t) => t.accountDeleted.equals(true))).get();
+
+    for (final contact in deletedContacts) {
+      await (delete(receipts)..where(
+            (t) => t.contactId.equals(contact.userId),
+          ))
+          .go();
+    }
   }
 
   Future<Receipt?> insertReceipt(ReceiptsCompanion entry) async {

@@ -29,6 +29,10 @@ import 'package:twonly/src/utils/storage.dart';
 void main() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
 
+  globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
+  globalApplicationSupportDirectory =
+      (await getApplicationSupportDirectory()).path;
+
   await initFCMService();
 
   final user = await getUser();
@@ -52,10 +56,6 @@ void main() async {
     Log.info('User is not yet register. Ensure all local data is removed.');
     await deleteLocalUserData();
   }
-
-  globalApplicationCacheDirectory = (await getApplicationCacheDirectory()).path;
-  globalApplicationSupportDirectory =
-      (await getApplicationSupportDirectory()).path;
 
   initLogger();
 

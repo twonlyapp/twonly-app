@@ -46,6 +46,7 @@ import 'package:web_socket_channel/io.dart';
 
 final lockConnecting = Mutex();
 final lockRetransStore = Mutex();
+final lockAuthentication = Mutex();
 
 /// The ApiProvider is responsible for communicating with the server.
 /// It handles errors and does automatically tries to reconnect on
@@ -86,7 +87,6 @@ class ApiService {
 
   // Function is called after the user is authenticated at the server
   Future<void> onAuthenticated() async {
-    isAuthenticated = true;
     await initFCMAfterAuthenticated();
     globalCallbackConnectionState(isConnected: true);
 
@@ -157,8 +157,9 @@ class ApiService {
     if (connectivitySubscription != null) {
       return;
     }
-    connectivitySubscription =
-        Connectivity().onConnectivityChanged.listen((result) async {
+    connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      result,
+    ) async {
       if (!result.contains(ConnectivityResult.none)) {
         await connect();
       }
@@ -355,7 +356,6 @@ class ApiService {
         return Result.error(ErrorCode.InternalError);
       }
       if (res.error == ErrorCode.SessionNotAuthenticated) {
-        isAuthenticated = false;
         if (authenticated) {
           await authenticate();
           if (isAuthenticated) {
@@ -387,8 +387,9 @@ class ApiService {
 
   Future<bool> tryAuthenticateWithToken(int userId) async {
     const storage = FlutterSecureStorage();
-    final apiAuthToken =
-        await storage.read(key: SecureStorageKeys.apiAuthToken);
+    final apiAuthToken = await storage.read(
+      key: SecureStorageKeys.apiAuthToken,
+    );
     final user = await getUser();
 
     if (apiAuthToken != null && user != null) {
@@ -412,6 +413,7 @@ class ApiService {
 
       if (result.isSuccess) {
         Log.info('websocket is authenticated');
+        isAuthenticated = true;
         if (globalIsInBackgroundTask) {
           await onAuthenticated();
         } else {
@@ -433,60 +435,66 @@ class ApiService {
   }
 
   Future<void> authenticate() async {
-    if (isAuthenticated) return;
-    if (await getSignalIdentity() == null) {
-      return;
-    }
+    return lockAuthentication.protect(() async {
+      if (isAuthenticated) return;
+      if (await getSignalIdentity() == null) {
+        return;
+      }
 
-    final userData = await getUser();
-    if (userData == null) return;
+      final userData = await getUser();
+      if (userData == null) return;
 
-    if (await tryAuthenticateWithToken(userData.userId)) {
-      return;
-    }
+      if (await tryAuthenticateWithToken(userData.userId)) {
+        return;
+      }
 
-    final handshake = Handshake()
-      ..getAuthChallenge = Handshake_GetAuthChallenge();
-    final req = createClientToServerFromHandshake(handshake);
+      final handshake = Handshake()
+        ..getAuthChallenge = Handshake_GetAuthChallenge();
+      final req = createClientToServerFromHandshake(handshake);
 
-    final result = await sendRequestSync(req, authenticated: false);
-    if (result.isError) {
-      Log.warn('could not request auth challenge', result);
-      return;
-    }
+      final result = await sendRequestSync(req, authenticated: false);
+      if (result.isError) {
+        Log.warn('could not request auth challenge', result);
+        return;
+      }
 
-    final challenge = result.value.authchallenge;
+      final challenge = result.value.authchallenge;
 
-    var privKey = (await getSignalIdentityKeyPair())?.getPrivateKey();
-    if (privKey == null) return;
-    final random = getRandomUint8List(32);
-    final signature = sign(privKey.serialize(), challenge as Uint8List, random);
-    privKey = null;
+      var privKey = (await getSignalIdentityKeyPair())?.getPrivateKey();
+      if (privKey == null) return;
+      final random = getRandomUint8List(32);
+      final signature = sign(
+        privKey.serialize(),
+        challenge as Uint8List,
+        random,
+      );
+      privKey = null;
 
-    final getAuthToken = Handshake_GetAuthToken()
-      ..response = signature
-      ..userId = Int64(userData.userId);
+      final getAuthToken = Handshake_GetAuthToken()
+        ..response = signature
+        ..userId = Int64(userData.userId);
 
-    final getauthtoken = Handshake()..getAuthToken = getAuthToken;
+      final getauthtoken = Handshake()..getAuthToken = getAuthToken;
 
-    final req2 = createClientToServerFromHandshake(getauthtoken);
+      final req2 = createClientToServerFromHandshake(getauthtoken);
 
-    final result2 = await sendRequestSync(req2, authenticated: false);
-    if (result2.isError) {
-      Log.error('could not send auth response: ${result2.error}');
-      return;
-    }
+      final result2 = await sendRequestSync(req2, authenticated: false);
+      if (result2.isError) {
+        Log.error('could not send auth response: ${result2.error}');
+        return;
+      }
 
-    final apiAuthToken = result2.value.authtoken as Uint8List;
-    final apiAuthTokenB64 = base64Encode(apiAuthToken);
+      final apiAuthToken = result2.value.authtoken as Uint8List;
+      final apiAuthTokenB64 = base64Encode(apiAuthToken);
 
-    const storage = FlutterSecureStorage();
-    await storage.write(
-      key: SecureStorageKeys.apiAuthToken,
-      value: apiAuthTokenB64,
-    );
+      const storage = FlutterSecureStorage();
+      await storage.write(
+        key: SecureStorageKeys.apiAuthToken,
+        value: apiAuthTokenB64,
+      );
 
-    await tryAuthenticateWithToken(userData.userId);
+      await tryAuthenticateWithToken(userData.userId);
+    });
   }
 
   Future<Result> register(
@@ -505,8 +513,9 @@ class ApiService {
 
     final register = Handshake_Register()
       ..username = username
-      ..publicIdentityKey =
-          (await signalStore.getIdentityKeyPair()).getPublicKey().serialize()
+      ..publicIdentityKey = (await signalStore.getIdentityKeyPair())
+          .getPublicKey()
+          .serialize()
       ..registrationId = Int64(signalIdentity.registrationId)
       ..signedPrekey = signedPreKey.getKeyPair().publicKey.serialize()
       ..signedPrekeySignature = signedPreKey.signature
@@ -526,8 +535,10 @@ class ApiService {
   }
 
   Future<void> checkForDeletedUsernames() async {
-    final users = await twonlyDB.contactsDao
-        .getContactsByUsername('[deleted]', username2: '[Unknown]');
+    final users = await twonlyDB.contactsDao.getContactsByUsername(
+      '[deleted]',
+      username2: '[Unknown]',
+    );
     for (final user in users) {
       final userData = await getUserById(user.userId);
       if (userData != null) {
